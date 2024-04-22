@@ -27,44 +27,14 @@ class HealthRouteE2ESpec extends E2ESpec {
     FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS),
   )
 
-  // Directory path for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("system", "health")
-
-  // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
-
   "The Health Route" should {
 
     "return 'OK' for state 'Running'" in {
 
-      val request                    = Get(baseApiUrl + s"/health")
-      val response: HttpResponse     = singleAwaitingRequest(request)
-      val responseStr: String        = responseToString(response)
-      val responseHeadersStr: String = response.headers.map(_.toString).mkString("\n")
+      val request                = Get(baseApiUrl + s"/health")
+      val response: HttpResponse = singleAwaitingRequest(request)
 
       response.status should be(StatusCodes.OK)
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "running-response",
-            fileExtension = "json",
-          ),
-          text = responseStr,
-        ),
-      )
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "response-headers",
-            fileExtension = "json",
-          ),
-          text = responseHeadersStr,
-        ),
-      )
     }
 
     "return 'ServiceUnavailable' for state 'Stopped'" in {
@@ -82,20 +52,8 @@ class HealthRouteE2ESpec extends E2ESpec {
 
       val request                = Get(baseApiUrl + s"/health")
       val response: HttpResponse = singleAwaitingRequest(request)
-      val responseStr: String    = responseToString(response)
 
       response.status should be(StatusCodes.ServiceUnavailable)
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "stopped-response",
-            fileExtension = "json",
-          ),
-          text = responseStr,
-        ),
-      )
     }
 
     "return 'ServiceUnavailable' for state 'MaintenanceMode'" in {
@@ -112,21 +70,7 @@ class HealthRouteE2ESpec extends E2ESpec {
 
       val request                = Get(baseApiUrl + s"/health")
       val response: HttpResponse = singleAwaitingRequest(request)
-      val responseStr: String    = responseToString(response)
-
       response.status should be(StatusCodes.ServiceUnavailable)
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "maintenance-mode-response",
-            fileExtension = "json",
-          ),
-          text = responseStr,
-        ),
-      )
     }
-
   }
 }

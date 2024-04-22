@@ -12,9 +12,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
@@ -69,12 +66,6 @@ class UsersADME2ESpec
   private val donaldIri            = new MutableTestIri
   private val systemUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.SystemUser.id, "utf-8")
 
-  // Directory path for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("admin", "users")
-
-  // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
-
   /**
    * Convenience method returning the users project memberships.
    *
@@ -119,16 +110,6 @@ class UsersADME2ESpec
           Get(baseApiUrl + s"/admin/users") ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-users-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return a single user profile identified by iri" in {
@@ -138,16 +119,6 @@ class UsersADME2ESpec
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-user-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return a single user profile identified by email" in {
@@ -178,32 +149,12 @@ class UsersADME2ESpec
         val request                = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc") ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-user-for-SystemAdmin-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return single user for itself" in {
         val request                = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc") ~> addNormalUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-user-for-itself-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return only public information for single user for non SystemAdmin and self" in {
@@ -216,16 +167,6 @@ class UsersADME2ESpec
         result.status should be(false)
         result.email should be("")
         result.username should be("")
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-user-for-nonSystemAdmin-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return only public information for single user with anonymous access" in {
@@ -238,48 +179,18 @@ class UsersADME2ESpec
         result.status should be(false)
         result.email should be("")
         result.username should be("")
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-user-for-anonymous-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return all users for SystemAdmin" in {
         val request                = Get(baseApiUrl + s"/admin/users") ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-users-for-SystemAdmin-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return all users for ProjectAdmin" in {
         val request                = Get(baseApiUrl + s"/admin/users") ~> addProjectAdminUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-users-for-ProjectAdmin-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return 'Forbidden' for all users for normal user" in {
@@ -326,16 +237,6 @@ class UsersADME2ESpec
              |    "systemAdmin": false
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-user-with-custom-Iri-request",
-              fileExtension = "json",
-            ),
-            text = createUserWithCustomIriRequest,
-          ),
-        )
         val request = Post(
           baseApiUrl + s"/admin/users",
           HttpEntity(ContentTypes.`application/json`, createUserWithCustomIriRequest),
@@ -348,17 +249,6 @@ class UsersADME2ESpec
 
         // check that the custom IRI is correctly assigned
         result.id should be(customUserIri)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-user-with-custom-Iri-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return 'BadRequest' if the supplied IRI for the user is not unique" in {
@@ -495,16 +385,6 @@ class UsersADME2ESpec
              |    "systemAdmin": false
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-user-request",
-              fileExtension = "json",
-            ),
-            text = createUserRequest,
-          ),
-        )
         val request = Post(
           baseApiUrl + s"/admin/users",
           HttpEntity(ContentTypes.`application/json`, createUserRequest),
@@ -523,17 +403,6 @@ class UsersADME2ESpec
         result.lang should be("en")
 
         donaldIri.set(result.id)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-user-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return a 'BadRequest' if the supplied username is not unique" in {
@@ -549,16 +418,6 @@ class UsersADME2ESpec
              |    "systemAdmin": false
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-user-request-duplicate-username",
-              fileExtension = "json",
-            ),
-            text = createUserRequest,
-          ),
-        )
         val request = Post(
           baseApiUrl + s"/admin/users",
           HttpEntity(ContentTypes.`application/json`, createUserRequest),
@@ -566,17 +425,6 @@ class UsersADME2ESpec
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.BadRequest)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-user-response-duplicate-username",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return a 'BadRequest' if the supplied email is not unique" in {
@@ -592,16 +440,6 @@ class UsersADME2ESpec
              |    "systemAdmin": false
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-user-request-duplicate-email",
-              fileExtension = "json",
-            ),
-            text = createUserRequest,
-          ),
-        )
         val request = Post(
           baseApiUrl + s"/admin/users",
           HttpEntity(ContentTypes.`application/json`, createUserRequest),
@@ -609,17 +447,6 @@ class UsersADME2ESpec
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.BadRequest)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-user-response-duplicate-email",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "authenticate the newly created user using HttpBasicAuth" in {
@@ -659,17 +486,6 @@ class UsersADME2ESpec
              |    "lang": "de"
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-user-request",
-              fileExtension = "json",
-            ),
-            text = updateUserRequest,
-          ),
-        )
-
         val userIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$userIriEncoded/BasicUserInformation",
@@ -684,17 +500,6 @@ class UsersADME2ESpec
         result.givenName should be("Big Donald")
         result.familyName should be("Duckmann")
         result.lang should be("de")
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-user-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return 'BadRequest' if user IRI is None and 'NotFound' if user IRI is '' in update user request" in {
@@ -702,17 +507,6 @@ class UsersADME2ESpec
           s"""{
              |    "username": "donald.without.iri.duck"
              |}""".stripMargin
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-user-request-without-iri",
-              fileExtension = "json",
-            ),
-            text = updateUserRequest,
-          ),
-        )
 
         val missingUserIri = ""
         val request = Put(
@@ -723,17 +517,6 @@ class UsersADME2ESpec
 
         response.status should be(StatusCodes.NotFound)
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-user-response-without-iri-1",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
-
         val missingUserIriNone = None
         val request2 = Put(
           baseApiUrl + s"/admin/users/iri/$missingUserIriNone/BasicUserInformation",
@@ -742,18 +525,6 @@ class UsersADME2ESpec
         val response2: HttpResponse = singleAwaitingRequest(request2)
 
         response2.status should be(StatusCodes.BadRequest)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-user-response-without-iri-2",
-              fileExtension = "json",
-            ),
-            text = responseToString(response2),
-          ),
-        )
-
       }
 
       "return 'Forbidden' when updating another user's password if a requesting user is not a SystemAdmin" in {
@@ -778,34 +549,12 @@ class UsersADME2ESpec
              |    "newPassword": "test123456"
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-user-password-request",
-              fileExtension = "json",
-            ),
-            text = changeUserPasswordRequest,
-          ),
-        )
-
         val request1 = Put(
           baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/Password",
           HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest),
         ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test")) // requester's password
         val response1: HttpResponse = singleAwaitingRequest(request1)
         response1.status should be(StatusCodes.OK)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-user-password-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response1),
-          ),
-        )
 
         // check if the password was changed, i.e. if the new one is accepted
         val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
@@ -846,17 +595,6 @@ class UsersADME2ESpec
              |    "requesterPassword": "test"
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "incomplete-update-user-password-request",
-              fileExtension = "json",
-            ),
-            text = changeUserPasswordRequest,
-          ),
-        )
-
         val request1 = Put(
           baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/Password",
           HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest),
@@ -864,17 +602,6 @@ class UsersADME2ESpec
         val response1: HttpResponse = singleAwaitingRequest(request1)
 
         response1.status should be(StatusCodes.BadRequest)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "incomplete-update-user-password-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response1),
-          ),
-        )
 
         // check that the password was not changed, i.e. the old one is still accepted
         val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
@@ -890,17 +617,6 @@ class UsersADME2ESpec
              |    "newPassword": "testABC"
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "incomplete-update-user-password-request-2",
-              fileExtension = "json",
-            ),
-            text = changeUserPasswordRequest,
-          ),
-        )
-
         val request1 = Put(
           baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/Password",
           HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest),
@@ -908,17 +624,6 @@ class UsersADME2ESpec
         val response1: HttpResponse = singleAwaitingRequest(request1)
 
         response1.status should be(StatusCodes.BadRequest)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "incomplete-update-user-password-response-2",
-              fileExtension = "json",
-            ),
-            text = responseToString(response1),
-          ),
-        )
 
         // check that the password was not changed, i.e. the old one is still accepted
         val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
@@ -934,16 +639,6 @@ class UsersADME2ESpec
              |    "status": false
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-user-status-request",
-              fileExtension = "json",
-            ),
-            text = changeUserStatusRequest,
-          ),
-        )
         val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/Status",
@@ -954,16 +649,6 @@ class UsersADME2ESpec
 
         val result: User = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[User]
         result.status should be(false)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-user-status-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "update the user's system admin membership status" in {
@@ -972,16 +657,6 @@ class UsersADME2ESpec
              |    "systemAdmin": true
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-user-system-admin-membership-request",
-              fileExtension = "json",
-            ),
-            text = changeUserSystemAdminMembershipRequest,
-          ),
-        )
         val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/SystemAdmin",
@@ -994,17 +669,6 @@ class UsersADME2ESpec
         result.permissions.groupsPerProject
           .get("http://www.knora.org/ontology/knora-admin#SystemProject")
           .head should equal(List("http://www.knora.org/ontology/knora-admin#SystemAdmin"))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-user-system-admin-membership-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
 
         // Throw BadRequest exception if user is built-in user
         val badRequest = Put(
@@ -1068,16 +732,6 @@ class UsersADME2ESpec
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "delete-user-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "not allow deleting the system user" in {
@@ -1114,16 +768,6 @@ class UsersADME2ESpec
 
         // testing getUserProjectMemberships method, which should return the same result
         projects should contain allElementsOf getUserProjectMemberships(multiUserIri)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-user-project-memberships-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
     }
 
@@ -1151,17 +795,6 @@ class UsersADME2ESpec
 
         val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri)
         membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "add-user-to-project-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "don't add user to project if user is already a member" in {
@@ -1177,17 +810,6 @@ class UsersADME2ESpec
         // verify that users's project memberships weren't changed
         val membershipsAfterTryUpdate = getUserProjectMemberships(normalUserIri)
         membershipsAfterTryUpdate should equal(membershipsBeforeTryUpdate)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "user-already-member-of-project-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "remove user from project" in {
@@ -1203,19 +825,7 @@ class UsersADME2ESpec
 
         val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri)
         membershipsAfterUpdate should equal(Seq.empty[Project])
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "remove-user-from-project-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
-
     }
 
     "used to query project admin group memberships" should {
@@ -1236,18 +846,7 @@ class UsersADME2ESpec
 
         // explicitly testing 'getUserProjectsAdminMemberships' method, which should return the same result
         projects should contain allElementsOf getUserProjectAdminMemberships(multiUserIri)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-user-project-admin-group-memberships-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
-
     }
 
     "used to modify project admin group membership" should {
@@ -1268,7 +867,7 @@ class UsersADME2ESpec
 
         assert(responseAddUserToProject.status === StatusCodes.OK)
 
-        // verfiy that user is not yet project admin in images project
+        // verify that user is not yet project admin in images project
         val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUser.id)
         membershipsBeforeUpdate should equal(Seq())
 
@@ -1283,17 +882,6 @@ class UsersADME2ESpec
         // verify that user has been added as project admin to images project
         val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUser.id)
         membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "add-user-to-project-admin-group-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "remove user from project admin group" in {
@@ -1311,17 +899,6 @@ class UsersADME2ESpec
         val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUser.id)
 
         membershipsAfterUpdate should equal(Seq.empty[Project])
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "remove-user-from-project-admin-group-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "remove user from project which also removes him from project admin group" in {
@@ -1367,19 +944,7 @@ class UsersADME2ESpec
 
         // testing getUserGroupMemberships method, which should return the same result
         groups should contain allElementsOf getUserGroupMemberships(multiUserIri)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-user-group-memberships-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
-
     }
 
     "used to modify group membership" should {
@@ -1396,17 +961,6 @@ class UsersADME2ESpec
 
         val membershipsAfterUpdate = getUserGroupMemberships(normalUserIri)
         membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroupExternal))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "add-user-to-group-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "remove user from group" in {
@@ -1422,17 +976,6 @@ class UsersADME2ESpec
 
         val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri)
         membershipsAfterUpdate should equal(Seq.empty[Group])
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "remove-user-from-group-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
     }
   }
