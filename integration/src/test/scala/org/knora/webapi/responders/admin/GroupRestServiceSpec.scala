@@ -27,10 +27,7 @@ import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-/**
- * This spec is used to test the messages received by the [[GroupsResponderADMSpec]] actor.
- */
-class GroupsResponderADMSpec extends CoreSpec {
+class GroupRestServiceSpec extends CoreSpec {
   private val groupRestService = ZIO.serviceWithZIO[GroupRestService]
   private val groupService     = ZIO.serviceWithZIO[GroupService]
 
