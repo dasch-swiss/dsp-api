@@ -145,7 +145,6 @@ object ProjectsEndpointsResponses {
 }
 
 final case class ProjectsEndpoints(base: BaseEndpoints) {
-
   private val projects = "projects"
 
   val getProjectsEndpoint = base.secureEndpoint.get
@@ -153,21 +152,25 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .out(jsonBody[Chunk[ProjectResponse]])
     .out(header[String](HeaderNames.ContentRange))
     .tag(projects)
+    .description("Authorization: admin scope required.")
 
   val getProjectByShortcodeEndpoint = base.secureEndpoint.get
     .in(projects / shortcodePathVar)
     .out(jsonBody[ProjectResponse])
     .tag(projects)
+    .description("Authorization: read:project:1234 scope required.")
 
   val getProjectsChecksumReport = base.secureEndpoint.get
     .in(projects / shortcodePathVar / "checksumreport")
     .out(jsonBody[AssetCheckResultResponse])
     .tag(projects)
+    .description("Authorization: read:project:1234 scope required.")
 
   val getProjectsAssetsInfo = base.secureEndpoint.get
     .in(projects / shortcodePathVar / "assets" / path[AssetId]("assetId"))
     .out(jsonBody[AssetInfoResponse])
     .tag("assets")
+    .description("Authorization: read:project:1234 scope required.")
 
   val postBulkIngest = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "bulk-ingest")
@@ -176,7 +179,8 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .description(
       "Triggers an ingest on the project with the given shortcode. " +
         "Currently only supports ingest of images. " +
-        "The files are expected to be in the `tmp/<project_shortcode>` directory.",
+        "The files are expected to be in the `tmp/<project_shortcode>` directory. " +
+        "Authorization: admin scope required.",
     )
     .tag("bulk-ingest")
 
@@ -186,7 +190,8 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .description(
       "Finalizes the bulk ingest. " +
         "This will remove the files from the `tmp/<project_shortcode>` directory and the directory itself. " +
-        "This will remove also the mapping.csv file.",
+        "This will remove also the mapping.csv file. " +
+        "Authorization: admin scope required.",
     )
     .tag("bulk-ingest")
 
@@ -194,8 +199,8 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .in(projects / shortcodePathVar / "bulk-ingest" / "mapping.csv")
     .description(
       "Get the current result of the bulk ingest, may be incomplete. " +
-        "The result is a csv with the following structure: " +
-        "original,derivative",
+        "The result is a csv with the following structure: `original,derivative`. " +
+        "Authorization: admin scope required.",
     )
     .out(stringBody)
     .out(header(HeaderNames.ContentType, "text/csv"))
@@ -208,6 +213,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .out(header[String]("Content-Type"))
     .out(streamBinaryBody(ZioStreams)(CodecFormat.Zip()))
     .tag("import/export")
+    .description("Authorization: admin scope required.")
 
   val getImport = base.secureEndpoint
     .in(projects / shortcodePathVar / "import")
@@ -215,6 +221,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .in(header("Content-Type", "application/zip"))
     .out(jsonBody[UploadResponse])
     .tag("import/export")
+    .description("Authorization: admin scope required.")
 
   val endpoints =
     List(

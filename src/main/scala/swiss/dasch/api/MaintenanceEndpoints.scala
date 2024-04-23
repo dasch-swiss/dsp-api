@@ -67,24 +67,28 @@ final case class MaintenanceEndpoints(base: BaseEndpoints) {
     .out(stringBody)
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
+    .description("Authorization: admin scope required.")
 
   val needsTopLeftCorrectionEndpoint = base.secureEndpoint.get
     .in(maintenance / "needs-top-left-correction")
     .out(stringBody)
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
+    .description("Authorization: admin scope required.")
 
   val wasTopLeftCorrectionAppliedEndpoint = base.secureEndpoint.get
     .in(maintenance / "was-top-left-correction-applied")
     .out(stringBody)
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
+    .description("Authorization: admin scope required.")
 
   val createOriginalsEndpoint = base.secureEndpoint.post
     .in(maintenance / "create-originals" / shortcodePathVar)
     .in(jsonBody[Chunk[MappingEntry]])
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
+    .description("Authorization: admin scope required.")
 
   val needsOriginalsEndpoint = base.secureEndpoint.get
     .in(maintenance / "needs-originals")
@@ -92,6 +96,7 @@ final case class MaintenanceEndpoints(base: BaseEndpoints) {
     .out(stringBody)
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
+    .description("Authorization: admin scope required.")
 
   val endpoints = List(
     postMaintenanceActionEndpoint,
