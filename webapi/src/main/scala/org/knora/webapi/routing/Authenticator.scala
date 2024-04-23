@@ -395,7 +395,7 @@ final case class AuthenticatorLive(
                   case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
                     ZIO
                       .fail(BadCredentialsException(BAD_CRED_NOT_VALID))
-                      .when(!jwtService.isTokenValid(jwtToken))
+                      .unless(jwtService.isTokenValid(jwtToken))
                       .as(true)
                   case Some(KnoraSessionCredentialsV2(sessionToken)) =>
                     ZIO
