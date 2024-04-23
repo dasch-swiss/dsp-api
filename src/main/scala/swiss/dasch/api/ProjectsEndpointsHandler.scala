@@ -8,29 +8,28 @@ package swiss.dasch.api
 import sttp.capabilities.zio.ZioStreams
 import sttp.model.headers.ContentRange
 import sttp.tapir.ztapir.ZServerEndpoint
-import swiss.dasch.api.ApiProblem.BadRequest
-import swiss.dasch.api.ApiProblem.Conflict
-import swiss.dasch.api.ApiProblem.InternalServerError
-import swiss.dasch.api.ApiProblem.NotFound
-import swiss.dasch.api.ProjectsEndpointsResponses.AssetCheckResultResponse
-import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
-import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
-import swiss.dasch.api.ProjectsEndpointsResponses.UploadResponse
 import swiss.dasch.api.*
+import swiss.dasch.api.ApiProblem.{BadRequest, Conflict, InternalServerError, NotFound}
+import swiss.dasch.api.ProjectsEndpointsResponses.{
+  AssetCheckResultResponse,
+  AssetInfoResponse,
+  ProjectResponse,
+  UploadResponse,
+}
 import swiss.dasch.domain.*
-import zio.ZIO
-import zio.ZLayer
-import zio.stream
-import zio.stream.ZStream
+import zio.stream.{ZSink, ZStream}
+import zio.{ZIO, ZLayer, stream}
 
 import java.io.IOException
 
 final case class ProjectsEndpointsHandler(
   bulkIngestService: BulkIngestService,
+  ingestService: IngestService,
   importService: ImportService,
   projectEndpoints: ProjectsEndpoints,
   projectService: ProjectService,
   reportService: ReportService,
+  storageService: StorageService,
   assetInfoService: AssetInfoService,
   authorizationHandler: AuthorizationHandler,
 ) extends HandlerFunctions {
@@ -89,6 +88,22 @@ final case class ProjectsEndpointsHandler(
               )
         },
     )
+
+  private val postProjectAssetEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postProjectAsset
+    .serverLogic(principal => { case (shortcode, filename, stream) =>
+      authorizationHandler.ensureProjectWritable(principal, shortcode) *>
+        ZIO.scoped {
+          for {
+            prj <- projectService.findProject(shortcode).some.mapError(projectNotFoundOrServerError(_, shortcode))
+            tmpDir <-
+              storageService.createTempDirectoryScoped(s"${prj.shortcode}-ingest").mapError(InternalServerError(_))
+            tmpFile = tmpDir / filename.value
+            _      <- stream.run(ZSink.fromFile(tmpFile.toFile)).mapError(InternalServerError(_))
+            asset  <- ingestService.ingestFile(tmpFile, shortcode).mapError(InternalServerError(_))
+            info   <- assetInfoService.findByAssetRef(asset.ref).someOrFailException.orDie
+          } yield AssetInfoResponse.from(info)
+        }
+    })
 
   private val postBulkIngestEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngest
     .serverLogic(userSession =>
@@ -173,6 +188,7 @@ final case class ProjectsEndpointsHandler(
       getProjectByShortcodeEndpoint,
       getProjectChecksumReportEndpoint,
       getProjectsAssetsInfoEndpoint,
+      postProjectAssetEndpoint,
       postBulkIngestEndpoint,
       postBulkIngestEndpointFinalize,
       getBulkIngestMappingCsvEndpoint,

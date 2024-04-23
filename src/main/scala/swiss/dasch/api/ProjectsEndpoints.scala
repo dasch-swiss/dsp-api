@@ -11,7 +11,7 @@ import sttp.tapir.codec.refined.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
-import sttp.tapir.{CodecFormat, EndpointInput}
+import sttp.tapir.{Codec, CodecFormat, EndpointInput}
 import swiss.dasch.api.ProjectsEndpoints.shortcodePathVar
 import swiss.dasch.api.ProjectsEndpointsResponses.{
   AssetCheckResultResponse,
@@ -172,6 +172,14 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .tag("assets")
     .description("Authorization: read:project:1234 scope required.")
 
+  given filenameCodec: Codec[String, AssetFilename, CodecFormat.TextPlain] =
+    Codec.string.mapEither(AssetFilename.from)(_.value)
+  val postProjectAsset = base.secureEndpoint.post
+    .in(projects / shortcodePathVar / "assets" / "ingest" / path[AssetFilename]("filename"))
+    .in(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
+    .out(jsonBody[AssetInfoResponse])
+    .tag("assets")
+
   val postBulkIngest = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "bulk-ingest")
     .out(jsonBody[ProjectResponse].example(ProjectResponse("0001")))
@@ -229,6 +237,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       getProjectByShortcodeEndpoint,
       getProjectsChecksumReport,
       getProjectsAssetsInfo,
+      postProjectAsset,
       postBulkIngest,
       postBulkIngestFinalize,
       getBulkIngestMappingCsv,
