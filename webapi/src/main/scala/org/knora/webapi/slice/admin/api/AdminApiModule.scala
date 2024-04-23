@@ -9,7 +9,6 @@ import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.admin.AssetPermissionsResponder
-import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.admin.UsersResponder
@@ -45,7 +44,6 @@ object AdminApiModule {
       AuthorizationRestService &
       BaseEndpoints &
       CacheManager &
-      GroupsResponderADM &
       GroupService &
       HandlerMapper &
       KnoraGroupService &

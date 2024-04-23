@@ -9,6 +9,7 @@ import zio.Task
 import zio.ZLayer
 
 import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -36,6 +37,9 @@ final case class UserService(
 
   def findAllRegularUsers: Task[Seq[User]] =
     knoraUserService.findAllRegularUsers().flatMap(userConverter.toUser)
+
+  def findByGroupMembership(groupIri: GroupIri): Task[Seq[User]] =
+    knoraUserService.findByGroupMembership(groupIri).flatMap(userConverter.toUser)
 }
 
 object UserService {
