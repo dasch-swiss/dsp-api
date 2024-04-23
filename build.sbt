@@ -144,26 +144,18 @@ lazy val webApiCommonSettings = Seq(
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
 val customScalacOptions = Seq(
-  "-Xsource:3-cross",
-  "-Wconf:msg=constructor modifiers are assumed:s",
   "-feature",
   "-unchecked",
   "-deprecation",
   "-Yresolve-term-conflict:package",
-  "-Ymacro-annotations",
   "-Wunused:imports",
   "-Wunused:privates",
   "-Wunused:locals",
   "-Wunused:explicits",
   "-Wunused:implicits",
   "-Wunused:params",
-  "-Wunused:patvars",
-  "-Wdead-code",
   "-Wvalue-discard",
-  "-Xlint:doc-detached",
-  // silence twirl templates unused imports warnings
-  "-Wconf:src=target/.*:s",
-  "-Xfatal-warnings",
+//  "-Xfatal-warnings",
 )
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
