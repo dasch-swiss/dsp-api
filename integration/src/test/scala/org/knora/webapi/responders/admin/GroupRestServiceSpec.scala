@@ -27,10 +27,7 @@ import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-/**
- * This spec is used to test the messages received by the [[GroupsResponderADMSpec]] actor.
- */
-class GroupsResponderADMSpec extends CoreSpec {
+class GroupRestServiceSpec extends CoreSpec {
   private val groupRestService = ZIO.serviceWithZIO[GroupRestService]
   private val groupService     = ZIO.serviceWithZIO[GroupService]
 
@@ -222,8 +219,9 @@ class GroupsResponderADMSpec extends CoreSpec {
     "used to query members" should {
       "return all members of a group identified by IRI" in {
         val iri = GroupIri.unsafeFrom(imagesReviewerGroup.id)
-        val received =
-          UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[GroupsResponderADM](_.groupMembersGetRequest(iri, rootUser)))
+        val received = UnsafeZioRun.runOrThrow(
+          groupRestService(_.getGroupMembers(iri, rootUser)),
+        )
 
         received.members.map(_.id) should contain allElementsOf Seq(
           multiuserUser.ofType(UserInformationType.Restricted),
@@ -233,8 +231,8 @@ class GroupsResponderADMSpec extends CoreSpec {
 
       "remove all members when group is deactivated" in {
         val group = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[GroupsResponderADM](
-            _.groupMembersGetRequest(
+          groupRestService(
+            _.getGroupMembers(
               GroupIri.unsafeFrom(imagesReviewerGroup.id),
               rootUser,
             ),
@@ -253,30 +251,30 @@ class GroupsResponderADMSpec extends CoreSpec {
         )
         statusChangeResponse.group.status shouldBe false
 
-        val anotherGroup = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[GroupsResponderADM](
-            _.groupMembersGetRequest(
+        val deactivatedGroup = UnsafeZioRun.runOrThrow(
+          groupRestService(
+            _.getGroupMembers(
               GroupIri.unsafeFrom(imagesReviewerGroup.id),
               rootUser,
             ),
           ),
         )
-        anotherGroup.members.size shouldBe 0
+        deactivatedGroup.members.size shouldBe 0
       }
 
-      "return 'NotFound' when the group IRI is unknown" in {
+      "return 'ForbiddenException' when the group IRI is unknown" in {
         val groupIri = "http://rdfh.ch/groups/0000/notexisting"
         val exit = UnsafeZioRun.run(
-          ZIO.serviceWithZIO[GroupsResponderADM](
-            _.groupMembersGetRequest(
+          groupRestService(
+            _.getGroupMembers(
               GroupIri.unsafeFrom(groupIri),
               rootUser,
             ),
           ),
         )
-        assertFailsWithA[NotFoundException](
+        assertFailsWithA[ForbiddenException](
           exit,
-          s"Group <$groupIri> not found",
+          s"Group with IRI '$groupIri' not found",
         )
       }
     }
