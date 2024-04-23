@@ -30,5 +30,5 @@ trait MaintenanceAction[A] {
    *
    * @param params optional parameters as provided by the caller
    */
-  def execute(params: Option[A]): Task[Unit]
+  def execute(params: Option[A] = None): Task[Unit]
 }
