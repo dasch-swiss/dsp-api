@@ -8,7 +8,6 @@ package org.knora.webapi.responders.admin
 import org.apache.pekko.testkit.ImplicitSender
 import zio.Chunk
 import zio.ZIO
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
@@ -28,8 +27,7 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRe
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
-import org.knora.webapi.slice.admin.api.service.ProjectRestService
-import org.knora.webapi.slice.admin.api.service.UserRestService
+import org.knora.webapi.slice.admin.api.service.{GroupRestService, ProjectRestService, UserRestService}
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.model._
@@ -46,7 +44,8 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
   private val incunabulaProject   = SharedTestDataADM.incunabulaProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
 
-  private val ProjectRestService = ZIO.serviceWithZIO[ProjectRestService]
+  private val groupRestService   = ZIO.serviceWithZIO[GroupRestService]
+  private val projectRestService = ZIO.serviceWithZIO[ProjectRestService]
   private val userRestService    = ZIO.serviceWithZIO[UserRestService]
 
   "The UserRestService" when {
@@ -376,7 +375,7 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate.projects.map(_.id) should equal(Chunk(imagesProject.id))
 
         val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
+          projectRestService(
             _.getProjectMembers(
               KnoraSystemInstances.Users.SystemUser,
               IriIdentifier.unsafeFrom(imagesProject.id),
@@ -404,7 +403,7 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         )
 
         val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
+          projectRestService(
             _.getProjectMembers(
               KnoraSystemInstances.Users.SystemUser,
               IriIdentifier.unsafeFrom(incunabulaProject.id),
@@ -449,7 +448,7 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // also check that the user has been removed from the project's list of users
         val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
+          projectRestService(
             _.getProjectMembers(
               rootUser,
               IriIdentifier.unsafeFrom(imagesProject.id),
@@ -500,7 +499,7 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // get project admins for images project (should contain normal user)
         val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
+          projectRestService(
             _.getProjectAdminMembers(
               rootUser,
               IriIdentifier.unsafeFrom(imagesProject.id),
@@ -524,7 +523,7 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate.projects should equal(Seq())
 
         val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
+          projectRestService(
             _.getProjectAdminMembers(
               rootUser,
               IriIdentifier.unsafeFrom(imagesProject.id),
@@ -553,8 +552,8 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
         val received = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[GroupsResponderADM](
-            _.groupMembersGetRequest(
+          groupRestService(
+            _.getGroupMembers(
               GroupIri.unsafeFrom(imagesReviewerGroup.id),
               rootUser,
             ),
@@ -575,8 +574,8 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate should equal(Seq())
 
         val received = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[GroupsResponderADM](
-            _.groupMembersGetRequest(
+          groupRestService(
+            _.getGroupMembers(
               GroupIri.unsafeFrom(imagesReviewerGroup.id),
               rootUser,
             ),
