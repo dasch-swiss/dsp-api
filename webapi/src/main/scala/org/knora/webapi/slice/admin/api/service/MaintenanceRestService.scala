@@ -14,6 +14,7 @@ import zio.json.ast.Json
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.ProjectsWithBakfilesReport
+import org.knora.webapi.slice.admin.api.service.MaintenanceRestService.fixTopLeftAction
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -23,7 +24,6 @@ final case class MaintenanceRestService(
   maintenanceService: MaintenanceService,
 ) {
 
-  private val fixTopLeftAction = "fix-top-left"
   def executeMaintenanceAction(user: User, action: String, jsonMaybe: Option[Json]): Task[Unit] =
     securityService.ensureSystemAdmin(user) *> {
       action match {
@@ -53,4 +53,8 @@ final case class MaintenanceRestService(
 
 object MaintenanceRestService {
   val layer = ZLayer.derive[MaintenanceRestService]
+
+  val fixTopLeftAction = "fix-top-left"
+
+  val allActions: List[String] = List(fixTopLeftAction)
 }
