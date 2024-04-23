@@ -17,7 +17,6 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.admin.repo.AdminRepoModule
-import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -29,7 +28,6 @@ object AdminDomainModule {
       AdminRepoModule.Provided &
       IriService &
       OntologyRepo &
-      PredicateObjectMapper &
       TriplestoreService
 
   type Provided =
