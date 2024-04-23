@@ -8,8 +8,6 @@ package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import zio._
 
-import java.util.UUID
-
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.core.MessageHandler
@@ -25,14 +23,11 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
@@ -179,111 +174,6 @@ final case class GroupsResponderADM(
    */
   def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
     groupMembersGetADM(iri.value, user).map(GroupMembersGetResponseADM.apply)
-
-  def deleteGroup(
-    iri: GroupIri,
-    apiRequestID: UUID,
-  ): Task[GroupGetResponseADM] = {
-    val task = for {
-      updated <- updateGroupHelper(iri, GroupUpdateRequest(None, None, Some(GroupStatus.inactive), None))
-      result  <- removeGroupMembersIfNecessary(updated.group)
-    } yield result
-    IriLocker.runWithIriLock(apiRequestID, iri.value, task)
-  }
-
-  /**
-   * Main group update method.
-   *
-   * @param groupIri  the IRI of the group we are updating.
-   * @param request   the payload holding the information which we want to update.
-   * @return a [[GroupGetResponseADM]]
-   */
-  private def updateGroupHelper(groupIri: GroupIri, request: GroupUpdateRequest) =
-    for {
-      _ <- ZIO
-             .fail(BadRequestException("No data would be changed. Aborting update request."))
-             .when(
-               // parameter list is empty
-               List(
-                 request.name,
-                 request.descriptions,
-                 request.status,
-                 request.selfjoin,
-               ).flatten.isEmpty,
-             )
-
-      /* Verify that the group exists. */
-      groupADM <-
-        groupGetADM(groupIri.value)
-          .someOrFail(NotFoundException(s"Group <${groupIri.value}> not found. Aborting update request."))
-
-      /* Verify that the potentially new name is unique */
-      groupByNameAlreadyExists <- (
-                                    for {
-                                      name    <- request.name
-                                      project <- groupADM.project
-                                    } yield groupByNameAndProjectExists(name.value, project.id)
-                                  ).getOrElse(ZIO.succeed(false))
-      _ <- ZIO
-             .fail(BadRequestException(s"Group with name: '${request.name.get.value}' already exists."))
-             .when(groupByNameAlreadyExists)
-
-      /* Update group */
-      updateGroupSparqlString =
-        sparql.admin.txt
-          .updateGroup(
-            adminNamedGraphIri = "http://www.knora.org/data/admin",
-            groupIri.value,
-            maybeName = request.name.map(_.value),
-            maybeDescriptions = request.descriptions.map(_.value),
-            maybeProject = None, // maybe later we want to allow moving of a group to another project
-            maybeStatus = request.status.map(_.value),
-            maybeSelfjoin = request.selfjoin.map(_.value),
-          )
-      _ <- triplestore.query(Update(updateGroupSparqlString))
-
-      /* Verify that the project was updated. */
-      updatedGroup <-
-        groupGetADM(groupIri.value)
-          .someOrFail(UpdateNotPerformedException("Group was not updated. Please report this as a possible bug."))
-    } yield GroupGetResponseADM(updatedGroup)
-
-  ////////////////////
-  // Helper Methods //
-  ////////////////////
-
-  /**
-   * Helper method for checking if a group identified by name / project IRI exists.
-   *
-   * @param name       the name of the group.
-   * @param projectIri the IRI of the project.
-   * @return a [[Boolean]].
-   */
-  private def groupByNameAndProjectExists(name: String, projectIri: IRI): Task[Boolean] =
-    triplestore.query(Ask(sparql.admin.txt.checkGroupExistsByName(projectIri, name)))
-
-  /**
-   * In the case that the group was deactivated (status = false), the
-   * group members need to be removed from the group.
-   *
-   * @param changedGroup         the group with the new status.
-   * @return a [[GroupGetResponseADM]]
-   */
-  private def removeGroupMembersIfNecessary(changedGroup: Group) =
-    if (changedGroup.status) {
-      // group active. no need to remove members.
-      logger.debug("removeGroupMembersIfNecessary - group active. no need to remove members.")
-      ZIO.succeed(GroupGetResponseADM(changedGroup))
-    } else {
-      // group deactivated. need to remove members.
-      logger.debug("removeGroupMembersIfNecessary - group deactivated. need to remove members.")
-      for {
-        members <- groupMembersGetADM(changedGroup.id, KnoraSystemInstances.Users.SystemUser)
-        _ <- ZIO.foreachDiscard(members)(user =>
-               knoraUserService.removeUserFromGroup(user, changedGroup).mapError(BadRequestException.apply),
-             )
-      } yield GroupGetResponseADM(group = changedGroup)
-    }
 }
 
 object GroupsResponderADM {

@@ -33,8 +33,11 @@ import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-final case class KnoraGroupRepoLive(triplestore: TriplestoreService, mapper: RdfEntityMapper[KnoraGroup])
-    extends AbstractEntityRepo[KnoraGroup, GroupIri](triplestore, mapper)
+final case class KnoraGroupRepoLive(
+  private val triplestore: TriplestoreService,
+  private val mapper: RdfEntityMapper[KnoraGroup],
+  private val cache: EntityCache[GroupIri, KnoraGroup],
+) extends CachingEntityRepo[KnoraGroup, GroupIri](triplestore, mapper, cache)
     with KnoraGroupRepo {
   override protected def resourceClass: ParsedIRI = ParsedIRI.create(KnoraAdmin.UserGroup)
   override protected def namedGraphIri: Iri       = Vocabulary.NamedGraphs.dataAdmin
@@ -91,5 +94,6 @@ object KnoraGroupRepoLive {
         .andHas(hasSelfJoinEnabled, Rdf.literalOf(group.hasSelfJoinEnabled.value))
   }
 
-  val layer = ZLayer.succeed(mapper) >>> ZLayer.derive[KnoraGroupRepoLive]
+  val layer = (ZLayer.succeed(mapper) >+> EntityCache.layer[GroupIri, KnoraGroup]("knoraGroup")) >>> ZLayer
+    .derive[KnoraGroupRepoLive]
 }

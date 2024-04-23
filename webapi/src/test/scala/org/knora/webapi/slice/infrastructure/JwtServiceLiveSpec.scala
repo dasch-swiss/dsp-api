@@ -188,7 +188,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     test("validate a self issued token") {
       for {
         token   <- JwtService(_.createJwt(user))
-        isValid <- JwtService(_.validateToken(token.jwtString))
+        isValid <- ZIO.serviceWith[JwtService](_.isTokenValid(token.jwtString))
       } yield assertTrue(isValid)
     },
     test("fail to validate an invalid token") {
@@ -219,7 +219,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
         for {
           secret  <- ZIO.serviceWith[JwtConfig](_.secret)
           token    = JwtZIOJson.encode("""{"typ":"JWT","alg":"HS256"}""", claim.toJson, secret, JwtAlgorithm.HS256)
-          isValid <- JwtService(_.validateToken(token))
+          isValid <- ZIO.serviceWith[JwtService](_.isTokenValid(token))
         } yield assertTrue(!isValid)
       }
     },
