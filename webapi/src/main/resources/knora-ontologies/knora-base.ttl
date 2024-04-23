@@ -2233,7 +2233,8 @@
 
 :hasTitle
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "has title"@en ;
+    rdfs:label              "Title"@en ,
+                            "Titel"@de ;
     rdfs:comment            "Indicates the title of a resource"@en ;
     :subjectClassConstraint :Resource ;
     :objectClassConstraint  :TextValue ;
@@ -2249,7 +2250,8 @@
 
 :hasDescription
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "has description"@en ;
+    rdfs:label              "Description"@en ,
+                            "Beschreibung"@de ;
     rdfs:comment            "Indicates the description of a resource"@en ;
     :subjectClassConstraint :Resource ;
     :objectClassConstraint  :TextValue ;
@@ -2265,7 +2267,8 @@
 
 :hasKeyword
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "has keyword"@en ;
+    rdfs:label              "Keywords"@en ,
+                            "Schlagwörter"@de ;
     rdfs:comment            "Indicates a keyword of a resource"@en ;
     :subjectClassConstraint :Resource ;
     :objectClassConstraint  :TextValue ;
@@ -2281,7 +2284,8 @@
 
 :relatesTo
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "relates to"@en ;
+    rdfs:label              "Related Resources"@en ,
+                            "Verknüpfte Ressourcen"@de ;
     rdfs:comment            "Indicates that this resource relates to another resource"@en ;
     :subjectClassConstraint :Resource ;
     :objectClassConstraint  :Resource ;
@@ -2307,8 +2311,8 @@
 
 :isSegmentOf
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "ist Segment von"@de,
-                            "is segment of"@en ;
+    rdfs:label              "Segment of"@en  ,
+                            "Segment von"@de ;
     rdfs:comment            "Indicates that this resource is a segment of a video or audio resource"@en ;
     :subjectClassConstraint :Segment  ;
     :objectClassConstraint  :Representation ;
@@ -2332,8 +2336,8 @@
 
 :isAudioSegmentOf
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "ist Audio-Segment von"@de,
-                            "is audio segment of"@en ;
+    rdfs:label              "Segment of (Audio)"@en ,
+                            "Segment von (Audio)"@de ;
     rdfs:comment            "Indicates that this resource is a segment of an audio resource"@en ;
     :subjectClassConstraint :AudioSegment  ;
     :objectClassConstraint  :AudioRepresentation ;
@@ -2355,8 +2359,8 @@
 
 :isVideoSegmentOf
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "ist Video-Segment von"@de,
-                            "is video segment of"@en ;
+    rdfs:label              "Segment of (Video)"@en ,
+                            "Segment von (Video)"@de ;
     rdfs:comment            "Indicates that this resource is a segment of a video resource"@en ;
     :subjectClassConstraint :VideoSegment  ;
     :objectClassConstraint  :MovingImageRepresentation ;
@@ -2382,8 +2386,8 @@
     :subjectClassConstraint :Segment  ;
     :isEditable             true ;
     rdfs:subPropertyOf      :hasValue ;
-    rdfs:label              "Segment-Grenzen"@de,
-                            "Segment Bounds"@en ;
+    rdfs:label              "Segment Bounds"@en ,
+                            "Segment-Grenzen"@de ;
     rdfs:comment            "Indicates the bounds of a segment, i.e. the start and end point in the containing resource."@en .
 
 
