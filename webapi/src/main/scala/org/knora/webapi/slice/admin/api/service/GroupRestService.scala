@@ -77,25 +77,18 @@ final case class GroupRestService(
     } yield external
 
   def putGroupStatus(iri: GroupIri, request: GroupStatusUpdateRequest, user: User): Task[GroupGetResponseADM] =
-    for {
-      groupAndProject <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
-      (group, _)       = groupAndProject
-      internal <- knoraGroupService
-                    .updateGroupStatus(group, request.status)
-                    .flatMap(groupService.toGroup)
-                    .map(GroupGetResponseADM.apply)
-      external <- format.toExternalADM(internal)
-    } yield external
+    updateStatus(iri, request.status, user)
 
   def deleteGroup(iri: GroupIri, user: User): Task[GroupGetResponseADM] =
+    updateStatus(iri, GroupStatus.inactive, user)
+
+  private def updateStatus(iri: GroupIri, status: GroupStatus, user: User) =
     for {
       groupAndProject <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
       (group, _)       = groupAndProject
-      internal <- knoraGroupService
-                    .updateGroupStatus(group, GroupStatus.inactive)
-                    .flatMap(groupService.toGroup)
-                    .map(GroupGetResponseADM.apply)
-      external <- format.toExternalADM(internal)
+      updated         <- knoraGroupService.updateGroupStatus(group, status)
+      internal        <- groupService.toGroup(updated).map(GroupGetResponseADM.apply)
+      external        <- format.toExternalADM(internal)
     } yield external
 }
 
