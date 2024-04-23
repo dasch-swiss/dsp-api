@@ -7,12 +7,7 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.Task
 import zio.ZLayer
-
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model.{Email, GroupIri, KnoraProject, User, UserIri, Username}
 
 final case class UserService(
   private val knoraUserService: KnoraUserService,
@@ -36,6 +31,9 @@ final case class UserService(
 
   def findAllRegularUsers: Task[Seq[User]] =
     knoraUserService.findAllRegularUsers().flatMap(userConverter.toUser)
+
+  def findByGroupMembership(groupIri: GroupIri): Task[Seq[User]] =
+    knoraUserService.findByGroupMembership(groupIri).flatMap(userConverter.toUser)
 }
 
 object UserService {
