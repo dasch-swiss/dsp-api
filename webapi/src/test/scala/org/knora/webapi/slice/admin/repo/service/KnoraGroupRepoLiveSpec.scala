@@ -23,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.common.repo.AbstractInMemoryCrudRepository
+import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 final case class KnoraGroupRepoInMemory(groups: Ref[Chunk[KnoraGroup]])
@@ -96,6 +97,7 @@ object KnoraGroupRepoLiveSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Any] = suite("KnoraUserGroupRepoLive")(findById, findAll, save)
     .provide(
       KnoraGroupRepoLive.layer,
+      CacheManager.layer,
       TriplestoreServiceInMemory.emptyLayer,
       StringFormatter.test,
     )

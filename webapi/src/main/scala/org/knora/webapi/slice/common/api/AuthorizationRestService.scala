@@ -9,6 +9,7 @@ import zio._
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
@@ -31,7 +32,7 @@ final case class AuthorizationRestService(
   def ensureSystemAdminOrProjectAdminOfGroup(
     user: User,
     groupIri: GroupIri,
-  ): IO[ForbiddenException, KnoraProject] =
+  ): IO[ForbiddenException, (KnoraGroup, KnoraProject)] =
     for {
       group <- knoraGroupService
                  .findById(groupIri)
@@ -41,7 +42,7 @@ final case class AuthorizationRestService(
                       .succeed(group.belongsToProject)
                       .someOrFail(ForbiddenException(s"Group with IRI '${groupIri.value}' not found"))
       project <- ensureSystemAdminOrProjectAdmin(user, projectIri)
-    } yield project
+    } yield (group, project)
 
   def ensureSystemAdminOrProjectAdmin(
     user: User,

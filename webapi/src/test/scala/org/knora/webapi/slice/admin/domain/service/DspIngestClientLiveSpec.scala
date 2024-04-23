@@ -134,7 +134,7 @@ object DspIngestClientLiveSpecLayers {
     new JwtService {
       override def createJwtForDspIngest(): UIO[Jwt]                              = ZIO.succeed(Jwt("mock-jwt-string-value", Long.MaxValue))
       override def createJwt(user: User, content: Map[String, JsValue]): UIO[Jwt] = unsupported
-      override def validateToken(token: String): Task[Boolean]                    = unsupported
+      override def isTokenValid(token: String): Boolean                           = throw new UnsupportedOperationException("not implemented")
       override def extractUserIriFromToken(token: String): Task[Option[IRI]]      = unsupported
     }
   }

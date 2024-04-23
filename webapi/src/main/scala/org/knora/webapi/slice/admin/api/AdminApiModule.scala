@@ -21,6 +21,7 @@ import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
 import org.knora.webapi.slice.admin.domain.service.GroupService
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
@@ -47,6 +48,7 @@ object AdminApiModule {
       GroupsResponderADM &
       GroupService &
       HandlerMapper &
+      KnoraGroupService &
       KnoraProjectService &
       KnoraResponseRenderer &
       KnoraUserService &
