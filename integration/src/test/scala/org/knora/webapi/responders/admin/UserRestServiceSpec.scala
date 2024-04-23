@@ -8,6 +8,7 @@ package org.knora.webapi.responders.admin
 import org.apache.pekko.testkit.ImplicitSender
 import zio.Chunk
 import zio.ZIO
+
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
@@ -27,7 +28,9 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRe
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
-import org.knora.webapi.slice.admin.api.service.{GroupRestService, ProjectRestService, UserRestService}
+import org.knora.webapi.slice.admin.api.service.GroupRestService
+import org.knora.webapi.slice.admin.api.service.ProjectRestService
+import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.model._
