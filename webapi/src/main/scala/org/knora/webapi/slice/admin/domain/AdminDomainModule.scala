@@ -15,6 +15,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service._
+import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.admin.repo.AdminRepoModule
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.CacheManager

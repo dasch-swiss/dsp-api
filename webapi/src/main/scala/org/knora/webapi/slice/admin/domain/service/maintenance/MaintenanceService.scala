@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.admin.domain.service
+package org.knora.webapi.slice.admin.domain.service.maintenance
 
 import zio.IO
 import zio.Task
@@ -13,6 +13,8 @@ import zio.stream.ZStream
 
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
