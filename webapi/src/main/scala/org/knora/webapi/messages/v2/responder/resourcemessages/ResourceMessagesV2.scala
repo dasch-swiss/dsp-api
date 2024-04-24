@@ -352,11 +352,6 @@ sealed trait ResourceV2 {
    * The resource's `rdfs:label`.
    */
   def label: String
-
-  /**
-   * A map of property IRIs to [[IOValueV2]] objects.
-   */
-  def values: Map[SmartIri, Seq[IOValueV2]]
 }
 
 /**
@@ -599,7 +594,7 @@ case class CreateValueInNewResourceV2(
   customValueUUID: Option[UUID] = None,
   customValueCreationDate: Option[Instant] = None,
   permissions: Option[String] = None,
-) extends IOValueV2
+)
 
 /**
  * Represents a Knora resource to be created.
