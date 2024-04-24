@@ -62,7 +62,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.UserS
 /**
  * A trait implemented by all Knora exceptions, which must be serializable and extend [[java.lang.Exception]].
  */
-trait KnoraException extends Serializable {}
+trait KnoraException extends Serializable
 
 /**
  * An abstract base class for exceptions indicating that something about a request made it impossible to fulfil (e.g.
