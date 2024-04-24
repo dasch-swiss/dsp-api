@@ -28,11 +28,8 @@ final case class TopLeftCorrectionAction[A <: ProjectsWithBakfilesReport](
   knoraProjectService: KnoraProjectService,
   triplestoreService: TriplestoreService,
 ) extends MaintenanceAction[A] {
-  def execute(params: Option[A]): Task[Unit] =
-    ZIO
-      .fromOption(params)
-      .orDieWith(_ => new Exception("Missing parameters for maintenance action 'fix-top-left'."))
-      .flatMap(report => ZStream.fromIterable(report.projects).flatMap(processProject).runDrain)
+  def execute(params: A): Task[Unit] =
+    ZStream.fromIterable(params.projects).flatMap(processProject).runDrain
 
   private def getKnoraProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, KnoraProject] = {
     val getProjectZio: IO[Option[Throwable], KnoraProject] = knoraProjectService

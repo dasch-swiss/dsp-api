@@ -19,7 +19,7 @@ final case class MaintenanceService(
 ) {
   def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit] =
     ZIO.logInfo(s"Starting fix top left maintenance") *>
-      TopLeftCorrectionAction(knoraProjectService, triplestoreService).execute(Some(report)) *>
+      TopLeftCorrectionAction(knoraProjectService, triplestoreService).execute(report) *>
       ZIO.logInfo(s"Finished fix top left maintenance")
 }
 
