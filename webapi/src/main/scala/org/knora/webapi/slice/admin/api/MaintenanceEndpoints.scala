@@ -6,12 +6,14 @@
 package org.knora.webapi.slice.admin.api
 
 import sttp.model.StatusCode
+import sttp.tapir.EndpointIO.Example
 import sttp.tapir._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.zio.{jsonBody => zioJsonBody}
 import zio.ZLayer
 import zio.json.ast.Json
 
+import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
@@ -25,7 +27,7 @@ final case class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
         .description("""The name of the maintenance action to be executed.
                        |Maintenance actions are executed asynchronously in the background.
                        |""".stripMargin)
-        .example("fix-top-left-dimensions"),
+        .examples(MaintenanceRestService.allActions.map(Example.of(_))),
     )
     .in(
       zioJsonBody[Option[Json]]
