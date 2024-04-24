@@ -241,18 +241,13 @@ object ChangeFileRequest {
     valueIri: String,
     className: Option[String] = None,
     ontologyName: String = "knora-api",
-  ): ChangeFileRequest = {
-    val classNameWithDefaults = className match {
-      case Some(v) => v
-      case None    => FileModelUtil.getDefaultClassName(fileType)
-    }
+  ): ChangeFileRequest =
     new ChangeFileRequest(
       fileType = fileType,
       internalFilename = internalFilename,
       resourceIRI = resourceIri,
       valueIRI = valueIri,
-      className = classNameWithDefaults,
+      className = className.getOrElse(FileModelUtil.getDefaultClassName(fileType)),
       ontologyName = ontologyName,
     ) {}
-  }
 }

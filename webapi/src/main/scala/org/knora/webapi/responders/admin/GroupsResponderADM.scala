@@ -18,18 +18,13 @@ import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
-import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.model
 import org.knora.webapi.slice.admin.domain.model.Group
-import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -114,66 +109,6 @@ final case class GroupsResponderADM(
         .flatMap(ZIO.fromOption(_))
         .mapBoth(_ => NotFoundException(s"Group <$iri> not found."), GroupGetResponseADM.apply)
     })
-
-  /**
-   * Gets the members with the given group IRI and returns the information as a sequence of [[User]].
-   *
-   * @param groupIri             the IRI of the group.
-   * @param requestingUser       the user initiating the request.
-   * @return A sequence of [[User]]
-   */
-  private def groupMembersGetADM(
-    groupIri: IRI,
-    requestingUser: User,
-  ): Task[Seq[User]] =
-    for {
-      group <- groupGetADM(groupIri)
-                 .flatMap(ZIO.fromOption(_))
-                 .orElseFail(NotFoundException(s"Group <$groupIri> not found"))
-
-      // check if the requesting user is allowed to access the information
-      _ <- ZIO
-             .fail(ForbiddenException("Project members can only be retrieved by a project or system admin."))
-             .when {
-               val userPermissions = requestingUser.permissions
-               !group.project.exists(it => userPermissions.isProjectAdmin(it.id)) &&
-               !userPermissions.isSystemAdmin && !requestingUser.isSystemUser
-             }
-
-      groupMembersResponse <- triplestore.query(Select(sparql.admin.txt.getGroupMembersByIri(groupIri)))
-
-      // get project member IRI from results rows
-      groupMemberIris =
-        if (groupMembersResponse.results.bindings.nonEmpty) {
-          groupMembersResponse.results.bindings.map(_.rowMap("s"))
-        } else {
-          Seq.empty[IRI]
-        }
-
-      usersMaybeTasks: Seq[Task[Option[User]]] =
-        groupMemberIris.map { userIri =>
-          messageRelay
-            .ask[Option[User]](
-              UserGetByIriADM(
-                UserIri.unsafeFrom(userIri),
-                UserInformationType.Restricted,
-                KnoraSystemInstances.Users.SystemUser,
-              ),
-            )
-        }
-      users <- ZioHelper.sequence(usersMaybeTasks).map(_.flatten)
-    } yield users
-
-  /**
-   * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
-   * Only project and system admins are allowed to access this information.
-   *
-   * @param iri             the IRI of the group.
-   * @param user       the user initiating the request.
-   * @return A [[GroupMembersGetResponseADM]]
-   */
-  def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
-    groupMembersGetADM(iri.value, user).map(GroupMembersGetResponseADM.apply)
 }
 
 object GroupsResponderADM {

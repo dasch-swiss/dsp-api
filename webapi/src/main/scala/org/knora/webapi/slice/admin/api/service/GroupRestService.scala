@@ -11,7 +11,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
-import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
@@ -21,6 +20,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
@@ -30,7 +30,7 @@ final case class GroupRestService(
   groupService: GroupService,
   knoraGroupService: KnoraGroupService,
   knoraProjectService: KnoraProjectService,
-  responder: GroupsResponderADM,
+  userService: UserService,
 ) {
 
   def getGroups: Task[GroupsGetResponseADM] = for {
@@ -49,7 +49,11 @@ final case class GroupRestService(
 
   def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
     for {
-      internal <- responder.groupMembersGetRequest(iri, user)
+      _ <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
+      _ <- groupService
+             .findById(iri)
+             .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
+      internal <- userService.findByGroupMembership(iri).map(GroupMembersGetResponseADM.apply)
       external <- format.toExternalADM(internal)
     } yield external
 

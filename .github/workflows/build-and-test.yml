@@ -138,7 +138,7 @@ jobs:
         run: echo "Running this as a no-op job... ${{ env.IS_NOOP}}"
       - name: Checkout source
         if: ${{ env.IS_NOOP == 'false' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - uses: extractions/setup-just@v2
       - name: Install requirements (pip, npm, apt)
         if: ${{ env.IS_NOOP == 'false' }}
