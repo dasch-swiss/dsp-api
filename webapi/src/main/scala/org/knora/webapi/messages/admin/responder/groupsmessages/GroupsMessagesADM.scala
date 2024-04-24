@@ -9,7 +9,6 @@ import spray.json.DefaultJsonProtocol
 import spray.json.JsonFormat
 import spray.json.RootJsonFormat
 
-import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
@@ -23,16 +22,6 @@ import org.knora.webapi.slice.admin.domain.model.Group
  * An abstract trait representing a request message that can be sent to 'GroupsResponderADM'.
  */
 sealed trait GroupsResponderRequestADM extends KnoraRequestADM with RelayedMessage
-
-/**
- * Get everything about a multiple groups identified by their IRIs. The response will be a
- * [[Set[GroupGetResponseADM] ]], or an error if one or more groups was not found.
- *
- * @param groupIris            the IRIs of the groups being requested
- */
-case class MultipleGroupsGetRequestADM(
-  groupIris: Set[IRI],
-) extends GroupsResponderRequestADM
 
 // Responses
 /**
