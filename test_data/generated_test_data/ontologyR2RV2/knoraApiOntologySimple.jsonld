@@ -172,7 +172,7 @@
             "@id": "knora-api:AudioRepresentation"
         },
         {
-            "rdfs:label": "Audio Segment",
+            "rdfs:label": "Audiosegment",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:Segment"
@@ -1002,7 +1002,7 @@
             "@id": "knora-api:TextRepresentation"
         },
         {
-            "rdfs:label": "Video Segment",
+            "rdfs:label": "Videosegment",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:Segment"
@@ -1253,7 +1253,7 @@
             "@id": "knora-api:hasDDDFile"
         },
         {
-            "rdfs:label": "has description",
+            "rdfs:label": "Description",
             "rdfs:subPropertyOf": [
                 {
                     "@id": "knora-api:hasValue"
@@ -1339,7 +1339,7 @@
             "@id": "knora-api:hasIncomingLink"
         },
         {
-            "rdfs:label": "has keyword",
+            "rdfs:label": "Keywords",
             "rdfs:subPropertyOf": [
                 {
                     "@id": "knora-api:hasValue"
@@ -1482,7 +1482,7 @@
             "@id": "knora-api:hasTextFile"
         },
         {
-            "rdfs:label": "has title",
+            "rdfs:label": "Title",
             "rdfs:subPropertyOf": [
                 {
                     "@id": "knora-api:hasValue"
@@ -1534,7 +1534,7 @@
             "@id": "knora-api:isAnnotationOf"
         },
         {
-            "rdfs:label": "is audio segment of",
+            "rdfs:label": "Segment of (Audio)",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:isSegmentOf"
             },
@@ -1590,7 +1590,7 @@
             "@id": "knora-api:isRegionOf"
         },
         {
-            "rdfs:label": "is segment of",
+            "rdfs:label": "Segment of",
             "rdfs:subPropertyOf": [
                 {
                     "@id": "knora-api:hasLinkTo"
@@ -1628,7 +1628,7 @@
             "@id": "knora-api:isSequenceOf"
         },
         {
-            "rdfs:label": "is video segment of",
+            "rdfs:label": "Segment of (Video)",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:isSegmentOf"
             },
@@ -1658,7 +1658,7 @@
             "rdfs:comment": "Specifies the required type of the objects of a property"
         },
         {
-            "rdfs:label": "relates to",
+            "rdfs:label": "Related Resources",
             "rdfs:subPropertyOf": [
                 {
                     "@id": "knora-api:hasLinkTo"
