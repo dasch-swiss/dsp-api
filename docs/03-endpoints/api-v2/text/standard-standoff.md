@@ -30,8 +30,10 @@ that are mapped to standoff classes and properties defined in the ontology:
 - `<ul>` → `standoff:StandoffUnrderedListTag`
 - `<li>` → `standoff:StandoffListElementTag`
 - `<tbody>` → `standoff:StandoffTableBodyTag`
+- `<thead>` → `standoff:StandoffTableHeaderTag`
 - `<table>` → `standoff:StandoffTableTag`
 - `<tr>` → `standoff:StandoffTableRowTag`
+- `<th>` → `standoff:StandoffTableHeaderCellTag`
 - `<td>` → `standoff:StandoffTableCellTag`
 - `<br>` → `standoff:StandoffBrTag`
 - `<hr>` → `standoff:StandoffLineTag`
