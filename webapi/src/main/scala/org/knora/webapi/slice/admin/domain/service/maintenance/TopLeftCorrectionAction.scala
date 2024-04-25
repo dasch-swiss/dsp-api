@@ -3,57 +3,57 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.admin.domain.service
+package org.knora.webapi.slice.admin.domain.service.maintenance
 
 import zio.IO
 import zio.Task
 import zio.ZIO
-import zio.ZLayer
 import zio.stream.ZStream
 
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests._
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.Dimensions
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.ProjectWithBakFiles
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.ProjectsWithBakfilesReport
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.ReportAsset
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
+import org.knora.webapi.slice.admin.domain.model.MaintenanceAction
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-final case class MaintenanceService(
+final case class TopLeftCorrectionAction[A <: ProjectsWithBakfilesReport](
   knoraProjectService: KnoraProjectService,
   triplestoreService: TriplestoreService,
-  mapper: PredicateObjectMapper,
-) {
+) extends MaintenanceAction[A] {
+  def execute(params: A): Task[Unit] =
+    ZStream.fromIterable(params.projects).flatMap(processProject).runDrain
 
-  def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit] = {
-    def processProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, Unit] =
-      getKnoraProject(project).flatMap { knoraProject =>
-        ZStream
-          .fromIterable(project.assetIds)
-          .flatMapPar(5)(processSingleAsset(knoraProject, _))
-      }
-
-    def getKnoraProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, KnoraProject] = {
-      val getProjectZio: IO[Option[Throwable], KnoraProject] = knoraProjectService
-        .findByShortcode(project.id)
-        .some
-        .tapSomeError { case None => ZIO.logInfo(s"Project ${project.id} not found, skipping.") }
-      ZStream.fromZIOOption(getProjectZio)
-    }
-
-    def processSingleAsset(knoraProject: KnoraProject, assetId: ReportAsset): ZStream[Any, Nothing, Unit] =
-      ZStream.fromZIOOption(
-        fixAsset(knoraProject, assetId)
-          // None.type errors are just a sign that the assetId should be ignored. Some.type errors are real errors.
-          .tapSomeError { case Some(e) => ZIO.logError(s"Error while processing ${knoraProject.id}, $assetId: $e") }
-          // We have logged real errors above, from here on out ignore all errors so that the stream can continue.
-          .orElseFail(None),
-      )
-
-    ZIO.logInfo(s"Starting fix top left maintenance") *>
-      ZStream.fromIterable(report.projects).flatMap(processProject).runDrain *>
-      ZIO.logInfo(s"Finished fix top left maintenance")
+  private def getKnoraProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, KnoraProject] = {
+    val getProjectZio: IO[Option[Throwable], KnoraProject] = knoraProjectService
+      .findByShortcode(project.id)
+      .some
+      .tapSomeError { case None => ZIO.logInfo(s"Project ${project.id} not found, skipping.") }
+    ZStream.fromZIOOption(getProjectZio)
   }
+
+  private def processSingleAsset(knoraProject: KnoraProject, assetId: ReportAsset): ZStream[Any, Nothing, Unit] =
+    ZStream.fromZIOOption(
+      fixAsset(knoraProject, assetId)
+        // None.type errors are just a sign that the assetId should be ignored. Some.type errors are real errors.
+        .tapSomeError { case Some(e) => ZIO.logError(s"Error while processing ${knoraProject.id}, $assetId: $e") }
+        // We have logged real errors above, from here on out ignore all errors so that the stream can continue.
+        .orElseFail(None),
+    )
+
+  private def processProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, Unit] =
+    getKnoraProject(project).flatMap { knoraProject =>
+      ZStream
+        .fromIterable(project.assetIds)
+        .flatMapPar(5)(processSingleAsset(knoraProject, _))
+    }
 
   private def fixAsset(project: KnoraProject, asset: ReportAsset): IO[Option[Throwable], Unit] =
     for {
@@ -122,7 +122,7 @@ final case class MaintenanceService(
          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
          |
          |WITH <${projectGraph.value}>
-         |DELETE 
+         |DELETE
          |{
          |  ?r knora-base:dimX ?oldX .
          |  ?r knora-base:dimY ?oldY .
@@ -132,7 +132,7 @@ final case class MaintenanceService(
          |  ?r knora-base:dimX ?oldY .
          |  ?r knora-base:dimY ?oldX .
          |}
-         |WHERE 
+         |WHERE
          |{
          |  BIND (<${stillImageFileValueIri.value}> AS ?r)
          |  ?r knora-base:dimX ?oldX .
@@ -141,8 +141,4 @@ final case class MaintenanceService(
          |""".stripMargin,
     )
   }
-}
-
-object MaintenanceService {
-  val layer = ZLayer.derive[MaintenanceService]
 }
