@@ -28,7 +28,7 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
   private def prepare: ZIO[AppServer.AppServerEnvironment, Throwable, AppServer] = for {
     appServer <- AppServer.init()
-    _         <- appServer.start(requiresAdditionalRepositoryChecks = false, requiresIIIFService = false).orDie
+    _         <- appServer.start(requiresAdditionalRepositoryChecks = false).orDie
     _         <- prepareRepository(rdfDataObjects)
   } yield appServer
 

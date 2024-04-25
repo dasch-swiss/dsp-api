@@ -104,7 +104,7 @@ abstract class ITKnoraLiveSpec
       runtime.unsafe
         .run(
           for {
-            _ <- AppServer.testWithSipi
+            _ <- AppServer.test
             _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
           } yield (),
         )

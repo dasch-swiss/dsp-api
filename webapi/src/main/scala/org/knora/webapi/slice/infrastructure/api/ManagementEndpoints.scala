@@ -67,8 +67,6 @@ object HealthResponse {
     case AppState.RepositoryUpToDate    => unhealthy("Repository up to date. Please retry later.")
     case AppState.LoadingOntologies     => unhealthy("Loading ontologies. Please retry later.")
     case AppState.OntologiesReady       => unhealthy("Ontologies ready. Please retry later.")
-    case AppState.WaitingForIIIFService => unhealthy("Waiting for IIIF service. Please retry later.")
-    case AppState.IIIFServiceReady      => unhealthy("IIIF service ready. Please retry later.")
     case AppState.MaintenanceMode       => unhealthy("Application is in maintenance mode. Please retry later.")
     case AppState.Running               => healthy
   }
