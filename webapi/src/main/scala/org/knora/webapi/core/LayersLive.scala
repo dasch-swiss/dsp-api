@@ -124,7 +124,6 @@ object LayersLive {
       TriplestoreService &
       UserRestService &
       UserService &
-      UsersResponder &
       ValuesResponderV2
 
   /**
@@ -192,7 +191,6 @@ object LayersLive {
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
       UserService.layer,
-      UsersResponder.layer,
       ValuesResponderV2Live.layer,
       org.knora.webapi.core.ActorSystem.layer,
     )

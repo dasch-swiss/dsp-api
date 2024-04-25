@@ -16,7 +16,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
-import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
@@ -47,7 +46,6 @@ final case class UserRestService(
   knoraUserToUserConverter: KnoraUserToUserConverter,
   passwordService: PasswordService,
   projectService: ProjectService,
-  responder: UsersResponder,
   format: KnoraResponseRenderer,
 ) {
 
