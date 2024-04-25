@@ -3,10 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * To be able to test UsersResponder, we need to be able to start UsersResponder isolated. Now the UsersResponder
- * extend ResponderADM which messes up testing, as we cannot inject the TestActor system.
- */
 package org.knora.webapi.responders.admin
 
 import org.apache.pekko.testkit.ImplicitSender
