@@ -6,21 +6,22 @@
 package org.knora.webapi.store.triplestore.upgrade
 
 import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
+import zio._
+
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.knoraBaseVersionInt
-import org.knora.webapi.messages.store.triplestoremessages.*
-import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
 import org.knora.webapi.store.triplestore.upgrade.plugins.MigrateOnlyBuiltInGraphs
 import org.knora.webapi.util.FileUtil
-import org.slf4j.LoggerFactory
-import zio.*
-
-import java.io.File
-import java.nio.file.Files
-import java.nio.file.Path
 
 final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
 
