@@ -85,7 +85,6 @@ object LayersLive {
       GravsearchTypeInspectionRunner &
       GroupRestService &
       GroupService &
-      GroupsResponderADM &
       HttpServer &
       IIIFRequestMessageHandler &
       InferenceOptimizationService &
@@ -149,7 +148,6 @@ object LayersLive {
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
-      GroupsResponderADM.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,

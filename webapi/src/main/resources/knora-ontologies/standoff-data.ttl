@@ -41,8 +41,10 @@
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/uJ4GgFl_Qki-cYHae_nAtA>,
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/X-SQznMkTx-LZRLAY74ePA>,
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/62844c98-7251-11e7-8cf>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/2tO9l7IZSEKktbCPWc2Enw>,
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/_-8MPxJFSAiZm1T-g3Ymzg>,
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/vlGCAF3kQyywpobNu1T7ng>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/CFGtLwdXQyGdVpMyfB9Leg>,
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ktOIwFHSTm-GC1RVF3HZpw>,
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ZeSrjYCxT-anWm8YYy61Uw>,
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/a05L2z3NT3iMWMn7nFqIOA>,
@@ -254,6 +256,14 @@
     knora-base:mappingElementRequiresSeparator true ;
     knora-base:mappingHasXMLTagname            "tbody"^^xsd:string .
 
+<http://rdfh.ch/standoff/mappings/StandardMapping/elements/2tO9l7IZSEKktbCPWc2Enw>
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffTableHeaderTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
+    knora-base:mappingElementRequiresSeparator true ;
+    knora-base:mappingHasXMLTagname            "thead"^^xsd:string .
+
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/_-8MPxJFSAiZm1T-g3Ymzg>
     a                                          knora-base:MappingElement ;
     knora-base:mappingHasStandoffClass         standoff:StandoffTableRowTag ;
@@ -269,6 +279,14 @@
     knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
     knora-base:mappingHasXMLTagname            "td"^^xsd:string .
+
+<http://rdfh.ch/standoff/mappings/StandardMapping/elements/CFGtLwdXQyGdVpMyfB9Leg>
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffTableHeaderCellTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
+    knora-base:mappingElementRequiresSeparator true ;
+    knora-base:mappingHasXMLTagname            "th"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ktOIwFHSTm-GC1RVF3HZpw>
     a                                          knora-base:MappingElement ;

@@ -12,22 +12,20 @@ import zio.ZLayer
 
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
-import dsp.valueobjects.Iri
+import dsp.errors.NotFoundException
 import org.knora.webapi.IRI
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
-import org.knora.webapi.messages.admin.responder.groupsmessages.MultipleGroupsGetRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.util.PermissionUtilADM.formatPermissionADMs
 import org.knora.webapi.messages.util.PermissionUtilADM.parsePermissions
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 
 /**
@@ -541,8 +539,7 @@ trait PermissionUtilADM {
   def validatePermissions(permissionLiteral: String): Task[String]
 }
 
-final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatter: StringFormatter)
-    extends PermissionUtilADM {
+final case class PermissionUtilADMLive(groupService: GroupService) extends PermissionUtilADM {
 
   /**
    * Given a permission literal, checks that it refers to valid permissions and groups.
@@ -564,18 +561,17 @@ final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatt
         )
 
       // Get the group IRIs that are mentioned, minus the built-in groups.
-      projectSpecificGroupIris: Set[IRI] =
+      projectSpecificGroupIris =
         parsedPermissions.values.flatten.toSet -- KnoraGroupRepo.builtIn.all.map(_.id.value)
 
-      validatedProjectSpecificGroupIris <-
-        ZIO.attempt(
-          projectSpecificGroupIris.map(iri =>
-            Iri.validateAndEscapeIri(iri).getOrElse(throw BadRequestException(s"Invalid group IRI: $iri")),
-          ),
-        )
+      irisToCheck = projectSpecificGroupIris.map(iri => GroupIri.unsafeFrom(iri)).toSeq
 
       // Check that those groups exist.
-      _ <- messageRelay.ask[Set[GroupGetResponseADM]](MultipleGroupsGetRequestADM(validatedProjectSpecificGroupIris))
+      _ <- ZIO.foreach(irisToCheck)(iri =>
+             groupService
+               .findById(iri)
+               .someOrFail(NotFoundException(s"Group <$iri> not found.")),
+           )
 
       // Reformat the permission literal.
       permissionADMs: Set[PermissionADM] = parsedPermissions.flatMap { case (entityPermission, groupIris) =>

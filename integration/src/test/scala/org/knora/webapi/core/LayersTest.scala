@@ -100,7 +100,6 @@ object LayersTest {
       GravsearchTypeInspectionRunner &
       GroupRestService &
       GroupService &
-      GroupsResponderADM &
       HttpServer &
       IIIFRequestMessageHandler &
       InferenceOptimizationService &
@@ -160,7 +159,6 @@ object LayersTest {
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
-      GroupsResponderADM.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
