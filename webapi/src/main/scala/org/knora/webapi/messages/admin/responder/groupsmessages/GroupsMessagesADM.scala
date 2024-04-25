@@ -9,19 +9,9 @@ import spray.json.DefaultJsonProtocol
 import spray.json.JsonFormat
 import spray.json.RootJsonFormat
 
-import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.Group
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Messages
-
-/**
- * An abstract trait representing a request message that can be sent to 'GroupsResponderADM'.
- */
-sealed trait GroupsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 // Responses
 /**
