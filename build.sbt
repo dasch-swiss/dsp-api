@@ -155,6 +155,7 @@ val customScalacOptions = Seq(
   "-Wunused:implicits",
   "-Wunused:params",
   "-Wvalue-discard",
+  "-Xmax-inlines:64",
 //  "-Xfatal-warnings",
 )
 

@@ -9,6 +9,7 @@ import com.typesafe.config.ConfigFactory
 import zio._
 import zio.config._
 import zio.config.magnolia._
+import zio.config.magnolia.DeriveConfig.given
 import zio.config.typesafe._
 
 import java.time.Duration

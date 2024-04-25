@@ -19,7 +19,7 @@ import org.knora.webapi.slice.common.WithFrom
 
 object ListProperties {
 
-  final case class ListIri private (value: String) extends AnyVal with StringValue
+  final case class ListIri private (value: String) extends StringValue
 
   object ListIri extends StringValueCompanion[ListIri] {
 
@@ -54,14 +54,14 @@ object ListProperties {
     }
   }
 
-  final case class ListName private (value: String) extends AnyVal with StringValue
+  final case class ListName private (value: String) extends StringValue
   object ListName extends StringValueCompanion[ListName] {
     def from(value: String): Either[String, ListName] =
       if (value.isEmpty) Left("List name cannot be empty.")
       else Iri.toSparqlEncodedString(value).toRight("List name is invalid.").map(ListName.apply)
   }
 
-  final case class Position private (value: Int) extends AnyVal with IntValue {
+  final case class Position private (value: Int) extends IntValue {
     def >(other: Int): Boolean = value > other
 
     def <(other: Int): Boolean = value < other

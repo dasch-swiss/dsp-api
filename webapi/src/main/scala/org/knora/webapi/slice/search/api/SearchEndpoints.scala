@@ -39,7 +39,7 @@ object SearchEndpointsInputs {
     val default: Offset = unsafeFrom(0)
   }
 
-  final case class InputIri private (value: String) extends AnyVal with StringValue
+  final case class InputIri private (value: String) extends StringValue
 
   object InputIri extends StringValueCompanion[InputIri] {
 

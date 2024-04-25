@@ -12,7 +12,7 @@ import scala.util.Try
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.WithFrom
 
-final case class IiifImageRequestUrl(value: URL) extends AnyVal with Value[URL]
+final case class IiifImageRequestUrl(value: URL) extends Value[URL]
 
 object IiifImageRequestUrl extends WithFrom[String, IiifImageRequestUrl] {
 

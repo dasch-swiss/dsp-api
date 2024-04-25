@@ -9,7 +9,7 @@ import dsp.valueobjects.Iri
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 
-final case class SparqlEncodedString private (value: String) extends AnyVal with StringValue
+final case class SparqlEncodedString private (value: String) extends StringValue
 
 object SparqlEncodedString extends StringValueCompanion[SparqlEncodedString] {
   def from(str: String): Either[String, SparqlEncodedString] =
