@@ -877,8 +877,8 @@ class StringFormatter private (
             val ontologyName           = ontologyPath.last
             val hasBuiltInOntologyName = isBuiltInOntologyName(ontologyName)
 
-            if (!hasBuiltInOntologyName) {
-              ValuesValidator.validateProjectSpecificOntologyName(ontologyName).getOrElse(errorFun)
+            if (!hasBuiltInOntologyName && ValuesValidator.validateProjectSpecificOntologyName(ontologyName).isEmpty) {
+              errorFun
             }
 
             // If the IRI has the hostname for project-specific ontologies, it can't refer to a built-in or shared ontology.
@@ -1134,7 +1134,7 @@ class StringFormatter private (
         iriInfo.projectCode match {
           case Some(projectCode) =>
             if (projectCode != DefaultSharedOntologiesProjectCode) {
-              externalOntologyIri.append(projectCode).append('/')
+              val _ = externalOntologyIri.append(projectCode).append('/')
             }
 
           case None => ()
@@ -1435,7 +1435,7 @@ class StringFormatter private (
     projectCode match {
       case Some(code) =>
         if (code != DefaultSharedOntologiesProjectCode) {
-          internalOntologyIri.append('/').append(code)
+          val _ = internalOntologyIri.append('/').append(code)
         }
 
       case None => ()

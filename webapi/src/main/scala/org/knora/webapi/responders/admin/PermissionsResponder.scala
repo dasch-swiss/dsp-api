@@ -193,8 +193,8 @@ final case class PermissionsResponder(
 
     if (req.hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 
-    if (!builtIn.all.map(_.id.value).contains(req.forGroup)) {
-      GroupIri.from(req.forGroup).getOrElse(throw BadRequestException(s"Invalid group IRI ${req.forGroup}"))
+    if (!builtIn.all.map(_.id.value).contains(req.forGroup) && GroupIri.from(req.forGroup).isLeft) {
+      throw BadRequestException(s"Invalid group IRI ${req.forGroup}")
     }
 
     verifyHasPermissionsAP(req.hasPermissions)
