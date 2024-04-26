@@ -51,7 +51,7 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
         } else if (repositoryVersion.exists(_ > KnoraBaseVersion)) {
           ZIO.die(
             new InconsistentRepositoryDataException(
-              s"Repository version is higher than the current version of DSP-API: $KnoraBaseVersion",
+              s"Repository version is higher than the current version of dsp-api: ${repositoryVersion.get} > $KnoraBaseVersion",
             ),
           )
         } else {
