@@ -139,7 +139,6 @@ object LayersTest {
       TriplestoreService &
       UserRestService &
       UserService &
-      UsersResponder &
       ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
@@ -204,7 +203,6 @@ object LayersTest {
       TestClientService.layer,
       TriplestoreServiceLive.layer,
       UserService.layer,
-      UsersResponder.layer,
       ValuesResponderV2Live.layer,
     )
 
