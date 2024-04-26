@@ -12,7 +12,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
-import org.knora.webapi.messages.store.sipimessages.IIIFServiceGetStatus
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.store.iiif.api.SipiService
@@ -28,7 +27,6 @@ final case class IIIFRequestMessageHandlerLive(iiifService: SipiService) extends
     case req: MoveTemporaryFileToPermanentStorageRequest => iiifService.moveTemporaryFileToPermanentStorage(req)
     case req: DeleteTemporaryFileRequest                 => iiifService.deleteTemporaryFile(req)
     case req: SipiGetTextFileRequest                     => iiifService.getTextFileRequest(req)
-    case IIIFServiceGetStatus                            => iiifService.getStatus()
     case other                                           => ZIO.logError(s"IIIFServiceManager received an unexpected message: $other")
   }
 }

@@ -235,15 +235,6 @@ final case class SipiServiceLive(
   }
 
   /**
-   * Tries to access the IIIF Service to check if Sipi is running.
-   */
-  def getStatus(): Task[IIIFServiceStatusResponse] =
-    for {
-      request  <- ZIO.succeed(new HttpGet(sipiConfig.internalBaseUrl + "/server/test.html"))
-      response <- doSipiRequest(request).fold(_ => IIIFServiceStatusNOK, _ => IIIFServiceStatusOK)
-    } yield response
-
-  /**
    * Makes an HTTP request to Sipi and returns the response.
    *
    * @param request the HTTP request.
