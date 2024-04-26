@@ -11,7 +11,6 @@ import zio._
 
 import java.time.Instant
 import java.util.UUID
-import scala.concurrent.Future
 
 import dsp.errors._
 import dsp.valueobjects.Iri
@@ -1088,21 +1087,21 @@ final case class ResourcesResponderV2(
       outbound: Boolean,
       depth: Int,
       traversedEdges: Set[QueryResultEdge] = Set.empty[QueryResultEdge],
-    ): Task[GraphQueryResults] = {
-      if (depth < 1) Future.failed(AssertionException("Depth must be at least 1"))
-
-      val query =
-        sparql.v2.txt
-          .getGraphData(
-            startNodeIri = startNode.nodeIri,
-            startNodeOnly = false,
-            maybeExcludeLinkProperty = excludePropertyInternal,
-            outbound = outbound, // true to query outbound edges, false to query inbound edges
-            limit = appConfig.v2.graphRoute.maxGraphBreadth,
-          )
+    ): Task[GraphQueryResults] = ZIO.fail(AssertionException("Depth must be at least 1")).when(depth < 1) *> {
       for {
         // Get the direct links from/to the start node.
-        response                     <- triplestore.query(Select(query))
+        response <- triplestore.query(
+                      Select(
+                        sparql.v2.txt
+                          .getGraphData(
+                            startNode.nodeIri,
+                            false,
+                            excludePropertyInternal,
+                            outbound,
+                            appConfig.v2.graphRoute.maxGraphBreadth,
+                          ),
+                      ),
+                    )
         rows: Seq[VariableResultsRow] = response.results.bindings
 
         // Did we get any results?

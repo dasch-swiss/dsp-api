@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import org.apache.pekko.http.scaladsl.util.FastFuture
 import zio._
 
 import java.time.Instant
@@ -1868,20 +1867,16 @@ final case class ValuesResponderV2Live(
     val submittedInternalPropertyIri: SmartIri = submittedPropertyIri.toOntologySchema(InternalSchema)
 
     if (propertyInfoForSubmittedProperty.isLinkValueProp) {
-      maybeSubmittedValueType match {
-        case Some(submittedValueType) =>
-          if (submittedValueType.toString != OntologyConstants.KnoraApiV2Complex.LinkValue) {
-            FastFuture.failed(
-              BadRequestException(
-                s"A value of type <$submittedValueType> cannot be an object of property <$submittedPropertyIri>",
-              ),
-            )
-          }
-
-        case None => ()
-      }
-
       for {
+        _ <- (maybeSubmittedValueType map { submittedValueType =>
+               ZIO
+                 .fail(
+                   BadRequestException(
+                     s"A value of type <$submittedValueType> cannot be an object of property <$submittedPropertyIri>",
+                   ),
+                 )
+                 .when(submittedValueType.toString != OntologyConstants.KnoraApiV2Complex.LinkValue)
+             }).getOrElse(ZIO.unit)
         internalLinkPropertyIri <- ZIO.attempt(submittedInternalPropertyIri.fromLinkValuePropToLinkProp)
 
         propertyInfoRequestForLinkProperty =

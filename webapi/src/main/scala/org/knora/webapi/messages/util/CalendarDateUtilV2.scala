@@ -476,7 +476,7 @@ case class CalendarDateRangeV2(startCalendarDate: CalendarDateV2, endCalendarDat
     // Can we represent the start and end dates as a single date?
     if (startCalendarDate != endCalendarDate) {
       // No. Include the end date.
-      strBuilder.append(StringFormatter.CalendarSeparator).append(endCalendarDate.toString)
+      val _ = strBuilder.append(StringFormatter.CalendarSeparator).append(endCalendarDate.toString)
     }
 
     strBuilder.toString
