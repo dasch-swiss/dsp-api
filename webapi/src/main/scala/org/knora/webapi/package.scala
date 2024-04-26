@@ -7,12 +7,15 @@ package org.knora
 
 package object webapi {
 
+  private val versionPrefix                                    = "knora-base v"
+  def knoraBaseVersionFrom(versionString: String): Option[Int] = versionString.replace(versionPrefix, "").toIntOption
+
   /**
    * The version of `knora-base` and of the other built-in ontologies that this version of Knora requires.
    * Must be the same as the object of `knora-base:ontologyVersion` in the `knora-base` ontology being used.
    */
-  val knoraBaseVersionInt: Int = 37
-  val KnoraBaseVersion: String = s"knora-base v$knoraBaseVersionInt"
+  val KnoraBaseVersion: Int          = 37
+  val KnoraBaseVersionString: String = s"$versionPrefix$KnoraBaseVersion"
 
   /**
    * `IRI` is a synonym for `String`, used to improve code readability.

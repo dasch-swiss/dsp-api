@@ -13,7 +13,7 @@ import java.time.Instant
 import dsp.errors._
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.KnoraBaseVersion
+import org.knora.webapi.KnoraBaseVersionString
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -513,9 +513,9 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
           ),
         )
 
-      _ = if (knoraBaseOntologyVersion != KnoraBaseVersion) {
+      _ = if (knoraBaseOntologyVersion != KnoraBaseVersionString) {
             throw InconsistentRepositoryDataException(
-              s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates.",
+              s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersionString'. See the Knora documentation on repository updates.",
             )
           }
 
