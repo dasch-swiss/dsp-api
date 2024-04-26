@@ -43,31 +43,29 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
    * @return a response indicating what was done.
    */
   val maybeUpgradeRepository: Task[RepositoryUpdatedResponse] =
-    for {
-      repositoryVersion <- getRepositoryVersion
-      repositoryUpdatedResponse <-
-        if (repositoryVersion.contains(KnoraBaseVersion)) {
-          ZIO.succeed(RepositoryUpdatedResponse(s"Repository is up to date at $KnoraBaseVersionString"))
-        } else if (repositoryVersion.exists(_ > KnoraBaseVersion)) {
-          ZIO.die(
-            new InconsistentRepositoryDataException(
-              s"Repository version is higher than the current version of dsp-api: ${repositoryVersion.get} > $KnoraBaseVersion",
-            ),
-          )
-        } else {
-          for {
-            _ <- ZIO.logInfo(repositoryVersion map { v =>
-                   s"Repository not up to date. Found: $v, Required: $KnoraBaseVersion"
-                 } getOrElse { s"Repository not up to date. Found: None, Required: $KnoraBaseVersion" })
-            _            <- deleteTmpDirectories()
-            updatePlugins = selectPluginsForNeededUpdates(repositoryVersion)
-            _ <- ZIO.logInfo(
-                   s"Updating repository with transformations: ${updatePlugins.map(_.versionNumber).mkString(", ")}",
-                 )
-            result <- updateRepositoryWithSelectedPlugins(updatePlugins)
-          } yield result
-        }
-    } yield repositoryUpdatedResponse
+    getRepositoryVersion.flatMap {
+      case Some(version) if version == KnoraBaseVersion =>
+        ZIO.succeed(RepositoryUpdatedResponse(s"Repository is up to date at $KnoraBaseVersionString"))
+      case Some(version) if version > KnoraBaseVersion =>
+        val msg =
+          s"Repository version is higher than the current version of dsp-api: ${version} > $KnoraBaseVersion"
+        ZIO.die(new InconsistentRepositoryDataException(msg))
+      case versionMaybe =>
+        for {
+          _ <- ZIO.logInfo(versionMaybe map { v =>
+                 s"Repository not up to date. Found: $v, Required: $KnoraBaseVersion"
+               } getOrElse {
+                 s"Repository not up to date. Found: None, Required: $KnoraBaseVersion"
+               })
+          _            <- deleteTmpDirectories()
+          updatePlugins = selectPluginsForNeededUpdates(versionMaybe)
+          _ <-
+            ZIO.logInfo(
+              s"Updating repository with transformations: ${updatePlugins.map(_.versionNumber).mkString(", ")}",
+            )
+          result <- updateRepositoryWithSelectedPlugins(updatePlugins)
+        } yield result
+    }
 
   /**
    * Deletes directories inside tmp directory starting with `tmpDirNamePrefix`.
