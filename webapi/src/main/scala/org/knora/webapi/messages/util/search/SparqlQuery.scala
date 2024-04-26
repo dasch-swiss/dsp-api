@@ -569,11 +569,11 @@ case class ConstructQuery(
       .append(whereClause.toSparql)
 
     if (orderBy.nonEmpty) {
-      stringBuilder.append("ORDER BY ").append(orderBy.map(_.toSparql).mkString(" ")).append("\n")
+      val _ = stringBuilder.append("ORDER BY ").append(orderBy.map(_.toSparql).mkString(" ")).append("\n")
     }
 
     if (offset > 0) {
-      stringBuilder.append("OFFSET ").append(offset)
+      val _ = stringBuilder.append("OFFSET ").append(offset)
     }
 
     stringBuilder.toString
@@ -618,19 +618,19 @@ case class SelectQuery(
       .append(whereClause.toSparql)
 
     if (groupBy.nonEmpty) {
-      stringBuilder.append("GROUP BY ").append(groupBy.map(_.toSparql).mkString(" ")).append("\n")
+      val _ = stringBuilder.append("GROUP BY ").append(groupBy.map(_.toSparql).mkString(" ")).append("\n")
     }
 
     if (orderBy.nonEmpty) {
-      stringBuilder.append("ORDER BY ").append(orderBy.map(_.toSparql).mkString(" ")).append("\n")
+      val _ = stringBuilder.append("ORDER BY ").append(orderBy.map(_.toSparql).mkString(" ")).append("\n")
     }
 
     if (offset > 0) {
-      stringBuilder.append("OFFSET ").append(offset).append("\n")
+      val _ = stringBuilder.append("OFFSET ").append(offset).append("\n")
     }
 
     if (limit.nonEmpty) {
-      stringBuilder.append(s"LIMIT ${limit.get}").append("\n")
+      val _ = stringBuilder.append(s"LIMIT ${limit.get}").append("\n")
     }
 
     stringBuilder.toString

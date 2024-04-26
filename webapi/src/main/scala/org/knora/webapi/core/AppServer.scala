@@ -10,8 +10,6 @@ import zio._
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.domain.AppState
-import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
-import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.iiif.api.SipiService
@@ -75,27 +73,6 @@ final case class AppServer(
     } yield ()
 
   /**
-   * Checks if the IIIF service is running
-   *
-   * @param requiresIIIFService If `true`, checks the status of the IIIFService instance, otherwise returns ()
-   */
-  private def checkIIIFService(requiresIIIFService: Boolean): UIO[Unit] =
-    for {
-      _ <- state.set(AppState.WaitingForIIIFService)
-      _ <- sipiService
-             .getStatus()
-             .flatMap {
-               case IIIFServiceStatusOK =>
-                 ZIO.logInfo("IIIF service running")
-               case IIIFServiceStatusNOK =>
-                 ZIO.logError("IIIF service not running") *> ZIO.die(new Exception("IIIF service not running"))
-             }
-             .when(requiresIIIFService)
-             .orDie
-      _ <- state.set(AppState.IIIFServiceReady)
-    } yield ()
-
-  /**
    * Initiates the startup of the DSP-API server.
    *
    * @param requiresAdditionalRepositoryChecks  If `true`, checks if repository service is running, updates data if necessary and loads ontology cache.
@@ -104,14 +81,12 @@ final case class AppServer(
    */
   def start(
     requiresAdditionalRepositoryChecks: Boolean,
-    requiresIIIFService: Boolean,
   ): Task[Unit] =
     for {
       _ <- ZIO.logInfo("=> Startup checks initiated")
       _ <- checkTriplestoreService
       _ <- upgradeRepository(requiresAdditionalRepositoryChecks)
       _ <- populateOntologyCaches(requiresAdditionalRepositoryChecks)
-      _ <- checkIIIFService(requiresIIIFService)
       _ <- ZIO.logInfo("=> Startup checks finished")
       _ <- ZIO.logInfo(s"DSP-API Server started: ${appConfig.knoraApi.internalKnoraApiBaseUrl}")
       _ <- ZIO.logWarning("Resetting DB over HTTP is turned ON").when(appConfig.allowReloadOverHttp)
@@ -146,26 +121,16 @@ object AppServer {
   val make: URIO[AppServerEnvironment, Unit] =
     for {
       appServer <- AppServer.init()
-      _         <- appServer.start(requiresAdditionalRepositoryChecks = true, requiresIIIFService = true).orDie
+      _         <- appServer.start(requiresAdditionalRepositoryChecks = true).orDie
     } yield ()
 
   /**
-   * The test AppServer with Sipi, which initiates the startup checks. Before this effect does what it does,
+   * The test AppServer with or without Sipi, which initiates the startup checks. Before this effect does what it does,
    * the complete server should have already been started.
    */
-  val testWithSipi: ZIO[AppServerEnvironment, Nothing, Unit] =
+  val test: ZIO[AppServerEnvironment, Nothing, Unit] =
     for {
       appServer <- AppServer.init()
-      _         <- appServer.start(requiresAdditionalRepositoryChecks = false, requiresIIIFService = true).orDie
-    } yield ()
-
-  /**
-   * The test AppServer without Sipi, which initiates the startup checks. Before this effect does what it does,
-   * the complete server should have already been started.
-   */
-  val testWithoutSipi: ZIO[AppServerEnvironment, Nothing, Unit] =
-    for {
-      appServer <- AppServer.init()
-      _         <- appServer.start(requiresAdditionalRepositoryChecks = false, requiresIIIFService = false).orDie
+      _         <- appServer.start(requiresAdditionalRepositoryChecks = false).orDie
     } yield ()
 }

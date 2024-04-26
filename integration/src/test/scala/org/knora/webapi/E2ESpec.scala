@@ -7,6 +7,9 @@ package org.knora.webapi
 
 import com.typesafe.scalalogging._
 import org.apache.pekko
+import org.apache.pekko.http.scaladsl.client.RequestBuilding
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.testkit.TestKitBase
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -37,10 +40,6 @@ import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.LogAspect
-
-import pekko.http.scaladsl.client.RequestBuilding
-import pekko.http.scaladsl.model._
-import pekko.testkit.TestKitBase
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack
@@ -110,9 +109,7 @@ abstract class E2ESpec
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
-    UnsafeZioRun.runOrThrow(
-      AppServer.testWithoutSipi *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")),
-    )
+    UnsafeZioRun.runOrThrow(AppServer.test *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")))
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
