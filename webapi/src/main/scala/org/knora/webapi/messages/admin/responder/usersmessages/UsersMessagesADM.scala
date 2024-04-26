@@ -8,8 +8,6 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
-import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
@@ -17,24 +15,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model._
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Messages
-
-/**
- * An abstract trait representing message that can be sent to `UsersResponderADM`.
- */
-sealed trait UsersResponderRequestADM extends KnoraRequestADM with RelayedMessage
-
-/**
- * A message that requests a user's profile by IRI. A successful response will be a [[User]].
- *
- * @param identifier             the IRI of the user to be queried.
- * @param userInformationTypeADM the extent of the information returned.
- * @param requestingUser         the user initiating the request.
- */
-case class UserGetByIriADM(identifier: UserIri, userInformationTypeADM: UserInformationType, requestingUser: User)
-    extends UsersResponderRequestADM
 
 // Responses
 
