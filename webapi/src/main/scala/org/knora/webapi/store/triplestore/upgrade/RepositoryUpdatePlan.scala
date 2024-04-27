@@ -25,34 +25,16 @@ object RepositoryUpdatePlan {
       PluginForKnoraBaseVersion(versionNumber = 2, plugin = new UpgradePluginPR1322()),
       PluginForKnoraBaseVersion(versionNumber = 3, plugin = new UpgradePluginPR1367()),
       PluginForKnoraBaseVersion(versionNumber = 4, plugin = new UpgradePluginPR1372()),
-      PluginForKnoraBaseVersion(versionNumber = 5, plugin = new MigrateOnlyBuiltInGraphs),
-      PluginForKnoraBaseVersion(versionNumber = 6, plugin = new MigrateOnlyBuiltInGraphs), // PR 1206
-      PluginForKnoraBaseVersion(versionNumber = 7, plugin = new MigrateOnlyBuiltInGraphs), // PR 1403
       PluginForKnoraBaseVersion(versionNumber = 8, plugin = new UpgradePluginPR1615()),
       PluginForKnoraBaseVersion(versionNumber = 9, plugin = new UpgradePluginPR1746(log)),
-      PluginForKnoraBaseVersion(versionNumber = 10, plugin = new MigrateOnlyBuiltInGraphs), // PR 1808
-      PluginForKnoraBaseVersion(versionNumber = 11, plugin = new MigrateOnlyBuiltInGraphs), // PR 1813
-      PluginForKnoraBaseVersion(versionNumber = 12, plugin = new MigrateOnlyBuiltInGraphs), // PR 1891
       PluginForKnoraBaseVersion(versionNumber = 13, plugin = new UpgradePluginPR1921(log)),
-      PluginForKnoraBaseVersion(versionNumber = 14, plugin = new MigrateOnlyBuiltInGraphs), // PR 1992
       PluginForKnoraBaseVersion(versionNumber = 20, plugin = new UpgradePluginPR2018(log)),
       PluginForKnoraBaseVersion(versionNumber = 21, plugin = new UpgradePluginPR2079(log)),
       PluginForKnoraBaseVersion(versionNumber = 22, plugin = new UpgradePluginPR2081(log)),
       PluginForKnoraBaseVersion(versionNumber = 23, plugin = new UpgradePluginPR2094(log)),
-      PluginForKnoraBaseVersion(versionNumber = 24, plugin = new MigrateOnlyBuiltInGraphs), // PR 2076
-      PluginForKnoraBaseVersion(versionNumber = 25, plugin = new MigrateOnlyBuiltInGraphs), // PR 2268
-      PluginForKnoraBaseVersion(versionNumber = 26, plugin = new MigrateOnlyBuiltInGraphs), // PR 3003
-      PluginForKnoraBaseVersion(versionNumber = 27, plugin = new MigrateOnlyBuiltInGraphs), // PR 3026
-      PluginForKnoraBaseVersion(versionNumber = 28, plugin = new MigrateOnlyBuiltInGraphs), // PR 3038
       PluginForKnoraBaseVersion(versionNumber = 29, plugin = new UpgradePluginPR3110()),
       PluginForKnoraBaseVersion(versionNumber = 30, plugin = new UpgradePluginPR3111()),
       PluginForKnoraBaseVersion(versionNumber = 31, plugin = new UpgradePluginPR3112()),
-      PluginForKnoraBaseVersion(versionNumber = 32, plugin = new MigrateOnlyBuiltInGraphs()),
-      PluginForKnoraBaseVersion(versionNumber = 33, plugin = new MigrateOnlyBuiltInGraphs()),
-      PluginForKnoraBaseVersion(versionNumber = 34, plugin = new MigrateOnlyBuiltInGraphs()),
-      PluginForKnoraBaseVersion(versionNumber = 35, plugin = new MigrateOnlyBuiltInGraphs()),
-      PluginForKnoraBaseVersion(versionNumber = 36, plugin = new MigrateOnlyBuiltInGraphs()),
-      PluginForKnoraBaseVersion(versionNumber = 37, plugin = new MigrateOnlyBuiltInGraphs()),
     )
 
   /**
