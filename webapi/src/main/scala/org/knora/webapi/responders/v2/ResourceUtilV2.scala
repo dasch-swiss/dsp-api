@@ -28,6 +28,8 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
+import org.knora.webapi.routing.v2.AssetIngestState
+import org.knora.webapi.routing.v2.AssetIngestState.*
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -109,11 +111,17 @@ trait ResourceUtilV2 {
     fileValues: Seq[FileValueContentV2],
     requestingUser: User,
   ): Task[T]
-  final def doSipiPostUpdate[T <: UpdateResultInProject](
+
+  def doSipiPostUpdateIfInTemp[T <: UpdateResultInProject](
+    ingestState: AssetIngestState,
     updateTask: Task[T],
-    fileValue: FileValueContentV2,
+    fileValues: Seq[FileValueContentV2],
     requestingUser: User,
-  ): Task[T] = doSipiPostUpdate(updateTask, List(fileValue), requestingUser)
+  ): Task[T] =
+    ingestState match {
+      case AssetIngested => updateTask
+      case AssetInTemp   => doSipiPostUpdate(updateTask, fileValues, requestingUser)
+    }
 }
 
 final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRelay: MessageRelay)
@@ -139,10 +147,7 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
       requestingUser = requestingUser,
     )
 
-    val hasRequiredPermission: Boolean = maybeUserPermission match {
-      case Some(userPermission: Permission.ObjectAccess) => userPermission >= permissionNeeded
-      case None                                          => false
-    }
+    val hasRequiredPermission: Boolean = maybeUserPermission.exists(_ >= permissionNeeded)
 
     ZIO
       .fail(
@@ -175,10 +180,7 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
       requestingUser = requestingUser,
     )
 
-    val hasRequiredPermission: Boolean = maybeUserPermission match {
-      case Some(userPermission: Permission.ObjectAccess) => userPermission >= permissionNeeded
-      case None                                          => false
-    }
+    val hasRequiredPermission: Boolean = maybeUserPermission.exists(_ >= permissionNeeded)
 
     ZIO
       .fail(

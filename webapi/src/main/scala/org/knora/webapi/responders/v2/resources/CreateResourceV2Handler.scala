@@ -28,7 +28,6 @@ import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
@@ -83,23 +82,12 @@ final case class CreateResourceV2Handler(
    * @return a [[ReadResourcesSequenceV2]] containing a preview of the resource.
    */
   def apply(createResourceRequestV2: CreateResourceRequestV2): Task[ReadResourcesSequenceV2] =
-    createResourceRequestV2.ingestState match {
-      case AssetIngestState.AssetIngested =>
-        triplestoreUpdate(createResourceRequestV2)
-      // If the request includes file values, tell Sipi to move the files to permanent storage if the update
-      // succeeded, or to delete the temporary files if the update failed.
-      case AssetIngestState.AssetInTemp =>
-        val fileValues = Seq(createResourceRequestV2.createResource)
-          .flatMap(_.flatValues)
-          .map(_.valueContent)
-          .filter(_.isInstanceOf[FileValueContentV2])
-          .map(_.asInstanceOf[FileValueContentV2])
-        resourceUtilV2.doSipiPostUpdate(
-          triplestoreUpdate(createResourceRequestV2),
-          fileValues,
-          createResourceRequestV2.requestingUser,
-        )
-    }
+    resourceUtilV2.doSipiPostUpdateIfInTemp(
+      createResourceRequestV2.ingestState,
+      triplestoreUpdate(createResourceRequestV2),
+      createResourceRequestV2.createResource.flatValues.flatMap(_.valueContent.asOpt[FileValueContentV2]).toSeq,
+      createResourceRequestV2.requestingUser,
+    )
 
   private def triplestoreUpdate(
     createResourceRequestV2: CreateResourceRequestV2,
