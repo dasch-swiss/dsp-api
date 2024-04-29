@@ -287,10 +287,9 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       }
 
       "CREATE a project that its info has special characters" in {
-
-        val longnameWithSpecialCharacter    = "New \\\"Longname\\\""
-        val descriptionWithSpecialCharacter = "project \\\"description\\\""
-        val keywordWithSpecialCharacter     = "new \\\"keyword\\\""
+        val longnameWithSpecialCharacter    = """New "Longname""""
+        val descriptionWithSpecialCharacter = """project "description""""
+        val keywordWithSpecialCharacter     = """new "keyword""""
         val received = UnsafeZioRun.runOrThrow(
           ProjectRestService(
             _.createProject(
