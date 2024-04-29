@@ -5,8 +5,9 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import spray.json.JsValue
 import zio.Chunk
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
 import scala.util.matching.Regex
 
@@ -16,7 +17,6 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationType
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
@@ -128,14 +128,15 @@ final case class User(
 
   def isActive: Boolean = status
 
-  def toJsValue: JsValue = UsersADMJsonProtocol.userADMFormat.write(this)
-
   def isAnonymousUser: Boolean = id.equalsIgnoreCase(KnoraUserRepo.builtIn.AnonymousUser.id.value)
 
   def filterUserInformation(requestingUser: User, infoType: UserInformationType): User =
     if (requestingUser.permissions.isSystemAdmin || requestingUser.id == this.id || requestingUser.isSystemUser)
       self.ofType(infoType)
     else self.ofType(UserInformationType.Public)
+}
+object User {
+  implicit val userCodec: JsonCodec[User] = DeriveJsonCodec.gen[User]
 }
 
 final case class UserIri private (value: String) extends AnyVal with StringValue

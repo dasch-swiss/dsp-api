@@ -5,6 +5,7 @@
 
 package org.knora.webapi.e2e.admin
 
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import spray.json._
@@ -16,7 +17,8 @@ import org.knora.webapi.E2ESpec
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.admin.responder.IntegrationTestAdminJsonProtocol._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
@@ -29,7 +31,7 @@ import org.knora.webapi.util.AkkaHttpUtils
  *
  * This spec tests the 'v1/store' route.
  */
-class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
+class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
   // Directory path for generated client test data
   private val clientTestDataPath: Seq[String] = Seq("admin", "permissions")
 
@@ -438,10 +440,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
-        val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
-        val groupIri = result
-          .getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing."))
-          .convertTo[String]
+        val json = AkkaHttpUtils.httpResponseToJson(response)
+        println("==============================\n" + json.prettyPrint)
+        val result   = json.convertTo[AdministrativePermissionGetResponseADM]
+        val groupIri = result.administrativePermission.forGroup
         assert(groupIri == newGroupIri)
 
         clientTestDataCollector.addFile(

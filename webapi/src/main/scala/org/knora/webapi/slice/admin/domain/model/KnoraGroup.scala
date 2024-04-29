@@ -9,6 +9,8 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
 import zio.Chunk
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -63,6 +65,9 @@ case class Group(
    * Allows to sort collections of GroupADM. Sorting is done by the id.
    */
   def compare(that: Group): Int = this.id.compareTo(that.id)
+}
+object Group {
+  implicit val groupCodec: JsonCodec[Group] = DeriveJsonCodec.gen[Group]
 }
 
 final case class GroupIri private (override val value: String) extends AnyVal with StringValue {

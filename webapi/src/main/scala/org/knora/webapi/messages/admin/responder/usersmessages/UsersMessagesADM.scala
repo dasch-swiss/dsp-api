@@ -5,26 +5,22 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json._
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.slice.admin.api.model.Project
-import org.knora.webapi.slice.admin.api.model.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model._
-
-// Responses
 
 /**
  * Represents an answer to a request for a list of all users.
  *
  * @param users a sequence of user profiles of the requested type.
  */
-case class UsersGetResponseADM(users: Seq[User]) extends AdminKnoraResponseADM {
-  def toJsValue: JsValue = UsersADMJsonProtocol.usersGetResponseADMFormat.write(this)
+case class UsersGetResponseADM(users: Seq[User]) extends AdminKnoraResponseADM
+object UsersGetResponseADM {
+  implicit val codec: JsonCodec[UsersGetResponseADM] = DeriveJsonCodec.gen[UsersGetResponseADM]
 }
 
 /**
@@ -32,8 +28,9 @@ case class UsersGetResponseADM(users: Seq[User]) extends AdminKnoraResponseADM {
  *
  * @param user the user's information of the requested type.
  */
-case class UserResponseADM(user: User) extends AdminKnoraResponseADM {
-  def toJsValue: JsValue = UsersADMJsonProtocol.userProfileResponseADMFormat.write(this)
+case class UserResponseADM(user: User) extends AdminKnoraResponseADM
+object UserResponseADM {
+  implicit val codec: JsonCodec[UserResponseADM] = DeriveJsonCodec.gen[UserResponseADM]
 }
 
 /**
@@ -41,8 +38,10 @@ case class UserResponseADM(user: User) extends AdminKnoraResponseADM {
  *
  * @param projects a sequence of projects the user is member of.
  */
-case class UserProjectMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponseADM {
-  def toJsValue: JsValue = UsersADMJsonProtocol.userProjectMembershipsGetResponseADMFormat.write(this)
+case class UserProjectMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponseADM
+object UserProjectMembershipsGetResponseADM {
+  implicit val codec: JsonCodec[UserProjectMembershipsGetResponseADM] =
+    DeriveJsonCodec.gen[UserProjectMembershipsGetResponseADM]
 }
 
 /**
@@ -50,8 +49,10 @@ case class UserProjectMembershipsGetResponseADM(projects: Seq[Project]) extends 
  *
  * @param projects a sequence of projects the user is member of the project admin group.
  */
-case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponseADM {
-  def toJsValue: JsValue = UsersADMJsonProtocol.userProjectAdminMembershipsGetResponseADMFormat.write(this)
+case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponseADM {}
+object UserProjectAdminMembershipsGetResponseADM {
+  implicit val codec: JsonCodec[UserProjectAdminMembershipsGetResponseADM] =
+    DeriveJsonCodec.gen[UserProjectAdminMembershipsGetResponseADM]
 }
 
 /**
@@ -59,8 +60,10 @@ case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[Project]) ext
  *
  * @param groups a sequence of groups the user is member of.
  */
-case class UserGroupMembershipsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponseADM {
-  def toJsValue: JsValue = UsersADMJsonProtocol.userGroupMembershipsGetResponseADMFormat.write(this)
+case class UserGroupMembershipsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponseADM
+object UserGroupMembershipsGetResponseADM {
+  implicit val codec: JsonCodec[UserGroupMembershipsGetResponseADM] =
+    DeriveJsonCodec.gen[UserGroupMembershipsGetResponseADM]
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +87,6 @@ object UserInformationType {
   case object Short      extends UserInformationType
   case object Restricted extends UserInformationType
   case object Full       extends UserInformationType
-
 }
 
 /**
@@ -92,36 +94,7 @@ object UserInformationType {
  *
  * @param members the group's members.
  */
-case class GroupMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM {
-  def toJsValue = UsersADMJsonProtocol.groupMembersGetResponseADMFormat.write(this)
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JSON formatting
-
-/**
- * A spray-json protocol for formatting objects as JSON.
- */
-object UsersADMJsonProtocol
-    extends SprayJsonSupport
-    with DefaultJsonProtocol
-    with ProjectsADMJsonProtocol
-    with GroupsADMJsonProtocol
-    with PermissionsADMJsonProtocol {
-
-  implicit val userADMFormat: JsonFormat[User] =
-    jsonFormat11(User.apply)
-  implicit val groupMembersGetResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] =
-    jsonFormat(GroupMembersGetResponseADM.apply, "members")
-  implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] =
-    jsonFormat1(UsersGetResponseADM.apply)
-  implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM] =
-    jsonFormat1(UserResponseADM.apply)
-  implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseADM] =
-    jsonFormat1(UserProjectMembershipsGetResponseADM.apply)
-  implicit val userProjectAdminMembershipsGetResponseADMFormat
-    : RootJsonFormat[UserProjectAdminMembershipsGetResponseADM] =
-    jsonFormat1(UserProjectAdminMembershipsGetResponseADM.apply)
-  implicit val userGroupMembershipsGetResponseADMFormat: RootJsonFormat[UserGroupMembershipsGetResponseADM] =
-    jsonFormat1(UserGroupMembershipsGetResponseADM.apply)
+case class GroupMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM
+object GroupMembersGetResponseADM {
+  implicit val codec: JsonCodec[GroupMembersGetResponseADM] = DeriveJsonCodec.gen[GroupMembersGetResponseADM]
 }

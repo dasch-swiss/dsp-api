@@ -7,6 +7,7 @@ package org.knora.webapi.e2e.v2
 
 import org.apache.pekko
 import zio.ZIO
+import zio.json.ast.Json
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -389,13 +390,10 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       assert(response.status === StatusCodes.Unauthorized)
     }
 
-    "not return sensitive information (token, password) in the response " in {
+    "not return the password in the response" in {
       val request  = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=${token.get}")
-      val response = singleAwaitingRequest(request)
-
-      /* check for sensitive information leakage */
-      val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
-      assert(body contains "\"password\":null")
+      val response = getSuccessResponseAs[Json.Obj](request)
+      assert(response.filterKeys(_ == "password").isEmpty)
     }
   }
 }

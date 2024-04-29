@@ -7,15 +7,13 @@ package org.knora.webapi.slice.admin.api
 
 import sttp.tapir._
 import sttp.tapir.generic.auto._
-import sttp.tapir.json.spray.{jsonBody => sprayJsonBody}
-import sttp.tapir.json.zio.{jsonBody => zioJsonBody}
+import sttp.tapir.json.zio.jsonBody
 import zio._
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIriPathVar
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
@@ -29,11 +27,11 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
   private val base = "admin" / "groups"
 
   private val groupGetResponse =
-    sprayJsonBody[GroupGetResponseADM].example(Examples.GroupEndpointsExample.groupGetResponseADM)
+    jsonBody[GroupGetResponseADM].example(Examples.GroupEndpointsExample.groupGetResponseADM)
 
   val getGroups = baseEndpoints.publicEndpoint.get
     .in(base)
-    .out(sprayJsonBody[GroupsGetResponseADM].example(Examples.GroupEndpointsExample.groupsGetResponseADM))
+    .out(jsonBody[GroupsGetResponseADM].example(Examples.GroupEndpointsExample.groupsGetResponseADM))
     .description("Return all groups.")
 
   val getGroupByIri = baseEndpoints.publicEndpoint.get
@@ -43,12 +41,12 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
 
   val getGroupMembers = baseEndpoints.securedEndpoint.get
     .in(base / groupIriPathVar / "members")
-    .out(sprayJsonBody[GroupMembersGetResponseADM].example(Examples.GroupEndpointsExample.groupGetMembersResponse))
+    .out(jsonBody[GroupMembersGetResponseADM].example(Examples.GroupEndpointsExample.groupGetMembersResponse))
     .description("Return all members of a single group.")
 
   val postGroup = baseEndpoints.securedEndpoint.post
     .in(base)
-    .in(zioJsonBody[GroupCreateRequest].example(Examples.GroupEndpointsExample.groupCreateRequest))
+    .in(jsonBody[GroupCreateRequest].example(Examples.GroupEndpointsExample.groupCreateRequest))
     .out(groupGetResponse)
     .name("Create new group")
     .description(
@@ -57,13 +55,13 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
 
   val putGroup = baseEndpoints.securedEndpoint.put
     .in(base / groupIriPathVar)
-    .in(zioJsonBody[GroupUpdateRequest].example(Examples.GroupEndpointsExample.groupUpdateRequest))
+    .in(jsonBody[GroupUpdateRequest].example(Examples.GroupEndpointsExample.groupUpdateRequest))
     .out(groupGetResponse)
     .description("Update a group's basic information.")
 
   val putGroupStatus = baseEndpoints.securedEndpoint.put
     .in(base / groupIriPathVar / "status")
-    .in(zioJsonBody[GroupStatusUpdateRequest])
+    .in(jsonBody[GroupStatusUpdateRequest])
     .out(groupGetResponse)
     .description("Updates a group's status.")
 

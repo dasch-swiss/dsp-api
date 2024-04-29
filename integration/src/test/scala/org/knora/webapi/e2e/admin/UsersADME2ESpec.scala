@@ -6,20 +6,19 @@
 package org.knora.webapi.e2e.admin
 
 import org.apache.pekko
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 import java.net.URLEncoder
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+import org.knora.webapi.E2ESpec
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.admin.responder.IntegrationTestAdminJsonProtocol._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.api.model.Project
-import org.knora.webapi.slice.admin.api.model.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
@@ -32,11 +31,7 @@ import pekko.http.scaladsl.unmarshalling.Unmarshal
 /**
  * End-to-End (E2E) test specification for testing users endpoint.
  */
-class UsersADME2ESpec
-    extends E2ESpec
-    with ProjectsADMJsonProtocol
-    with GroupsADMJsonProtocol
-    with TriplestoreJsonProtocol {
+class UsersADME2ESpec extends E2ESpec with SprayJsonSupport {
 
   private val rootUser                         = SharedTestDataADM.rootUser
   private val projectAdminUser                 = SharedTestDataADM.imagesUser01

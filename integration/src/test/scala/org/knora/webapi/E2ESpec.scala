@@ -16,6 +16,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import spray.json._
 import zio._
+import zio.json._
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -26,6 +27,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
+import dsp.errors.AssertionException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
@@ -132,6 +134,16 @@ abstract class E2ESpec
 
   protected def checkResponseOK(request: HttpRequest): Unit =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.checkResponseOK(request)))
+
+  protected def getSuccessResponseAs[A](request: HttpRequest)(implicit decoder: JsonDecoder[A]): A = UnsafeZioRun
+    .runOrThrow(
+      for {
+        str <- ZIO.serviceWithZIO[TestClientService](_.getResponseString(request))
+        obj <- ZIO
+                 .fromEither(str.fromJson[A])
+                 .mapError(e => new AssertionException(s"Error: $e\nFailed to parse json:\n$str"))
+      } yield obj,
+    )
 
   protected def getResponseAsJson(request: HttpRequest): JsObject =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseJson(request)))
