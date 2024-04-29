@@ -10,7 +10,7 @@ import spray.json.JsonFormat
 import spray.json.RootJsonFormat
 
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
+import org.knora.webapi.slice.admin.api.model.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.Group
 
 // Responses

@@ -8,11 +8,11 @@ package org.knora.webapi.slice.admin.domain.service
 import zio._
 
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.projectsmessages.Project
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponse
+import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortcodeIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortnameIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectKeywordsGetResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject

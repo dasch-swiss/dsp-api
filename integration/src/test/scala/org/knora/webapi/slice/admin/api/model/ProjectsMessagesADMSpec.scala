@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.admin.responder.projectsmessages
+package org.knora.webapi.slice.admin.api.model
 
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM._
 
 /**
  * This spec is used to test subclasses of the [[ProjectsResponderRequestADM]] trait.
