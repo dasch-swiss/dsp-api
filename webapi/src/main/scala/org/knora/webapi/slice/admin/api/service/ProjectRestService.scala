@@ -101,7 +101,7 @@ final case class ProjectRestService(
            )
     internal <- projectService.createProject(createReq).map(ProjectOperationResponseADM.apply)
     _        <- permissionResponder.createPermissionsForAdminsAndMembersOfNewProject(internal.project.projectIri)
-    external <- format.toExternalADM(internal)
+    external <- format.toExternal(internal)
   } yield external
 
   /**
@@ -121,7 +121,7 @@ final case class ProjectRestService(
       internal <- projectService
                     .updateProject(project, ProjectUpdateRequest(status = Some(Status.Inactive)))
                     .map(ProjectOperationResponseADM.apply)
-      external <- format.toExternalADM(internal)
+      external <- format.toExternal(internal)
     } yield external
 
   /**
@@ -146,7 +146,7 @@ final case class ProjectRestService(
                  .someOrFail(NotFoundException(s"Project '${projectIri.value}' not found."))
     _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
     internal <- projectService.updateProject(project, updateReq).map(ProjectOperationResponseADM.apply)
-    external <- format.toExternalADM(internal)
+    external <- format.toExternal(internal)
   } yield external
 
   /**
@@ -173,7 +173,7 @@ final case class ProjectRestService(
   def getProjectMembersByShortname(user: User, id: Shortname): Task[ProjectMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminByShortname(user, id).flatMap(findProjectMembers)
   private def findProjectMembers(project: KnoraProject) =
-    userService.findByProjectMembership(project).map(ProjectMembersGetResponseADM.apply).flatMap(format.toExternalADM)
+    userService.findByProjectMembership(project).map(ProjectMembersGetResponseADM.apply).flatMap(format.toExternal)
 
   def getProjectAdminMembersById(user: User, id: ProjectIri): Task[ProjectAdminMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(findProjectAdminMembers)
@@ -185,7 +185,7 @@ final case class ProjectRestService(
     userService
       .findByProjectAdminMembership(project)
       .map(ProjectAdminMembersGetResponseADM.apply)
-      .flatMap(format.toExternalADM)
+      .flatMap(format.toExternal)
 
   /**
    * Returns all keywords of all projects.
