@@ -5,25 +5,11 @@
 
 package org.knora.webapi.routing
 
-import org.apache.pekko.http.scaladsl.model.ContentTypes.`application/json`
-import org.apache.pekko.http.scaladsl.model.StatusCodes.OK
-import org.apache.pekko.http.scaladsl.model._
-import org.apache.pekko.http.scaladsl.server.RequestContext
-import org.apache.pekko.http.scaladsl.server.RouteResult
-import org.apache.pekko.util.ByteString
 import zio._
 
-import java.util.UUID
-import scala.concurrent.Future
-
-import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri
 import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.IRI
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -39,17 +25,12 @@ object RouteUtilADM {
    * Transforms all ontology IRIs referenced inside a KnoraResponseADM into their external format.
    *
    * @param response the response that should be transformed
-   * @return the transformed [[KnoraResponseADM]]
+   * @return the transformed [[AdminKnoraResponseADM]]
    */
   def transformResponseIntoExternalFormat(
-    response: KnoraResponseADM,
-  ): ZIO[StringFormatter, Throwable, KnoraResponseADM] = ZIO.serviceWithZIO[StringFormatter] { sf =>
+    response: AdminKnoraResponseADM,
+  ): ZIO[StringFormatter, Throwable, AdminKnoraResponseADM] = ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
     ZIO.attempt {
-      def projectAsExternalRepresentation(project: Project): Project = {
-        val ontologiesExternal =
-          project.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
-        project.copy(ontologies = ontologiesExternal)
-      }
 
       def groupAsExternalRepresentation(group: Group): Group = {
         val projectExternal = group.project.map(projectAsExternalRepresentation)
@@ -88,17 +69,16 @@ object RouteUtilADM {
       }
     }
   }
+  private def projectAsExternalRepresentation(project: Project)(implicit sf: StringFormatter): Project = {
+    val ontologiesExternal =
+      project.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
+    project.copy(ontologies = ontologiesExternal)
+  }
 
   def transformResponseIntoExternalFormat[A](response: A): ZIO[StringFormatter, Throwable, A] =
     ZIO
-      .serviceWithZIO[StringFormatter] { sf =>
+      .serviceWithZIO[StringFormatter] { implicit sf =>
         ZIO.attempt {
-          def projectAsExternalRepresentation(project: Project): Project = {
-            val ontologiesExternal =
-              project.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
-            project.copy(ontologies = ontologiesExternal)
-          }
-
           response match {
             case ProjectsGetResponse(projects) => ProjectsGetResponse(projects.map(projectAsExternalRepresentation))
             case ProjectGetResponse(project)   => ProjectGetResponse(projectAsExternalRepresentation(project))
@@ -107,61 +87,4 @@ object RouteUtilADM {
         }
       }
       .map(_.asInstanceOf[A])
-
-  /**
-   * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
-   *
-   * @param requestTask    A [[Task]] containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
-   * @param requestContext The pekko-http [[RequestContext]].
-   * @return a [[Future]] containing a [[RouteResult]].
-   */
-  def runJsonRouteZ[R](
-    requestTask: ZIO[R, Throwable, KnoraRequestADM],
-    requestContext: RequestContext,
-  )(implicit runtime: Runtime[R & StringFormatter & MessageRelay]): Future[RouteResult] =
-    UnsafeZioRun.runToFuture(requestTask.flatMap(doRunJsonRoute(_, requestContext)))
-
-  private def doRunJsonRoute(
-    request: KnoraRequestADM,
-    ctx: RequestContext,
-  ): ZIO[StringFormatter & MessageRelay, Throwable, RouteResult] =
-    createResponse(request).flatMap(completeContext(ctx, _))
-
-  private def createResponse(
-    request: KnoraRequestADM,
-  ): ZIO[StringFormatter & MessageRelay, Throwable, HttpResponse] =
-    for {
-      knoraResponse         <- ZIO.serviceWithZIO[MessageRelay](_.ask[KnoraResponseADM](request))
-      knoraResponseExternal <- transformResponseIntoExternalFormat(knoraResponse)
-    } yield HttpResponse(
-      OK,
-      entity = HttpEntity(`application/json`, ByteString(knoraResponseExternal.toJsValue.asJsObject.compactPrint)),
-    )
-
-  private def completeContext(ctx: RequestContext, response: HttpResponse): Task[RouteResult] =
-    ZIO.fromFuture(_ => ctx.complete(response))
-
-  case class IriUserUuid(iri: IRI, user: User, uuid: UUID)
-  case class IriUser(iri: IRI, user: User)
-
-  def getIriUserUuid(
-    iri: String,
-    requestContext: RequestContext,
-  ): ZIO[Authenticator & StringFormatter, Throwable, IriUserUuid] =
-    for {
-      r    <- getIriUser(iri, requestContext)
-      uuid <- RouteUtilZ.randomUuid()
-    } yield IriUserUuid(r.iri, r.user, uuid)
-
-  def getIriUser(
-    iri: String,
-    requestContext: RequestContext,
-  ): ZIO[Authenticator & StringFormatter, Throwable, IriUser] =
-    for {
-      validatedIri <- validateAndEscape(iri)
-      user         <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-    } yield IriUser(validatedIri, user)
-
-  def validateAndEscape(iri: String): IO[BadRequestException, IRI] =
-    Iri.validateAndEscapeIri(iri).toZIO.orElseFail(BadRequestException(s"Invalid IRI: $iri"))
 }
