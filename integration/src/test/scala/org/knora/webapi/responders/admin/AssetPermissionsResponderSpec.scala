@@ -13,8 +13,8 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.slice.admin.api.model.ProjectRestrictedViewSettingsADM
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 
 /**
@@ -22,7 +22,7 @@ import org.knora.webapi.slice.admin.domain.model.User
  */
 class AssetPermissionsResponderSpec extends CoreSpec with ImplicitSender {
 
-  private def getFileInfoForSipiADM(shortcode: ShortcodeIdentifier, filename: String, user: User) =
+  private def getFileInfoForSipiADM(shortcode: Shortcode, filename: String, user: User) =
     ZIO.serviceWithZIO[AssetPermissionsResponder](
       _.getPermissionCodeAndProjectRestrictedViewSettings(shortcode, filename, user),
     )
@@ -39,7 +39,7 @@ class AssetPermissionsResponderSpec extends CoreSpec with ImplicitSender {
       // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
       val actual = UnsafeZioRun.runOrThrow(
         getFileInfoForSipiADM(
-          ShortcodeIdentifier.unsafeFrom("0803"),
+          Shortcode.unsafeFrom("0803"),
           "incunabula_0000003328.jp2",
           SharedTestDataADM.incunabulaMemberUser,
         ),
@@ -52,7 +52,7 @@ class AssetPermissionsResponderSpec extends CoreSpec with ImplicitSender {
       // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
       val actual = UnsafeZioRun.runOrThrow(
         getFileInfoForSipiADM(
-          ShortcodeIdentifier.unsafeFrom("0803"),
+          Shortcode.unsafeFrom("0803"),
           "incunabula_0000003328.jp2",
           SharedTestDataADM.anonymousUser,
         ),

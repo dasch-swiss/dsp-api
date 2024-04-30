@@ -10,7 +10,6 @@ import zio.NonEmptyChunk
 
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM._
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
@@ -101,19 +100,4 @@ object TestDataFactory {
     SelfJoin.CannotJoin,
     RestrictedView.default,
   )
-
-  def projectShortcodeIdentifier(shortcode: String): ShortcodeIdentifier =
-    ShortcodeIdentifier
-      .fromString(shortcode)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid ShortcodeIdentifier $shortcode."))
-
-  def projectShortnameIdentifier(shortname: String): ShortnameIdentifier =
-    ShortnameIdentifier
-      .fromString(shortname)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid ShortnameIdentifier $shortname."))
-
-  def projectIriIdentifier(iri: String): IriIdentifier =
-    IriIdentifier
-      .fromString(iri)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid IriIdentifier $iri."))
 }

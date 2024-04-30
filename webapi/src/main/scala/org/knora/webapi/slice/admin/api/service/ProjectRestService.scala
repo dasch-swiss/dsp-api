@@ -12,7 +12,6 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM._
 import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
@@ -20,6 +19,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsGetResponse
 import org.knora.webapi.slice.admin.api.model._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
@@ -117,7 +117,7 @@ final case class ProjectRestService(
    */
   def deleteProject(projectIri: ProjectIri, user: User): Task[ProjectOperationResponseADM] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdmin(user, projectIri)
+      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
       internal <- projectService
                     .updateProject(project, ProjectUpdateRequest(status = Some(Status.Inactive)))
                     .map(ProjectOperationResponseADM.apply)
@@ -160,52 +160,32 @@ final case class ProjectRestService(
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[IriIdentifier]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def getAllProjectData(id: IriIdentifier, user: User): Task[ProjectDataGetResponseADM] =
+  def getAllProjectData(id: ProjectIri, user: User): Task[ProjectDataGetResponseADM] =
     for {
-      project <-
-        knoraProjectService.findById(id.value).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
-      _      <- auth.ensureSystemAdminOrProjectAdmin(user, project)
-      result <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
+      project <- auth.ensureSystemAdminOrProjectAdminById(user, id)
+      result  <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
     } yield ProjectDataGetResponseADM(result)
 
-  /**
-   * Returns all project members of a specific project, identified by its [[ProjectIdentifierADM]].
-   *
-   * @param id   the [[ProjectIdentifierADM]] of the project
-   * @param user the [[User]] making the request
-   * @return
-   *     '''success''': list of project members as [[ProjectMembersGetResponseADM]]
-   *
-   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIdentifierADM]] can be found
-   *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
-   */
-  def getProjectMembers(user: User, id: ProjectIdentifierADM): Task[ProjectMembersGetResponseADM] = for {
-    project  <- knoraProjectService.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-    _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
-    internal <- userService.findByProjectMembership(project).map(ProjectMembersGetResponseADM.apply)
-    external <- format.toExternalADM(internal)
-  } yield external
+  def getProjectMembersById(user: User, id: ProjectIri): Task[ProjectMembersGetResponseADM] =
+    auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(findProjectMembers)
+  def getProjectMembersByShortcode(user: User, id: Shortcode): Task[ProjectMembersGetResponseADM] =
+    auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(findProjectMembers)
+  def getProjectMembersByShortname(user: User, id: Shortname): Task[ProjectMembersGetResponseADM] =
+    auth.ensureSystemAdminOrProjectAdminByShortname(user, id).flatMap(findProjectMembers)
+  private def findProjectMembers(project: KnoraProject) =
+    userService.findByProjectMembership(project).map(ProjectMembersGetResponseADM.apply).flatMap(format.toExternalADM)
 
-  /**
-   * Returns all project admins of a specific project, identified by its [[ProjectIdentifierADM]].
-   *
-   * @param id   the [[ProjectIdentifierADM]] of the project
-   * @param user the [[User]] making the request
-   * @return
-   *     '''success''': list of project admins as [[ProjectAdminMembersGetResponseADM]]
-   *
-   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIdentifierADM]] can be found
-   *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
-   */
-  def getProjectAdminMembers(
-    user: User,
-    id: ProjectIdentifierADM,
-  ): Task[ProjectAdminMembersGetResponseADM] = for {
-    project  <- knoraProjectService.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-    _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
-    internal <- userService.findByProjectAdminMembership(project).map(ProjectAdminMembersGetResponseADM.apply)
-    external <- format.toExternalADM(internal)
-  } yield external
+  def getProjectAdminMembersById(user: User, id: ProjectIri): Task[ProjectAdminMembersGetResponseADM] =
+    auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(findProjectAdminMembers)
+  def getProjectAdminMembersByShortcode(user: User, id: Shortcode): Task[ProjectAdminMembersGetResponseADM] =
+    auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(findProjectAdminMembers)
+  def getProjectAdminMembersByShortname(user: User, id: Shortname): Task[ProjectAdminMembersGetResponseADM] =
+    auth.ensureSystemAdminOrProjectAdminByShortname(user, id).flatMap(findProjectAdminMembers)
+  private def findProjectAdminMembers(project: KnoraProject) =
+    userService
+      .findByProjectAdminMembership(project)
+      .map(ProjectAdminMembersGetResponseADM.apply)
+      .flatMap(format.toExternalADM)
 
   /**
    * Returns all keywords of all projects.
@@ -239,37 +219,45 @@ final case class ProjectRestService(
     external <- format.toExternal(internal)
   } yield external
 
-  /**
-   * Returns the restricted view settings of a specific project, identified by its [[ProjectIri]].
-   *
-   * @param id      the [[ProjectIdentifierADM]] of the project
-   * @return
-   *     '''success''': the restricted view settings as [[ProjectRestrictedViewSettingsGetResponseADM]]
-   *
-   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
-   */
-  def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM] =
+  def getProjectRestrictedViewSettingsById(id: ProjectIri): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     for {
-      project  <- knoraProjectService.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      project <-
+        knoraProjectService.findById(id).someOrFail(NotFoundException(s"Project with id ${id.value} not found."))
       external <- format.toExternal(ProjectRestrictedViewSettingsGetResponseADM.from(project.restrictedView))
     } yield external
 
-  /**
-   * Sets project's restricted view settings.
-   *
-   * @param id   The project's id represented by iri, shortcode or shortname.
-   * @param user Requesting user.
-   * @param req  Contains the values to be set.
-   * @return [[RestrictedViewResponse]].
-   */
-  def updateProjectRestrictedViewSettings(
-    id: ProjectIdentifierADM,
+  def getProjectRestrictedViewSettingsByShortcode(id: Shortcode): Task[ProjectRestrictedViewSettingsGetResponseADM] =
+    for {
+      project <- knoraProjectService
+                   .findByShortcode(id)
+                   .someOrFail(NotFoundException(s"Project with shortcode ${id.value} not found."))
+      external <- format.toExternal(ProjectRestrictedViewSettingsGetResponseADM.from(project.restrictedView))
+    } yield external
+
+  def getProjectRestrictedViewSettingsByShortname(id: Shortname): Task[ProjectRestrictedViewSettingsGetResponseADM] =
+    for {
+      project <- knoraProjectService
+                   .findByShortname(id)
+                   .someOrFail(NotFoundException(s"Project with shortname ${id.value} not found."))
+      external <- format.toExternal(ProjectRestrictedViewSettingsGetResponseADM.from(project.restrictedView))
+    } yield external
+
+  def updateProjectRestrictedViewSettingsByShortcode(
+    id: Shortcode,
     user: User,
     req: SetRestrictedViewRequest,
   ): Task[RestrictedViewResponse] =
+    auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(updateRestrictedViewSettings(_, req))
+
+  def updateProjectRestrictedViewSettingsById(
+    id: ProjectIri,
+    user: User,
+    req: SetRestrictedViewRequest,
+  ): Task[RestrictedViewResponse] =
+    auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(updateRestrictedViewSettings(_, req))
+
+  private def updateRestrictedViewSettings(project: KnoraProject, req: SetRestrictedViewRequest) =
     for {
-      project        <- knoraProjectService.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      _              <- auth.ensureSystemAdminOrProjectAdmin(user, project)
       restrictedView <- req.toRestrictedView
       newSettings    <- knoraProjectService.setProjectRestrictedView(project, restrictedView)
     } yield RestrictedViewResponse.from(newSettings)

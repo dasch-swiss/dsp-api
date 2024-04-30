@@ -26,12 +26,10 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.InvalidTokenCache
 import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.IriIdentifier
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.repo.service.CrudRepository
@@ -45,13 +43,11 @@ final case class KnoraProjectRepoInMemory(projects: Ref[Chunk[KnoraProject]])
     extends AbstractInMemoryCrudRepository[KnoraProject, ProjectIri](projects, _.id)
     with KnoraProjectRepo {
 
-  override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = projects.get.map(
-    _.find(id match {
-      case ShortcodeIdentifier(shortcode) => _.shortcode == shortcode
-      case ShortnameIdentifier(shortname) => _.shortname == shortname
-      case IriIdentifier(iri)             => _.id.value == iri.value
-    }),
-  )
+  override def findByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]] =
+    projects.get.map(_.find(_.shortcode == shortcode))
+
+  override def findByShortname(shortname: Shortname): Task[Option[KnoraProject]] =
+    projects.get.map(_.find(_.shortname == shortname))
 }
 
 abstract class AbstractInMemoryCrudRepository[Entity, Id](entities: Ref[Chunk[Entity]], getId: Entity => Id)
