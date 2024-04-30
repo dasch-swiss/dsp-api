@@ -5,9 +5,11 @@
 
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
-import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json._
 import zio.Chunk
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
+import zio.json.jsonDiscriminator
+import zio.json.jsonField
 
 import java.util.UUID
 
@@ -19,11 +21,6 @@ import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType.Full
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType.Restricted
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.traits.Jsonable
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -32,9 +29,6 @@ import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// API requests
 
 /**
  * Represents a payload that asks the Knora API server to create a new
@@ -49,8 +43,10 @@ case class CreateAdministrativePermissionAPIRequestADM(
   forProject: IRI,
   forGroup: IRI,
   hasPermissions: Set[PermissionADM],
-) extends PermissionsADMJsonProtocol {
-  def toJsValue: JsValue = createAdministrativePermissionAPIRequestADMFormat.write(this)
+)
+object CreateAdministrativePermissionAPIRequestADM {
+  implicit val codec: JsonCodec[CreateAdministrativePermissionAPIRequestADM] =
+    DeriveJsonCodec.gen[CreateAdministrativePermissionAPIRequestADM]
 }
 
 /**
@@ -70,8 +66,10 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
   forResourceClass: Option[IRI] = None,
   forProperty: Option[IRI] = None,
   hasPermissions: Set[PermissionADM],
-) extends PermissionsADMJsonProtocol {
-  def toJsValue: JsValue = createDefaultObjectAccessPermissionAPIRequestADMFormat.write(this)
+)
+object CreateDefaultObjectAccessPermissionAPIRequestADM {
+  implicit val codec: JsonCodec[CreateDefaultObjectAccessPermissionAPIRequestADM] =
+    DeriveJsonCodec.gen[CreateDefaultObjectAccessPermissionAPIRequestADM]
 }
 
 /**
@@ -79,7 +77,7 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
  *
  * @param forGroup the new group IRI.
  */
-case class ChangePermissionGroupApiRequestADM(forGroup: IRI) extends PermissionsADMJsonProtocol {
+case class ChangePermissionGroupApiRequestADM(forGroup: IRI) {
 
   if (forGroup.isEmpty) {
     throw BadRequestException(s"IRI of new group cannot be empty.")
@@ -87,8 +85,10 @@ case class ChangePermissionGroupApiRequestADM(forGroup: IRI) extends Permissions
   Iri
     .validateAndEscapeIri(forGroup)
     .getOrElse(throw BadRequestException(s"Invalid IRI $forGroup is given."))
-
-  def toJsValue: JsValue = changePermissionGroupApiRequestADMFormat.write(this)
+}
+object ChangePermissionGroupApiRequestADM {
+  implicit val codec: JsonCodec[ChangePermissionGroupApiRequestADM] =
+    DeriveJsonCodec.gen[ChangePermissionGroupApiRequestADM]
 }
 
 /**
@@ -97,8 +97,9 @@ case class ChangePermissionGroupApiRequestADM(forGroup: IRI) extends Permissions
  * @param hasPermissions the new set of permission values.
  */
 case class ChangePermissionHasPermissionsApiRequestADM(hasPermissions: Set[PermissionADM])
-    extends PermissionsADMJsonProtocol {
-  def toJsValue: JsValue = changePermissionHasPermissionsApiRequestADMFormat.write(this)
+object ChangePermissionHasPermissionsApiRequestADM {
+  implicit val codec: JsonCodec[ChangePermissionHasPermissionsApiRequestADM] =
+    DeriveJsonCodec.gen[ChangePermissionHasPermissionsApiRequestADM]
 }
 
 /**
@@ -106,7 +107,7 @@ case class ChangePermissionHasPermissionsApiRequestADM(hasPermissions: Set[Permi
  *
  * @param forResourceClass the new resource class IRI of the doap permission.
  */
-case class ChangePermissionResourceClassApiRequestADM(forResourceClass: IRI) extends PermissionsADMJsonProtocol {
+case class ChangePermissionResourceClassApiRequestADM(forResourceClass: IRI) {
   if (forResourceClass.isEmpty) {
     throw BadRequestException(s"Resource class IRI cannot be empty.")
   }
@@ -115,8 +116,10 @@ case class ChangePermissionResourceClassApiRequestADM(forResourceClass: IRI) ext
     .getOrElse(
       throw BadRequestException(s"Invalid resource class IRI $forResourceClass is given."),
     )
-
-  def toJsValue: JsValue = changePermissionResourceClassApiRequestADMFormat.write(this)
+}
+object ChangePermissionResourceClassApiRequestADM {
+  implicit val codec: JsonCodec[ChangePermissionResourceClassApiRequestADM] =
+    DeriveJsonCodec.gen[ChangePermissionResourceClassApiRequestADM]
 }
 
 /**
@@ -124,15 +127,17 @@ case class ChangePermissionResourceClassApiRequestADM(forResourceClass: IRI) ext
  *
  * @param forProperty the new property IRI of the doap permission.
  */
-case class ChangePermissionPropertyApiRequestADM(forProperty: IRI) extends PermissionsADMJsonProtocol {
+case class ChangePermissionPropertyApiRequestADM(forProperty: IRI) {
   if (forProperty.isEmpty) {
     throw BadRequestException(s"Property IRI cannot be empty.")
   }
   Iri
     .validateAndEscapeIri(forProperty)
     .getOrElse(throw BadRequestException(s"Invalid property IRI $forProperty is given."))
-
-  def toJsValue: JsValue = changePermissionPropertyApiRequestADMFormat.write(this)
+}
+object ChangePermissionPropertyApiRequestADM {
+  implicit val codec: JsonCodec[ChangePermissionPropertyApiRequestADM] =
+    DeriveJsonCodec.gen[ChangePermissionPropertyApiRequestADM]
 }
 
 /**
@@ -366,54 +371,60 @@ case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
 
-// All Permissions for project
 /**
- * Represents an answer to [[PermissionsForProjectForProjectGetRequestADM]].
+ * All Permissions for project
  *
- * @param allPermissions the retrieved sequence of [[PermissionInfoADM]]
+ * @param permissions the retrieved sequence of [[PermissionInfoADM]]
  */
-case class PermissionsForProjectGetResponseADM(allPermissions: Set[PermissionInfoADM])
-    extends AdminKnoraResponseADM
-    with PermissionsADMJsonProtocol {
-  def toJsValue: JsValue = permissionsForProjectGetResponseADMFormat.write(this)
+case class PermissionsForProjectGetResponseADM(permissions: Set[PermissionInfoADM]) extends AdminKnoraResponseADM
+object PermissionsForProjectGetResponseADM {
+  implicit val codec: JsonCodec[PermissionsForProjectGetResponseADM] =
+    DeriveJsonCodec.gen[PermissionsForProjectGetResponseADM]
 }
 
-// All administrative Permissions for project
 /**
- * Represents an answer to [[AdministrativePermissionsForProjectGetRequestADM]].
+ * All administrative Permissions for project
  *
  * @param administrativePermissions the retrieved sequence of [[AdministrativePermissionADM]]
  */
 case class AdministrativePermissionsForProjectGetResponseADM(
-  administrativePermissions: Seq[AdministrativePermissionADM],
+  @jsonField("administrative_permissions") administrativePermissions: Seq[AdministrativePermissionADM],
 ) extends AdminKnoraResponseADM
-    with PermissionsADMJsonProtocol {
-  def toJsValue: JsValue = administrativePermissionsForProjectGetResponseADMFormat.write(this)
+object AdministrativePermissionsForProjectGetResponseADM {
+  implicit val codec: JsonCodec[AdministrativePermissionsForProjectGetResponseADM] =
+    DeriveJsonCodec.gen[AdministrativePermissionsForProjectGetResponseADM]
 }
 
-// All Default Object Access Permissions for project
 /**
- * Represents an answer to [[DefaultObjectAccessPermissionsForProjectGetRequestADM]]
+ * All Default Object Access Permissions for project
  *
  * @param defaultObjectAccessPermissions the retrieved sequence of [[DefaultObjectAccessPermissionADM]]
  */
 case class DefaultObjectAccessPermissionsForProjectGetResponseADM(
-  defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionADM],
+  @jsonField("default_object_access_permissions") defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionADM],
 ) extends AdminKnoraResponseADM
-    with PermissionsADMJsonProtocol {
-  def toJsValue: JsValue = defaultObjectAccessPermissionsForProjectGetResponseADMFormat.write(this)
+object DefaultObjectAccessPermissionsForProjectGetResponseADM {
+  implicit val codec: JsonCodec[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
+    DeriveJsonCodec.gen[DefaultObjectAccessPermissionsForProjectGetResponseADM]
 }
 
-sealed trait PermissionGetResponseADM extends AdminKnoraResponseADM with PermissionsADMJsonProtocol
+@jsonDiscriminator("type") // required for zio-json, unfortunately zio json cannot infer it from the field names alone
+sealed trait PermissionGetResponseADM extends AdminKnoraResponseADM
+object PermissionGetResponseADM {
+  implicit val codec: JsonCodec[PermissionGetResponseADM] = DeriveJsonCodec.gen[PermissionGetResponseADM]
+}
 
 /**
  * Represents an answer to a request for getting a default object access permission.
  *
  * @param defaultObjectAccessPermission the retrieved [[DefaultObjectAccessPermissionADM]].
  */
-case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermission: DefaultObjectAccessPermissionADM)
-    extends PermissionGetResponseADM() {
-  def toJsValue: JsValue = defaultObjectAccessPermissionGetResponseADMFormat.write(this)
+case class DefaultObjectAccessPermissionGetResponseADM(
+  @jsonField("default_object_access_permission") defaultObjectAccessPermission: DefaultObjectAccessPermissionADM,
+) extends PermissionGetResponseADM()
+object DefaultObjectAccessPermissionGetResponseADM {
+  implicit val codec: JsonCodec[DefaultObjectAccessPermissionGetResponseADM] =
+    DeriveJsonCodec.gen[DefaultObjectAccessPermissionGetResponseADM]
 }
 
 /**
@@ -421,9 +432,12 @@ case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermis
  *
  * @param administrativePermission the retrieved [[AdministrativePermissionADM]].
  */
-case class AdministrativePermissionGetResponseADM(administrativePermission: AdministrativePermissionADM)
-    extends PermissionGetResponseADM() {
-  def toJsValue: JsValue = administrativePermissionGetResponseADMFormat.write(this)
+case class AdministrativePermissionGetResponseADM(
+  @jsonField("administrative_permission") administrativePermission: AdministrativePermissionADM,
+) extends PermissionGetResponseADM()
+object AdministrativePermissionGetResponseADM {
+  implicit val codec: JsonCodec[AdministrativePermissionGetResponseADM] =
+    DeriveJsonCodec.gen[AdministrativePermissionGetResponseADM]
 }
 
 /**
@@ -431,10 +445,12 @@ case class AdministrativePermissionGetResponseADM(administrativePermission: Admi
  *
  * @param administrativePermission the newly created [[AdministrativePermissionADM]].
  */
-case class AdministrativePermissionCreateResponseADM(administrativePermission: AdministrativePermissionADM)
-    extends AdminKnoraResponseADM
-    with PermissionsADMJsonProtocol {
-  def toJsValue = administrativePermissionCreateResponseADMFormat.write(this)
+case class AdministrativePermissionCreateResponseADM(
+  @jsonField("administrative_permission") administrativePermission: AdministrativePermissionADM,
+) extends AdminKnoraResponseADM
+object AdministrativePermissionCreateResponseADM {
+  implicit val codec: JsonCodec[AdministrativePermissionCreateResponseADM] =
+    DeriveJsonCodec.gen[AdministrativePermissionCreateResponseADM]
 }
 
 /**
@@ -443,10 +459,11 @@ case class AdministrativePermissionCreateResponseADM(administrativePermission: A
  * @param defaultObjectAccessPermission the newly created [[DefaultObjectAccessPermissionADM]].
  */
 case class DefaultObjectAccessPermissionCreateResponseADM(
-  defaultObjectAccessPermission: DefaultObjectAccessPermissionADM,
+  @jsonField("default_object_access_permission") defaultObjectAccessPermission: DefaultObjectAccessPermissionADM,
 ) extends AdminKnoraResponseADM
-    with PermissionsADMJsonProtocol {
-  def toJsValue: JsValue = defaultObjectAccessPermissionCreateResponseADMFormat.write(this)
+object DefaultObjectAccessPermissionCreateResponseADM {
+  implicit val codec: JsonCodec[DefaultObjectAccessPermissionCreateResponseADM] =
+    DeriveJsonCodec.gen[DefaultObjectAccessPermissionCreateResponseADM]
 }
 
 /**
@@ -455,6 +472,10 @@ case class DefaultObjectAccessPermissionCreateResponseADM(
  * @param permissionLiteral a permission literal string.
  */
 case class DefaultObjectAccessPermissionsStringResponseADM(permissionLiteral: String)
+object DefaultObjectAccessPermissionsStringResponseADM {
+  implicit val codec: JsonCodec[DefaultObjectAccessPermissionsStringResponseADM] =
+    DeriveJsonCodec.gen[DefaultObjectAccessPermissionsStringResponseADM]
+}
 
 /**
  * Responds to deletion of a permission by returning a success message.
@@ -462,11 +483,9 @@ case class DefaultObjectAccessPermissionsStringResponseADM(permissionLiteral: St
  * @param permissionIri the IRI of the permission that is deleted.
  * @param deleted       status of delete operation.
  */
-case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean)
-    extends AdminKnoraResponseADM
-    with PermissionsADMJsonProtocol {
-
-  def toJsValue: JsValue = permissionDeleteResponseADMFormat.write(this)
+case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean) extends AdminKnoraResponseADM
+object PermissionDeleteResponseADM {
+  implicit val codec: JsonCodec[PermissionDeleteResponseADM] = DeriveJsonCodec.gen[PermissionDeleteResponseADM]
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -536,22 +555,17 @@ case class PermissionsDataADM(
    * @param insideProject the IRI of the project inside which the operation will be performed.
    * @return a boolean value.
    */
-  def hasPermissionFor(operation: OperationADM, insideProject: IRI): Boolean =
+  def hasPermissionFor(operation: ResourceCreateOperation, insideProject: IRI): Boolean =
     if (this.isSystemAdmin) {
       /* A member of the SystemAdmin group is allowed to perform any operation */
       true
     } else {
-      operation match {
-        case ResourceCreateOperation(resourceClassIri) =>
-          this.administrativePermissionsPerProject.get(insideProject) match {
-            case Some(set) =>
-              set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)) || set(
-                PermissionADM.from(Permission.Administrative.ProjectResourceCreateRestricted, resourceClassIri),
-              )
-            case None => {
-              false
-            }
-          }
+      this.administrativePermissionsPerProject.get(insideProject) match {
+        case Some(set) =>
+          set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)) || set(
+            PermissionADM.from(Permission.Administrative.ProjectResourceCreateRestricted, operation.resourceClass),
+          )
+        case None => false
       }
     }
 
@@ -574,18 +588,22 @@ case class PermissionsDataADM(
       ")"
 }
 
+object PermissionsDataADM {
+  implicit val codec: JsonCodec[PermissionsDataADM] = DeriveJsonCodec.gen[PermissionsDataADM]
+}
+
 /**
  * Represents 'knora-base:AdministrativePermission'
  *
  * @param iri            the IRI of the permission.
  * @param permissionType the type of the permission.
  */
-case class PermissionInfoADM(iri: IRI, permissionType: IRI) extends Jsonable with PermissionsADMJsonProtocol {
-
-  def toJsValue: JsValue = permissionInfoADMFormat.write(this)
+case class PermissionInfoADM(iri: IRI, permissionType: IRI)
+object PermissionInfoADM {
+  implicit val codec: JsonCodec[PermissionInfoADM] = DeriveJsonCodec.gen[PermissionInfoADM]
 }
 
-abstract class PermissionItemADM extends Jsonable with PermissionsADMJsonProtocol
+abstract class PermissionItemADM
 
 /**
  * Represents object access permissions attached to a resource OR value via the
@@ -599,9 +617,9 @@ case class ObjectAccessPermissionADM(
   forResource: Option[IRI] = None,
   forValue: Option[IRI] = None,
   hasPermissions: Set[PermissionADM],
-) extends PermissionItemADM {
-
-  def toJsValue: JsValue = objectAccessPermissionADMFormat.write(this)
+) extends PermissionItemADM
+object ObjectAccessPermissionADM {
+  implicit val codec: JsonCodec[ObjectAccessPermissionADM] = DeriveJsonCodec.gen[ObjectAccessPermissionADM]
 }
 
 /**
@@ -613,12 +631,10 @@ case class ObjectAccessPermissionADM(
  * @param hasPermissions the administrative permissions.
  */
 case class AdministrativePermissionADM(iri: IRI, forProject: IRI, forGroup: IRI, hasPermissions: Set[PermissionADM])
-    extends PermissionItemADM {
-
-  def toJsValue: JsValue = administrativePermissionADMFormat.write(this)
-}
+    extends PermissionItemADM
 
 object AdministrativePermissionADM {
+  implicit val codec: JsonCodec[AdministrativePermissionADM] = DeriveJsonCodec.gen[AdministrativePermissionADM]
   def from(permission: AdministrativePermission): AdministrativePermissionADM =
     AdministrativePermissionADM(
       iri = permission.id.value,
@@ -645,9 +661,10 @@ case class DefaultObjectAccessPermissionADM(
   forResourceClass: Option[IRI] = None,
   forProperty: Option[IRI] = None,
   hasPermissions: Set[PermissionADM],
-) extends PermissionItemADM {
-
-  def toJsValue: JsValue = defaultObjectAccessPermissionADMFormat.write(this)
+) extends PermissionItemADM
+object DefaultObjectAccessPermissionADM {
+  implicit val codec: JsonCodec[DefaultObjectAccessPermissionADM] =
+    DeriveJsonCodec.gen[DefaultObjectAccessPermissionADM]
 }
 
 /**
@@ -656,19 +673,11 @@ case class DefaultObjectAccessPermissionADM(
  * @param name                  the name of the permission.
  * @param additionalInformation an optional IRI (e.g., group IRI, resource class IRI).
  */
-case class PermissionADM(name: String, additionalInformation: Option[IRI] = None, permissionCode: Option[Int] = None)
-    extends Jsonable
-    with PermissionsADMJsonProtocol {
-
-  def toJsValue: JsValue = permissionADMFormat.write(this)
-
+case class PermissionADM(name: String, additionalInformation: Option[IRI] = None, permissionCode: Option[Int] = None) {
   override def toString: String = name
 }
-
-/**
- * The permission companion object, used to create specific permissions.
- */
 object PermissionADM {
+  implicit val codec: JsonCodec[PermissionADM] = DeriveJsonCodec.gen[PermissionADM]
 
   def from(permission: Permission): PermissionADM =
     PermissionADM(permission.token, None, codeFrom(permission))
@@ -691,13 +700,8 @@ object PermissionADM {
     }
 }
 
-/**
- * An abstract trait representing operations for which the user needs Administrative Permissions.
- */
-sealed trait OperationADM
-
 /* Creating a resource of a certain class */
-case class ResourceCreateOperation(resourceClass: IRI) extends OperationADM
+case class ResourceCreateOperation(resourceClass: IRI)
 
 /**
  * Permission data types:
@@ -726,137 +730,4 @@ object PermissionType {
   case object DOAP extends PermissionType {
     override def toString: String = "DefaultObjectAccessPermission"
   }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JSON formatting
-
-trait PermissionsADMJsonProtocol
-    extends SprayJsonSupport
-    with DefaultJsonProtocol
-    with ProjectsADMJsonProtocol
-    with TriplestoreJsonProtocol {
-
-  implicit object PermissionProfileTypeFormat extends JsonFormat[PermissionProfileType] {
-
-    /**
-     * Not implemented.
-     */
-    def read(jsonVal: JsValue): PermissionProfileType = ???
-
-    /**
-     * Converts a [[PermissionProfileType]] into [[JsValue]] for formatting as JSON.
-     *
-     * @param permissionProfileType the [[PermissionProfileType]] to be converted.
-     * @return a [[JsValue]].
-     */
-    def write(permissionProfileType: PermissionProfileType): JsValue =
-      permissionProfileType match {
-        case Full =>
-          JsObject {
-            Map("permission_profile_type" -> "full".toJson)
-          }
-        case Restricted =>
-          JsObject {
-            Map("permission_profile_type" -> "restricted".toJson)
-          }
-      }
-  }
-
-  implicit val permissionADMFormat: JsonFormat[PermissionADM] =
-    jsonFormat(PermissionADM.apply, "name", "additionalInformation", "permissionCode")
-
-  implicit val permissionInfoADMFormat: JsonFormat[PermissionInfoADM] =
-    lazyFormat(jsonFormat(PermissionInfoADM.apply, "iri", "permissionType"))
-
-  implicit val administrativePermissionADMFormat: JsonFormat[AdministrativePermissionADM] =
-    lazyFormat(jsonFormat(AdministrativePermissionADM.apply, "iri", "forProject", "forGroup", "hasPermissions"))
-
-  implicit val objectAccessPermissionADMFormat: JsonFormat[ObjectAccessPermissionADM] =
-    jsonFormat(ObjectAccessPermissionADM.apply, "forResource", "forValue", "hasPermissions")
-
-  implicit val defaultObjectAccessPermissionADMFormat: JsonFormat[DefaultObjectAccessPermissionADM] =
-    lazyFormat(jsonFormat6(DefaultObjectAccessPermissionADM.apply))
-
-  implicit val permissionsDataADMFormat: JsonFormat[PermissionsDataADM] =
-    jsonFormat2(PermissionsDataADM.apply)
-
-  implicit val permissionsForProjectGetResponseADMFormat: RootJsonFormat[PermissionsForProjectGetResponseADM] =
-    jsonFormat(PermissionsForProjectGetResponseADM.apply, "permissions")
-
-  implicit val administrativePermissionsForProjectGetResponseADMFormat
-    : RootJsonFormat[AdministrativePermissionsForProjectGetResponseADM] =
-    jsonFormat(AdministrativePermissionsForProjectGetResponseADM.apply, "administrative_permissions")
-
-  implicit val defaultObjectAccessPermissionsForProjectGetResponseADMFormat
-    : RootJsonFormat[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
-    jsonFormat(DefaultObjectAccessPermissionsForProjectGetResponseADM.apply, "default_object_access_permissions")
-
-  implicit val administrativePermissionGetResponseADMFormat: RootJsonFormat[AdministrativePermissionGetResponseADM] =
-    jsonFormat(AdministrativePermissionGetResponseADM.apply, "administrative_permission")
-
-  implicit val defaultObjectAccessPermissionGetResponseADMFormat
-    : RootJsonFormat[DefaultObjectAccessPermissionGetResponseADM] =
-    jsonFormat(DefaultObjectAccessPermissionGetResponseADM.apply, "default_object_access_permission")
-
-  implicit val permissionGetResponseADMFormat: RootJsonFormat[PermissionGetResponseADM] =
-    new RootJsonFormat[PermissionGetResponseADM] {
-      def write(response: PermissionGetResponseADM): JsValue =
-        response match {
-          case admin: AdministrativePermissionGetResponseADM =>
-            administrativePermissionGetResponseADMFormat.write(admin)
-          case default: DefaultObjectAccessPermissionGetResponseADM =>
-            defaultObjectAccessPermissionGetResponseADMFormat.write(default)
-        }
-      def read(json: JsValue): PermissionGetResponseADM = throw new UnsupportedOperationException("Not implemented.")
-    }
-
-  implicit val createAdministrativePermissionAPIRequestADMFormat
-    : RootJsonFormat[CreateAdministrativePermissionAPIRequestADM] = rootFormat(
-    lazyFormat(
-      jsonFormat(CreateAdministrativePermissionAPIRequestADM.apply, "id", "forProject", "forGroup", "hasPermissions"),
-    ),
-  )
-
-  implicit val createDefaultObjectAccessPermissionAPIRequestADMFormat
-    : RootJsonFormat[CreateDefaultObjectAccessPermissionAPIRequestADM] = rootFormat(
-    lazyFormat(
-      jsonFormat(
-        CreateDefaultObjectAccessPermissionAPIRequestADM.apply,
-        "id",
-        "forProject",
-        "forGroup",
-        "forResourceClass",
-        "forProperty",
-        "hasPermissions",
-      ),
-    ),
-  )
-
-  implicit val administrativePermissionCreateResponseADMFormat
-    : RootJsonFormat[AdministrativePermissionCreateResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(AdministrativePermissionCreateResponseADM.apply, "administrative_permission")),
-  )
-
-  implicit val defaultObjectAccessPermissionCreateResponseADMFormat
-    : RootJsonFormat[DefaultObjectAccessPermissionCreateResponseADM] =
-    jsonFormat(DefaultObjectAccessPermissionCreateResponseADM.apply, "default_object_access_permission")
-
-  implicit val changePermissionGroupApiRequestADMFormat: RootJsonFormat[ChangePermissionGroupApiRequestADM] =
-    jsonFormat(ChangePermissionGroupApiRequestADM.apply, "forGroup")
-
-  implicit val changePermissionHasPermissionsApiRequestADMFormat
-    : RootJsonFormat[ChangePermissionHasPermissionsApiRequestADM] =
-    jsonFormat(ChangePermissionHasPermissionsApiRequestADM.apply, "hasPermissions")
-
-  implicit val changePermissionResourceClassApiRequestADMFormat
-    : RootJsonFormat[ChangePermissionResourceClassApiRequestADM] =
-    jsonFormat(ChangePermissionResourceClassApiRequestADM.apply, "forResourceClass")
-
-  implicit val changePermissionPropertyApiRequestADMFormat: RootJsonFormat[ChangePermissionPropertyApiRequestADM] =
-    jsonFormat(ChangePermissionPropertyApiRequestADM.apply, "forProperty")
-
-  implicit val permissionDeleteResponseADMFormat: RootJsonFormat[PermissionDeleteResponseADM] =
-    jsonFormat(PermissionDeleteResponseADM.apply, "permissionIri", "deleted")
-
 }

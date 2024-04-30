@@ -9,9 +9,9 @@ import zio._
 
 import java.time.Instant
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
@@ -21,14 +21,14 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 final case class ResourceInfoRepoLive(triplestore: TriplestoreService) extends ResourceInfoRepo {
 
   override def findByProjectAndResourceClass(
-    projectIri: IriIdentifier,
+    projectIri: ProjectIri,
     resourceClass: InternalIri,
   ): Task[List[ResourceInfo]] = {
     val select = selectResourcesByCreationDate(resourceClass, projectIri)
     triplestore.query(select).logError.flatMap(toResourceInfoList)
   }
 
-  private def selectResourcesByCreationDate(resourceClassIri: InternalIri, projectIri: IriIdentifier): Select = Select(
+  private def selectResourcesByCreationDate(resourceClassIri: InternalIri, projectIri: ProjectIri): Select = Select(
     s"""
        |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
        |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -36,7 +36,7 @@ final case class ResourceInfoRepoLive(triplestore: TriplestoreService) extends R
        |SELECT DISTINCT ?resource ?creationDate ?isDeleted ?lastModificationDate ?deleteDate
        |WHERE {
        |    ?resource a <${resourceClassIri.value}> ;
-       |              knora-base:attachedToProject <${projectIri.value.value}> ;
+       |              knora-base:attachedToProject <${projectIri.value}> ;
        |              knora-base:creationDate ?creationDate ;
        |              knora-base:isDeleted ?isDeleted ;
        |    OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate .}

@@ -30,7 +30,6 @@ import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
@@ -44,6 +43,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -265,7 +265,7 @@ case class GenerateSparqlForValueInNewResourceV2(
   customValueUUID: Option[UUID],
   customValueCreationDate: Option[Instant],
   permissions: String,
-) extends IOValueV2
+)
 
 /**
  * Represents a response to a [[GenerateSparqlToCreateMultipleValuesRequestV2]], providing a string that can be
@@ -282,14 +282,6 @@ case class GenerateSparqlToCreateMultipleValuesResponseV2(
   unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]],
   hasStandoffLink: Boolean,
 )
-
-/**
- * The value of a Knora property in the context of some particular input or output operation.
- * Any implementation of `IOValueV2` is an API operation-specific wrapper of a `ValueContentV2`.
- */
-trait IOValueV2 {
-  def valueContent: ValueContentV2
-}
 
 /**
  * Provides information about the deletion of a resource or value.
@@ -322,7 +314,7 @@ case class DeletionInfo(deleteDate: Instant, maybeDeleteComment: Option[String])
 /**
  * Represents a Knora value as read from the triplestore.
  */
-sealed trait ReadValueV2 extends IOValueV2 {
+sealed trait ReadValueV2 {
 
   /**
    * The IRI of the value.
@@ -611,7 +603,7 @@ case class CreateValueV2(
   valueCreationDate: Option[Instant] = None,
   permissions: Option[String] = None,
   ingestState: AssetIngestState = AssetInTemp,
-) extends IOValueV2
+)
 
 /**
  * Constructs [[CreateValueV2]] instances based on JSON-LD input.
@@ -935,8 +927,7 @@ case class UpdateValueContentV2(
   permissions: Option[String] = None,
   valueCreationDate: Option[Instant] = None,
   newValueVersionIri: Option[SmartIri] = None,
-) extends IOValueV2
-    with UpdateValueV2
+) extends UpdateValueV2
 
 /**
  * New permissions for a value.

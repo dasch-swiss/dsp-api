@@ -57,31 +57,6 @@ case class SipiGetTextFileRequest(fileUrl: String, requestingUser: User, senderN
  */
 case class SipiGetTextFileResponse(content: String)
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// IIIF Request ADM
-
-sealed trait IIIFRequestADM extends IIIFRequest
-
-/**
- * Queries IIIF Service status.
- */
-case object IIIFServiceGetStatus extends IIIFRequestADM
-
-/**
- * Represents a response for [[IIIFServiceGetStatus]].
- */
-sealed trait IIIFServiceStatusResponse
-
-/**
- * Represents a positive response for [[IIIFServiceGetStatus]].
- */
-case object IIIFServiceStatusOK extends IIIFServiceStatusResponse
-
-/**
- * Represents a negative response for [[IIIFServiceGetStatus]].
- */
-case object IIIFServiceStatusNOK extends IIIFServiceStatusResponse
-
 /**
  * Represents the information that Sipi returns about each file that has been uploaded.
  *

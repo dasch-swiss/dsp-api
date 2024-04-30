@@ -11,10 +11,10 @@ import java.util.UUID
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.api.model.Project
 
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
@@ -241,18 +241,13 @@ object ChangeFileRequest {
     valueIri: String,
     className: Option[String] = None,
     ontologyName: String = "knora-api",
-  ): ChangeFileRequest = {
-    val classNameWithDefaults = className match {
-      case Some(v) => v
-      case None    => FileModelUtil.getDefaultClassName(fileType)
-    }
+  ): ChangeFileRequest =
     new ChangeFileRequest(
       fileType = fileType,
       internalFilename = internalFilename,
       resourceIRI = resourceIri,
       valueIRI = valueIri,
-      className = classNameWithDefaults,
+      className = className.getOrElse(FileModelUtil.getDefaultClassName(fileType)),
       ontologyName = ontologyName,
     ) {}
-  }
 }

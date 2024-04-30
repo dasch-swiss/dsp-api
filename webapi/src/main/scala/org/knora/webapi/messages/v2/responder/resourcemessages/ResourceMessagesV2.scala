@@ -23,7 +23,6 @@ import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
-import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -33,6 +32,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -352,11 +352,6 @@ sealed trait ResourceV2 {
    * The resource's `rdfs:label`.
    */
   def label: String
-
-  /**
-   * A map of property IRIs to [[IOValueV2]] objects.
-   */
-  def values: Map[SmartIri, Seq[IOValueV2]]
 }
 
 /**
@@ -599,7 +594,7 @@ case class CreateValueInNewResourceV2(
   customValueUUID: Option[UUID] = None,
   customValueCreationDate: Option[Instant] = None,
   permissions: Option[String] = None,
-) extends IOValueV2
+)
 
 /**
  * Represents a Knora resource to be created.

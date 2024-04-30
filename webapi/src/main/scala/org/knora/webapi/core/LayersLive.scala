@@ -85,7 +85,6 @@ object LayersLive {
       GravsearchTypeInspectionRunner &
       GroupRestService &
       GroupService &
-      GroupsResponderADM &
       HttpServer &
       IIIFRequestMessageHandler &
       InferenceOptimizationService &
@@ -125,7 +124,6 @@ object LayersLive {
       TriplestoreService &
       UserRestService &
       UserService &
-      UsersResponder &
       ValuesResponderV2
 
   /**
@@ -149,7 +147,6 @@ object LayersLive {
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
-      GroupsResponderADM.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
@@ -194,7 +191,6 @@ object LayersLive {
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
       UserService.layer,
-      UsersResponder.layer,
       ValuesResponderV2Live.layer,
       org.knora.webapi.core.ActorSystem.layer,
     )

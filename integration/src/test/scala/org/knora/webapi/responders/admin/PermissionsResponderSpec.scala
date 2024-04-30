@@ -610,7 +610,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
             _.getPermissionsByProjectIri(ProjectIri.unsafeFrom(imagesProjectIri)),
           ),
         )
-        actual.allPermissions.size should be(10)
+        actual.permissions.size should be(10)
       }
 
       "return all permissions for 'incunabula' project" in {
@@ -622,7 +622,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
           ),
         )
         actual shouldEqual
-          PermissionsForProjectGetResponseADM(allPermissions =
+          PermissionsForProjectGetResponseADM(permissions =
             Set(
               PermissionInfoADM(
                 perm003_a1.iri,

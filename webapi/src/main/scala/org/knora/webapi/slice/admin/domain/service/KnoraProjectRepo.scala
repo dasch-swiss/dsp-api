@@ -9,9 +9,6 @@ import zio.Chunk
 import zio.NonEmptyChunk
 import zio.Task
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
@@ -22,13 +19,10 @@ import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.common.repo.service.Repository
 
 trait KnoraProjectRepo extends Repository[KnoraProject, ProjectIri] {
-  def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]]
   def save(project: KnoraProject): Task[KnoraProject]
+  def findByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]]
+  def findByShortname(shortname: Shortname): Task[Option[KnoraProject]]
 
-  final def findByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]] =
-    findById(ShortcodeIdentifier.from(shortcode))
-  final def findByShortname(shortname: Shortname): Task[Option[KnoraProject]] =
-    findById(ShortnameIdentifier.from(shortname))
   final def existsByShortcode(shortcode: Shortcode): Task[Boolean] =
     findByShortcode(shortcode).map(_.isDefined)
   final def existsByShortname(shortname: Shortname): Task[Boolean] =

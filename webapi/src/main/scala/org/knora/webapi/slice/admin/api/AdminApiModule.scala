@@ -11,7 +11,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.admin.AssetPermissionsResponder
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.admin.PermissionsResponder
-import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionRestService
@@ -24,12 +23,12 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
-import org.knora.webapi.slice.admin.domain.service.MaintenanceService
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
+import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.common.api._
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -61,8 +60,7 @@ object AdminApiModule {
       ProjectService &
       TapirToPekkoInterpreter &
       TriplestoreService &
-      UserService &
-      UsersResponder
+      UserService
 
   type Provided = AdminApiEndpoints &
     AdminApiRoutes &

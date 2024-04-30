@@ -100,7 +100,6 @@ object LayersTest {
       GravsearchTypeInspectionRunner &
       GroupRestService &
       GroupService &
-      GroupsResponderADM &
       HttpServer &
       IIIFRequestMessageHandler &
       InferenceOptimizationService &
@@ -140,7 +139,6 @@ object LayersTest {
       TriplestoreService &
       UserRestService &
       UserService &
-      UsersResponder &
       ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
@@ -160,7 +158,6 @@ object LayersTest {
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
-      GroupsResponderADM.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
@@ -206,7 +203,6 @@ object LayersTest {
       TestClientService.layer,
       TriplestoreServiceLive.layer,
       UserService.layer,
-      UsersResponder.layer,
       ValuesResponderV2Live.layer,
     )
 

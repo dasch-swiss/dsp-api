@@ -133,10 +133,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   /**
    * Performs a http request and dosn't return the string (only error channel).
    */
-  def checkResponseOK(request: pekko.http.scaladsl.model.HttpRequest): Task[Unit] =
-    for {
-      _ <- getResponseString(request)
-    } yield ()
+  def checkResponseOK(request: pekko.http.scaladsl.model.HttpRequest): Task[Unit] = getResponseString(request).unit
 
   /**
    * Performs a http request and tries to parse the response body as Json.

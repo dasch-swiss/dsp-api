@@ -8,12 +8,12 @@ package org.knora.webapi.slice.admin.api
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.api.Examples.GroupExample.groupName
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
+import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName

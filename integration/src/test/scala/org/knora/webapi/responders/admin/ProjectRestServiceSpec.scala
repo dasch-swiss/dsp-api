@@ -3,29 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * To be able to test UsersResponder, we need to be able to start UsersResponder isolated. Now the UsersResponder
- * extend ResponderADM which messes up testing, as we cannot inject the TestActor system.
- */
 package org.knora.webapi.responders.admin
 
 import org.apache.pekko.testkit.ImplicitSender
 import zio.ZIO
 
 import dsp.errors.DuplicateValueException
+import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.api.model._
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -103,7 +99,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return restricted view settings using project IRI" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectRestrictedViewSettings(IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id)),
+            _.getProjectRestrictedViewSettingsById(SharedTestDataADM.imagesProject.projectIri),
           ),
         )
         actual shouldEqual expectedResult
@@ -112,9 +108,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return restricted view settings using project SHORTNAME" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectRestrictedViewSettings(
-              ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname),
-            ),
+            _.getProjectRestrictedViewSettingsByShortname(SharedTestDataADM.imagesProject.getShortname),
           ),
         )
         actual shouldEqual expectedResult
@@ -123,9 +117,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return restricted view settings using project SHORTCODE" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectRestrictedViewSettings(
-              ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode),
-            ),
+            _.getProjectRestrictedViewSettingsByShortcode(SharedTestDataADM.imagesProject.getShortcode),
           ),
         )
         actual shouldEqual expectedResult
@@ -134,30 +126,28 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return 'NotFoundException' when the project IRI is unknown" in {
         val exit = UnsafeZioRun.run(
           ProjectRestService(
-            _.getProjectRestrictedViewSettings(
-              IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri),
+            _.getProjectRestrictedViewSettingsById(
+              ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri),
             ),
           ),
         )
-        assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
+        assertFailsWithA[NotFoundException](exit, s"Project with id $notExistingProjectButValidProjectIri not found.")
       }
 
       "return 'NotFoundException' when the project SHORTCODE is unknown" in {
         val exit = UnsafeZioRun.run(
-          ProjectRestService(_.getProjectRestrictedViewSettings(ShortcodeIdentifier.unsafeFrom("9999"))),
+          ProjectRestService(_.getProjectRestrictedViewSettingsByShortcode(Shortcode.unsafeFrom("9999"))),
         )
-        assertFailsWithA[NotFoundException](exit, s"Project '9999' not found.")
+        assertFailsWithA[NotFoundException](exit, s"Project with shortcode 9999 not found.")
       }
 
       "return 'NotFoundException' when the project SHORTNAME is unknown" in {
         val exit = UnsafeZioRun.run(
           ProjectRestService(
-            _.getProjectRestrictedViewSettings(
-              ShortnameIdentifier.unsafeFrom("wrongshortname"),
-            ),
+            _.getProjectRestrictedViewSettingsByShortname(Shortname.unsafeFrom("wrongshortname")),
           ),
         )
-        assertFailsWithA[NotFoundException](exit, s"Project 'wrongshortname' not found.")
+        assertFailsWithA[NotFoundException](exit, s"Project with shortname wrongshortname not found.")
       }
     }
 
@@ -291,10 +281,9 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       }
 
       "CREATE a project that its info has special characters" in {
-
-        val longnameWithSpecialCharacter    = "New \\\"Longname\\\""
-        val descriptionWithSpecialCharacter = "project \\\"description\\\""
-        val keywordWithSpecialCharacter     = "new \\\"keyword\\\""
+        val longnameWithSpecialCharacter    = """New "Longname""""
+        val descriptionWithSpecialCharacter = """project "description""""
+        val keywordWithSpecialCharacter     = """new "keyword""""
         val received = UnsafeZioRun.runOrThrow(
           ProjectRestService(
             _.createProject(
@@ -441,10 +430,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return all members of a project identified by IRI" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectMembers(
-              SharedTestDataADM.rootUser,
-              IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id),
-            ),
+            _.getProjectMembersById(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.projectIri),
           ),
         )
 
@@ -461,10 +447,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return all members of a project identified by shortname" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectMembers(
-              SharedTestDataADM.rootUser,
-              ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname),
-            ),
+            _.getProjectMembersByShortname(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.getShortname),
           ),
         )
 
@@ -481,10 +464,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return all members of a project identified by shortcode" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectMembers(
-              SharedTestDataADM.rootUser,
-              ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode),
-            ),
+            _.getProjectMembersByShortcode(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.getShortcode),
           ),
         )
 
@@ -498,49 +478,40 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         )
       }
 
-      "return 'NotFound' when the project IRI is unknown (project membership)" in {
+      "return 'Forbidden' when the project IRI is unknown (project membership)" in {
         val exit = UnsafeZioRun.run(
           ProjectRestService(
-            _.getProjectMembers(
+            _.getProjectMembersById(
               SharedTestDataADM.rootUser,
-              IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri),
+              ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri),
             ),
           ),
         )
-        assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
+        assertFailsWithA[ForbiddenException](exit, s"Project with id $notExistingProjectButValidProjectIri not found.")
       }
 
-      "return 'NotFound' when the project shortname is unknown (project membership)" in {
+      "return 'Forbidden' when the project shortname is unknown (project membership)" in {
         val exit = UnsafeZioRun.run(
           ProjectRestService(
-            _.getProjectMembers(
-              SharedTestDataADM.rootUser,
-              ShortnameIdentifier.unsafeFrom("wrongshortname"),
-            ),
+            _.getProjectMembersByShortname(SharedTestDataADM.rootUser, Shortname.unsafeFrom("wrongshortname")),
           ),
         )
-        assertFailsWithA[NotFoundException](exit, s"Project 'wrongshortname' not found.")
+        assertFailsWithA[ForbiddenException](exit, s"Project with shortname wrongshortname not found.")
       }
 
-      "return 'NotFound' when the project shortcode is unknown (project membership)" in {
+      "return 'Forbidden' when the project shortcode is unknown (project membership)" in {
         val exit = UnsafeZioRun.run(
           ProjectRestService(
-            _.getProjectMembers(
-              SharedTestDataADM.rootUser,
-              ShortcodeIdentifier.unsafeFrom("9999"),
-            ),
+            _.getProjectMembersByShortcode(SharedTestDataADM.rootUser, Shortcode.unsafeFrom("9999")),
           ),
         )
-        assertFailsWithA[NotFoundException](exit, s"Project '9999' not found.")
+        assertFailsWithA[ForbiddenException](exit, s"Project with shortcode 9999 not found.")
       }
 
       "return all project admin members of a project identified by IRI" in {
         val received = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectAdminMembers(
-              SharedTestDataADM.rootUser,
-              IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id),
-            ),
+            _.getProjectAdminMembersById(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.projectIri),
           ),
         )
 
@@ -555,9 +526,9 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return all project admin members of a project identified by shortname" in {
         val received = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectAdminMembers(
+            _.getProjectAdminMembersByShortname(
               SharedTestDataADM.rootUser,
-              ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname),
+              SharedTestDataADM.imagesProject.getShortname,
             ),
           ),
         )
@@ -573,9 +544,9 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return all project admin members of a project identified by shortcode" in {
         val received = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectAdminMembers(
+            _.getProjectAdminMembersByShortcode(
               SharedTestDataADM.rootUser,
-              ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode),
+              SharedTestDataADM.imagesProject.getShortcode,
             ),
           ),
         )
@@ -588,41 +559,34 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         )
       }
 
-      "return 'NotFound' when the project IRI is unknown (project admin membership)" in {
+      "return 'Forbidden' when the project IRI is unknown (project admin membership)" in {
         val exit = UnsafeZioRun.run(
           ProjectRestService(
-            _.getProjectAdminMembers(
+            _.getProjectAdminMembersById(
               SharedTestDataADM.rootUser,
-              IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri),
+              ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri),
             ),
           ),
         )
-
-        assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
+        assertFailsWithA[ForbiddenException](exit, s"Project with id $notExistingProjectButValidProjectIri not found.")
       }
 
-      "return 'NotFound' when the project shortname is unknown (project admin membership)" in {
+      "return 'Forbidden' when the project shortname is unknown (project admin membership)" in {
         val exit = UnsafeZioRun.run(
           ProjectRestService(
-            _.getProjectAdminMembers(
-              SharedTestDataADM.rootUser,
-              ShortnameIdentifier.unsafeFrom("wrongshortname"),
-            ),
+            _.getProjectAdminMembersByShortname(SharedTestDataADM.rootUser, Shortname.unsafeFrom("wrongshortname")),
           ),
         )
-        assertFailsWithA[NotFoundException](exit, s"Project 'wrongshortname' not found.")
+        assertFailsWithA[ForbiddenException](exit, s"Project with shortname wrongshortname not found.")
       }
 
-      "return 'NotFound' when the project shortcode is unknown (project admin membership)" in {
+      "return 'Forbidden' when the project shortcode is unknown (project admin membership)" in {
         val exit = UnsafeZioRun.run(
           ProjectRestService(
-            _.getProjectMembers(
-              SharedTestDataADM.rootUser,
-              ShortcodeIdentifier.unsafeFrom("9999"),
-            ),
+            _.getProjectMembersByShortcode(SharedTestDataADM.rootUser, Shortcode.unsafeFrom("9999")),
           ),
         )
-        assertFailsWithA[NotFoundException](exit, s"Project '9999' not found.")
+        assertFailsWithA[ForbiddenException](exit, s"Project with shortcode 9999 not found.")
       }
     }
 

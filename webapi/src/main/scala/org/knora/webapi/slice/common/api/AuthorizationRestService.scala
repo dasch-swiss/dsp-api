@@ -12,6 +12,8 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -41,17 +43,37 @@ final case class AuthorizationRestService(
       projectIri <- ZIO
                       .succeed(group.belongsToProject)
                       .someOrFail(ForbiddenException(s"Group with IRI '${groupIri.value}' not found"))
-      project <- ensureSystemAdminOrProjectAdmin(user, projectIri)
+      project <- ensureSystemAdminOrProjectAdminById(user, projectIri)
     } yield (group, project)
 
-  def ensureSystemAdminOrProjectAdmin(
+  def ensureSystemAdminOrProjectAdminById(
     user: User,
     projectIri: ProjectIri,
   ): IO[ForbiddenException, KnoraProject] =
     knoraProjectService
       .findById(projectIri)
       .orDie
-      .someOrFail(ForbiddenException(s"Project with IRI '${projectIri.value}' not found"))
+      .someOrFail(ForbiddenException(s"Project with id ${projectIri.value} not found."))
+      .tap(ensureSystemAdminOrProjectAdmin(user, _))
+
+  def ensureSystemAdminOrProjectAdminByShortcode(
+    user: User,
+    shortcode: Shortcode,
+  ): IO[ForbiddenException, KnoraProject] =
+    knoraProjectService
+      .findByShortcode(shortcode)
+      .orDie
+      .someOrFail(ForbiddenException(s"Project with shortcode ${shortcode.value} not found."))
+      .tap(ensureSystemAdminOrProjectAdmin(user, _))
+
+  def ensureSystemAdminOrProjectAdminByShortname(
+    user: User,
+    shortname: Shortname,
+  ): IO[ForbiddenException, KnoraProject] =
+    knoraProjectService
+      .findByShortname(shortname)
+      .orDie
+      .someOrFail(ForbiddenException(s"Project with shortname ${shortname.value} not found."))
       .tap(ensureSystemAdminOrProjectAdmin(user, _))
 
   def ensureSystemAdminOrProjectAdmin(user: User, project: KnoraProject): IO[ForbiddenException, Unit] = {

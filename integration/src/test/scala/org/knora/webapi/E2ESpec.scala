@@ -7,12 +7,16 @@ package org.knora.webapi
 
 import com.typesafe.scalalogging._
 import org.apache.pekko
+import org.apache.pekko.http.scaladsl.client.RequestBuilding
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.testkit.TestKitBase
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import spray.json._
 import zio._
+import zio.json._
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -23,6 +27,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
+import dsp.errors.AssertionException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
@@ -37,10 +42,6 @@ import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.LogAspect
-
-import pekko.http.scaladsl.client.RequestBuilding
-import pekko.http.scaladsl.model._
-import pekko.testkit.TestKitBase
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack
@@ -110,9 +111,7 @@ abstract class E2ESpec
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
-    UnsafeZioRun.runOrThrow(
-      AppServer.testWithoutSipi *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")),
-    )
+    UnsafeZioRun.runOrThrow(AppServer.test *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")))
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
@@ -135,6 +134,16 @@ abstract class E2ESpec
 
   protected def checkResponseOK(request: HttpRequest): Unit =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.checkResponseOK(request)))
+
+  protected def getSuccessResponseAs[A](request: HttpRequest)(implicit decoder: JsonDecoder[A]): A = UnsafeZioRun
+    .runOrThrow(
+      for {
+        str <- ZIO.serviceWithZIO[TestClientService](_.getResponseString(request))
+        obj <- ZIO
+                 .fromEither(str.fromJson[A])
+                 .mapError(e => new AssertionException(s"Error: $e\nFailed to parse json:\n$str"))
+      } yield obj,
+    )
 
   protected def getResponseAsJson(request: HttpRequest): JsObject =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseJson(request)))

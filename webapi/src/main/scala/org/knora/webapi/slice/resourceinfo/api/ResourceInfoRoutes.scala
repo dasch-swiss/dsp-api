@@ -8,7 +8,7 @@ package org.knora.webapi.slice.resourceinfo.api
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.ZLayer
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
@@ -27,9 +27,9 @@ final case class ResourceInfoRoutes(
 ) {
 
   val getResourcesInfoHandler =
-    PublicEndpointHandler[(IriIdentifier, String, Option[Order], Option[OrderBy]), ListResponseDto](
+    PublicEndpointHandler[(ProjectIri, String, Option[Order], Option[OrderBy]), ListResponseDto](
       endpoints.getResourcesInfo,
-      { case (projectIri: IriIdentifier, resourceClass: String, order: Option[Order], orderBy: Option[OrderBy]) =>
+      { case (projectIri: ProjectIri, resourceClass: String, order: Option[Order], orderBy: Option[OrderBy]) =>
         resourceInfoService.findByProjectAndResourceClass(
           projectIri,
           resourceClass,

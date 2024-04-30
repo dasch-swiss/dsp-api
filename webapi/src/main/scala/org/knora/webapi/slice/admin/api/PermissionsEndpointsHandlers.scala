@@ -21,9 +21,9 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
@@ -46,34 +46,34 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val getPermissionsApByProjectIriHandler =
-    SecuredEndpointHandler[IriIdentifier, AdministrativePermissionsForProjectGetResponseADM](
+    SecuredEndpointHandler[ProjectIri, AdministrativePermissionsForProjectGetResponseADM](
       permissionsEndpoints.getPermissionsApByProjectIri,
-      user => { case (projectIri: IriIdentifier) =>
-        restService.getPermissionsApByProjectIri(projectIri.value, user)
+      user => { case (projectIri: ProjectIri) =>
+        restService.getPermissionsApByProjectIri(projectIri, user)
       },
     )
 
   private val getPermissionsApByProjectAndGroupIriHandler =
-    SecuredEndpointHandler[(IriIdentifier, GroupIri), AdministrativePermissionGetResponseADM](
+    SecuredEndpointHandler[(ProjectIri, GroupIri), AdministrativePermissionGetResponseADM](
       permissionsEndpoints.getPermissionsApByProjectAndGroupIri,
-      user => { case (projectIri: IriIdentifier, groupIri: GroupIri) =>
-        restService.getPermissionsApByProjectAndGroupIri(projectIri.value, groupIri, user)
+      user => { case (projectIri: ProjectIri, groupIri: GroupIri) =>
+        restService.getPermissionsApByProjectAndGroupIri(projectIri, groupIri, user)
       },
     )
 
   private val getPermissionsDaopByProjectIriHandler =
-    SecuredEndpointHandler[IriIdentifier, DefaultObjectAccessPermissionsForProjectGetResponseADM](
+    SecuredEndpointHandler[ProjectIri, DefaultObjectAccessPermissionsForProjectGetResponseADM](
       permissionsEndpoints.getPermissionsDoapByProjectIri,
-      user => { case (projectIri: IriIdentifier) =>
-        restService.getPermissionsDaopByProjectIri(projectIri.value, user)
+      user => { case (projectIri: ProjectIri) =>
+        restService.getPermissionsDaopByProjectIri(projectIri, user)
       },
     )
 
   private val getPermissionsByProjectIriHandler =
-    SecuredEndpointHandler[IriIdentifier, PermissionsForProjectGetResponseADM](
+    SecuredEndpointHandler[ProjectIri, PermissionsForProjectGetResponseADM](
       permissionsEndpoints.getPermissionsByProjectIri,
-      user => { case (projectIri: IriIdentifier) =>
-        restService.getPermissionsByProjectIri(projectIri.value, user)
+      user => { case (projectIri: ProjectIri) =>
+        restService.getPermissionsByProjectIri(projectIri, user)
       },
     )
 

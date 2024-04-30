@@ -18,10 +18,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests._
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.admin.domain.service.MaintenanceService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.store.triplestore.api.TestTripleStore
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -119,8 +117,6 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
     KnoraProjectService.layer,
     KnoraProjectRepoInMemory.layer,
     emptyDatasetRefLayer >>> TriplestoreServiceInMemory.layer,
-    PredicateObjectMapper.layer,
-    IriConverter.layer,
     StringFormatter.test,
   )
 }
