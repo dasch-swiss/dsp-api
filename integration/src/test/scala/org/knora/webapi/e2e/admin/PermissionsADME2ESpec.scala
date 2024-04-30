@@ -440,9 +440,7 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
-        val json = AkkaHttpUtils.httpResponseToJson(response)
-        println("==============================\n" + json.prettyPrint)
-        val result   = json.convertTo[AdministrativePermissionGetResponseADM]
+        val result   = AkkaHttpUtils.httpResponseToJson(response).convertTo[AdministrativePermissionGetResponseADM]
         val groupIri = result.administrativePermission.forGroup
         assert(groupIri == newGroupIri)
 
