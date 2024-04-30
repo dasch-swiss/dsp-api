@@ -49,7 +49,7 @@ object UserProjectMembershipsGetResponseADM {
  *
  * @param projects a sequence of projects the user is member of the project admin group.
  */
-case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponseADM {}
+case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponseADM
 object UserProjectAdminMembershipsGetResponseADM {
   implicit val codec: JsonCodec[UserProjectAdminMembershipsGetResponseADM] =
     DeriveJsonCodec.gen[UserProjectAdminMembershipsGetResponseADM]
