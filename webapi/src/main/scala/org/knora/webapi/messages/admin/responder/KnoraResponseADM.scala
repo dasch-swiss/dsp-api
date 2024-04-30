@@ -12,4 +12,4 @@ import org.knora.webapi.messages.traits.Jsonable
  */
 trait KnoraResponseADM extends Jsonable
 
-trait AdminKnoraResponseADM extends KnoraResponseADM
+trait AdminKnoraResponseADM

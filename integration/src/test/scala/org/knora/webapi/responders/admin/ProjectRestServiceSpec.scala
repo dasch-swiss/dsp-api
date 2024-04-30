@@ -15,13 +15,13 @@ import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM._
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.api.model._
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -287,10 +287,9 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       }
 
       "CREATE a project that its info has special characters" in {
-
-        val longnameWithSpecialCharacter    = "New \\\"Longname\\\""
-        val descriptionWithSpecialCharacter = "project \\\"description\\\""
-        val keywordWithSpecialCharacter     = "new \\\"keyword\\\""
+        val longnameWithSpecialCharacter    = """New "Longname""""
+        val descriptionWithSpecialCharacter = """project "description""""
+        val keywordWithSpecialCharacter     = """new "keyword""""
         val received = UnsafeZioRun.runOrThrow(
           ProjectRestService(
             _.createProject(

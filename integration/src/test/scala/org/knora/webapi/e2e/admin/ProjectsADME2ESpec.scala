@@ -5,6 +5,7 @@
 
 package org.knora.webapi.e2e.admin
 
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.pekko.http.scaladsl.model.ContentTypes
 import org.apache.pekko.http.scaladsl.model.HttpEntity
 import org.apache.pekko.http.scaladsl.model.HttpResponse
@@ -12,6 +13,7 @@ import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.apache.pekko.util.Timeout
+import spray.json.jsonReader
 
 import java.net.URLEncoder
 import scala.concurrent.Await
@@ -20,12 +22,13 @@ import scala.concurrent.duration._
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
+import org.knora.webapi.messages.admin.responder.IntegrationTestAdminJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
+import org.knora.webapi.slice.admin.api.model._
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
@@ -33,7 +36,7 @@ import org.knora.webapi.util.MutableTestIri
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
  */
-class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
+class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
 
   private val rootEmail        = SharedTestDataADM.rootUser.email
   private val testPass         = SharedTestDataADM.testPass
@@ -406,8 +409,10 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
-
-        val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
+        val jsObject       = AkkaHttpUtils.httpResponseToJson(response)
+        val prjMembersResp = jsonReader[ProjectMembersGetResponseADM].read(jsObject)
+//        val prjMembersResp = jsObject.convertTo[ProjectMembersGetResponseADM]
+        val members = prjMembersResp.members
         members.size should be(4)
       }
 
@@ -418,7 +423,8 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
+        val members: Seq[User] =
+          AkkaHttpUtils.httpResponseToJson(response).convertTo[ProjectMembersGetResponseADM].members
         members.size should be(4)
       }
 
@@ -429,7 +435,8 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
+        val members: Seq[User] =
+          AkkaHttpUtils.httpResponseToJson(response).convertTo[ProjectMembersGetResponseADM].members
         members.size should be(4)
       }
 
@@ -440,7 +447,8 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
+        val members: Seq[User] =
+          AkkaHttpUtils.httpResponseToJson(response).convertTo[ProjectAdminMembersGetResponseADM].members
         members.size should be(2)
       }
 
@@ -451,7 +459,8 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
+        val members: Seq[User] =
+          AkkaHttpUtils.httpResponseToJson(response).convertTo[ProjectAdminMembersGetResponseADM].members
         members.size should be(2)
       }
 
@@ -462,7 +471,8 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
+        val members: Seq[User] =
+          AkkaHttpUtils.httpResponseToJson(response).convertTo[ProjectAdminMembersGetResponseADM].members
         members.size should be(2)
       }
     }

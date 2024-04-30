@@ -8,7 +8,7 @@ package org.knora.webapi.slice.resourceinfo.api
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.ZLayer
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter

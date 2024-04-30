@@ -6,7 +6,7 @@
 package org.knora.webapi.sharedtestdata
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.projectsmessages.Project
+import org.knora.webapi.slice.admin.api.model.Project
 
 /**
  * Represents basic information about a project.

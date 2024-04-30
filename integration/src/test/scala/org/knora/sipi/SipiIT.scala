@@ -23,13 +23,13 @@ import scala.util.Try
 
 import org.knora.sipi.MockDspApiServer.verify._
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.admin.responder.projectsmessages.PermissionCodeAndProjectRestrictedViewSettings
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.InvalidTokenCache
+import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortcodeIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
