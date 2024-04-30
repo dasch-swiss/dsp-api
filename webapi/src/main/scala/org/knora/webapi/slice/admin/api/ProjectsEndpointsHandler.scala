@@ -11,14 +11,14 @@ import zio.ZLayer
 import java.nio.file.Files
 import scala.concurrent.ExecutionContext
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortcodeIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
+import org.knora.webapi.slice.admin.api.model._
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.HandlerMapper

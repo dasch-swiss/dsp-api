@@ -13,7 +13,7 @@ import zio.URIO
 import zio.ZIO
 import zio.ZLayer
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.resourceinfo.domain
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo

@@ -16,7 +16,7 @@ import java.util.UUID.randomUUID
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Asc
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.CreationDate

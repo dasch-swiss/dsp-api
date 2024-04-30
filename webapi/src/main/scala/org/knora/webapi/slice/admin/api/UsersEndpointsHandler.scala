@@ -7,7 +7,6 @@ package org.knora.webapi.slice.admin.api
 
 import zio.ZLayer
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
@@ -15,6 +14,7 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRe
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri

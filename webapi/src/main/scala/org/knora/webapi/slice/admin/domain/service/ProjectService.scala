@@ -8,11 +8,11 @@ package org.knora.webapi.slice.admin.domain.service
 import zio._
 
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.projectsmessages.Project
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponse
+import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortcodeIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortnameIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectKeywordsGetResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -45,23 +45,23 @@ final case class ProjectService(
   private def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[Project]] =
     knoraProjectService.findById(projectId).flatMap(ZIO.foreach(_)(toProject))
 
-  private def toProject(knoraProject: KnoraProject): Task[Project] = for {
-    ontologies <- ontologyRepo.findByProject(knoraProject).map(_.map(_.ontologyMetadata.ontologyIri.toIri))
-    prj <- ZIO.attempt(
-             Project(
-               id = knoraProject.id.value,
-               shortname = knoraProject.shortname.value,
-               shortcode = knoraProject.shortcode.value,
-               longname = knoraProject.longname.map(_.value),
-               description = knoraProject.description.map(_.value),
-               keywords = knoraProject.keywords.map(_.value),
-               logo = knoraProject.logo.map(_.value),
-               status = knoraProject.status.value,
-               selfjoin = knoraProject.selfjoin.value,
-               ontologies = ontologies,
-             ).unescape,
-           )
-  } yield prj
+  private def toProject(knoraProject: KnoraProject): Task[Project] = ontologyRepo
+    .findByProject(knoraProject)
+    .map(_.map(_.ontologyMetadata.ontologyIri.toIri))
+    .map(ontologies =>
+      Project(
+        knoraProject.id.value,
+        knoraProject.shortname.value,
+        knoraProject.shortcode.value,
+        knoraProject.longname.map(_.value),
+        knoraProject.description.map(_.value),
+        knoraProject.keywords.map(_.value),
+        knoraProject.logo.map(_.value),
+        ontologies,
+        knoraProject.status.value,
+        knoraProject.selfjoin.value,
+      ),
+    )
 
   private def toKnoraProject(project: Project, restrictedView: RestrictedView): KnoraProject =
     KnoraProject(

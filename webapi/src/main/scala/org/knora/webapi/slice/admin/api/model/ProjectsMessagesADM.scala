@@ -3,14 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.admin.responder.projectsmessages
+package org.knora.webapi.slice.admin.api.model
 
-import org.apache.commons.lang3.builder.HashCodeBuilder
-import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.DefaultJsonProtocol
-import spray.json.JsValue
-import spray.json.JsonFormat
-import spray.json.RootJsonFormat
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat.TextPlain
 import sttp.tapir.DecodeResult
@@ -19,20 +13,52 @@ import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import dsp.errors.BadRequestException
-import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
-import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
 
-object ProjectCodec {
+/**
+ * Represents basic information about a project.
+ *
+ * @param id          The project's IRI.
+ * @param shortname   The project's shortname.
+ * @param shortcode   The project's shortcode.
+ * @param longname    The project's long name.
+ * @param description The project's description.
+ * @param keywords    The project's keywords.
+ * @param logo        The project's logo.
+ * @param ontologies  The project's ontologies.
+ * @param status      The project's status.
+ * @param selfjoin    The project's self-join status.
+ */
+case class Project(
+  id: IRI,
+  shortname: String,
+  shortcode: String,
+  longname: Option[String],
+  description: Seq[StringLiteralV2],
+  keywords: Seq[String],
+  logo: Option[String],
+  ontologies: Seq[IRI],
+  status: Boolean,
+  selfjoin: Boolean,
+) extends Ordered[Project] {
+
+  def projectIri: ProjectIri = ProjectIri.unsafeFrom(id)
+
+  def getShortname: Shortname = Shortname.unsafeFrom(shortname)
+  def getShortcode: Shortcode = Shortcode.unsafeFrom(shortcode)
+
+  /**
+   * Allows to sort collections of ProjectADM. Sorting is done by the id.
+   */
+  def compare(that: Project): Int = this.id.compareTo(that.id)
+}
+object Project {
   implicit val projectCodec: JsonCodec[Project] = DeriveJsonCodec.gen[Project]
 }
 
@@ -43,8 +69,6 @@ object ProjectCodec {
  */
 case class ProjectsGetResponse(projects: Seq[Project])
 object ProjectsGetResponse {
-  // can be removed as soon as ProjectADM can define its own codec
-  import ProjectCodec.projectCodec
   implicit val codec: JsonCodec[ProjectsGetResponse] = DeriveJsonCodec.gen[ProjectsGetResponse]
 }
 
@@ -55,8 +79,6 @@ object ProjectsGetResponse {
  */
 case class ProjectGetResponse(project: Project)
 object ProjectGetResponse {
-  // can be removed as soon as ProjectADM can define its own codec
-  import ProjectCodec.projectCodec
   implicit val codec: JsonCodec[ProjectGetResponse] = DeriveJsonCodec.gen[ProjectGetResponse]
 }
 
@@ -65,9 +87,9 @@ object ProjectGetResponse {
  *
  * @param members a list of members.
  */
-case class ProjectMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
-
-  def toJsValue: JsValue = projectMembersGetResponseADMFormat.write(this)
+case class ProjectMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM
+object ProjectMembersGetResponseADM {
+  implicit val codec: JsonCodec[ProjectMembersGetResponseADM] = DeriveJsonCodec.gen[ProjectMembersGetResponseADM]
 }
 
 /**
@@ -75,11 +97,10 @@ case class ProjectMembersGetResponseADM(members: Seq[User]) extends AdminKnoraRe
  *
  * @param members a list of admin members.
  */
-case class ProjectAdminMembersGetResponseADM(members: Seq[User])
-    extends AdminKnoraResponseADM
-    with ProjectsADMJsonProtocol {
-
-  def toJsValue: JsValue = projectAdminMembersGetResponseADMFormat.write(this)
+case class ProjectAdminMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM
+object ProjectAdminMembersGetResponseADM {
+  implicit val codec: JsonCodec[ProjectAdminMembersGetResponseADM] =
+    DeriveJsonCodec.gen[ProjectAdminMembersGetResponseADM]
 }
 
 /**
@@ -136,126 +157,15 @@ object PermissionCodeAndProjectRestrictedViewSettings {
  *
  * @param project the new project info of the created/modified project.
  */
-case class ProjectOperationResponseADM(project: Project) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
-  def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Components of messages
-
-/**
- * Represents basic information about a project.
- *
- * @param id          The project's IRI.
- * @param shortname   The project's shortname.
- * @param shortcode   The project's shortcode.
- * @param longname    The project's long name.
- * @param description The project's description.
- * @param keywords    The project's keywords.
- * @param logo        The project's logo.
- * @param ontologies  The project's ontologies.
- * @param status      The project's status.
- * @param selfjoin    The project's self-join status.
- */
-case class Project(
-  id: IRI,
-  shortname: String,
-  shortcode: String,
-  longname: Option[String],
-  description: Seq[StringLiteralV2],
-  keywords: Seq[String],
-  logo: Option[String],
-  ontologies: Seq[IRI],
-  status: Boolean,
-  selfjoin: Boolean,
-) extends Ordered[Project] {
-
-  def projectIri: ProjectIri = ProjectIri.unsafeFrom(id)
-
-  def getShortname: Shortname = Shortname.unsafeFrom(shortname)
-  def getShortcode: Shortcode = Shortcode.unsafeFrom(shortcode)
-
-  if (description.isEmpty) {
-    throw OntologyConstraintException("Project description is a required property.")
-  }
-
-  /**
-   * Allows to sort collections of ProjectADM. Sorting is done by the id.
-   */
-  def compare(that: Project): Int = this.id.compareTo(that.id)
-
-  override def equals(that: Any): Boolean =
-    // Ignore the order of sequences when testing equality for this class.
-    that match {
-      case otherProj: Project =>
-        id == otherProj.id &&
-        shortname == otherProj.shortname &&
-        shortcode == otherProj.shortcode &&
-        longname == otherProj.longname &&
-        description.toSet == otherProj.description.toSet &&
-        keywords.toSet == otherProj.keywords.toSet &&
-        logo == otherProj.logo &&
-        ontologies.toSet == otherProj.ontologies.toSet &&
-        status == otherProj.status &&
-        selfjoin == otherProj.selfjoin
-
-      case _ => false
-    }
-
-  override def hashCode(): Int =
-    // Ignore the order of sequences when generating hash codes for this class.
-    new HashCodeBuilder(19, 39)
-      .append(id)
-      .append(shortname)
-      .append(shortcode)
-      .append(longname)
-      .append(description.toSet)
-      .append(keywords.toSet)
-      .append(logo)
-      .append(ontologies.toSet)
-      .append(status)
-      .append(selfjoin)
-      .toHashCode
-
-  def unescape: Project = {
-    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val unescapedDescriptions: Seq[StringLiteralV2] = description.map(desc =>
-      StringLiteralV2.from(value = Iri.fromSparqlEncodedString(desc.value), language = desc.language),
-    )
-    val unescapedKeywords: Seq[String] = keywords.map(key => Iri.fromSparqlEncodedString(key))
-    copy(
-      shortcode = Iri.fromSparqlEncodedString(shortcode),
-      shortname = Iri.fromSparqlEncodedString(shortname),
-      longname = stringFormatter.unescapeOptionalString(longname),
-      logo = stringFormatter.unescapeOptionalString(logo),
-      description = unescapedDescriptions,
-      keywords = unescapedKeywords,
-    )
-  }
+case class ProjectOperationResponseADM(project: Project) extends AdminKnoraResponseADM
+object ProjectOperationResponseADM {
+  implicit val codec: JsonCodec[ProjectOperationResponseADM] = DeriveJsonCodec.gen[ProjectOperationResponseADM]
 }
 
 /**
  * Represents the project's identifier, which can be an IRI, shortcode or shortname.
  */
-sealed trait ProjectIdentifierADM { self =>
-  def asIriIdentifierOption: Option[String] =
-    self match {
-      case IriIdentifier(value) => Some(value.value)
-      case _                    => None
-    }
-
-  def asShortcodeIdentifierOption: Option[String] =
-    self match {
-      case ShortcodeIdentifier(value) => Some(value.value)
-      case _                          => None
-    }
-
-  def asShortnameIdentifierOption: Option[String] =
-    self match {
-      case ShortnameIdentifier(value) => Some(value.value)
-      case _                          => None
-    }
-}
+sealed trait ProjectIdentifierADM
 
 object ProjectIdentifierADM {
 
@@ -344,43 +254,6 @@ object ProjectRestrictedViewSettingsADM {
   def from(restrictedView: RestrictedView): ProjectRestrictedViewSettingsADM =
     restrictedView match {
       case RestrictedView.Watermark(value) => ProjectRestrictedViewSettingsADM(None, value)
-      case RestrictedView.Size(value)      => ProjectRestrictedViewSettingsADM(Some(value), false)
+      case RestrictedView.Size(value)      => ProjectRestrictedViewSettingsADM(Some(value), watermark = false)
     }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JSON formatting
-
-/**
- * A spray-json protocol for generating Knora API v1 JSON providing data about projects.
- */
-trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with TriplestoreJsonProtocol {
-
-  import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
-
-  implicit val projectADMFormat: JsonFormat[Project] = lazyFormat(
-    jsonFormat(
-      Project.apply,
-      "id",
-      "shortname",
-      "shortcode",
-      "longname",
-      "description",
-      "keywords",
-      "logo",
-      "ontologies",
-      "status",
-      "selfjoin",
-    ),
-  )
-
-  implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM.apply, "members")),
-  )
-  implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectMembersGetResponseADM.apply, "members")),
-  )
-  implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectOperationResponseADM.apply, "project")),
-  )
 }

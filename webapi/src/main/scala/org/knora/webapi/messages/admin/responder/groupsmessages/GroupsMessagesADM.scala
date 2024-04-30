@@ -4,23 +4,20 @@
  */
 
 package org.knora.webapi.messages.admin.responder.groupsmessages
-import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.DefaultJsonProtocol
-import spray.json.JsonFormat
-import spray.json.RootJsonFormat
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.Group
 
-// Responses
 /**
  * Represents the Knora API v1 JSON response to a request for information about all groups.
  *
  * @param groups information about all existing groups.
  */
-case class GroupsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponseADM with GroupsADMJsonProtocol {
-  def toJsValue = groupsGetResponseADMFormat.write(this)
+final case class GroupsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponseADM
+object GroupsGetResponseADM {
+  implicit val codec: JsonCodec[GroupsGetResponseADM] = DeriveJsonCodec.gen[GroupsGetResponseADM]
 }
 
 /**
@@ -28,21 +25,7 @@ case class GroupsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponseAD
  *
  * @param group all information about the group.
  */
-case class GroupGetResponseADM(group: Group) extends AdminKnoraResponseADM with GroupsADMJsonProtocol {
-  def toJsValue = groupResponseADMFormat.write(this)
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JSON formatting
-
-/**
- * A spray-json protocol for generating Knora API v1 JSON providing data about groups.
- */
-trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol {
-
-  implicit val groupADMFormat: JsonFormat[Group] = jsonFormat6(Group.apply)
-  implicit val groupsGetResponseADMFormat: RootJsonFormat[GroupsGetResponseADM] =
-    jsonFormat(GroupsGetResponseADM.apply, "groups")
-  implicit val groupResponseADMFormat: RootJsonFormat[GroupGetResponseADM] =
-    jsonFormat(GroupGetResponseADM.apply, "group")
+final case class GroupGetResponseADM(group: Group) extends AdminKnoraResponseADM
+object GroupGetResponseADM {
+  implicit val codec: JsonCodec[GroupGetResponseADM] = DeriveJsonCodec.gen[GroupGetResponseADM]
 }

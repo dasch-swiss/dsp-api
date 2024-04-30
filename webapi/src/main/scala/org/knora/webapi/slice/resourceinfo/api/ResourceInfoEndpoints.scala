@@ -10,7 +10,7 @@ import sttp.tapir.generic.auto._
 import sttp.tapir.json.zio._
 import zio.ZLayer
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto

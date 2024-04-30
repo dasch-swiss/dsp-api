@@ -3,38 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.admin.responder.projectsmessages
+package org.knora.webapi.slice.admin.api.model
 
 import dsp.errors.BadRequestException
-import dsp.errors.OntologyConstraintException
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM._
 
 /**
  * This spec is used to test subclasses of the [[ProjectsResponderRequestADM]] trait.
  */
 class ProjectsMessagesADMSpec extends CoreSpec {
-  "The ProjectADM case class" should {
-    "return a 'OntologyConstraintException' when project description is not supplied" in {
-      assertThrows[OntologyConstraintException](
-        Project(
-          id = "id",
-          shortcode = "1111",
-          shortname = "shortname",
-          longname = None,
-          description = Seq.empty[StringLiteralV2],
-          keywords = Seq.empty[String],
-          logo = None,
-          ontologies = Seq.empty[IRI],
-          status = true,
-          selfjoin = false,
-        ),
-      )
-    }
-  }
-
   "The ProjectIdentifierADM class" should {
     "return without throwing when the project IRI is valid" in {
       IriIdentifier

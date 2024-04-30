@@ -11,10 +11,10 @@ import zio.Task
 import zio.ULayer
 import zio.ZLayer
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortcodeIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo

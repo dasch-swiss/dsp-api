@@ -9,12 +9,12 @@ import org.apache.pekko.testkit._
 import zio.ZIO
 
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.projectsmessages.PermissionCodeAndProjectRestrictedViewSettings
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
+import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortcodeIdentifier
+import org.knora.webapi.slice.admin.api.model.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.slice.admin.domain.model.User
 
 /**

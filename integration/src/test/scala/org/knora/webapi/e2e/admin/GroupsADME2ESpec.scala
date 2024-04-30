@@ -6,12 +6,13 @@
 package org.knora.webapi.e2e.admin
 
 import org.apache.pekko
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
+import org.knora.webapi.messages.admin.responder.IntegrationTestAdminJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Group
@@ -26,7 +27,7 @@ import pekko.http.scaladsl.unmarshalling.Unmarshal
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
  */
-class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
+class GroupsADME2ESpec extends E2ESpec with SprayJsonSupport {
 
   implicit def default: RouteTestTimeout = RouteTestTimeout(30.seconds)
 
