@@ -29,8 +29,10 @@ import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.model.ProjectAdminMembersGetResponseADM
+import org.knora.webapi.slice.admin.api.model.ProjectGetResponse
 import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
+import org.knora.webapi.slice.admin.api.model.ProjectsGetResponse
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
@@ -79,6 +81,9 @@ final class KnoraResponseRenderer(config: AppConfig, stringFormatter: StringForm
           ProjectAdminMembersGetResponseADM(members.map(userAsExternalRepresentation))
         case ProjectOperationResponseADM(project) =>
           ProjectOperationResponseADM(projectAsExternalRepresentation(project))
+
+        case ProjectGetResponse(project)   => ProjectGetResponse(projectAsExternalRepresentation(project))
+        case ProjectsGetResponse(projects) => ProjectsGetResponse(projects.map(projectAsExternalRepresentation))
 
         case GroupsGetResponseADM(groups) => GroupsGetResponseADM(groups.map(groupAsExternalRepresentation))
         case GroupGetResponseADM(group)   => GroupGetResponseADM(groupAsExternalRepresentation(group))
