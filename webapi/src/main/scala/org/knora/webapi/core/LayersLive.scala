@@ -40,7 +40,6 @@ import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.common.api._
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
-import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.JwtServiceLive
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
@@ -70,7 +69,8 @@ object LayersLive {
    * The `Environment` that we require to exist at startup.
    */
   type DspEnvironmentLive =
-    ActorSystem &
+    AdminModule.Provided &
+      ActorSystem &
       AdminApiEndpoints &
       ApiRoutes &
       ApiV2Endpoints &
@@ -79,12 +79,10 @@ object LayersLive {
       AssetPermissionsResponder &
       Authenticator &
       AuthorizationRestService &
-      CacheManager &
       CardinalityHandler &
       ConstructResponseUtilV2 &
       GravsearchTypeInspectionRunner &
       GroupRestService &
-      GroupService &
       HttpServer &
       IIIFRequestMessageHandler &
       InferenceOptimizationService &
@@ -92,7 +90,6 @@ object LayersLive {
       InvalidTokenCache &
       IriConverter &
       JwtService &
-      KnoraUserToUserConverter &
       ListsResponder &
       ListsResponderV2 &
       MessageRelay &
@@ -107,7 +104,6 @@ object LayersLive {
       ProjectExportStorageService &
       ProjectImportService &
       ProjectRestService &
-      ProjectService &
       QueryTraverser &
       RepositoryUpdater &
       ResourceUtilV2 &
@@ -123,7 +119,6 @@ object LayersLive {
       StringFormatter &
       TriplestoreService &
       UserRestService &
-      UserService &
       ValuesResponderV2
 
   /**
