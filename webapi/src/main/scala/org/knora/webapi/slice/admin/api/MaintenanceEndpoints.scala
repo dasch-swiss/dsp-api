@@ -20,6 +20,7 @@ final case class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val maintenanceBase = "admin" / "maintenance"
 
+  implicit val jsonSchemaForJson: Schema[Json] = Schema.derived[Json]
   val postMaintenance = baseEndpoints.securedEndpoint.post
     .in(
       maintenanceBase / path[String]
