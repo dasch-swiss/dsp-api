@@ -5,20 +5,21 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import dsp.valueobjects.Iri
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.*
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.AdminKnoraResponse
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import spray.json.*
+import spray.json._
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.json.jsonDiscriminator
 
 import scala.util.Try
+
+import dsp.valueobjects.Iri
+import org.knora.webapi._
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponse
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 
 /**
  * Responds to deletion of list node's comments by returning a success message.

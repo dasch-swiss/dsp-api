@@ -5,6 +5,8 @@
 
 package org.knora.webapi.routing
 
+import zio._
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponse
@@ -13,7 +15,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.slice.admin.api.model._
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.User
-import zio.*
 
 /**
  * Convenience methods for Knora Admin routes.

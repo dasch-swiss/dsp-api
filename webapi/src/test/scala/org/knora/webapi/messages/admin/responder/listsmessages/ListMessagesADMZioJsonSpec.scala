@@ -1,7 +1,10 @@
+/*
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import spray.json.JsonWriter
 import zio.Scope
 import zio.json.DecoderOps
@@ -12,6 +15,9 @@ import zio.test.Spec
 import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 object ListMessagesADMZioJsonSpec extends ZIOSpecDefault with ListADMJsonProtocol {
   object TestData {
@@ -120,6 +126,7 @@ object ListMessagesADMZioJsonSpec extends ZIOSpecDefault with ListADMJsonProtoco
       children = Seq.empty[ListChildNodeADM],
     )
   }
+
   val spec: Spec[TestEnvironment with Scope, Any] = suite("List models")(
     suite("serialization")(
       suite("ListNodeInfoADM")(

@@ -4,9 +4,10 @@
  */
 
 package org.knora.webapi.messages.admin.responder.groupsmessages
-import org.knora.webapi.messages.admin.responder.AdminKnoraResponse
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
+
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponse
 import org.knora.webapi.slice.admin.domain.model.Group
 
 /**

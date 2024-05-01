@@ -55,7 +55,7 @@ final class KnoraResponseRenderer(config: AppConfig, stringFormatter: StringForm
     transformResponseIntoExternalFormat(response).mapAttempt(_.asInstanceOf[A])
 
   private def transformResponseIntoExternalFormat(
-                                                   response: AdminKnoraResponse,
+    response: AdminKnoraResponse,
   ): Task[AdminKnoraResponse] =
     ZIO.attempt {
       def projectAsExternalRepresentation(project: Project): Project = {
