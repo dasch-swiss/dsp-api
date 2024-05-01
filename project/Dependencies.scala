@@ -89,7 +89,7 @@ object Dependencies {
   // other
   val diff           = "com.sksamuel.diff" % "diff"                % "1.1.11"
   val gwtServlet     = "com.google.gwt"    % "gwt-servlet"         % "2.10.0"
-  val icu4j          = "com.ibm.icu"       % "icu4j"               % "74.2"
+  val icu4j          = "com.ibm.icu"       % "icu4j"               % "75.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"        % "2.0.1"
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
   val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
