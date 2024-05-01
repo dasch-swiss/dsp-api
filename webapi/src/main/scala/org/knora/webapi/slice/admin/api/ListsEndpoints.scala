@@ -7,8 +7,7 @@ package org.knora.webapi.slice.admin.api
 
 import sttp.tapir._
 import sttp.tapir.generic.auto._
-import sttp.tapir.json.spray.{jsonBody => sprayJsonBody}
-import sttp.tapir.json.zio.{jsonBody => zioJsonBody}
+import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
@@ -34,84 +33,84 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
   val getListsQueryByProjectIriOption = baseEndpoints.publicEndpoint.get
     .in(base)
     .in(AdminQueryVariables.projectIriOption)
-    .out(sprayJsonBody[ListsGetResponseADM].description("Contains the list of all root nodes of each found list."))
+    .out(jsonBody[ListsGetResponseADM].description("Contains the list of all root nodes of each found list."))
     .description("Get all lists or all lists belonging to a project.")
 
   private val listIriPathVar = path[ListIri].description("The IRI of the list.")
   val getListsByIri = baseEndpoints.publicEndpoint.get
     .in(base / listIriPathVar)
-    .out(sprayJsonBody[ListItemGetResponseADM])
+    .out(jsonBody[ListItemGetResponseADM])
     .description("Returns a list node, root or child, with children (if exist).")
 
   private val getListInfoDesc = "Returns basic information about a list node, root or child, w/o children (if exist)."
   val getListsByIriInfo = baseEndpoints.publicEndpoint.get
     .in(base / listIriPathVar / "info")
-    .out(sprayJsonBody[NodeInfoGetResponseADM])
+    .out(jsonBody[NodeInfoGetResponseADM])
     .description(getListInfoDesc)
 
   private val getListInfoDeprecation = "*Deprecated*. Use GET admin/lists/<listIri>/info instead. "
   val getListsInfosByIri = baseEndpoints.publicEndpoint.get
     .in(base / "infos" / listIriPathVar)
-    .out(sprayJsonBody[NodeInfoGetResponseADM])
+    .out(jsonBody[NodeInfoGetResponseADM])
     .description(getListInfoDeprecation + getListInfoDesc)
     .deprecated()
 
   val getListsNodesByIri = baseEndpoints.publicEndpoint.get
     .in(base / "nodes" / listIriPathVar)
-    .out(sprayJsonBody[NodeInfoGetResponseADM])
+    .out(jsonBody[NodeInfoGetResponseADM])
     .description(getListInfoDeprecation + getListInfoDesc)
     .deprecated()
 
   // Creates
   val postLists = baseEndpoints.securedEndpoint.post
     .in(base)
-    .in(zioJsonBody[ListCreateRootNodeRequest])
-    .out(sprayJsonBody[ListGetResponseADM])
+    .in(jsonBody[ListCreateRootNodeRequest])
+    .out(jsonBody[ListGetResponseADM])
 
   val postListsChild = baseEndpoints.securedEndpoint.post
     .in(base / listIriPathVar)
-    .in(zioJsonBody[ListCreateChildNodeRequest])
-    .out(sprayJsonBody[ChildNodeInfoGetResponseADM])
+    .in(jsonBody[ListCreateChildNodeRequest])
+    .out(jsonBody[ChildNodeInfoGetResponseADM])
 
   // Updates
   val putListsByIriName = baseEndpoints.securedEndpoint.put
     .in(base / listIriPathVar / "name")
-    .in(zioJsonBody[ListChangeNameRequest])
-    .out(sprayJsonBody[NodeInfoGetResponseADM])
+    .in(jsonBody[ListChangeNameRequest])
+    .out(jsonBody[NodeInfoGetResponseADM])
 
   val putListsByIriLabels = baseEndpoints.securedEndpoint.put
     .in(base / listIriPathVar / "labels")
-    .in(zioJsonBody[ListChangeLabelsRequest])
-    .out(sprayJsonBody[NodeInfoGetResponseADM])
+    .in(jsonBody[ListChangeLabelsRequest])
+    .out(jsonBody[NodeInfoGetResponseADM])
 
   val putListsByIriComments = baseEndpoints.securedEndpoint.put
     .in(base / listIriPathVar / "comments")
-    .in(zioJsonBody[ListChangeCommentsRequest])
-    .out(sprayJsonBody[NodeInfoGetResponseADM])
+    .in(jsonBody[ListChangeCommentsRequest])
+    .out(jsonBody[NodeInfoGetResponseADM])
 
   val putListsByIriPosistion = baseEndpoints.securedEndpoint.put
     .in(base / listIriPathVar / "position")
-    .in(zioJsonBody[ListChangePositionRequest])
-    .out(sprayJsonBody[NodePositionChangeResponseADM])
+    .in(jsonBody[ListChangePositionRequest])
+    .out(jsonBody[NodePositionChangeResponseADM])
 
   val putListsByIri = baseEndpoints.securedEndpoint.put
     .in(base / listIriPathVar)
-    .in(zioJsonBody[ListChangeRequest])
-    .out(sprayJsonBody[NodeInfoGetResponseADM])
+    .in(jsonBody[ListChangeRequest])
+    .out(jsonBody[NodeInfoGetResponseADM])
 
   // Deletes
   val deleteListsByIri = baseEndpoints.securedEndpoint.delete
     .in(base / listIriPathVar)
-    .out(sprayJsonBody[ListItemDeleteResponseADM])
+    .out(jsonBody[ListItemDeleteResponseADM])
 
   val getListsCanDeleteByIri = baseEndpoints.publicEndpoint.get
     .in(base / "candelete" / listIriPathVar)
-    .out(sprayJsonBody[CanDeleteListResponseADM])
+    .out(jsonBody[CanDeleteListResponseADM])
     .description("Checks if a list can be deleted (none of its nodes is used in data).")
 
   val deleteListsComment = baseEndpoints.securedEndpoint.delete
     .in(base / "comments" / listIriPathVar)
-    .out(sprayJsonBody[ListNodeCommentsDeleteResponseADM])
+    .out(jsonBody[ListNodeCommentsDeleteResponseADM])
 
   private val secured =
     List(

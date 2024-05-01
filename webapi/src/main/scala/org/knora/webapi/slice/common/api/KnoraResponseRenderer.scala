@@ -16,7 +16,7 @@ import org.knora.webapi.Rendering
 import org.knora.webapi.SchemaRendering
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponse
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
@@ -46,17 +46,17 @@ final class KnoraResponseRenderer(config: AppConfig, stringFormatter: StringForm
     ZIO.attempt(response.format(opts, config)).map((_, opts.rdfFormat.mediaType))
 
   /**
-   * Transforms all ontology IRIs from an [[AdminKnoraResponseADM]] into their external format.
+   * Transforms all ontology IRIs from an [[AdminKnoraResponse]] into their external format.
    *
    * @param response the response that should be transformed
-   * @return the transformed [[AdminKnoraResponseADM]]
+   * @return the transformed [[AdminKnoraResponse]]
    */
-  def toExternal[A <: AdminKnoraResponseADM](response: A): Task[A] =
+  def toExternal[A <: AdminKnoraResponse](response: A): Task[A] =
     transformResponseIntoExternalFormat(response).mapAttempt(_.asInstanceOf[A])
 
   private def transformResponseIntoExternalFormat(
-    response: AdminKnoraResponseADM,
-  ): Task[AdminKnoraResponseADM] =
+                                                   response: AdminKnoraResponse,
+  ): Task[AdminKnoraResponse] =
     ZIO.attempt {
       def projectAsExternalRepresentation(project: Project): Project = {
         val ontologiesExternal =
