@@ -167,7 +167,6 @@ object LayersTest {
       IriService.layer,
       JwtServiceLive.layer,
       KnoraResponseRenderer.layer,
-      KnoraUserToUserConverter.layer,
       ListsResponder.layer,
       ListsResponderV2.layer,
       ManagementEndpoints.layer,
@@ -202,7 +201,6 @@ object LayersTest {
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
-      UserService.layer,
       ValuesResponderV2Live.layer,
     )
 

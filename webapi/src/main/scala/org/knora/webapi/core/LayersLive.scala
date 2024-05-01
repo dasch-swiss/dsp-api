@@ -156,7 +156,6 @@ object LayersLive {
       IriService.layer,
       JwtServiceLive.layer,
       KnoraResponseRenderer.layer,
-      KnoraUserToUserConverter.layer,
       ListsResponder.layer,
       ListsResponderV2.layer,
       ManagementEndpoints.layer,
@@ -190,7 +189,6 @@ object LayersLive {
       StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
-      UserService.layer,
       ValuesResponderV2Live.layer,
       org.knora.webapi.core.ActorSystem.layer,
     )
