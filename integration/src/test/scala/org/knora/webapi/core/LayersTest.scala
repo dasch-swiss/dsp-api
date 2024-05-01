@@ -42,7 +42,6 @@ import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.common.api._
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
-import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.JwtServiceLive
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
@@ -87,26 +86,24 @@ object LayersTest {
 
   type CommonR =
     AdminApiEndpoints &
+      AdminModule.Provided &
       ApiRoutes &
       ApiV2Endpoints &
       AppRouter &
       AssetPermissionsResponder &
       Authenticator &
       AuthorizationRestService &
-      CacheManager &
       CardinalityHandler &
       ConstructResponseUtilV2 &
       DspIngestClient &
       GravsearchTypeInspectionRunner &
       GroupRestService &
-      GroupService &
       HttpServer &
       IIIFRequestMessageHandler &
       InferenceOptimizationService &
       InvalidTokenCache &
       IriConverter &
       JwtService &
-      KnoraUserToUserConverter &
       ListsResponder &
       ListsResponderV2 &
       MessageRelay &
@@ -122,7 +119,6 @@ object LayersTest {
       ProjectExportStorageService &
       ProjectImportService &
       ProjectRestService &
-      ProjectService &
       QueryTraverser &
       RepositoryUpdater &
       ResourceUtilV2 &
@@ -138,7 +134,6 @@ object LayersTest {
       TestClientService &
       TriplestoreService &
       UserRestService &
-      UserService &
       ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
