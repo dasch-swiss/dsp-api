@@ -185,7 +185,7 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
             "hasPermissions",
             throw DeserializationException("The expected field 'hasPermissions' is missing."),
           )
-          .toString()
+          .compactPrint
 
         assert(permissions.contains("ProjectAdminGroupAllPermission"))
 
@@ -330,7 +330,7 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
             "hasPermissions",
             throw DeserializationException("The expected field 'hasPermissions' is missing."),
           )
-          .toString()
+          .compactPrint
 
         assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
 
@@ -398,7 +398,7 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
             "hasPermissions",
             throw DeserializationException("The expected field 'hasPermissions' is missing."),
           )
-          .toString()
+          .compactPrint
 
         assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
 

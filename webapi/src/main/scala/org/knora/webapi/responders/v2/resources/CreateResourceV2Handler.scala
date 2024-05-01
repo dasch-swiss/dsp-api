@@ -34,7 +34,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.v2._
-import org.knora.webapi.responders.v2.resources.CheckObjectClassConstraints
 import org.knora.webapi.slice.admin.api.model._
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
