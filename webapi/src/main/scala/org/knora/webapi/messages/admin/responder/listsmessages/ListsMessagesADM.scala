@@ -571,24 +571,6 @@ object ListChildNodeADM {
   implicit lazy val codec: JsonCodec[ListChildNodeADM] = DeriveJsonCodec.gen[ListChildNodeADM]
 }
 
-/**
- * Represents an element of a node path.
- *
- * @param id       the IRI of the node path element.
- * @param name     the optional name of the node path element.
- * @param labels   the label(s) of the node path element.
- * @param comments the comment(s) of the node path element.
- */
-final case class NodePathElementADM(
-  id: IRI,
-  name: Option[String],
-  labels: StringLiteralSequenceV2,
-  comments: StringLiteralSequenceV2,
-)
-object NodePathElementADM {
-  implicit val codec: JsonCodec[NodePathElementADM] = DeriveJsonCodec.gen[NodePathElementADM]
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
@@ -833,57 +815,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           children = children,
         )
       }
-    }
-  }
-
-  implicit object NodePathElementFormat extends JsonFormat[NodePathElementADM] {
-
-    /**
-     * Converts a [[NodePathElementADM]] to a [[JsValue]].
-     *
-     * @param element a [[NodePathElementADM]].
-     * @return a [[JsValue]].
-     */
-    def write(element: NodePathElementADM): JsValue =
-      JsObject(
-        "id"       -> element.id.toJson,
-        "name"     -> element.name.toJson,
-        "labels"   -> JsArray(element.labels.stringLiterals.map(_.toJson)),
-        "comments" -> JsArray(element.comments.stringLiterals.map(_.toJson)),
-      )
-
-    /**
-     * Converts a [[JsValue]] to a [[ListNodeInfoADM]].
-     *
-     * @param value a [[JsValue]].
-     * @return a [[ListNodeInfoADM]].
-     */
-    def read(value: JsValue): NodePathElementADM = {
-
-      val fields = value.asJsObject.fields
-
-      val id =
-        fields.getOrElse("id", throw DeserializationException("The expected field 'id' is missing.")).convertTo[String]
-      val name = fields.get("name").map(_.convertTo[String])
-      val labels = fields.get("labels") match {
-        case Some(JsArray(values)) => values.map(_.convertTo[StringLiteralV2])
-        case None                  => Seq.empty[StringLiteralV2]
-        case _                     => throw DeserializationException("The expected field 'labels' is in the wrong format.")
-      }
-
-      val comments = fields.get("comments") match {
-        case Some(JsArray(values)) => values.map(_.convertTo[StringLiteralV2])
-        case None                  => Seq.empty[StringLiteralV2]
-        case _                     => throw DeserializationException("The expected field 'comments' is in the wrong format.")
-      }
-
-      NodePathElementADM(
-        id = id,
-        name = name,
-        labels = StringLiteralSequenceV2(labels.toVector),
-        comments = StringLiteralSequenceV2(comments.toVector),
-      )
-
     }
   }
 
