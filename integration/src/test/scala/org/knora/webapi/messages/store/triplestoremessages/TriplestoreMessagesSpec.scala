@@ -10,12 +10,11 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json._
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.messages.admin.responder.listsmessages._
 
 /**
  * This spec is used to test 'ListAdminMessages'.
  */
-class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with IntegrationTestListADMJsonProtocol {
+class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with TriplestoreJsonProtocol {
 
   "Conversion from case class to JSON and back" should {
 
