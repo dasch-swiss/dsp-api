@@ -9,7 +9,7 @@ import zio._
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.AdminKnoraResponse
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.slice.admin.api.model._
@@ -28,8 +28,8 @@ object RouteUtilADM {
    * @return the transformed [[KnoraResponseADM]]
    */
   def transformResponseIntoExternalFormat(
-    response: AdminKnoraResponse,
-  ): ZIO[StringFormatter, Throwable, AdminKnoraResponse] = ZIO.serviceWithZIO[StringFormatter] { sf =>
+                                           response: AdminKnoraResponseADM,
+  ): ZIO[StringFormatter, Throwable, AdminKnoraResponseADM] = ZIO.serviceWithZIO[StringFormatter] { sf =>
     ZIO.attempt {
       def projectAsExternalRepresentation(project: Project): Project = {
         val ontologiesExternal =

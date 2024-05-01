@@ -12,7 +12,7 @@ import zio.json.jsonDiscriminator
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.AdminKnoraResponse
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 
 /**
@@ -21,7 +21,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequence
  * @param nodeIri         the IRI of the list that comments are deleted.
  * @param commentsDeleted contains a boolean value if comments were deleted.
  */
-final case class ListNodeCommentsDeleteResponseADM(nodeIri: IRI, commentsDeleted: Boolean) extends AdminKnoraResponse
+final case class ListNodeCommentsDeleteResponseADM(nodeIri: IRI, commentsDeleted: Boolean) extends AdminKnoraResponseADM
 object ListNodeCommentsDeleteResponseADM {
   implicit val codec: JsonCodec[ListNodeCommentsDeleteResponseADM] =
     DeriveJsonCodec.gen[ListNodeCommentsDeleteResponseADM]
@@ -33,7 +33,7 @@ object ListNodeCommentsDeleteResponseADM {
  * @param listIri           the IRI of the list that is checked.
  * @param canDeleteList contains a boolean value if list node can be deleted.
  */
-final case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean) extends AdminKnoraResponse
+final case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean) extends AdminKnoraResponseADM
 object CanDeleteListResponseADM {
   implicit val codec: JsonCodec[CanDeleteListResponseADM] = DeriveJsonCodec.gen[CanDeleteListResponseADM]
 }
@@ -43,13 +43,13 @@ object CanDeleteListResponseADM {
  *
  * @param lists a [[ListRootNodeInfoADM]] sequence.
  */
-final case class ListsGetResponseADM(lists: Seq[ListRootNodeInfoADM]) extends AdminKnoraResponse
+final case class ListsGetResponseADM(lists: Seq[ListRootNodeInfoADM]) extends AdminKnoraResponseADM
 object ListsGetResponseADM {
   implicit val codec: JsonCodec[ListsGetResponseADM] = DeriveJsonCodec.gen[ListsGetResponseADM]
 }
 
 @jsonDiscriminator("type")
-sealed trait ListItemGetResponseADM extends AdminKnoraResponse
+sealed trait ListItemGetResponseADM extends AdminKnoraResponseADM
 object ListItemGetResponseADM {
   implicit lazy val codec: JsonCodec[ListItemGetResponseADM] = DeriveJsonCodec.gen[ListItemGetResponseADM]
 }
@@ -78,7 +78,7 @@ object ListNodeGetResponseADM {
  * Provides basic information about any node (root or child) without it's children.
  */
 @jsonDiscriminator("type")
-sealed trait NodeInfoGetResponseADM extends AdminKnoraResponse
+sealed trait NodeInfoGetResponseADM extends AdminKnoraResponseADM
 object NodeInfoGetResponseADM {
   implicit lazy val codec: JsonCodec[NodeInfoGetResponseADM] = DeriveJsonCodec.gen[NodeInfoGetResponseADM]
 }
@@ -104,7 +104,7 @@ object ChildNodeInfoGetResponseADM {
 }
 
 @jsonDiscriminator("type")
-sealed trait ListItemDeleteResponseADM extends AdminKnoraResponse
+sealed trait ListItemDeleteResponseADM extends AdminKnoraResponseADM
 object ListItemDeleteResponseADM {
   implicit lazy val codec: JsonCodec[ListItemDeleteResponseADM] = DeriveJsonCodec.gen[ListItemDeleteResponseADM]
 }
@@ -135,7 +135,7 @@ object ChildNodeDeleteResponseADM {
  *
  * @param node the updated parent node.
  */
-final case class NodePositionChangeResponseADM(node: ListNodeADM) extends AdminKnoraResponse
+final case class NodePositionChangeResponseADM(node: ListNodeADM) extends AdminKnoraResponseADM
 object NodePositionChangeResponseADM {
   implicit val codec: JsonCodec[NodePositionChangeResponseADM] = DeriveJsonCodec.gen[NodePositionChangeResponseADM]
 }

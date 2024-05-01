@@ -8,7 +8,7 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
-import org.knora.webapi.messages.admin.responder.AdminKnoraResponse
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model._
@@ -18,7 +18,7 @@ import org.knora.webapi.slice.admin.domain.model._
  *
  * @param users a sequence of user profiles of the requested type.
  */
-case class UsersGetResponseADM(users: Seq[User]) extends AdminKnoraResponse
+case class UsersGetResponseADM(users: Seq[User]) extends AdminKnoraResponseADM
 object UsersGetResponseADM {
   implicit val codec: JsonCodec[UsersGetResponseADM] = DeriveJsonCodec.gen[UsersGetResponseADM]
 }
@@ -28,7 +28,7 @@ object UsersGetResponseADM {
  *
  * @param user the user's information of the requested type.
  */
-case class UserResponseADM(user: User) extends AdminKnoraResponse
+case class UserResponseADM(user: User) extends AdminKnoraResponseADM
 object UserResponseADM {
   implicit val codec: JsonCodec[UserResponseADM] = DeriveJsonCodec.gen[UserResponseADM]
 }
@@ -38,7 +38,7 @@ object UserResponseADM {
  *
  * @param projects a sequence of projects the user is member of.
  */
-case class UserProjectMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponse
+case class UserProjectMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponseADM
 object UserProjectMembershipsGetResponseADM {
   implicit val codec: JsonCodec[UserProjectMembershipsGetResponseADM] =
     DeriveJsonCodec.gen[UserProjectMembershipsGetResponseADM]
@@ -49,7 +49,7 @@ object UserProjectMembershipsGetResponseADM {
  *
  * @param projects a sequence of projects the user is member of the project admin group.
  */
-case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponse
+case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponseADM
 object UserProjectAdminMembershipsGetResponseADM {
   implicit val codec: JsonCodec[UserProjectAdminMembershipsGetResponseADM] =
     DeriveJsonCodec.gen[UserProjectAdminMembershipsGetResponseADM]
@@ -60,7 +60,7 @@ object UserProjectAdminMembershipsGetResponseADM {
  *
  * @param groups a sequence of groups the user is member of.
  */
-case class UserGroupMembershipsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponse
+case class UserGroupMembershipsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponseADM
 object UserGroupMembershipsGetResponseADM {
   implicit val codec: JsonCodec[UserGroupMembershipsGetResponseADM] =
     DeriveJsonCodec.gen[UserGroupMembershipsGetResponseADM]
@@ -94,7 +94,7 @@ object UserInformationType {
  *
  * @param members the group's members.
  */
-case class GroupMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponse
+case class GroupMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM
 object GroupMembersGetResponseADM {
   implicit val codec: JsonCodec[GroupMembersGetResponseADM] = DeriveJsonCodec.gen[GroupMembersGetResponseADM]
 }

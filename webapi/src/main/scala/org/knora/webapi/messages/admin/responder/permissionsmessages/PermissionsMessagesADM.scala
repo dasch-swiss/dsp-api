@@ -20,7 +20,7 @@ import org.knora.webapi._
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.AdminKnoraResponse
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -376,7 +376,7 @@ case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User
  *
  * @param permissions the retrieved sequence of [[PermissionInfoADM]]
  */
-case class PermissionsForProjectGetResponseADM(permissions: Set[PermissionInfoADM]) extends AdminKnoraResponse
+case class PermissionsForProjectGetResponseADM(permissions: Set[PermissionInfoADM]) extends AdminKnoraResponseADM
 object PermissionsForProjectGetResponseADM {
   implicit val codec: JsonCodec[PermissionsForProjectGetResponseADM] =
     DeriveJsonCodec.gen[PermissionsForProjectGetResponseADM]
@@ -389,7 +389,7 @@ object PermissionsForProjectGetResponseADM {
  */
 case class AdministrativePermissionsForProjectGetResponseADM(
   @jsonField("administrative_permissions") administrativePermissions: Seq[AdministrativePermissionADM],
-) extends AdminKnoraResponse
+) extends AdminKnoraResponseADM
 object AdministrativePermissionsForProjectGetResponseADM {
   implicit val codec: JsonCodec[AdministrativePermissionsForProjectGetResponseADM] =
     DeriveJsonCodec.gen[AdministrativePermissionsForProjectGetResponseADM]
@@ -402,14 +402,14 @@ object AdministrativePermissionsForProjectGetResponseADM {
  */
 case class DefaultObjectAccessPermissionsForProjectGetResponseADM(
   @jsonField("default_object_access_permissions") defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionADM],
-) extends AdminKnoraResponse
+) extends AdminKnoraResponseADM
 object DefaultObjectAccessPermissionsForProjectGetResponseADM {
   implicit val codec: JsonCodec[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     DeriveJsonCodec.gen[DefaultObjectAccessPermissionsForProjectGetResponseADM]
 }
 
 @jsonDiscriminator("type") // required for zio-json, unfortunately zio json cannot infer it from the field names alone
-sealed trait PermissionGetResponseADM extends AdminKnoraResponse
+sealed trait PermissionGetResponseADM extends AdminKnoraResponseADM
 object PermissionGetResponseADM {
   implicit val codec: JsonCodec[PermissionGetResponseADM] = DeriveJsonCodec.gen[PermissionGetResponseADM]
 }
@@ -447,7 +447,7 @@ object AdministrativePermissionGetResponseADM {
  */
 case class AdministrativePermissionCreateResponseADM(
   @jsonField("administrative_permission") administrativePermission: AdministrativePermissionADM,
-) extends AdminKnoraResponse
+) extends AdminKnoraResponseADM
 object AdministrativePermissionCreateResponseADM {
   implicit val codec: JsonCodec[AdministrativePermissionCreateResponseADM] =
     DeriveJsonCodec.gen[AdministrativePermissionCreateResponseADM]
@@ -460,7 +460,7 @@ object AdministrativePermissionCreateResponseADM {
  */
 case class DefaultObjectAccessPermissionCreateResponseADM(
   @jsonField("default_object_access_permission") defaultObjectAccessPermission: DefaultObjectAccessPermissionADM,
-) extends AdminKnoraResponse
+) extends AdminKnoraResponseADM
 object DefaultObjectAccessPermissionCreateResponseADM {
   implicit val codec: JsonCodec[DefaultObjectAccessPermissionCreateResponseADM] =
     DeriveJsonCodec.gen[DefaultObjectAccessPermissionCreateResponseADM]
@@ -483,7 +483,7 @@ object DefaultObjectAccessPermissionsStringResponseADM {
  * @param permissionIri the IRI of the permission that is deleted.
  * @param deleted       status of delete operation.
  */
-case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean) extends AdminKnoraResponse
+case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean) extends AdminKnoraResponseADM
 object PermissionDeleteResponseADM {
   implicit val codec: JsonCodec[PermissionDeleteResponseADM] = DeriveJsonCodec.gen[PermissionDeleteResponseADM]
 }

@@ -7,7 +7,7 @@ package org.knora.webapi.messages.admin.responder.groupsmessages
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
-import org.knora.webapi.messages.admin.responder.AdminKnoraResponse
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.slice.admin.domain.model.Group
 
 /**
@@ -15,7 +15,7 @@ import org.knora.webapi.slice.admin.domain.model.Group
  *
  * @param groups information about all existing groups.
  */
-final case class GroupsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponse
+final case class GroupsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponseADM
 object GroupsGetResponseADM {
   implicit val codec: JsonCodec[GroupsGetResponseADM] = DeriveJsonCodec.gen[GroupsGetResponseADM]
 }
@@ -25,7 +25,7 @@ object GroupsGetResponseADM {
  *
  * @param group all information about the group.
  */
-final case class GroupGetResponseADM(group: Group) extends AdminKnoraResponse
+final case class GroupGetResponseADM(group: Group) extends AdminKnoraResponseADM
 object GroupGetResponseADM {
   implicit val codec: JsonCodec[GroupGetResponseADM] = DeriveJsonCodec.gen[GroupGetResponseADM]
 }

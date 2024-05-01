@@ -5,4 +5,4 @@
 
 package org.knora.webapi.messages.admin.responder
 
-trait AdminKnoraResponse
+trait AdminKnoraResponseADM
