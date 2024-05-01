@@ -15,7 +15,7 @@ import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 /**
  * This spec is used to test 'ListAdminMessages'.
  */
-class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
+class ListsMessagesADMSpec extends CoreSpec with IntegrationTestListADMJsonProtocol {
   val exampleListIri = "http://rdfh.ch/lists/00FF/abcd"
 
   "Conversion from case class to JSON and back" should {

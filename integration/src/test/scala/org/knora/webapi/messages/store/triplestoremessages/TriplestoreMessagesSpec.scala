@@ -15,7 +15,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages._
 /**
  * This spec is used to test 'ListAdminMessages'.
  */
-class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADMJsonProtocol {
+class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with IntegrationTestListADMJsonProtocol {
 
   "Conversion from case class to JSON and back" should {
 

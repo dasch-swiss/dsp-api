@@ -19,7 +19,7 @@ import zio.test.assertTrue
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
-object ListMessagesADMZioJsonSpec extends ZIOSpecDefault with ListADMJsonProtocol {
+object ListMessagesADMZioJsonSpec extends ZIOSpecDefault with IntegrationTestListADMJsonProtocol {
   object TestData {
     val listRootNodeInfoADM: ListRootNodeInfoADM = ListRootNodeInfoADM(
       id = "http://rdfh.ch/lists/73d0ec0302",

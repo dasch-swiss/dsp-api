@@ -25,7 +25,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties._
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
-case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProtocol {
+case class ListsEndpoints(baseEndpoints: BaseEndpoints) {
   import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.listIri
 
   private val base = "admin" / "lists"
