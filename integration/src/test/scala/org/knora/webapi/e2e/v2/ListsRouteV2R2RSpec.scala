@@ -14,9 +14,6 @@ import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
 
 import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.routing.v2.ListsRouteV2
@@ -34,12 +31,6 @@ class ListsRouteV2R2RSpec extends R2RSpec {
   private val listsPath = ListsRouteV2().makeRoute
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
-
-  // Directory path for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("v2", "lists")
-
-  // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
@@ -78,17 +69,6 @@ class ListsRouteV2R2RSpec extends R2RSpec {
           JsonParser(FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/listsR2RV2/treelist.jsonld")))
         val responseJson: JsValue = JsonParser(responseStr)
         assert(responseJson == expectedAnswerJSONLD)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "treelist",
-              fileExtension = "json",
-            ),
-            text = responseStr,
-          ),
-        )
       }
     }
 
@@ -102,17 +82,6 @@ class ListsRouteV2R2RSpec extends R2RSpec {
           )
         val responseJson: JsValue = JsonParser(responseStr)
         assert(responseJson == expectedAnswerJSONLD)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "othertreelist",
-              fileExtension = "json",
-            ),
-            text = responseStr,
-          ),
-        )
       }
     }
 
@@ -160,17 +129,6 @@ class ListsRouteV2R2RSpec extends R2RSpec {
           )
         val responseJson: JsValue = JsonParser(responseStr)
         assert(responseJson == expectedAnswerJSONLD)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "listnode",
-              fileExtension = "json",
-            ),
-            text = responseStr,
-          ),
-        )
       }
     }
 
@@ -199,6 +157,5 @@ class ListsRouteV2R2RSpec extends R2RSpec {
         assert(responseRdfXml == expectedAnswerRdfXml)
       }
     }
-
   }
 }
