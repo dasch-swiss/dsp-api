@@ -893,6 +893,10 @@ final case class ListsResponder(
      * placed in position 3. That means the furthest a node can be positioned is being appended to the end of
      * children of the new parent.
      *
+     * If node remains in its current parent, the highest valid position is numberOfChildren -1
+     * That means if the parent node has 4 children, the highest position is 3.
+     * Nodes are only reorganized within the same parent.
+     *
      * The lowest position a node gets is 0. If -1 is given, node will be appended to the end of children list.
      * Values less than -1 are not allowed.
      *
