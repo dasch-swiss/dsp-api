@@ -897,6 +897,9 @@ final case class ListsResponder(
      * That means if the parent node has 4 children, the highest position is 3.
      * Nodes are only reorganized within the same parent.
      *
+     * The lowest position a node gets is 0. If -1 is given, node will be appended to the end of children list.
+     * Values less than -1 are not allowed.
+     *
      * @param parentNode  the parent to which the node should belong.
      * @param isNewParent identifier that node is added to another parent or not.
      * @return [[Unit]]
