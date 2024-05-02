@@ -11,7 +11,7 @@ import java.time.Instant
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams._
 import org.knora.webapi.slice.resourceinfo.api.model.ResourceInfoDto
@@ -47,7 +47,7 @@ final case class RestResourceInfoService(repo: ResourceInfoRepo, iriConverter: I
    * @return the [[ListResponseDto]] for the project and resource class
    */
   def findByProjectAndResourceClass(
-    projectIri: IriIdentifier,
+    projectIri: ProjectIri,
     resourceClass: IRI,
     order: Order,
     orderBy: OrderBy,

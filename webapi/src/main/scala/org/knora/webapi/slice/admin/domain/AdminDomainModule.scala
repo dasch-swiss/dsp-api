@@ -37,9 +37,11 @@ object AdminDomainModule {
       KnoraGroupService &
       KnoraProjectService &
       KnoraUserService &
+      KnoraUserToUserConverter &
       MaintenanceService &
       PasswordService &
-      ProjectService
+      ProjectService &
+      UserService
 
   val layer = ZLayer.makeSome[Dependencies, Provided](
     AdministrativePermissionService.layer,
@@ -47,8 +49,10 @@ object AdminDomainModule {
     KnoraGroupService.layer,
     KnoraProjectService.layer,
     KnoraUserService.layer,
+    KnoraUserToUserConverter.layer,
     MaintenanceService.layer,
     PasswordService.layer,
     ProjectService.layer,
+    UserService.layer,
   )
 }
