@@ -27,7 +27,7 @@ object Dependencies {
   val ZioLoggingVersion           = "2.2.2"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC23"
+  val ZioPreludeVersion           = "1.0.0-RC24"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.22"
 
@@ -81,7 +81,7 @@ object Dependencies {
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "6.2.3" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.78"
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.78.1"
 
   // caching
   val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
@@ -89,7 +89,7 @@ object Dependencies {
   // other
   val diff           = "com.sksamuel.diff" % "diff"                % "1.1.11"
   val gwtServlet     = "com.google.gwt"    % "gwt-servlet"         % "2.10.0"
-  val icu4j          = "com.ibm.icu"       % "icu4j"               % "74.2"
+  val icu4j          = "com.ibm.icu"       % "icu4j"               % "75.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"        % "2.0.1"
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
   val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
