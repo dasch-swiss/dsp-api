@@ -94,7 +94,6 @@ nav:
           - Docker Cheat Sheet: 05-internals/development/docker-cheat-sheet.md
           - Starting the DSP-Stack inside Docker Container: 05-internals/development/docker-compose.md
           - Updating Repositories: 05-internals/development/updating-repositories.md
-          - Generating Client Test Data: 05-internals/development/generating-client-test-data.md
           - Third-Party Dependencies: 05-internals/development/third-party.md
   - SIPI:
       - Overview: 06-sipi/index.md

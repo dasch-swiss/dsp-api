@@ -19,9 +19,6 @@ import scala.concurrent.ExecutionContextExecutor
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions._
@@ -80,12 +77,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
   // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
   private val writeTestDataFiles = false
-
-  // Directory paths for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("v2", "search")
-
-  // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
@@ -5959,16 +5950,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD: String = testData(responseAs[String], "ThingSmallerThanDecimal.jsonld")
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
         checkSearchResponseNumberOfResults(responseAs[String], 2)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "things",
-              fileExtension = "json",
-            ),
-            text = expectedAnswerJSONLD,
-          ),
-        )
       }
     }
 
@@ -5993,16 +5974,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD: String = testData(responseAs[String], "ThingWithLinkToStart.jsonld")
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
         checkSearchResponseNumberOfResults(responseAs[String], 2)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "thing-links",
-              fileExtension = "json",
-            ),
-            text = expectedAnswerJSONLD,
-          ),
-        )
       }
     }
 
@@ -6024,16 +5995,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, responseAs[String])
         val expectedAnswerJSONLD: String = testData(responseAs[String], "PageOfThings.jsonld")
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "things-with-paging",
-              fileExtension = "json",
-            ),
-            text = expectedAnswerJSONLD,
-          ),
-        )
       }
     }
 
