@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
+import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
@@ -524,21 +525,20 @@ final case class ListsResponder(
       case child: ListCreateChildNodeRequest => (child.id, child.projectIri, child.name, child.position)
     }
 
-    def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
+    def getPositionOfNewChild(children: Seq[ListChildNodeADM]): IO[BadRequestException, Int] =
       if (position.exists(_.value > children.size)) {
-        val givenPosition = position.map(_.value)
-        throw BadRequestException(
-          s"Invalid position given ${givenPosition.get}, maximum allowed position is = ${children.size}.",
+        val givenPosition = position.map(_.value).get
+        ZIO.fail(
+          BadRequestException(
+            s"Invalid position given ${givenPosition}, maximum allowed position is = ${children.size}.",
+          ),
         )
-      }
-
-      val newPosition = if (position.isEmpty || position.exists(_.value.equals(-1))) {
-        children.size
       } else {
-        position.get.value
+        val newPosition =
+          if (position.isEmpty || position.exists(_.value.equals(-1))) { children.size }
+          else { position.get.value }
+        ZIO.succeed(newPosition)
       }
-      newPosition
-    }
 
     def getRootNodeIri(parentListNode: ListNodeADM): IRI =
       parentListNode match {
@@ -552,15 +552,10 @@ final case class ListsResponder(
     ): Task[(Some[Int], Some[IRI])] =
       for {
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
-        maybeParentListNode <- listNodeGetADM(nodeIri = parentNodeIri, shallow = true)
-        (parentListNode, children) = maybeParentListNode match {
-                                       case Some(node: ListRootNodeADM)  => (node, node.children)
-                                       case Some(node: ListChildNodeADM) => (node, node.children)
-                                       case _                            => throw BadRequestException(s"List node '$parentNodeIri' not found.")
-                                     }
-
-        // get position of the new child
-        position = getPositionOfNewChild(children)
+        parentListNode <- listNodeGetADM(parentNodeIri, shallow = true)
+                            .someOrFail(BadRequestException(s"List node '$parentNodeIri' not found."))
+        children  = parentListNode.children
+        position <- getPositionOfNewChild(children)
 
         // Is the node supposed to be inserted in a specific position in array of children?
         _ <-
@@ -898,34 +893,34 @@ final case class ListsResponder(
      * The highest position a node can be placed is to the end of the parents children; that means length of existing
      * children + 1
      *
+     * If the node must be added to a new parent, highest valid position is numberOfChildren.
+     * For example, if the new parent already has 3 children, the highest occupied position is 2, node can be
+     * placed in position 3. That means the furthest a node can be positioned is being appended to the end of
+     * children of the new parent.
+     *
+     * The lowest position a node gets is 0. If -1 is given, node will be appended to the end of children list.
+     * Values less than -1 are not allowed.
+     *
+     * The lowest position a node gets is 0. If -1 is given, node will be appended to the end of children list.
+     * Values less than -1 are not allowed.
+     *
      * @param parentNode  the parent to which the node should belong.
      * @param isNewParent identifier that node is added to another parent or not.
      * @return [[Unit]]
      *         fails with a [[BadRequestException]] if given position is out of range.
      */
-    def isNewPositionValid(parentNode: ListNodeADM, isNewParent: Boolean): Unit = {
+    def isNewPositionValid(parentNode: ListNodeADM, isNewParent: Boolean): Task[Unit] = {
       val numberOfChildren = parentNode.children.size
-      // If the node must be added to a new parent, highest valid position is numberOfChildren.
-      // For example, if the new parent already has 3 children, the highest occupied position is 2, node can be
-      // placed in position 3. That means the furthest a node can be positioned is being appended to the end of
-      // children of the new parent.
-      if (isNewParent && changeNodePositionRequest.position > numberOfChildren) {
-        throw BadRequestException(s"Invalid position given, maximum allowed position is = $numberOfChildren.")
-      }
-
-      // If node remains in its current parent, the highest valid position is numberOfChildren -1
-      // That means if the parent node has 4 children, the highest position is 3.
-      // Nodes are only reorganized within the same parent.
-      if (!isNewParent && changeNodePositionRequest.position > numberOfChildren - 1) {
-        throw BadRequestException(s"Invalid position given, maximum allowed position is = ${numberOfChildren - 1}.")
-      }
-
-      // The lowest position a node gets is 0. If -1 is given, node will be appended to the end of children list.
-      // Values less than -1 are not allowed.
-      if (changeNodePositionRequest.position < -1) {
-        throw BadRequestException(s"Invalid position given, minimum allowed is -1.")
-      }
-    }
+      ZIO
+        .fail(s"Invalid position given, maximum allowed position is = $numberOfChildren.")
+        .when(isNewParent && changeNodePositionRequest.position > numberOfChildren) *>
+        ZIO
+          .fail(s"Invalid position given, maximum allowed position is = ${numberOfChildren - 1}.")
+          .when(!isNewParent && changeNodePositionRequest.position > numberOfChildren - 1) *>
+        ZIO
+          .fail(s"Invalid position given, minimum allowed is -1.")
+          .when(changeNodePositionRequest.position < -1)
+    }.unit.mapError(BadRequestException.apply)
 
     /**
      * Checks that the position of the node is updated and node is sublist of specified parent.
@@ -983,12 +978,10 @@ final case class ListsResponder(
     ): Task[Int] =
       for {
         // get parent node with its immediate children
-        maybeParentNode <- listNodeGetADM(nodeIri = parentIri, shallow = true)
-        parentNode =
-          maybeParentNode.getOrElse(
-            throw BadRequestException(s"The parent node $parentIri could node be found, report this as a bug."),
-          )
-        _              = isNewPositionValid(parentNode, isNewParent = false)
+        parentNode <-
+          listNodeGetADM(nodeIri = parentIri, shallow = true)
+            .someOrFail(BadRequestException(s"The parent node $parentIri could node be found, report this as a bug."))
+        _             <- isNewPositionValid(parentNode, isNewParent = false)
         parentChildren = parentNode.children
         currPosition   = node.position
 
@@ -1060,7 +1053,7 @@ final case class ListsResponder(
         // get new parent node with its immediate children
         maybeNewParentNode <- listNodeGetADM(nodeIri = newParentIri, shallow = true)
         newParent           = maybeNewParentNode.get
-        _                   = isNewPositionValid(newParent, isNewParent = true)
+        _                  <- isNewPositionValid(newParent, isNewParent = true)
         newSiblings         = newParent.children
 
         currentNodePosition = node.position
@@ -1123,12 +1116,9 @@ final case class ListsResponder(
         // get data names graph of the project
         dataNamedGraph <- getDataNamedGraph(project.id)
         // get node in its current position
-        maybeNode <- listNodeGetADM(nodeIri.value, shallow = true)
-        node = maybeNode match {
-                 case Some(node: ListChildNodeADM) => node
-                 case _ =>
-                   throw BadRequestException(s"Update of position is only allowed for child nodes!")
-               }
+        node <- listNodeGetADM(nodeIri.value, shallow = true)
+                  .map(_.collect { case child: ListChildNodeADM => child })
+                  .someOrFail(BadRequestException(s"Update of position is only allowed for child nodes!"))
 
         // get node's current parent
         currentParentNodeIri <- getParentNodeIRI(nodeIri.value)
@@ -1203,29 +1193,18 @@ final case class ListsResponder(
      * Checks if node itself or any of its children is in use.
      *
      * @param nodeIri      the node's IRI.
-     * @param nodeChildren the children of the node.
-     * @throws BadRequestException in case a node or one of its children is in use.
+     * @param children the children of the node.
      */
-    def isNodeOrItsChildrenUsed(nodeIri: IRI, nodeChildren: Seq[ListChildNodeADM]): Task[Unit] =
-      for {
-        // Is node itself in use?
-        _ <- isNodeUsed(
-               nodeIri = nodeIri,
-               errorFun = throw BadRequestException(s"Node $nodeIri cannot be deleted, because it is in use."),
-             )
-
-        errorCheckFutures: Seq[Task[Unit]] = nodeChildren.map { child =>
-                                               isNodeUsed(
-                                                 nodeIri = child.id,
-                                                 errorFun = throw BadRequestException(
-                                                   s"Node $nodeIri cannot be deleted, because its child ${child.id} is in use.",
-                                                 ),
-                                               )
-                                             }
-
-        _ <- ZioHelper.sequence(errorCheckFutures)
-
-      } yield ()
+    def isNodeOrItsChildrenUsed(nodeIri: IRI, children: Seq[ListChildNodeADM]): Task[Unit] = {
+      def failIfInUse(nodeIri: IRI, failReason: String) = ZIO
+        .fail(BadRequestException(failReason))
+        .whenZIO(triplestore.query(Select(sparql.admin.txt.isNodeUsed(nodeIri))).map(_.results.bindings.nonEmpty))
+      failIfInUse(nodeIri, s"Node $nodeIri cannot be deleted, because it is in use.") *> {
+        ZIO.foreachDiscard(children) { child =>
+          failIfInUse(child.id, s"Node $nodeIri cannot be deleted, because its child ${child.id} is in use.")
+        }
+      }
+    }
 
     /**
      * Delete a list (root node) or a child node after verifying that neither the node itself nor any of its children
@@ -1276,12 +1255,9 @@ final case class ListsResponder(
       dataNamedGraph: IRI,
     ): Task[ListNodeADM] =
       for {
-        maybeNode <- listNodeGetADM(nodeIri = parentNodeIri, shallow = false)
-
-        parentNode: ListNodeADM =
-          maybeNode.getOrElse(
-            throw BadRequestException(s"The parent node of $deletedNodeIri not found, report this as a bug."),
-          )
+        parentNode <-
+          listNodeGetADM(parentNodeIri, shallow = false)
+            .someOrFail(BadRequestException(s"The parent node of $deletedNodeIri not found, report this as a bug."))
 
         remainingChildren = parentNode.children
 
@@ -1415,22 +1391,17 @@ final case class ListsResponder(
       dataNamedGraph <- getDataNamedGraph(changeNodeInfoRequest.projectIri)
 
       /* verify that the list name is unique for the project */
-      nodeNameUnique <- listNodeNameIsProjectUnique(
-                          changeNodeInfoRequest.projectIri.value,
-                          changeNodeInfoRequest.name,
-                        )
-      _ = if (!nodeNameUnique) {
-            throw DuplicateValueException(
-              s"The name ${changeNodeInfoRequest.name.get} is already used by a list inside the project ${changeNodeInfoRequest.projectIri.value}.",
-            )
-          }
+      _ <- ZIO.fail {
+             val msg =
+               s"The name ${changeNodeInfoRequest.name.get} is already used by a list inside the project ${changeNodeInfoRequest.projectIri.value}."
+             DuplicateValueException(msg)
+           }.whenZIO(
+             listNodeNameIsProjectUnique(changeNodeInfoRequest.projectIri.value, changeNodeInfoRequest.name).negate,
+           )
 
       /* Verify that the node with Iri exists. */
-      maybeNode <- listNodeGetADM(nodeIri = changeNodeInfoRequest.listIri.value, shallow = true)
-
-      node = maybeNode.getOrElse(
-               throw BadRequestException(s"List item with '${changeNodeInfoRequest.listIri}' not found."),
-             )
+      node <- listNodeGetADM(changeNodeInfoRequest.listIri.value, shallow = true)
+                .someOrFail(BadRequestException(s"List item with '${changeNodeInfoRequest.listIri}' not found."))
 
       // Update the list
       changeNodeInfoSparqlString: String = sparql.admin.txt
@@ -1438,7 +1409,7 @@ final case class ListsResponder(
                                                dataNamedGraph = dataNamedGraph,
                                                nodeIri = changeNodeInfoRequest.listIri.value,
                                                hasOldName = node.name.nonEmpty,
-                                               isRootNode = maybeNode.exists(_.isInstanceOf[ListRootNodeADM]),
+                                               isRootNode = node.isInstanceOf[ListRootNodeADM],
                                                maybeName = changeNodeInfoRequest.name.map(_.value),
                                                projectIri = changeNodeInfoRequest.projectIri.value,
                                                listClassIri = KnoraBase.ListNode,
@@ -1474,23 +1445,10 @@ final case class ListsResponder(
                            } yield iriStr
 
                          case _ =>
-                           throw BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI.")
+                           ZIO.fail(BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI."))
                        }
       projectIri <- ZIO.fromEither(ProjectIri.from(projectIriStr)).mapError(BadRequestException.apply)
     } yield projectIri
-
-  /**
-   * Helper method to check if a node is in use.
-   *
-   * @param nodeIri  the IRI of the node.
-   * @param errorFun a function that throws an exception. It will be called if the node is used.
-   * @return a [[Boolean]].
-   */
-  private def isNodeUsed(nodeIri: IRI, errorFun: => Nothing): Task[Unit] =
-    for {
-      isNodeUsedResponse <- triplestore.query(Select(sparql.admin.txt.isNodeUsed(nodeIri)))
-      _                  <- ZIO.when(isNodeUsedResponse.results.bindings.nonEmpty)(ZIO.attempt(errorFun))
-    } yield ()
 
   /**
    * Helper method to get the data named graph of a project.
@@ -1544,39 +1502,27 @@ final case class ListsResponder(
    * @param nodeIri              the IRI of the node that must be shifted.
    * @param newPosition          the new position of the child node.
    * @param dataNamedGraph       the data named graph of the project.
-   * @throws UpdateNotPerformedException if the position of the node could not be updated.
    * @return a [[ListChildNodeADM]].
    */
   private def updatePositionOfNode(
     nodeIri: IRI,
     newPosition: Int,
     dataNamedGraph: IRI,
-  ): Task[ListChildNodeADM] = {
-    // Generate SPARQL for erasing a node.
-    val sparqlUpdateNodePosition = sparql.admin.txt.updateNodePosition(
-      dataNamedGraph = dataNamedGraph,
-      nodeIri = nodeIri,
-      newPosition = newPosition,
-    )
+  ): Task[ListChildNodeADM] =
     for {
-      _ <- triplestore.query(Update(sparqlUpdateNodePosition))
-
+      _ <- triplestore.query(Update(sparql.admin.txt.updateNodePosition(dataNamedGraph, nodeIri, newPosition)))
       /* Verify that the node info was updated */
-      maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = false)
-
-      childNode: ListChildNodeADM =
-        maybeNode
-          .getOrElse(throw BadRequestException(s"Node with $nodeIri could not be found to update its position."))
-          .asInstanceOf[ListChildNodeADM]
-
-      _ = if (!childNode.position.equals(newPosition)) {
-            throw UpdateNotPerformedException(
-              s"The position of the node $nodeIri could not be updated, report this as a possible bug.",
-            )
-          }
-
+      childNode <- listNodeGetADM(nodeIri = nodeIri, shallow = false)
+                     .someOrFail(BadRequestException(s"Node with $nodeIri could not be found to update its position."))
+                     .map(_.asInstanceOf[ListChildNodeADM])
+      _ <- ZIO
+             .fail(
+               UpdateNotPerformedException(
+                 s"The position of the node $nodeIri could not be updated, report this as a possible bug.",
+               ),
+             )
+             .when(!childNode.position.equals(newPosition))
     } yield childNode
-  }
 
   /**
    * Helper method to shift nodes between positions startPos and endPos to the left if 'shiftToLeft' is true,
