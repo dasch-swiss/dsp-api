@@ -127,10 +127,7 @@ trait IntegrationTestListADMJsonProtocol
 
       val maybeIsRootNode: Option[Boolean] = fields.get("isRootNode").map(_.convertTo[Boolean])
 
-      val isRootNode = maybeIsRootNode match {
-        case Some(boolValue) => boolValue
-        case None            => false
-      }
+      val isRootNode = maybeIsRootNode.getOrElse(false)
 
       val maybeProjectIri: Option[IRI] = fields.get("projectIri").map(_.convertTo[IRI])
 
