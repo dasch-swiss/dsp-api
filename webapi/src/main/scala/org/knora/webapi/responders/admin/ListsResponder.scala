@@ -593,17 +593,12 @@ final case class ListsResponder(
                    .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
 
       /* verify that the list node name is unique for the project */
-      projectUniqueNodeName <- listNodeNameIsProjectUnique(
-                                 projectIri.value,
-                                 name,
-                               )
-      _ = if (!projectUniqueNodeName) {
-            val escapedName   = name.get.value
-            val unescapedName = Iri.fromSparqlEncodedString(escapedName)
-            throw BadRequestException(
-              s"The node name $unescapedName is already used by a list inside the project ${projectIri.value}.",
-            )
-          }
+      _ <- ZIO.fail {
+             val unescapedName = Iri.fromSparqlEncodedString(name.map(_.value).getOrElse(""))
+             BadRequestException(
+               s"The node name $unescapedName is already used by a list inside the project ${projectIri.value}.",
+             )
+           }.whenZIO(listNodeNameIsProjectUnique(projectIri.value, name).negate)
 
       // calculate the data named graph
       dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(project).value
