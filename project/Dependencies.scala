@@ -97,7 +97,7 @@ object Dependencies {
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"            % "12.4"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"          % "2.0.1" // Should be Scala 3 compatible
   val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld"    % "1.4.0"
-  val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"        % "2.9.1"
+  val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"        % "2.10.0"
 
   // test
   val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion  // Scala 3 incompatible
