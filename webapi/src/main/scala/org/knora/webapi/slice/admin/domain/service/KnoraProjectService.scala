@@ -12,7 +12,6 @@ import zio.ZIO
 import zio.ZLayer
 
 import dsp.errors.DuplicateValueException
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -23,11 +22,11 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 
 final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo) {
-  def findById(id: ProjectIri): Task[Option[KnoraProject]]           = knoraProjectRepo.findById(id)
-  def existsById(id: ProjectIri): Task[Boolean]                      = knoraProjectRepo.existsById(id)
-  def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = knoraProjectRepo.findById(id)
-  def findByShortcode(code: Shortcode): Task[Option[KnoraProject]]   = knoraProjectRepo.findByShortcode(code)
-  def findAll(): Task[Chunk[KnoraProject]]                           = knoraProjectRepo.findAll()
+  def findById(id: ProjectIri): Task[Option[KnoraProject]]         = knoraProjectRepo.findById(id)
+  def existsById(id: ProjectIri): Task[Boolean]                    = knoraProjectRepo.existsById(id)
+  def findByShortcode(code: Shortcode): Task[Option[KnoraProject]] = knoraProjectRepo.findByShortcode(code)
+  def findByShortname(code: Shortname): Task[Option[KnoraProject]] = knoraProjectRepo.findByShortname(code)
+  def findAll(): Task[Chunk[KnoraProject]]                         = knoraProjectRepo.findAll()
   def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[RestrictedView] = {
     val newSettings = settings match {
       case RestrictedView.Watermark(false) => RestrictedView.default
