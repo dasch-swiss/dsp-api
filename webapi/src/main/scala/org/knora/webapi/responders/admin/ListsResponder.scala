@@ -1517,7 +1517,7 @@ final case class ListsResponder(
                  s"The position of the node $nodeIri could not be updated, report this as a possible bug.",
                ),
              )
-             .when(!childNode.position.equals(newPosition))
+             .unless(childNode.position.equals(newPosition))
     } yield childNode
 
   /**
