@@ -401,6 +401,8 @@ case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
 }
 
 object StringLiteralSequenceV2 {
+  implicit val codec: JsonCodec[StringLiteralSequenceV2] =
+    JsonCodec[Vector[StringLiteralV2]].transform(StringLiteralSequenceV2.apply, _.stringLiterals)
   val empty: StringLiteralSequenceV2 = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
 }
 
