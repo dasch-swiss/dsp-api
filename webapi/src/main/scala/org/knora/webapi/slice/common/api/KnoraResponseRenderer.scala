@@ -58,11 +58,13 @@ final class KnoraResponseRenderer(config: AppConfig, stringFormatter: StringForm
     response: AdminKnoraResponseADM,
   ): Task[AdminKnoraResponseADM] =
     ZIO.attempt {
+
       def projectAsExternalRepresentation(project: Project): Project = {
         val ontologiesExternal =
           project.ontologies.map(stringFormatter.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
         project.copy(ontologies = ontologiesExternal)
       }
+
       def groupAsExternalRepresentation(group: Group): Group = {
         val projectExternal = group.project.map(projectAsExternalRepresentation)
         group.copy(project = projectExternal)

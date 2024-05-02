@@ -30,7 +30,10 @@ import pekko.http.scaladsl.unmarshalling.Unmarshal
 /**
  * End-to-End (E2E) test specification for testing lists endpoint.
  */
-class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol with ListADMJsonProtocol {
+class CreateListItemsRouteADME2ESpec
+    extends E2ESpec
+    with TriplestoreJsonProtocol
+    with IntegrationTestListADMJsonProtocol {
 
   implicit def default: RouteTestTimeout = RouteTestTimeout(5.seconds)
 
