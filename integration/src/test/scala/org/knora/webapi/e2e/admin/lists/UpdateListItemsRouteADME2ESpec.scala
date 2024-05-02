@@ -27,7 +27,10 @@ import pekko.http.scaladsl.testkit.RouteTestTimeout
 /**
  * End-to-End (E2E) test specification for testing update node props routes.
  */
-class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol with ListADMJsonProtocol {
+class UpdateListItemsRouteADME2ESpec
+    extends E2ESpec
+    with TriplestoreJsonProtocol
+    with IntegrationTestListADMJsonProtocol {
 
   implicit def default: RouteTestTimeout = RouteTestTimeout(5.seconds)
 
