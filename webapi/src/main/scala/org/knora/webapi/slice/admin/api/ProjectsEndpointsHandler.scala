@@ -11,15 +11,15 @@ import zio.ZLayer
 import java.nio.file.Files
 import scala.concurrent.ExecutionContext
 
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.IriIdentifier
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
 import org.knora.webapi.slice.admin.api.model._
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
@@ -41,108 +41,99 @@ final case class ProjectsEndpointsHandler(
     )
 
   val getAdminProjectsByProjectIriHandler =
-    PublicEndpointHandler(
-      projectsEndpoints.Public.getAdminProjectsByProjectIri,
-      (id: IriIdentifier) => restService.findById(id.value),
-    )
+    PublicEndpointHandler(projectsEndpoints.Public.getAdminProjectsByProjectIri, restService.findById)
 
   val getAdminProjectsByProjectShortcodeHandler =
-    PublicEndpointHandler(
-      projectsEndpoints.Public.getAdminProjectsByProjectShortcode,
-      (id: ShortcodeIdentifier) => restService.findByShortcode(id.value),
-    )
+    PublicEndpointHandler(projectsEndpoints.Public.getAdminProjectsByProjectShortcode, restService.findByShortcode)
 
   val getAdminProjectsByProjectShortnameHandler =
-    PublicEndpointHandler(
-      projectsEndpoints.Public.getAdminProjectsByProjectShortname,
-      (id: ShortnameIdentifier) => restService.findByShortname(id.value),
-    )
+    PublicEndpointHandler(projectsEndpoints.Public.getAdminProjectsByProjectShortname, restService.findByShortname)
 
   val getAdminProjectsKeywordsByProjectIriHandler =
     PublicEndpointHandler(
       projectsEndpoints.Public.getAdminProjectsKeywordsByProjectIri,
-      (iri: IriIdentifier) => restService.getKeywordsByProjectIri(iri.value),
+      (iri: ProjectIri) => restService.getKeywordsByProjectIri(iri),
     )
 
   val getAdminProjectByProjectIriRestrictedViewSettingsHandler =
     PublicEndpointHandler(
       projectsEndpoints.Public.getAdminProjectsByProjectIriRestrictedViewSettings,
-      (id: IriIdentifier) => restService.getProjectRestrictedViewSettings(id),
+      (id: ProjectIri) => restService.getProjectRestrictedViewSettingsById(id),
     )
 
   val getAdminProjectByProjectShortcodeRestrictedViewSettingsHandler =
     PublicEndpointHandler(
       projectsEndpoints.Public.getAdminProjectsByProjectShortcodeRestrictedViewSettings,
-      (id: ShortcodeIdentifier) => restService.getProjectRestrictedViewSettings(id),
+      (id: Shortcode) => restService.getProjectRestrictedViewSettingsByShortcode(id),
     )
 
   val getAdminProjectByProjectShortnameRestrictedViewSettingsHandler =
     PublicEndpointHandler(
       projectsEndpoints.Public.getAdminProjectsByProjectShortnameRestrictedViewSettings,
-      (id: ShortnameIdentifier) => restService.getProjectRestrictedViewSettings(id),
+      (id: Shortname) => restService.getProjectRestrictedViewSettingsByShortname(id),
     )
 
   // secured endpoints
   val postAdminProjectsByProjectIriRestrictedViewSettingsHandler =
     SecuredEndpointHandler[
-      (IriIdentifier, SetRestrictedViewRequest),
+      (ProjectIri, SetRestrictedViewRequest),
       RestrictedViewResponse,
     ](
       projectsEndpoints.Secured.postAdminProjectsByProjectIriRestrictedViewSettings,
-      user => { case (id, payload) => restService.updateProjectRestrictedViewSettings(id, user, payload) },
+      user => { case (id, payload) => restService.updateProjectRestrictedViewSettingsById(id, user, payload) },
     )
 
   val postAdminProjectsByProjectShortcodeRestrictedViewSettingsHandler =
     SecuredEndpointHandler[
-      (ShortcodeIdentifier, SetRestrictedViewRequest),
+      (Shortcode, SetRestrictedViewRequest),
       RestrictedViewResponse,
     ](
       projectsEndpoints.Secured.postAdminProjectsByProjectShortcodeRestrictedViewSettings,
       user => { case (id, payload) =>
-        restService.updateProjectRestrictedViewSettings(id, user, payload)
+        restService.updateProjectRestrictedViewSettingsByShortcode(id, user, payload)
       },
     )
 
   val getAdminProjectsByProjectIriMembersHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.getAdminProjectsByProjectIriMembers,
-      user => id => restService.getProjectMembers(user, id),
+      user => id => restService.getProjectMembersById(user, id),
     )
 
   val getAdminProjectsByProjectShortcodeMembersHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.getAdminProjectsByProjectShortcodeMembers,
-      user => id => restService.getProjectMembers(user, id),
+      user => id => restService.getProjectMembersByShortcode(user, id),
     )
 
   val getAdminProjectsByProjectShortnameMembersHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.getAdminProjectsByProjectShortnameMembers,
-      user => id => restService.getProjectMembers(user, id),
+      user => id => restService.getProjectMembersByShortname(user, id),
     )
 
   val getAdminProjectsByProjectIriAdminMembersHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.getAdminProjectsByProjectIriAdminMembers,
-      user => id => restService.getProjectAdminMembers(user, id),
+      user => id => restService.getProjectAdminMembersById(user, id),
     )
 
   val getAdminProjectsByProjectShortcodeAdminMembersHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.getAdminProjectsByProjectShortcodeAdminMembers,
-      user => id => restService.getProjectAdminMembers(user, id),
+      user => id => restService.getProjectAdminMembersByShortcode(user, id),
     )
 
   val getAdminProjectsByProjectShortnameAdminMembersHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.getAdminProjectsByProjectShortnameAdminMembers,
-      user => id => restService.getProjectAdminMembers(user, id),
+      user => id => restService.getProjectAdminMembersByShortname(user, id),
     )
 
   val deleteAdminProjectsByIriHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.deleteAdminProjectsByIri,
-      user => (id: IriIdentifier) => restService.deleteProject(id.value, user),
+      user => (id: ProjectIri) => restService.deleteProject(id, user),
     )
 
   val getAdminProjectsExportsHandler =
@@ -154,19 +145,19 @@ final case class ProjectsEndpointsHandler(
   val postAdminProjectsByShortcodeExportHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.postAdminProjectsByShortcodeExport,
-      user => (id: ShortcodeIdentifier) => restService.exportProject(id.value, user),
+      user => (id: Shortcode) => restService.exportProject(id, user),
     )
 
   val postAdminProjectsByShortcodeExportAwaitingHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.postAdminProjectsByShortcodeExportAwaiting,
-      user => (id: ShortcodeIdentifier) => restService.exportProjectAwaiting(id.value, user),
+      user => (id: Shortcode) => restService.exportProjectAwaiting(id, user),
     )
 
   val postAdminProjectsByShortcodeImportHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.postAdminProjectsByShortcodeImport,
-      user => (id: ShortcodeIdentifier) => restService.importProject(id.value, user),
+      user => (id: Shortcode) => restService.importProject(id, user),
     )
 
   val postAdminProjectsHandler =
@@ -176,17 +167,17 @@ final case class ProjectsEndpointsHandler(
     )
 
   val putAdminProjectsByIriHandler =
-    SecuredEndpointHandler[(IriIdentifier, ProjectUpdateRequest), ProjectOperationResponseADM](
+    SecuredEndpointHandler[(ProjectIri, ProjectUpdateRequest), ProjectOperationResponseADM](
       projectsEndpoints.Secured.putAdminProjectsByIri,
-      user => { case (id: IriIdentifier, changeReq: ProjectUpdateRequest) =>
-        restService.updateProject(id.value, changeReq, user)
+      user => { case (id: ProjectIri, changeReq: ProjectUpdateRequest) =>
+        restService.updateProject(id, changeReq, user)
       },
     )
 
   val getAdminProjectsByIriAllDataHandler = {
     implicit val ec: ExecutionContext = ExecutionContext.global
     projectsEndpoints.Secured.getAdminProjectsByIriAllData.serverLogic((user: User) =>
-      (iri: IriIdentifier) =>
+      (iri: ProjectIri) =>
         // Future[Either[RequestRejectedException, (String, String, PekkoStreams.BinaryStream]]
         mapper.runToFuture(
           restService
