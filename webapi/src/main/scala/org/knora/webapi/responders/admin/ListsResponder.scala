@@ -896,9 +896,6 @@ final case class ListsResponder(
      * The lowest position a node gets is 0. If -1 is given, node will be appended to the end of children list.
      * Values less than -1 are not allowed.
      *
-     * The lowest position a node gets is 0. If -1 is given, node will be appended to the end of children list.
-     * Values less than -1 are not allowed.
-     *
      * @param parentNode  the parent to which the node should belong.
      * @param isNewParent identifier that node is added to another parent or not.
      * @return [[Unit]]
