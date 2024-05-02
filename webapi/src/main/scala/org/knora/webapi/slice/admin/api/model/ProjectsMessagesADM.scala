@@ -5,15 +5,9 @@
 
 package org.knora.webapi.slice.admin.api.model
 
-import sttp.tapir.Codec
-import sttp.tapir.CodecFormat.TextPlain
-import sttp.tapir.DecodeResult
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
-import zio.prelude.Validation
 
-import dsp.errors.BadRequestException
-import dsp.errors.ValidationException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -161,84 +155,6 @@ object PermissionCodeAndProjectRestrictedViewSettings {
 case class ProjectOperationResponseADM(project: Project) extends AdminKnoraResponseADM
 object ProjectOperationResponseADM {
   implicit val codec: JsonCodec[ProjectOperationResponseADM] = DeriveJsonCodec.gen[ProjectOperationResponseADM]
-}
-
-/**
- * Represents the project's identifier, which can be an IRI, shortcode or shortname.
- */
-sealed trait ProjectIdentifierADM
-
-object ProjectIdentifierADM {
-
-  def from(projectIri: ProjectIri): ProjectIdentifierADM =
-    IriIdentifier(projectIri)
-
-  /**
-   * Represents [[IriIdentifier]] identifier.
-   *
-   * @param value that constructs the identifier in the type of [[ProjectIri]] value object.
-   */
-  final case class IriIdentifier(value: ProjectIri) extends ProjectIdentifierADM
-  object IriIdentifier {
-
-    def from(projectIri: ProjectIri): IriIdentifier = IriIdentifier(projectIri)
-
-    def unsafeFrom(projectIri: String): IriIdentifier =
-      fromString(projectIri).fold(err => throw err.head, identity)
-
-    def fromString(value: String): Validation[ValidationException, IriIdentifier] =
-      Validation
-        .fromEither(ProjectIri.from(value).map(IriIdentifier.apply))
-        .mapError(ValidationException.apply)
-
-    implicit val tapirCodec: Codec[String, IriIdentifier, TextPlain] =
-      Codec.string.mapDecode(str =>
-        IriIdentifier
-          .fromString(str)
-          .fold(err => DecodeResult.Error(str, BadRequestException(err.head.msg)), DecodeResult.Value(_)),
-      )(_.value.value)
-  }
-
-  /**
-   * Represents [[ShortcodeIdentifier]] identifier.
-   *
-   * @param value that constructs the identifier in the type of [[Shortcode]] value object.
-   */
-  final case class ShortcodeIdentifier(value: Shortcode) extends ProjectIdentifierADM
-  object ShortcodeIdentifier {
-    def unsafeFrom(value: String): ShortcodeIdentifier  = fromString(value).fold(err => throw err.head, identity)
-    def from(shortcode: Shortcode): ShortcodeIdentifier = ShortcodeIdentifier(shortcode)
-    def fromString(value: String): Validation[ValidationException, ShortcodeIdentifier] =
-      Validation.fromEither(Shortcode.from(value).map(ShortcodeIdentifier.from)).mapError(ValidationException(_))
-  }
-
-  /**
-   * Represents [[ShortnameIdentifier]] identifier.
-   *
-   * @param value that constructs the identifier in the type of [[Shortname]] value object.
-   */
-  final case class ShortnameIdentifier private (value: Shortname) extends ProjectIdentifierADM
-  object ShortnameIdentifier {
-    def from(shortname: Shortname): ShortnameIdentifier = ShortnameIdentifier(shortname)
-    def unsafeFrom(value: String): ShortnameIdentifier  = fromString(value).fold(err => throw err.head, identity)
-    def fromString(value: String): Validation[ValidationException, ShortnameIdentifier] =
-      Validation
-        .fromEither(Shortname.from(value).map(ShortnameIdentifier.from))
-        .mapError(ValidationException.apply)
-  }
-
-  /**
-   * Gets desired Project identifier value.
-   *
-   * @param identifier either IRI, Shortname or Shortcode of the project.
-   * @return identifier's value as [[String]]
-   */
-  def getId(identifier: ProjectIdentifierADM): String =
-    identifier match {
-      case IriIdentifier(value)       => value.value
-      case ShortnameIdentifier(value) => value.value
-      case ShortcodeIdentifier(value) => value.value
-    }
 }
 
 /**

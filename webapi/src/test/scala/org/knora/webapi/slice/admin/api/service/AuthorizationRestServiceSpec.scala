@@ -107,7 +107,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
             activeNormalUser.copy(permissions =
               PermissionsDataADM(Map(project.id.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),
             )
-          actualProject <- authorizationRestService(_.ensureSystemAdminOrProjectAdmin(userIsAdmin, project.id))
+          actualProject <- authorizationRestService(_.ensureSystemAdminOrProjectAdminById(userIsAdmin, project.id))
         } yield assertTrue(project == actualProject)
       },
       test(
@@ -119,7 +119,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
             PermissionsDataADM(Map(project.id.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),
           )
         for {
-          exit <- authorizationRestService(_.ensureSystemAdminOrProjectAdmin(userIsAdmin, project.id)).exit
+          exit <- authorizationRestService(_.ensureSystemAdminOrProjectAdminById(userIsAdmin, project.id)).exit
         } yield assert(exit)(failsWithA[ForbiddenException])
       },
       test(
@@ -129,7 +129,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
         for {
           _             <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project))
           userIsNotAdmin = activeNormalUser.copy(permissions = PermissionsDataADM(Map.empty))
-          exit          <- authorizationRestService(_.ensureSystemAdminOrProjectAdmin(userIsNotAdmin, project.id)).exit
+          exit          <- authorizationRestService(_.ensureSystemAdminOrProjectAdminById(userIsNotAdmin, project.id)).exit
         } yield assert(exit)(failsWithA[ForbiddenException])
       },
     ),

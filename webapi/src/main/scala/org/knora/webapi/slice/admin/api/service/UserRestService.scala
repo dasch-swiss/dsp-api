@@ -196,7 +196,7 @@ final case class UserRestService(
   ): Task[UserResponseADM] =
     for {
       _           <- ensureNotABuiltInUser(userIri)
-      _           <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
+      _           <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
       kUser       <- getKnoraUserOrNotFound(userIri)
       project     <- getProjectADMOrBadRequest(projectIri)
       updatedUser <- knoraUserService.addUserToProject(kUser, project).mapError(BadRequestException.apply)
@@ -223,7 +223,7 @@ final case class UserRestService(
   ): Task[UserResponseADM] =
     for {
       _           <- ensureNotABuiltInUser(userIri)
-      _           <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
+      _           <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
       user        <- getKnoraUserOrNotFound(userIri)
       project     <- getProjectADMOrBadRequest(projectIri)
       updatedUser <- knoraUserService.addUserToProjectAsAdmin(user, project).mapError(BadRequestException.apply)
@@ -237,7 +237,7 @@ final case class UserRestService(
   ): Task[UserResponseADM] =
     for {
       _          <- ensureNotABuiltInUser(userIri)
-      _          <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
+      _          <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
       user       <- getKnoraUserOrNotFound(userIri)
       project    <- getProjectADMOrBadRequest(projectIri)
       updateUser <- knoraUserService.removeUserFromProject(user, project).mapError(BadRequestException.apply)
@@ -251,7 +251,7 @@ final case class UserRestService(
   ): Task[UserResponseADM] =
     for {
       _       <- ensureNotABuiltInUser(userIri)
-      _       <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
+      _       <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
       user    <- getKnoraUserOrNotFound(userIri)
       project <- getProjectADMOrBadRequest(projectIri)
       updatedUser <- knoraUserService

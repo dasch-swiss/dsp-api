@@ -14,7 +14,6 @@ import zio._
 
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin._
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -52,21 +51,14 @@ final case class KnoraProjectRepoLive(
     ),
   )
 
-  override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] =
-    id match {
-      case ProjectIdentifierADM.IriIdentifier(iri)             => findById(iri)
-      case ProjectIdentifierADM.ShortcodeIdentifier(shortcode) => findOneByShortcode(shortcode)
-      case ProjectIdentifierADM.ShortnameIdentifier(shortname) => findOneByShortname(shortname)
-    }
-
   override def findById(id: ProjectIri): Task[Option[KnoraProject]] =
     super.findById(id).map(_.orElse(KnoraProjectRepo.builtIn.findOneBy(_.id == id)))
 
-  private def findOneByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]] =
+  override def findByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]] =
     findOneByTriplePattern(_.has(Vocabulary.KnoraAdmin.projectShortcode, shortcode.value))
       .map(_.orElse(KnoraProjectRepo.builtIn.findOneBy(_.shortcode == shortcode)))
 
-  private def findOneByShortname(shortname: Shortname): Task[Option[KnoraProject]] =
+  override def findByShortname(shortname: Shortname): Task[Option[KnoraProject]] =
     findOneByTriplePattern(_.has(Vocabulary.KnoraAdmin.projectShortname, shortname.value))
       .map(_.orElse(KnoraProjectRepo.builtIn.findOneBy(_.shortname == shortname)))
 

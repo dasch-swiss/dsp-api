@@ -17,8 +17,8 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.slice.admin.api.model.ProjectRestrictedViewSettingsADM
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -34,7 +34,7 @@ final case class AssetPermissionsResponder(
 )(private implicit val sf: StringFormatter) {
 
   def getPermissionCodeAndProjectRestrictedViewSettings(
-    shortcode: ShortcodeIdentifier,
+    shortcode: Shortcode,
     filename: String,
     requestingUser: User,
   ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
@@ -77,12 +77,12 @@ final case class AssetPermissionsResponder(
     }
 
   private def buildResponse(
-    shortcode: ShortcodeIdentifier,
+    shortcode: Shortcode,
     permissionCode: Int,
   ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
     knoraProjectService
-      .findByShortcode(shortcode.value)
-      .someOrFail(NotFoundException(s"No project found for shortcode $shortcode"))
+      .findByShortcode(shortcode)
+      .someOrFail(NotFoundException(s"No project found for shortcode ${shortcode.value}"))
       .map(project =>
         permissionCode match {
           case 1 =>

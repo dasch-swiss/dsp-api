@@ -50,7 +50,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
     isInProjectAdminGroup.map(ProjectIri.unsafeFrom).toChunk,
   )
 
-  private val KnoraUserToUserConverter = ZIO.serviceWithZIO[KnoraUserToUserConverter]
+  private val knoraUserToUserConverter = ZIO.serviceWithZIO[KnoraUserToUserConverter]
 
   override def e2eSpec =
     suite("KnoraUserToUserConverter, given a KnoraUser")(
@@ -62,7 +62,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
           Chunk.empty,
         )
         for {
-          actual <- KnoraUserToUserConverter(_.toUser(user))
+          actual <- knoraUserToUserConverter(_.toUser(user))
         } yield assertTrue(actual.permissions == SharedTestDataADM2.rootUser.permissionData)
       },
       test("return the permissions profile (multi group user)") {
@@ -73,7 +73,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
           Chunk(SharedTestDataADM.incunabulaProjectIri, imagesProjectIri),
         )
         for {
-          actual <- KnoraUserToUserConverter(_.toUser(user))
+          actual <- knoraUserToUserConverter(_.toUser(user))
         } yield assertTrue(actual.permissions == SharedTestDataADM2.multiuserUser.permissionData)
       },
       test("return the permissions profile (incunabula project admin user)") {
@@ -85,7 +85,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
             Chunk(SharedTestDataADM.incunabulaProjectIri),
           )
         for {
-          actual <- KnoraUserToUserConverter(_.toUser(user))
+          actual <- knoraUserToUserConverter(_.toUser(user))
         } yield assertTrue(actual.permissions == SharedTestDataADM2.incunabulaProjectAdminUser.permissionData)
       },
       test("return the permissions profile (incunabula creator user)") {
@@ -97,7 +97,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
             Chunk.empty,
           )
         for {
-          actual <- KnoraUserToUserConverter(_.toUser(user))
+          actual <- knoraUserToUserConverter(_.toUser(user))
         } yield assertTrue(actual.permissions == SharedTestDataADM2.incunabulaCreatorUser.permissionData)
       },
       test("return the permissions profile (incunabula normal project member user)") {
@@ -107,7 +107,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
           SystemAdmin.IsNotSystemAdmin,
           Chunk.empty,
         )
-        for { actual <- KnoraUserToUserConverter(_.toUser(user)) } yield assertTrue(
+        for { actual <- knoraUserToUserConverter(_.toUser(user)) } yield assertTrue(
           actual.permissions == SharedTestDataADM2.incunabulaMemberUser.permissionData,
         )
       },
@@ -120,7 +120,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
             Chunk(imagesProjectIri),
           )
         for {
-          actual <- KnoraUserToUserConverter(_.toUser(user))
+          actual <- knoraUserToUserConverter(_.toUser(user))
         } yield assertTrue(actual.permissions == SharedTestDataADM2.imagesUser01.permissionData)
       },
       test("return the permissions profile (images-reviewer-user)") {
@@ -131,7 +131,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
           Chunk.empty,
         )
         for {
-          actual <- KnoraUserToUserConverter(_.toUser(user))
+          actual <- knoraUserToUserConverter(_.toUser(user))
         } yield assertTrue(actual.permissions == SharedTestDataADM2.imagesReviewerUser.permissionData)
       },
       test("return the permissions profile (anything user 01)") {
@@ -141,7 +141,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
           SystemAdmin.IsNotSystemAdmin,
           Chunk.empty,
         )
-        for { actual <- KnoraUserToUserConverter(_.toUser(user)) } yield assertTrue(
+        for { actual <- knoraUserToUserConverter(_.toUser(user)) } yield assertTrue(
           actual.permissions == SharedTestDataADM2.anythingUser1.permissionData,
         )
       },

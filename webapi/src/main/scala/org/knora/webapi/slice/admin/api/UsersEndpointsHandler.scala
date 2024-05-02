@@ -14,10 +14,10 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRe
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.HandlerMapper
@@ -72,18 +72,18 @@ case class UsersEndpointsHandler(
   )
 
   private val postUsersByIriProjectMemberShipsHandler =
-    SecuredEndpointHandler[(UserIri, IriIdentifier), UserResponseADM](
+    SecuredEndpointHandler[(UserIri, ProjectIri), UserResponseADM](
       usersEndpoints.post.usersByIriProjectMemberShips,
-      requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
-        restService.addUserToProject(requestingUser, userIri, projectIri.value)
+      requestingUser => { case (userIri: UserIri, projectIri: ProjectIri) =>
+        restService.addUserToProject(requestingUser, userIri, projectIri)
       },
     )
 
   private val postUsersByIriProjectAdminMemberShipsHandler =
-    SecuredEndpointHandler[(UserIri, IriIdentifier), UserResponseADM](
+    SecuredEndpointHandler[(UserIri, ProjectIri), UserResponseADM](
       usersEndpoints.post.usersByIriProjectAdminMemberShips,
-      requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
-        restService.addUserToProjectAsAdmin(requestingUser, userIri, projectIri.value)
+      requestingUser => { case (userIri: UserIri, projectIri: ProjectIri) =>
+        restService.addUserToProjectAsAdmin(requestingUser, userIri, projectIri)
       },
     )
 
@@ -135,18 +135,18 @@ case class UsersEndpointsHandler(
   )
 
   private val deleteUsersByIriProjectMemberShipsHandler =
-    SecuredEndpointHandler[(UserIri, IriIdentifier), UserResponseADM](
+    SecuredEndpointHandler[(UserIri, ProjectIri), UserResponseADM](
       usersEndpoints.delete.usersByIriProjectMemberShips,
-      requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
-        restService.removeUserFromProject(requestingUser, userIri, projectIri.value)
+      requestingUser => { case (userIri: UserIri, projectIri: ProjectIri) =>
+        restService.removeUserFromProject(requestingUser, userIri, projectIri)
       },
     )
 
   private val deleteUsersByIriProjectAdminMemberShipsHandler =
-    SecuredEndpointHandler[(UserIri, IriIdentifier), UserResponseADM](
+    SecuredEndpointHandler[(UserIri, ProjectIri), UserResponseADM](
       usersEndpoints.delete.usersByIriProjectAdminMemberShips,
-      requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
-        restService.removeUserFromProjectAsAdmin(requestingUser, userIri, projectIri.value)
+      requestingUser => { case (userIri: UserIri, projectIri: ProjectIri) =>
+        restService.removeUserFromProjectAsAdmin(requestingUser, userIri, projectIri)
       },
     )
 
