@@ -10,9 +10,6 @@ import org.apache.pekko
 import scala.concurrent.duration._
 
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -33,12 +30,6 @@ import pekko.http.scaladsl.testkit.RouteTestTimeout
 class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
   implicit def default: RouteTestTimeout = RouteTestTimeout(5.seconds)
-
-  // Directory path for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("admin", "lists")
-
-  // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -79,16 +70,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           s"""{
              |    "name": "updated root node name"
              |}""".stripMargin
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-rootNode-name-request",
-              fileExtension = "json",
-            ),
-            text = updateNodeName,
-          ),
-        )
         val encodedListUrl = java.net.URLEncoder.encode(treeListInfo.id, "utf-8")
 
         val request = Put(
@@ -103,17 +84,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
 
         receivedListInfo.name should be(Some("updated root node name"))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-rootNode-name-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "update only node labels" in {
@@ -121,16 +91,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           s"""{
              |    "labels": [{"language": "se", "value": "nya märkningen"}]
              |}""".stripMargin
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-rootNode-labels-request",
-              fileExtension = "json",
-            ),
-            text = updateNodeLabels,
-          ),
-        )
         val encodedListUrl = java.net.URLEncoder.encode(treeListInfo.id, "utf-8")
 
         val request = Put(
@@ -147,17 +107,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
         labels.size should be(1)
         labels should contain(StringLiteralV2.from(value = "nya märkningen", language = Some("se")))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-rootNode-labels-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "update node comments" in {
@@ -165,16 +114,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           s"""{
              |    "comments": [{"language": "se", "value": "nya kommentarer"}]
              |}""".stripMargin
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-rootNode-comments-request",
-              fileExtension = "json",
-            ),
-            text = updateCommentsLabels,
-          ),
-        )
         val encodedListUrl = java.net.URLEncoder.encode(treeListInfo.id, "utf-8")
 
         val request = Put(
@@ -191,17 +130,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val comments: Seq[StringLiteralV2] = receivedListInfo.comments.stringLiterals
         comments.size should be(1)
         comments should contain(StringLiteralV2.from(value = "nya kommentarer", language = Some("se")))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-rootNode-comments-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "not delete root node comments" in {
@@ -228,17 +156,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |    "name": "$newName"
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-name-request",
-              fileExtension = "json",
-            ),
-            text = updateNodeName,
-          ),
-        )
-
         val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
         val request = Put(
@@ -252,17 +169,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val receivedNodeInfo: ListChildNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
         receivedNodeInfo.name.get should be(newName)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-name-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "update only the labels of the child node" in {
@@ -270,17 +176,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           s"""{
              |    "labels": [{"language": "se", "value": "nya märkningen för nod"}]
              |}""".stripMargin
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-labels-request",
-              fileExtension = "json",
-            ),
-            text = updateNodeLabels,
-          ),
-        )
 
         val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
@@ -297,17 +192,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val labels: Seq[StringLiteralV2] = receivedNodeInfo.labels.stringLiterals
         labels.size should be(1)
         labels should contain(StringLiteralV2.from(value = "nya märkningen för nod", language = Some("se")))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-labels-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "update only comments of the child node" in {
@@ -315,17 +199,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           s"""{
              |    "comments": [{"language": "se", "value": "nya kommentarer för nod"}]
              |}""".stripMargin
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-comments-request",
-              fileExtension = "json",
-            ),
-            text = updateNodeComments,
-          ),
-        )
 
         val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
@@ -342,17 +215,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val comments: Seq[StringLiteralV2] = receivedNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments should contain(StringLiteralV2.from(value = "nya kommentarer för nod", language = Some("se")))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-comments-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "not delete child node comments by sending empty array" in {
@@ -360,17 +222,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           s"""{
              |    "comments": []
              |}""".stripMargin
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "not-update-childNode-comments-request",
-              fileExtension = "json",
-            ),
-            text = deleteNodeComments,
-          ),
-        )
 
         val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
@@ -414,17 +265,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |    "position": $newPosition
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-position-request",
-              fileExtension = "json",
-            ),
-            text = updateNodeName,
-          ),
-        )
-
         val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
 
         val request = Put(
@@ -437,17 +277,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val receivedNode: ListNodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
         receivedNode.id should be(parentIri)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-position-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "reposition child node to the end of its parent's children" in {
@@ -460,17 +289,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |    "position": $newPosition
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-position-to-end-request",
-              fileExtension = "json",
-            ),
-            text = updateNodeName,
-          ),
-        )
-
         val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
 
         val request = Put(
@@ -483,17 +301,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val receivedNode: ListNodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
         receivedNode.id should be(parentIri)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-position-to-end-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "update parent and position of the child node" in {
@@ -506,17 +313,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |    "position": $newPosition
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-position-new-parent-request",
-              fileExtension = "json",
-            ),
-            text = updateNodeName,
-          ),
-        )
-
         val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
 
         val request = Put(
@@ -529,17 +325,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val receivedNode: ListNodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
         receivedNode.id should be(parentIri)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-position-new-parent-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "reposition child node to end of another parent's children" in {
@@ -552,17 +337,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |    "position": $newPosition
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-position-new-parent-to-end-request",
-              fileExtension = "json",
-            ),
-            text = updateNodeName,
-          ),
-        )
-
         val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
 
         val request = Put(
@@ -575,17 +349,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val receivedNode: ListNodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
         receivedNode.id should be(parentIri)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-childNode-position-new-parent-to-end-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
     }
 
@@ -599,16 +362,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-list-info-request",
-              fileExtension = "json",
-            ),
-            text = updateListInfo,
-          ),
-        )
         val encodedListUrl = java.net.URLEncoder.encode(newListIri, "utf-8")
 
         val request = Put(
@@ -628,17 +381,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val comments = receivedListInfo.comments.stringLiterals
         comments.size should be(2)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-list-info-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "update basic list information with a new name" in {
@@ -648,16 +390,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "name": "a totally new name"
              |}""".stripMargin
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-list-name-request",
-              fileExtension = "json",
-            ),
-            text = updateListName,
-          ),
-        )
         val encodedListUrl = java.net.URLEncoder.encode(newListIri, "utf-8")
 
         val request = Put(
@@ -673,17 +405,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
 
         receivedListInfo.name should be(Some("a totally new name"))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-list-name-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "update basic list information with repeated comment and label in different languages" in {
@@ -702,17 +423,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |     {"language": "it", "value": "test"}
              |  ]
              |}""".stripMargin
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-list-info-comment-label-multiple-languages-request",
-              fileExtension = "json",
-            ),
-            text = updateListInfoWithRepeatedCommentAndLabelValuesRequest,
-          ),
-        )
 
         val encodedListUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "utf-8")
 
@@ -733,17 +443,6 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val comments = receivedListInfo.comments.stringLiterals
         comments.size should be(4)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-list-info-comment-label-multiple-languages-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return a ForbiddenException if the user updating the list is not project or system admin" in {

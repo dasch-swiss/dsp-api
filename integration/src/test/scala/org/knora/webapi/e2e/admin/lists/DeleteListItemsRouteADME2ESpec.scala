@@ -10,9 +10,6 @@ import org.apache.pekko
 import scala.concurrent.duration._
 
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
@@ -31,25 +28,6 @@ import pekko.http.scaladsl.testkit.RouteTestTimeout
 class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
   implicit def default: RouteTestTimeout = RouteTestTimeout(5.seconds)
-
-  // Directory path for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("admin", "lists")
-
-  // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
-
-  // Collects client test data
-  private def collectClientTestData(fileName: String, fileContent: String): Unit =
-    clientTestDataCollector.addFile(
-      TestDataFileContent(
-        filePath = TestDataFilePath(
-          directoryPath = clientTestDataPath,
-          filename = fileName,
-          fileExtension = "json",
-        ),
-        text = fileContent,
-      ),
-    )
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -118,8 +96,6 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         // first child must have its child
         val firstChild = children.head
         firstChild.children.size should be(5)
-
-        collectClientTestData("delete-list-node-response", responseToString(response))
       }
 
       "delete the single child of a node" in {
@@ -144,11 +120,8 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         response.status should be(StatusCodes.OK)
         val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
         deletedStatus.convertTo[Boolean] should be(true)
-
-        collectClientTestData("delete-list-response", responseToString(response))
       }
     }
-
   }
 
   "The admin lists candelete route (/admin/lists/candelete)" when {
@@ -167,8 +140,6 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         canDelete.convertTo[Boolean] should be(true)
         val listIri = AkkaHttpUtils.httpResponseToJson(response).fields("listIri")
         listIri.convertTo[String] should be(unusedList)
-
-        collectClientTestData("candeletelist-response", responseToString(response))
       }
 
       "return negative response for used list" in {
@@ -210,15 +181,12 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         )
 
         val response: HttpResponse = singleAwaitingRequest(request)
-        val responseStr            = responseToString(response)
 
         response.status should be(StatusCodes.OK)
         val commentsDeleted = AkkaHttpUtils.httpResponseToJson(response).fields("commentsDeleted")
         commentsDeleted.convertTo[Boolean] should be(true)
         val nodeIri = AkkaHttpUtils.httpResponseToJson(response).fields("nodeIri")
         nodeIri.convertTo[String] should be(childNodeIri)
-
-        collectClientTestData("delete-list-node-comments-response", responseStr)
       }
 
       "return exception for root node comments" in {
