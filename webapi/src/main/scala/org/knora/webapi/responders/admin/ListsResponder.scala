@@ -525,20 +525,15 @@ final case class ListsResponder(
       case child: ListCreateChildNodeRequest => (child.id, child.projectIri, child.name, child.position)
     }
 
-    def getPositionOfNewChild(children: Seq[ListChildNodeADM]): IO[BadRequestException, Int] =
-      if (position.exists(_.value > children.size)) {
-        val givenPosition = position.map(_.value).get
-        ZIO.fail(
-          BadRequestException(
-            s"Invalid position given ${givenPosition}, maximum allowed position is = ${children.size}.",
-          ),
-        )
-      } else {
-        val newPosition =
-          if (position.isEmpty || position.exists(_.value.equals(-1))) { children.size }
-          else { position.get.value }
-        ZIO.succeed(newPosition)
+    def getPositionOfNewChild(children: Seq[ListChildNodeADM]): IO[BadRequestException, Int] = {
+      val size = children.size
+      position.map(_.value) match {
+        case Some(pos) if pos > size =>
+          ZIO.fail(BadRequestException(s"Invalid position given $pos, maximum allowed position is = $size."))
+        case Some(pos) if pos >= 0 => ZIO.succeed(pos)
+        case _                     => ZIO.succeed(size)
       }
+    }
 
     def getRootNodeIri(parentListNode: ListNodeADM): IRI =
       parentListNode match {
