@@ -160,11 +160,10 @@ final case class CardinalityHandlerLive(
             // need to be marked as wanting to keep.
             existingLinkPropsToKeep =
               newClassDefinitionWithRemovedCardinality.directCardinalities.keySet // gets all keys from the map as a set
-                .map(propertyIri =>
-                  cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri),
-                )                                     // turn the propertyIri into a ReadPropertyInfoV2
-                .filter(_.isLinkProp)                 // we are only interested in link properties
-                .map(_.entityInfoContent.propertyIri),// turn whatever is left back to a propertyIri
+                .map(propertyIri => cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri),
+                )                                      // turn the propertyIri into a ReadPropertyInfoV2
+                .filter(_.isLinkProp)                  // we are only interested in link properties
+                .map(_.entityInfoContent.propertyIri), // turn whatever is left back to a propertyIri
           )
           .fold(e => throw e.head, v => v)
 
@@ -305,11 +304,10 @@ final case class CardinalityHandlerLive(
             // need to be marked as wanting to keep.
             existingLinkPropsToKeep =
               newClassDefinitionWithRemovedCardinality.directCardinalities.keySet // gets all keys from the map as a set
-                .map(propertyIri =>
-                  cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri),
-                )                                     // turn the propertyIri into a ReadPropertyInfoV2
-                .filter(_.isLinkProp)                 // we are only interested in link properties
-                .map(_.entityInfoContent.propertyIri),// turn whatever is left back to a propertyIri
+                .map(propertyIri => cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri),
+                )                                      // turn the propertyIri into a ReadPropertyInfoV2
+                .filter(_.isLinkProp)                  // we are only interested in link properties
+                .map(_.entityInfoContent.propertyIri), // turn whatever is left back to a propertyIri
           )
           .fold(e => throw e.head, v => v)
 

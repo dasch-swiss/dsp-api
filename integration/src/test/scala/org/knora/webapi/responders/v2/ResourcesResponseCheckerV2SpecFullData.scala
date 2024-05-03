@@ -281,8 +281,9 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString =
-              Some("http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320"),
+            maybeValueHasString = Some(
+              "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320",
+            ),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/f89173afca2704",

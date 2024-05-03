@@ -18,11 +18,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object AdminModule {
 
   type Dependencies =
-    AppConfig &
-      IriService &
-      OntologyRepo &
-      PredicateObjectMapper &
-      TriplestoreService
+    AppConfig & IriService & OntologyRepo & PredicateObjectMapper & TriplestoreService
 
   type Provided = AdminDomainModule.Provided
 

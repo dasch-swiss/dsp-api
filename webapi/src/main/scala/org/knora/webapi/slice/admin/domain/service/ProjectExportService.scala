@@ -84,8 +84,10 @@ private object TriGCombiner {
 
   def combineTrigFiles(inputFiles: Iterable[Path], outputFile: Path): Task[Path] = ZIO.scoped {
     for {
-      outFile   <- ZScopedJavaIoStreams.fileBufferedOutputStream(outputFile)
-      outWriter <- createPrefixDedupStreamRDF(outFile).map { it => it.start(); it }
+      outFile <- ZScopedJavaIoStreams.fileBufferedOutputStream(outputFile)
+      outWriter <- createPrefixDedupStreamRDF(outFile).map { it =>
+                     it.start(); it
+                   }
       _ <- ZIO.foreachDiscard(inputFiles)(file =>
              // Combine the files and write the output to the given OutputStream
              for {

@@ -97,7 +97,8 @@ final case class AppServer(
 object AppServer {
 
   type AppServerEnvironment =
-    actor.ActorSystem & AppConfig & HttpServer & OntologyCache & RepositoryUpdater & SipiService & State & TriplestoreService
+    actor.ActorSystem & AppConfig & HttpServer & OntologyCache & RepositoryUpdater & SipiService & State &
+      TriplestoreService
 
   /**
    * Initializes the AppServer instance with the required services

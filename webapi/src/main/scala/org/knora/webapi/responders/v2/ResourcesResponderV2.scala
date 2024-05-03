@@ -2001,7 +2001,8 @@ final case class ResourcesResponderV2(
 
 object ResourcesResponderV2 {
   val layer: URLayer[
-    AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectService & MessageRelay & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & SearchResponderV2 & StringFormatter & TriplestoreService & OntologyRepo,
+    AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectService & MessageRelay & PermissionUtilADM &
+      ResourceUtilV2 & StandoffTagUtilV2 & SearchResponderV2 & StringFormatter & TriplestoreService & OntologyRepo,
     ResourcesResponderV2,
   ] = ZLayer.fromZIO {
     for {

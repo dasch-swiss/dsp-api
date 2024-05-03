@@ -92,14 +92,17 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   ): Task[pekko.http.scaladsl.model.HttpResponse] =
     ZIO
       .fromFuture[pekko.http.scaladsl.model.HttpResponse](_ =>
-        pekko.http.scaladsl.Http().singleRequest(request).map { resp =>
-          if (printFailure && resp.status.isFailure()) {
-            Unmarshal(resp.entity).to[String].map { body =>
-              println(s"Request failed with status ${resp.status} and body $body")
+        pekko.http.scaladsl
+          .Http()
+          .singleRequest(request)
+          .map { resp =>
+            if (printFailure && resp.status.isFailure()) {
+              Unmarshal(resp.entity).to[String].map { body =>
+                println(s"Request failed with status ${resp.status} and body $body")
+              }
             }
-          }
-          resp
-        },
+            resp
+          },
       )
       .timeout(timeout.getOrElse(10.seconds))
       .some
