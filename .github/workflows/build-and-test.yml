@@ -35,7 +35,7 @@ jobs:
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
+          coverage-reports: ./target/scala-3.3.3/coverage-report/cobertura.xml
       - name: Upload coverage data to codecov
         if: ${{ env.IS_NOOP == 'false' }}
         uses: codecov/codecov-action@v3
