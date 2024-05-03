@@ -17,9 +17,6 @@ import dsp.valueobjects.Iri
 import dsp.valueobjects.LangString
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -87,25 +84,6 @@ class OntologyV2R2RSpec extends R2RSpec {
     ),
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
   )
-
-  // Directory path for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("v2", "ontologies")
-
-  // an instance of ClientTestDataCollector
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
-
-  // Collects client test data
-  private def CollectClientTestData(fileName: String, fileContent: String): Unit =
-    clientTestDataCollector.addFile(
-      TestDataFileContent(
-        filePath = TestDataFilePath(
-          directoryPath = clientTestDataPath,
-          filename = fileName,
-          fileExtension = "json",
-        ),
-        text = fileContent,
-      ),
-    )
 
   private val anythingOntoLocalhostIri = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost
   private val hasOtherNothingIri       = anythingOntoLocalhostIri + "#hasOtherNothing"
@@ -177,8 +155,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    }
            |}""".stripMargin
 
-      CollectClientTestData("create-empty-foo-ontology-request", params)
-
       Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
@@ -198,8 +174,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         )
 
         fooLastModDate = lastModDate
-
-        CollectClientTestData("create-empty-foo-ontology-response", responseStr)
       }
     }
 
@@ -220,8 +194,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
            |    }
            |}""".stripMargin
-
-      CollectClientTestData("create-ontology-with-comment-request", params)
 
       Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password),
@@ -244,8 +216,6 @@ class OntologyV2R2RSpec extends R2RSpec {
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
         barLastModDate = lastModDate
-
-        CollectClientTestData("create-ontology-with-comment-response", responseStr)
       }
     }
 
@@ -303,8 +273,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
            |  }
            |}""".stripMargin
-
-      CollectClientTestData("update-ontology-metadata-request", params)
 
       Put("/v2/ontologies/metadata", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password),
@@ -405,8 +373,6 @@ class OntologyV2R2RSpec extends R2RSpec {
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
 
-        CollectClientTestData("can-do-response", responseStr)
-
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
         assert(responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
@@ -422,8 +388,6 @@ class OntologyV2R2RSpec extends R2RSpec {
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
-
-        CollectClientTestData("delete-ontology-response", responseStr)
       }
     }
 
@@ -480,8 +444,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      CollectClientTestData("create-value-property-request", params)
-
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
@@ -501,8 +463,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
-
-        CollectClientTestData("create-value-property-response", responseStr)
       }
     }
 
@@ -538,8 +498,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}""".stripMargin
-
-      CollectClientTestData("change-property-label-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -596,8 +554,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}""".stripMargin
-
-      CollectClientTestData("change-property-comment-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -757,8 +713,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         responseFromJsonLD.properties.head._2.predicates.toSet should ===(
           expectedResponseToCompare.properties.head._2.predicates.toSet,
         )
-
-        CollectClientTestData("delete-property-comment-response", responseStr)
       }
     }
 
@@ -835,8 +789,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         responseFromJsonLD.classes.head._2.predicates.toSet should ===(
           expectedResponseToCompare.classes.head._2.predicates.toSet,
         )
-
-        CollectClientTestData("delete-class-comment-response", responseStr)
       }
     }
 
@@ -867,8 +819,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}""".stripMargin
-
-      CollectClientTestData("change-property-guielement-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -940,16 +890,12 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      CollectClientTestData("not-change-property-guielement-request", params)
-
       Put(
         "/v2/ontologies/properties/guielement",
         HttpEntity(RdfMediaTypes.`application/ld+json`, params),
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.BadRequest, responseStr)
-
-        CollectClientTestData("not-change-property-guielement-response", responseStr)
       }
     }
 
@@ -976,8 +922,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}""".stripMargin
-
-      CollectClientTestData("remove-property-guielement-request", params)
 
       Put(
         "/v2/ontologies/properties/guielement",
@@ -1054,8 +998,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      CollectClientTestData("create-class-with-cardinalities-request", params)
-
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
@@ -1118,8 +1060,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}
            """.stripMargin
 
-      CollectClientTestData("create-class-without-cardinalities-request", params)
-
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
@@ -1144,8 +1084,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
-
-        CollectClientTestData("create-class-without-cardinalities-response", responseStr)
       }
     }
 
@@ -1178,8 +1116,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}""".stripMargin
-
-      CollectClientTestData("change-class-label-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1233,8 +1169,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}""".stripMargin
-
-      CollectClientTestData("change-class-comment-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1302,8 +1236,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}
                 """.stripMargin
 
-      CollectClientTestData("create-link-property-request", params)
-
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
@@ -1323,8 +1255,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
-
-        CollectClientTestData("create-link-property-response", responseStr)
       }
     }
 
@@ -1359,8 +1289,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}
                 """.stripMargin
-
-      CollectClientTestData("add-cardinalities-to-class-nothing-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1400,8 +1328,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
-
-        CollectClientTestData("add-cardinalities-to-class-nothing-response", responseStr)
       }
     }
 
@@ -1807,8 +1733,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      CollectClientTestData("remove-property-cardinality-request", params)
-
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
@@ -2020,8 +1944,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      CollectClientTestData("change-gui-order-request", params)
-
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
@@ -2149,8 +2071,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      CollectClientTestData("replace-class-cardinalities-request", params)
-
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
@@ -2225,8 +2145,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}""".stripMargin
-
-      CollectClientTestData("remove-class-cardinalities-request", params)
 
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password),
@@ -2919,8 +2837,6 @@ class OntologyV2R2RSpec extends R2RSpec {
       ),
     )
 
-    CollectClientTestData("candeletecardinalities-false-request", cardinalityCantBeDeletedPayload.value)
-
     // Expect cardinality can't be deleted - endpoint should return CanDo response with value false
     Post(
       "/v2/ontologies/candeletecardinalities",
@@ -2936,8 +2852,6 @@ class OntologyV2R2RSpec extends R2RSpec {
             .asInstanceOf[JsonLDBoolean]
             .value,
         )
-
-        CollectClientTestData("candeletecardinalities-false-response", responseStr)
       }
 
     // Prepare the JsonLD payload to check if a cardinality can be deleted and then to also actually delete it.
@@ -2971,8 +2885,6 @@ class OntologyV2R2RSpec extends R2RSpec {
          |  }
          |}""".stripMargin
 
-    CollectClientTestData("candeletecardinalities-true-request", params)
-
     // Successfully check if the cardinality can be deleted
     Post(
       "/v2/ontologies/candeletecardinalities",
@@ -2984,8 +2896,6 @@ class OntologyV2R2RSpec extends R2RSpec {
       assert(status == StatusCodes.OK, response.toString)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
       assert(responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
-
-      CollectClientTestData("candeletecardinalities-true-response", responseStr)
     }
 
     // Successfully remove the (unused) text value cardinality from the class.
@@ -3203,11 +3113,6 @@ class OntologyV2R2RSpec extends R2RSpec {
       )
       .value
 
-    CollectClientTestData(
-      "candeletecardinalities-true-if-not-used-in-this-class-request",
-      cardinalityCanBeDeletedPayload,
-    )
-
     // Expect cardinality can be deleted from TestClassTwo - CanDo response should return true
     Post(
       "/v2/ontologies/candeletecardinalities",
@@ -3223,8 +3128,6 @@ class OntologyV2R2RSpec extends R2RSpec {
             .asInstanceOf[JsonLDBoolean]
             .value,
         )
-
-        CollectClientTestData("candeletecardinalities-true-if-not-used-in-this-class-response", responseStr)
       }
   }
 

@@ -85,56 +85,16 @@ object LayersTest {
     pekko.actor.ActorSystem & AppConfigurationsTest & JwtConfig & WhichSipiService
 
   type CommonR =
-    AdminModule.Provided &
-      AdminApiEndpoints &
-      ApiRoutes &
-      ApiV2Endpoints &
-      AppRouter &
-      AssetPermissionsResponder &
-      Authenticator &
-      AuthorizationRestService &
-      CardinalityHandler &
-      ConstructResponseUtilV2 &
-      DspIngestClient &
-      GravsearchTypeInspectionRunner &
-      GroupRestService &
-      HttpServer &
-      IIIFRequestMessageHandler &
-      InferenceOptimizationService &
-      InvalidTokenCache &
-      IriConverter &
-      JwtService &
-      ListsResponder &
-      ListsResponderV2 &
-      MessageRelay &
-      OntologyCache &
-      OntologyHelpers &
-      OntologyInferencer &
-      OntologyRepo &
-      OntologyResponderV2 &
-      PermissionRestService &
-      PermissionUtilADM &
-      PermissionsResponder &
-      ProjectExportService &
-      ProjectExportStorageService &
-      ProjectImportService &
-      ProjectRestService &
-      QueryTraverser &
-      RepositoryUpdater &
-      ResourceUtilV2 &
-      ResourcesResponderV2 &
-      RestCardinalityService &
-      SearchApiRoutes &
-      SearchResponderV2 &
-      SipiService &
-      StandoffResponderV2 &
-      StandoffTagUtilV2 &
-      State &
-      StringFormatter &
-      TestClientService &
-      TriplestoreService &
-      UserRestService &
-      ValuesResponderV2
+    AdminModule.Provided & AdminApiEndpoints & ApiRoutes & ApiV2Endpoints & AppRouter & AssetPermissionsResponder &
+      Authenticator & AuthorizationRestService & CardinalityHandler & ConstructResponseUtilV2 & DspIngestClient &
+      GravsearchTypeInspectionRunner & GroupRestService & HttpServer & IIIFRequestMessageHandler &
+      InferenceOptimizationService & InvalidTokenCache & IriConverter & JwtService & ListsResponder & ListsResponderV2 &
+      MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo & OntologyResponderV2 &
+      PermissionRestService & PermissionUtilADM & PermissionsResponder & ProjectExportService &
+      ProjectExportStorageService & ProjectImportService & ProjectRestService & QueryTraverser & RepositoryUpdater &
+      ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & SearchApiRoutes & SearchResponderV2 &
+      SipiService & StandoffResponderV2 & StandoffTagUtilV2 & State & StringFormatter & TestClientService &
+      TriplestoreService & UserRestService & ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -201,7 +161,8 @@ object LayersTest {
 
   private val fusekiAndSipiTestcontainers =
     ZLayer.make[
-      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & SharedVolumes.Images & SipiTestContainer & WhichSipiService,
+      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & SharedVolumes.Images & SipiTestContainer &
+        WhichSipiService,
     ](
       AppConfigForTestContainers.testcontainers,
       DspIngestTestContainer.layer,

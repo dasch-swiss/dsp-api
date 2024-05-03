@@ -17,9 +17,6 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -53,12 +50,6 @@ class ValuesV2R2RSpec extends R2RSpec {
   private val password          = SharedTestDataADM.testPass
 
   private val stillImageFileValueIri = new MutableTestIri
-
-  // Directory path for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("v2", "values")
-
-  // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
@@ -165,17 +156,6 @@ class ValuesV2R2RSpec extends R2RSpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-still-image-file-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       Put("/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password),

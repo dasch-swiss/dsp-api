@@ -23,11 +23,11 @@ object Dependencies {
   val JenaVersion       = "5.0.0"
   val Rdf4jVersion      = "4.3.11"
 
-  val ZioConfigVersion            = "4.0.1"
-  val ZioLoggingVersion           = "2.2.2"
+  val ZioConfigVersion            = "4.0.2"
+  val ZioLoggingVersion           = "2.2.3"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC23"
+  val ZioPreludeVersion           = "1.0.0-RC24"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.22"
 
@@ -42,7 +42,7 @@ object Dependencies {
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
   val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
-  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.5"
+  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.6"
 
   // refined
   val refined = Seq(
@@ -80,8 +80,8 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.0"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.2.3" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.78"
+    "org.springframework.security" % "spring-security-core" % "6.2.4" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.78.1"
 
   // caching
   val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
@@ -98,7 +98,7 @@ object Dependencies {
   val scalaGraph =
     "org.scala-graph" %% "graph-core" % "2.0.1" cross CrossVersion.for3Use2_13 // Should be Scala 3 compatible
   val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.4.0"
-  val xmlunitCore    = "org.xmlunit"    % "xmlunit-core"     % "2.9.1"
+  val xmlunitCore    = "org.xmlunit"    % "xmlunit-core"     % "2.10.0"
 
   // test
   val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion  // Scala 3 incompatible
@@ -107,12 +107,12 @@ object Dependencies {
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.18"          // Scala 3 compatible
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "1.19.7"
-  val wiremock       = "org.wiremock"       % "wiremock"       % "3.5.2"
+  val wiremock       = "org.wiremock"       % "wiremock"       % "3.5.4"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.10.4"
+  val tapirVersion = "1.10.6"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,

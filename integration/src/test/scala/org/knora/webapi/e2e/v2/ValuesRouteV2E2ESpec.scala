@@ -25,9 +25,6 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForResourcesResponse
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -77,11 +74,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   // If true, writes some API responses to test data files. If false, compares the API responses to the existing test data files.
   private val writeTestDataFiles = false
 
-  // Directory path for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("v2", "values")
-
-  // Collects client test data
-  private val clientTestDataCollector                       = new ClientTestDataCollector(appConfig)
   private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
   object AThing {
@@ -689,17 +681,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       if (writeTestDataFiles) writeTestData(responseStr, Paths.get(s"valuesE2EV2/$fileBasename.jsonld"))
       else readTestData(Paths.get(s"valuesE2EV2/$fileBasename.jsonld"))
     compareJSONLDForResourcesResponse(expectedJSONLD = expectedResponseStr, receivedJSONLD = responseStr)
-
-    clientTestDataCollector.addFile(
-      TestDataFileContent(
-        filePath = TestDataFilePath(
-          directoryPath = clientTestDataPath,
-          filename = fileBasename,
-          fileExtension = "json",
-        ),
-        text = responseStr,
-      ),
-    )
   }
   private val customValueUUID     = "CpO1TIDf1IS55dQbyIuDsA"
   private val customValueIri: IRI = s"http://rdfh.ch/0001/a-thing/values/$customValueUUID"
@@ -783,17 +764,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-int-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -825,17 +795,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         .getRequiredInt(KnoraApiV2Complex.IntValueAsInt)
         .fold(e => throw BadRequestException(e), identity)
       savedIntValue should ===(intValue)
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-value-response",
-            fileExtension = "json",
-          ),
-          text = responseStr,
-        ),
-      )
     }
 
     "create an integer value with a custom value IRI" in {
@@ -857,17 +816,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-int-value-with-custom-Iri-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request = Post(
         baseApiUrl + "/v2/values",
@@ -934,17 +882,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-int-value-with-custom-UUID-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request = Post(
         baseApiUrl + "/v2/values",
@@ -1018,17 +955,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-int-value-with-custom-creationDate-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -1076,17 +1002,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-int-value-with-custom-Iri-UUID-CreationDate-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request = Post(
         baseApiUrl + "/v2/values",
@@ -1157,17 +1072,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-int-value-with-custom-permissions-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -1209,17 +1113,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity: String = createTextValueWithoutStandoffRequest(
         resourceIri = resourceIri,
         valueAsString = valueAsString,
-      )
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-text-value-without-standoff-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
       )
 
       val request = Post(
@@ -1298,17 +1191,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         valueAsString = valueAsString,
       )
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-text-value-without-standoff-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
           BasicHttpCredentials(anythingUserEmail, password),
@@ -1348,17 +1230,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         valueIri = textValueWithoutStandoffIri.get,
         valueAsString = valueAsString,
         valueHasComment = "Adding a comment",
-      )
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-text-value-with-comment-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
       )
 
       val request =
@@ -1471,17 +1342,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-text-value-with-comment-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -1523,17 +1383,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         textValueAsXml = textValue1AsXmlWithStandardMapping,
         mappingIri = standardMappingIri,
-      )
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-text-value-with-standoff-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
       )
 
       val request = Post(
@@ -1828,17 +1677,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-decimal-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -1895,17 +1733,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndMonth = dateValueHasEndMonth,
         dateValueHasEndDay = dateValueHasEndDay,
         dateValueHasEndEra = dateValueHasEndEra,
-      )
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-date-value-with-day-precision-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
       )
 
       val request = Post(
@@ -1991,17 +1818,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasEndEra,
       )
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-date-value-with-month-precision-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -2081,17 +1897,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasStartEra = dateValueHasStartEra,
         dateValueHasEndYear = dateValueHasEndYear,
         dateValueHasEndEra = dateValueHasEndEra,
-      )
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-date-value-with-year-precision-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
       )
 
       val request = Post(
@@ -2549,17 +2354,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-boolean-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -2607,17 +2401,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-geometry-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request = Post(
         baseApiUrl + "/v2/values",
@@ -2677,17 +2460,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-interval-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request = Post(
         baseApiUrl + "/v2/values",
@@ -2753,17 +2525,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-time-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -2819,17 +2580,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-list-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -2881,17 +2631,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-color-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request = Post(
         baseApiUrl + "/v2/values",
@@ -2946,17 +2685,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-uri-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -3010,17 +2738,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-geoname-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -3073,17 +2790,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-link-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request = Post(
         baseApiUrl + "/v2/values",
@@ -3151,17 +2857,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-link-value-with-custom-Iri-UUID-CreationDate-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -3207,17 +2902,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-int-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
           BasicHttpCredentials(anythingUserEmail, password),
@@ -3251,17 +2935,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val intValueAsInt: Int =
         savedValue.getRequiredInt(KnoraApiV2Complex.IntValueAsInt).fold(e => throw BadRequestException(e), identity)
       intValueAsInt should ===(intValue)
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-value-response",
-            fileExtension = "json",
-          ),
-          text = responseStr,
-        ),
-      )
     }
 
     "update an integer value with a custom creation date" in {
@@ -3290,17 +2963,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-int-value-request-with-custom-creation-date",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
@@ -3514,17 +3176,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-int-value-with-custom-permissions-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
           BasicHttpCredentials(anythingUserEmail, password),
@@ -3577,17 +3228,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-int-value-permissions-only-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
@@ -3642,17 +3282,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-decimal-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
@@ -3711,17 +3340,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-text-value-with-standoff-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
@@ -3866,17 +3484,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasEndEra,
       )
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-date-value-with-day-precision-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
           BasicHttpCredentials(anythingUserEmail, password),
@@ -3962,17 +3569,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasEndEra,
       )
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-date-value-with-month-precision-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
           BasicHttpCredentials(anythingUserEmail, password),
@@ -4054,17 +3650,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasStartEra = dateValueHasStartEra,
         dateValueHasEndYear = dateValueHasEndYear,
         dateValueHasEndEra = dateValueHasEndEra,
-      )
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-date-value-with-year-precision-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
       )
 
       val request =
@@ -4389,17 +3974,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-boolean-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
           BasicHttpCredentials(anythingUserEmail, password),
@@ -4448,17 +4022,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-geometry-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
@@ -4519,17 +4082,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-interval-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
@@ -4596,17 +4148,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-time-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
           BasicHttpCredentials(anythingUserEmail, password),
@@ -4663,17 +4204,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-list-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
           BasicHttpCredentials(anythingUserEmail, password),
@@ -4726,17 +4256,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-color-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
@@ -4792,17 +4311,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-uri-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
           BasicHttpCredentials(anythingUserEmail, password),
@@ -4857,17 +4365,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-geoname-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
           BasicHttpCredentials(anythingUserEmail, password),
@@ -4909,17 +4406,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         valueIri = linkValueIri.get,
         targetResourceIri = linkTargetIri,
-      )
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-link-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
       )
 
       val request =
@@ -5176,17 +4662,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         maybeDeleteComment = Some("this value was incorrect"),
       )
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "delete-int-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values/delete",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -5216,17 +4691,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "delete-int-value-request-with-custom-delete-date",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request = Post(
         baseApiUrl + "/v2/values/delete",
@@ -5301,17 +4765,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "delete-link-value-request",
-            fileExtension = "json",
-          ),
-          text = jsonLDEntity,
-        ),
-      )
 
       val request = Post(
         baseApiUrl + "/v2/values/delete",

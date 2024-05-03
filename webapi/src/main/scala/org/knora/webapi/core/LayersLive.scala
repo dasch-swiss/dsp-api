@@ -72,6 +72,7 @@ object LayersLive {
     AdminModule.Provided &
       ActorSystem &
       AdminApiEndpoints &
+      AdminModule.Provided &
       ApiRoutes &
       ApiV2Endpoints &
       AppConfigurations &
