@@ -3062,31 +3062,15 @@ object ClassInfoContentV2 {
 
     // If this is a custom datatype, get its definition.
     val datatypeInfo: Option[DatatypeInfoV2] =
-      jsonLDClassDef.maybeIriInObject(OntologyConstants.Owl.OnDatatype, stringFormatter.toSmartIriWithErr) match {
-        case Some(onDatatype: SmartIri) =>
+      jsonLDClassDef.maybeIriInObject(OntologyConstants.Owl.OnDatatype, stringFormatter.toSmartIriWithErr).map {
+        (onDatatype: SmartIri) =>
           val pattern: Option[String] = jsonLDClassDef
             .getObject(OntologyConstants.Owl.WithRestrictions)
-            .fold(e => throw BadRequestException(e), identity) match {
-            case Some(jsonLDValue: JsonLDObject) =>
-              jsonLDValue match {
-                case jsonLDObject: JsonLDObject =>
-                  Some(
-                    jsonLDObject
-                      .getRequiredString(OntologyConstants.Xsd.Pattern)
-                      .fold(msg => throw BadRequestException(msg), identity),
-                  )
-              }
-            case None => None
-          }
-
-          Some(
-            DatatypeInfoV2(
-              onDatatype = onDatatype,
-              pattern = pattern,
-            ),
-          )
-
-        case None => None
+            .fold(e => throw BadRequestException(e), identity)
+            .map(
+              _.getRequiredString(OntologyConstants.Xsd.Pattern).fold(msg => throw BadRequestException(msg), identity),
+            )
+          DatatypeInfoV2(onDatatype, pattern)
       }
 
     ClassInfoContentV2(
