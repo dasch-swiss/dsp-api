@@ -36,7 +36,7 @@ object FileUtil {
    * @param file    the destination file.
    * @param content the string to write.
    */
-  def writeTextFile(file: Path, content: String): Path =
+  def writeTextFile(file: Path, content: String) =
     writeBinaryFile(file, content.getBytes(StandardCharsets.UTF_8))
 
   /**
