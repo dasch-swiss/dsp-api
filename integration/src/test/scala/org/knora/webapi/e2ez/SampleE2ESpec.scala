@@ -47,7 +47,7 @@ object SampleE2ESpec extends E2EZSpec {
     } yield assertTrue(
       response.name == "version",
       response.webapi.startsWith("v"),
-      response.scala.startsWith("2.13."),
+      response.scala.startsWith("3.3."),
     )
   }
 
