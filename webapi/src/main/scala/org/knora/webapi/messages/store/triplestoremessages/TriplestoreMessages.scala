@@ -5,6 +5,7 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
+import sttp.tapir.Schema
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
 import spray.json._
@@ -325,6 +326,7 @@ case class StringLiteralV2 private (value: String, language: Option[String])
 
 object StringLiteralV2 {
   implicit val codec: JsonCodec[StringLiteralV2] = DeriveJsonCodec.gen[StringLiteralV2]
+  implicit val schema: Schema[StringLiteralV2]   = Schema.derived[StringLiteralV2]
 
   def from(value: String, language: Option[String]): StringLiteralV2 = language match {
     case Some(_) if value.isEmpty => throw BadRequestException("String value is missing.")
@@ -403,6 +405,9 @@ case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
 object StringLiteralSequenceV2 {
   implicit val codec: JsonCodec[StringLiteralSequenceV2] =
     JsonCodec[Vector[StringLiteralV2]].transform(StringLiteralSequenceV2.apply, _.stringLiterals)
+
+  implicit val schema: Schema[StringLiteralSequenceV2] = Schema.derived[StringLiteralSequenceV2]
+
   val empty: StringLiteralSequenceV2 = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
 }
 

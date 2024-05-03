@@ -36,9 +36,6 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) {
     .out(jsonBody[ListsGetResponseADM].description("Contains the list of all root nodes of each found list."))
     .description("Get all lists or all lists belonging to a project.")
 
-  implicit val listChildNodeADMschema: Schema[ListChildNodeADM] = Schema.derived[ListChildNodeADM]
-  implicit val listADMschema: Schema[ListADM]                   = Schema.derived[ListADM]
-
   private val listIriPathVar = path[ListIri].description("The IRI of the list.")
   val getListsByIri = baseEndpoints.publicEndpoint.get
     .in(base / listIriPathVar)
