@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.9.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.8.3...v0.9.0) (2024-05-03)
+
+
+### Enhancements
+
+* Add upload asset endpoint (DEV-3503) ([#207](https://github.com/dasch-swiss/dsp-ingest/issues/207)) ([26b8f2b](https://github.com/dasch-swiss/dsp-ingest/commit/26b8f2b311d6f67a6e24cabc951554ae3c407ea9))
+* Validate JWT scope contents (DEV-3452) ([#203](https://github.com/dasch-swiss/dsp-ingest/issues/203)) ([7a00bc8](https://github.com/dasch-swiss/dsp-ingest/commit/7a00bc8fd09480bb8e07eba68fe1aedacdf1be2a))
+
+
+### Maintenance
+
+* Dependency updates ([#209](https://github.com/dasch-swiss/dsp-ingest/issues/209)) ([214dcd7](https://github.com/dasch-swiss/dsp-ingest/commit/214dcd76611578473820904501bbcebede58850f))
+* Patch dependency updates ([#208](https://github.com/dasch-swiss/dsp-ingest/issues/208)) ([ee1c881](https://github.com/dasch-swiss/dsp-ingest/commit/ee1c881be768ca766629378a3c3cf9beadd050f8))
+* Update sipi to v30.13.0 ([#210](https://github.com/dasch-swiss/dsp-ingest/issues/210)) ([67ff065](https://github.com/dasch-swiss/dsp-ingest/commit/67ff0651d5039d497217c73041aa53cdd8703fea))
+
+
+### Documentation
+
+* Add docs for endpoint authorization (DEV-3452) ([#206](https://github.com/dasch-swiss/dsp-ingest/issues/206)) ([3fab03e](https://github.com/dasch-swiss/dsp-ingest/commit/3fab03eb962e9e6251e2258ca3a00b9dadc68265))
+
 ## [0.8.3](https://github.com/dasch-swiss/dsp-ingest/compare/v0.8.2...v0.8.3) (2024-04-19)
 
 
