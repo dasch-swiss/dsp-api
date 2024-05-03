@@ -5,11 +5,12 @@
 
 package org.knora.webapi.slice.admin.api
 
-import dsp.errors.BadRequestException
-import zio.ZLayer
 import zio.ZIO
+import zio.ZLayer
+import zio.json._
 import zio.json.ast.Json
-import zio.json.*
+
+import dsp.errors.BadRequestException
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.HandlerMapper

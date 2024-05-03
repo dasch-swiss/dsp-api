@@ -5,10 +5,10 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import sttp.tapir.Schema
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
 import spray.json._
+import sttp.tapir.Schema
 import zio._
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
