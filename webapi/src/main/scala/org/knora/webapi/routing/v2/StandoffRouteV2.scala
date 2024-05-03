@@ -69,8 +69,6 @@ final case class StandoffRouteV2()(
                 throw BadRequestException("part of HTTP multipart request has no name")
 
               case b: BodyPart => throw BadRequestException(s"multipart contains invalid name: ${b.name}")
-
-              case _ => throw BadRequestException("multipart request could not be handled")
             }
             .runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 

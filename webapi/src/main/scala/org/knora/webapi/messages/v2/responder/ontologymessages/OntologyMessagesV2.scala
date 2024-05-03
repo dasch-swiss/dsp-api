@@ -3067,7 +3067,7 @@ object ClassInfoContentV2 {
           val pattern: Option[String] = jsonLDClassDef
             .getObject(OntologyConstants.Owl.WithRestrictions)
             .fold(e => throw BadRequestException(e), identity) match {
-            case Some(jsonLDValue: JsonLDValue) =>
+            case Some(jsonLDValue: JsonLDObject) =>
               jsonLDValue match {
                 case jsonLDObject: JsonLDObject =>
                   Some(
@@ -3075,11 +3075,7 @@ object ClassInfoContentV2 {
                       .getRequiredString(OntologyConstants.Xsd.Pattern)
                       .fold(msg => throw BadRequestException(msg), identity),
                   )
-
-                case other =>
-                  throw BadRequestException(s"Object of owl:withRestrictions must be an object, but got $other")
               }
-
             case None => None
           }
 
