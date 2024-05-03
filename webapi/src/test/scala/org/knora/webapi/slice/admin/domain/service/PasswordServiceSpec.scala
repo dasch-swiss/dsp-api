@@ -11,7 +11,6 @@ import zio.URIO
 import zio.ZIO
 import zio.ZLayer
 import zio.test.Spec
-import zio.test.TestSuccess
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 

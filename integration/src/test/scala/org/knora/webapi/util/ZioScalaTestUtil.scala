@@ -6,10 +6,10 @@
 package org.knora.webapi.util
 
 import org.scalatest.Assertions
+import org.scalatest.matchers.should.Matchers._
 import zio.Exit
 
 import scala.reflect.ClassTag
-import org.scalatest.matchers.should.Matchers._
 
 object ZioScalaTestUtil {
 

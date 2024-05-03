@@ -44,8 +44,8 @@ class OntologyFormatsE2ESpec extends E2ESpec {
 
     def storeAsTtl: Unit = {
       val jsonStr = readFile()
-      val ttlStr  = RdfFormatUtil.format(model, Turtle)
       val model   = parseJsonLd(jsonStr)
+      val ttlStr  = RdfFormatUtil.format(model, Turtle)
       val newFile = makeFile("ttl")
       Files.createDirectories(newFile.getParent)
       val _ = FileUtil.writeTextFile(newFile, ttlStr)
