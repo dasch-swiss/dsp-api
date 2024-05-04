@@ -12,7 +12,6 @@ import java.time.Instant
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -30,7 +29,11 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 /**
  * Contains methods used for dealing with cardinalities on a class
  */
-trait CardinalityHandler {
+final case class CardinalityHandler(
+  ontologyCache: OntologyCache,
+  triplestoreService: TriplestoreService,
+  ontologyHelpers: OntologyHelpers,
+)(implicit val stringFormatter: StringFormatter) {
 
   /**
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
@@ -39,54 +42,6 @@ trait CardinalityHandler {
    * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be deleted.
    */
   def canDeleteCardinalitiesFromClass(
-    deleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
-    internalClassIri: SmartIri,
-    internalOntologyIri: SmartIri,
-  ): Task[CanDoResponseV2]
-
-  /**
-   * FIXME(DSP-1856): Only works if a single cardinality is supplied.
-   * Deletes the supplied cardinalities from a class, if the referenced properties are not used in instances
-   * of the class and any subclasses.
-   *
-   * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
-   * @param internalClassIri the Class from which the cardinalities are deleted.
-   * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
-   * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
-   */
-  def deleteCardinalitiesFromClass(
-    deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
-    internalClassIri: SmartIri,
-    internalOntologyIri: SmartIri,
-  ): Task[ReadOntologyV2]
-
-  /**
-   * Check if a property entity is used in resource instances. Returns `true` if
-   * it is used, and `false` if it is not used.
-   *
-   * @param classIri the IRI of the class that is being checked for usage.
-   * @param propertyIri the IRI of the entity that is being checked for usage.
-   *
-   * @return a [[Boolean]] denoting if the property entity is used.
-   */
-  def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean]
-}
-
-final case class CardinalityHandlerLive(
-  ontologyCache: OntologyCache,
-  triplestoreService: TriplestoreService,
-  messageRelay: MessageRelay,
-  ontologyHelpers: OntologyHelpers,
-)(implicit val stringFormatter: StringFormatter)
-    extends CardinalityHandler {
-
-  /**
-   * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
-   * @param internalClassIri the Class from which the cardinalities are deleted.
-   * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
-   * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be deleted.
-   */
-  override def canDeleteCardinalitiesFromClass(
     deleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri,
@@ -224,7 +179,7 @@ final case class CardinalityHandlerLive(
    * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  override def deleteCardinalitiesFromClass(
+  def deleteCardinalitiesFromClass(
     deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri,
@@ -405,7 +360,7 @@ final case class CardinalityHandlerLive(
    *
    * @return a [[Boolean]] denoting if the property entity is used.
    */
-  override def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean] =
+  def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean] =
     triplestoreService.query(Ask(sparql.v2.txt.isPropertyUsed(propertyIri, classIri)))
 
   /**
@@ -476,6 +431,6 @@ final case class CardinalityHandlerLive(
     }
 }
 
-object CardinalityHandlerLive {
-  val layer = ZLayer.derive[CardinalityHandlerLive]
+object CardinalityHandler {
+  val layer = ZLayer.derive[CardinalityHandler]
 }

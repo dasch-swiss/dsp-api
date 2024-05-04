@@ -26,7 +26,6 @@ import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
@@ -95,7 +94,7 @@ object LayersLive {
       AuthenticatorLive.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
-      CardinalityHandlerLive.layer,
+      CardinalityHandler.layer,
       CardinalityService.layer,
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,
