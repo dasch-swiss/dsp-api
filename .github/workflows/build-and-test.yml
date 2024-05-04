@@ -100,6 +100,8 @@ jobs:
       - name: Run preparatory steps
         if: ${{ env.IS_NOOP == 'false' }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java-version: 21
       - name: Test repository upgrade
         if: ${{ env.IS_NOOP == 'false' }}
         run: make test-repository-upgrade
@@ -149,6 +151,8 @@ jobs:
       - name: Run preparatory steps
         if: ${{ env.IS_NOOP == 'false' }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java-version: 21
       - name: Check formatting
         if: ${{ env.IS_NOOP == 'false' }}
         run: make check
