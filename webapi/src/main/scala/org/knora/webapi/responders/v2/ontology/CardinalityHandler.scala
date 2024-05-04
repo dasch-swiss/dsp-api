@@ -85,12 +85,14 @@ final case class CardinalityHandler(
 
       newClassDefinitionWithRemovedCardinality =
         currentClassDefinition.copy(
-          directCardinalities =
+          directCardinalities = {
+            val cardinalities = currentClassDefinition.directCardinalities - submittedPropertyToDelete
             if (submittedPropertyToDeleteIsLinkProperty) {
-              // if we want to remove a link property, then we also need to remove the corresponding link property value
-              currentClassDefinition.directCardinalities - submittedPropertyToDelete - submittedPropertyToDelete.fromLinkPropToLinkValueProp
-            } else
-              currentClassDefinition.directCardinalities - submittedPropertyToDelete,
+              // if we want to remove a link property,
+              // then we also need to remove the corresponding link property value
+              cardinalities - submittedPropertyToDelete.fromLinkPropToLinkValueProp
+            } else cardinalities
+          },
         )
 
       // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
@@ -113,12 +115,12 @@ final case class CardinalityHandler(
             cacheData = cacheData,
             // since we only want to delete (and have already removed what we want), the rest of the link properties
             // need to be marked as wanting to keep.
-            existingLinkPropsToKeep =
-              newClassDefinitionWithRemovedCardinality.directCardinalities.keySet // gets all keys from the map as a set
-                .map(propertyIri => cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri),
-                )                                      // turn the propertyIri into a ReadPropertyInfoV2
-                .filter(_.isLinkProp)                  // we are only interested in link properties
-                .map(_.entityInfoContent.propertyIri), // turn whatever is left back to a propertyIri
+            existingLinkPropsToKeep = newClassDefinitionWithRemovedCardinality.directCardinalities.keySet
+              .map(propertyIri =>
+                cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri),
+              )                                     // turn the propertyIri into a ReadPropertyInfoV2
+              .filter(_.isLinkProp)                 // we are only interested in link properties
+              .map(_.entityInfoContent.propertyIri),// turn whatever is left back to a propertyIri
           )
           .fold(e => throw e.head, v => v)
 
@@ -226,12 +228,14 @@ final case class CardinalityHandler(
 
       newClassDefinitionWithRemovedCardinality =
         currentClassDefinition.copy(
-          directCardinalities =
+          directCardinalities = {
+            val cardinalities = currentClassDefinition.directCardinalities - submittedPropertyToDelete
             if (submittedPropertyToDeleteIsLinkProperty) {
-              // if we want to remove a link property, then we also need to remove the corresponding link property value
-              currentClassDefinition.directCardinalities - submittedPropertyToDelete - submittedPropertyToDelete.fromLinkPropToLinkValueProp
-            } else
-              currentClassDefinition.directCardinalities - submittedPropertyToDelete,
+              // if we want to remove a link property,
+              // then we also need to remove the corresponding link property value
+              cardinalities - submittedPropertyToDelete.fromLinkPropToLinkValueProp
+            } else cardinalities
+          },
         )
 
       // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
@@ -254,12 +258,11 @@ final case class CardinalityHandler(
             cacheData = cacheData,
             // since we only want to delete (and have already removed what we want), the rest of the link properties
             // need to be marked as wanting to keep.
-            existingLinkPropsToKeep =
-              newClassDefinitionWithRemovedCardinality.directCardinalities.keySet // gets all keys from the map as a set
-                .map(propertyIri => cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri),
-                )                                      // turn the propertyIri into a ReadPropertyInfoV2
-                .filter(_.isLinkProp)                  // we are only interested in link properties
-                .map(_.entityInfoContent.propertyIri), // turn whatever is left back to a propertyIri
+            existingLinkPropsToKeep = newClassDefinitionWithRemovedCardinality.directCardinalities.keySet
+              .map(propertyIri => cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri),
+              )                                     // turn the propertyIri into a ReadPropertyInfoV2
+              .filter(_.isLinkProp)                 // we are only interested in link properties
+              .map(_.entityInfoContent.propertyIri),// turn whatever is left back to a propertyIri
           )
           .fold(e => throw e.head, v => v)
 
@@ -325,7 +328,8 @@ final case class CardinalityHandler(
 
       _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
             throw InconsistentRepositoryDataException(
-              s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved",
+              s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, " +
+                s"but $loadedClassDef was saved",
             )
           }
 
