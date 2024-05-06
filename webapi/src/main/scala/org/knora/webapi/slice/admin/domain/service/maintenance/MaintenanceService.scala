@@ -24,7 +24,7 @@ final case class MaintenanceService(
 
   def textValueCleanupSimpleTextInOnto(): Task[Unit] =
     ZIO.logInfo(s"Starting text value cleanup maintenance") *>
-      TextValueCleanupSimpleTextInOntoAction(knoraProjectService, triplestoreService).execute(()) *>
+      TextValueCleanupSimpleTextInOntoAction(triplestoreService).execute(()) *>
       ZIO.logInfo(s"Finished text value cleanup maintenance")
 }
 
