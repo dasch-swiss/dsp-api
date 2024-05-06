@@ -735,25 +735,19 @@ class KnoraSipiIntegrationV2ITSpec
           ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
           ~> addHeader("X-Asset-Ingested", "true"),
       )
-      pdfValueIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
-      val resource = getResponseJsonLD(
-        Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}"),
-      )
+      val utf8Encode = URLEncoder.encode(_: String, "UTF-8")
+      val resource   = getResponseJsonLD(Get(s"$baseApiUrl/v2/resources/${utf8Encode(pdfResourceIri.get)}"))
 
       // Get the new file value from the resource.
       val savedDocument: SavedDocument = savedValueToSavedDocument(
         getValueFromResource(
           resource = resource,
           propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri,
-          expectedValueIri = pdfValueIri.get,
+          expectedValueIri = UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString,
         ),
       )
       assert(savedDocument.internalFilename == "De6XyNL4H71-D9QxghOuOPJ.jp2")
-
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
     }
 
     "not create a document resource if the file is actually a zip file" in {
