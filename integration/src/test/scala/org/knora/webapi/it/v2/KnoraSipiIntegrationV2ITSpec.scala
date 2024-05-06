@@ -20,6 +20,7 @@ import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
@@ -201,35 +202,10 @@ class KnoraSipiIntegrationV2ITSpec
     resource: JsonLDDocument,
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI,
-  ): JsonLDObject = {
-    val resourceIri: IRI =
-      resource.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-    val propertyValues: JsonLDArray =
-      getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
-
-    val matchingValues: Seq[JsonLDObject] = propertyValues.value.collect {
-      case jsonLDObject: JsonLDObject
-          if jsonLDObject.requireStringWithValidation(
-            JsonLDKeywords.ID,
-            validationFun,
-          ) == expectedValueIri =>
-        jsonLDObject
-    }
-
-    if (matchingValues.isEmpty) {
-      throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>",
-      )
-    }
-
-    if (matchingValues.size > 1) {
-      throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> has more than one value with the IRI <$expectedValueIri>",
-      )
-    }
-
-    matchingValues.head
-  }
+  ): JsonLDObject =
+    assertingUnique(getValuesFromResource(resource, propertyIriInResult).value.flatMap {
+      _.asOpt[JsonLDObject].filter(_.requireStringWithValidation(JsonLDKeywords.ID, validationFun) == expectedValueIri)
+    })
 
   /**
    * Given a JSON-LD object representing a Knora image file value, returns a [[SavedImage]] containing the same information.
@@ -250,12 +226,8 @@ class KnoraSipiIntegrationV2ITSpec
       validationFun,
     )
 
-    val width = savedValue
-      .getRequiredInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX)
-      .fold(e => throw BadRequestException(e), identity)
-    val height = savedValue
-      .getRequiredInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY)
-      .fold(e => throw BadRequestException(e), identity)
+    val width  = savedValue.getRequiredInt(StillImageFileValueHasDimX).fold(e => throw BadRequestException(e), identity)
+    val height = savedValue.getRequiredInt(StillImageFileValueHasDimY).fold(e => throw BadRequestException(e), identity)
 
     SavedImage(
       internalFilename = internalFilename,
@@ -273,7 +245,7 @@ class KnoraSipiIntegrationV2ITSpec
    */
   private def savedValueToSavedDocument(savedValue: JsonLDObject): SavedDocument = {
     val internalFilename = savedValue
-      .getRequiredString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+      .getRequiredString(FileValueHasFilename)
       .fold(msg => throw BadRequestException(msg), identity)
 
     val validationFun: (String, => Nothing) => String = (s, errorFun) =>
@@ -347,9 +319,8 @@ class KnoraSipiIntegrationV2ITSpec
    * @return a [[SavedVideoFile]] containing the same information.
    */
   private def savedValueToSavedVideoFile(savedValue: JsonLDObject): SavedVideoFile = {
-    val internalFilename = savedValue
-      .getRequiredString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
-      .fold(msg => throw BadRequestException(msg), identity)
+    val internalFilename =
+      savedValue.getRequiredString(FileValueHasFilename).fold(msg => throw BadRequestException(msg), identity)
     val validationFun: (String, => Nothing) => String = (s, errorFun) =>
       Iri.toSparqlEncodedString(s).getOrElse(errorFun)
     val url: String = savedValue.requireDatatypeValueInObject(
@@ -358,10 +329,7 @@ class KnoraSipiIntegrationV2ITSpec
       validationFun,
     )
 
-    SavedVideoFile(
-      internalFilename = internalFilename,
-      url = url,
-    )
+    SavedVideoFile(internalFilename = internalFilename, url = url)
   }
 
   protected def requestJsonLDWithAuth(request: HttpRequest): JsonLDDocument =
@@ -421,11 +389,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       // Get the new file value from the resource.
 
-      val savedValues: JsonLDArray = getValuesFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
-      )
-
+      val savedValues: JsonLDArray    = getValuesFromResource(resource, HasStillImageFileValue.toSmartIri)
       val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
       stillImageFileValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -464,11 +428,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       // Get the new file value from the resource.
 
-      val savedValues: JsonLDArray = getValuesFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
-      )
-
+      val savedValues: JsonLDArray    = getValuesFromResource(resource, HasStillImageFileValue.toSmartIri)
       val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
       stillImageFileValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -595,11 +555,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       // Get the new file value from the resource.
 
-      val savedValues: JsonLDArray = getValuesFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri,
-      )
-
+      val savedValues: JsonLDArray    = getValuesFromResource(resource, HasDocumentFileValue.toSmartIri)
       val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
       pdfValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -640,13 +596,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       val resource = getResponseJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(pdfResourceIri.get)}"))
 
-      // Get the new file value from the resource.
-      val savedValue: JsonLDObject = getValueFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri,
-        expectedValueIri = pdfValueIri.get,
-      )
-
+      val savedValue: JsonLDObject     = getValueFromResource(resource, HasDocumentFileValue.toSmartIri, pdfValueIri.get)
       val savedDocument: SavedDocument = savedValueToSavedDocument(savedValue)
       assert(savedDocument.internalFilename == uploadedFile.internalFilename)
 
