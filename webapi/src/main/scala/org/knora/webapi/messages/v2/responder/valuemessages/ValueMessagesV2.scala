@@ -10,6 +10,7 @@ import zio.ZIO
 import java.net.URI
 import java.time.Instant
 import java.util.UUID
+import scala.reflect.ClassTag
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -36,12 +37,12 @@ import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.routing.v2.AssetIngestState
+import org.knora.webapi.routing.v2.AssetIngestState._
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -51,6 +52,8 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
+
+import PartialFunction.condOpt
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -705,10 +708,8 @@ object CreateValueV2 {
     }
 }
 
-/**
- * A trait for classes representing information to be updated in a value.
- */
-trait UpdateValueV2 {
+/** A trait for classes representing information to be updated in a value. */
+sealed trait UpdateValueV2 {
 
   /**
    * The IRI of the resource containing the value.
@@ -735,6 +736,7 @@ trait UpdateValueV2 {
    */
   val valueCreationDate: Option[Instant]
 }
+
 object UpdateValueV2 {
 
   /**
@@ -745,6 +747,7 @@ object UpdateValueV2 {
    * @return a case class instance representing the input.
    */
   def fromJsonLd(
+    ingestState: AssetIngestState,
     jsonLdString: String,
     requestingUser: User,
   ): ZIO[IriConverter & SipiService & StringFormatter & MessageRelay, Throwable, UpdateValueV2] =
@@ -766,7 +769,7 @@ object UpdateValueV2 {
               jsonLDObject.maybeStringWithValidation(HasPermissions, validationFun)
             }
           shortcode    <- ZIO.fromOption(resourceIri.getProjectCode).orElseFail(NotFoundException("Shortcode not found."))
-          fileInfo     <- ValueContentV2.getFileInfo(shortcode, AssetIngestState.AssetInTemp, jsonLDObject).option
+          fileInfo     <- ValueContentV2.getFileInfo(shortcode, ingestState, jsonLDObject).option
           valueContent <- ValueContentV2.fromJsonLdObject(jsonLDObject, requestingUser, fileInfo)
         } yield UpdateValueContentV2(
           resourceIri = resourceIri.toString,
@@ -777,6 +780,7 @@ object UpdateValueV2 {
           permissions = maybePermissions,
           valueCreationDate = maybeValueCreationDate,
           newValueVersionIri = maybeNewIri,
+          ingestState = ingestState,
         )
 
       def makeUpdateValuePermissionsV2(
@@ -927,6 +931,7 @@ case class UpdateValueContentV2(
   permissions: Option[String] = None,
   valueCreationDate: Option[Instant] = None,
   newValueVersionIri: Option[SmartIri] = None,
+  ingestState: AssetIngestState = AssetInTemp,
 ) extends UpdateValueV2
 
 /**
@@ -1039,6 +1044,8 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
    * @return `true` if this [[ValueContentV2]] would duplicate `currentVersion`.
    */
   def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean
+
+  def asOpt[T <: ValueContentV2: ClassTag]: Option[T] = condOpt(this) { case a: T => a }
 }
 
 /**

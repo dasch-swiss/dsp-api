@@ -27,8 +27,6 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.ValuesValidator.arkTimestampToInstant
 import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetIngested
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.SearchResponderV2
@@ -104,9 +102,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
             requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             apiRequestId   <- RouteUtilZ.randomUuid()
-            header          = "X-Asset-Ingested"
-            ingestState = if (requestContext.request.headers.exists(_.name == header)) AssetIngested
-                          else AssetInTemp
+            ingestState     = AssetIngestState.headerAssetIngestState(requestContext.request.headers)
             requestMessage <- CreateResourceRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser, ingestState)
             // check for each value which represents a file value if the file's MIME type is allowed
             _ <- checkMimeTypesForFileValueContents(requestMessage.createResource.flatValues)
