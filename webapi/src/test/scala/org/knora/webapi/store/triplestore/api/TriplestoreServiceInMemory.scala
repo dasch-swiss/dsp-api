@@ -79,7 +79,7 @@ object TestTripleStore {
     ZIO.serviceWithZIO[TestTripleStore](_.printDataset(prefix))
 }
 
-final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
+final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit val sf: StringFormatter)
     extends TestTripleStore {
 
   override def query(query: Select): Task[SparqlSelectResult] = {
@@ -331,7 +331,7 @@ object TriplestoreServiceInMemory {
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 
   val layer: ZLayer[Ref[Dataset] & StringFormatter, Nothing, TriplestoreServiceInMemory] =
-    ZLayer.fromFunction(TriplestoreServiceInMemory.apply _)
+    ZLayer.derive[TriplestoreServiceInMemory]
 
   val emptyLayer = emptyDatasetRefLayer >>> layer
 }

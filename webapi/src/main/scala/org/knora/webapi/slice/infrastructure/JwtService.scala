@@ -40,8 +40,6 @@ import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.Proje
 import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.ProjectResourceCreateRestricted
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.infrastructure.Scope
-import org.knora.webapi.slice.infrastructure.ScopeValue
 import org.knora.webapi.slice.infrastructure.ScopeValue.Write
 
 case class Jwt(jwtString: String, expiration: Long)

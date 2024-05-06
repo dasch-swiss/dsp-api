@@ -410,8 +410,9 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
               CreateDefaultObjectAccessPermissionAPIRequestADM(
                 forProject = imagesProjectIri,
                 forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
-                hasPermissions =
-                  Set(PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value)),
+                hasPermissions = Set(
+                  PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
+                ),
               ),
               rootUser,
               UUID.randomUUID(),

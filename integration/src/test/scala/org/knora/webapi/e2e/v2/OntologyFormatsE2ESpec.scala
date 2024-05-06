@@ -42,13 +42,14 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     private def makeFile(fileEnding: String = "jsonld"): Path =
       Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$fileEnding")
 
-    def storeAsTtl = {
+    def storeAsTtl: Unit = {
       val jsonStr = readFile()
       val model   = parseJsonLd(jsonStr)
       val ttlStr  = RdfFormatUtil.format(model, Turtle)
       val newFile = makeFile("ttl")
       Files.createDirectories(newFile.getParent)
-      FileUtil.writeTextFile(newFile, ttlStr)
+      val _ = FileUtil.writeTextFile(newFile, ttlStr)
+      ()
     }
 
     /**
@@ -64,13 +65,10 @@ class OntologyFormatsE2ESpec extends E2ESpec {
 
     def writeReceived(responseStr: String): Unit = {
       val newOutputFile = makeFile()
-
       Files.createDirectories(newOutputFile.getParent)
       FileUtil.writeTextFile(newOutputFile, responseStr)
-
       if (persistTtl) storeAsTtl
-
-      ()
+      else ()
     }
   }
 

@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.util.search.gravsearch.types
 
 import org.apache.pekko
-import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.matchers.must.Matchers._
 import zio.RIO
 import zio.ZIO
 

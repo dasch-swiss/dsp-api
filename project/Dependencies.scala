@@ -16,7 +16,7 @@ object Dependencies {
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.12.2"
 
-  val ScalaVersion = "2.13.13"
+  val ScalaVersion = "3.3.3"
 
   val PekkoActorVersion = "1.0.2"
   val PekkoHttpVersion  = "1.0.1"
@@ -31,7 +31,7 @@ object Dependencies {
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.22"
 
-  // ZIO - all Scala 3 compatible
+  // ZIO
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
   val zioConfig             = "dev.zio"                       %% "zio-config"                % ZioConfigVersion
   val zioConfigMagnolia     = "dev.zio"                       %% "zio-config-magnolia"       % ZioConfigVersion
@@ -66,7 +66,7 @@ object Dependencies {
   val jenaText = "org.apache.jena" % "jena-text" % JenaVersion
 
   // logging
-  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"  // Scala 3 compatible
+  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
   val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.13" // the logging interface
 
   // Metrics
@@ -87,31 +87,27 @@ object Dependencies {
   val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
 
   // other
-  val diff           = "com.sksamuel.diff" % "diff"                % "1.1.11"
-  val gwtServlet     = "com.google.gwt"    % "gwt-servlet"         % "2.10.0"
-  val icu4j          = "com.ibm.icu"       % "icu4j"               % "75.1"
-  val jakartaJSON    = "org.glassfish"     % "jakarta.json"        % "2.0.1"
-  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
-  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
-  val rdf4jSparql    = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
-  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"            % "12.4"
-  val scalaGraph     = "org.scala-graph"  %% "graph-core"          % "2.0.1" // Should be Scala 3 compatible
-  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld"    % "1.4.0"
-  val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"        % "2.10.0"
+  val diff        = "com.sksamuel.diff" % "diff"                % "1.1.11"
+  val gwtServlet  = "com.google.gwt"    % "gwt-servlet"         % "2.10.0"
+  val icu4j       = "com.ibm.icu"       % "icu4j"               % "74.2"
+  val jakartaJSON = "org.glassfish"     % "jakarta.json"        % "2.0.1"
+  val rdf4jClient = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
+  val rdf4jShacl  = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
+  val rdf4jSparql = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
+  val saxonHE     = "net.sf.saxon"      % "Saxon-HE"            % "12.4"
+  val scalaGraph =
+    "org.scala-graph" %% "graph-core" % "2.0.1" cross CrossVersion.for3Use2_13
+  val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.4.0"
+  val xmlunitCore    = "org.xmlunit"    % "xmlunit-core"     % "2.10.0"
 
   // test
-  val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion  // Scala 3 incompatible
-  val pekkoStreamTestkit = "org.apache.pekko" %% "pekko-stream-testkit" % PekkoActorVersion // Scala 3 compatible
-  val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion // Scala 3 compatible
-  val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.18"          // Scala 3 compatible
-  // The scoverage plugin actually adds its dependencies automatically.
-  // Add it redundantly to the IT dependencies in order to fix build issues with IntelliJ
-  // Fixes error message when running IT in IntelliJ
-  //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
-  //  java.lang.NoClassDefFoundError: scoverage / Invoker$
-  val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.1.0"
-  val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.7"
-  val wiremock       = "org.wiremock"       % "wiremock"                 % "3.5.4"
+  val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion
+  val pekkoStreamTestkit = "org.apache.pekko" %% "pekko-stream-testkit" % PekkoActorVersion
+  val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
+  val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.18"
+
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.19.7"
+  val wiremock       = "org.wiremock"       % "wiremock"       % "3.5.4"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
@@ -138,7 +134,6 @@ object Dependencies {
     pekkoTestkit,
     rdf4jClient,
     scalaTest,
-    scoverage,
     testcontainers,
     wiremock,
     xmlunitCore,

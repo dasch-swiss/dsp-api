@@ -27,7 +27,7 @@ object InMemoryCrudRepositorySpec extends ZIOSpecDefault {
   private val otherEntity = SomeEntity(2, "other")
   private val twoEntities = List(someEntity, otherEntity)
 
-  val spec: Spec[InMemoryRepository, Throwable]#ZSpec[Any, Throwable, TestSuccess] =
+  val spec =
     suite("InMemoryCrudRepository")(
       test("should be empty initially")(repo(_.findAll()).map(actual => assertTrue(actual.isEmpty))),
       test("should save and find entity")(for {

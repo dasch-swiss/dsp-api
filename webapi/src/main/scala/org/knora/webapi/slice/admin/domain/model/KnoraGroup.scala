@@ -70,7 +70,7 @@ object Group {
   implicit val groupCodec: JsonCodec[Group] = DeriveJsonCodec.gen[Group]
 }
 
-final case class GroupIri private (override val value: String) extends AnyVal with StringValue {
+final case class GroupIri private (override val value: String) extends StringValue {
   def isBuiltInGroupIri: Boolean = GroupIri.isBuiltInGroupIri(value)
   def isRegularGroupIri: Boolean = !isBuiltInGroupIri
 
@@ -120,16 +120,14 @@ object GroupIri extends StringValueCompanion[GroupIri] {
   }
 }
 
-final case class GroupName private (value: String) extends AnyVal with StringValue
+final case class GroupName private (value: String) extends StringValue
 
 object GroupName extends StringValueCompanion[GroupName] {
   def from(value: String): Either[String, GroupName] =
     Right(GroupName(value)).filterOrElse(_.value.nonEmpty, GroupErrorMessages.GroupNameMissing)
 }
 
-final case class GroupDescriptions private (value: Seq[StringLiteralV2])
-    extends AnyVal
-    with Value[Seq[StringLiteralV2]] {
+final case class GroupDescriptions private (value: Seq[StringLiteralV2]) extends Value[Seq[StringLiteralV2]] {
   def toRdfLiterals: Seq[StringLiteral] = value.map(_.toRdfLiteral)
 }
 
@@ -149,7 +147,7 @@ object GroupDescriptions extends WithFrom[Seq[StringLiteralV2], GroupDescription
 /**
  * GroupStatus value object.
  */
-final case class GroupStatus private (value: Boolean) extends AnyVal with BooleanValue
+final case class GroupStatus private (value: Boolean) extends BooleanValue
 
 object GroupStatus {
   val active: GroupStatus                = GroupStatus(true)
@@ -157,7 +155,7 @@ object GroupStatus {
   def from(active: Boolean): GroupStatus = GroupStatus(active)
 }
 
-final case class GroupSelfJoin private (value: Boolean) extends AnyVal with BooleanValue
+final case class GroupSelfJoin private (value: Boolean) extends BooleanValue
 object GroupSelfJoin {
   val enabled: GroupSelfJoin                = GroupSelfJoin(true)
   val disabled: GroupSelfJoin               = GroupSelfJoin(false)

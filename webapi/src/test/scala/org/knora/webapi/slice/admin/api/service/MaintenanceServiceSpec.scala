@@ -32,7 +32,7 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
   private val createProject            = ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(testProject))
   private val projectDataNamedGraphIri = ProjectService.projectDataNamedGraphV2(testProject).value
   private val testAssetId              = AssetId.unsafeFrom("some-asset-id")
-  private val expectedDimension        = Dimensions(5202, 3602)
+  private val expectedDimension        = Dimensions.unsafeFrom(5202, 3602)
   private val testReport = ProjectsWithBakfilesReport(
     Chunk(ProjectWithBakFiles(testProject.shortcode, Chunk(ReportAsset(testAssetId, expectedDimension)))),
   )

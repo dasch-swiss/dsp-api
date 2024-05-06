@@ -116,16 +116,13 @@ private object RemoveEntitiesInferredFromProperty {
     val optionalEntities: Seq[TypeableEntity] = patterns.collect { case optionalPattern: OptionalPattern =>
       optionalPattern
     }.flatMap {
-      case optionalPattern: OptionalPattern =>
-        optionalPattern.patterns.flatMap {
-          case pattern: StatementPattern =>
-            GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj) ++ GravsearchTypeInspectionUtil
-              .maybeTypeableEntity(pattern.obj)
+      _.patterns.flatMap {
+        case pattern: StatementPattern =>
+          GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj) ++ GravsearchTypeInspectionUtil
+            .maybeTypeableEntity(pattern.obj)
 
-          case _ => None
-        }
-
-      case _ => None
+        case _ => None
+      }
     }
 
     // Remove statements whose predicate is rdf:type, type of subject is inferred from a property,

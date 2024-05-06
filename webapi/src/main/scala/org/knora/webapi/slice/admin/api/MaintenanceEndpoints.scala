@@ -8,10 +8,8 @@ package org.knora.webapi.slice.admin.api
 import sttp.model.StatusCode
 import sttp.tapir.EndpointIO.Example
 import sttp.tapir._
-import sttp.tapir.generic.auto._
-import sttp.tapir.json.zio.{jsonBody => zioJsonBody}
+import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
-import zio.json.ast.Json
 
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
@@ -30,7 +28,7 @@ final case class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
         .examples(MaintenanceRestService.allActions.map(Example.of(_))),
     )
     .in(
-      zioJsonBody[Option[Json]]
+      jsonBody[Option[String]]
         .description("""The optional parameters as json for the maintenance action.
                        |May be required by certain actions.
                        |""".stripMargin),

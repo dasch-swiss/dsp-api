@@ -1591,12 +1591,10 @@ case class TextValueContentV2(
           // return standoff tag with updated attributes
           standoffTag.copy(
             standoffNode = standoffTag.standoffNode.copy(attributes = attributesWithStandoffNodeIriReferences),
-            startParentIri = startParentIndex.map(parentIndex =>
-              startIndexesToStandoffNodeIris(parentIndex),
-            ), // If there's a start parent index, get its IRI, otherwise None
-            endParentIri = endParentIndex.map(parentIndex =>
-              startIndexesToStandoffNodeIris(parentIndex),
-            ), // If there's an end parent index, get its IRI, otherwise None
+            // If there's a start parent index, get its IRI, otherwise None
+            startParentIri = startParentIndex.map(startIndexesToStandoffNodeIris(_)),
+            // If there's an end parent index, get its IRI, otherwise None
+            endParentIri = endParentIndex.map(startIndexesToStandoffNodeIris(_)),
           )
       }
 

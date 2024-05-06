@@ -35,12 +35,12 @@ jobs:
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
+          coverage-reports: ./target/scala-3.3.3/coverage-report/cobertura.xml
       - name: Upload coverage data to codecov
         if: ${{ env.IS_NOOP == 'false' }}
         uses: codecov/codecov-action@v3
         with:
-          files: ./target/scala-2.13/coverage-report/cobertura.xml
+          files: ./target/scala-3.3.3/coverage-report/cobertura.xml
       - name: No-op step
         if: ${{ env.IS_NOOP == 'true' }}
         run: echo "No checks on main or release branches, skipping this job."
@@ -79,12 +79,12 @@ jobs:
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
+          coverage-reports: ./target/scala-3.3.3/coverage-report/cobertura.xml
       - name: Upload coverage data to codecov
         if: ${{ env.IS_NOOP == 'false' }}
         uses: codecov/codecov-action@v3
         with:
-          files: ./target/scala-2.13/coverage-report/cobertura.xml
+          files: ./target/scala-3.3.3/coverage-report/cobertura.xml
       - name: No-op step
         if: ${{ env.IS_NOOP == 'true' }}
         run: echo "No checks on main or release branches, skipping this job."
@@ -100,6 +100,8 @@ jobs:
       - name: Run preparatory steps
         if: ${{ env.IS_NOOP == 'false' }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java-version: 21
       - name: Test repository upgrade
         if: ${{ env.IS_NOOP == 'false' }}
         run: make test-repository-upgrade
@@ -149,6 +151,8 @@ jobs:
       - name: Run preparatory steps
         if: ${{ env.IS_NOOP == 'false' }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java-version: 21
       - name: Check formatting
         if: ${{ env.IS_NOOP == 'false' }}
         run: make check

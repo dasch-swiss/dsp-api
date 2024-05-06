@@ -16,7 +16,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.common.repo.AbstractInMemoryCrudRepository
+import org.knora.webapi.slice.common.repo.service.AbstractInMemoryCrudRepository
 
 final case class KnoraProjectRepoInMemory(projects: Ref[Chunk[KnoraProject]])
     extends AbstractInMemoryCrudRepository[KnoraProject, ProjectIri](projects, _.id)

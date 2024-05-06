@@ -33,7 +33,7 @@ class VersionRouteITSpec extends ITKnoraLiveSpec {
     val responseBodyJson = getJsonResponse
     var result           = false
     try {
-      val value = responseBodyJson.fields(field).toString().replaceAll("\"", "")
+      val value = responseBodyJson.fields(field).compactPrint.replaceAll("\"", "")
       result = !value.equals("")
     } catch {
       case _: NoSuchElementException => result = false
@@ -51,7 +51,7 @@ class VersionRouteITSpec extends ITKnoraLiveSpec {
 
     "return 'version' as name" in {
       val responseBodyJson = getJsonResponse
-      val value            = responseBodyJson.fields("name").toString().replaceAll("\"", "")
+      val value            = responseBodyJson.fields("name").compactPrint.replaceAll("\"", "")
       assert(value.equals("version"))
     }
 

@@ -24,7 +24,7 @@ import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 
-final case class VersionResponse private (
+final case class VersionResponse(
   webapi: String,
   buildCommit: String,
   buildTime: String,

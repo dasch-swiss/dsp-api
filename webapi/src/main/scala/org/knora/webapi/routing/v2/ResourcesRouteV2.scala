@@ -44,7 +44,8 @@ import org.knora.webapi.store.iiif.api.SipiService
  */
 final case class ResourcesRouteV2(appConfig: AppConfig)(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & ProjectService & MessageRelay & SearchResponderV2 & SipiService & StringFormatter & UserService,
+    AppConfig & Authenticator & IriConverter & ProjectService & MessageRelay & SearchResponderV2 & SipiService &
+      StringFormatter & UserService,
   ],
 ) extends LazyLogging {
   private val sipiConfig: Sipi             = appConfig.sipi

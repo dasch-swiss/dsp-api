@@ -14,7 +14,7 @@ import org.knora.webapi.slice.common.Value.StringValue
 /**
  * LanguageCode value object.
  */
-final case class LanguageCode private (value: String) extends AnyVal with StringValue
+final case class LanguageCode private (value: String) extends StringValue
 
 object LanguageCode { self =>
   implicit val codec: JsonCodec[LanguageCode] =

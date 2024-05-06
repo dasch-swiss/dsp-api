@@ -31,6 +31,9 @@ object MaintenanceRequests {
       heightRefined <- refineV[Positive](height)
     } yield Dimensions(widthRefined, heightRefined)
 
+    def unsafeFrom(width: Int, height: Int): Dimensions =
+      from(width, height).fold(e => throw IllegalArgumentException(e), identity)
+
     implicit val codec: JsonCodec[Dimensions] = DeriveJsonCodec.gen[Dimensions]
   }
 

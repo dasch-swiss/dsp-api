@@ -15,7 +15,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 
-final case class PermissionIri private (value: String) extends AnyVal with StringValue
+final case class PermissionIri private (value: String) extends StringValue
 
 object PermissionIri extends StringValueCompanion[PermissionIri] {
 

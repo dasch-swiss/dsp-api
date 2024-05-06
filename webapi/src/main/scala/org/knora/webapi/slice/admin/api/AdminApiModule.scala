@@ -37,38 +37,36 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object AdminApiModule {
 
   type Dependencies =
+    // format: off
+    AdministrativePermissionService &
     AppConfig &
-      AdministrativePermissionService &
-      AssetPermissionsResponder &
-      AuthorizationRestService &
-      BaseEndpoints &
-      CacheManager &
-      GroupService &
-      HandlerMapper &
-      KnoraGroupService &
-      KnoraProjectService &
-      KnoraResponseRenderer &
-      KnoraUserService &
-      KnoraUserToUserConverter &
-      ListsResponder &
-      MaintenanceService &
-      OntologyCache &
-      PasswordService &
-      PermissionsResponder &
-      ProjectExportService &
-      ProjectImportService &
-      ProjectService &
-      TapirToPekkoInterpreter &
-      TriplestoreService &
-      UserService
+    AssetPermissionsResponder &
+    AuthorizationRestService &
+    BaseEndpoints &
+    CacheManager &
+    GroupService &
+    HandlerMapper &
+    KnoraGroupService &
+    KnoraProjectService &
+    KnoraResponseRenderer &
+    KnoraUserService &
+    KnoraUserToUserConverter &
+    ListsResponder &
+    MaintenanceService &
+    OntologyCache &
+    PasswordService &
+    PermissionsResponder &
+    ProjectExportService &
+    ProjectImportService &
+    ProjectService &
+    TapirToPekkoInterpreter &
+    TriplestoreService &
+    UserService
+    // format: on
 
-  type Provided = AdminApiEndpoints &
-    AdminApiRoutes &
+  type Provided = AdminApiEndpoints & AdminApiRoutes &
     // the `*RestService`s are only exposed for the integration tests
-    GroupRestService &
-    UserRestService &
-    ProjectRestService &
-    PermissionRestService
+    GroupRestService & UserRestService & ProjectRestService & PermissionRestService
 
   val layer: ZLayer[Dependencies, Nothing, Provided] =
     ZLayer.makeSome[Dependencies, Provided](

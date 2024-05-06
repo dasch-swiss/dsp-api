@@ -564,6 +564,5 @@ object CalendarDateUtilV2 {
     calendarName match {
       case CalendarNameJulian    => new Date(java.lang.Long.MAX_VALUE)
       case CalendarNameGregorian => new Date(java.lang.Long.MIN_VALUE)
-      case _                     => throw AssertionException(s"Invalid calendar: $calendarName")
     }
 }

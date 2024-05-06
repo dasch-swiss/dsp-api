@@ -26,7 +26,6 @@ import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
@@ -69,57 +68,60 @@ object LayersLive {
    * The `Environment` that we require to exist at startup.
    */
   type DspEnvironmentLive =
+    // format: off
+    AdminModule.Provided &
     ActorSystem &
-      AdminApiEndpoints &
-      AdminModule.Provided &
-      ApiRoutes &
-      ApiV2Endpoints &
-      AppConfigurations &
-      AppRouter &
-      AssetPermissionsResponder &
-      Authenticator &
-      AuthorizationRestService &
-      CardinalityHandler &
-      ConstructResponseUtilV2 &
-      GravsearchTypeInspectionRunner &
-      GroupRestService &
-      HttpServer &
-      IIIFRequestMessageHandler &
-      InferenceOptimizationService &
-      InstrumentationServerConfig &
-      InvalidTokenCache &
-      IriConverter &
-      JwtService &
-      ListsResponder &
-      ListsResponderV2 &
-      MessageRelay &
-      OntologyCache &
-      OntologyHelpers &
-      OntologyInferencer &
-      OntologyResponderV2 &
-      PermissionRestService &
-      PermissionUtilADM &
-      PermissionsResponder &
-      ProjectExportService &
-      ProjectExportStorageService &
-      ProjectImportService &
-      ProjectRestService &
-      QueryTraverser &
-      RepositoryUpdater &
-      ResourceUtilV2 &
-      ResourceUtilV2 &
-      ResourcesResponderV2 &
-      RestCardinalityService &
-      SearchApiRoutes &
-      SearchResponderV2 &
-      SipiService &
-      StandoffResponderV2 &
-      StandoffTagUtilV2 &
-      State &
-      StringFormatter &
-      TriplestoreService &
-      UserRestService &
-      ValuesResponderV2
+    AdminApiEndpoints &
+    AdminModule.Provided &
+    ApiRoutes &
+    ApiV2Endpoints &
+    AppConfigurations &
+    AppRouter &
+    AssetPermissionsResponder &
+    Authenticator &
+    AuthorizationRestService &
+    CardinalityHandler &
+    ConstructResponseUtilV2 &
+    GravsearchTypeInspectionRunner &
+    GroupRestService &
+    HttpServer &
+    IIIFRequestMessageHandler &
+    InferenceOptimizationService &
+    InstrumentationServerConfig &
+    InvalidTokenCache &
+    IriConverter &
+    JwtService &
+    ListsResponder &
+    ListsResponderV2 &
+    MessageRelay &
+    OntologyCache &
+    OntologyHelpers &
+    OntologyInferencer &
+    OntologyResponderV2 &
+    PermissionRestService &
+    PermissionUtilADM &
+    PermissionsResponder &
+    ProjectExportService &
+    ProjectExportStorageService &
+    ProjectImportService &
+    ProjectRestService &
+    QueryTraverser &
+    RepositoryUpdater &
+    ResourceUtilV2 &
+    ResourceUtilV2 &
+    ResourcesResponderV2 &
+    RestCardinalityService &
+    SearchApiRoutes &
+    SearchResponderV2 &
+    SipiService &
+    StandoffResponderV2 &
+    StandoffTagUtilV2 &
+    State &
+    StringFormatter &
+    TriplestoreService &
+    UserRestService &
+    ValuesResponderV2
+    // format: on
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -136,7 +138,7 @@ object LayersLive {
       AuthenticatorLive.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
-      CardinalityHandlerLive.layer,
+      CardinalityHandler.layer,
       CardinalityService.layer,
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,

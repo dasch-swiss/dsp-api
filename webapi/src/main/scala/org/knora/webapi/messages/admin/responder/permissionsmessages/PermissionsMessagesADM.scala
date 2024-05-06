@@ -523,8 +523,6 @@ case class PermissionsDataADM(
           groupsPerProject = groupsPerProject,
           administrativePermissionsPerProject = administrativePermissionsPerProject,
         )
-
-      case _ => throw BadRequestException(s"The requested userProfileType: $permissionProfileType is invalid.")
     }
 
   /* Is the user a member of the SystemAdmin group */

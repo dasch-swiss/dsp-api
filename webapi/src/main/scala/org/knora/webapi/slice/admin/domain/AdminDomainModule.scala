@@ -24,24 +24,22 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object AdminDomainModule {
 
   type Dependencies =
-    AppConfig &
-      AdminRepoModule.Provided &
-      IriService &
-      OntologyRepo &
-      TriplestoreService
+    AppConfig & AdminRepoModule.Provided & IriService & OntologyRepo & TriplestoreService
 
   type Provided =
+    // format: off
     AdministrativePermissionService &
-      CacheManager &
-      GroupService &
-      KnoraGroupService &
-      KnoraProjectService &
-      KnoraUserService &
-      KnoraUserToUserConverter &
-      MaintenanceService &
-      PasswordService &
-      ProjectService &
-      UserService
+    CacheManager &
+    GroupService &
+    KnoraGroupService &
+    KnoraProjectService &
+    KnoraUserService &
+    KnoraUserToUserConverter &
+    MaintenanceService &
+    PasswordService &
+    ProjectService &
+    UserService
+    // format: on
 
   val layer = ZLayer.makeSome[Dependencies, Provided](
     AdministrativePermissionService.layer,

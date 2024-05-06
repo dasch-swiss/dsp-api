@@ -27,7 +27,6 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
@@ -85,56 +84,58 @@ object LayersTest {
     pekko.actor.ActorSystem & AppConfigurationsTest & JwtConfig & WhichSipiService
 
   type CommonR =
+    // format: off
     AdminApiEndpoints &
-      AdminModule.Provided &
-      ApiRoutes &
-      ApiV2Endpoints &
-      AppRouter &
-      AssetPermissionsResponder &
-      Authenticator &
-      AuthorizationRestService &
-      CardinalityHandler &
-      ConstructResponseUtilV2 &
-      DspIngestClient &
-      GravsearchTypeInspectionRunner &
-      GroupRestService &
-      HttpServer &
-      IIIFRequestMessageHandler &
-      InferenceOptimizationService &
-      InvalidTokenCache &
-      IriConverter &
-      JwtService &
-      ListsResponder &
-      ListsResponderV2 &
-      MessageRelay &
-      OntologyCache &
-      OntologyHelpers &
-      OntologyInferencer &
-      OntologyRepo &
-      OntologyResponderV2 &
-      PermissionRestService &
-      PermissionUtilADM &
-      PermissionsResponder &
-      ProjectExportService &
-      ProjectExportStorageService &
-      ProjectImportService &
-      ProjectRestService &
-      QueryTraverser &
-      RepositoryUpdater &
-      ResourceUtilV2 &
-      ResourcesResponderV2 &
-      RestCardinalityService &
-      SearchApiRoutes &
-      SearchResponderV2 &
-      SipiService &
-      StandoffResponderV2 &
-      StandoffTagUtilV2 &
-      State &
-      StringFormatter &
-      TestClientService &
-      TriplestoreService &
-      UserRestService &
-      ValuesResponderV2
+    AdminModule.Provided &
+    ApiRoutes &
+    ApiV2Endpoints &
+    AppRouter &
+    AssetPermissionsResponder &
+    Authenticator &
+    AuthorizationRestService &
+    CardinalityHandler &
+    ConstructResponseUtilV2 &
+    DspIngestClient &
+    GravsearchTypeInspectionRunner &
+    GroupRestService &
+    HttpServer &
+    IIIFRequestMessageHandler &
+    InferenceOptimizationService &
+    InvalidTokenCache &
+    IriConverter &
+    JwtService &
+    ListsResponder &
+    ListsResponderV2 &
+    MessageRelay &
+    OntologyCache &
+    OntologyHelpers &
+    OntologyInferencer &
+    OntologyRepo &
+    OntologyResponderV2 &
+    PermissionRestService &
+    PermissionUtilADM &
+    PermissionsResponder &
+    ProjectExportService &
+    ProjectExportStorageService &
+    ProjectImportService &
+    ProjectRestService &
+    QueryTraverser &
+    RepositoryUpdater &
+    ResourceUtilV2 &
+    ResourcesResponderV2 &
+    RestCardinalityService &
+    SearchApiRoutes &
+    SearchResponderV2 &
+    SipiService &
+    StandoffResponderV2 &
+    StandoffTagUtilV2 &
+    State &
+    StringFormatter &
+    TestClientService &
+    TriplestoreService &
+    UserRestService &
+    ValuesResponderV2
+  // format: on
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -147,7 +148,7 @@ object LayersTest {
       AuthenticatorLive.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
-      CardinalityHandlerLive.layer,
+      CardinalityHandler.layer,
       CardinalityService.layer,
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,
@@ -201,7 +202,8 @@ object LayersTest {
 
   private val fusekiAndSipiTestcontainers =
     ZLayer.make[
-      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & SharedVolumes.Images & SipiTestContainer & WhichSipiService,
+      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & SharedVolumes.Images & SipiTestContainer &
+        WhichSipiService,
     ](
       AppConfigForTestContainers.testcontainers,
       DspIngestTestContainer.layer,

@@ -12,7 +12,6 @@ import java.time.Instant
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -30,7 +29,11 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 /**
  * Contains methods used for dealing with cardinalities on a class
  */
-trait CardinalityHandler {
+final case class CardinalityHandler(
+  ontologyCache: OntologyCache,
+  triplestoreService: TriplestoreService,
+  ontologyHelpers: OntologyHelpers,
+)(implicit val stringFormatter: StringFormatter) {
 
   /**
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
@@ -39,54 +42,6 @@ trait CardinalityHandler {
    * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be deleted.
    */
   def canDeleteCardinalitiesFromClass(
-    deleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
-    internalClassIri: SmartIri,
-    internalOntologyIri: SmartIri,
-  ): Task[CanDoResponseV2]
-
-  /**
-   * FIXME(DSP-1856): Only works if a single cardinality is supplied.
-   * Deletes the supplied cardinalities from a class, if the referenced properties are not used in instances
-   * of the class and any subclasses.
-   *
-   * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
-   * @param internalClassIri the Class from which the cardinalities are deleted.
-   * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
-   * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
-   */
-  def deleteCardinalitiesFromClass(
-    deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
-    internalClassIri: SmartIri,
-    internalOntologyIri: SmartIri,
-  ): Task[ReadOntologyV2]
-
-  /**
-   * Check if a property entity is used in resource instances. Returns `true` if
-   * it is used, and `false` if it is not used.
-   *
-   * @param classIri the IRI of the class that is being checked for usage.
-   * @param propertyIri the IRI of the entity that is being checked for usage.
-   *
-   * @return a [[Boolean]] denoting if the property entity is used.
-   */
-  def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean]
-}
-
-final case class CardinalityHandlerLive(
-  ontologyCache: OntologyCache,
-  triplestoreService: TriplestoreService,
-  messageRelay: MessageRelay,
-  ontologyHelpers: OntologyHelpers,
-)(implicit val stringFormatter: StringFormatter)
-    extends CardinalityHandler {
-
-  /**
-   * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
-   * @param internalClassIri the Class from which the cardinalities are deleted.
-   * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
-   * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be deleted.
-   */
-  override def canDeleteCardinalitiesFromClass(
     deleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri,
@@ -130,12 +85,14 @@ final case class CardinalityHandlerLive(
 
       newClassDefinitionWithRemovedCardinality =
         currentClassDefinition.copy(
-          directCardinalities =
+          directCardinalities = {
+            val cardinalities = currentClassDefinition.directCardinalities - submittedPropertyToDelete
             if (submittedPropertyToDeleteIsLinkProperty) {
-              // if we want to remove a link property, then we also need to remove the corresponding link property value
-              currentClassDefinition.directCardinalities - submittedPropertyToDelete - submittedPropertyToDelete.fromLinkPropToLinkValueProp
-            } else
-              currentClassDefinition.directCardinalities - submittedPropertyToDelete,
+              // if we want to remove a link property,
+              // then we also need to remove the corresponding link property value
+              cardinalities - submittedPropertyToDelete.fromLinkPropToLinkValueProp
+            } else cardinalities
+          },
         )
 
       // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
@@ -158,22 +115,22 @@ final case class CardinalityHandlerLive(
             cacheData = cacheData,
             // since we only want to delete (and have already removed what we want), the rest of the link properties
             // need to be marked as wanting to keep.
-            existingLinkPropsToKeep =
-              newClassDefinitionWithRemovedCardinality.directCardinalities.keySet // gets all keys from the map as a set
-                .map(propertyIri =>
-                  cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri),
-                )                                     // turn the propertyIri into a ReadPropertyInfoV2
-                .filter(_.isLinkProp)                 // we are only interested in link properties
-                .map(_.entityInfoContent.propertyIri),// turn whatever is left back to a propertyIri
+            existingLinkPropsToKeep = newClassDefinitionWithRemovedCardinality.directCardinalities.keySet
+              // turn the propertyIri into a ReadPropertyInfoV2
+              .map(propertyIri => cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri))
+              .filter(_.isLinkProp)                 // we are only interested in link properties
+              .map(_.entityInfoContent.propertyIri),// turn whatever is left back to a propertyIri
           )
           .fold(e => throw e.head, v => v)
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
-      _ = OntologyCache.checkOntologyReferencesInClassDef(
-            cache = cacheData,
-            classDef = newInternalClassDefWithLinkValueProps,
-            errorFun = { (msg: String) => throw BadRequestException(msg) },
-          )
+      _ <- ZIO.attempt(
+             OntologyCache.checkOntologyReferencesInClassDef(
+               cacheData,
+               newInternalClassDefWithLinkValueProps,
+               msg => throw BadRequestException(msg),
+             ),
+           )
 
       // response is true only when property is not used in data and cardinality is defined directly on that class
     } yield CanDoResponseV2.of(!propertyIsUsed && !atLeastOneCardinalityNotDefinedOnClass)
@@ -196,23 +153,21 @@ final case class CardinalityHandlerLive(
    */
   private def getRdfTypeAndEnsureSingleCardinality(classInfo: ClassInfoContentV2): Task[SmartIri] =
     for {
-      // Check that the class's rdf:type is owl:Class.
       rdfType <- ZIO
                    .fromOption(classInfo.getIriObject(OntologyConstants.Rdf.Type.toSmartIri))
                    .orElseFail(BadRequestException(s"No rdf:type specified"))
-      _ = if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
-            throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
-          }
-
+      // Check that the class's rdf:type is owl:Class.
+      _ <- ZIO
+             .fail(BadRequestException(s"Invalid rdf:type for property: $rdfType"))
+             .when(rdfType != OntologyConstants.Owl.Class.toSmartIri)
       // Check that cardinalities were submitted.
-      _ = if (classInfo.directCardinalities.isEmpty) {
-            throw BadRequestException("No cardinalities specified")
-          }
-
+      _ <- ZIO
+             .fail(BadRequestException("No cardinalities specified"))
+             .when(classInfo.directCardinalities.isEmpty)
       // Check that only one cardinality was submitted.
-      _ = if (classInfo.directCardinalities.size > 1) {
-            throw BadRequestException("Only one cardinality is allowed to be submitted.")
-          }
+      _ <- ZIO
+             .fail(BadRequestException("Only one cardinality is allowed to be submitted."))
+             .when(classInfo.directCardinalities.size > 1)
     } yield rdfType
 
   /**
@@ -225,7 +180,7 @@ final case class CardinalityHandlerLive(
    * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  override def deleteCardinalitiesFromClass(
+  def deleteCardinalitiesFromClass(
     deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri,
@@ -250,21 +205,18 @@ final case class CardinalityHandlerLive(
       isDefinedOnClassList <- ZIO.foreach(cardinalitiesToDelete.toList) { case (k, v) =>
                                 isCardinalityDefinedOnClass(cacheData, k, v, internalClassIri, internalOntologyIri)
                               }
-
-      _ = if (isDefinedOnClassList.contains(false)) {
-            throw BadRequestException(
-              "The cardinality is not defined directly on the class and cannot be deleted.",
-            )
-          }
+      _ <- ZIO
+             .fail(BadRequestException("The cardinality is not defined directly on the class and cannot be deleted."))
+             .when(isDefinedOnClassList.contains(false))
 
       // Check if property is used in resources of this class
 
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
       propertyIsUsed <-
         isPropertyUsedInResources(internalClassIri.toInternalIri, submittedPropertyToDelete.toInternalIri)
-      _ = if (propertyIsUsed) {
-            throw BadRequestException("Property is used in data. The cardinality cannot be deleted.")
-          }
+      _ <- ZIO
+             .fail(BadRequestException("Property is used in data. The cardinality cannot be deleted."))
+             .when(propertyIsUsed)
 
       // Make an update class definition in which the cardinality to delete is removed
 
@@ -275,12 +227,14 @@ final case class CardinalityHandlerLive(
 
       newClassDefinitionWithRemovedCardinality =
         currentClassDefinition.copy(
-          directCardinalities =
+          directCardinalities = {
+            val cardinalities = currentClassDefinition.directCardinalities - submittedPropertyToDelete
             if (submittedPropertyToDeleteIsLinkProperty) {
-              // if we want to remove a link property, then we also need to remove the corresponding link property value
-              currentClassDefinition.directCardinalities - submittedPropertyToDelete - submittedPropertyToDelete.fromLinkPropToLinkValueProp
-            } else
-              currentClassDefinition.directCardinalities - submittedPropertyToDelete,
+              // if we want to remove a link property,
+              // then we also need to remove the corresponding link property value
+              cardinalities - submittedPropertyToDelete.fromLinkPropToLinkValueProp
+            } else cardinalities
+          },
         )
 
       // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
@@ -303,22 +257,22 @@ final case class CardinalityHandlerLive(
             cacheData = cacheData,
             // since we only want to delete (and have already removed what we want), the rest of the link properties
             // need to be marked as wanting to keep.
-            existingLinkPropsToKeep =
-              newClassDefinitionWithRemovedCardinality.directCardinalities.keySet // gets all keys from the map as a set
-                .map(propertyIri =>
-                  cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri),
-                )                                     // turn the propertyIri into a ReadPropertyInfoV2
-                .filter(_.isLinkProp)                 // we are only interested in link properties
-                .map(_.entityInfoContent.propertyIri),// turn whatever is left back to a propertyIri
+            existingLinkPropsToKeep = newClassDefinitionWithRemovedCardinality.directCardinalities.keySet
+              // turn the propertyIri into a ReadPropertyInfoV2
+              .map(propertyIri => cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri))
+              .filter(_.isLinkProp)                 // we are only interested in link properties
+              .map(_.entityInfoContent.propertyIri),// turn whatever is left back to a propertyIri
           )
           .fold(e => throw e.head, v => v)
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
-      _ = OntologyCache.checkOntologyReferencesInClassDef(
-            cache = cacheData,
-            classDef = newInternalClassDefWithLinkValueProps,
-            errorFun = { (msg: String) => throw BadRequestException(msg) },
-          )
+      _ <- ZIO.attempt(
+             OntologyCache.checkOntologyReferencesInClassDef(
+               cacheData,
+               newInternalClassDefWithLinkValueProps,
+               msg => throw BadRequestException(msg),
+             ),
+           )
 
       // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
       // isn't any text to escape in cardinalities.)
@@ -373,7 +327,8 @@ final case class CardinalityHandlerLive(
 
       _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
             throw InconsistentRepositoryDataException(
-              s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved",
+              s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, " +
+                s"but $loadedClassDef was saved",
             )
           }
 
@@ -408,7 +363,7 @@ final case class CardinalityHandlerLive(
    *
    * @return a [[Boolean]] denoting if the property entity is used.
    */
-  override def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean] =
+  def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean] =
     triplestoreService.query(Ask(sparql.v2.txt.isPropertyUsed(propertyIri, classIri)))
 
   /**
@@ -449,43 +404,36 @@ final case class CardinalityHandlerLive(
     cardinalityInfo: OwlCardinality.KnoraCardinalityInfo,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri,
-  ): Task[Boolean] = {
-    val currentOntologyState: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
-
-    val readClassInfo: ReadClassInfoV2 = currentOntologyState.classes
-      .getOrElse(
-        internalClassIri,
-        throw BadRequestException(
-          s"Class $internalClassIri does not exist",
-        ),
-      )
-
-    // if cardinality is inherited, it's not directly defined on that class
-    if (readClassInfo.inheritedCardinalities.keySet.contains(propertyIri)) {
-      return ZIO.succeed(false)
-    }
-
-    val currentClassState: ClassInfoContentV2 = readClassInfo.entityInfoContent
-    val existingCardinality                   = currentClassState.directCardinalities.get(propertyIri)
-    existingCardinality match {
-      case Some(cardinality) =>
-        if (cardinality.cardinality.equals(cardinalityInfo.cardinality)) {
-          ZIO.succeed(true)
-        } else {
-          ZIO.fail(
-            BadRequestException(
-              s"Submitted cardinality for property $propertyIri does not match existing cardinality.",
-            ),
-          )
+  ): Task[Boolean] = ZIO
+    .fromOption(cacheData.ontologies(internalOntologyIri).classes.get(internalClassIri))
+    .orElseFail(BadRequestException(s"Class $internalClassIri does not exist"))
+    .flatMap { readClassInfo =>
+      // if cardinality is inherited, it's not directly defined on that class
+      if (readClassInfo.inheritedCardinalities.keySet.contains(propertyIri)) {
+        ZIO.succeed(false)
+      } else {
+        readClassInfo.entityInfoContent.directCardinalities.get(propertyIri) match {
+          case Some(cardinality) =>
+            if (cardinality.cardinality.equals(cardinalityInfo.cardinality)) {
+              ZIO.succeed(true)
+            } else {
+              ZIO.fail(
+                BadRequestException(
+                  s"Submitted cardinality for property $propertyIri does not match existing cardinality.",
+                ),
+              )
+            }
+          case None =>
+            ZIO.fail(
+              BadRequestException(
+                s"Submitted cardinality for property $propertyIri is not defined for class $internalClassIri.",
+              ),
+            )
         }
-      case None =>
-        throw BadRequestException(
-          s"Submitted cardinality for property $propertyIri is not defined for class $internalClassIri.",
-        )
+      }
     }
-  }
 }
 
-object CardinalityHandlerLive {
-  val layer = ZLayer.derive[CardinalityHandlerLive]
+object CardinalityHandler {
+  val layer = ZLayer.derive[CardinalityHandler]
 }

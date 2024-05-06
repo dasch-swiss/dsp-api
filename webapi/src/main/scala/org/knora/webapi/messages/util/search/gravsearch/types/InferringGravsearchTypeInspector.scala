@@ -1039,7 +1039,6 @@ final case class InferringGravsearchTypeInspector(
     typeInfo match {
       case propertyTypeInfo: PropertyTypeInfo       => propertyTypeInfo.objectTypeIri
       case nonPropertyTypeInfo: NonPropertyTypeInfo => nonPropertyTypeInfo.typeIri
-      case _                                        => throw GravsearchException(s"There is an invalid type")
     }
 
   /**
