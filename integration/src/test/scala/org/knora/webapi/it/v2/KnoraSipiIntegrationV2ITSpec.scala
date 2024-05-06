@@ -340,22 +340,12 @@ class KnoraSipiIntegrationV2ITSpec
 
     "log in as a Knora user" in {
       /* Correct username and correct password */
-
-      val params =
-        s"""
-           |{
-           |    "email": "$anythingUserEmail",
-           |    "password": "$password"
-           |}
-                """.stripMargin
-
+      val params   = s"""{"email": "$anythingUserEmail", "password": "$password"}"""
       val request  = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
-      val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
-      loginToken = lr.token
-
+      loginToken = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds).token
       loginToken.nonEmpty should be(true)
     }
 
@@ -500,23 +490,13 @@ class KnoraSipiIntegrationV2ITSpec
         .toJsonLd
 
       // Send the JSON in a PUT request to the API.
-      val knoraPostRequest = Put(baseApiUrl + "/v2/values", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc  = getResponseJsonLD(knoraPostRequest)
-      stillImageFileValueIri.set(
-        UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString,
-      )
+      val response = requestJsonLDWithAuth(Put(baseApiUrl + "/v2/values", jsonLdHttpEntity(jsonLdEntity)))
+      stillImageFileValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
-      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${encodeUTF8(stillImageResourceIri.get)}")
-      val resource        = getResponseJsonLD(knoraGetRequest)
-
-      // Get the new file value from the resource.
-      val savedValue: JsonLDObject = getValueFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
-        expectedValueIri = stillImageFileValueIri.get,
-      )
-
+      val resource   = getResponseJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(stillImageResourceIri.get)}"))
+      val savedValue = getValueFromResource(resource, HasStillImageFileValue.toSmartIri, stillImageFileValueIri.get)
       val savedImage = savedValueToSavedImage(savedValue)
+
       assert(savedImage.internalFilename == uploadedFile.internalFilename)
       assert(savedImage.width == trp88Width)
       assert(savedImage.height == trp88Height)
@@ -679,15 +659,9 @@ class KnoraSipiIntegrationV2ITSpec
       val resourceIri = response.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       csvResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
-      val resource = getResponseJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(resourceIri)}"))
-
       // Get the new file value from the resource.
-
-      val savedValues: JsonLDArray = getValuesFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri,
-      )
-
+      val resource                    = getResponseJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(resourceIri)}"))
+      val savedValues: JsonLDArray    = getValuesFromResource(resource, HasTextFileValue.toSmartIri)
       val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
       csvValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -726,12 +700,7 @@ class KnoraSipiIntegrationV2ITSpec
       val resource = getResponseJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(csvResourceIri.get)}"))
 
       // Get the new file value from the resource.
-      val savedValue: JsonLDObject = getValueFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri,
-        expectedValueIri = csvValueIri.get,
-      )
-
+      val savedValue: JsonLDObject     = getValueFromResource(resource, HasTextFileValue.toSmartIri, csvValueIri.get)
       val savedTextFile: SavedTextFile = savedValueToSavedTextFile(savedValue)
       assert(savedTextFile.internalFilename == uploadedFile.internalFilename)
 
