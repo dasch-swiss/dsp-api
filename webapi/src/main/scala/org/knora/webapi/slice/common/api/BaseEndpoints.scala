@@ -12,7 +12,7 @@ import sttp.tapir.EndpointOutput
 import sttp.tapir.auth
 import sttp.tapir.cookie
 import sttp.tapir.endpoint
-import sttp.tapir.generic.auto._
+import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.model.UsernamePassword
 import sttp.tapir.oneOf
@@ -23,7 +23,7 @@ import zio.ZLayer
 
 import scala.concurrent.Future
 
-import dsp.errors._
+import dsp.errors.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2

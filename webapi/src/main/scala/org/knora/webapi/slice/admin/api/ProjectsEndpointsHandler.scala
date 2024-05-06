@@ -11,11 +11,11 @@ import zio.ZLayer
 import java.nio.file.Files
 import scala.concurrent.ExecutionContext
 
+import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
-import org.knora.webapi.slice.admin.api.model._
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode

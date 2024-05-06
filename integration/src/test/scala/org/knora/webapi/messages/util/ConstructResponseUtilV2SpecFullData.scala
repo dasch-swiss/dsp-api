@@ -9,14 +9,14 @@ import java.time.Instant
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAttributeV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
 

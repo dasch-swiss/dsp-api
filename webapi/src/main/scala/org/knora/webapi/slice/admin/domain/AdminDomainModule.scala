@@ -9,12 +9,12 @@ import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.IriService
+import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.admin.repo.AdminRepoModule
 import org.knora.webapi.slice.infrastructure.CacheManager

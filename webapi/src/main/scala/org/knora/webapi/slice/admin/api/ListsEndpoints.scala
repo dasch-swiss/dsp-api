@@ -5,14 +5,14 @@
 
 package org.knora.webapi.slice.admin.api
 
-import sttp.tapir._
-import sttp.tapir.generic.auto._
+import sttp.tapir.*
+import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
-import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.slice.admin.api.Requests.ListChangeCommentsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeLabelsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeNameRequest
@@ -22,7 +22,7 @@ import org.knora.webapi.slice.admin.api.Requests.ListCreateChildNodeRequest
 import org.knora.webapi.slice.admin.api.Requests.ListCreateRootNodeRequest
 import org.knora.webapi.slice.admin.api.model.AdminQueryVariables
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.ListProperties._
+import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 case class ListsEndpoints(baseEndpoints: BaseEndpoints) {

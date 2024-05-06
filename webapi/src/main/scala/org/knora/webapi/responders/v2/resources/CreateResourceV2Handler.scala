@@ -6,34 +6,34 @@
 package org.knora.webapi.responders.v2.resources
 
 import com.typesafe.scalalogging.LazyLogging
-import zio._
+import zio.*
 
 import java.time.Instant
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.Iri
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages._
+import org.knora.webapi.messages.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
-import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
-import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.v2._
-import org.knora.webapi.slice.admin.api.model._
+import org.knora.webapi.responders.v2.*
+import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService

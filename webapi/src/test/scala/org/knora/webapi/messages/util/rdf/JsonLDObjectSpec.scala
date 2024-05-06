@@ -5,8 +5,8 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import zio._
-import zio.test._
+import zio.*
+import zio.test.*
 
 import java.util.UUID
 

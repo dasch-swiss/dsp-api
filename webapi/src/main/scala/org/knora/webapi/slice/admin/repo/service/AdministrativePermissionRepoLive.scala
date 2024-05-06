@@ -27,7 +27,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.Permission.Administrative
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
-import org.knora.webapi.slice.admin.repo.rdf.RdfConversions._
+import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError

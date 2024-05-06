@@ -5,11 +5,11 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio._
+import zio.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-import org.knora.webapi.messages.admin.responder.groupsmessages._
+import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest

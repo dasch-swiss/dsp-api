@@ -8,10 +8,10 @@ package org.knora.webapi.store.triplestore
 import org.apache.pekko
 import zio.ZIO
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select

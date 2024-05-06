@@ -8,13 +8,13 @@ package org.knora.webapi.messages.util.rdf
 import org.apache.jena
 
 import scala.collection.mutable.ArrayBuffer
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 import dsp.errors.RdfProcessingException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 
 sealed trait JenaNode extends RdfNode {
   def node: jena.graph.Node

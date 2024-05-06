@@ -5,9 +5,9 @@
 
 package org.knora.webapi.routing.v2
 
-import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.Route
-import zio._
+import zio.*
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol

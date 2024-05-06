@@ -6,7 +6,7 @@
 package org.knora.webapi.slice.resourceinfo.api
 
 import zio.ZIO
-import zio.test._
+import zio.test.*
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri

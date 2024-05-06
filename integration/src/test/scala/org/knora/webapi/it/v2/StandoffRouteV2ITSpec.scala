@@ -9,20 +9,20 @@ import org.apache.pekko
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
-import spray.json._
+import spray.json.*
 
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
-import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.sipimessages.*
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
@@ -37,7 +37,7 @@ import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
 import pekko.http.javadsl.model.StatusCodes
-import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import pekko.http.scaladsl.unmarshalling.Unmarshal
 

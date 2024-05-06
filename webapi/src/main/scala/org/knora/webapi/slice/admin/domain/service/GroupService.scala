@@ -5,8 +5,8 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.*
 import zio.ZIO
-import zio._
 
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest

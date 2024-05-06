@@ -5,34 +5,34 @@
 
 package org.knora.webapi.responders.v2
 
-import zio._
+import zio.*
 
 import java.time.Instant
 import java.util.UUID
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.*
 import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
-import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageExternalFileValue
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageFileValue
-import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.PermissionUtilADM._
+import org.knora.webapi.messages.util.PermissionUtilADM.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder

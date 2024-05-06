@@ -21,7 +21,7 @@ import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.KnoraBaseVersionString
 import org.knora.webapi.knoraBaseVersionFrom
 import org.knora.webapi.messages.store.triplestoremessages.RepositoryUpdatedResponse
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion

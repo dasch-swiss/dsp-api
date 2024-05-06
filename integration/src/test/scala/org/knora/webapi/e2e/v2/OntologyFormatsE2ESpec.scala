@@ -4,17 +4,17 @@
  */
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.Accept
 import org.scalatest.Inspectors.forEvery
-import spray.json._
+import spray.json.*
 
 import java.net.URLEncoder
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -22,7 +22,7 @@ import org.knora.webapi.messages.util.rdf.RdfFormatUtil
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util._
+import org.knora.webapi.util.*
 
 class OntologyFormatsE2ESpec extends E2ESpec {
 

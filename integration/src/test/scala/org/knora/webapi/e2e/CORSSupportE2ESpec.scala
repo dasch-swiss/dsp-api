@@ -13,10 +13,10 @@ import scala.concurrent.duration.NANOSECONDS
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
-import pekko.http.scaladsl.model.HttpMethods._
+import pekko.http.scaladsl.model.HttpMethods.*
 import pekko.http.scaladsl.model.HttpResponse
 import pekko.http.scaladsl.model.StatusCodes
-import pekko.http.scaladsl.model.headers._
+import pekko.http.scaladsl.model.headers.*
 import pekko.http.scaladsl.testkit.RouteTestTimeout
 
 /**

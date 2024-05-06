@@ -8,10 +8,10 @@ package org.knora.webapi.routing
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.cors.scaladsl.CorsDirectives
 import org.apache.pekko.http.cors.scaladsl.settings.CorsSettings
-import org.apache.pekko.http.scaladsl.model.HttpMethods._
-import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.model.HttpMethods.*
+import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.Route
-import zio._
+import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
@@ -23,7 +23,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing
-import org.knora.webapi.routing.v2._
+import org.knora.webapi.routing.v2.*
 import org.knora.webapi.slice.admin.api.AdminApiRoutes
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService

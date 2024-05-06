@@ -14,9 +14,9 @@ import dsp.errors.ForbiddenException
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
-import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
-import org.knora.webapi.sharedtestdata._
+import org.knora.webapi.sharedtestdata.*
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.*
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
 import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo

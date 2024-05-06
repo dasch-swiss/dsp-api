@@ -7,21 +7,21 @@ package org.knora.webapi.messages.store.triplestoremessages
 
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
-import spray.json._
+import spray.json.*
 import sttp.tapir.Schema
-import zio._
+import zio.*
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import java.time.Instant
 import scala.collection.mutable
 
-import dsp.errors._
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages._
+import dsp.errors.*
+import org.knora.webapi.*
+import org.knora.webapi.messages.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 
 /**
  * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.

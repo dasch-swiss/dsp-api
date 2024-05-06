@@ -10,8 +10,8 @@ import zio.json.JsonCodec
 
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.Group
-import org.knora.webapi.slice.admin.domain.model._
 
 /**
  * Represents an answer to a request for a list of all users.

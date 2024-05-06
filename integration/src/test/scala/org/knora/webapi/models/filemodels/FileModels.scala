@@ -8,7 +8,7 @@ package org.knora.webapi.models.filemodels
 import java.time.Instant
 import java.util.UUID
 
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2

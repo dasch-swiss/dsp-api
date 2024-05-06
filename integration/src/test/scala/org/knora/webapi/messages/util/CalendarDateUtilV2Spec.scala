@@ -9,7 +9,7 @@ import org.scalatest.compatible.Assertion
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.*
 
 /**
  * Tests [[CalendarDateUtilV2]].

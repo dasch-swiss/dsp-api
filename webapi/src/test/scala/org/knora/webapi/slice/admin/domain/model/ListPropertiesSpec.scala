@@ -12,7 +12,7 @@ import zio.test.assertTrue
 import zio.test.check
 
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.domain.model.ListProperties._
+import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 
 /**
  * This spec is used to test the [[List]] value objects creation.

@@ -6,14 +6,14 @@
 package org.knora.webapi.it
 
 import org.apache.pekko
-import spray.json._
+import spray.json.*
 
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import org.knora.webapi.ITKnoraLiveSpec
 
-import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.*
 
 /**
  * End-to-End (E2E) test specification for testing route rejections.

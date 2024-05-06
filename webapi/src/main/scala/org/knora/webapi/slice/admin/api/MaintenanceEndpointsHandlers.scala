@@ -7,7 +7,7 @@ package org.knora.webapi.slice.admin.api
 
 import zio.ZIO
 import zio.ZLayer
-import zio.json._
+import zio.json.*
 import zio.json.ast.Json
 
 import dsp.errors.BadRequestException

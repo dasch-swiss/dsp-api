@@ -12,23 +12,23 @@ import zio.ZLayer
 
 import java.util.UUID
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri._
+import dsp.valueobjects.Iri.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.messages.admin.responder.listsmessages.*
+import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.ListsResponder.Queries
-import org.knora.webapi.slice.admin.api.Requests._
+import org.knora.webapi.slice.admin.api.Requests.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri

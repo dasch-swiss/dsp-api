@@ -11,7 +11,7 @@ import zio.json.JsonCodec
 import zio.json.jsonDiscriminator
 
 import dsp.valueobjects.Iri
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2

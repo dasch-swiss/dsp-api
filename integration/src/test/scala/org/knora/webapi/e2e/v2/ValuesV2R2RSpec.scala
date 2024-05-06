@@ -8,7 +8,7 @@ package org.knora.webapi.e2e.v2
 import org.apache.pekko.http.scaladsl.model.HttpEntity
 import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import org.apache.pekko.http.scaladsl.server.RouteConcatenation._
+import org.apache.pekko.http.scaladsl.server.RouteConcatenation.*
 import zio.ZIO
 
 import scala.concurrent.ExecutionContextExecutor
@@ -16,13 +16,13 @@ import scala.concurrent.ExecutionContextExecutor
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.routing.v2.ValuesRouteV2

@@ -5,10 +5,10 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.testkit._
+import org.apache.pekko.testkit.*
 import zio.ZIO
 
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM

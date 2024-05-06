@@ -5,11 +5,11 @@
 
 package org.knora.webapi.core
 
-import zio._
+import zio.*
+import zio.test.*
 import zio.test.Assertion.anything
 import zio.test.Assertion.dies
 import zio.test.Assertion.isSubtype
-import zio.test._
 
 import org.knora.webapi.messages.ResponderRequest
 

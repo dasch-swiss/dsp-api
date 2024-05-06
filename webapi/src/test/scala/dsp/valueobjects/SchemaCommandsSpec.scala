@@ -6,8 +6,8 @@
 package dsp.valueobjects
 
 import zio.ZIO
-import zio.test.Assertion._
-import zio.test._
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.time.Instant
 
