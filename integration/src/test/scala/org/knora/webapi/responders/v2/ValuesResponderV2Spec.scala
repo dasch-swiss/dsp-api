@@ -303,7 +303,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     resourceIri: IRI,
     maybePreviousLastModDate: Option[Instant],
     maybeUpdatedLastModDate: Option[Instant],
-  ): Assertion =
+  ): Unit =
     maybeUpdatedLastModDate match {
       case Some(updatedLastModDate) =>
         maybePreviousLastModDate match {

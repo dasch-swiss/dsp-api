@@ -277,12 +277,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           ),
         )
 
-        val nodeInfo = received.nodeinfo
-        // check correct node info
-        val childNodeInfo = nodeInfo match {
-          case info: ListChildNodeInfoADM => info
-          case something                  => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
-        }
+        val childNodeInfo: ListChildNodeInfoADM = received.nodeinfo
 
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
