@@ -1534,7 +1534,7 @@
             "@id": "knora-api:isAnnotationOf"
         },
         {
-            "rdfs:label": "Segment of (Audio)",
+            "rdfs:label": "Segment of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:isSegmentOf"
             },
@@ -1628,7 +1628,7 @@
             "@id": "knora-api:isSequenceOf"
         },
         {
-            "rdfs:label": "Segment of (Video)",
+            "rdfs:label": "Segment of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:isSegmentOf"
             },

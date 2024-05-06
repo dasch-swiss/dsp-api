@@ -8576,7 +8576,7 @@
             "@id": "knora-api:isAnnotationOfValue"
         },
         {
-            "rdfs:label": "Segment of (Audio)",
+            "rdfs:label": "Segment of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:isSegmentOf"
             },
@@ -8878,7 +8878,7 @@
             "rdfs:comment": "Indicates whether class is a subclass of Value."
         },
         {
-            "rdfs:label": "Segment of (Video)",
+            "rdfs:label": "Segment of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:isSegmentOf"
             },
