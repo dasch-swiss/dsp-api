@@ -127,7 +127,7 @@ class KnoraSipiIntegrationV2ITSpec
 
   private def assertingUnique[A](l: Seq[A]): A = l.toList match {
     case h :: Nil => h
-    case _        => throw AssertionException(s"value not unique out of ${l.length}, value: $l")
+    case _        => throw AssertionException(s"Not unique value: $l out of ${l.length} values.")
   }
 
   /**
