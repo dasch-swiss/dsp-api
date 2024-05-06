@@ -15,6 +15,7 @@ import zio.json.ast.Json
 import dsp.errors.BadRequestException
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.ProjectsWithBakfilesReport
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService.fixTopLeftAction
+import org.knora.webapi.slice.admin.api.service.MaintenanceRestService.textValueCleanupSimpleTextInOntoAction
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -27,8 +28,9 @@ final case class MaintenanceRestService(
   def executeMaintenanceAction(user: User, action: String, jsonMaybe: Option[Json]): Task[Unit] =
     securityService.ensureSystemAdmin(user) *> {
       action match {
-        case `fixTopLeftAction` => executeTopLeftAction(jsonMaybe)
-        case _                  => ZIO.fail(BadRequestException(s"Unknown action $action"))
+        case `fixTopLeftAction`                       => executeTopLeftAction(jsonMaybe)
+        case `textValueCleanupSimpleTextInOntoAction` => executeTextValueCleanupSimpleTextInOntoAction()
+        case _                                        => ZIO.fail(BadRequestException(s"Unknown action $action"))
       }
     }
 
@@ -49,12 +51,20 @@ final case class MaintenanceRestService(
       report <- getParamsAs[ProjectsWithBakfilesReport](topLeftParams, fixTopLeftAction)
       _      <- maintenanceService.fixTopLeftDimensions(report).logError.forkDaemon
     } yield ()
+
+  private def executeTextValueCleanupSimpleTextInOntoAction(): IO[BadRequestException, Unit] =
+    maintenanceService.textValueCleanupSimpleTextInOnto().logError.forkDaemon
 }
 
 object MaintenanceRestService {
   val layer = ZLayer.derive[MaintenanceRestService]
 
-  val fixTopLeftAction = "fix-top-left"
+  val fixTopLeftAction                       = "fix-top-left"
+  val textValueCleanupSimpleTextInOntoAction = "text-value-cleanup-simple-text-in-onto"
 
-  val allActions: List[String] = List(fixTopLeftAction)
+  val allActions: List[String] =
+    List(
+      fixTopLeftAction,
+      textValueCleanupSimpleTextInOntoAction,
+    )
 }

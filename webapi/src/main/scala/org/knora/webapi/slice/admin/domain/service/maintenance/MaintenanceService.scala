@@ -21,6 +21,11 @@ final case class MaintenanceService(
     ZIO.logInfo(s"Starting fix top left maintenance") *>
       TopLeftCorrectionAction(knoraProjectService, triplestoreService).execute(report) *>
       ZIO.logInfo(s"Finished fix top left maintenance")
+
+  def textValueCleanupSimpleTextInOnto(): Task[Unit] =
+    ZIO.logInfo(s"Starting text value cleanup maintenance") *>
+      TextValueCleanupSimpleTextInOntoAction(knoraProjectService, triplestoreService).execute(()) *>
+      ZIO.logInfo(s"Finished text value cleanup maintenance")
 }
 
 object MaintenanceService {
