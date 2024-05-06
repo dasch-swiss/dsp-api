@@ -28,10 +28,10 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.routing.v2.AssetIngestState
+import org.knora.webapi.routing.v2.AssetIngestState._
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -652,11 +652,6 @@ case class CreateResourceRequestV2(
 ) extends ResourcesResponderRequestV2
 
 object CreateResourceRequestV2 {
-  sealed trait AssetIngestState
-  object AssetIngestState {
-    case object AssetIngested extends AssetIngestState
-    case object AssetInTemp   extends AssetIngestState
-  }
 
   /**
    * Converts JSON-LD input to a [[CreateResourceRequestV2]].
