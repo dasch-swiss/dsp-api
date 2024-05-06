@@ -31,7 +31,7 @@ object Dependencies {
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.22"
 
-  // ZIO - all Scala 3 compatible
+  // ZIO
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
   val zioConfig             = "dev.zio"                       %% "zio-config"                % ZioConfigVersion
   val zioConfigMagnolia     = "dev.zio"                       %% "zio-config-magnolia"       % ZioConfigVersion
@@ -66,7 +66,7 @@ object Dependencies {
   val jenaText = "org.apache.jena" % "jena-text" % JenaVersion
 
   // logging
-  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"  // Scala 3 compatible
+  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
   val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.13" // the logging interface
 
   // Metrics
@@ -96,15 +96,15 @@ object Dependencies {
   val rdf4jSparql = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
   val saxonHE     = "net.sf.saxon"      % "Saxon-HE"            % "12.4"
   val scalaGraph =
-    "org.scala-graph" %% "graph-core" % "2.0.1" cross CrossVersion.for3Use2_13 // Should be Scala 3 compatible
+    "org.scala-graph" %% "graph-core" % "2.0.1" cross CrossVersion.for3Use2_13
   val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.4.0"
   val xmlunitCore    = "org.xmlunit"    % "xmlunit-core"     % "2.10.0"
 
   // test
-  val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion  // Scala 3 incompatible
-  val pekkoStreamTestkit = "org.apache.pekko" %% "pekko-stream-testkit" % PekkoActorVersion // Scala 3 compatible
-  val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion // Scala 3 compatible
-  val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.18"          // Scala 3 compatible
+  val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion
+  val pekkoStreamTestkit = "org.apache.pekko" %% "pekko-stream-testkit" % PekkoActorVersion
+  val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
+  val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.18"
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "1.19.7"
   val wiremock       = "org.wiremock"       % "wiremock"       % "3.5.4"
