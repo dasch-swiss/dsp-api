@@ -123,6 +123,11 @@ class KnoraSipiIntegrationV2ITSpec
 
   private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
+  private def assertingUnique[A](l: Seq[A]): A = l.toList match {
+    case h :: Nil => h
+    case _        => throw AssertionException(s"value not unique out of ${l.length}, value: $l")
+  }
+
   /**
    * Represents the information that Knora returns about an image file value that was created.
    *
@@ -406,7 +411,8 @@ class KnoraSipiIntegrationV2ITSpec
           ontologyName = "anything",
         )
 
-      val responseJsonDoc = getResponseJsonLD(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization)
+      val responseJsonDoc =
+        getResponseJsonLD(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization)
       stillImageResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
@@ -425,17 +431,7 @@ class KnoraSipiIntegrationV2ITSpec
         propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
       )
 
-      val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
-        savedValues.value.head
-      } else {
-        throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
-      }
-
-      val savedValueObj: JsonLDObject = savedValue match {
-        case jsonLDObject: JsonLDObject => jsonLDObject
-        case other                      => throw AssertionException(s"Invalid value object: $other")
-      }
-
+      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
       stillImageFileValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
 
       val savedImage = savedValueToSavedImage(savedValueObj)
@@ -643,17 +639,7 @@ class KnoraSipiIntegrationV2ITSpec
         propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri,
       )
 
-      val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
-        savedValues.value.head
-      } else {
-        throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
-      }
-
-      val savedValueObj: JsonLDObject = savedValue match {
-        case jsonLDObject: JsonLDObject => jsonLDObject
-        case other                      => throw AssertionException(s"Invalid value object: $other")
-      }
-
+      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
       pdfValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
 
       val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
@@ -818,17 +804,7 @@ class KnoraSipiIntegrationV2ITSpec
         propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri,
       )
 
-      val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
-        savedValues.value.head
-      } else {
-        throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
-      }
-
-      val savedValueObj: JsonLDObject = savedValue match {
-        case jsonLDObject: JsonLDObject => jsonLDObject
-        case other                      => throw AssertionException(s"Invalid value object: $other")
-      }
-
+      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
       csvValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
 
       val savedTextFile: SavedTextFile = savedValueToSavedTextFile(savedValueObj)
@@ -945,17 +921,7 @@ class KnoraSipiIntegrationV2ITSpec
         propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri,
       )
 
-      val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
-        savedValues.value.head
-      } else {
-        throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
-      }
-
-      val savedValueObj: JsonLDObject = savedValue match {
-        case jsonLDObject: JsonLDObject => jsonLDObject
-        case other                      => throw AssertionException(s"Invalid value object: $other")
-      }
-
+      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
       xmlValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
 
       val savedTextFile: SavedTextFile = savedValueToSavedTextFile(savedValueObj)
@@ -1077,17 +1043,7 @@ class KnoraSipiIntegrationV2ITSpec
         propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri,
       )
 
-      val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
-        savedValues.value.head
-      } else {
-        throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
-      }
-
-      val savedValueObj: JsonLDObject = savedValue match {
-        case jsonLDObject: JsonLDObject => jsonLDObject
-        case other                      => throw AssertionException(s"Invalid value object: $other")
-      }
-
+      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
       zipValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
 
       val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
@@ -1188,17 +1144,7 @@ class KnoraSipiIntegrationV2ITSpec
         propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri,
       )
 
-      val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
-        savedValues.value.head
-      } else {
-        throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
-      }
-
-      val savedValueObj: JsonLDObject = savedValue match {
-        case jsonLDObject: JsonLDObject => jsonLDObject
-        case other                      => throw AssertionException(s"Invalid value object: $other")
-      }
-
+      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
       zipValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
 
       val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
@@ -1248,17 +1194,7 @@ class KnoraSipiIntegrationV2ITSpec
         propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasAudioFileValue.toSmartIri,
       )
 
-      val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
-        savedValues.value.head
-      } else {
-        throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
-      }
-
-      val savedValueObj: JsonLDObject = savedValue match {
-        case jsonLDObject: JsonLDObject => jsonLDObject
-        case other                      => throw AssertionException(s"Invalid value object: $other")
-      }
-
+      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
       wavValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
 
       val savedAudioFile: SavedAudioFile = savedValueToSavedAudioFile(savedValueObj)
@@ -1354,17 +1290,7 @@ class KnoraSipiIntegrationV2ITSpec
         propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasMovingImageFileValue.toSmartIri,
       )
 
-      val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
-        savedValues.value.head
-      } else {
-        throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
-      }
-
-      val savedValueObj: JsonLDObject = savedValue match {
-        case jsonLDObject: JsonLDObject => jsonLDObject
-        case other                      => throw AssertionException(s"Invalid value object: $other")
-      }
-
+      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
       videoValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
 
       val savedVideoFile: SavedVideoFile = savedValueToSavedVideoFile(savedValueObj)
