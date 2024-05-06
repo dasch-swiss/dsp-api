@@ -406,18 +406,11 @@ class KnoraSipiIntegrationV2ITSpec
       // Create the resource in the API.
 
       val jsonLdEntity = UploadFileRequest
-        .make(
-          fileType = FileType.StillImageFile(),
-          internalFilename = uploadedFile.internalFilename,
-        )
-        .toJsonLd(
-          className = Some("ThingPicture"),
-          ontologyName = "anything",
-        )
+        .make(FileType.StillImageFile(), uploadedFile.internalFilename)
+        .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
 
-      val responseJsonDoc =
-        getResponseJsonLD(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization)
-      stillImageResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
+      stillImageResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       val resource = getResponseJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(stillImageResourceIri.get)}"))
       assert(
@@ -456,14 +449,8 @@ class KnoraSipiIntegrationV2ITSpec
       // Create the resource in the API.
 
       val jsonLdEntity = UploadFileRequest
-        .make(
-          fileType = FileType.StillImageFile(),
-          internalFilename = uploadedFile.filename,
-        )
-        .toJsonLd(
-          className = Some("ThingPicture"),
-          ontologyName = "anything",
-        )
+        .make(fileType = FileType.StillImageFile(), internalFilename = uploadedFile.filename)
+        .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
 
       val responseJsonDoc = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
       stillImageResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
@@ -494,12 +481,11 @@ class KnoraSipiIntegrationV2ITSpec
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
         .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
-      val request = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity))
-        ~> addAuthorization
-        ~> addAssetIngested
-      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-      val resIri                          = UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString
-      val getRequest                      = Get(s"$baseApiUrl/v2/resources/${encodeUTF8(resIri)}")
+      val response = requestJsonLDWithAuth(
+        Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAssetIngested,
+      )
+      val resIri     = UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString
+      val getRequest = Get(s"$baseApiUrl/v2/resources/${encodeUTF8(resIri)}")
       checkResponseOK(getRequest)
     }
 
@@ -596,14 +582,8 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity =
         UploadFileRequest
-          .make(
-            fileType = FileType.DocumentFile(),
-            internalFilename = uploadedFile.internalFilename,
-          )
-          .toJsonLd(
-            className = Some("ThingDocument"),
-            ontologyName = "anything",
-          )
+          .make(fileType = FileType.DocumentFile(), internalFilename = uploadedFile.internalFilename)
+          .toJsonLd(className = Some("ThingDocument"), ontologyName = "anything")
 
       val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
       pdfResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
@@ -721,14 +701,8 @@ class KnoraSipiIntegrationV2ITSpec
       // Create the resource in the API.
 
       val jsonLdEntity = UploadFileRequest
-        .make(
-          fileType = FileType.DocumentFile(),
-          internalFilename = uploadedFile.internalFilename,
-        )
-        .toJsonLd(
-          className = Some("ThingDocument"),
-          ontologyName = "anything",
-        )
+        .make(fileType = FileType.DocumentFile(), internalFilename = uploadedFile.internalFilename)
+        .toJsonLd(className = Some("ThingDocument"), ontologyName = "anything")
 
       val request = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
       assert(singleAwaitingRequest(request).status == StatusCodes.BadRequest)
