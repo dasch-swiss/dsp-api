@@ -307,8 +307,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     maybeUpdatedLastModDate match {
       case Some(updatedLastModDate) =>
         maybePreviousLastModDate match {
-          case Some(previousLastModDate) => assert(updatedLastModDate.isAfter(previousLastModDate))
-          case None                      => assert(true)
+          case Some(previousLastModDate) => assert(updatedLastModDate.isAfter(previousLastModDate)); ()
+          case None                      => assert(true); ()
         }
 
       case None => throw AssertionException(s"Resource $resourceIri has no knora-base:lastModificationDate")

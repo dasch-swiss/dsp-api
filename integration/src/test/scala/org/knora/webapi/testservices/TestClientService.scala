@@ -97,7 +97,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
           .singleRequest(request)
           .map { resp =>
             if (printFailure && resp.status.isFailure()) {
-              Unmarshal(resp.entity).to[String].map { body =>
+              val _ = Unmarshal(resp.entity).to[String].map { body =>
                 println(s"Request failed with status ${resp.status} and body $body")
               }
             }
