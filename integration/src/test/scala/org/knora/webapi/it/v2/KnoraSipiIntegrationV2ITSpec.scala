@@ -508,9 +508,9 @@ class KnoraSipiIntegrationV2ITSpec
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
         .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
-      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~>
-        addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~>
-        addHeader("X-Asset-Ingested", "true")
+      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity))
+        ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+        ~> addHeader("X-Asset-Ingested", "true")
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       // Get the resource from the API.
       val resIri     = UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString
@@ -715,6 +715,39 @@ class KnoraSipiIntegrationV2ITSpec
       // Request the permanently stored file from Sipi.
       val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
       checkResponseOK(sipiGetFileRequest)
+    }
+
+    "change a PDF file value with X-Asset-Ingested=true" in {
+      // Update the value.
+      val jsonLdEntity = ChangeFileRequest
+        .make(
+          fileType = FileType.DocumentFile(),
+          internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2",
+          resourceIri = pdfResourceIri.get,
+          valueIri = pdfValueIri.get,
+          className = Some("ThingDocument"),
+          ontologyName = "anything",
+        )
+        .toJsonLd
+
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity))
+          ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+          ~> addHeader("X-Asset-Ingested", "true"),
+      )
+
+      val utf8Encode = URLEncoder.encode(_: String, "UTF-8")
+      val resource   = getResponseJsonLD(Get(s"$baseApiUrl/v2/resources/${utf8Encode(pdfResourceIri.get)}"))
+
+      // Get the new file value from the resource.
+      val savedDocument: SavedDocument = savedValueToSavedDocument(
+        getValueFromResource(
+          resource = resource,
+          propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri,
+          expectedValueIri = UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString,
+        ),
+      )
+      assert(savedDocument.internalFilename == "De6XyNL4H71-D9QxghOuOPJ.jp2")
     }
 
     "not create a document resource if the file is actually a zip file" in {
