@@ -60,6 +60,10 @@ class KnoraSipiIntegrationV2ITSpec
   private val videoResourceIri = new MutableTestIri
   private val videoValueIri    = new MutableTestIri
 
+  private val jsonLdHttpEntity = HttpEntity(RdfMediaTypes.`application/ld+json`, _: String)
+  private val addAuthorization = addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+  private val addAssetIngested = addHeader("X-Asset-Ingested", "true")
+
   private val marblesOriginalFilename = "marbles.tif"
   private val pathToMarbles           = Paths.get("..", s"test_data/test_route/images/$marblesOriginalFilename")
   private val marblesWidth            = 1419
@@ -402,11 +406,7 @@ class KnoraSipiIntegrationV2ITSpec
           ontologyName = "anything",
         )
 
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      val responseJsonDoc = getResponseJsonLD(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization)
       stillImageResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
@@ -470,7 +470,7 @@ class KnoraSipiIntegrationV2ITSpec
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      ) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       stillImageResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -508,9 +508,9 @@ class KnoraSipiIntegrationV2ITSpec
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
         .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
-      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity))
-        ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-        ~> addHeader("X-Asset-Ingested", "true")
+      val request = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity))
+        ~> addAuthorization
+        ~> addAssetIngested
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       // Get the resource from the API.
       val resIri     = UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString
@@ -523,8 +523,8 @@ class KnoraSipiIntegrationV2ITSpec
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
         .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
-      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~>
-        addCredentials(BasicHttpCredentials(anythingUserEmail, password)) // no X-Asset-Ingested header
+      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity))
+        ~> addAuthorization // no X-Asset-Ingested header
       val res = singleAwaitingRequest(request)
       assert(res.status == StatusCodes.BadRequest)
     }
@@ -570,11 +570,8 @@ class KnoraSipiIntegrationV2ITSpec
         .toJsonLd
 
       // Send the JSON in a PUT request to the API.
-      val knoraPostRequest =
-        Put(baseApiUrl + "/v2/values", HttpEntity(ContentTypes.`application/json`, jsonLdEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val responseJsonDoc = getResponseJsonLD(knoraPostRequest)
+      val knoraPostRequest = Put(baseApiUrl + "/v2/values", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
+      val responseJsonDoc  = getResponseJsonLD(knoraPostRequest)
       stillImageFileValueIri.set(
         UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString,
       )
@@ -628,7 +625,7 @@ class KnoraSipiIntegrationV2ITSpec
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      ) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       pdfResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -692,9 +689,7 @@ class KnoraSipiIntegrationV2ITSpec
         .toJsonLd
 
       val request =
-        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       pdfValueIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -732,7 +727,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(
         Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity))
-          ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+          ~> addAuthorization
           ~> addHeader("X-Asset-Ingested", "true"),
       )
 
@@ -778,7 +773,7 @@ class KnoraSipiIntegrationV2ITSpec
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      ) ~> addAuthorization
       val response = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest)
     }
@@ -806,7 +801,7 @@ class KnoraSipiIntegrationV2ITSpec
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      ) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       val resourceIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -866,9 +861,7 @@ class KnoraSipiIntegrationV2ITSpec
         .toJsonLd
 
       val request =
-        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       csvValueIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -911,7 +904,7 @@ class KnoraSipiIntegrationV2ITSpec
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      ) ~> addAuthorization
       val response = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest)
     }
@@ -935,7 +928,7 @@ class KnoraSipiIntegrationV2ITSpec
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      ) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       val resourceIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -995,9 +988,7 @@ class KnoraSipiIntegrationV2ITSpec
         .toJsonLd
 
       val request =
-        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       xmlValueIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -1041,7 +1032,7 @@ class KnoraSipiIntegrationV2ITSpec
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      ) ~> addAuthorization
       val response = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest)
     }
@@ -1067,7 +1058,7 @@ class KnoraSipiIntegrationV2ITSpec
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      ) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       zipResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -1131,9 +1122,7 @@ class KnoraSipiIntegrationV2ITSpec
         .toJsonLd
 
       val request =
-        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       zipValueIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -1180,7 +1169,7 @@ class KnoraSipiIntegrationV2ITSpec
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      ) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       zipResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -1239,7 +1228,7 @@ class KnoraSipiIntegrationV2ITSpec
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      ) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       wavResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -1303,9 +1292,7 @@ class KnoraSipiIntegrationV2ITSpec
         .toJsonLd
 
       val request =
-        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       wavValueIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -1347,7 +1334,7 @@ class KnoraSipiIntegrationV2ITSpec
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      ) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       videoResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
@@ -1411,9 +1398,7 @@ class KnoraSipiIntegrationV2ITSpec
         .toJsonLd
 
       val request =
-        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addAuthorization
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       videoValueIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
