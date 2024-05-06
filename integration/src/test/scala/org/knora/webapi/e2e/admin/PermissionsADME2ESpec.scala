@@ -5,6 +5,7 @@
 
 package org.knora.webapi.e2e.admin
 
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import spray.json._
@@ -13,10 +14,8 @@ import zio.durationInt
 import java.net.URLEncoder
 
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.admin.responder.IntegrationTestAdminJsonProtocol._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
@@ -29,13 +28,9 @@ import org.knora.webapi.util.AkkaHttpUtils
  *
  * This spec tests the 'v1/store' route.
  */
-class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
-  // Directory path for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("admin", "permissions")
+class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
 
-  // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
-  private val customDOAPIri           = "http://rdfh.ch/permissions/00FF/zTOK3HlWTLGgTO8ZWVnotg"
+  private val customDOAPIri = "http://rdfh.ch/permissions/00FF/zTOK3HlWTLGgTO8ZWVnotg"
   "The Permissions Route ('admin/permissions')" when {
     "getting permissions" should {
       "return a group's administrative permission" in {
@@ -55,16 +50,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           .convertTo[String]
 
         assert(iri == "http://rdfh.ch/permissions/00FF/QYdrY7O6QD2VR30oaAt3Yg")
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-administrative-permission-for-project-group-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return a project's administrative permissions" in {
@@ -78,17 +63,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         assert(response.status === StatusCodes.OK, responseToString(response))
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permissions")
         result.asInstanceOf[JsArray].elements.size should be(3)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-administrative-permissions-for-project-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return a project's default object access permissions" in {
@@ -102,17 +76,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         assert(response.status === StatusCodes.OK, responseToString(response))
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permissions")
         result.asInstanceOf[JsArray].elements.size should be(3)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-defaultObjectAccess-permissions-for-project-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return a project's all permissions" in {
@@ -126,17 +89,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         assert(response.status === StatusCodes.OK, responseToString(response))
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("permissions")
         result.asInstanceOf[JsArray].elements.size should be(6)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-permissions-for-project-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
     }
 
@@ -148,17 +100,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
              |    "forProject":"${SharedTestDataADM.anythingProjectIri}",
              |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
              |}""".stripMargin
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-administrative-permission-request",
-              fileExtension = "json",
-            ),
-            text = createAdministrativePermissionRequest,
-          ),
-        )
 
         val request = Post(
           baseApiUrl + s"/admin/permissions/ap",
@@ -186,63 +127,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           .toString()
 
         assert(permissions.contains("ProjectAdminGroupAllPermission"))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-administrative-permission-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
-        val customAPIri = "http://rdfh.ch/permissions/0001/u0PRnDl3kgcbrehZnRlEfA"
-        val createAdministrativePermissionWithCustomIriRequest: String =
-          s"""{
-             |    "id": "$customAPIri",
-             |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-             |    "forProject":"${SharedTestDataADM.anythingProjectIri}",
-             |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
-             |}""".stripMargin
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-administrative-permission-withCustomIRI-request",
-              fileExtension = "json",
-            ),
-            text = createAdministrativePermissionWithCustomIriRequest,
-          ),
-        )
-
-        val createAdministrativePermissionWithCustomIriResponse: String =
-          s"""{
-             |    "administrative_permission": {
-             |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
-             |        "forProject": "http://rdfh.ch/projects/0001",
-             |        "hasPermissions": [
-             |            {
-             |                "additionalInformation": null,
-             |                "name": "ProjectAdminGroupAllPermission",
-             |                "permissionCode": null
-             |            }
-             |        ],
-             |        "iri": "$customAPIri"
-             |    }
-             |}""".stripMargin
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-administrative-permission-withCustomIRI-response",
-              fileExtension = "json",
-            ),
-            text = createAdministrativePermissionWithCustomIriResponse,
-          ),
-        )
       }
 
       "create a new administrative permission for a new project" in {
@@ -295,17 +179,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
              |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-defaultObjectAccess-permission-request",
-              fileExtension = "json",
-            ),
-            text = createDefaultObjectAccessPermissionRequest,
-          ),
-        )
-
         val request = Post(
           baseApiUrl + s"/admin/permissions/doap",
           HttpEntity(ContentTypes.`application/json`, createDefaultObjectAccessPermissionRequest),
@@ -331,17 +204,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           .toString()
 
         assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-defaultObjectAccess-permission-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "create a default object access permission with a custom IRI" in {
@@ -355,17 +217,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
              |    "forResourceClass":"${SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS}",
              |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
              |}""".stripMargin
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-defaultObjectAccess-permission-withCustomIRI-request",
-              fileExtension = "json",
-            ),
-            text = createDefaultObjectAccessPermissionWithCustomIriRequest,
-          ),
-        )
 
         val request = Post(
           baseApiUrl + s"/admin/permissions/doap",
@@ -399,17 +250,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           .toString()
 
         assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-defaultObjectAccess-permission-withCustomIRI-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
     }
 
@@ -422,38 +262,15 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           s"""{
              |    "forGroup": "$newGroupIri"
              |}""".stripMargin
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-administrative-permission-forGroup-request",
-              fileExtension = "json",
-            ),
-            text = updatePermissionGroup,
-          ),
-        )
         val request = Put(
           baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group",
           HttpEntity(ContentTypes.`application/json`, updatePermissionGroup),
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
-        val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
-        val groupIri = result
-          .getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing."))
-          .convertTo[String]
+        val result   = AkkaHttpUtils.httpResponseToJson(response).convertTo[AdministrativePermissionGetResponseADM]
+        val groupIri = result.administrativePermission.forGroup
         assert(groupIri == newGroupIri)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-administrative-permission-forGroup-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "change the group of a default object access permission" in {
@@ -464,16 +281,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           s"""{
              |    "forGroup": "$newGroupIri"
              |}""".stripMargin
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-defaultObjectAccess-permission-forGroup-request",
-              fileExtension = "json",
-            ),
-            text = updatePermissionGroup,
-          ),
-        )
         val request = Put(
           baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group",
           HttpEntity(ContentTypes.`application/json`, updatePermissionGroup),
@@ -486,17 +293,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           .getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing."))
           .convertTo[String]
         assert(groupIri == newGroupIri)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-defaultObjectAccess-permission-forGroup-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "change the set of hasPermissions of an administrative permission" in {
@@ -506,16 +302,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           s"""{
              |   "hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
              |}""".stripMargin
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-administrative-permission-hasPermissions-request",
-              fileExtension = "json",
-            ),
-            text = updateHasPermissions,
-          ),
-        )
         val request = Put(
           baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/hasPermissions",
           HttpEntity(ContentTypes.`application/json`, updateHasPermissions),
@@ -532,16 +318,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           .elements
         permissions.size should be(1)
         assert(permissions.head.asJsObject.fields("name").toString.contains("ProjectAdminGroupAllPermission"))
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-administrative-permission-hasPermissions-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "change the set of hasPermissions of a default object access permission" in {
@@ -551,16 +327,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           s"""{
              |   "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
              |}""".stripMargin
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-defaultObjectAccess-permission-hasPermissions-request",
-              fileExtension = "json",
-            ),
-            text = updateHasPermissions,
-          ),
-        )
         val request = Put(
           baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/hasPermissions",
           HttpEntity(ContentTypes.`application/json`, updateHasPermissions),
@@ -583,16 +349,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             .toString
             .contains("http://www.knora.org/ontology/knora-admin#ProjectMember"),
         )
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-defaultObjectAccess-permission-hasPermissions-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "change the resource class of a default object access permission" in {
@@ -603,16 +359,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           s"""{
              |   "forResourceClass":"$resourceClassIri"
              |}""".stripMargin
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-defaultObjectAccess-permission-forResourceClass-request",
-              fileExtension = "json",
-            ),
-            text = updateResourceClass,
-          ),
-        )
         val request = Put(
           baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/resourceClass",
           HttpEntity(ContentTypes.`application/json`, updateResourceClass),
@@ -628,17 +374,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           )
           .convertTo[String]
         assert(forResourceClassIRI == resourceClassIri)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-defaultObjectAccess-permission-forResourceClass-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "change the property of a default object access permission" in {
@@ -649,16 +384,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           s"""{
              |   "forProperty":"$propertyClassIri"
              |}""".stripMargin
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-defaultObjectAccess-permission-forProperty-request",
-              fileExtension = "json",
-            ),
-            text = updateResourceClass,
-          ),
-        )
         val request = Put(
           baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/property",
           HttpEntity(ContentTypes.`application/json`, updateResourceClass),
@@ -671,17 +396,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           .getOrElse("forProperty", throw DeserializationException("The expected field 'forProperty' is missing."))
           .convertTo[String]
         assert(forProperty == propertyClassIri)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-defaultObjectAccess-permission-forProperty-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
     }
 
@@ -696,16 +410,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         response.status should be(StatusCodes.OK)
         val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
         deletedStatus.convertTo[Boolean] should be(true)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "delete-defaultObjectAccess-permission-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
       "erase an administrative permission" in {
         val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
@@ -717,16 +421,6 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         response.status should be(StatusCodes.OK)
         val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
         deletedStatus.convertTo[Boolean] should be(true)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "delete-administrative-permission-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
     }
   }

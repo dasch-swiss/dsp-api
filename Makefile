@@ -187,13 +187,6 @@ stack-db-only: env-file  ## starts only fuseki.
 ## Test Targets
 #################################
 
-.PHONY: client-test-data
-client-test-data: export KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA := true
-client-test-data: build ## runs the dsp-api e2e and r2r tests and generates client-test-data.
-	$(CURRENT_DIR)/webapi/scripts/zap-client-test-data.sh
-	$(SBTX) -v "integration/testOnly *E2ESpec *E2EZioHttpSpec *R2RSpec"
-	$(CURRENT_DIR)/webapi/scripts/zip-client-test-data.sh
-
 .PHONY: test-repository-upgrade
 test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integration test
 	@rm -rf $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/

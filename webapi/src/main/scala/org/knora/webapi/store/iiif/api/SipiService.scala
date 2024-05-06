@@ -104,11 +104,6 @@ trait SipiService {
   def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse]
 
   /**
-   * Tries to access the IIIF Service.
-   */
-  def getStatus(): Task[IIIFServiceStatusResponse]
-
-  /**
    * Downloads an asset from Sipi.
    *
    * @param asset     The asset to download.

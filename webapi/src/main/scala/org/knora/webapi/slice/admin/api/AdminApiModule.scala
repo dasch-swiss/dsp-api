@@ -11,7 +11,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.admin.AssetPermissionsResponder
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.admin.PermissionsResponder
-import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionRestService
@@ -61,8 +60,7 @@ object AdminApiModule {
       ProjectService &
       TapirToPekkoInterpreter &
       TriplestoreService &
-      UserService &
-      UsersResponder
+      UserService
 
   type Provided = AdminApiEndpoints &
     AdminApiRoutes &

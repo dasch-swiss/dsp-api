@@ -12,7 +12,6 @@ import zio.nio.file.Path
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
-import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusResponse
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
@@ -98,12 +97,6 @@ case class SipiServiceTestDelegator(
    */
   override def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
     sipiService.getTextFileRequest(textFileRequest)
-
-  /**
-   * Tries to access the IIIF Service.
-   */
-  override def getStatus(): Task[IIIFServiceStatusResponse] =
-    sipiService.getStatus()
 
   /**
    * Downloads an asset from Sipi.

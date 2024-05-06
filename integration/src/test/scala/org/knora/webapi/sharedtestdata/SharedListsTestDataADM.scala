@@ -8,7 +8,6 @@ package org.knora.webapi.sharedtestdata
 import org.knora.webapi.messages.admin.responder.listsmessages.ListChildNodeADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListChildNodeInfoADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoADM
-import org.knora.webapi.messages.admin.responder.listsmessages.NodePathElementADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
@@ -49,27 +48,6 @@ object SharedListsTestDataADM {
       children = Seq.empty[ListChildNodeADM],
       position = 1,
       hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab",
-    ),
-  )
-
-  val nodePath: Seq[NodePathElementADM] = Seq(
-    NodePathElementADM(
-      id = "http://rdfh.ch/lists/00FF/691eee1cbe",
-      name = Some("4KUN"),
-      labels = StringLiteralSequenceV2(Vector(StringLiteralV2.from("KUNST", None))),
-      comments = StringLiteralSequenceV2.empty,
-    ),
-    NodePathElementADM(
-      id = "http://rdfh.ch/lists/00FF/2ebd2706c1",
-      name = Some("7"),
-      labels = StringLiteralSequenceV2(Vector(StringLiteralV2.from("FILM UND FOTO", None))),
-      comments = StringLiteralSequenceV2.empty,
-    ),
-    NodePathElementADM(
-      id = "http://rdfh.ch/lists/00FF/c7f07a3fc1",
-      name = Some("1"),
-      labels = StringLiteralSequenceV2(Vector(StringLiteralV2.from("Heidi Film", None))),
-      comments = StringLiteralSequenceV2.empty,
     ),
   )
 

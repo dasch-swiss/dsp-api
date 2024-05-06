@@ -17,7 +17,6 @@ import zio.test.assertTrue
 
 import dsp.errors.AssertionException
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
-import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusResponse
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
@@ -94,8 +93,6 @@ object ValueContentV2Spec extends ZIOSpecDefault {
     ): Task[SuccessResponseV2] =
       ZIO.dieMessage("unsupported operation")
     def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
-      ZIO.dieMessage("unsupported operation")
-    def getStatus(): Task[IIIFServiceStatusResponse] =
       ZIO.dieMessage("unsupported operation")
     def downloadAsset(asset: Asset, targetDir: Path, user: User): Task[Option[Path]] =
       ZIO.dieMessage("unsupported operation")

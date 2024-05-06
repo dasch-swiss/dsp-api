@@ -61,8 +61,6 @@ case class SipiServiceMock() extends SipiService {
 
   override def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] = ???
 
-  override def getStatus(): Task[IIIFServiceStatusResponse] = ZIO.succeed(IIIFServiceStatusOK)
-
   override def downloadAsset(asset: Asset, targetDir: Path, user: User): Task[Option[Path]] = ???
 
   override def getFileMetadataFromDspIngest(

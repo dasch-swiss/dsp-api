@@ -10,9 +10,6 @@ import org.apache.pekko
 import scala.concurrent.duration._
 
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
@@ -27,15 +24,9 @@ import pekko.http.scaladsl.testkit.RouteTestTimeout
 /**
  * End-to-End (E2E) test specification for testing lists endpoint.
  */
-class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol with ListADMJsonProtocol {
+class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol with IntegrationTestListADMJsonProtocol {
 
   implicit def default: RouteTestTimeout = RouteTestTimeout(5.seconds)
-
-  // Directory path for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("admin", "lists")
-
-  // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -68,16 +59,6 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
         AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListNodeInfoADM]]
 
       lists.size should be(9)
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "get-lists-response",
-            fileExtension = "json",
-          ),
-          text = responseToString(response),
-        ),
-      )
     }
 
     "return all lists belonging to the images project" in {
@@ -92,17 +73,6 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
         AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListNodeInfoADM]]
 
       lists.size should be(4)
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "get-image-project-lists-response",
-            fileExtension = "json",
-          ),
-          text = responseToString(response),
-        ),
-      )
     }
 
     "return all lists belonging to the anything project" in {
@@ -117,17 +87,6 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
         AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListNodeInfoADM]]
 
       lists.size should be(4)
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "get-anything-project-lists-response",
-            fileExtension = "json",
-          ),
-          text = responseToString(response),
-        ),
-      )
     }
 
     "return basic list information (w/o children)" in {
@@ -144,17 +103,6 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
       val expectedListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
 
       receivedListInfo.sorted should be(expectedListInfo.sorted)
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "get-list-info-response",
-            fileExtension = "json",
-          ),
-          text = responseToString(response),
-        ),
-      )
     }
 
     "return basic list information (w/o children) for new merged GET route" in {
@@ -172,17 +120,6 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
       val expectedListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
 
       receivedListInfo.sorted should be(expectedListInfo.sorted)
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "get-list-info-response-new-merged-get-route",
-            fileExtension = "json",
-          ),
-          text = responseToString(response),
-        ),
-      )
     }
 
     "return a complete list" in {
@@ -196,17 +133,6 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
       val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
       receivedList.listinfo.sorted should be(treeListInfo.sorted)
       receivedList.children.map(_.sorted) should be(treeListNodes.map(_.sorted))
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "get-list-response",
-            fileExtension = "json",
-          ),
-          text = responseToString(response),
-        ),
-      )
     }
 
     "return node info w/o children" in {
@@ -223,17 +149,6 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
       val expectedListInfo: ListChildNodeInfoADM = SharedListsTestDataADM.treeListNode01Info
 
       receivedListInfo.sorted should be(expectedListInfo.sorted)
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "get-list-node-info-response",
-            fileExtension = "json",
-          ),
-          text = responseToString(response),
-        ),
-      )
     }
 
     "return a complete node with children" in {
@@ -247,17 +162,6 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
       receivedNode.nodeinfo.id should be("http://rdfh.ch/lists/0001/treeList03")
       receivedNode.nodeinfo.name should be(Some("Tree list node 03"))
       receivedNode.children.size should be(2)
-
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "get-node-response",
-            fileExtension = "json",
-          ),
-          text = responseToString(response),
-        ),
-      )
     }
   }
 }

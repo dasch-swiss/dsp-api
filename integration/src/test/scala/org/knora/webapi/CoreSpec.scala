@@ -101,14 +101,8 @@ abstract class CoreSpec
     /* Here we start our app and initialize the repository before each suit runs */
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
-        .run(
-          (for {
-            _ <- AppServer.testWithoutSipi
-            _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-          } yield ()),
-        )
+        .run(AppServer.test *> prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo"))
         .getOrThrow()
-
     }
 
   final override def afterAll(): Unit =

@@ -5,8 +5,6 @@
 
 package org.knora.webapi.e2e.v2
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 import org.apache.pekko.http.scaladsl.model.HttpEntity
 import org.apache.pekko.http.scaladsl.model.HttpResponse
 import org.apache.pekko.http.scaladsl.model.MediaRange
@@ -33,10 +31,7 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.InstanceChecker
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions._
@@ -88,24 +83,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
   )
 
   private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
-
-  // Directory path for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("v2", "resources")
-
-  // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
-
-  private def collectClientTestData(fileName: String, fileContent: String, fileExtension: String = "json"): Unit =
-    clientTestDataCollector.addFile(
-      TestDataFileContent(
-        filePath = TestDataFilePath(
-          directoryPath = clientTestDataPath,
-          filename = fileName,
-          fileExtension = fileExtension,
-        ),
-        text = fileContent,
-      ),
-    )
 
   private def successResponse(message: String): String =
     s"""{
@@ -205,7 +182,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD = testData(responseAsString, "AThing.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
-      collectClientTestData("resource-preview", responseAsString)
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header) in JSON-LD" in {
@@ -425,7 +401,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD = testData(responseAsString, "Testding.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
-      collectClientTestData("testding", responseAsString)
 
       // Check that the resource corresponds to the ontology.
       instanceChecker.check(
@@ -443,7 +418,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD = testData(responseAsString, "ThingWithPicture.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
-      collectClientTestData("thing-with-picture", responseAsString)
 
       // Check that the resource corresponds to the ontology.
       instanceChecker.check(
@@ -583,7 +557,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=both")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
-      collectClientTestData("resource-graph", responseAsString)
       assert(response.status == StatusCodes.OK, responseAsString)
       val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
       val expectedAnswerJSONLD = testData(responseAsString, "ThingGraphBoth.jsonld")
@@ -794,8 +767,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |  }
           |}""".stripMargin
 
-      collectClientTestData("create-resource-with-values-request", createResourceWithValues)
-
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues),
@@ -956,8 +927,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      collectClientTestData("create-resource-with-custom-creation-date", jsonLDEntity)
-
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -1002,8 +971,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "create a resource with a custom IRI" in {
       val customIRI: IRI = SharedTestDataADM.customResourceIRI
       val jsonLDEntity   = createResourceWithCustomIRI(customIRI)
-
-      collectClientTestData("create-resource-with-custom-IRI-request", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1101,8 +1068,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val customValueIRI: IRI = SharedTestDataADM.customValueIRI
       val jsonLDEntity        = createResourceWithCustomValueIRI(customValueIRI)
 
-      collectClientTestData("create-resource-with-custom-value-IRI-request", jsonLDEntity)
-
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -1148,8 +1113,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            | }
            |}""".stripMargin
-
-      collectClientTestData("create-resource-with-custom-value-UUID-request", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1200,8 +1163,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            | }
            |}""".stripMargin
-
-      collectClientTestData("create-resource-with-custom-value-creationDate-request", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1263,11 +1224,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            | }
            |}""".stripMargin
-
-      collectClientTestData(
-        "create-resource-with-custom-resourceIRI-creationDate-ValueIri-ValueUUID-request",
-        jsonLDEntity,
-      )
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1342,8 +1298,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      collectClientTestData("create-resource-as-user", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1432,8 +1386,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             |  }
             |}""".stripMargin
 
-      collectClientTestData("update-resource-metadata-request", jsonLDEntity)
-
       val updateRequest = Put(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -1449,8 +1401,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           ),
         ),
       )
-
-      collectClientTestData("update-resource-metadata-response", updateResponseAsString)
 
       val previewRequest = Get(
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded",
@@ -1507,8 +1457,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             |  }
             |}""".stripMargin
 
-      collectClientTestData("update-resource-metadata-request-with-last-mod-date", jsonLDEntity)
-
       val updateRequest = Put(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -1526,8 +1474,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           ),
         ),
       )
-
-      collectClientTestData("update-resource-metadata-response-with-last-mod-date", updateResponseAsString)
 
       val previewRequest = Get(
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded",
@@ -1578,8 +1524,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             |  }
             |}""".stripMargin
 
-      collectClientTestData("delete-resource-request", jsonLDEntity)
-
       val updateRequest = Post(
         s"$baseApiUrl/v2/resources/delete",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
@@ -1588,8 +1532,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val updateResponseAsString: String = responseToString(updateResponse)
       assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
       assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
-
-      collectClientTestData("delete-resource-response", updateResponseAsString)
 
       val previewRequest = Get(
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded",
@@ -1606,8 +1548,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseType =
         previewJsonLD.body.getRequiredString("@type").fold(msg => throw BadRequestException(msg), identity)
       responseType should equal(KnoraApiV2Complex.DeletedResource)
-
-      collectClientTestData("deleted-resource-preview-response", previewResponseAsString)
     }
 
     "mark a resource as deleted, supplying a custom delete date" in {
@@ -1631,8 +1571,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
             |  }
             |}""".stripMargin
-
-      collectClientTestData("delete-resource-with-custom-delete-date-request", jsonLDEntity)
 
       val updateRequest = Post(
         s"$baseApiUrl/v2/resources/delete",
@@ -1832,8 +1770,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
             |  }
             |}""".stripMargin
-
-      collectClientTestData("erase-resource-request", jsonLDEntity)
 
       val updateRequest = Post(
         s"$baseApiUrl/v2/resources/erase",
@@ -2090,13 +2026,5 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val editValueResponse: HttpResponse = singleAwaitingRequest(editValueRequest)
       assert(editValueResponse.status == StatusCodes.OK, responseToString(editValueResponse))
     }
-
   }
-}
-
-object ResourcesRouteV2E2ESpec {
-  val config: Config = ConfigFactory.parseString("""pekko.loglevel = "DEBUG"
-                                                   |pekko.stdout-loglevel = "DEBUG"
-                                                   |app.triplestore.profile-queries = false
-        """.stripMargin)
 }

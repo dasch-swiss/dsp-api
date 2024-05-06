@@ -8,11 +8,7 @@ package org.knora.webapi.slice.admin.domain.service
 import zio._
 
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.projectsmessages.Project
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponse
+import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -32,36 +28,36 @@ final case class ProjectService(
     .flatMap(ZIO.foreach(_)(toProject))
 
   def findById(id: ProjectIri): Task[Option[Project]] =
-    findByProjectIdentifier(ProjectIdentifierADM.from(id))
+    knoraProjectService.findById(id).flatMap(toProject)
 
   def findByShortcode(shortcode: Shortcode): Task[Option[Project]] =
-    findByProjectIdentifier(ShortcodeIdentifier.from(shortcode))
+    knoraProjectService.findByShortcode(shortcode).flatMap(toProject)
 
   def findByShortname(shortname: Shortname): Task[Option[Project]] =
-    findByProjectIdentifier(ShortnameIdentifier.from(shortname))
+    knoraProjectService.findByShortname(shortname).flatMap(toProject)
 
   def findByIds(id: Seq[ProjectIri]): Task[Seq[Project]] = ZIO.foreach(id)(findById).map(_.flatten)
 
-  private def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[Project]] =
-    knoraProjectService.findById(projectId).flatMap(ZIO.foreach(_)(toProject))
+  private def toProject(knoraProject: Option[KnoraProject]): Task[Option[Project]] =
+    ZIO.foreach(knoraProject)(toProject)
 
-  private def toProject(knoraProject: KnoraProject): Task[Project] = for {
-    ontologies <- ontologyRepo.findByProject(knoraProject).map(_.map(_.ontologyMetadata.ontologyIri.toIri))
-    prj <- ZIO.attempt(
-             Project(
-               id = knoraProject.id.value,
-               shortname = knoraProject.shortname.value,
-               shortcode = knoraProject.shortcode.value,
-               longname = knoraProject.longname.map(_.value),
-               description = knoraProject.description.map(_.value),
-               keywords = knoraProject.keywords.map(_.value),
-               logo = knoraProject.logo.map(_.value),
-               status = knoraProject.status.value,
-               selfjoin = knoraProject.selfjoin.value,
-               ontologies = ontologies,
-             ).unescape,
-           )
-  } yield prj
+  private def toProject(knoraProject: KnoraProject): Task[Project] = ontologyRepo
+    .findByProject(knoraProject)
+    .map(_.map(_.ontologyMetadata.ontologyIri.toIri))
+    .map(ontologies =>
+      Project(
+        knoraProject.id.value,
+        knoraProject.shortname.value,
+        knoraProject.shortcode.value,
+        knoraProject.longname.map(_.value),
+        knoraProject.description.map(_.value),
+        knoraProject.keywords.map(_.value),
+        knoraProject.logo.map(_.value),
+        ontologies,
+        knoraProject.status.value,
+        knoraProject.selfjoin.value,
+      ),
+    )
 
   private def toKnoraProject(project: Project, restrictedView: RestrictedView): KnoraProject =
     KnoraProject(
@@ -78,13 +74,6 @@ final case class ProjectService(
       selfjoin = SelfJoin.from(project.selfjoin),
       restrictedView,
     )
-
-  def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponse]] =
-    for {
-      projectMaybe <- knoraProjectService.findById(id)
-      keywordsMaybe = projectMaybe.map(_.keywords.map(_.value))
-      result        = keywordsMaybe.map(ProjectKeywordsGetResponse.apply)
-    } yield result
 
   def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] = {
     val projectGraph = ProjectService.projectDataNamedGraphV2(project)

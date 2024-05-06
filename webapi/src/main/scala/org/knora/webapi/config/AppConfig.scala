@@ -36,7 +36,6 @@ final case class AppConfig(
   gui: Gui,
   routesToReject: List[String],
   triplestore: Triplestore,
-  clientTestDataService: ClientTestDataService,
   instrumentationServerConfig: InstrumentationServerConfig,
   jwt: JwtConfig,
   dspIngest: DspIngestConfig,
@@ -164,10 +163,6 @@ final case class Fuseki(
   username: String,
   password: String,
   queryLoggingThreshold: Duration = Duration.ofMillis(1000),
-)
-
-final case class ClientTestDataService(
-  collectClientTestData: Boolean,
 )
 
 final case class InstrumentationServerConfig(

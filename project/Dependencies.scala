@@ -12,7 +12,7 @@ import scala.collection.immutable.Seq
 object Dependencies {
   // should be the same version as in docker-compose.yml,
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
-  val fusekiImage = "daschswiss/apache-jena-fuseki:5.0.0-1"
+  val fusekiImage = "daschswiss/apache-jena-fuseki:5.0.0-2"
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.12.2"
 
@@ -23,11 +23,11 @@ object Dependencies {
   val JenaVersion       = "5.0.0"
   val Rdf4jVersion      = "4.3.11"
 
-  val ZioConfigVersion            = "4.0.1"
-  val ZioLoggingVersion           = "2.2.2"
+  val ZioConfigVersion            = "4.0.2"
+  val ZioLoggingVersion           = "2.2.3"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC23"
+  val ZioPreludeVersion           = "1.0.0-RC24"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.22"
 
@@ -42,7 +42,7 @@ object Dependencies {
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
   val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
-  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.5"
+  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.6"
 
   // refined
   val refined = Seq(
@@ -80,8 +80,8 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.0"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.2.3" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.78"
+    "org.springframework.security" % "spring-security-core" % "6.2.4" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.78.1"
 
   // caching
   val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
@@ -89,7 +89,7 @@ object Dependencies {
   // other
   val diff           = "com.sksamuel.diff" % "diff"                % "1.1.11"
   val gwtServlet     = "com.google.gwt"    % "gwt-servlet"         % "2.10.0"
-  val icu4j          = "com.ibm.icu"       % "icu4j"               % "74.2"
+  val icu4j          = "com.ibm.icu"       % "icu4j"               % "75.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"        % "2.0.1"
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
   val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
@@ -97,7 +97,7 @@ object Dependencies {
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"            % "12.4"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"          % "2.0.1" // Should be Scala 3 compatible
   val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld"    % "1.4.0"
-  val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"        % "2.9.1"
+  val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"        % "2.10.0"
 
   // test
   val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion  // Scala 3 incompatible
@@ -111,12 +111,12 @@ object Dependencies {
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.1.0"
   val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.7"
-  val wiremock       = "org.wiremock"       % "wiremock"                 % "3.5.2"
+  val wiremock       = "org.wiremock"       % "wiremock"                 % "3.5.4"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.10.4"
+  val tapirVersion = "1.10.6"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,

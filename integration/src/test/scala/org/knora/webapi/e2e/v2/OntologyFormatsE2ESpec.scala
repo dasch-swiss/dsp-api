@@ -15,9 +15,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -40,26 +37,10 @@ class OntologyFormatsE2ESpec extends E2ESpec {
    *
    * @param urlPath                     the URL path to be used in the request.
    * @param fileBasename                the basename of the test data file containing the expected response.
-   * @param clientTestDataBasename      the basename of the client test data file, if any, to be collected by
-   *                                    [[org.knora.webapi.e2e.ClientTestDataCollector]].
    */
-  private case class HttpGetTest(
-    urlPath: String,
-    fileBasename: String,
-    clientTestDataBasename: Option[String] = None,
-    persistTtl: Boolean = false,
-  ) {
+  private case class HttpGetTest(urlPath: IRI, fileBasename: IRI, persistTtl: Boolean = false) {
     private def makeFile(fileEnding: String = "jsonld"): Path =
       Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$fileEnding")
-
-    /**
-     * If `maybeClientTestDataBasename` is defined, stores the response string in [[org.knora.webapi.e2e.ClientTestDataCollector]].
-     */
-    def storeClientTestData(responseStr: String): Unit =
-      clientTestDataBasename match {
-        case Some(clientTestDataBasename) => CollectClientTestData(clientTestDataBasename, responseStr)
-        case None                         => ()
-      }
 
     def storeAsTtl = {
       val jsonStr = readFile()
@@ -73,7 +54,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     /**
      * Reads the expected response file.
      *
-     * @param mediaType the media type of the response.
      * @return the contents of the file.
      */
     def readFile(): String =
@@ -93,21 +73,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       ()
     }
   }
-
-  private val clientTestDataPath: Seq[String] = Seq("v2", "ontologies")
-  private val clientTestDataCollector         = new ClientTestDataCollector(appConfig)
-
-  private def CollectClientTestData(fileName: String, fileContent: String): Unit =
-    clientTestDataCollector.addFile(
-      TestDataFileContent(
-        filePath = TestDataFilePath(
-          directoryPath = clientTestDataPath,
-          filename = fileName,
-          fileExtension = "json",
-        ),
-        text = fileContent,
-      ),
-    )
 
   private def urlEncodeIri(iri: IRI): String =
     URLEncoder.encode(iri, "UTF-8")
@@ -147,8 +112,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
 
     assert(parseTurtle(responseTtl) == parseJsonLd(responseJsonLd))
     assert(parseRdfXml(responseRdfXml) == parseJsonLd(responseJsonLd))
-
-    httpGetTest.storeClientTestData(responseJsonLd)
   }
 
   private def getResponse(url: String, mediaType: MediaType.NonBinary) = {
@@ -170,7 +133,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       HttpGetTest(
         urlPath = s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Complex.KnoraApiOntologyIri)}",
         fileBasename = "knoraApiOntologyWithValueObjects",
-        clientTestDataBasename = Some("knora-api-ontology"),
       )
 
     private val salsahGuiOntology =
@@ -207,7 +169,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       HttpGetTest(
         urlPath = s"/v2/ontologies/metadata/${urlEncodeIri(SharedTestDataADM.anythingProjectIri)}",
         fileBasename = "anythingOntologyMetadata",
-        clientTestDataBasename = Some("get-ontologies-project-anything-response"),
       )
 
     private val anythingOntologySimple =
@@ -222,7 +183,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         urlPath =
           s"/v2/ontologies/allentities/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost)}",
         fileBasename = "anythingOntologyWithValueObjects",
-        clientTestDataBasename = Some("anything-ontology"),
         persistTtl = true,
       )
 
@@ -231,7 +191,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         urlPath =
           s"/v2/ontologies/classes/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost)}?allLanguages=true",
         fileBasename = "anythingThingWithAllLanguages",
-        clientTestDataBasename = Some("get-class-anything-thing-with-allLanguages-response"),
       )
 
     private val anythingOntologyThingSimple =
@@ -260,7 +219,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         urlPath =
           s"/v2/ontologies/properties/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_HasListItem_PROPERTY_LocalHost)}",
         fileBasename = "anythingHasListItem",
-        clientTestDataBasename = Some("get-property-listValue-response"),
       )
 
     val testCases = Seq(

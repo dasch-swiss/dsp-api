@@ -7,8 +7,7 @@ package org.knora.webapi.slice.admin.api
 
 import sttp.tapir._
 import sttp.tapir.generic.auto._
-import sttp.tapir.json.spray.{jsonBody => sprayJsonBody}
-import sttp.tapir.json.zio.{jsonBody => zioJsonBody}
+import sttp.tapir.json.zio.jsonBody
 import zio._
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
@@ -18,7 +17,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembersh
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.slice.admin.api.PathVars.emailPathVar
 import org.knora.webapi.slice.admin.api.PathVars.userIriPathVar
@@ -66,86 +64,86 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
   object get {
     val users = baseEndpoints.securedEndpoint.get
       .in(base)
-      .out(sprayJsonBody[UsersGetResponseADM])
+      .out(jsonBody[UsersGetResponseADM])
       .description("Returns all users.")
 
     val userByIri = baseEndpoints.withUserEndpoint.get
       .in(base / "iri" / PathVars.userIriPathVar)
-      .out(sprayJsonBody[UserResponseADM])
+      .out(jsonBody[UserResponseADM])
       .description("Returns a user identified by their IRI.")
 
     val userByEmail = baseEndpoints.withUserEndpoint.get
       .in(base / "email" / emailPathVar)
-      .out(sprayJsonBody[UserResponseADM])
+      .out(jsonBody[UserResponseADM])
       .description("Returns a user identified by their Email.")
 
     val userByUsername = baseEndpoints.withUserEndpoint.get
       .in(base / "username" / usernamePathVar)
-      .out(sprayJsonBody[UserResponseADM])
+      .out(jsonBody[UserResponseADM])
       .description("Returns a user identified by their Username.")
 
     val usersByIriProjectMemberShips = baseEndpoints.publicEndpoint.get
       .in(base / "iri" / userIriPathVar / "project-memberships")
-      .out(sprayJsonBody[UserProjectMembershipsGetResponseADM])
+      .out(jsonBody[UserProjectMembershipsGetResponseADM])
       .description("Returns the user's project memberships for a user identified by their IRI.")
 
     val usersByIriProjectAdminMemberShips = baseEndpoints.publicEndpoint.get
       .in(base / "iri" / userIriPathVar / "project-admin-memberships")
-      .out(sprayJsonBody[UserProjectAdminMembershipsGetResponseADM])
+      .out(jsonBody[UserProjectAdminMembershipsGetResponseADM])
       .description("Returns the user's project admin memberships for a user identified by their IRI.")
 
     val usersByIriGroupMemberships = baseEndpoints.publicEndpoint.get
       .in(base / "iri" / userIriPathVar / "group-memberships")
-      .out(sprayJsonBody[UserGroupMembershipsGetResponseADM])
+      .out(jsonBody[UserGroupMembershipsGetResponseADM])
       .description("Returns the user's group memberships for a user identified by their IRI.")
   }
 
   object post {
     val users = baseEndpoints.securedEndpoint.post
       .in(base)
-      .in(zioJsonBody[UserCreateRequest])
-      .out(sprayJsonBody[UserResponseADM])
+      .in(jsonBody[UserCreateRequest])
+      .out(jsonBody[UserResponseADM])
       .description("Create a new user.")
 
     val usersByIriProjectMemberShips = baseEndpoints.securedEndpoint.post
       .in(base / "iri" / PathVars.userIriPathVar / "project-memberships" / AdminPathVariables.projectIri)
-      .out(sprayJsonBody[UserResponseADM])
+      .out(jsonBody[UserResponseADM])
       .description("Add a user to a project identified by IRI.")
 
     val usersByIriProjectAdminMemberShips = baseEndpoints.securedEndpoint.post
       .in(base / "iri" / PathVars.userIriPathVar / "project-admin-memberships" / AdminPathVariables.projectIri)
-      .out(sprayJsonBody[UserResponseADM])
+      .out(jsonBody[UserResponseADM])
       .description("Add a user as an admin to a project identified by IRI.")
 
     val usersByIriGroupMemberShips = baseEndpoints.securedEndpoint.post
       .in(base / "iri" / PathVars.userIriPathVar / "group-memberships" / AdminPathVariables.groupIriPathVar)
-      .out(sprayJsonBody[UserResponseADM])
+      .out(jsonBody[UserResponseADM])
       .description("Add a user to a group identified by IRI.")
   }
 
   object put {
     val usersIriBasicInformation = baseEndpoints.securedEndpoint.put
       .in(base / "iri" / PathVars.userIriPathVar / "BasicUserInformation")
-      .in(zioJsonBody[BasicUserInformationChangeRequest])
-      .out(sprayJsonBody[UserResponseADM])
+      .in(jsonBody[BasicUserInformationChangeRequest])
+      .out(jsonBody[UserResponseADM])
       .description("Update a user's basic information identified by IRI.")
 
     val usersIriPassword = baseEndpoints.securedEndpoint.put
       .in(base / "iri" / PathVars.userIriPathVar / "Password")
-      .in(zioJsonBody[PasswordChangeRequest])
-      .out(sprayJsonBody[UserResponseADM])
+      .in(jsonBody[PasswordChangeRequest])
+      .out(jsonBody[UserResponseADM])
       .description("Change a user's password identified by IRI.")
 
     val usersIriStatus = baseEndpoints.securedEndpoint.put
       .in(base / "iri" / PathVars.userIriPathVar / "Status")
-      .in(zioJsonBody[StatusChangeRequest])
-      .out(sprayJsonBody[UserResponseADM])
+      .in(jsonBody[StatusChangeRequest])
+      .out(jsonBody[UserResponseADM])
       .description("Change a user's status identified by IRI.")
 
     val usersIriSystemAdmin = baseEndpoints.securedEndpoint.put
       .in(base / "iri" / PathVars.userIriPathVar / "SystemAdmin")
-      .in(zioJsonBody[SystemAdminChangeRequest])
-      .out(sprayJsonBody[UserResponseADM])
+      .in(jsonBody[SystemAdminChangeRequest])
+      .out(jsonBody[UserResponseADM])
       .description("Change a user's SystemAdmin status identified by IRI.")
 
   }
@@ -153,22 +151,22 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
   object delete {
     val deleteUser = baseEndpoints.securedEndpoint.delete
       .in(base / "iri" / PathVars.userIriPathVar)
-      .out(sprayJsonBody[UserResponseADM])
+      .out(jsonBody[UserResponseADM])
       .description("Delete a user identified by IRI (change status to false).")
 
     val usersByIriProjectMemberShips = baseEndpoints.securedEndpoint.delete
       .in(base / "iri" / PathVars.userIriPathVar / "project-memberships" / AdminPathVariables.projectIri)
-      .out(sprayJsonBody[UserResponseADM])
+      .out(jsonBody[UserResponseADM])
       .description("Remove a user from a project membership identified by IRI.")
 
     val usersByIriProjectAdminMemberShips = baseEndpoints.securedEndpoint.delete
       .in(base / "iri" / PathVars.userIriPathVar / "project-admin-memberships" / AdminPathVariables.projectIri)
-      .out(sprayJsonBody[UserResponseADM])
+      .out(jsonBody[UserResponseADM])
       .description("Remove a user form an admin project membership identified by IRI.")
 
     val usersByIriGroupMemberShips = baseEndpoints.securedEndpoint.delete
       .in(base / "iri" / PathVars.userIriPathVar / "group-memberships" / AdminPathVariables.groupIriPathVar)
-      .out(sprayJsonBody[UserResponseADM])
+      .out(jsonBody[UserResponseADM])
       .description("Remove a user form an group membership identified by IRI.")
   }
 

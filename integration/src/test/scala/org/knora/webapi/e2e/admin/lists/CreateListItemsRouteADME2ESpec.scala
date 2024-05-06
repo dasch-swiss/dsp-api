@@ -12,9 +12,6 @@ import scala.concurrent.duration._
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.IRI
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.e2e.admin.lists
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -30,15 +27,12 @@ import pekko.http.scaladsl.unmarshalling.Unmarshal
 /**
  * End-to-End (E2E) test specification for testing lists endpoint.
  */
-class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol with ListADMJsonProtocol {
+class CreateListItemsRouteADME2ESpec
+    extends E2ESpec
+    with TriplestoreJsonProtocol
+    with IntegrationTestListADMJsonProtocol {
 
   implicit def default: RouteTestTimeout = RouteTestTimeout(5.seconds)
-
-  // Directory path for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("admin", "lists")
-
-  // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   val anythingUserCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.anythingUser1,
@@ -76,16 +70,6 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-list-with-custom-IRI-request",
-              fileExtension = "json",
-            ),
-            text = createListWithCustomIriRequest,
-          ),
-        )
         val request = Post(
           baseApiUrl + s"/admin/lists",
           HttpEntity(ContentTypes.`application/json`, createListWithCustomIriRequest),
@@ -101,17 +85,6 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
         labels.size should be(1)
         labels.head should be(StringLiteralV2.from(value = "New list with a custom IRI", language = Some("en")))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-list-with-custom-IRI-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return a DuplicateValueException during list creation when the supplied list IRI is not unique" in {
@@ -150,17 +123,6 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-child-node-with-custom-IRI-request",
-              fileExtension = "json",
-            ),
-            text = createChildNodeWithCustomIriRequest,
-          ),
-        )
-
         val encodedParentNodeUrl = java.net.URLEncoder.encode(SharedTestDataADM.customListIRI, "utf-8")
 
         val request = Post(
@@ -179,17 +141,6 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           case something                  => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
         }
         childNodeInfo.id should be(customChildNodeIRI)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-child-node-with-custom-IRI-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
     }
 
@@ -207,16 +158,6 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-list-request",
-              fileExtension = "json",
-            ),
-            text = createListRequest,
-          ),
-        )
         val request = Post(
           baseApiUrl + s"/admin/lists",
           HttpEntity(ContentTypes.`application/json`, createListRequest),
@@ -239,16 +180,6 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val children = receivedList.children
         children.size should be(0)
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-list-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
         // store list IRI for next test
         newListIri.set(listInfo.id)
       }
@@ -362,17 +293,6 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           comment = comment,
         )
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-child-node-request",
-              fileExtension = "json",
-            ),
-            text = addChildToRoot,
-          ),
-        )
-
         val request = Post(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
           HttpEntity(ContentTypes.`application/json`, addChildToRoot),
@@ -406,16 +326,6 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         // check has root node
         val rootNode = childNodeInfo.hasRootNode
         rootNode should be(newListIri.get)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-child-node-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
         firstChildIri.set(childNodeInfo.id)
       }
 
@@ -432,16 +342,7 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           label = label,
           comment = comment,
         )
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "add-second-child-to-root-request",
-              fileExtension = "json",
-            ),
-            text = addSecondChildToRoot,
-          ),
-        )
+
         val request = Post(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
           HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot),
@@ -477,17 +378,6 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         rootNode should be(newListIri.get)
 
         secondChildIri.set(childNodeInfo.id)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "add-second-child-to-root-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "insert new child in a specific position" in {
@@ -507,16 +397,6 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |    "comments": [{ "value": "$comment", "language": "en"}]
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "insert-childNode-in-position-request",
-              fileExtension = "json",
-            ),
-            text = insertChild,
-          ),
-        )
         val request = Post(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
           HttpEntity(ContentTypes.`application/json`, insertChild),
@@ -552,17 +432,6 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         rootNode should be(newListIri.get)
 
         secondChildIri.set(childNodeInfo.id)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "insert-childNode-in-position-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "add child to second child node" in {
@@ -578,16 +447,7 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           label = label,
           comment = comment,
         )
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "add-child-to-second-child-request",
-              fileExtension = "json",
-            ),
-            text = addChildToSecondChild,
-          ),
-        )
+
         val request = Post(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
           HttpEntity(ContentTypes.`application/json`, addChildToSecondChild),
@@ -623,17 +483,6 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         rootNode should be(newListIri.get)
 
         thirdChildIri.set(childNodeInfo.id)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "add-child-to-second-child-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
     }
   }

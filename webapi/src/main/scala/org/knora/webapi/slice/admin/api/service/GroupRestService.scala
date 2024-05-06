@@ -35,7 +35,7 @@ final case class GroupRestService(
 
   def getGroups: Task[GroupsGetResponseADM] = for {
     internal <- groupService.findAllRegularGroups
-    external <- format.toExternalADM(GroupsGetResponseADM(internal))
+    external <- format.toExternal(GroupsGetResponseADM(internal))
   } yield external
 
   def getGroupByIri(iri: GroupIri): Task[GroupGetResponseADM] =
@@ -44,7 +44,7 @@ final case class GroupRestService(
                     .findById(iri)
                     .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
                     .map(GroupGetResponseADM.apply)
-      external <- format.toExternalADM(internal)
+      external <- format.toExternal(internal)
     } yield external
 
   def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
@@ -54,17 +54,17 @@ final case class GroupRestService(
              .findById(iri)
              .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
       internal <- userService.findByGroupMembership(iri).map(GroupMembersGetResponseADM.apply)
-      external <- format.toExternalADM(internal)
+      external <- format.toExternal(internal)
     } yield external
 
   def postGroup(request: GroupCreateRequest, user: User): Task[GroupGetResponseADM] =
     for {
-      _ <- auth.ensureSystemAdminOrProjectAdmin(user, request.project)
+      _ <- auth.ensureSystemAdminOrProjectAdminById(user, request.project)
       project <- knoraProjectService
                    .findById(request.project)
                    .someOrFail(NotFoundException(s"Project <${request.project}> not found."))
       internal <- groupService.createGroup(request, project).map(GroupGetResponseADM.apply)
-      external <- format.toExternalADM(internal)
+      external <- format.toExternal(internal)
     } yield external
 
   def putGroup(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM] =
@@ -77,7 +77,7 @@ final case class GroupRestService(
                          .findById(iri)
                          .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
       internal <- groupService.updateGroup(groupToUpdate, request).map(GroupGetResponseADM.apply)
-      external <- format.toExternalADM(internal)
+      external <- format.toExternal(internal)
     } yield external
 
   def putGroupStatus(iri: GroupIri, request: GroupStatusUpdateRequest, user: User): Task[GroupGetResponseADM] =
@@ -92,7 +92,7 @@ final case class GroupRestService(
       (group, _)       = groupAndProject
       updated         <- knoraGroupService.updateGroupStatus(group, status)
       internal        <- groupService.toGroup(updated).map(GroupGetResponseADM.apply)
-      external        <- format.toExternalADM(internal)
+      external        <- format.toExternal(internal)
     } yield external
 }
 

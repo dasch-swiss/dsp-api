@@ -40,7 +40,6 @@ sipi/tmp-dsp-ingest/
 /*.trig
 
 dependencies.txt
-/client-test-data.zip
 /sipi/images/*
 
 .idea/

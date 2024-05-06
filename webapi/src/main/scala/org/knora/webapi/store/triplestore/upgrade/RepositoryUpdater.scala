@@ -7,28 +7,28 @@ package org.knora.webapi.store.triplestore.upgrade
 
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory
-import zio._
+import zio.Task
+import zio.UIO
+import zio.ZIO
+import zio.ZLayer
 
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.KnoraBaseVersion
+import org.knora.webapi.KnoraBaseVersionString
+import org.knora.webapi.knoraBaseVersionFrom
+import org.knora.webapi.messages.store.triplestoremessages.RepositoryUpdatedResponse
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
+import org.knora.webapi.store.triplestore.upgrade.plugins.MigrateOnlyBuiltInGraphs
 import org.knora.webapi.util.FileUtil
 
 final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
-  // A SPARQL query to find out the knora-base version in a repository.
-  private val knoraBaseVersionQuery =
-    """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-      |
-      |SELECT ?knoraBaseVersion WHERE {
-      |    <http://www.knora.org/ontology/knora-base> knora-base:ontologyVersion ?knoraBaseVersion .
-      |}""".stripMargin
 
   /**
    * Provides logging.
@@ -43,43 +43,29 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
    * @return a response indicating what was done.
    */
   val maybeUpgradeRepository: Task[RepositoryUpdatedResponse] =
-    for {
-      foundRepositoryVersion    <- getRepositoryVersion()
-      requiredRepositoryVersion <- ZIO.succeed(org.knora.webapi.KnoraBaseVersion)
-
-      // Is the repository up to date?
-      repositoryUpToDate <- ZIO.succeed(foundRepositoryVersion.contains(requiredRepositoryVersion))
-
-      repositoryUpdatedResponse <-
-        if (repositoryUpToDate) {
-          // Yes. Nothing more to do.
-          ZIO.succeed(RepositoryUpdatedResponse(s"Repository is up to date at $requiredRepositoryVersion"))
-        } else {
-          for {
-            // No. Construct the list of updates that it needs.
-            _ <-
-              foundRepositoryVersion match {
-                case Some(foundRepositoryVersion) =>
-                  ZIO.logInfo(
-                    s"Repository not up to date. Found: $foundRepositoryVersion, Required: $requiredRepositoryVersion",
-                  )
-                case None =>
-                  ZIO.logWarning(
-                    s"Repository not up to date. Found: None, Required: $requiredRepositoryVersion",
-                  )
-              }
-            _               <- deleteTmpDirectories()
-            selectedPlugins <- selectPluginsForNeededUpdates(foundRepositoryVersion)
-            _ <-
-              ZIO.logInfo(
-                s"Updating repository with transformations: ${selectedPlugins.map(_.versionNumber).mkString(", ")}",
-              )
-
-            // Update it with those plugins.
-            result <- updateRepositoryWithSelectedPlugins(selectedPlugins)
-          } yield result
-        }
-    } yield repositoryUpdatedResponse
+    getRepositoryVersion.flatMap {
+      case Some(version) if version == KnoraBaseVersion =>
+        ZIO.succeed(RepositoryUpdatedResponse(s"Repository is up to date at $KnoraBaseVersionString"))
+      case Some(version) if version > KnoraBaseVersion =>
+        val msg =
+          s"Repository version is higher than the current version of dsp-api: ${version} > $KnoraBaseVersion"
+        ZIO.die(new InconsistentRepositoryDataException(msg))
+      case versionMaybe =>
+        for {
+          _ <- ZIO.logInfo(versionMaybe map { v =>
+                 s"Repository not up to date. Found: $v, Required: $KnoraBaseVersion"
+               } getOrElse {
+                 s"Repository not up to date. Found: None, Required: $KnoraBaseVersion"
+               })
+          _            <- deleteTmpDirectories()
+          updatePlugins = selectPluginsForNeededUpdates(versionMaybe)
+          _ <-
+            ZIO.logInfo(
+              s"Updating repository with transformations: ${updatePlugins.map(_.versionNumber).mkString(", ")}",
+            )
+          result <- updateRepositoryWithSelectedPlugins(updatePlugins)
+        } yield result
+    }
 
   /**
    * Deletes directories inside tmp directory starting with `tmpDirNamePrefix`.
@@ -93,61 +79,45 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
   }.unit.orDie
 
   /**
-   * Determines the `knora-base` version in the repository.
+   * Retrieves the `knora-base:ontologyVersion` version from the repository.
    *
-   * @return the `knora-base` version string, if any, in the repository.
+   * @return The parsed `knora-base:ontologyVersion` as an [[Int]], if any, from the repository.
+   *         Dies with an [[InconsistentRepositoryDataException]] if the version in the repository is invalid.
    */
-  private def getRepositoryVersion(): Task[Option[String]] =
-    for {
-      repositoryVersionResponse <- triplestoreService.query(Select(knoraBaseVersionQuery, isGravsearch = false))
-      bindings                  <- ZIO.succeed(repositoryVersionResponse.results.bindings)
-      versionString <-
-        if (bindings.nonEmpty) {
-          ZIO.succeed(Some(bindings.head.rowMap("knoraBaseVersion")))
-        } else {
-          ZIO.none
-        }
-    } yield versionString
+  private def getRepositoryVersion: Task[Option[Int]] =
+    triplestoreService
+      .query(
+        Select(
+          """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |SELECT ?knoraBaseVersion WHERE {
+            |    <http://www.knora.org/ontology/knora-base> knora-base:ontologyVersion ?knoraBaseVersion .
+            |}""".stripMargin,
+        ),
+      )
+      .map(_.results.bindings.headOption.flatMap(_.rowMap.get("knoraBaseVersion")))
+      .flatMap {
+        case Some(knoraBaseVersion: String) =>
+          ZIO
+            .fromOption(knoraBaseVersionFrom(knoraBaseVersion))
+            .orDieWith(_ => new InconsistentRepositoryDataException(s"Invalid repository version: $knoraBaseVersion"))
+            .map(Some(_))
+        case None => ZIO.none
+      }
 
   /**
    * Constructs a list of update plugins that need to be run to update the repository.
    *
-   * @param maybeRepositoryVersionString the `knora-base` version string, if any, in the repository.
+   * @param maybeRepositoryVersion the `knora-base` version, if any, from in the repository.
    * @return the plugins needed to update the repository.
    */
-  private def selectPluginsForNeededUpdates(
-    maybeRepositoryVersionString: Option[String],
-  ): UIO[Seq[PluginForKnoraBaseVersion]] = {
-
-    // A list of available plugins.
-    val plugins: Seq[PluginForKnoraBaseVersion] =
-      RepositoryUpdatePlan.makePluginsForVersions(log)
-
-    ZIO.attempt {
-      maybeRepositoryVersionString match {
-        case Some(repositoryVersion) =>
-          // The repository has a version string. Get the plugins for all subsequent versions.
-
-          // Make a map of version strings to plugins.
-          val versionsToPluginsMap: Map[String, PluginForKnoraBaseVersion] = plugins.map { plugin =>
-            s"knora-base v${plugin.versionNumber}" -> plugin
-          }.toMap
-
-          val pluginForRepositoryVersion: PluginForKnoraBaseVersion =
-            versionsToPluginsMap.getOrElse(
-              repositoryVersion,
-              throw InconsistentRepositoryDataException(s"No such repository version $repositoryVersion"),
-            )
-
-          plugins.filter { plugin =>
-            plugin.versionNumber > pluginForRepositoryVersion.versionNumber
-          }
-
-        case None =>
-          // The repository has no version string. Include all updates.
-          plugins
-      }
-    }.orDie
+  private def selectPluginsForNeededUpdates(maybeRepositoryVersion: Option[Int]): Seq[PluginForKnoraBaseVersion] = {
+    val repositoryVersion = maybeRepositoryVersion.getOrElse(-1)
+    val plugins = RepositoryUpdatePlan
+      .makePluginsForVersions(log)
+      .filter(_.versionNumber > repositoryVersion)
+    if (plugins.isEmpty) { Seq(PluginForKnoraBaseVersion(KnoraBaseVersion, new MigrateOnlyBuiltInGraphs)) }
+    else { plugins }
   }
 
   /**
@@ -196,9 +166,7 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
       // Upload the transformed repository.
       _ <- ZIO.logInfo("Uploading transformed repository data...")
       _ <- triplestoreService.uploadRepository(graphsWithAppliedMigrationsFile)
-    } yield RepositoryUpdatedResponse(
-      message = s"Updated repository to ${org.knora.webapi.KnoraBaseVersion}",
-    )).orDie
+    } yield RepositoryUpdatedResponse(s"Updated repository to ${org.knora.webapi.KnoraBaseVersionString}")).orDie
   }
 
   /**

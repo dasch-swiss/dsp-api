@@ -40,7 +40,6 @@ import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.common.api._
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
-import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.JwtServiceLive
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
@@ -72,6 +71,7 @@ object LayersLive {
   type DspEnvironmentLive =
     ActorSystem &
       AdminApiEndpoints &
+      AdminModule.Provided &
       ApiRoutes &
       ApiV2Endpoints &
       AppConfigurations &
@@ -79,13 +79,10 @@ object LayersLive {
       AssetPermissionsResponder &
       Authenticator &
       AuthorizationRestService &
-      CacheManager &
       CardinalityHandler &
       ConstructResponseUtilV2 &
       GravsearchTypeInspectionRunner &
       GroupRestService &
-      GroupService &
-      GroupsResponderADM &
       HttpServer &
       IIIFRequestMessageHandler &
       InferenceOptimizationService &
@@ -93,7 +90,6 @@ object LayersLive {
       InvalidTokenCache &
       IriConverter &
       JwtService &
-      KnoraUserToUserConverter &
       ListsResponder &
       ListsResponderV2 &
       MessageRelay &
@@ -108,7 +104,6 @@ object LayersLive {
       ProjectExportStorageService &
       ProjectImportService &
       ProjectRestService &
-      ProjectService &
       QueryTraverser &
       RepositoryUpdater &
       ResourceUtilV2 &
@@ -124,8 +119,6 @@ object LayersLive {
       StringFormatter &
       TriplestoreService &
       UserRestService &
-      UserService &
-      UsersResponder &
       ValuesResponderV2
 
   /**
@@ -149,7 +142,6 @@ object LayersLive {
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
-      GroupsResponderADM.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
@@ -159,7 +151,6 @@ object LayersLive {
       IriService.layer,
       JwtServiceLive.layer,
       KnoraResponseRenderer.layer,
-      KnoraUserToUserConverter.layer,
       ListsResponder.layer,
       ListsResponderV2.layer,
       ManagementEndpoints.layer,
@@ -193,8 +184,6 @@ object LayersLive {
       StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
-      UserService.layer,
-      UsersResponder.layer,
       ValuesResponderV2Live.layer,
       org.knora.webapi.core.ActorSystem.layer,
     )

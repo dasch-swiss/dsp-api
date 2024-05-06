@@ -16,7 +16,6 @@ import zio.test.assertTrue
 import zio.test.check
 
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
@@ -105,18 +104,13 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
       suite("findById")(
         test("return project if it exists") {
           for {
-            _ <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-            project <- KnoraProjectRepo(
-                         _.findById(ProjectIdentifierADM.IriIdentifier.unsafeFrom("http://rdfh.ch/projects/1234")),
-                       )
+            _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
+            project <- KnoraProjectRepo(_.findById(ProjectIri.unsafeFrom("http://rdfh.ch/projects/1234")))
           } yield assertTrue(project.contains(someProject))
         },
         test("return None if project does not exist") {
           for {
-            project <-
-              KnoraProjectRepo(
-                _.findById(ProjectIdentifierADM.IriIdentifier.unsafeFrom("http://rdfh.ch/projects/unknown-project")),
-              )
+            project <- KnoraProjectRepo(_.findById(ProjectIri.unsafeFrom("http://rdfh.ch/projects/unknown-project")))
           } yield assertTrue(project.isEmpty)
         },
         test("should find all built in projects") {
@@ -131,12 +125,12 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         test("return project if it exists") {
           for {
             _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-            project <- KnoraProjectRepo(_.findById(ProjectIdentifierADM.ShortcodeIdentifier.unsafeFrom("1234")))
+            project <- KnoraProjectRepo(_.findByShortcode(Shortcode.unsafeFrom("1234")))
           } yield assertTrue(project.contains(someProject))
         },
         test("return None if project does not exist") {
           for {
-            project <- KnoraProjectRepo(_.findById(ProjectIdentifierADM.ShortcodeIdentifier.unsafeFrom("1234")))
+            project <- KnoraProjectRepo(_.findByShortcode(Shortcode.unsafeFrom("1234")))
           } yield assertTrue(project.isEmpty)
         },
         test("should find all built in projects") {
@@ -151,12 +145,12 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         test("return project if it exists") {
           for {
             _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-            project <- KnoraProjectRepo(_.findById(ProjectIdentifierADM.ShortnameIdentifier.unsafeFrom("project1")))
+            project <- KnoraProjectRepo(_.findByShortname(Shortname.unsafeFrom("project1")))
           } yield assertTrue(project.contains(someProject))
         },
         test("return None if project does not exist") {
           for {
-            project <- KnoraProjectRepo(_.findById(ProjectIdentifierADM.ShortnameIdentifier.unsafeFrom("project1")))
+            project <- KnoraProjectRepo(_.findByShortname(Shortname.unsafeFrom("project1")))
           } yield assertTrue(project.isEmpty)
         },
         test("should find all built in projects") {

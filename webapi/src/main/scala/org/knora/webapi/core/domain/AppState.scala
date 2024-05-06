@@ -17,8 +17,6 @@ object AppState {
   case object RepositoryUpToDate    extends AppState
   case object LoadingOntologies     extends AppState
   case object OntologiesReady       extends AppState
-  case object WaitingForIIIFService extends AppState
-  case object IIIFServiceReady      extends AppState
   case object MaintenanceMode       extends AppState
   case object Running               extends AppState
 }

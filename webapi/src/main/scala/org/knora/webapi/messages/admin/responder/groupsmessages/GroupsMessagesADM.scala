@@ -4,44 +4,20 @@
  */
 
 package org.knora.webapi.messages.admin.responder.groupsmessages
-import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.DefaultJsonProtocol
-import spray.json.JsonFormat
-import spray.json.RootJsonFormat
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
-import org.knora.webapi.IRI
-import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.Group
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Messages
-
-/**
- * An abstract trait representing a request message that can be sent to 'GroupsResponderADM'.
- */
-sealed trait GroupsResponderRequestADM extends KnoraRequestADM with RelayedMessage
-
-/**
- * Get everything about a multiple groups identified by their IRIs. The response will be a
- * [[Set[GroupGetResponseADM] ]], or an error if one or more groups was not found.
- *
- * @param groupIris            the IRIs of the groups being requested
- */
-case class MultipleGroupsGetRequestADM(
-  groupIris: Set[IRI],
-) extends GroupsResponderRequestADM
-
-// Responses
 /**
  * Represents the Knora API v1 JSON response to a request for information about all groups.
  *
  * @param groups information about all existing groups.
  */
-case class GroupsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponseADM with GroupsADMJsonProtocol {
-  def toJsValue = groupsGetResponseADMFormat.write(this)
+final case class GroupsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponseADM
+object GroupsGetResponseADM {
+  implicit val codec: JsonCodec[GroupsGetResponseADM] = DeriveJsonCodec.gen[GroupsGetResponseADM]
 }
 
 /**
@@ -49,21 +25,7 @@ case class GroupsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponseAD
  *
  * @param group all information about the group.
  */
-case class GroupGetResponseADM(group: Group) extends AdminKnoraResponseADM with GroupsADMJsonProtocol {
-  def toJsValue = groupResponseADMFormat.write(this)
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JSON formatting
-
-/**
- * A spray-json protocol for generating Knora API v1 JSON providing data about groups.
- */
-trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol {
-
-  implicit val groupADMFormat: JsonFormat[Group] = jsonFormat6(Group.apply)
-  implicit val groupsGetResponseADMFormat: RootJsonFormat[GroupsGetResponseADM] =
-    jsonFormat(GroupsGetResponseADM.apply, "groups")
-  implicit val groupResponseADMFormat: RootJsonFormat[GroupGetResponseADM] =
-    jsonFormat(GroupGetResponseADM.apply, "group")
+final case class GroupGetResponseADM(group: Group) extends AdminKnoraResponseADM
+object GroupGetResponseADM {
+  implicit val codec: JsonCodec[GroupGetResponseADM] = DeriveJsonCodec.gen[GroupGetResponseADM]
 }

@@ -5,7 +5,6 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
 import spray.json._
@@ -402,6 +401,8 @@ case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
 }
 
 object StringLiteralSequenceV2 {
+  implicit val codec: JsonCodec[StringLiteralSequenceV2] =
+    JsonCodec[Vector[StringLiteralV2]].transform(StringLiteralSequenceV2.apply, _.stringLiterals)
   val empty: StringLiteralSequenceV2 = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
 }
 
@@ -502,7 +503,7 @@ object SparqlResultProtocol extends DefaultJsonProtocol {
 /**
  * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
  */
-trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+trait TriplestoreJsonProtocol extends DefaultJsonProtocol with NullOptions {
 
   implicit object LiteralV2Format extends JsonFormat[StringLiteralV2] {
 
