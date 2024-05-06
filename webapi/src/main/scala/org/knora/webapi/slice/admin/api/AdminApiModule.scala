@@ -37,11 +37,32 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object AdminApiModule {
 
   type Dependencies =
-    AppConfig & AdministrativePermissionService & AssetPermissionsResponder & AuthorizationRestService & BaseEndpoints &
-      CacheManager & GroupService & HandlerMapper & KnoraGroupService & KnoraProjectService & KnoraResponseRenderer &
-      KnoraUserService & KnoraUserToUserConverter & ListsResponder & MaintenanceService & OntologyCache &
-      PasswordService & PermissionsResponder & ProjectExportService & ProjectImportService & ProjectService &
-      TapirToPekkoInterpreter & TriplestoreService & UserService
+    // format: off
+    AdministrativePermissionService &
+    AppConfig &
+    AssetPermissionsResponder &
+    AuthorizationRestService &
+    BaseEndpoints &
+    CacheManager &
+    GroupService &
+    HandlerMapper &
+    KnoraGroupService &
+    KnoraProjectService &
+    KnoraResponseRenderer &
+    KnoraUserService &
+    KnoraUserToUserConverter &
+    ListsResponder &
+    MaintenanceService &
+    OntologyCache &
+    PasswordService &
+    PermissionsResponder &
+    ProjectExportService &
+    ProjectImportService &
+    ProjectService &
+    TapirToPekkoInterpreter &
+    TriplestoreService &
+    UserService
+    // format: on
 
   type Provided = AdminApiEndpoints & AdminApiRoutes &
     // the `*RestService`s are only exposed for the integration tests
