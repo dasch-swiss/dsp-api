@@ -10,7 +10,6 @@ import zio.ZIO
 import java.net.URI
 import java.time.Instant
 import java.util.UUID
-import scala.reflect.ClassTag
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -52,8 +51,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
-
-import PartialFunction.condOpt
+import org.knora.webapi.util.WithAsIs
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -980,7 +978,7 @@ case class UnverifiedValueV2(
 /**
  * The content of the value of a Knora property.
  */
-sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
+sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] with WithAsIs[ValueContentV2] {
   protected implicit def stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   /**
@@ -1044,8 +1042,6 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
    * @return `true` if this [[ValueContentV2]] would duplicate `currentVersion`.
    */
   def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean
-
-  def asOpt[T <: ValueContentV2: ClassTag]: Option[T] = condOpt(this) { case a: T => a }
 }
 
 /**
