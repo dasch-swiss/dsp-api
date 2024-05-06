@@ -363,6 +363,9 @@ class KnoraSipiIntegrationV2ITSpec
     )
   }
 
+  protected def requestJsonLDWithAuth(request: HttpRequest): JsonLDDocument =
+    getResponseJsonLD(request ~> addAuthorization)
+
   "The Knora/Sipi integration" should {
     var loginToken: String = ""
 
@@ -463,8 +466,7 @@ class KnoraSipiIntegrationV2ITSpec
           ontologyName = "anything",
         )
 
-      val request         = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc = getResponseJsonLD(request)
+      val responseJsonDoc = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
       stillImageResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
@@ -608,9 +610,8 @@ class KnoraSipiIntegrationV2ITSpec
             ontologyName = "anything",
           )
 
-      val request         = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc = getResponseJsonLD(request)
-      pdfResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
+      pdfResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}")
@@ -661,9 +662,8 @@ class KnoraSipiIntegrationV2ITSpec
         )
         .toJsonLd
 
-      val request         = Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc = getResponseJsonLD(request)
-      pdfValueIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response = requestJsonLDWithAuth(Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)))
+      pdfValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}")
@@ -758,17 +758,12 @@ class KnoraSipiIntegrationV2ITSpec
       // Create the resource in the API.
 
       val jsonLdEntity = UploadFileRequest
-        .make(
-          fileType = FileType.TextFile,
-          internalFilename = uploadedFile.internalFilename,
-        )
+        .make(fileType = FileType.TextFile, internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val request         = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc = getResponseJsonLD(request)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-      csvResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response    = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
+      val resourceIri = response.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      csvResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}")
@@ -813,9 +808,8 @@ class KnoraSipiIntegrationV2ITSpec
         )
         .toJsonLd
 
-      val request         = Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc = getResponseJsonLD(request)
-      csvValueIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response = requestJsonLDWithAuth(Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)))
+      csvValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(csvResourceIri.get, "UTF-8")}")
@@ -874,11 +868,9 @@ class KnoraSipiIntegrationV2ITSpec
         .make(fileType = FileType.TextFile, internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val request                         = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-      xmlResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response         = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
+      val resourceIri: IRI = response.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      xmlResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}")
@@ -923,9 +915,8 @@ class KnoraSipiIntegrationV2ITSpec
         )
         .toJsonLd
 
-      val request         = Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc = getResponseJsonLD(request)
-      xmlValueIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response = requestJsonLDWithAuth(Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)))
+      xmlValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(xmlResourceIri.get, "UTF-8")}")
@@ -987,9 +978,8 @@ class KnoraSipiIntegrationV2ITSpec
         .make(fileType = FileType.ArchiveFile, internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val request         = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc = getResponseJsonLD(request)
-      zipResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
+      zipResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
@@ -1040,9 +1030,8 @@ class KnoraSipiIntegrationV2ITSpec
         )
         .toJsonLd
 
-      val request         = Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc = getResponseJsonLD(request)
-      zipValueIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response = requestJsonLDWithAuth(Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)))
+      zipValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
@@ -1084,9 +1073,8 @@ class KnoraSipiIntegrationV2ITSpec
         .make(fileType = FileType.ArchiveFile, internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val request         = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc = getResponseJsonLD(request)
-      zipResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
+      zipResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
@@ -1130,9 +1118,8 @@ class KnoraSipiIntegrationV2ITSpec
         .make(fileType = FileType.AudioFile, internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val request         = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc = getResponseJsonLD(request)
-      wavResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
+      wavResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(wavResourceIri.get, "UTF-8")}")
@@ -1183,9 +1170,8 @@ class KnoraSipiIntegrationV2ITSpec
         )
         .toJsonLd
 
-      val request         = Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc = getResponseJsonLD(request)
-      wavValueIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response = requestJsonLDWithAuth(Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)))
+      wavValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(wavResourceIri.get, "UTF-8")}")
@@ -1222,9 +1208,8 @@ class KnoraSipiIntegrationV2ITSpec
         .make(fileType = FileType.MovingImageFile(), internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val request         = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc = getResponseJsonLD(request)
-      videoResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
+      videoResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(videoResourceIri.get, "UTF-8")}")
@@ -1275,9 +1260,8 @@ class KnoraSipiIntegrationV2ITSpec
         )
         .toJsonLd
 
-      val request         = Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val responseJsonDoc = getResponseJsonLD(request)
-      videoValueIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val response = requestJsonLDWithAuth(Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)))
+      videoValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the resource from Knora.
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(videoResourceIri.get, "UTF-8")}")
