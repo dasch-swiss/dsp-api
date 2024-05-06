@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.common.api
 
-import zio._
+import zio.*
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.slice.admin.domain.model.GroupIri

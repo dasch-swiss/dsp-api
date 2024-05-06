@@ -5,7 +5,7 @@
 
 package org.knora.webapi.e2e.admin
 
-import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import zio.ZIO
 

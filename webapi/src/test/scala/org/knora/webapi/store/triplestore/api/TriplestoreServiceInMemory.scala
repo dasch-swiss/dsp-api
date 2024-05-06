@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.triplestore.api
 
-import org.apache.jena.query._
+import org.apache.jena.query.*
 import org.apache.jena.rdf.model
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
@@ -29,13 +29,13 @@ import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.nio.file.Paths
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.TestDatasetBuilder
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask

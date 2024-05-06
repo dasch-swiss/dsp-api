@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.admin.api
 
-import sttp.tapir._
+import sttp.tapir.*
 
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
 import org.knora.webapi.slice.admin.domain.model.GroupIri

@@ -5,12 +5,12 @@
 
 package org.knora.webapi.slice.admin.api
 
-import sttp.tapir._
-import sttp.tapir.generic.auto._
+import sttp.tapir.*
+import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
 
-import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIriPathVar
 import org.knora.webapi.slice.admin.api.AdminPathVariables.permissionIri
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri

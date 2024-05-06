@@ -16,7 +16,7 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter

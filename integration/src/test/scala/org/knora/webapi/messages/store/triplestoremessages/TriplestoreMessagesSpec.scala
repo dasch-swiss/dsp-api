@@ -7,7 +7,7 @@ package org.knora.webapi.messages.store.triplestoremessages
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import spray.json._
+import spray.json.*
 
 import dsp.errors.BadRequestException
 

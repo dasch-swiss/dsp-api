@@ -19,15 +19,15 @@ import zio.ZLayer
 
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
-import org.knora.webapi.slice.admin.domain.model.KnoraGroup.Conversions._
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup.Conversions.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model._
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.projectIriConverter
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
-import org.knora.webapi.slice.admin.repo.rdf.Vocabulary.KnoraAdmin._
+import org.knora.webapi.slice.admin.repo.rdf.Vocabulary.KnoraAdmin.*
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource

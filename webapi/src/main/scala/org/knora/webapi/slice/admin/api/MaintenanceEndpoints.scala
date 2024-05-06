@@ -6,8 +6,8 @@
 package org.knora.webapi.slice.admin.api
 
 import sttp.model.StatusCode
+import sttp.tapir.*
 import sttp.tapir.EndpointIO.Example
-import sttp.tapir._
 import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
 

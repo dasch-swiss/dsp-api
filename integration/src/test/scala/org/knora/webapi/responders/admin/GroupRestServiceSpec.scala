@@ -5,14 +5,14 @@
 
 package org.knora.webapi.responders.admin
 
-import zio._
+import zio.*
 
-import dsp.errors._
-import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.usersmessages._
+import dsp.errors.*
+import org.knora.webapi.*
+import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest

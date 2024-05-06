@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.util.standoff
 
 import com.sksamuel.diffpatch.DiffMatchPatch
-import com.sksamuel.diffpatch.DiffMatchPatch._
+import com.sksamuel.diffpatch.DiffMatchPatch.*
 import org.apache.commons.text.StringEscapeUtils
 
 import java.io.StringReader
@@ -15,11 +15,11 @@ import java.util.UUID
 import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.stream.StreamSource
 import scala.util.control.NonFatal
-import scala.xml._
+import scala.xml.*
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ErrorHandlingMap
 

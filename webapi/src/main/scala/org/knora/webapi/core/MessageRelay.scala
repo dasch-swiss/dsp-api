@@ -5,7 +5,7 @@
 
 package org.knora.webapi.core
 
-import zio._
+import zio.*
 
 import org.knora.webapi.messages.ResponderRequest
 

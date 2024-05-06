@@ -5,15 +5,15 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.transformers
 
+import zio.*
 import zio.ZLayer
-import zio._
 
 import dsp.errors.GravsearchException
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 

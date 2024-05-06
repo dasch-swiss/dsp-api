@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util
 
-import com.ibm.icu.util._
+import com.ibm.icu.util.*
 
 import java.util.Date
 

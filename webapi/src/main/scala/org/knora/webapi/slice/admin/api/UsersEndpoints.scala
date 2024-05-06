@@ -5,10 +5,10 @@
 
 package org.knora.webapi.slice.admin.api
 
-import sttp.tapir._
-import sttp.tapir.generic.auto._
+import sttp.tapir.*
+import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
-import zio._
+import zio.*
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 

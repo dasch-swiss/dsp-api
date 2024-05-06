@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User

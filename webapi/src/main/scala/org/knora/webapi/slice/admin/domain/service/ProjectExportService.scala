@@ -23,7 +23,7 @@ import zio.nio.file.Path
 import java.io.OutputStream
 import scala.collection.mutable
 
-import org.knora.webapi.messages.twirl.queries._
+import org.knora.webapi.messages.twirl.queries.*
 import org.knora.webapi.messages.util.rdf.TriG
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph

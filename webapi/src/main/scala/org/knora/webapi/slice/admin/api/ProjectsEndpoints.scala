@@ -7,8 +7,8 @@ package org.knora.webapi.slice.admin.api
 
 import sttp.capabilities.pekko.PekkoStreams
 import sttp.model.StatusCode
-import sttp.tapir._
-import sttp.tapir.generic.auto._
+import sttp.tapir.*
+import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import zio.Chunk
 import zio.ZLayer
@@ -16,13 +16,13 @@ import zio.ZLayer
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortname
+import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
-import org.knora.webapi.slice.admin.api.model._
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.common.api.BaseEndpoints
 

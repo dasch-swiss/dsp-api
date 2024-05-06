@@ -10,7 +10,7 @@ import java.time.Instant
 import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2

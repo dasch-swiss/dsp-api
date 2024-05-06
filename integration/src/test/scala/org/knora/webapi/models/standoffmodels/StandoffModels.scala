@@ -5,12 +5,12 @@
 
 package org.knora.webapi.models.standoffmodels
 
-import spray.json.DefaultJsonProtocol._
-import spray.json._
+import spray.json.*
+import spray.json.DefaultJsonProtocol.*
 
 import java.util.UUID
 
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords

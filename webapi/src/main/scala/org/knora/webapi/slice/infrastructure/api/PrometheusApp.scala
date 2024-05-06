@@ -5,8 +5,8 @@
 
 package org.knora.webapi.slice.infrastructure.api
 
-import zio._
-import zio.http._
+import zio.*
+import zio.http.*
 import zio.metrics.connectors.prometheus.PrometheusPublisher
 
 /**

@@ -6,13 +6,13 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import zio._
+import zio.*
 
 import java.util.UUID
 import scala.collection.mutable.ListBuffer
 
-import dsp.errors._
-import org.knora.webapi._
+import dsp.errors.*
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -21,7 +21,7 @@ import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages
-import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
@@ -38,7 +38,7 @@ import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
 import org.knora.webapi.slice.admin.domain.service.GroupService
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo._
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService

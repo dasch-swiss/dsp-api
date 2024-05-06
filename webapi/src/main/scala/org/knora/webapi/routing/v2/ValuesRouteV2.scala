@@ -5,19 +5,19 @@
 
 package org.knora.webapi.routing.v2
 
-import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.PathMatcher
 import org.apache.pekko.http.scaladsl.server.Route
-import zio._
+import zio.*
 
 import dsp.errors.BadRequestException
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2

@@ -6,11 +6,11 @@
 package org.knora.webapi.config
 
 import com.typesafe.config.ConfigFactory
-import zio._
-import zio.config._
+import zio.*
+import zio.config.*
+import zio.config.magnolia.*
 import zio.config.magnolia.DeriveConfig.given
-import zio.config.magnolia._
-import zio.config.typesafe._
+import zio.config.typesafe.*
 
 import java.time.Duration
 

@@ -9,11 +9,11 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.InsertDataQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import play.twirl.api.TxtFormat
-import zio._
+import zio.*
 
 import java.nio.file.Path
 
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.slice.common.repo.rdf.RdfModel

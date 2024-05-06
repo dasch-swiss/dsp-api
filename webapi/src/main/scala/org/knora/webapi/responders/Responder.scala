@@ -6,9 +6,9 @@
 package org.knora.webapi
 package responders
 
-import zio._
+import zio.*
 
-import dsp.errors._
+import dsp.errors.*
 
 object Responder {
 

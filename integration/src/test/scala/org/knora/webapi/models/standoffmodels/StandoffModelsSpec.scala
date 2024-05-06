@@ -5,7 +5,7 @@
 
 package org.knora.webapi.models.standoffmodels
 
-import spray.json._
+import spray.json.*
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.StringFormatter

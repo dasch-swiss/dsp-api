@@ -10,15 +10,15 @@ import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-import zio._
+import zio.*
 
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin._
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.admin.repo.rdf.RdfConversions._
+import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource

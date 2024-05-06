@@ -5,11 +5,11 @@
 
 package org.knora.webapi.routing.v2
 
-import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.PathMatcher
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.Route
-import zio._
+import zio.*
 import zio.prelude.Validation
 
 import java.time.Instant
@@ -18,10 +18,10 @@ import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 import dsp.valueobjects.CreatePropertyCommand
-import dsp.valueobjects.Iri._
+import dsp.valueobjects.Iri.*
 import dsp.valueobjects.LangString
-import dsp.valueobjects.Schema._
-import org.knora.webapi._
+import dsp.valueobjects.Schema.*
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
@@ -31,7 +31,7 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.completeResponse

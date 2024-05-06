@@ -5,9 +5,9 @@
 
 package org.knora.webapi.e2ez
 
-import zio._
-import zio.json._
-import zio.test._
+import zio.*
+import zio.json.*
+import zio.test.*
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject

@@ -14,8 +14,8 @@ import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.LanguageCode
-import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.*
+import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
@@ -30,9 +30,9 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateReques
 import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UserRestService
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.slice.admin.domain.model._
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA

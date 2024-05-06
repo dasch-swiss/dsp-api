@@ -7,7 +7,7 @@ package org.knora.webapi.core
 
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
-import zio._
+import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.routing.ApiRoutes

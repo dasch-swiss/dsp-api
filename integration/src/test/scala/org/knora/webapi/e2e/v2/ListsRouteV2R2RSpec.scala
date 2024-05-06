@@ -13,7 +13,7 @@ import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
 
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.routing.v2.ListsRouteV2
