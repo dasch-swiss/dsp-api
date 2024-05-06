@@ -34,6 +34,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.util.WithAsIs
 
 /*
 
@@ -71,7 +72,7 @@ object JsonLDKeywords {
 /**
  * Represents a value in a JSON-LD document.
  */
-sealed trait JsonLDValue extends Ordered[JsonLDValue] {
+sealed trait JsonLDValue extends Ordered[JsonLDValue] with WithAsIs[JsonLDValue] {
 
   /**
    * Converts this JSON-LD value to a `jakarta.json` [[JsonValue]].
