@@ -401,7 +401,7 @@ case class TriplestoreServiceLive(
 
     val formParams = new util.ArrayList[NameValuePair]()
     formParams.add(new BasicNameValuePair("query", query.sparql))
-    formParams.add(new BasicNameValuePair("timeout", "${timeout.toSeconds}"))
+    formParams.add(new BasicNameValuePair("timeout", s"${timeout.toSeconds}"))
 
     val request: HttpPost = new HttpPost(paths.query)
     request.setEntity(new UrlEncodedFormEntity(formParams, Consts.UTF_8))
