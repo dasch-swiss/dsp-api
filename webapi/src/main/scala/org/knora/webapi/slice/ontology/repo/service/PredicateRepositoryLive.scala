@@ -31,7 +31,7 @@ final case class PredicateRepositoryLive(private val tripleStore: TriplestoreSer
   ): Task[List[(InternalIri, Int)]] =
     tripleStore
       .query(Select(countPropertyUsedWithClass(propertyIri, classIri)))
-      .map(_.results.bindings.map(row => (InternalIri(row.rowMap("subject")), row.rowMap("count").toInt)).toList)
+      .map(_.map(row => (InternalIri(row.rowMap("subject")), row.rowMap("count").toInt)).toList)
 }
 
 object PredicateRepositoryLive {

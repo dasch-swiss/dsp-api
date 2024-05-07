@@ -5783,7 +5783,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       assert(
-        actual.results.bindings.map(_.rowMap("cardinalityProp")).sorted == Seq(
+        actual.getColOrThrow("cardinalityProp").sorted == Seq(
           "http://www.knora.org/ontology/0001/anything#testIntProp",
           "http://www.knora.org/ontology/0001/anything#testTextProp",
         ),
@@ -6089,7 +6089,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       assert(
-        actual.results.bindings.map(_.rowMap("cardinalityProp")).sorted == Seq(
+        actual.getColOrThrow("cardinalityProp").sorted == Seq(
           "http://www.knora.org/ontology/0001/freetest#hasBlueTestIntProp",
         ),
       )

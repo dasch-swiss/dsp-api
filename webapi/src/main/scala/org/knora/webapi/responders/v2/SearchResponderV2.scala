@@ -334,9 +334,7 @@ final case class SearchResponderV2Live(
 
       // a sequence of resource IRIs that match the search criteria
       // attention: no permission checking has been done so far
-      resourceIris: Seq[IRI] = prequeryResponse.results.bindings.map { (resultRow: VariableResultsRow) =>
-                                 resultRow.rowMap(FullTextSearchConstants.resourceVar.variableName)
-                               }
+      resourceIris: Seq[IRI] = prequeryResponse.getColOrThrow(FullTextSearchConstants.resourceVar.variableName)
 
       // If the prequery returned some results, prepare a main query.
       mainResourcesAndValueRdfData <-
@@ -472,13 +470,11 @@ final case class SearchResponderV2Live(
       _ <- // query response should contain one result with one row with the name "count"
         ZIO
           .fail(
-            GravsearchException(
-              s"Count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given",
-            ),
+            GravsearchException(s"Count query is expected to return exactly one row, but ${countResponse.size} given"),
           )
-          .when(countResponse.results.bindings.size != 1)
+          .when(countResponse.size != 1)
 
-      count: String = countResponse.results.bindings.head.rowMap("count")
+      count: String = countResponse.getFirstOrThrow("count")
 
     } yield ResourceCountV2(numberOfResources = count.toInt)
 
@@ -546,7 +542,7 @@ final case class SearchResponderV2Live(
           .query(Select(prequerySparql, isGravsearch = true))
           .logError(s"Gravsearch timed out for prequery:\n$prequerySparql")
 
-      pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
+      pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.size
 
       // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
       prequeryResponse =
@@ -557,10 +553,7 @@ final case class SearchResponderV2Live(
 
       // a sequence of resource IRIs that match the search criteria
       // attention: no permission checking has been done so far
-      mainResourceIris: Seq[IRI] =
-        prequeryResponse.results.bindings.map { (resultRow: VariableResultsRow) =>
-          resultRow.rowMap(mainResourceVar.variableName)
-        }
+      mainResourceIris: Seq[IRI] = prequeryResponse.getColOrThrow(mainResourceVar.variableName)
 
       mainQueryResults <-
         if (mainResourceIris.nonEmpty) {
@@ -791,7 +784,7 @@ final case class SearchResponderV2Live(
                      offset = page * appConfig.v2.resourcesSequence.resultsPerPage,
                    )
       sparqlSelectResponse      <- triplestore.query(Select(prequery))
-      mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
+      mainResourceIris: Seq[IRI] = sparqlSelectResponse.getColOrThrow("resource")
 
       // Find out whether to query standoff along with text values. This boolean value will be passed to
       // ConstructResponseUtilV2.makeTextValueContentV2.
@@ -876,11 +869,11 @@ final case class SearchResponderV2Live(
         ZIO
           .fail(
             GravsearchException(
-              s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given",
+              s"Fulltext count query is expected to return exactly one row, but ${countResponse.size} given",
             ),
           )
-          .when(countResponse.results.bindings.length != 1)
-          .as(countResponse.results.bindings.head.rowMap("count"))
+          .when(countResponse.size != 1)
+          .as(countResponse.getFirstOrThrow("count"))
 
     } yield ResourceCountV2(count.toInt)
 
@@ -1042,9 +1035,7 @@ final case class SearchResponderV2Live(
 
     // Construct a sequence of the distinct main resource IRIs in the query results, preserving the
     // order of the result rows.
-    val mainResourceIris: Seq[IRI] = prequeryResponseNotMerged.results.bindings.map { (resultRow: VariableResultsRow) =>
-      resultRow.rowMap(mainResourceVar.variableName)
-    }.distinct
+    val mainResourceIris: Seq[IRI] = prequeryResponseNotMerged.getColOrThrow(mainResourceVar.variableName).distinct
 
     // Arrange the merged rows in the same order.
     val prequeryRowsMerged: Seq[VariableResultsRow] = mainResourceIris.map { resourceIri =>
