@@ -15,13 +15,40 @@ import dsp.errors.InconsistentRepositoryDataException
  */
 case class SparqlSelectResult(head: SparqlSelectResultHeader, results: SparqlSelectResultBody) {
 
+  def getFirstRow: Option[VariableResultsRow] =
+    results.bindings.headOption
+
+  def getFirst(v: String): Option[String] =
+    results.bindings.head.rowMap.get(v)
+
+  def getFirstOrThrow(v: String): String =
+    results.bindings.head.rowMap(v)
+
+  def getCol(v: String): Seq[String] =
+    results.bindings.flatMap(_.rowMap.get(v))
+
+  def getColOrThrow(v: String): Seq[String] =
+    results.bindings.map(_.rowMap(v))
+
+  def map[B](f: VariableResultsRow => B): Seq[B] =
+    results.bindings.map(f)
+
+  def isEmpty: Boolean =
+    results.bindings.isEmpty
+
+  def nonEmpty: Boolean =
+    results.bindings.nonEmpty
+
+  def size: Int =
+    results.bindings.size
+
   /**
    * Returns the contents of the first row of results.
    *
    * @return a [[Map]] representing the contents of the first row of results.
    */
-  def getFirstRow: VariableResultsRow =
-    results.bindings.headOption match {
+  def getFirstRowOrThrow: VariableResultsRow =
+    getFirstRow match {
       case Some(row: VariableResultsRow) => row
       case None                          => throw InconsistentRepositoryDataException(s"A SPARQL query unexpectedly returned an empty result")
     }
