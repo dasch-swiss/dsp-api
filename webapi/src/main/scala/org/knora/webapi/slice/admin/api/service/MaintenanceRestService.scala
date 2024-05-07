@@ -53,7 +53,7 @@ final case class MaintenanceRestService(
     } yield ()
 
   private def executeTextValueCleanupSimpleTextInOntoAction(): IO[BadRequestException, Unit] =
-    maintenanceService.textValueCleanupSimpleTextInOnto().logError.forkDaemon
+    maintenanceService.textValueCleanupSimpleTextInOnto().logError.forkDaemon.unit
 }
 
 object MaintenanceRestService {
