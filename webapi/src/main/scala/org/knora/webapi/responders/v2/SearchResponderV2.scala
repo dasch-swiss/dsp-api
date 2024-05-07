@@ -374,7 +374,7 @@ final case class SearchResponderV2Live(
 
           for {
             query          <- constructTransformer.transform(mainQuery).map(_.toSparql)
-            searchResponse <- triplestore.query(Construct(query, isGravsearch = true)).flatMap(_.asExtended)
+            searchResponse <- triplestore.query(Construct.gravsearch(query)).flatMap(_.asExtended)
             // separate resources and value objects
             queryResultsSep = constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
           } yield queryResultsSep
@@ -467,7 +467,7 @@ final case class SearchResponderV2Live(
                       ontologiesForInferenceMaybe,
                     )
 
-      countResponse <- triplestore.query(Select(countQuery.toSparql, isGravsearch = true))
+      countResponse <- triplestore.query(Select.gravsearch(countQuery.toSparql))
 
       _ <- // query response should contain one result with one row with the name "count"
         ZIO
@@ -543,7 +543,7 @@ final case class SearchResponderV2Live(
 
       prequeryResponseNotMerged <-
         triplestore
-          .query(Select(prequerySparql, isGravsearch = true))
+          .query(Select.gravsearch(prequerySparql))
           .logError(s"Gravsearch timed out for prequery:\n$prequerySparql")
 
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
@@ -621,7 +621,7 @@ final case class SearchResponderV2Live(
 
           for {
             mainQuery         <- constructTransformer.transform(mainQuery, ontologiesForInferenceMaybe).map(_.toSparql)
-            mainQueryResponse <- triplestore.query(Construct(mainQuery, isGravsearch = true)).flatMap(_.asExtended)
+            mainQueryResponse <- triplestore.query(Construct.gravsearch(mainQuery)).flatMap(_.asExtended)
 
             // Filter out values that the user doesn't have permission to see.
             queryResultsFilteredForPermissions =
