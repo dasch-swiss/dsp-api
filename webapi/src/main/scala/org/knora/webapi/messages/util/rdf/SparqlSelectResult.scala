@@ -13,7 +13,7 @@ import dsp.errors.InconsistentRepositoryDataException
  * @param head    the header of the response, containing the variable names.
  * @param results the body of the response, containing rows of query results.
  */
-case class SparqlSelectResult(head: SparqlSelectResultHeader, results: SparqlSelectResultBody) {
+case class SparqlSelectResult(head: SparqlSelectResultHeader, results: SparqlSelectResultBody) { self =>
 
   def getFirstRow: Option[VariableResultsRow] =
     results.bindings.headOption
@@ -25,10 +25,10 @@ case class SparqlSelectResult(head: SparqlSelectResultHeader, results: SparqlSel
     results.bindings.head.rowMap(v)
 
   def getCol(v: String): Seq[String] =
-    flatMap(_.rowMap.get(v))
+    self.flatMap(_.rowMap.get(v))
 
   def getColOrThrow(v: String): Seq[String] =
-    map(_.rowMap(v))
+    self.map(_.rowMap(v))
 
   def map[B](f: VariableResultsRow => B): Seq[B] =
     results.bindings.map(f)
