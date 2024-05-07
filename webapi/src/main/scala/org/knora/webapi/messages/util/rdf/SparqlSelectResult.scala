@@ -19,7 +19,7 @@ case class SparqlSelectResult(head: SparqlSelectResultHeader, results: SparqlSel
     results.bindings.headOption
 
   def getFirst(v: String): Option[String] =
-    results.bindings.head.rowMap.get(v)
+    results.bindings.headOption.flatMap(_.rowMap.get(v))
 
   def getFirstOrThrow(v: String): String =
     results.bindings.head.rowMap(v)
