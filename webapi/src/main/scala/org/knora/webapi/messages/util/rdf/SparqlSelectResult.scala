@@ -25,13 +25,16 @@ case class SparqlSelectResult(head: SparqlSelectResultHeader, results: SparqlSel
     results.bindings.head.rowMap(v)
 
   def getCol(v: String): Seq[String] =
-    results.bindings.flatMap(_.rowMap.get(v))
+    flatMap(_.rowMap.get(v))
 
   def getColOrThrow(v: String): Seq[String] =
-    results.bindings.map(_.rowMap(v))
+    map(_.rowMap(v))
 
   def map[B](f: VariableResultsRow => B): Seq[B] =
     results.bindings.map(f)
+
+  def flatMap[B](f: VariableResultsRow => Iterable[B]): Seq[B] =
+    results.bindings.flatMap(f)
 
   def isEmpty: Boolean =
     results.bindings.isEmpty
