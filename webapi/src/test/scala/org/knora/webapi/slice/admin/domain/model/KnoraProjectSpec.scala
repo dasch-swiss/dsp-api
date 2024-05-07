@@ -6,12 +6,12 @@
 package org.knora.webapi.slice.admin.domain.model
 
 import zio.Scope
-import zio.test._
+import zio.test.*
 
 import scala.util.Random
 
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 
 /**
  * This spec is used to test the [[org.knora.webapi.slice.admin.domain.model.KnoraProject]] value objects creation.

@@ -152,9 +152,11 @@ object HttpMockServer {
       requestPattern: RequestPatternBuilder,
       amount: CountMatchingStrategy = WireMock.exactly(1),
     ): ZIO[WireMockServer, Throwable, Unit] = ZIO.serviceWithZIO[WireMockServer](server =>
-      ZIO.attempt(server.verify(amount, requestPattern)).tapError { e =>
-        Console.printLine(s"\nMockDspApiServer: ${e.getMessage}")
-      },
+      ZIO
+        .attempt(server.verify(amount, requestPattern))
+        .tapError { e =>
+          Console.printLine(s"\nMockDspApiServer: ${e.getMessage}")
+        },
     )
   }
 

@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.search
 
-import zio._
+import zio.*
 
 import dsp.errors.GravsearchOptimizationException
 import org.knora.webapi.InternalSchema

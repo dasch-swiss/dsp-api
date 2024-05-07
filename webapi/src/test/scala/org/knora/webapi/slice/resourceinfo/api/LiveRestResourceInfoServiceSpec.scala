@@ -7,7 +7,7 @@ package org.knora.webapi.slice.resourceinfo.api
 
 import zio.Exit
 import zio.ZIO
-import zio.test._
+import zio.test.*
 
 import java.time.Instant.now
 import java.time.temporal.ChronoUnit.DAYS

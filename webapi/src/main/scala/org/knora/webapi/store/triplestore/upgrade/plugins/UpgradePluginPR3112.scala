@@ -5,9 +5,9 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.{`var` => variable}
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
+import org.eclipse.rdf4j.sparqlbuilder.core.query.*
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query._
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
 import org.knora.webapi.slice.admin.AdminConstants

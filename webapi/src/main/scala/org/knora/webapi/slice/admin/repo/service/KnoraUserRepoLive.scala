@@ -31,8 +31,8 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
-import org.knora.webapi.slice.admin.repo.rdf.RdfConversions._
-import org.knora.webapi.slice.admin.repo.rdf.Vocabulary.KnoraAdmin._
+import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
+import org.knora.webapi.slice.admin.repo.rdf.Vocabulary.KnoraAdmin.*
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource

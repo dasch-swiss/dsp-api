@@ -16,15 +16,15 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
-import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
+import org.knora.webapi.sharedtestdata.SharedPermissionsTestData.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesProjectIri
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesUser02
@@ -410,8 +410,9 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
               CreateDefaultObjectAccessPermissionAPIRequestADM(
                 forProject = imagesProjectIri,
                 forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
-                hasPermissions =
-                  Set(PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value)),
+                hasPermissions = Set(
+                  PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
+                ),
               ),
               rootUser,
               UUID.randomUUID(),

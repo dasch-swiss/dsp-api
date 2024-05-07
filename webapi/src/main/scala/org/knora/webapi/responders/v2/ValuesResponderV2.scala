@@ -5,34 +5,34 @@
 
 package org.knora.webapi.responders.v2
 
-import zio._
+import zio.*
 
 import java.time.Instant
 import java.util.UUID
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.*
 import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
-import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageExternalFileValue
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageFileValue
-import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.PermissionUtilADM._
+import org.knora.webapi.messages.util.PermissionUtilADM.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
@@ -357,11 +357,12 @@ final case class ValuesResponderV2Live(
 
     // If we were creating a file value, have Sipi move the file to permanent storage if the update
     // was successful, or delete the temporary file if the update failed.
-    val fileValue = List(valueToCreate.valueContent)
-      .filter(_.isInstanceOf[FileValueContentV2])
-      .map(_.asInstanceOf[FileValueContentV2])
-
-    resourceUtilV2.doSipiPostUpdate(triplestoreUpdateFuture, fileValue, requestingUser)
+    resourceUtilV2.doSipiPostUpdateIfInTemp(
+      valueToCreate.ingestState,
+      triplestoreUpdateFuture,
+      valueToCreate.valueContent.asOpt[FileValueContentV2].toSeq,
+      requestingUser,
+    )
   }
 
   private def ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(valueContent: ValueContentV2) =
@@ -958,13 +959,13 @@ final case class ValuesResponderV2Live(
               ),
             )
         isSameType = currentValue.valueContent.valueType == submittedInternalValueType
-        isStillImageTypes = {
-          val stillImageFileValues = List(StillImageExternalFileValue, StillImageFileValue)
-          stillImageFileValues.contains(submittedInternalValueType.toInternalIri.value) &&
-          stillImageFileValues.contains(currentValue.valueContent.valueType.toInternalIri.value)
-        }
+        isStillImageTypes =
+          Set(
+            submittedInternalValueType.toInternalIri.value,
+            currentValue.valueContent.valueType.toInternalIri.value,
+          ).subsetOf(Set(StillImageExternalFileValue, StillImageFileValue))
         _ <-
-          ZIO.when(!(isSameType || isStillImageTypes))(
+          ZIO.unless(isSameType || isStillImageTypes)(
             ZIO.fail(
               BadRequestException(
                 s"Value <$valueIri> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, but the submitted type was <$submittedExternalValueType>",
@@ -1229,17 +1230,18 @@ final case class ValuesResponderV2Live(
       updateValue match {
         case updateValueContentV2: UpdateValueContentV2 =>
           // This is a request to update the content of a value.
-          val triplestoreUpdateFuture = IriLocker.runWithIriLock(
+          val triplestoreUpdate = IriLocker.runWithIriLock(
             apiRequestId,
             updateValueContentV2.resourceIri,
             makeTaskFutureToUpdateValueContent(updateValueContentV2),
           )
 
-          val fileValue = List(updateValueContentV2.valueContent)
-            .filter(_.isInstanceOf[FileValueContentV2])
-            .map(_.asInstanceOf[FileValueContentV2])
-
-          resourceUtilV2.doSipiPostUpdate(triplestoreUpdateFuture, fileValue, requestingUser)
+          resourceUtilV2.doSipiPostUpdateIfInTemp(
+            updateValueContentV2.ingestState,
+            triplestoreUpdate,
+            updateValueContentV2.valueContent.asOpt[FileValueContentV2].toSeq,
+            requestingUser,
+          )
 
         case updateValuePermissionsV2: UpdateValuePermissionsV2 =>
           // This is a request to update the permissions attached to a value.

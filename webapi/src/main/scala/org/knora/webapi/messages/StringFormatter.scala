@@ -5,10 +5,10 @@
 
 package org.knora.webapi.messages
 
-import spray.json._
+import spray.json.*
 import zio.ZLayer
 
-import java.time._
+import java.time.*
 import java.time.temporal.ChronoField
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -17,12 +17,12 @@ import scala.util.Success
 import scala.util.Try
 import scala.util.matching.Regex
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.StringFormatter._
+import org.knora.webapi.messages.StringFormatter.*
 import org.knora.webapi.messages.XmlPatterns.nCNamePattern
 import org.knora.webapi.messages.XmlPatterns.nCNameRegex
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2

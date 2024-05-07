@@ -13,7 +13,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.InstrumentationServerConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
@@ -22,23 +22,22 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.IriService
+import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.admin.ListsResponder
-import org.knora.webapi.responders.admin._
-import org.knora.webapi.responders.v2._
+import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
-import org.knora.webapi.routing._
+import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
+import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.api.AdminApiModule
-import org.knora.webapi.slice.admin.api._
 import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UserRestService
-import org.knora.webapi.slice.admin.domain.service._
-import org.knora.webapi.slice.common.api._
+import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.JwtServiceLive
@@ -69,57 +68,60 @@ object LayersLive {
    * The `Environment` that we require to exist at startup.
    */
   type DspEnvironmentLive =
+    // format: off
+    AdminModule.Provided &
     ActorSystem &
-      AdminApiEndpoints &
-      AdminModule.Provided &
-      ApiRoutes &
-      ApiV2Endpoints &
-      AppConfigurations &
-      AppRouter &
-      AssetPermissionsResponder &
-      Authenticator &
-      AuthorizationRestService &
-      CardinalityHandler &
-      ConstructResponseUtilV2 &
-      GravsearchTypeInspectionRunner &
-      GroupRestService &
-      HttpServer &
-      IIIFRequestMessageHandler &
-      InferenceOptimizationService &
-      InstrumentationServerConfig &
-      InvalidTokenCache &
-      IriConverter &
-      JwtService &
-      ListsResponder &
-      ListsResponderV2 &
-      MessageRelay &
-      OntologyCache &
-      OntologyHelpers &
-      OntologyInferencer &
-      OntologyResponderV2 &
-      PermissionRestService &
-      PermissionUtilADM &
-      PermissionsResponder &
-      ProjectExportService &
-      ProjectExportStorageService &
-      ProjectImportService &
-      ProjectRestService &
-      QueryTraverser &
-      RepositoryUpdater &
-      ResourceUtilV2 &
-      ResourceUtilV2 &
-      ResourcesResponderV2 &
-      RestCardinalityService &
-      SearchApiRoutes &
-      SearchResponderV2 &
-      SipiService &
-      StandoffResponderV2 &
-      StandoffTagUtilV2 &
-      State &
-      StringFormatter &
-      TriplestoreService &
-      UserRestService &
-      ValuesResponderV2
+    AdminApiEndpoints &
+    AdminModule.Provided &
+    ApiRoutes &
+    ApiV2Endpoints &
+    AppConfigurations &
+    AppRouter &
+    AssetPermissionsResponder &
+    Authenticator &
+    AuthorizationRestService &
+    CardinalityHandler &
+    ConstructResponseUtilV2 &
+    GravsearchTypeInspectionRunner &
+    GroupRestService &
+    HttpServer &
+    IIIFRequestMessageHandler &
+    InferenceOptimizationService &
+    InstrumentationServerConfig &
+    InvalidTokenCache &
+    IriConverter &
+    JwtService &
+    ListsResponder &
+    ListsResponderV2 &
+    MessageRelay &
+    OntologyCache &
+    OntologyHelpers &
+    OntologyInferencer &
+    OntologyResponderV2 &
+    PermissionRestService &
+    PermissionUtilADM &
+    PermissionsResponder &
+    ProjectExportService &
+    ProjectExportStorageService &
+    ProjectImportService &
+    ProjectRestService &
+    QueryTraverser &
+    RepositoryUpdater &
+    ResourceUtilV2 &
+    ResourceUtilV2 &
+    ResourcesResponderV2 &
+    RestCardinalityService &
+    SearchApiRoutes &
+    SearchResponderV2 &
+    SipiService &
+    StandoffResponderV2 &
+    StandoffTagUtilV2 &
+    State &
+    StringFormatter &
+    TriplestoreService &
+    UserRestService &
+    ValuesResponderV2
+    // format: on
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -136,7 +138,7 @@ object LayersLive {
       AuthenticatorLive.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
-      CardinalityHandlerLive.layer,
+      CardinalityHandler.layer,
       CardinalityService.layer,
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,

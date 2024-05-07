@@ -8,8 +8,8 @@ package org.knora.webapi.slice.admin.repo.service
 import org.eclipse.rdf4j.common.net.ParsedIRI
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.XSD
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.{`var` => variable}
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern

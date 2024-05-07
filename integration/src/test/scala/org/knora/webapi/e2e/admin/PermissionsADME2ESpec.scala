@@ -6,15 +6,15 @@
 package org.knora.webapi.e2e.admin
 
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import spray.json._
+import spray.json.*
 import zio.durationInt
 
 import java.net.URLEncoder
 
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.admin.responder.IntegrationTestAdminJsonProtocol._
+import org.knora.webapi.messages.admin.responder.IntegrationTestAdminJsonProtocol.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -124,7 +124,7 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
             "hasPermissions",
             throw DeserializationException("The expected field 'hasPermissions' is missing."),
           )
-          .toString()
+          .compactPrint
 
         assert(permissions.contains("ProjectAdminGroupAllPermission"))
       }
@@ -201,7 +201,7 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
             "hasPermissions",
             throw DeserializationException("The expected field 'hasPermissions' is missing."),
           )
-          .toString()
+          .compactPrint
 
         assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
       }
@@ -247,7 +247,7 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
             "hasPermissions",
             throw DeserializationException("The expected field 'hasPermissions' is missing."),
           )
-          .toString()
+          .compactPrint
 
         assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
       }

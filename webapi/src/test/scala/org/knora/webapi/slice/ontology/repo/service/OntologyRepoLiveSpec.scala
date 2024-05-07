@@ -8,8 +8,8 @@ package org.knora.webapi.slice.ontology.repo.service
 import zio.Chunk
 import zio.Scope
 import zio.ZIO
+import zio.test.*
 import zio.test.ZIOSpecDefault
-import zio.test._
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter

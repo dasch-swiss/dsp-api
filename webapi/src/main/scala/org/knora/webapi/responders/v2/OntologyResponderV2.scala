@@ -14,21 +14,21 @@ import zio.ZLayer
 import java.time.Instant
 
 import dsp.constants.SalsahGui
-import dsp.errors._
-import org.knora.webapi._
+import dsp.errors.*
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages._
+import org.knora.webapi.messages.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
@@ -2951,8 +2951,8 @@ final case class OntologyResponderV2Live(
 
 object OntologyResponderV2Live {
   val layer: URLayer[
-    AppConfig & CardinalityHandler & CardinalityService & IriService & KnoraProjectService & MessageRelay & OntologyCache &
-      OntologyHelpers & OntologyRepo & StringFormatter & TriplestoreService,
+    AppConfig & CardinalityHandler & CardinalityService & IriService & KnoraProjectService & MessageRelay &
+      OntologyCache & OntologyHelpers & OntologyRepo & StringFormatter & TriplestoreService,
     OntologyResponderV2,
   ] = ZLayer.fromZIO {
     for {

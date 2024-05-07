@@ -6,9 +6,9 @@
 package org.knora.webapi.slice.infrastructure.api
 
 import sttp.model.StatusCode
+import sttp.tapir.*
 import sttp.tapir.AnyEndpoint
-import sttp.tapir._
-import sttp.tapir.generic.auto._
+import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.statusCode
 import zio.UIO
@@ -24,7 +24,7 @@ import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 
-final case class VersionResponse private (
+final case class VersionResponse(
   webapi: String,
   buildCommit: String,
   buildTime: String,

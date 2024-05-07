@@ -15,7 +15,7 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.repo.service.EntityWithId
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
@@ -38,7 +38,7 @@ case class KnoraProject(
 
 object KnoraProject {
 
-  final case class ProjectIri private (override val value: String) extends AnyVal with StringValue {
+  final case class ProjectIri private (override val value: String) extends StringValue {
     def isBuiltInProjectIri: Boolean = ProjectIri.isBuiltInProjectIri(value)
     def isRegularProjectIri: Boolean = !isBuiltInProjectIri
   }
@@ -86,7 +86,7 @@ object KnoraProject {
    *
    * @param value the valid shortcode.
    */
-  final case class Shortcode private (override val value: String) extends AnyVal with StringValue
+  final case class Shortcode private (override val value: String) extends StringValue
 
   object Shortcode extends StringValueCompanion[Shortcode] {
 
@@ -99,7 +99,7 @@ object KnoraProject {
     }
   }
 
-  final case class Shortname private (override val value: String) extends AnyVal with StringValue
+  final case class Shortname private (override val value: String) extends StringValue
 
   object Shortname extends StringValueCompanion[Shortname] {
 
@@ -112,7 +112,7 @@ object KnoraProject {
     }
   }
 
-  final case class Longname private (override val value: String) extends AnyVal with StringValue
+  final case class Longname private (override val value: String) extends StringValue
 
   object Longname extends StringValueCompanion[Longname] {
 
@@ -123,7 +123,7 @@ object KnoraProject {
       else Left("Longname must be 3 to 256 characters long.")
   }
 
-  final case class Description private (override val value: StringLiteralV2) extends AnyVal with Value[StringLiteralV2]
+  final case class Description private (override val value: StringLiteralV2) extends Value[StringLiteralV2]
 
   object Description extends WithFrom[StringLiteralV2, Description] {
 
@@ -135,7 +135,7 @@ object KnoraProject {
       else Left("Description must be 3 to 40960 characters long.")
   }
 
-  final case class Keyword private (override val value: String) extends AnyVal with StringValue
+  final case class Keyword private (override val value: String) extends StringValue
 
   object Keyword extends StringValueCompanion[Keyword] {
 
@@ -145,7 +145,7 @@ object KnoraProject {
       else Left("Keyword must be 3 to 64 characters long.")
   }
 
-  final case class Logo private (override val value: String) extends AnyVal with StringValue
+  final case class Logo private (override val value: String) extends StringValue
 
   object Logo extends StringValueCompanion[Logo] {
 

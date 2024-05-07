@@ -9,12 +9,12 @@ import java.time.Instant
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameJulian
 import org.knora.webapi.messages.util.DatePrecisionYear
-import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
 
@@ -281,8 +281,9 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString =
-              Some("http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320"),
+            maybeValueHasString = Some(
+              "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320",
+            ),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/f89173afca2704",

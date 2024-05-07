@@ -17,7 +17,7 @@ import scala.util.Success
 import scala.util.Using
 
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 
 /**
  * Provides helper methods for specs that test upgrade plugins.

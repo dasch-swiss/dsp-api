@@ -22,7 +22,7 @@ import zio.test.check
 
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.TestDataFactory
-import org.knora.webapi.TestDataFactory.User._
+import org.knora.webapi.TestDataFactory.User.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -36,7 +36,7 @@ import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.slice.admin.domain.service._
+import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TestTripleStore

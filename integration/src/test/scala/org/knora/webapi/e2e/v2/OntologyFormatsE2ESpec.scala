@@ -4,17 +4,17 @@
  */
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.Accept
 import org.scalatest.Inspectors.forEvery
-import spray.json._
+import spray.json.*
 
 import java.net.URLEncoder
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -22,7 +22,7 @@ import org.knora.webapi.messages.util.rdf.RdfFormatUtil
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util._
+import org.knora.webapi.util.*
 
 class OntologyFormatsE2ESpec extends E2ESpec {
 
@@ -42,13 +42,14 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     private def makeFile(fileEnding: String = "jsonld"): Path =
       Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$fileEnding")
 
-    def storeAsTtl = {
+    def storeAsTtl: Unit = {
       val jsonStr = readFile()
       val model   = parseJsonLd(jsonStr)
       val ttlStr  = RdfFormatUtil.format(model, Turtle)
       val newFile = makeFile("ttl")
       Files.createDirectories(newFile.getParent)
-      FileUtil.writeTextFile(newFile, ttlStr)
+      val _ = FileUtil.writeTextFile(newFile, ttlStr)
+      ()
     }
 
     /**
@@ -64,13 +65,10 @@ class OntologyFormatsE2ESpec extends E2ESpec {
 
     def writeReceived(responseStr: String): Unit = {
       val newOutputFile = makeFile()
-
       Files.createDirectories(newOutputFile.getParent)
       FileUtil.writeTextFile(newOutputFile, responseStr)
-
       if (persistTtl) storeAsTtl
-
-      ()
+      else ()
     }
   }
 

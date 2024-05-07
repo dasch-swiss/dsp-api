@@ -5,18 +5,18 @@
 
 package org.knora.webapi
 
-import com.typesafe.scalalogging._
+import com.typesafe.scalalogging.*
 import org.apache.pekko
 import org.apache.pekko.http.scaladsl.client.RequestBuilding
-import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.testkit.TestKitBase
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import spray.json._
-import zio._
-import zio.json._
+import spray.json.*
+import zio.*
+import zio.json.*
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -35,7 +35,7 @@ import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.FileToUpload

@@ -9,7 +9,7 @@ import org.apache.jena.query.QueryExecution
 import org.apache.jena.query.ResultSet
 import org.apache.jena.rdfconnection.RDFConnection
 import org.apache.jena.rdfconnection.RDFConnectionFuseki
-import zio._
+import zio.*
 import zio.http.URL
 import zio.nio.file.Files
 import zio.nio.file.Path

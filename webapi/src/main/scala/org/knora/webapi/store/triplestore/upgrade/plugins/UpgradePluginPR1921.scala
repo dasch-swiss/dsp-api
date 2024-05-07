@@ -8,7 +8,7 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 import com.typesafe.scalalogging.Logger
 
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
@@ -59,36 +59,33 @@ class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
       }
 
     for (statement: Statement <- model) {
-      statement.pred match {
-        case predicate: IriNode =>
-          if (predicate.stringValue == "http://www.knora.org/ontology/knora-admin#groupDescriptions") {
-            statement.obj match {
-              case _: StringWithLanguage =>
-                ()
-              case _: StringLiteralV2 =>
-                ()
-              case _ =>
-                updateGroupDescription(
-                  statement = statement,
-                  languageTag = Some(DEFAULT_LANG),
-                )
-            }
-          }
+      val predicate = statement.pred
+      if (predicate.stringValue == "http://www.knora.org/ontology/knora-admin#groupDescriptions") {
+        statement.obj match {
+          case _: StringWithLanguage =>
+            ()
+          case _: StringLiteralV2 =>
+            ()
+          case _ =>
+            updateGroupDescription(
+              statement = statement,
+              languageTag = Some(DEFAULT_LANG),
+            )
+        }
+      }
 
-          if (predicate.stringValue == "http://www.knora.org/ontology/knora-admin#groupDescription") {
-            statement.obj match {
-              case _: StringWithLanguage =>
-                updateGroupDescription(statement, None)
-              case _: StringLiteralV2 =>
-                updateGroupDescription(statement, None)
-              case _ =>
-                updateGroupDescription(
-                  statement = statement,
-                  languageTag = Some(DEFAULT_LANG),
-                )
-            }
-          }
-        case _ => ()
+      if (predicate.stringValue == "http://www.knora.org/ontology/knora-admin#groupDescription") {
+        statement.obj match {
+          case _: StringWithLanguage =>
+            updateGroupDescription(statement, None)
+          case _: StringLiteralV2 =>
+            updateGroupDescription(statement, None)
+          case _ =>
+            updateGroupDescription(
+              statement = statement,
+              languageTag = Some(DEFAULT_LANG),
+            )
+        }
       }
     }
 

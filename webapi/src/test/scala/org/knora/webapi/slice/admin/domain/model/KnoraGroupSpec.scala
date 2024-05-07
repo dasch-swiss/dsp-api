@@ -5,10 +5,10 @@
 
 package dsp.valueobjects
 
-import zio.test._
+import zio.test.*
 
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.domain.model._
+import org.knora.webapi.slice.admin.domain.model.*
 
 /**
  * This spec is used to test the [[Group]] value objects creation.

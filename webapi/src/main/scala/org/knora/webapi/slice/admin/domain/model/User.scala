@@ -139,7 +139,7 @@ object User {
   implicit val userCodec: JsonCodec[User] = DeriveJsonCodec.gen[User]
 }
 
-final case class UserIri private (value: String) extends AnyVal with StringValue
+final case class UserIri private (value: String) extends StringValue
 
 object UserIri extends StringValueCompanion[UserIri] {
 
@@ -175,7 +175,7 @@ object UserIri extends StringValueCompanion[UserIri] {
   }
 }
 
-final case class Username private (value: String) extends AnyVal with StringValue
+final case class Username private (value: String) extends StringValue
 
 object Username extends StringValueCompanion[Username] {
 
@@ -210,7 +210,7 @@ object Username extends StringValueCompanion[Username] {
     }
 }
 
-final case class Email private (value: String) extends AnyVal with StringValue
+final case class Email private (value: String) extends StringValue
 
 object Email extends StringValueCompanion[Email] {
   private val EmailRegex: Regex = """^.+@.+$""".r
@@ -226,21 +226,21 @@ object Email extends StringValueCompanion[Email] {
     }
 }
 
-final case class GivenName private (value: String) extends AnyVal with StringValue
+final case class GivenName private (value: String) extends StringValue
 
 object GivenName extends StringValueCompanion[GivenName] {
   def from(value: String): Either[String, GivenName] =
     Option.when(value.nonEmpty)(GivenName(value)).toRight(UserErrorMessages.GivenNameMissing)
 }
 
-final case class FamilyName private (value: String) extends AnyVal with StringValue
+final case class FamilyName private (value: String) extends StringValue
 
 object FamilyName extends StringValueCompanion[FamilyName] {
   def from(value: String): Either[String, FamilyName] =
     Option.when(value.nonEmpty)(FamilyName(value)).toRight(UserErrorMessages.FamilyNameMissing)
 }
 
-final case class Password private (value: String) extends AnyVal with StringValue
+final case class Password private (value: String) extends StringValue
 
 object Password extends StringValueCompanion[Password] {
 
@@ -257,7 +257,7 @@ object Password extends StringValueCompanion[Password] {
     }
 }
 
-final case class PasswordHash private (value: String) extends AnyVal with StringValue
+final case class PasswordHash private (value: String) extends StringValue
 object PasswordHash extends StringValueCompanion[PasswordHash] {
 
   def from(hashedValue: String): Either[String, PasswordHash] =
@@ -266,14 +266,14 @@ object PasswordHash extends StringValueCompanion[PasswordHash] {
 
 }
 
-final case class PasswordStrength private (value: Int) extends AnyVal with IntValue
+final case class PasswordStrength private (value: Int) extends IntValue
 
 object PasswordStrength extends IntValueCompanion[PasswordStrength] {
   def from(i: Int): Either[String, PasswordStrength] =
     Option.unless(i < 4 || i > 31)(PasswordStrength(i)).toRight(UserErrorMessages.PasswordStrengthInvalid)
 }
 
-final case class UserStatus private (value: Boolean) extends AnyVal with BooleanValue
+final case class UserStatus private (value: Boolean) extends BooleanValue
 
 object UserStatus {
 
@@ -283,7 +283,7 @@ object UserStatus {
   def from(value: Boolean): UserStatus = if (value) Active else Inactive
 }
 
-final case class SystemAdmin private (value: Boolean) extends AnyVal with BooleanValue
+final case class SystemAdmin private (value: Boolean) extends BooleanValue
 
 object SystemAdmin {
   val IsSystemAdmin: SystemAdmin        = SystemAdmin(true)

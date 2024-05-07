@@ -6,16 +6,16 @@
 package org.knora.webapi.messages.util.search.gravsearch.types
 
 import org.apache.pekko
-import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.matchers.must.Matchers.*
 import zio.RIO
 import zio.ZIO
 
 import dsp.errors.GravsearchException
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM

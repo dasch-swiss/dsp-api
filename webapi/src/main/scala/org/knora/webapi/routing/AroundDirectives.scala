@@ -13,7 +13,7 @@ import org.apache.pekko.http.scaladsl.model.StatusCodes.NotFound
 import org.slf4j.LoggerFactory
 
 import pekko.http.scaladsl.server.Directive0
-import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Directives.*
 
 /**
  * Pekko HTTP directives which can be wrapped around a [[pekko.http.scaladsl.server.Route]]].

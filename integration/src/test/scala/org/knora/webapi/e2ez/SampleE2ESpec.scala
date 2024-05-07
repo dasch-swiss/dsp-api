@@ -5,8 +5,8 @@
 
 package org.knora.webapi.e2ez
 
-import zio.json._
-import zio.test._
+import zio.json.*
+import zio.test.*
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -47,7 +47,7 @@ object SampleE2ESpec extends E2EZSpec {
     } yield assertTrue(
       response.name == "version",
       response.webapi.startsWith("v"),
-      response.scala.startsWith("2.13."),
+      response.scala.startsWith("3.3."),
     )
   }
 

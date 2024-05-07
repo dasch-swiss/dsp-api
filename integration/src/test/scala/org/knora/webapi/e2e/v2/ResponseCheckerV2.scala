@@ -8,7 +8,7 @@ package org.knora.webapi.e2e.v2
 import dsp.errors.AssertionException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 
 object ResponseCheckerV2 {
 

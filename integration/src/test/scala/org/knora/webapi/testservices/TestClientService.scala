@@ -20,9 +20,9 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.util.EntityUtils
 import org.apache.pekko
 import org.apache.pekko.actor.ActorSystem
+import spray.json.*
 import spray.json.JsObject
-import spray.json._
-import zio._
+import zio.*
 
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
@@ -35,9 +35,9 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol.*
 import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponse
-import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponseJsonProtocol._
+import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponseJsonProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
@@ -92,14 +92,17 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   ): Task[pekko.http.scaladsl.model.HttpResponse] =
     ZIO
       .fromFuture[pekko.http.scaladsl.model.HttpResponse](_ =>
-        pekko.http.scaladsl.Http().singleRequest(request).map { resp =>
-          if (printFailure && resp.status.isFailure()) {
-            Unmarshal(resp.entity).to[String].map { body =>
-              println(s"Request failed with status ${resp.status} and body $body")
+        pekko.http.scaladsl
+          .Http()
+          .singleRequest(request)
+          .map { resp =>
+            if (printFailure && resp.status.isFailure()) {
+              val _ = Unmarshal(resp.entity).to[String].map { body =>
+                println(s"Request failed with status ${resp.status} and body $body")
+              }
             }
-          }
-          resp
-        },
+            resp
+          },
       )
       .timeout(timeout.getOrElse(10.seconds))
       .some

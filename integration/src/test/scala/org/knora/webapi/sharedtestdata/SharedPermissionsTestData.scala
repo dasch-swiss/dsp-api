@@ -10,8 +10,8 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Administrat
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ObjectAccessPermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
-import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.*
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo

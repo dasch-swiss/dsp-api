@@ -11,14 +11,14 @@ import java.util.UUID
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
-import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne

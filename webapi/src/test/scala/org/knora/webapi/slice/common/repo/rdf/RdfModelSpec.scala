@@ -5,11 +5,11 @@
 
 package org.knora.webapi.slice.common.repo.rdf
 
-import zio._
-import zio.test.Assertion._
-import zio.test._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
-import org.knora.webapi.slice.common.repo.rdf.Errors._
+import org.knora.webapi.slice.common.repo.rdf.Errors.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 object RdfModelSpec extends ZIOSpecDefault {

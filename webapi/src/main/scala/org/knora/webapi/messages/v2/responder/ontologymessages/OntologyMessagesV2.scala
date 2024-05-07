@@ -8,7 +8,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.apache.pekko
-import zio._
+import zio.*
 
 import java.time.Instant
 import java.util.UUID
@@ -22,10 +22,10 @@ import dsp.errors.DataConversionException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.Rdfs
@@ -33,9 +33,9 @@ import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
@@ -3062,35 +3062,15 @@ object ClassInfoContentV2 {
 
     // If this is a custom datatype, get its definition.
     val datatypeInfo: Option[DatatypeInfoV2] =
-      jsonLDClassDef.maybeIriInObject(OntologyConstants.Owl.OnDatatype, stringFormatter.toSmartIriWithErr) match {
-        case Some(onDatatype: SmartIri) =>
+      jsonLDClassDef.maybeIriInObject(OntologyConstants.Owl.OnDatatype, stringFormatter.toSmartIriWithErr).map {
+        (onDatatype: SmartIri) =>
           val pattern: Option[String] = jsonLDClassDef
             .getObject(OntologyConstants.Owl.WithRestrictions)
-            .fold(e => throw BadRequestException(e), identity) match {
-            case Some(jsonLDValue: JsonLDValue) =>
-              jsonLDValue match {
-                case jsonLDObject: JsonLDObject =>
-                  Some(
-                    jsonLDObject
-                      .getRequiredString(OntologyConstants.Xsd.Pattern)
-                      .fold(msg => throw BadRequestException(msg), identity),
-                  )
-
-                case other =>
-                  throw BadRequestException(s"Object of owl:withRestrictions must be an object, but got $other")
-              }
-
-            case None => None
-          }
-
-          Some(
-            DatatypeInfoV2(
-              onDatatype = onDatatype,
-              pattern = pattern,
-            ),
-          )
-
-        case None => None
+            .fold(e => throw BadRequestException(e), identity)
+            .map(
+              _.getRequiredString(OntologyConstants.Xsd.Pattern).fold(msg => throw BadRequestException(msg), identity),
+            )
+          DatatypeInfoV2(onDatatype, pattern)
       }
 
     ClassInfoContentV2(

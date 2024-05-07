@@ -29,8 +29,8 @@ class ErrorHandlingMap[A, B](
 ) extends Map[A, B] {
 
   // As an optimization, if the Map we're supposed to wrap is another ErrorHandlingMap, wrap its underlying wrapped Map instead.
-  private val wrapped: Map[A, B] = toWrap match {
-    case errHandlingMap: ErrorHandlingMap[A, B] => errHandlingMap.wrapped
+  private val wrapped: Map[A, B] = (toWrap: Map[A, B]) match {
+    case errHandlingMap: ErrorHandlingMap[_, _] => errHandlingMap.wrapped.asInstanceOf[Map[A, B]]
     case otherMap                               => otherMap
   }
 

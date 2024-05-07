@@ -8,13 +8,13 @@ package org.knora.webapi.responders.v2
 import org.apache.pekko
 import zio.ZIO
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
-import dsp.errors._
-import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages._
+import dsp.errors.*
+import org.knora.webapi.*
+import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM

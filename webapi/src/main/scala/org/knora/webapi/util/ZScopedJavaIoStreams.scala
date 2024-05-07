@@ -5,9 +5,9 @@
 
 package org.knora.webapi.util
 
-import zio._
+import zio.*
 
-import java.io._
+import java.io.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipInputStream

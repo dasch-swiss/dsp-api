@@ -20,7 +20,7 @@
     rdf:type           owl:Ontology ;
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
-    :ontologyVersion   "knora-base v37" .
+    :ontologyVersion   "knora-base v38" .
 
 
 #################################################################
@@ -2233,7 +2233,10 @@
 
 :hasTitle
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "has title"@en ;
+    rdfs:label              "Title"@en ,
+                            "Titel"@de ,
+                            "Titre"@fr ,
+                            "Titolo"@it ;
     rdfs:comment            "Indicates the title of a resource"@en ;
     :subjectClassConstraint :Resource ;
     :objectClassConstraint  :TextValue ;
@@ -2249,7 +2252,10 @@
 
 :hasDescription
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "has description"@en ;
+    rdfs:label              "Description"@en ,
+                            "Beschreibung"@de ,
+                            "Description"@fr ,
+                            "Descrizione"@it ;
     rdfs:comment            "Indicates the description of a resource"@en ;
     :subjectClassConstraint :Resource ;
     :objectClassConstraint  :TextValue ;
@@ -2265,7 +2271,10 @@
 
 :hasKeyword
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "has keyword"@en ;
+    rdfs:label              "Keywords"@en ,
+                            "Schlagwörter"@de ,
+                            "Mots clés"@fr ,
+                            "Parole chiave"@it ;
     rdfs:comment            "Indicates a keyword of a resource"@en ;
     :subjectClassConstraint :Resource ;
     :objectClassConstraint  :TextValue ;
@@ -2281,7 +2290,10 @@
 
 :relatesTo
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "relates to"@en ;
+    rdfs:label              "Related Resources"@en ,
+                            "Verknüpfte Ressourcen"@de ,
+                            "Ressources associées"@fr ,
+                            "Risorse correlate"@it ;
     rdfs:comment            "Indicates that this resource relates to another resource"@en ;
     :subjectClassConstraint :Resource ;
     :objectClassConstraint  :Resource ;
@@ -2307,8 +2319,10 @@
 
 :isSegmentOf
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "ist Segment von"@de,
-                            "is segment of"@en ;
+    rdfs:label              "Segment of"@en  ,
+                            "Segment von"@de ,
+                            "Segment de"@fr ,
+                            "Segmento di"@it ;
     rdfs:comment            "Indicates that this resource is a segment of a video or audio resource"@en ;
     :subjectClassConstraint :Segment  ;
     :objectClassConstraint  :Representation ;
@@ -2332,8 +2346,10 @@
 
 :isAudioSegmentOf
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "ist Audio-Segment von"@de,
-                            "is audio segment of"@en ;
+    rdfs:label              "Segment of"@en ,
+                            "Segment von"@de ,
+                            "Segment de"@fr ,
+                            "Segmento di"@it ;
     rdfs:comment            "Indicates that this resource is a segment of an audio resource"@en ;
     :subjectClassConstraint :AudioSegment  ;
     :objectClassConstraint  :AudioRepresentation ;
@@ -2355,8 +2371,10 @@
 
 :isVideoSegmentOf
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "ist Video-Segment von"@de,
-                            "is video segment of"@en ;
+    rdfs:label              "Segment of"@en ,
+                            "Segment von"@de ,
+                            "Segment de"@fr ,
+                            "Segmento di"@it ;
     rdfs:comment            "Indicates that this resource is a segment of a video resource"@en ;
     :subjectClassConstraint :VideoSegment  ;
     :objectClassConstraint  :MovingImageRepresentation ;
@@ -2382,8 +2400,10 @@
     :subjectClassConstraint :Segment  ;
     :isEditable             true ;
     rdfs:subPropertyOf      :hasValue ;
-    rdfs:label              "Segment-Grenzen"@de,
-                            "Segment Bounds"@en ;
+    rdfs:label              "Segment Bounds"@en ,
+                            "Segmentgrenzen"@de ,
+                            "Limites du segment"@fr ,
+                            "Limiti del segmento"@it ;
     rdfs:comment            "Indicates the bounds of a segment, i.e. the start and end point in the containing resource."@en .
 
 
@@ -2421,8 +2441,10 @@
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :relatesToValue ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
-    rdfs:label         "Segment"@de,
-                       "Segment"@en ;
+    rdfs:label         "Segment"@de ,
+                       "Segment"@en ,
+                       "Segment"@fr ,
+                       "Segmento"@it ;
     :canBeInstantiated false ;
     rdfs:comment       "A resource representing a sub-segment of another resource"@en .
 
@@ -2438,8 +2460,10 @@
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :isAudioSegmentOfValue  ;
                          owl:cardinality    "1"^^xsd:nonNegativeInteger ] ;
-    rdfs:label         "Audio-Segment"@de,
-                       "Audio Segment"@en ;
+    rdfs:label         "Audio-Segment"@de ,
+                       "Audiosegment"@en ,
+                       "Segment audio"@fr ,
+                       "Segmento audio"@it ;
     :canBeInstantiated true ;
     rdfs:comment       "A segment of an audio resource"@en .
 
@@ -2455,8 +2479,10 @@
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :isVideoSegmentOfValue  ;
                          owl:cardinality    "1"^^xsd:nonNegativeInteger ] ;
-    rdfs:label         "Video-Segment"@de,
-                       "Video Segment"@en ;
+    rdfs:label         "Video-Segment"@de ,
+                       "Videosegment"@en ,
+                       "Segment vidéo"@fr ,
+                       "Segmento video"@it ;
     :canBeInstantiated true ;
     rdfs:comment       "A segment of a video resource"@en .
 

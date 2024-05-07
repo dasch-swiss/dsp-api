@@ -5,14 +5,14 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import zio._
+import zio.*
 
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri

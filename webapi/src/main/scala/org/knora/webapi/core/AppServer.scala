@@ -6,7 +6,7 @@
 package org.knora.webapi.core
 
 import org.apache.pekko.actor
-import zio._
+import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.domain.AppState
@@ -97,7 +97,8 @@ final case class AppServer(
 object AppServer {
 
   type AppServerEnvironment =
-    actor.ActorSystem & AppConfig & HttpServer & OntologyCache & RepositoryUpdater & SipiService & State & TriplestoreService
+    actor.ActorSystem & AppConfig & HttpServer & OntologyCache & RepositoryUpdater & SipiService & State &
+      TriplestoreService
 
   /**
    * Initializes the AppServer instance with the required services

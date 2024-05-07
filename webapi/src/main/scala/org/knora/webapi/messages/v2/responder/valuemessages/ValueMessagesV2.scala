@@ -18,30 +18,30 @@ import dsp.errors.NotImplementedException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex._
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.*
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
-import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
+import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.routing.v2.AssetIngestState
+import org.knora.webapi.routing.v2.AssetIngestState.*
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -51,6 +51,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
+import org.knora.webapi.util.WithAsIs
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -705,10 +706,8 @@ object CreateValueV2 {
     }
 }
 
-/**
- * A trait for classes representing information to be updated in a value.
- */
-trait UpdateValueV2 {
+/** A trait for classes representing information to be updated in a value. */
+sealed trait UpdateValueV2 {
 
   /**
    * The IRI of the resource containing the value.
@@ -735,6 +734,7 @@ trait UpdateValueV2 {
    */
   val valueCreationDate: Option[Instant]
 }
+
 object UpdateValueV2 {
 
   /**
@@ -745,6 +745,7 @@ object UpdateValueV2 {
    * @return a case class instance representing the input.
    */
   def fromJsonLd(
+    ingestState: AssetIngestState,
     jsonLdString: String,
     requestingUser: User,
   ): ZIO[IriConverter & SipiService & StringFormatter & MessageRelay, Throwable, UpdateValueV2] =
@@ -766,7 +767,7 @@ object UpdateValueV2 {
               jsonLDObject.maybeStringWithValidation(HasPermissions, validationFun)
             }
           shortcode    <- ZIO.fromOption(resourceIri.getProjectCode).orElseFail(NotFoundException("Shortcode not found."))
-          fileInfo     <- ValueContentV2.getFileInfo(shortcode, AssetIngestState.AssetInTemp, jsonLDObject).option
+          fileInfo     <- ValueContentV2.getFileInfo(shortcode, ingestState, jsonLDObject).option
           valueContent <- ValueContentV2.fromJsonLdObject(jsonLDObject, requestingUser, fileInfo)
         } yield UpdateValueContentV2(
           resourceIri = resourceIri.toString,
@@ -777,6 +778,7 @@ object UpdateValueV2 {
           permissions = maybePermissions,
           valueCreationDate = maybeValueCreationDate,
           newValueVersionIri = maybeNewIri,
+          ingestState = ingestState,
         )
 
       def makeUpdateValuePermissionsV2(
@@ -927,6 +929,7 @@ case class UpdateValueContentV2(
   permissions: Option[String] = None,
   valueCreationDate: Option[Instant] = None,
   newValueVersionIri: Option[SmartIri] = None,
+  ingestState: AssetIngestState = AssetInTemp,
 ) extends UpdateValueV2
 
 /**
@@ -975,7 +978,7 @@ case class UnverifiedValueV2(
 /**
  * The content of the value of a Knora property.
  */
-sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
+sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] with WithAsIs[ValueContentV2] {
   protected implicit def stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   /**
@@ -1588,12 +1591,10 @@ case class TextValueContentV2(
           // return standoff tag with updated attributes
           standoffTag.copy(
             standoffNode = standoffTag.standoffNode.copy(attributes = attributesWithStandoffNodeIriReferences),
-            startParentIri = startParentIndex.map(parentIndex =>
-              startIndexesToStandoffNodeIris(parentIndex),
-            ), // If there's a start parent index, get its IRI, otherwise None
-            endParentIri = endParentIndex.map(parentIndex =>
-              startIndexesToStandoffNodeIris(parentIndex),
-            ), // If there's an end parent index, get its IRI, otherwise None
+            // If there's a start parent index, get its IRI, otherwise None
+            startParentIri = startParentIndex.map(startIndexesToStandoffNodeIris(_)),
+            // If there's an end parent index, get its IRI, otherwise None
+            endParentIri = endParentIndex.map(startIndexesToStandoffNodeIris(_)),
           )
       }
 

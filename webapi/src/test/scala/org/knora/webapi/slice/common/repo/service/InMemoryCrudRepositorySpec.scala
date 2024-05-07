@@ -9,8 +9,8 @@ import zio.Chunk
 import zio.Ref
 import zio.ZIO
 import zio.ZLayer
+import zio.test.*
 import zio.test.Assertion.hasSameElements
-import zio.test._
 
 final case class SomeEntity(id: Int, name: String)
 final case class InMemoryRepository(entities: Ref[Chunk[SomeEntity]])
@@ -27,7 +27,7 @@ object InMemoryCrudRepositorySpec extends ZIOSpecDefault {
   private val otherEntity = SomeEntity(2, "other")
   private val twoEntities = List(someEntity, otherEntity)
 
-  val spec: Spec[InMemoryRepository, Throwable]#ZSpec[Any, Throwable, TestSuccess] =
+  val spec =
     suite("InMemoryCrudRepository")(
       test("should be empty initially")(repo(_.findAll()).map(actual => assertTrue(actual.isEmpty))),
       test("should save and find entity")(for {

@@ -6,7 +6,7 @@
 package org.knora.webapi.core.actors
 
 import org.apache.pekko.actor.Actor
-import zio._
+import zio.*
 
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.core.MessageRelay

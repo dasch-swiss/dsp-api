@@ -6,16 +6,16 @@
 package org.knora.webapi.slice.ontology.repo.service
 
 import com.typesafe.scalalogging.LazyLogging
-import zio._
+import zio.*
 
 import java.time.Instant
 
-import dsp.errors._
+import dsp.errors.*
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.KnoraBaseVersionString
 import org.knora.webapi.OntologySchema
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -23,8 +23,8 @@ import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.OntologyUtil
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
-import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
 import org.knora.webapi.slice.admin.domain.model.User

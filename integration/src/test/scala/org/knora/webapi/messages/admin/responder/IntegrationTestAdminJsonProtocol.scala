@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.admin.responder
 
-import spray.json._
+import spray.json.*
 
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsGetResponseADM

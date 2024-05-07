@@ -7,7 +7,7 @@ package dsp.valueobjects
 
 import zio.NonEmptyChunk
 import zio.prelude.Validation
-import zio.test._
+import zio.test.*
 
 import dsp.constants.SalsahGui
 import dsp.errors.ValidationException

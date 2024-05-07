@@ -5,12 +5,13 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
+import sttp.tapir.Schema
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.json.jsonDiscriminator
 
 import dsp.valueobjects.Iri
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
@@ -52,6 +53,7 @@ object ListsGetResponseADM {
 sealed trait ListItemGetResponseADM extends AdminKnoraResponseADM
 object ListItemGetResponseADM {
   implicit lazy val codec: JsonCodec[ListItemGetResponseADM] = DeriveJsonCodec.gen[ListItemGetResponseADM]
+  implicit def schema: Schema[ListItemGetResponseADM]        = Schema.derived[ListItemGetResponseADM]
 }
 
 /**
@@ -62,6 +64,7 @@ object ListItemGetResponseADM {
 final case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM
 object ListGetResponseADM {
   implicit lazy val codec: JsonCodec[ListGetResponseADM] = DeriveJsonCodec.gen[ListGetResponseADM]
+  implicit def schema: Schema[ListGetResponseADM]        = Schema.derived[ListGetResponseADM]
 }
 
 /**
@@ -72,6 +75,7 @@ object ListGetResponseADM {
 final case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM
 object ListNodeGetResponseADM {
   implicit lazy val codec: JsonCodec[ListNodeGetResponseADM] = DeriveJsonCodec.gen[ListNodeGetResponseADM]
+  implicit def schema: Schema[ListNodeGetResponseADM]        = Schema.derived[ListNodeGetResponseADM]
 }
 
 /**
@@ -81,6 +85,7 @@ object ListNodeGetResponseADM {
 sealed trait NodeInfoGetResponseADM extends AdminKnoraResponseADM
 object NodeInfoGetResponseADM {
   implicit lazy val codec: JsonCodec[NodeInfoGetResponseADM] = DeriveJsonCodec.gen[NodeInfoGetResponseADM]
+  implicit def schema: Schema[NodeInfoGetResponseADM]        = Schema.derived[NodeInfoGetResponseADM]
 }
 
 /**
@@ -91,6 +96,7 @@ object NodeInfoGetResponseADM {
 final case class RootNodeInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends NodeInfoGetResponseADM
 object RootNodeInfoGetResponseADM {
   implicit lazy val codec: JsonCodec[RootNodeInfoGetResponseADM] = DeriveJsonCodec.gen[RootNodeInfoGetResponseADM]
+  implicit def schema: Schema[RootNodeInfoGetResponseADM]        = Schema.derived[RootNodeInfoGetResponseADM]
 }
 
 /**
@@ -101,12 +107,14 @@ object RootNodeInfoGetResponseADM {
 final case class ChildNodeInfoGetResponseADM(nodeinfo: ListChildNodeInfoADM) extends NodeInfoGetResponseADM
 object ChildNodeInfoGetResponseADM {
   implicit lazy val codec: JsonCodec[ChildNodeInfoGetResponseADM] = DeriveJsonCodec.gen[ChildNodeInfoGetResponseADM]
+  implicit def schema: Schema[ChildNodeInfoGetResponseADM]        = Schema.derived[ChildNodeInfoGetResponseADM]
 }
 
 @jsonDiscriminator("type")
 sealed trait ListItemDeleteResponseADM extends AdminKnoraResponseADM
 object ListItemDeleteResponseADM {
   implicit lazy val codec: JsonCodec[ListItemDeleteResponseADM] = DeriveJsonCodec.gen[ListItemDeleteResponseADM]
+  implicit def schema: Schema[ListItemDeleteResponseADM]        = Schema.derived[ListItemDeleteResponseADM]
 }
 
 /**
@@ -117,6 +125,7 @@ object ListItemDeleteResponseADM {
 final case class ListDeleteResponseADM(iri: IRI, deleted: Boolean) extends ListItemDeleteResponseADM
 object ListDeleteResponseADM {
   implicit lazy val codec: JsonCodec[ListDeleteResponseADM] = DeriveJsonCodec.gen[ListDeleteResponseADM]
+  implicit def schema: Schema[ListDeleteResponseADM]        = Schema.derived[ListDeleteResponseADM]
 }
 
 /**
@@ -128,6 +137,7 @@ object ListDeleteResponseADM {
 final case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteResponseADM
 object ChildNodeDeleteResponseADM {
   implicit lazy val codec: JsonCodec[ChildNodeDeleteResponseADM] = DeriveJsonCodec.gen[ChildNodeDeleteResponseADM]
+  implicit def schema: Schema[ChildNodeDeleteResponseADM]        = Schema.derived[ChildNodeDeleteResponseADM]
 }
 
 /**
@@ -146,6 +156,7 @@ object NodePositionChangeResponseADM {
 sealed trait ListItemADM
 object ListItemADM {
   implicit lazy val codec: JsonCodec[ListItemADM] = DeriveJsonCodec.gen[ListItemADM]
+  implicit def schema: Schema[ListItemADM]        = Schema.derived[ListItemADM]
 }
 
 final case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM]) extends ListItemADM {
@@ -159,6 +170,7 @@ final case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildN
 }
 object ListADM {
   implicit lazy val codec: JsonCodec[ListADM] = DeriveJsonCodec.gen[ListADM]
+  implicit def schema: Schema[ListADM]        = Schema.derived[ListADM]
 }
 
 final case class NodeADM(nodeinfo: ListChildNodeInfoADM, children: Seq[ListChildNodeADM]) extends ListItemADM {
@@ -172,6 +184,7 @@ final case class NodeADM(nodeinfo: ListChildNodeInfoADM, children: Seq[ListChild
 }
 object NodeADM {
   implicit lazy val codec: JsonCodec[NodeADM] = DeriveJsonCodec.gen[NodeADM]
+  implicit def schema: Schema[NodeADM]        = Schema.derived[NodeADM]
 }
 
 /**
@@ -229,6 +242,7 @@ sealed trait ListNodeInfoADM {
 }
 object ListNodeInfoADM {
   implicit lazy val codec: JsonCodec[ListNodeInfoADM] = DeriveJsonCodec.gen[ListNodeInfoADM]
+  implicit def schema: Schema[ListNodeInfoADM]        = Schema.derived[ListNodeInfoADM]
 }
 
 final case class ListRootNodeInfoADM(
@@ -295,6 +309,7 @@ final case class ListRootNodeInfoADM(
 }
 object ListRootNodeInfoADM {
   implicit lazy val codec: JsonCodec[ListRootNodeInfoADM] = DeriveJsonCodec.gen[ListRootNodeInfoADM]
+  implicit def schema: Schema[ListRootNodeInfoADM]        = Schema.derived[ListRootNodeInfoADM]
 }
 
 final case class ListChildNodeInfoADM(
@@ -361,6 +376,7 @@ final case class ListChildNodeInfoADM(
 }
 object ListChildNodeInfoADM {
   implicit lazy val codec: JsonCodec[ListChildNodeInfoADM] = DeriveJsonCodec.gen[ListChildNodeInfoADM]
+  implicit def schema: Schema[ListChildNodeInfoADM]        = Schema.derived[ListChildNodeInfoADM]
 }
 
 /**
@@ -421,6 +437,7 @@ sealed trait ListNodeADM {
 }
 object ListNodeADM {
   implicit lazy val codec: JsonCodec[ListNodeADM] = DeriveJsonCodec.gen[ListNodeADM]
+  implicit def schema: Schema[ListNodeADM]        = Schema.derived[ListNodeADM]
 }
 
 /**
@@ -494,6 +511,7 @@ final case class ListRootNodeADM(
 }
 object ListRootNodeADM {
   implicit lazy val codec: JsonCodec[ListRootNodeADM] = DeriveJsonCodec.gen[ListRootNodeADM]
+  implicit def schema: Schema[ListRootNodeADM]        = Schema.derived[ListRootNodeADM]
 }
 
 /**
@@ -564,4 +582,5 @@ final case class ListChildNodeADM(
 }
 object ListChildNodeADM {
   implicit lazy val codec: JsonCodec[ListChildNodeADM] = DeriveJsonCodec.gen[ListChildNodeADM]
+  implicit def schema: Schema[ListChildNodeADM]        = Schema.derived[ListChildNodeADM]
 }

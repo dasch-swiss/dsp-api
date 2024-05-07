@@ -13,9 +13,9 @@ import eu.timepit.refined.string.MatchesRegex
 import zio.Chunk
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
-import zio.json.interop.refined._
+import zio.json.interop.refined.*
 
-import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec._
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 object MaintenanceRequests {
@@ -30,6 +30,9 @@ object MaintenanceRequests {
       widthRefined  <- refineV[Positive](width)
       heightRefined <- refineV[Positive](height)
     } yield Dimensions(widthRefined, heightRefined)
+
+    def unsafeFrom(width: Int, height: Int): Dimensions =
+      from(width, height).fold(e => throw IllegalArgumentException(e), identity)
 
     implicit val codec: JsonCodec[Dimensions] = DeriveJsonCodec.gen[Dimensions]
   }

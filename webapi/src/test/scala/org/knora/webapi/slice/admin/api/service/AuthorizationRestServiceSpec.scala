@@ -7,8 +7,8 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio.Exit
 import zio.ZIO
+import zio.test.*
 import zio.test.Assertion.failsWithA
-import zio.test._
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.TestDataFactory

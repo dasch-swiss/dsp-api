@@ -6,14 +6,14 @@
 package org.knora.webapi.it
 
 import org.apache.pekko
-import spray.json._
+import spray.json.*
 
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import org.knora.webapi.ITKnoraLiveSpec
 
-import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.*
 
 /**
  * End-to-End (E2E) test specification for testing route rejections.
@@ -33,7 +33,7 @@ class VersionRouteITSpec extends ITKnoraLiveSpec {
     val responseBodyJson = getJsonResponse
     var result           = false
     try {
-      val value = responseBodyJson.fields(field).toString().replaceAll("\"", "")
+      val value = responseBodyJson.fields(field).compactPrint.replaceAll("\"", "")
       result = !value.equals("")
     } catch {
       case _: NoSuchElementException => result = false
@@ -51,7 +51,7 @@ class VersionRouteITSpec extends ITKnoraLiveSpec {
 
     "return 'version' as name" in {
       val responseBodyJson = getJsonResponse
-      val value            = responseBodyJson.fields("name").toString().replaceAll("\"", "")
+      val value            = responseBodyJson.fields("name").compactPrint.replaceAll("\"", "")
       assert(value.equals("version"))
     }
 

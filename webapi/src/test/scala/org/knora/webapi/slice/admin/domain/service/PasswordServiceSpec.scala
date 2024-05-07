@@ -11,7 +11,6 @@ import zio.URIO
 import zio.ZIO
 import zio.ZLayer
 import zio.test.Spec
-import zio.test.TestSuccess
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
@@ -38,7 +37,7 @@ object PasswordServiceSpec extends ZIOSpecDefault {
   private def matches(raw: String, hash: PasswordHash): URIO[PasswordService, Boolean] =
     ZIO.serviceWith[PasswordService](_.matches(Password.unsafeFrom(raw), hash))
 
-  val spec: Spec[PasswordService, Nothing]#ZSpec[Any, Nothing, TestSuccess] =
+  val spec =
     suite("PasswordService")(
       test("hashPassword - should hash new passwords with BCrypt") {
         val somePassword = "password"

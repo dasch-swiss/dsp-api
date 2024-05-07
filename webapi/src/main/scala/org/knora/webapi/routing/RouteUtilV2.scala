@@ -5,17 +5,17 @@
 
 package org.knora.webapi.routing
 
-import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.RouteResult
-import zio._
+import zio.*
 import zio.prelude.Validation
 
 import scala.concurrent.Future
 import scala.util.control.Exception.catching
 
 import dsp.errors.BadRequestException
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2

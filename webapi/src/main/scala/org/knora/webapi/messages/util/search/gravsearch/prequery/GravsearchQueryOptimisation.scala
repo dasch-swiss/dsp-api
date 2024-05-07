@@ -10,7 +10,7 @@ import scalax.collection.immutable.Graph
 
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveEntitiesInferredFromProperty.removeEntitiesInferredFromProperty
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveRedundantKnoraApiResource.removeRedundantKnoraApiResource
 import org.knora.webapi.messages.util.search.gravsearch.prequery.ReorderPatternsByDependency.reorderPatternsByDependency
@@ -116,16 +116,13 @@ private object RemoveEntitiesInferredFromProperty {
     val optionalEntities: Seq[TypeableEntity] = patterns.collect { case optionalPattern: OptionalPattern =>
       optionalPattern
     }.flatMap {
-      case optionalPattern: OptionalPattern =>
-        optionalPattern.patterns.flatMap {
-          case pattern: StatementPattern =>
-            GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj) ++ GravsearchTypeInspectionUtil
-              .maybeTypeableEntity(pattern.obj)
+      _.patterns.flatMap {
+        case pattern: StatementPattern =>
+          GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj) ++ GravsearchTypeInspectionUtil
+            .maybeTypeableEntity(pattern.obj)
 
-          case _ => None
-        }
-
-      case _ => None
+        case _ => None
+      }
     }
 
     // Remove statements whose predicate is rdf:type, type of subject is inferred from a property,

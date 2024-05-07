@@ -14,7 +14,7 @@ import org.knora.webapi.messages.OntologyConstants.KnoraBase.AttachedToProject
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.LastModificationDate
 import org.knora.webapi.messages.OntologyConstants.Owl.Ontology
 import org.knora.webapi.messages.OntologyConstants.Xsd.DateTime
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo.builtIn.SystemProject
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 

@@ -11,7 +11,7 @@ import zio.json.JsonCodec
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
 

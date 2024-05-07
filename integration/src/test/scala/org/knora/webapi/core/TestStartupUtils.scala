@@ -6,7 +6,7 @@
 package org.knora.webapi.core
 
 import com.typesafe.scalalogging.LazyLogging
-import zio._
+import zio.*
 
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances

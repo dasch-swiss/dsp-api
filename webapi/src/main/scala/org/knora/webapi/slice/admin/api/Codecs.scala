@@ -11,7 +11,8 @@ import zio.json.JsonCodec
 
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
-import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
@@ -23,7 +24,6 @@ import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.slice.admin.domain.model._
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue

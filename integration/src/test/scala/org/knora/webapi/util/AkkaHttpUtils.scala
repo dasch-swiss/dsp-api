@@ -7,12 +7,12 @@ package org.knora.webapi.util
 
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.pekko
-import spray.json._
+import spray.json.*
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import pekko.actor.ActorSystem
 import pekko.http.scaladsl.model.HttpResponse
