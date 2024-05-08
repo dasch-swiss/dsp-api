@@ -10,7 +10,6 @@ import zio.ZIO
 import zio.ZLayer
 
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.*
@@ -52,9 +51,7 @@ final case class ListsResponder(
   mapper: PredicateObjectMapper,
   triplestore: TriplestoreService,
 )(implicit val stringFormatter: StringFormatter) {
-
-  // The IRI used to lock user creation and update
-  private val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
+  private val lockIri = "http://rdfh.ch/lists"
 
   /**
    * Gets all lists or list belonging to a project and returns them as a [[ListsGetResponseADM]]. For performance reasons
@@ -97,19 +94,15 @@ final case class ListsResponder(
         if (exists) {
           for {
             // here we know that the list exists and it is fine if children is an empty list
-            children <-
-              getChildren(ofNodeIri = rootNodeIri, shallow = false)
-
-            maybeRootNodeInfo <-
-              listNodeInfoGetADM(nodeIri = rootNodeIri)
-
+            children          <- getChildren(ofNodeIri = rootNodeIri, shallow = false)
+            maybeRootNodeInfo <- listNodeInfoGetADM(rootNodeIri)
             rootNodeInfo = maybeRootNodeInfo match {
                              case Some(info: ListRootNodeInfoADM) => info
                              case Some(_: ListChildNodeInfoADM) =>
                                throw InconsistentRepositoryDataException(
                                  "A child node info was found, although we are expecting a root node info. Please report this as a possible bug.",
                                )
-                             case Some(_) | None =>
+                             case _ =>
                                throw InconsistentRepositoryDataException(
                                  "No info about list node found, although list node should exist. Please report this as a possible bug.",
                                )
@@ -135,7 +128,7 @@ final case class ListsResponder(
 
     def getNodeADM(childNode: ListChildNodeADM): Task[ListNodeGetResponseADM] =
       for {
-        maybeNodeInfo <- listNodeInfoGetADM(nodeIri = nodeIri)
+        maybeNodeInfo <- listNodeInfoGetADM(nodeIri)
         nodeInfo <- maybeNodeInfo match {
                       case Some(childNodeInfo: ListChildNodeInfoADM) => ZIO.succeed(childNodeInfo)
                       case _                                         => ZIO.fail(NotFoundException(s"Information not found for node '$nodeIri'"))
@@ -163,114 +156,45 @@ final case class ListsResponder(
    * @param nodeIri              the Iri if the list node to be queried.
    * @return a optional [[ListNodeInfoADM]].
    */
-  private def listNodeInfoGetADM(nodeIri: IRI) = {
+  private def listNodeInfoGetADM(nodeIri: IRI): Task[Option[ListNodeInfoADM]] =
     for {
       statements <- triplestore
                       .query(Construct(sparql.admin.txt.getListNode(nodeIri)))
                       .flatMap(_.asExtended)
                       .map(_.statements)
 
-      maybeListNodeInfo =
-        if (statements.nonEmpty) {
+      listNodeInfo <-
+        ZIO.foreach(statements.headOption) { (_: SubjectV2, propsMap: ConstructPredicateObjects) =>
+          for {
+            name <- mapper.getSingleOption[StringLiteralV2](KnoraBase.ListNodeName, propsMap).map(_.map(_.value))
+            labels <-
+              mapper
+                .getList[StringLiteralV2](Rdfs.Label, propsMap)
+                .map(_.toVector)
+                .map(StringLiteralSequenceV2.apply)
+            comments <-
+              mapper
+                .getList[StringLiteralV2](Rdfs.Comment, propsMap)
+                .map(_.toVector)
+                .map(StringLiteralSequenceV2.apply)
 
-          val nodeInfo: ListNodeInfoADM = statements.head match {
-            case (nodeIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-              val labels: Seq[StringLiteralV2] = propsMap
-                .getOrElse(Rdfs.Label.toSmartIri, Seq.empty[StringLiteralV2])
-                .map(_.asInstanceOf[StringLiteralV2])
-              val comments: Seq[StringLiteralV2] = propsMap
-                .getOrElse(Rdfs.Comment.toSmartIri, Seq.empty[StringLiteralV2])
-                .map(_.asInstanceOf[StringLiteralV2])
+            projectIri <-
+              mapper.getSingleOrFail[IriLiteralV2](KnoraBase.AttachedToProject, propsMap).map(_.value)
 
-              val attachedToProjectOption: Option[IRI] =
-                propsMap.get(KnoraBase.AttachedToProject.toSmartIri) match {
-                  case Some(iris: Seq[LiteralV2]) =>
-                    iris.headOption match {
-                      case Some(iri: IriLiteralV2) => Some(iri.value)
-                      case other =>
-                        throw InconsistentRepositoryDataException(
-                          s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other",
-                        )
-                    }
+            hasRootNode <- mapper.getSingleOrFail[IriLiteralV2](KnoraBase.HasRootNode, propsMap).map(_.value)
+            isRootNode  <- mapper.getSingleOrFail[BooleanLiteralV2](KnoraBase.IsRootNode, propsMap).map(_.value)
 
-                  case None => None
-                }
+            position <-
+              mapper.getSingleOrFail[IntLiteralV2](KnoraBase.ListNodePosition, propsMap).map(_.value)
 
-              val hasRootNodeOption: Option[IRI] =
-                propsMap.get(KnoraBase.HasRootNode.toSmartIri) match {
-                  case Some(iris: Seq[LiteralV2]) =>
-                    iris.headOption match {
-                      case Some(iri: IriLiteralV2) => Some(iri.value)
-                      case other =>
-                        throw InconsistentRepositoryDataException(
-                          s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other",
-                        )
-                    }
-
-                  case None => None
-                }
-
-              val isRootNode: Boolean = propsMap.get(KnoraBase.IsRootNode.toSmartIri) match {
-                case Some(values: Seq[LiteralV2]) =>
-                  values.headOption match {
-                    case Some(value: BooleanLiteralV2) => value.value
-                    case Some(other) =>
-                      throw InconsistentRepositoryDataException(
-                        s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other",
-                      )
-                    case None => false
-                  }
-
-                case None => false
-              }
-
-              val positionOption: Option[Int] = propsMap
-                .get(KnoraBase.ListNodePosition.toSmartIri)
-                .map(_.head.asInstanceOf[IntLiteralV2].value)
-
-              if (isRootNode) {
-                ListRootNodeInfoADM(
-                  id = nodeIri.toString,
-                  projectIri = attachedToProjectOption.getOrElse(
-                    throw InconsistentRepositoryDataException(
-                      s"Required attachedToProject property missing for list node $nodeIri.",
-                    ),
-                  ),
-                  name = propsMap
-                    .get(KnoraBase.ListNodeName.toSmartIri)
-                    .map(_.head.asInstanceOf[StringLiteralV2].value),
-                  labels = StringLiteralSequenceV2(labels.toVector.sorted),
-                  comments = StringLiteralSequenceV2(comments.toVector.sorted),
-                ).unescape
-              } else {
-                ListChildNodeInfoADM(
-                  id = nodeIri.toString,
-                  name = propsMap
-                    .get(KnoraBase.ListNodeName.toSmartIri)
-                    .map(_.head.asInstanceOf[StringLiteralV2].value),
-                  labels = StringLiteralSequenceV2(labels.toVector),
-                  comments = StringLiteralSequenceV2(comments.toVector),
-                  position = positionOption.getOrElse(
-                    throw InconsistentRepositoryDataException(
-                      s"Required position property missing for list node $nodeIri.",
-                    ),
-                  ),
-                  hasRootNode = hasRootNodeOption.getOrElse(
-                    throw InconsistentRepositoryDataException(
-                      s"Required hasRootNode property missing for list node $nodeIri.",
-                    ),
-                  ),
-                ).unescape
-              }
-          }
-          Some(nodeInfo)
-        } else {
-          None
+            nodeInfo =
+              if (isRootNode)
+                ListRootNodeInfoADM(nodeIri, projectIri, name, labels, comments).unescape
+              else
+                ListChildNodeInfoADM(nodeIri, name, labels, comments, position, hasRootNode).unescape
+          } yield nodeInfo
         }
-
-    } yield maybeListNodeInfo
-
-  }
+    } yield listNodeInfo
 
   /**
    * Retrieves information about a single node (without information about children). The single node can be a
@@ -296,10 +220,8 @@ final case class ListsResponder(
   private def listNodeGetADM(nodeIri: IRI, shallow: Boolean) = {
     for {
       // this query will give us only the information about the root node.
-      statements <- triplestore
-                      .query(Construct(sparql.admin.txt.getListNode(nodeIri)))
-                      .flatMap(_.asExtended)
-                      .map(_.statements)
+      statements <-
+        triplestore.query(Construct(sparql.admin.txt.getListNode(nodeIri))).flatMap(_.asExtended).map(_.statements)
 
       maybeListNode <-
         if (statements.nonEmpty) {
@@ -635,7 +557,7 @@ final case class ListsResponder(
         .someOrFail(UpdateNotPerformedException(errMsg))
         .map(ListGetResponseADM.apply)
     }
-    IriLocker.runWithIriLock(apiRequestID, LISTS_GLOBAL_LOCK_IRI, createTask)
+    IriLocker.runWithIriLock(apiRequestID, lockIri, createTask)
   }
 
   /**
@@ -710,7 +632,7 @@ final case class ListsResponder(
 
     IriLocker.runWithIriLock(
       apiRequestID,
-      LISTS_GLOBAL_LOCK_IRI,
+      lockIri,
       listChildNodeCreateTask(req),
     )
   }
