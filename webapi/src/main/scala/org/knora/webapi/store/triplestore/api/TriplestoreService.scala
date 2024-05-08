@@ -21,6 +21,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout.Standard
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
@@ -146,40 +147,42 @@ trait TriplestoreService {
 object TriplestoreService {
   object Queries {
 
-    sealed trait SparqlQuery {
-      val sparql: String
-      val isGravsearch: Boolean
+    enum SparqlTimeout {
+      case Standard
+      case Maintenance
+      case Gravsearch
     }
 
-    case class Ask(sparql: String) extends SparqlQuery {
-      override val isGravsearch: Boolean = false
+    sealed trait SparqlQuery {
+      val sparql: String
+      def timeout: SparqlTimeout = Standard
     }
+
+    case class Ask(sparql: String) extends SparqlQuery
     object Ask {
       def apply(sparql: TxtFormat.Appendable): Ask = Ask(sparql.toString)
     }
 
-    case class Select(sparql: String, isGravsearch: Boolean) extends SparqlQuery
+    case class Select(sparql: String, override val timeout: SparqlTimeout = SparqlTimeout.Standard) extends SparqlQuery
     object Select {
-      def apply(sparql: TxtFormat.Appendable, isGravsearch: Boolean = false): Select =
-        Select(sparql.toString, isGravsearch)
+      def apply(sparql: TxtFormat.Appendable): Select = Select(sparql.toString)
 
-      def apply(sparql: String): Select = Select(sparql, isGravsearch = false)
+      def gravsearch(sparql: TxtFormat.Appendable): Select = Select.gravsearch(sparql.toString)
+      def gravsearch(sparql: String): Select               = Select(sparql, SparqlTimeout.Gravsearch)
     }
 
-    case class Construct(sparql: String, isGravsearch: Boolean) extends SparqlQuery
+    case class Construct(sparql: String, override val timeout: SparqlTimeout = SparqlTimeout.Standard)
+        extends SparqlQuery
     object Construct {
-      def apply(sparql: TxtFormat.Appendable, isGravsearch: Boolean = false): Construct =
-        Construct(sparql.toString, isGravsearch)
+      def apply(query: ConstructQuery): Construct        = Construct(query.getQueryString)
+      def apply(sparql: TxtFormat.Appendable): Construct = Construct(sparql.toString)
 
-      def apply(query: ConstructQuery): Construct =
-        Construct(query.getQueryString, isGravsearch = false)
-
-      def apply(sparql: String): Construct = Construct(sparql, isGravsearch = false)
+      def gravsearch(query: ConstructQuery): Construct       = Construct.gravsearch(query.getQueryString)
+      def gravsearch(query: TxtFormat.Appendable): Construct = Construct.gravsearch(query.toString)
+      def gravsearch(query: String): Construct               = Construct(query, SparqlTimeout.Gravsearch)
     }
 
-    case class Update(sparql: String) extends SparqlQuery {
-      override val isGravsearch: Boolean = false
-    }
+    case class Update(sparql: String) extends SparqlQuery
     object Update {
       def apply(sparql: TxtFormat.Appendable): Update = Update(sparql.toString())
       def apply(query: ModifyQuery): Update           = Update(query.getQueryString)

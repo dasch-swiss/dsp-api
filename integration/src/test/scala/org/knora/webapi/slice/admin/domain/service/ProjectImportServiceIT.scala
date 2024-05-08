@@ -40,6 +40,7 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
           useHttps = false,
           host = container.getHost,
           queryTimeout = java.time.Duration.ofSeconds(5),
+          maintenanceTimeout = java.time.Duration.ofSeconds(5),
           gravsearchTimeout = java.time.Duration.ofSeconds(5),
           autoInit = false,
           fuseki = Fuseki(

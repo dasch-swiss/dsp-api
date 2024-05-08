@@ -209,7 +209,7 @@ case class TriplestoreServiceLive(
    */
   private def getAllGraphs: Task[Seq[String]] =
     for {
-      res     <- query(Select("select ?g {graph ?g {?s ?p ?o}} group by ?g", isGravsearch = false))
+      res     <- query(Select("select ?g {graph ?g {?s ?p ?o}} group by ?g"))
       bindings = res.results.bindings
       graphs   = bindings.map(_.rowMap("g"))
     } yield graphs
@@ -393,14 +393,15 @@ case class TriplestoreServiceLive(
     query: SparqlQuery,
     acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
   ) = {
-    // in case of a gravsearch query, a longer timeout is set
-    val timeout =
-      if (query.isGravsearch) triplestoreConfig.gravsearchTimeout.toSeconds.toInt.toString
-      else triplestoreConfig.queryTimeout.toSeconds.toInt.toString
+    val timeout: Duration = query.timeout match {
+      case SparqlTimeout.Standard    => triplestoreConfig.queryTimeout
+      case SparqlTimeout.Maintenance => triplestoreConfig.maintenanceTimeout
+      case SparqlTimeout.Gravsearch  => triplestoreConfig.gravsearchTimeout
+    }
 
     val formParams = new util.ArrayList[NameValuePair]()
     formParams.add(new BasicNameValuePair("query", query.sparql))
-    formParams.add(new BasicNameValuePair("timeout", timeout))
+    formParams.add(new BasicNameValuePair("timeout", s"${timeout.toSeconds}"))
 
     val request: HttpPost = new HttpPost(paths.query)
     request.setEntity(new UrlEncodedFormEntity(formParams, Consts.UTF_8))
@@ -414,14 +415,15 @@ case class TriplestoreServiceLive(
     for {
       result <- reqTask @@ requestTimer
                   .tagged("type", query.getClass.getSimpleName)
-                  .tagged("isGravsearch", query.isGravsearch.toString)
+                  .tagged("isGravsearch", s"${query == SparqlTimeout.Gravsearch}")
+                  .tagged("isMaintenance", s"${query == SparqlTimeout.Maintenance}")
                   .trackDuration
       _ <- {
              val endTime  = java.lang.System.nanoTime()
              val duration = Duration.fromNanos(endTime - startTime)
              ZIO.when(duration >= trackingThreshold) {
                ZIO.logInfo(
-                 s"Fuseki request took $duration, which is longer than $trackingThreshold, isGravSearch=${query.isGravsearch}\n ${query.sparql}",
+                 s"Fuseki request took $duration, which is longer than $trackingThreshold, timeout=${query.timeout}\n ${query.sparql}",
                )
              }
            }.ignore
