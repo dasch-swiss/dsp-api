@@ -1083,7 +1083,7 @@ final case class ListsResponder(
   def canDeleteListRequestADM(iri: ListIri): Task[CanDeleteListResponseADM] =
     triplestore
       .query(Select(sparql.admin.txt.canDeleteList(iri.value)))
-      .map(_.results.bindings.isEmpty)
+      .map(_.isEmpty)
       .map(CanDeleteListResponseADM(iri.value, _))
 
   /**
@@ -1129,7 +1129,7 @@ final case class ListsResponder(
     def isNodeOrItsChildrenUsed(nodeIri: IRI, children: Seq[ListChildNodeADM]): Task[Unit] = {
       def failIfInUse(nodeIri: IRI, failReason: String) = ZIO
         .fail(BadRequestException(failReason))
-        .whenZIO(triplestore.query(Select(sparql.admin.txt.isNodeUsed(nodeIri))).map(_.results.bindings.nonEmpty))
+        .whenZIO(triplestore.query(Select(sparql.admin.txt.isNodeUsed(nodeIri))).map(_.nonEmpty))
       failIfInUse(nodeIri, s"Node $nodeIri cannot be deleted, because it is in use.") *> {
         ZIO.foreachDiscard(children) { child =>
           failIfInUse(child.id, s"Node $nodeIri cannot be deleted, because its child ${child.id} is in use.")

@@ -83,7 +83,7 @@ final case class TopLeftCorrectionAction[A <: ProjectsWithBakfilesReport](
   ): IO[Option[Throwable], (Dimensions, InternalIri)] =
     for {
       result <- triplestoreService.query(checkDimensionsQuery(project, asset.id)).asSomeError
-      rowMap <- ZIO.fromOption(result.results.bindings.headOption.map(_.rowMap))
+      rowMap <- ZIO.fromOption(result.getFirstRow.map(_.rowMap))
       iri    <- ZIO.fromOption(rowMap.get("valueIri")).map(InternalIri.apply)
       width  <- ZIO.fromOption(rowMap.get("dimX").flatMap(_.toIntOption))
       height <- ZIO.fromOption(rowMap.get("dimY").flatMap(_.toIntOption))

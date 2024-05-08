@@ -188,7 +188,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                            |""".stripMargin
             for {
               result <- ZIO.serviceWithZIO[TriplestoreService](_.query(Select(query)))
-            } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
+            } yield assert(result.getCol("entity"))(
               hasSameElements(List("http://anArticle")),
             )
           },
@@ -206,7 +206,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                            |""".stripMargin
             for {
               result <- ZIO.serviceWithZIO[TriplestoreService](_.query(Select(query)))
-            } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
+            } yield assert(result.getCol("entity"))(
               hasSameElements(List("http://anArticle", "http://aJournalArticle")),
             )
           },
@@ -222,7 +222,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                         |""".stripMargin
           for {
             result <- ZIO.serviceWithZIO[TriplestoreService](_.query(Select(query)))
-          } yield assertTrue(result.results.bindings.isEmpty)
+          } yield assertTrue(result.isEmpty)
         },
         test("find an existing thing") {
           val query = """

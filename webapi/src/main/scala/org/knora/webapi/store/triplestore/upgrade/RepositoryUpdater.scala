@@ -95,14 +95,13 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
             |}""".stripMargin,
         ),
       )
-      .map(_.results.bindings.headOption.flatMap(_.rowMap.get("knoraBaseVersion")))
+      .map(_.getFirst("knoraBaseVersion"))
       .flatMap {
-        case Some(knoraBaseVersion: String) =>
+        ZIO.foreach(_) { kb =>
           ZIO
-            .fromOption(knoraBaseVersionFrom(knoraBaseVersion))
-            .orDieWith(_ => new InconsistentRepositoryDataException(s"Invalid repository version: $knoraBaseVersion"))
-            .map(Some(_))
-        case None => ZIO.none
+            .fromOption(knoraBaseVersionFrom(kb))
+            .orDieWith(_ => new InconsistentRepositoryDataException(s"Invalid repository version: $kb"))
+        }
       }
 
   /**

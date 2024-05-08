@@ -32,7 +32,7 @@ class UpgradePluginPR1615Spec extends UpgradePluginSpec {
           |""".stripMargin
 
       val queryResult1: SparqlSelectResult = repository.doSelect(selectQuery = query1)
-      assert(queryResult1.results.bindings.isEmpty)
+      assert(queryResult1.isEmpty)
 
       // Check that other data is still there.
 
@@ -45,7 +45,7 @@ class UpgradePluginPR1615Spec extends UpgradePluginSpec {
           |""".stripMargin
 
       val queryResult2: SparqlSelectResult = repository.doSelect(selectQuery = query2)
-      assert(queryResult2.results.bindings.nonEmpty)
+      assert(queryResult2.nonEmpty)
 
       repository.shutDown()
     }
