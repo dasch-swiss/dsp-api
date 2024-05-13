@@ -81,7 +81,6 @@ print-env-file: ## prints the env file used by dsp-stack
 .PHONY: env-file
 env-file: ## write the env file used by dsp-stack.
 	@echo DOCKERHOST=$(DOCKERHOST) > .env
-	@echo KNORA_DB_REPOSITORY_NAME=$(KNORA_DB_REPOSITORY_NAME) >> .env
 	@echo LOCAL_HOME=$(CURRENT_DIR) >> .env
 
 #################################
@@ -100,7 +99,7 @@ stack-up-fast: docker-build-dsp-api-image env-file ## starts the dsp-stack by sk
 	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-up-ci
-stack-up-ci: KNORA_DB_REPOSITORY_NAME := knora-test-unit
+stack-up-ci: KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME := knora-test-unit
 stack-up-ci: docker-build env-file print-env-file ## starts the dsp-stack using 'knora-test-unit' repository: fuseki, sipi, api.
 	docker-compose -f docker-compose.yml up -d
 

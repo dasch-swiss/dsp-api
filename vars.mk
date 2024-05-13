@@ -1,6 +1,3 @@
-KNORA_DB_REPOSITORY_NAME := knora-test
-
-
 UNAME := $(shell uname)
 ifeq ($(UNAME),Darwin)
   DOCKERHOST :=  $(shell ifconfig en0 | grep inet | grep -v inet6 | cut -d ' ' -f2)
