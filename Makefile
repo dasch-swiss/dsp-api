@@ -4,8 +4,6 @@
 THIS_FILE := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-include vars.mk
-
 #################################
 # Documentation targets
 #################################
