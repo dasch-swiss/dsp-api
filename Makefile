@@ -80,7 +80,6 @@ print-env-file: ## prints the env file used by dsp-stack
 
 .PHONY: env-file
 env-file: ## write the env file used by dsp-stack.
-	@echo DOCKERHOST=$(DOCKERHOST) > .env
 	@echo LOCAL_HOME=$(CURRENT_DIR) >> .env
 
 #################################
