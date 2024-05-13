@@ -153,6 +153,7 @@ final case class Triplestore(
   host: String,
   queryTimeout: Duration,
   gravsearchTimeout: Duration,
+  maintenanceTimeout: Duration,
   autoInit: Boolean,
   fuseki: Fuseki,
   profileQueries: Boolean,

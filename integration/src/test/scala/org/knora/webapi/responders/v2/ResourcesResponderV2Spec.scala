@@ -531,7 +531,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     val actual = UnsafeZioRun.runOrThrow(
       ZIO.serviceWithZIO[TriplestoreService](_.query(Select(sparql.v2.txt.getStandoffTagByUUID(uuid)))),
     )
-    actual.results.bindings.map(_.rowMap("standoffTag")).toSet
+    actual.getColOrThrow("standoffTag").toSet
   }
 
   // The default timeout for receiving reply messages from actors.

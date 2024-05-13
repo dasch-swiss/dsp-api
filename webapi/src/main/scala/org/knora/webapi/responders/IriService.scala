@@ -61,7 +61,7 @@ final case class IriService(
    * @return `true` if the class is used.
    */
   def isClassUsedInData(classIri: SmartIri): Task[Boolean] =
-    triplestore.query(Select(sparql.v2.txt.isClassUsedInData(classIri))).map(_.results.bindings.nonEmpty)
+    triplestore.query(Select(sparql.v2.txt.isClassUsedInData(classIri))).map(_.nonEmpty)
 
   def checkOrCreateNewUserIri(entityIri: Option[UserIri]): Task[UserIri] =
     for {

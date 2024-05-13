@@ -144,36 +144,34 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
       )
 
       val msg = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Select(countTriplesQuery))))
-      afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
+      afterLoadCount = msg.getFirstOrThrow("no").toInt
       (afterLoadCount > 0) should ===(true)
     }
 
     "provide data receiving a Named Graph request" in {
       val actual = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Select(namedGraphQuery))))
-      actual.results.bindings.nonEmpty should ===(true)
+      actual.nonEmpty should ===(true)
     }
 
     "execute an update" in {
       val countTriplesBefore = UnsafeZioRun.runOrThrow(
         ZIO
           .serviceWithZIO[TriplestoreService](_.query(Select(countTriplesQuery)))
-          .map(_.results.bindings.head.rowMap("no").toInt),
+          .map(_.getFirstOrThrow("no").toInt),
       )
       countTriplesBefore should ===(afterLoadCount)
 
       UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Update(insertQuery))))
 
       val checkInsertActual = UnsafeZioRun.runOrThrow(
-        ZIO
-          .serviceWithZIO[TriplestoreService](_.query(Select(checkInsertQuery)))
-          .map(_.results.bindings.size),
+        ZIO.serviceWithZIO[TriplestoreService](_.query(Select(checkInsertQuery))).map(_.size),
       )
       checkInsertActual should ===(3)
 
       afterChangeCount = UnsafeZioRun.runOrThrow(
         ZIO
           .serviceWithZIO[TriplestoreService](_.query(Select(countTriplesQuery)))
-          .map(_.results.bindings.head.rowMap("no").toInt),
+          .map(_.getFirstOrThrow("no").toInt),
       )
       (afterChangeCount - afterLoadCount) should ===(3)
     }
@@ -182,7 +180,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
       val countTriplesBefore = UnsafeZioRun.runOrThrow(
         ZIO
           .serviceWithZIO[TriplestoreService](_.query(Select(countTriplesQuery)))
-          .map(_.results.bindings.head.rowMap("no").toInt),
+          .map(_.getFirstOrThrow("no").toInt),
       )
       countTriplesBefore should ===(afterChangeCount)
 
@@ -191,14 +189,14 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
       val countTriplesQueryActual = UnsafeZioRun.runOrThrow(
         ZIO
           .serviceWithZIO[TriplestoreService](_.query(Select(countTriplesQuery)))
-          .map(_.results.bindings.head.rowMap("no").toInt),
+          .map(_.getFirstOrThrow("no").toInt),
       )
       countTriplesQueryActual should ===(afterLoadCount)
 
       val checkInsertActual = UnsafeZioRun.runOrThrow(
         ZIO
           .serviceWithZIO[TriplestoreService](_.query(Select(checkInsertQuery)))
-          .map(_.results.bindings.size),
+          .map(_.size),
       )
       checkInsertActual should ===(0)
     }
@@ -208,7 +206,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
         val actual = UnsafeZioRun.runOrThrow(
           ZIO
             .serviceWithZIO[TriplestoreService](_.query(Select(textSearchQueryFusekiValueHasString)))
-            .map(_.results.bindings.size),
+            .map(_.size),
         )
         actual should ===(3)
       }
@@ -219,7 +217,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
         val actual = UnsafeZioRun.runOrThrow(
           ZIO
             .serviceWithZIO[TriplestoreService](_.query(Select(textSearchQueryFusekiDRFLabel)))
-            .map(_.results.bindings.size),
+            .map(_.size),
         )
         actual should ===(1)
       }

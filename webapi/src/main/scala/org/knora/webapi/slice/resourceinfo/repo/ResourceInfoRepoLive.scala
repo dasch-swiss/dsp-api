@@ -46,7 +46,7 @@ final case class ResourceInfoRepoLive(triplestore: TriplestoreService) extends R
   )
 
   private def toResourceInfoList(result: SparqlSelectResult) =
-    ZIO.attempt(result.results.bindings.map(toResourceInfo).toList)
+    ZIO.attempt(result.map(toResourceInfo).toList)
 
   private def toResourceInfo(row: VariableResultsRow) = {
     val rowMap = row.rowMap

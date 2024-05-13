@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.admin
 
-import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
@@ -525,16 +524,6 @@ final case class ListsResponder(
       case child: ListCreateChildNodeRequest => (child.id, child.projectIri, child.name, child.position)
     }
 
-    def getPositionOfNewChild(children: Seq[ListChildNodeADM]): IO[BadRequestException, Int] = {
-      val size = children.size
-      position.map(_.value) match {
-        case Some(pos) if pos > size =>
-          ZIO.fail(BadRequestException(s"Invalid position given $pos, maximum allowed position is = $size."))
-        case Some(pos) if pos >= 0 => ZIO.succeed(pos)
-        case _                     => ZIO.succeed(size)
-      }
-    }
-
     def getRootNodeIri(parentListNode: ListNodeADM): IRI =
       parentListNode match {
         case root: ListRootNodeADM   => root.id
@@ -549,32 +538,18 @@ final case class ListsResponder(
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
         parentListNode <- listNodeGetADM(parentNodeIri, shallow = true)
                             .someOrFail(BadRequestException(s"List node '$parentNodeIri' not found."))
-        children  = parentListNode.children
-        position <- getPositionOfNewChild(children)
-
-        // Is the node supposed to be inserted in a specific position in array of children?
-        _ <-
-          if (position != children.size) {
-            // Yes. Shift the siblings after the given position to right in order to free the position.
-            for {
-              // shift siblings that are after given position to right
-              updatedSiblings <- shiftNodes(
-                                   startPos = position,
-                                   endPos = children.size - 1,
-                                   nodes = children,
-                                   shiftToLeft = false,
-                                   dataNamedGraph = dataNamedGraph,
-                                 )
-            } yield updatedSiblings
-          } else {
-            // No. new node will be appended to the end, no shifting is necessary.
-            ZIO.succeed(children)
+        children = parentListNode.children
+        size     = children.size
+        position <- {
+          position.map(_.value) match {
+            case Some(pos) if pos > size =>
+              ZIO.fail(BadRequestException(s"Invalid position given $pos, maximum allowed position is = $size."))
+            case Some(pos) if pos >= 0 => ZIO.succeed(pos)
+            case _                     => ZIO.succeed(size)
           }
-
-        /* get the root node, depending on the type of the parent */
-        rootNodeIri = getRootNodeIri(parentListNode)
-
-      } yield (Some(position), Some(rootNodeIri))
+        }
+        _ <- shiftNodes(position, size - 1, children, dataNamedGraph, ShiftRight).when(position != size)
+      } yield (Some(position), Some(getRootNodeIri(parentListNode)))
 
     for {
       /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
@@ -997,27 +972,9 @@ final case class ListsResponder(
         // update position of siblings
         _ <-
           if (currPosition < newPosition) {
-            for {
-              // shift siblings to left
-              updatedSiblings <- shiftNodes(
-                                   startPos = currPosition + 1,
-                                   endPos = newPosition,
-                                   nodes = parentChildren,
-                                   shiftToLeft = true,
-                                   dataNamedGraph = dataNamedGraph,
-                                 )
-            } yield updatedSiblings
+            shiftNodes(currPosition + 1, newPosition, parentChildren, dataNamedGraph, ShiftLeft)
           } else if (currPosition > newPosition) {
-            for {
-              // shift siblings to right
-              updatedSiblings <- shiftNodes(
-                                   startPos = newPosition,
-                                   endPos = currPosition - 1,
-                                   nodes = parentChildren,
-                                   shiftToLeft = false,
-                                   dataNamedGraph = dataNamedGraph,
-                                 )
-            } yield updatedSiblings
+            shiftNodes(newPosition, currPosition - 1, parentChildren, dataNamedGraph, ShiftRight)
           } else {
             throw UpdateNotPerformedException(s"The given position is the same as node's current position.")
           }
@@ -1055,11 +1012,8 @@ final case class ListsResponder(
         currentNodePosition = node.position
 
         // if givenPosition is -1, append the child to the end of the list of children
-        newPosition =
-          if (givenPosition == -1) {
-            newSiblings.size
-          } else givenPosition
-
+        newPosition = if (givenPosition == -1) { newSiblings.size }
+                      else givenPosition
         // update the position of the node itself
         _ <- updatePositionOfNode(
                nodeIri = node.id,
@@ -1068,41 +1022,22 @@ final case class ListsResponder(
              )
 
         // shift current siblings with a higher position to left as if the node is deleted
-        _ <- shiftNodes(
-               startPos = currentNodePosition + 1,
-               endPos = currentSiblings.last.position,
-               nodes = currentSiblings,
-               shiftToLeft = true,
-               dataNamedGraph = dataNamedGraph,
-             )
+        _ <-
+          shiftNodes(currentNodePosition + 1, currentSiblings.last.position, currentSiblings, dataNamedGraph, ShiftLeft)
 
         // Is node supposed to be added to the end of new parent's children list?
         _ <-
           if (givenPosition == -1 || givenPosition == newSiblings.size) {
             // Yes. New siblings should not be shifted
-            ZIO.attempt(newSiblings)
+            ZIO.succeed(newSiblings)
           } else {
             // No. Shift new siblings with the same and higher position
             // to right, as if the node is inserted in the given position
-            for {
-              updatedSiblings <- shiftNodes(
-                                   startPos = newPosition,
-                                   endPos = newSiblings.last.position,
-                                   nodes = newSiblings,
-                                   shiftToLeft = false,
-                                   dataNamedGraph = dataNamedGraph,
-                                 )
-            } yield updatedSiblings
+            shiftNodes(newPosition, newSiblings.last.position, newSiblings, dataNamedGraph, ShiftRight)
           }
 
         /* update the sublists of parent nodes */
-        _ <- changeParentNode(
-               nodeIri = node.id,
-               oldParentIri = currParentIri,
-               newParentIri = newParentIri,
-               dataNamedGraph = dataNamedGraph,
-             )
-
+        _ <- changeParentNode(node.id, currParentIri, newParentIri, dataNamedGraph)
       } yield newPosition
 
     val updateTask =
@@ -1148,7 +1083,7 @@ final case class ListsResponder(
   def canDeleteListRequestADM(iri: ListIri): Task[CanDeleteListResponseADM] =
     triplestore
       .query(Select(sparql.admin.txt.canDeleteList(iri.value)))
-      .map(_.results.bindings.isEmpty)
+      .map(_.isEmpty)
       .map(CanDeleteListResponseADM(iri.value, _))
 
   /**
@@ -1194,7 +1129,7 @@ final case class ListsResponder(
     def isNodeOrItsChildrenUsed(nodeIri: IRI, children: Seq[ListChildNodeADM]): Task[Unit] = {
       def failIfInUse(nodeIri: IRI, failReason: String) = ZIO
         .fail(BadRequestException(failReason))
-        .whenZIO(triplestore.query(Select(sparql.admin.txt.isNodeUsed(nodeIri))).map(_.results.bindings.nonEmpty))
+        .whenZIO(triplestore.query(Select(sparql.admin.txt.isNodeUsed(nodeIri))).map(_.nonEmpty))
       failIfInUse(nodeIri, s"Node $nodeIri cannot be deleted, because it is in use.") *> {
         ZIO.foreachDiscard(children) { child =>
           failIfInUse(child.id, s"Node $nodeIri cannot be deleted, because its child ${child.id} is in use.")
@@ -1266,11 +1201,11 @@ final case class ListsResponder(
           if (remainingChildren.nonEmpty) {
             for {
               shiftedChildren <- shiftNodes(
-                                   startPos = positionOfDeletedNode + 1,
-                                   endPos = remainingChildren.last.position,
-                                   nodes = remainingChildren,
-                                   shiftToLeft = true,
-                                   dataNamedGraph = dataNamedGraph,
+                                   positionOfDeletedNode + 1,
+                                   remainingChildren.last.position,
+                                   remainingChildren,
+                                   dataNamedGraph,
+                                   ShiftLeft,
                                  )
             } yield shiftedChildren
           } else {
@@ -1520,45 +1455,27 @@ final case class ListsResponder(
              .unless(childNode.position.equals(newPosition))
     } yield childNode
 
+  sealed trait ShiftDir { def apply(num: Int): Int }
+  private case object ShiftLeft  extends ShiftDir { def apply(num: Int): Int = num - 1 }
+  private case object ShiftRight extends ShiftDir { def apply(num: Int): Int = num + 1 }
+
   /**
-   * Helper method to shift nodes between positions startPos and endPos to the left if 'shiftToLeft' is true,
-   * otherwise shift them one position to the right.
+   * Helper method to shift nodes between positions startPos and endPos.
    *
    * @param startPos             the position of first node in range that must be shifted.
    * @param endPos               the position of last node in range that must be shifted.
    * @param nodes                the list of all nodes.
-   * @param shiftToLeft          shift nodes to left if true, otherwise to right.
-   * @param dataNamedGraph       the data named graph of the project.
-   * @throws UpdateNotPerformedException if the position of a node could not be updated.
+   * @param shift                the [[ShiftDir]] direction to shift
+   * @param namedGraph           the data named graph of the project.
    * @return a sequence of [[ListChildNodeADM]].
    */
-  private def shiftNodes(
-    startPos: Int,
-    endPos: Int,
-    nodes: Seq[ListChildNodeADM],
-    shiftToLeft: Boolean,
-    dataNamedGraph: IRI,
-  ): Task[Seq[ListChildNodeADM]] =
-    for {
-      nodesTobeUpdated <- ZIO.attempt(
-                            nodes.filter(node => node.position >= startPos && node.position <= endPos),
-                          )
-      staticStartNodes = nodes.filter(node => node.position < startPos)
-      staticEndNotes   = nodes.filter(node => node.position > endPos)
-      updatePositionFutures = nodesTobeUpdated.map { child =>
-                                val currPos = child.position
-                                val newPos = if (shiftToLeft) {
-                                  currPos - 1
-                                } else currPos + 1
-
-                                updatePositionOfNode(
-                                  nodeIri = child.id,
-                                  newPosition = newPos,
-                                  dataNamedGraph = dataNamedGraph,
-                                )
-                              }
-      updatedNodes <- ZioHelper.sequence(updatePositionFutures)
-    } yield staticStartNodes ++ updatedNodes ++ staticEndNotes
+  private def shiftNodes(startPos: Int, endPos: Int, nodes: Seq[ListChildNodeADM], namedGraph: IRI, shift: ShiftDir) = {
+    val (start, rest)     = nodes.partition(_.position < startPos)
+    val (needUpdate, end) = rest.partition(_.position <= endPos)
+    ZIO
+      .foreach(needUpdate)(node => updatePositionOfNode(node.id, shift(node.position), namedGraph))
+      .map(start ++ _ ++ end)
+  }
 
   /**
    * Helper method to change parent node of a node.

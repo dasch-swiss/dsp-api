@@ -1565,7 +1565,7 @@ final case class ResourcesResponderV2(
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
       prequery              = sparql.v2.txt.getAllResourcesInProjectPrequery(projectId.value)
       sparqlSelectResponse <- triplestore.query(Select(prequery))
-      mainResourceIris      = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
+      mainResourceIris      = sparqlSelectResponse.getColOrThrow("resource")
       // For each resource IRI return history events
       historyOfResourcesAsSeqOfFutures: Seq[Task[Seq[ResourceAndValueHistoryEvent]]] =
         mainResourceIris.map { resourceIri =>

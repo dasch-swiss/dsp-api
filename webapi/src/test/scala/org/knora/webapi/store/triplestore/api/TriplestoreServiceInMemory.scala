@@ -82,10 +82,8 @@ object TestTripleStore {
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit val sf: StringFormatter)
     extends TestTripleStore {
 
-  override def query(query: Select): Task[SparqlSelectResult] = {
-    require(!query.isGravsearch, "`isGravsearch` parameter is not supported by fake implementation yet")
+  override def query(query: Select): Task[SparqlSelectResult] =
     ZIO.scoped(execSelect(query.sparql).map(toSparqlSelectResult))
-  }
 
   private def execSelect(query: String): ZIO[Any & Scope, Throwable, ResultSet] = {
     def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execSelect)

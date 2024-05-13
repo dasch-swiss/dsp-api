@@ -1713,7 +1713,7 @@ final case class OntologyHelpersLive(
 
       isOntologyUsedResponse <- triplestore.query(Select(isOntologyUsedSparql))
 
-      subjects = isOntologyUsedResponse.results.bindings.map(row => row.rowMap("s")).toSet
+      subjects = isOntologyUsedResponse.getColOrThrow("s").toSet
     } yield subjects
 
   /**

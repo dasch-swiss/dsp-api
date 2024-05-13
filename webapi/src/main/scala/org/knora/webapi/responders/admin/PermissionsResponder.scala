@@ -521,7 +521,7 @@ final case class PermissionsResponder(
           )
 
         /* get the iri of the retrieved permission */
-        val permissionIri = result.getFirstRow.rowMap("s")
+        val permissionIri = result.getFirstRowOrThrow.rowMap("s")
 
         val groupedPermissionsQueryResponse: Map[IRI, Seq[IRI]] =
           rows.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
