@@ -97,7 +97,6 @@ nav:
           - Third-Party Dependencies: 05-internals/development/third-party.md
   - SIPI:
       - Overview: 06-sipi/index.md
-      - Setting Up Sipi for DSP-API: 06-sipi/setup-sipi-for-dsp-api.md
       - Interaction between Sipi and DSP-API: 06-sipi/sipi-and-dsp-api.md
   - Lucene:
       - Lucene Query Parser Syntax: 07-lucene/lucene-query-parser-syntax.md

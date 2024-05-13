@@ -4,8 +4,6 @@
 THIS_FILE := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-include vars.mk
-
 #################################
 # Documentation targets
 #################################
@@ -71,37 +69,23 @@ docker-image-tag: ## prints the docker image tag
 	@$(SBTX) -Dsbt.log.noformat=true -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag"
 
 #################################
-## Docker-Compose targets
-#################################
-
-.PHONY: print-env-file
-print-env-file: ## prints the env file used by dsp-stack
-	@cat .env
-
-.PHONY: env-file
-env-file: ## write the env file used by dsp-stack.
-	@echo DOCKERHOST=$(DOCKERHOST) > .env
-	@echo KNORA_DB_REPOSITORY_NAME=$(KNORA_DB_REPOSITORY_NAME) >> .env
-	@echo LOCAL_HOME=$(CURRENT_DIR) >> .env
-
-#################################
 ## DSP Stack Targets
 #################################
 
 .PHONY: stack-up
-stack-up: docker-build env-file ## starts the dsp-stack: fuseki, sipi, api and app.
+stack-up: docker-build ## starts the dsp-stack: fuseki, sipi, api and app.
 	@docker compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 	@docker compose -f docker-compose.yml up -d
 	$(CURRENT_DIR)/webapi/scripts/wait-for-api.sh
 
 .PHONY: stack-up-fast
-stack-up-fast: docker-build-dsp-api-image env-file ## starts the dsp-stack by skipping rebuilding most of the images (only api image is rebuilt).
+stack-up-fast: docker-build-dsp-api-image ## starts the dsp-stack by skipping rebuilding most of the images (only api image is rebuilt).
 	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-up-ci
-stack-up-ci: KNORA_DB_REPOSITORY_NAME := knora-test-unit
-stack-up-ci: docker-build env-file print-env-file ## starts the dsp-stack using 'knora-test-unit' repository: fuseki, sipi, api.
+stack-up-ci: KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME := knora-test-unit
+stack-up-ci: docker-build ## starts the dsp-stack using 'knora-test-unit' repository: fuseki, sipi, api.
 	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-restart
@@ -162,7 +146,7 @@ stack-down-delete-volumes: clean-local-tmp clean-sipi-tmp ## stops the dsp-stack
 	@docker compose -f docker-compose.yml down --volumes
 
 .PHONY: stack-config
-stack-config: env-file
+stack-config:
 	@docker compose -f docker-compose.yml config
 
 .PHONY: stack-without-api
@@ -179,7 +163,7 @@ stack-without-api-and-sipi: stack-up ## starts the dsp-stack without dsp-api and
 	@docker compose -f docker-compose.yml stop sipi
 
 .PHONY: stack-db-only
-stack-db-only: env-file  ## starts only fuseki.
+stack-db-only:  ## starts only fuseki.
 	@docker compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 
@@ -217,17 +201,17 @@ integration-test: docker-build-sipi-image ## runs all integration tests
 #################################
 
 .PHONY: init-db-test
-init-db-test: env-file stack-down-delete-volumes stack-db-only ## initializes the knora-test repository
+init-db-test: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository
 	@echo $@
 	cd $(CURRENT_DIR)/webapi/scripts && ./fuseki-init-knora-test.sh
 
 .PHONY: init-db-test-minimal
-init-db-test-minimal: env-file stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
+init-db-test-minimal: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
 	@echo $@
 	cd $(CURRENT_DIR)/webapi/scripts && ./fuseki-init-knora-test-minimal.sh
 
 .PHONY: init-db-test-empty
-init-db-test-empty: env-file stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
+init-db-test-empty: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
 	@echo $@
 	cd $(CURRENT_DIR)/webapi/scripts && ./fuseki-init-knora-test-empty.sh
 
