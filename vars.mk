@@ -1,5 +1,3 @@
-FUSEKI_HEAP_SIZE := 3G
-
 KNORA_DB_REPOSITORY_NAME := knora-test
 
 
