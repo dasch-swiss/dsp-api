@@ -55,7 +55,8 @@ also required.
 ### Resources
 
 All the content produced by a project (e.g. digitised primary source materials or research data) must be stored in
-objects that belong to subclasses of `kb:Resource`, so that DSP-API can query and update that content. Each project using
+objects that belong to subclasses of `kb:Resource`, so that DSP-API can query and update that content. Each project
+using
 the Knora base ontology must define its own OWL classes, derived from `kb:Resource`, to represent the types of data it
 deals with. A subclass of `kb:Resource` may additionally be a subclass of any other class, e.g. an industry-standard
 class such as `foaf:Person`; this can facilitate searches across projects.
@@ -113,15 +114,18 @@ see [Authorisation](#authorisation).
 #### Representations
 
 It is not practical to store all data in RDF. In particular, RDF is not a good storage medium for binary data such as
-images. Therefore, DSP-API stores such data outside the triplestore, in ordinary files. A resource can have metadata about
-a file attached to it. The technical term for such a resource in the Knora ontology is a **Representation**. For each file, there is
+images. Therefore, DSP-API stores such data outside the triplestore, in ordinary files. A resource can have metadata
+about
+a file attached to it. The technical term for such a resource in the Knora ontology is a **Representation**. For each
+file, there is
 a `kb:FileValue` in the triplestore containing metadata about the file (see [FileValue](#filevalue)). DSP-API
 uses [Sipi](https://github.com/dhlab-basel/Sipi) to store files. The DSP-API provides ways to create file values.
 
 A resource that has a file value must belong to one of the subclasses of
 `kb:Representation`. Its subclasses include:
 
-- `StillImageRepresentation`: A representation referring to a still image file which can be stored in Sipi or an external IIIF server.
+- `StillImageRepresentation`: A representation referring to a still image file which can be stored in Sipi or an
+  external IIIF server.
 
 - `MovingImageRepresentation`: A representation containing a video file.
 
@@ -355,7 +359,8 @@ Each `ListNode` can have the following properties:
 
 ##### FileValue
 
-DSP-API can store certain kinds of data outside the triplestore, in files (see [Representations](#representations)). Each
+DSP-API can store certain kinds of data outside the triplestore, in files (see [Representations](#representations)).
+Each
 digital object that is stored outside the triplestore has associated metadata, which is stored in the triplestore in
 a `kb:FileValue`. The base class `FileValue`, which is not intended to be used directly, has these properties:
 
@@ -368,11 +373,14 @@ a `kb:FileValue`. The base class `FileValue`, which is not intended to be used d
 - `originalMimeType` (0-1): The original MIME type of the file when it was uploaded to the Knora API server.
 
 - `isPreview` (0-1): A boolean indicating whether the file is a preview, i.e. a small image representing the contents of
-  the file. A preview is always a `StillImageAbstractFileValue`, regardless of the type of the enclosing `Representation`.
+  the file. A preview is always a `StillImageAbstractFileValue`, regardless of the type of the
+  enclosing `Representation`.
 
 The subclasses of `FileValue`, which are intended to be used directly in data, include:
 
-- `StillImageAbstractFileValue`: Contains metadata about a still image file, which can be either `StillImageFileValue` (an image stored in Sipi) or `StillImageExternalFileValue` (a reference to an image stored in an external IIIF service).
+- `StillImageAbstractFileValue`: Contains metadata about a still image file, which can be either `StillImageFileValue` (
+  an image stored in Sipi) or `StillImageExternalFileValue` (a reference to an image stored in an external IIIF
+  service).
 
 - `MovingImageFileValue`: Contains metadata about a video file.
 
@@ -389,7 +397,8 @@ The subclasses of `FileValue`, which are intended to be used directly in data, i
 Each of these classes contains properties that are specific to the type of file it describes. For example, still image
 files have dimensions, video files have frame rates, and so on.
 
-`FileValue` objects are versioned like other values, and the actual files stored by DSP-API are also versioned. Version 1
+`FileValue` objects are versioned like other values, and the actual files stored by DSP-API are also versioned. Version
+1
 of the DSP-API does not provide a way to retrieve a previous version of a file, but this feature will be added in a
 subsequent version of the API.
 
@@ -423,7 +432,8 @@ For details about how links are created in DSP-API, see
 ##### ExternalResValue
 
 Represents a resource that is not stored in the RDF triplestore managed by DSP-API, but instead resides in an external
-repository managed by some other software. The `ExternalResValue` contains the information that DSP-API needs in order to
+repository managed by some other software. The `ExternalResValue` contains the information that DSP-API needs in order
+to
 access the resource, assuming that a suitable gateway plugin is installed.
 
 `extResAccessInfo` (1)
@@ -445,7 +455,8 @@ A link between two resources is expressed, first of all, as a triple, in which t
 source of the link, the predicate is a "link property" (a subproperty of `kb:hasLinkTo`), and the object is the resource
 that is the target of the link.
 
-It is also useful to store metadata about links. For example, DSP-API needs to know who owns the link, who has permission
+It is also useful to store metadata about links. For example, DSP-API needs to know who owns the link, who has
+permission
 to modify it, when it was created, and so on. Such metadata cannot simply describe the link property, because then it
 would refer to that property in general, not to any particular instance in which that property is used to connect two
 particular resources. To attach metadata to a specific link in RDF, it is necessary to create an RDF "reification". A
@@ -589,31 +600,47 @@ of a book like in [this](../01-introduction/example-project.md#resource-classes)
 
 #### Segment
 
-DSP-API supports the creation of segment resources. 
-A segment is a part of a resource which has a temporal extent; 
-the segment is defined by a start and end time relative to the resource. 
-Segments are modelled as resources of type `kb:Segment`, 
+DSP-API supports the creation of segment resources.
+A segment is a part of a resource which has a temporal extent;
+the segment is defined by a start and end time relative to the resource.
+Segments are modelled as resources of type `kb:Segment`,
 having the properties `kb:isSegmentOf`, a [LinkValue](#linkvalue) pointing to the resource the segment is part of,
 and `kb:hasSegmentBounds`, a [IntervalValue](#intervalvalue) representing the temporal extent of the segment.
 However, `kb:Segment` is "abstract" and cannot be used directly in data.
 
 Segments have a number of optional, generic properties to add additional information:
+`kb:hasTitle` (0-1), `kb:hasDescription` (0-n), `kb:hasKeyword` (0-n),
+`kb:relatesTo`/`kb:relatesToValue` (0-n), and `kb:hasComment` (0-1).
 
+There are two concrete subclasses of `kb:Segment` for video and audio resources.
+
+It is possible to create subclasses of `kb:AudioSegment` and `kb:VideoSegment` to add additional properties,
+but this is discouraged and may not be supported in future versions of DSP-API.
+Instead, instances of `kb:Annotation` pointing to the segment should be used to add additional information.
+
+##### AudioSegment
+
+Audio segments are defined by the following properties:
+
+- `kb:isAudioSegmentOf` (1): A [LinkValue](#linkvalue) pointing to an [AudioRepresentation](#representations).
+- `kb:hasSegmentBounds` (1): An [IntervalValue](#intervalvalue) representing the temporal extent of the segment.
 - `kb:hasTitle` (0-1): A [TextValue](#textvalue) for adding a title or name to the segment.
 - `kb:hasDescription` (0-n): A [TextValue](#textvalue) for providing one or more descriptions of the segment.
 - `kb:hasKeyword` (0-n): A [TextValue](#textvalue) for adding one or more keywords to the segment.
 - `kb:relatesTo`/`kb:relatesToValue` (0-n): A [LinkValue](#linkvalue) for relating the segment to another resource.
 - `kb:hasComment` (0-1): A [TextValue](#textvalue) for a comment on the segment.
 
-There are two concrete subclasses of `kb:Segment`: `kb:AudioSegment` and `kb:VideoSegment`.
-`kb:AudioSegment` has the property `kb:isAudioSegmentOf`, which points to an [AudioRepresentation](#representations),
-`kb:VideoSegment` has the property `kb:isVideoSegmentOf`, which points to a [MovingImageRepresentation](#representations). 
-Both use the `kb:hasSegmentBounds` property directly.
+##### VideoSegment
 
-It is possible to create subclasses of `kb:AudioSegment` and `kb:VideoSegment` to add additional properties, 
-but this is discouraged and may not be supported in future versions of DSP-API. 
-Instead, instances of `kb:Annotation` pointing to the segment should be used to add additional information.
+Video segments are defined by the following properties:
 
+- `kb:isVideoSegmentOf` (1): A [LinkValue](#linkvalue) pointing to a [MovingImageRepresentation](#representations).
+- `kb:hasSegmentBounds` (1): An [IntervalValue](#intervalvalue) representing the temporal extent of the segment.
+- `kb:hasTitle` (0-1): A [TextValue](#textvalue) for adding a title or name to the segment.
+- `kb:hasDescription` (0-n): A [TextValue](#textvalue) for providing one or more descriptions of the segment.
+- `kb:hasKeyword` (0-n): A [TextValue](#textvalue) for adding one or more keywords to the segment.
+- `kb:relatesTo`/`kb:relatesToValue` (0-n): A [LinkValue](#linkvalue) for relating the segment to another resource.
+- `kb:hasComment` (0-1): A [TextValue](#textvalue) for a comment on the segment.
 
 ### Text with Standoff Markup
 
@@ -627,7 +654,7 @@ because it does not allow to perform searches across multiple documents.
 The recommended way to store text with markup in DSP-API is to use the built-in support for "standoff" markup, which
 is stored separately from the text. This has some advantages over embedded markup such as XML. While XML requires markup
 to have a hierarchical structure, and does not allow overlapping tags, standoff nodes do not have these limitations
-(see 
+(see
 [Using Standoff Properties for Marking-up Historical Documents in the Humanities](https://doi.org/10.1515/itit-2015-0030)).
 A standoff tag can be attached to any substring in the text by giving its start and end positions. Unlike in corpus
 linguistics, we do not use any tokenisation resulting in a form of predefined segmentation, which would limit the user's
@@ -636,7 +663,13 @@ ability to freely annotate any ranges in the text.
 For example, suppose we have the following text:
 
 ```xml
-<blockquote>This <i>sentence <strong>has overlapping</strong></i> <strong>visual</strong> attributes.</blockquote>
+
+<blockquote>This
+    <i>sentence
+        <strong>has overlapping</strong>
+    </i>
+    <strong>visual</strong> attributes.
+</blockquote>
 ```
 
 This would require just two standoff tags: `(italic, start=5, end=29)` and `(bold, start=14, end=36)`.
@@ -720,7 +753,8 @@ a `StandoffLinkTag` connects the name to the Knora resource describing that pers
 
 One of the design goals of the Knora base ontology is to make it easy and efficient to find out which resources contain
 references to a given resource. Direct links are easier and more efficient to query than indirect links. Therefore, when
-a text value contains a resource reference in its standoff nodes, DSP-API automatically creates a direct link between the
+a text value contains a resource reference in its standoff nodes, DSP-API automatically creates a direct link between
+the
 containing resource and the target resource, along with an RDF reification (a `kb:LinkValue`) describing the link, as
 discussed in [Links Between Resources](#links-between-resources). In this case, the link property is
 always `kb:hasStandoffLinkTo`, and the link value property (which points to the `LinkValue`) is always
@@ -916,7 +950,8 @@ Each DSP-API user is represented by an object belonging to the class
 
 :   The user's given name.
 
-DSP-API's concept of access control is that an object (a resource or value) can grant permissions to groups of users (but
+DSP-API's concept of access control is that an object (a resource or value) can grant permissions to groups of users (
+but
 not to individual users). There are several built-in groups:
 
 `knora-admin:UnknownUser`
@@ -1006,7 +1041,8 @@ V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember
 
 ### Consistency Checking
 
-DSP-API tries to enforce repository consistency by checking constraints that are specified in the Knora base ontology and
+DSP-API tries to enforce repository consistency by checking constraints that are specified in the Knora base ontology
+and
 in user-created ontologies. Three types of consistency rules are enforced:
 
 - Cardinalities in OWL class definitions must be satisfied.
@@ -1058,7 +1094,8 @@ displayed in a GUI
 (see [The SALSAH GUI Ontology](salsah-gui.md)).
 
 A resource class inherits cardinalities from its superclasses. This follows from the rules of
-[RDFS](http://www.w3.org/TR/2014/REC-rdf-schema-20140225/) inference. Also, in DSP-API, cardinalities in the subclass can
+[RDFS](http://www.w3.org/TR/2014/REC-rdf-schema-20140225/) inference. Also, in DSP-API, cardinalities in the subclass
+can
 override cardinalities that would otherwise be inherited from the superclass. Specifically, if a superclass has a
 cardinality on a property P, and a subclass has a cardinality on a subproperty of P, the subclass's cardinality
 overrides the superclass's cardinality. In the example above,
@@ -1090,7 +1127,8 @@ DSP-API will attempt to enforce this constraint.
 :   If the property is an object property, specifies the class that objects of the property must belong to. Every
 subproperty of
 `kb:hasValue` or a `kb:hasLinkTo` (i.e. every property of a resource that points to a `kb:Value` or to another resource)
-is required to have this constraint, because DSP-API relies on it to know what type of object to expect for the property.
+is required to have this constraint, because DSP-API relies on it to know what type of object to expect for the
+property.
 DSP-API will attempt to enforce this constraint.
 
 `objectDatatypeConstraint`
