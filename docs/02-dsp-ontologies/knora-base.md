@@ -589,31 +589,47 @@ of a book like in [this](../01-introduction/example-project.md#resource-classes)
 
 #### Segment
 
-DSP-API supports the creation of segment resources. 
-A segment is a part of a resource which has a temporal extent; 
-the segment is defined by a start and end time relative to the resource. 
-Segments are modelled as resources of type `kb:Segment`, 
+DSP-API supports the creation of segment resources.
+A segment is a part of a resource which has a temporal extent;
+the segment is defined by a start and end time relative to the resource.
+Segments are modelled as resources of type `kb:Segment`,
 having the properties `kb:isSegmentOf`, a [LinkValue](#linkvalue) pointing to the resource the segment is part of,
 and `kb:hasSegmentBounds`, a [IntervalValue](#intervalvalue) representing the temporal extent of the segment.
 However, `kb:Segment` is "abstract" and cannot be used directly in data.
 
 Segments have a number of optional, generic properties to add additional information:
+`kb:hasTitle` (0-1), `kb:hasDescription` (0-n), `kb:hasKeyword` (0-n),
+`kb:relatesTo`/`kb:relatesToValue` (0-n), and `kb:hasComment` (0-1).
 
+There are two concrete subclasses of `kb:Segment` for video and audio resources.
+
+It is possible to create subclasses of `kb:AudioSegment` and `kb:VideoSegment` to add additional properties,
+but this is discouraged and may not be supported in future versions of DSP-API.
+Instead, instances of `kb:Annotation` pointing to the segment should be used to add additional information.
+
+##### AudioSegment
+
+Audio segments are defined by the following properties:
+
+- `kb:isAudioSegmentOf` (1): A [LinkValue](#linkvalue) pointing to an [AudioRepresentation](#representations).
+- `kb:hasSegmentBounds` (1): An [IntervalValue](#intervalvalue) representing the temporal extent of the segment.
 - `kb:hasTitle` (0-1): A [TextValue](#textvalue) for adding a title or name to the segment.
 - `kb:hasDescription` (0-n): A [TextValue](#textvalue) for providing one or more descriptions of the segment.
 - `kb:hasKeyword` (0-n): A [TextValue](#textvalue) for adding one or more keywords to the segment.
 - `kb:relatesTo`/`kb:relatesToValue` (0-n): A [LinkValue](#linkvalue) for relating the segment to another resource.
 - `kb:hasComment` (0-1): A [TextValue](#textvalue) for a comment on the segment.
 
-There are two concrete subclasses of `kb:Segment`: `kb:AudioSegment` and `kb:VideoSegment`.
-`kb:AudioSegment` has the property `kb:isAudioSegmentOf`, which points to an [AudioRepresentation](#representations),
-`kb:VideoSegment` has the property `kb:isVideoSegmentOf`, which points to a [MovingImageRepresentation](#representations). 
-Both use the `kb:hasSegmentBounds` property directly.
+##### VideoSegment
 
-It is possible to create subclasses of `kb:AudioSegment` and `kb:VideoSegment` to add additional properties, 
-but this is discouraged and may not be supported in future versions of DSP-API. 
-Instead, instances of `kb:Annotation` pointing to the segment should be used to add additional information.
+Video segments are defined by the following properties:
 
+- `kb:isVideoSegmentOf` (1): A [LinkValue](#linkvalue) pointing to a [MovingImageRepresentation](#representations).
+- `kb:hasSegmentBounds` (1): An [IntervalValue](#intervalvalue) representing the temporal extent of the segment.
+- `kb:hasTitle` (0-1): A [TextValue](#textvalue) for adding a title or name to the segment.
+- `kb:hasDescription` (0-n): A [TextValue](#textvalue) for providing one or more descriptions of the segment.
+- `kb:hasKeyword` (0-n): A [TextValue](#textvalue) for adding one or more keywords to the segment.
+- `kb:relatesTo`/`kb:relatesToValue` (0-n): A [LinkValue](#linkvalue) for relating the segment to another resource.
+- `kb:hasComment` (0-1): A [TextValue](#textvalue) for a comment on the segment.
 
 ### Text with Standoff Markup
 
