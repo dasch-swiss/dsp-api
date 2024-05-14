@@ -36,6 +36,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
@@ -80,6 +81,7 @@ final case class ValuesResponderV2Live(
   resourceUtilV2: ResourceUtilV2,
   searchResponderV2: SearchResponderV2,
   triplestoreService: TriplestoreService,
+  permissionsResponder: PermissionsResponder,
 )(implicit val stringFormatter: StringFormatter)
     extends ValuesResponderV2
     with MessageHandler {
@@ -278,11 +280,11 @@ final case class ValuesResponderV2Live(
 
         // Get the default permissions for the new value.
         defaultValuePermissions <-
-          resourceUtilV2.getDefaultValuePermissions(
+          permissionsResponder.getDefaultValuePermissions(
             projectIri = resourceInfo.projectADM.id,
             resourceClassIri = resourceInfo.resourceClassIri,
             propertyIri = submittedInternalPropertyIri,
-            requestingUser = requestingUser,
+            targetUser = requestingUser,
           )
 
         // Did the user submit permissions for the new value?
@@ -2445,7 +2447,8 @@ object ValuesResponderV2Live {
       ts      <- ZIO.service[TriplestoreService]
       sr      <- ZIO.service[SearchResponderV2]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, sr, ts)(sf))
+      pr      <- ZIO.service[PermissionsResponder]
+      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, sr, ts, pr)(sf))
     } yield handler
   }
 }

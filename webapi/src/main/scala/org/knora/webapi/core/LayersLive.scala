@@ -6,6 +6,7 @@
 package org.knora.webapi.core
 
 import org.apache.pekko.actor.ActorSystem
+import zio.*
 import zio.ULayer
 import zio.ZLayer
 
@@ -15,8 +16,6 @@ import org.knora.webapi.config.InstrumentationServerConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
-import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
-import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -46,6 +45,7 @@ import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
@@ -69,7 +69,6 @@ object LayersLive {
    */
   type DspEnvironmentLive =
     // format: off
-    AdminModule.Provided &
     ActorSystem &
     AdminApiEndpoints &
     AdminModule.Provided &
@@ -82,11 +81,9 @@ object LayersLive {
     AuthorizationRestService &
     CardinalityHandler &
     ConstructResponseUtilV2 &
-    GravsearchTypeInspectionRunner &
     GroupRestService &
     HttpServer &
     IIIFRequestMessageHandler &
-    InferenceOptimizationService &
     InstrumentationServerConfig &
     InvalidTokenCache &
     IriConverter &
@@ -105,14 +102,12 @@ object LayersLive {
     ProjectExportStorageService &
     ProjectImportService &
     ProjectRestService &
-    QueryTraverser &
     RepositoryUpdater &
-    ResourceUtilV2 &
     ResourceUtilV2 &
     ResourcesResponderV2 &
     RestCardinalityService &
     SearchApiRoutes &
-    SearchResponderV2 &
+    SearchResponderV2Live.Provided &
     SipiService &
     StandoffResponderV2 &
     StandoffTagUtilV2 &
@@ -141,13 +136,10 @@ object LayersLive {
       CardinalityHandler.layer,
       CardinalityService.layer,
       ConstructResponseUtilV2Live.layer,
-      ConstructTransformer.layer,
       DspIngestClientLive.layer,
-      GravsearchTypeInspectionRunner.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
-      InferenceOptimizationService.layer,
       InvalidTokenCache.layer,
       IriConverter.layer,
       IriService.layer,
@@ -160,7 +152,6 @@ object LayersLive {
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
-      OntologyInferencer.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
@@ -170,7 +161,6 @@ object LayersLive {
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportService.layer,
-      QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoLayers.live,
       ResourceUtilV2Live.layer,
@@ -178,7 +168,7 @@ object LayersLive {
       RestCardinalityServiceLive.layer,
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
-      SearchResponderV2Live.layer,
+      SearchResponderV2Live.liveLayer,
       SipiServiceLive.layer,
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
@@ -188,5 +178,6 @@ object LayersLive {
       TriplestoreServiceLive.layer,
       ValuesResponderV2Live.layer,
       org.knora.webapi.core.ActorSystem.layer,
+      // ZLayer.Debug.mermaid,
     )
 }

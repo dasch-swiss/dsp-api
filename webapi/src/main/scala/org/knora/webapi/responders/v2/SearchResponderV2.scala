@@ -52,6 +52,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -1050,4 +1051,19 @@ final case class SearchResponderV2Live(
 
 object SearchResponderV2Live {
   val layer = ZLayer.derive[SearchResponderV2Live]
+
+  type Dependencies = StandoffTagUtilV2 & AppConfig & TriplestoreService & ConstructResponseUtilV2 & OntologyCache &
+    IriConverter & MessageRelay & StringFormatter & ProjectService
+
+  type Provided = SearchResponderV2Live & OntologyInferencer & QueryTraverser & GravsearchTypeInspectionRunner
+
+  val liveLayer: URLayer[Dependencies, Provided] =
+    ZLayer.makeSome[Dependencies, Provided](
+      GravsearchTypeInspectionRunner.layer,
+      SearchResponderV2Live.layer,
+      InferenceOptimizationService.layer,
+      QueryTraverser.layer,
+      ConstructTransformer.layer,
+      OntologyInferencer.layer,
+    )
 }
