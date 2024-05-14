@@ -14,7 +14,6 @@ import java.util.UUID
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.*
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdfs
@@ -45,7 +44,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
 
 final case class ListsResponder(
-  appConfig: AppConfig,
   auth: AuthorizationRestService,
   iriService: IriService,
   knoraProjectService: KnoraProjectService,
