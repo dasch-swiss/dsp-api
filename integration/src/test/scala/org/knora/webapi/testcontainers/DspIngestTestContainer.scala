@@ -11,7 +11,7 @@ import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
-import org.knora.webapi.testcontainers.TestContainerOps.StartableOps
+import org.knora.webapi.testcontainers.TestContainerOps.toZio
 
 final class DspIngestTestContainer extends GenericContainer[DspIngestTestContainer](s"daschswiss/dsp-ingest:latest")
 
@@ -43,5 +43,5 @@ object DspIngestTestContainer {
   )
 
   val layer: URLayer[SharedVolumes.Images, DspIngestTestContainer] =
-    ZLayer.scoped(ZIO.service[SharedVolumes.Images].flatMap(make(_).toZio)) >+> initDspIngest
+    ZLayer.scoped(ZIO.serviceWithZIO[SharedVolumes.Images](make(_).toZio)) >+> initDspIngest
 }
