@@ -240,6 +240,5 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, sipiService
 }
 
 object ResourceUtilV2Live {
-  val layer: URLayer[TriplestoreService & SipiService, ResourceUtilV2] =
-    ZLayer.fromFunction(ResourceUtilV2Live.apply(_, _))
+  val layer = ZLayer.derive[ResourceUtilV2Live]
 }

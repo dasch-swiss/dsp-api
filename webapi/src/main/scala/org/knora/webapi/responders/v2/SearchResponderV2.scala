@@ -1050,17 +1050,15 @@ final case class SearchResponderV2Live(
 }
 
 object SearchResponderV2Live {
-  val layer = ZLayer.derive[SearchResponderV2Live]
-
   type Dependencies = StandoffTagUtilV2 & AppConfig & TriplestoreService & ConstructResponseUtilV2 & OntologyCache &
     IriConverter & MessageRelay & StringFormatter & ProjectService
 
   type Provided = SearchResponderV2Live & OntologyInferencer & QueryTraverser & GravsearchTypeInspectionRunner
 
-  val liveLayer: URLayer[Dependencies, Provided] =
+  val layer: URLayer[Dependencies, Provided] =
     ZLayer.makeSome[Dependencies, Provided](
       GravsearchTypeInspectionRunner.layer,
-      SearchResponderV2Live.layer,
+      ZLayer.derive[SearchResponderV2Live],
       InferenceOptimizationService.layer,
       QueryTraverser.layer,
       ConstructTransformer.layer,

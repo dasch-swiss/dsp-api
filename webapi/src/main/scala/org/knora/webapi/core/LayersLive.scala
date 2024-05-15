@@ -168,7 +168,7 @@ object LayersLive {
       RestCardinalityServiceLive.layer,
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
-      SearchResponderV2Live.liveLayer,
+      SearchResponderV2Live.layer,
       SipiServiceLive.layer,
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,

@@ -2003,11 +2003,7 @@ final case class ResourcesResponderV2(
 }
 
 object ResourcesResponderV2 {
-  type Dependencies = AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectService & MessageRelay &
-    PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & SearchResponderV2 & StringFormatter & TriplestoreService &
-    OntologyRepo & PermissionsResponder
-
-  val layer: URLayer[Dependencies, ResourcesResponderV2] = ZLayer.fromZIO {
+  val layer = ZLayer.fromZIO {
     for {
       config  <- ZIO.service[AppConfig]
       iriS    <- ZIO.service[IriService]
