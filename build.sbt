@@ -9,12 +9,12 @@ addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
 val sipiVersion                 = "v30.13.0"
-val tapirVersion                = "1.10.6"
+val tapirVersion                = "1.10.7"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "4.0.2"
 val zioHttpVersion              = "3.0.0-RC6"
 val zioJsonVersion              = "0.6.2"
-val zioLoggingVersion           = "2.2.3"
+val zioLoggingVersion           = "2.2.4"
 val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
@@ -71,7 +71,7 @@ lazy val root = (project in file("."))
       ),
     ),
     libraryDependencies ++= tapir ++ metrics ++ Seq(
-      "com.github.jwt-scala" %% "jwt-zio-json"                      % "10.0.0",
+      "com.github.jwt-scala" %% "jwt-zio-json"                      % "10.0.1",
       "commons-io"            % "commons-io"                        % "2.16.1",
       "dev.zio"              %% "zio"                               % zioVersion,
       "dev.zio"              %% "zio-config"                        % zioConfigVersion,
@@ -105,7 +105,7 @@ lazy val root = (project in file("."))
       "dev.zio"      %% "zio-test-junit"         % zioVersion     % Test,
       "dev.zio"      %% "zio-test-magnolia"      % zioVersion     % Test,
       "dev.zio"      %% "zio-test-sbt"           % zioVersion     % Test,
-      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.0.11"       % Test,
+      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.0.12"       % Test,
     ),
     testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     Docker / dockerRepository            := Some("daschswiss"),
