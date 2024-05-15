@@ -21,7 +21,7 @@ object ZioTestContainers {
 }
 
 object TestContainerOps {
-  implicit final class StartableOps[T <: Startable](private val self: T) extends AnyVal {
+  extension [T <: Startable](self: T) {
     def toZio: URIO[Scope, T]                   = ZioTestContainers.toZio(self)
     def toLayer(implicit ev: Tag[T]): ULayer[T] = ZioTestContainers.toLayer(self)
   }
