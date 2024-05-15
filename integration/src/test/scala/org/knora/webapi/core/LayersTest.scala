@@ -123,7 +123,7 @@ object LayersTest {
     ResourcesResponderV2 &
     RestCardinalityService &
     SearchApiRoutes &
-    SearchResponderV2Live.Provided &
+    SearchResponderV2Module.Provided &
     SipiService &
     StandoffResponderV2 &
     StandoffTagUtilV2 &
@@ -182,7 +182,7 @@ object LayersTest {
       RestCardinalityServiceLive.layer,
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
-      SearchResponderV2Live.layer,
+      SearchResponderV2Module.layer,
       SipiServiceTestDelegator.layer,
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
