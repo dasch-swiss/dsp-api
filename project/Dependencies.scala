@@ -27,7 +27,7 @@ object Dependencies {
   val ZioLoggingVersion           = "2.2.4"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC24"
+  val ZioPreludeVersion           = "1.0.0-RC26"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.1.1"
 
@@ -70,7 +70,7 @@ object Dependencies {
   val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.13" // the logging interface
 
   // Metrics
-  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.22"
+  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.22.1"
 
   // input validation
   val commonsValidator =
@@ -89,7 +89,7 @@ object Dependencies {
   // other
   val diff        = "com.sksamuel.diff" % "diff"                % "1.1.11"
   val gwtServlet  = "com.google.gwt"    % "gwt-servlet"         % "2.10.0"
-  val icu4j       = "com.ibm.icu"       % "icu4j"               % "74.2"
+  val icu4j       = "com.ibm.icu"       % "icu4j"               % "75.1"
   val jakartaJSON = "org.glassfish"     % "jakarta.json"        % "2.0.1"
   val rdf4jClient = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
   val rdf4jShacl  = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
