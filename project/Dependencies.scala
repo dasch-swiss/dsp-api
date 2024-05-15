@@ -106,7 +106,7 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.18"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.19.7"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.19.8"
   val wiremock       = "org.wiremock"       % "wiremock"       % "3.5.4"
 
   // found/added by the plugin but deleted anyway
