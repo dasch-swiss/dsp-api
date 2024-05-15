@@ -11,18 +11,13 @@ import zio.Task
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.IRI
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
@@ -32,6 +27,7 @@ import org.knora.webapi.routing.v2.AssetIngestState
 import org.knora.webapi.routing.v2.AssetIngestState.*
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
@@ -71,22 +67,6 @@ trait ResourceUtilV2 {
   ): IO[ForbiddenException, Unit]
 
   /**
-   * Gets the default permissions for a new value.
-   *
-   * @param projectIri       the IRI of the project of the containing resource.
-   * @param resourceClassIri the internal IRI of the resource class.
-   * @param propertyIri      the internal IRI of the property that points to the value.
-   * @param requestingUser   the user that is creating the value.
-   * @return a permission string.
-   */
-  def getDefaultValuePermissions(
-    projectIri: IRI,
-    resourceClassIri: SmartIri,
-    propertyIri: SmartIri,
-    requestingUser: User,
-  ): Task[String]
-
-  /**
    * Checks whether a list node exists and if is a root node.
    *
    * @param nodeIri the IRI of the list node.
@@ -124,7 +104,7 @@ trait ResourceUtilV2 {
     }
 }
 
-final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRelay: MessageRelay)
+final case class ResourceUtilV2Live(triplestore: TriplestoreService, sipiService: SipiService)
     extends ResourceUtilV2
     with LazyLogging {
 
@@ -193,34 +173,6 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
   }
 
   /**
-   * Gets the default permissions for a new value.
-   *
-   * @param projectIri       the IRI of the project of the containing resource.
-   * @param resourceClassIri the internal IRI of the resource class.
-   * @param propertyIri      the internal IRI of the property that points to the value.
-   * @param requestingUser   the user that is creating the value.
-   * @return a permission string.
-   */
-  override def getDefaultValuePermissions(
-    projectIri: IRI,
-    resourceClassIri: SmartIri,
-    propertyIri: SmartIri,
-    requestingUser: User,
-  ): Task[String] =
-    for {
-      defaultObjectAccessPermissionsResponse <- messageRelay
-                                                  .ask[DefaultObjectAccessPermissionsStringResponseADM](
-                                                    DefaultObjectAccessPermissionsStringForPropertyGetADM(
-                                                      projectIri = projectIri,
-                                                      resourceClassIri = resourceClassIri.toString,
-                                                      propertyIri = propertyIri.toString,
-                                                      targetUser = requestingUser,
-                                                      requestingUser = KnoraSystemInstances.Users.SystemUser,
-                                                    ),
-                                                  )
-    } yield defaultObjectAccessPermissionsResponse.permissionLiteral
-
-  /**
    * Checks whether a list node exists and if is a root node.
    *
    * @param nodeIri the IRI of the list node.
@@ -259,30 +211,34 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
     valueContents: Seq[FileValueContentV2],
     requestingUser: User,
   ): Task[T] = {
-    val valuesToConsider = valueContents.filter(!_.isInstanceOf[StillImageExternalFileValueContentV2])
-    // Was this update a success?
+    val temporaryFiles = valueContents.filterNot(_.is[StillImageExternalFileValueContentV2])
     updateTask.foldZIO(
       (e: Throwable) => {
-        // The update failed. Ask Sipi to delete the temporary files and return the original failure.
-        val deleteRequests =
-          valuesToConsider.map(value => DeleteTemporaryFileRequest(value.fileValue.internalFilename, requestingUser))
-        val sipiResults = ZIO.foreachDiscard(deleteRequests)(messageRelay.ask[SuccessResponseV2](_).logError)
-        sipiResults.ignore *> ZIO.fail(e)
+        ZIO
+          .foreachDiscard(temporaryFiles) { file =>
+            sipiService
+              .deleteTemporaryFile(DeleteTemporaryFileRequest(file.fileValue.internalFilename, requestingUser))
+              .logError
+          }
+          .ignore *> ZIO.fail(e)
       },
       (updateInProject: T) => {
-        // Yes. Ask Sipi to move the file to permanent storage.
-        // If Sipi succeeds, return the original result.
-        // Otherwise, return the failures from Sipi.
-        val moveRequests = valuesToConsider
-          .map(_.fileValue.internalFilename)
-          .map(MoveTemporaryFileToPermanentStorageRequest(_, updateInProject.projectADM.shortcode, requestingUser))
-        ZIO.foreachDiscard(moveRequests)(messageRelay.ask[SuccessResponseV2](_)).as(updateInProject)
+        ZIO
+          .foreachDiscard(temporaryFiles) { file =>
+            sipiService.moveTemporaryFileToPermanentStorage(
+              MoveTemporaryFileToPermanentStorageRequest(
+                file.fileValue.internalFilename,
+                updateInProject.projectADM.shortcode,
+                requestingUser,
+              ),
+            )
+          }
+          .as(updateInProject)
       },
     )
   }
 }
 
 object ResourceUtilV2Live {
-  val layer: URLayer[TriplestoreService & MessageRelay, ResourceUtilV2] =
-    ZLayer.fromFunction(ResourceUtilV2Live.apply _)
+  val layer = ZLayer.derive[ResourceUtilV2Live]
 }

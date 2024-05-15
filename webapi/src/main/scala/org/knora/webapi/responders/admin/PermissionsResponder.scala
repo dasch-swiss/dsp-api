@@ -697,7 +697,7 @@ final case class PermissionsResponder(
     propertyIri: Option[IRI],
     entityType: IRI,
     targetUser: User,
-  ) =
+  ): Task[DefaultObjectAccessPermissionsStringResponseADM] =
     for {
       /* Get the groups the user is member of. */
       userGroups <-
@@ -1763,6 +1763,31 @@ final case class PermissionsResponder(
              UUID.randomUUID(),
            )
     } yield ()
+
+  /**
+   * Gets the default permissions for a new value.
+   *
+   * @param projectIri       the IRI of the project of the containing resource.
+   * @param resourceClassIri the internal IRI of the resource class.
+   * @param propertyIri      the internal IRI of the property that points to the value.
+   * @param requestingUser   the user that is creating the value.
+   * @return a permission string.
+   */
+  def getDefaultValuePermissions(
+    projectIri: IRI,
+    resourceClassIri: SmartIri,
+    propertyIri: SmartIri,
+    targetUser: User,
+  ): Task[String] =
+    defaultObjectAccessPermissionsStringForEntityGetADM(
+      projectIri = projectIri,
+      resourceClassIri = resourceClassIri.toString,
+      propertyIri = Some(propertyIri.toString),
+      entityType = PropertyEntityType,
+      targetUser = targetUser,
+    ).map {
+      _.permissionLiteral
+    }
 }
 
 object PermissionsResponder {
