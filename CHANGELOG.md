@@ -1,5 +1,40 @@
 # Changelog
 
+## [30.14.0](https://github.com/dasch-swiss/dsp-api/compare/v30.13.0...v30.14.0) (2024-05-15)
+
+
+### Maintenance
+
+* Dependency updates ([#3246](https://github.com/dasch-swiss/dsp-api/issues/3246)) ([070e653](https://github.com/dasch-swiss/dsp-api/commit/070e653acaf2b7102e565977eb41bac88b015d43))
+* Fix apache-jena-fuseki update ([#3234](https://github.com/dasch-swiss/dsp-api/issues/3234)) ([c8b1628](https://github.com/dasch-swiss/dsp-api/commit/c8b16284d6764970b37bacc903d42871f3eb3d3d))
+* Introduce accessors for SPARQL SELECT results ([#3238](https://github.com/dasch-swiss/dsp-api/issues/3238)) ([fafe48a](https://github.com/dasch-swiss/dsp-api/commit/fafe48a7769a4521644e194dd552e0a1ed36dced))
+* Introduce SparqlTimeOut, preparation to allow different timeouts for maintenance queries ([#3239](https://github.com/dasch-swiss/dsp-api/issues/3239)) ([bee3b08](https://github.com/dasch-swiss/dsp-api/commit/bee3b08bc54f6a40138df18e4861c27f3d65205d))
+* KnoraSipiIntegrationV2ITSpec simplifications (DEV-3504) ([#3235](https://github.com/dasch-swiss/dsp-api/issues/3235)) ([1d33541](https://github.com/dasch-swiss/dsp-api/commit/1d335419630260dcd1477fd7b0a1d283d9bd78da))
+* Minor dependency updates ([#3245](https://github.com/dasch-swiss/dsp-api/issues/3245)) ([2bacf50](https://github.com/dasch-swiss/dsp-api/commit/2bacf50564694f63d83be76d8ff7aef7f32f8d72))
+* Patch dependency updates ([#3244](https://github.com/dasch-swiss/dsp-api/issues/3244)) ([7424aa9](https://github.com/dasch-swiss/dsp-api/commit/7424aa971c15dd4c5ab6f3eb52b0169a8388d2dc))
+* Port to Scala 3 (DEV-3543) ([#3231](https://github.com/dasch-swiss/dsp-api/issues/3231)) ([82dc1c8](https://github.com/dasch-swiss/dsp-api/commit/82dc1c8f7c569ac002088f332020ce79de963f10))
+* Remove .env file requirement from setup ([#3240](https://github.com/dasch-swiss/dsp-api/issues/3240)) ([171719b](https://github.com/dasch-swiss/dsp-api/commit/171719b1cd9cbcf1254d27cfda934e28ec5de11c))
+* Remove MessageRelay from ResourceUtilV2 ([#3243](https://github.com/dasch-swiss/dsp-api/issues/3243)) ([698b07a](https://github.com/dasch-swiss/dsp-api/commit/698b07ae772a6e5ab82c6ce2527ecc46d7139946))
+* Set scalafix Scala 3 target dialect (DEV-3543) ([#3236](https://github.com/dasch-swiss/dsp-api/issues/3236)) ([1dcf47b](https://github.com/dasch-swiss/dsp-api/commit/1dcf47b73d2e88403907e1b47faf6fe20d7650f9))
+* Simplify shift code ([#3230](https://github.com/dasch-swiss/dsp-api/issues/3230)) ([a9f0840](https://github.com/dasch-swiss/dsp-api/commit/a9f084080438f7f9cad8be7e1971de9589d3892e))
+* Split list handlers and rest service ([#3242](https://github.com/dasch-swiss/dsp-api/issues/3242)) ([a190544](https://github.com/dasch-swiss/dsp-api/commit/a19054477b995dcf0114a5e5988d307ed1665644))
+* Update dsp-app to v11.9.1 ([#3232](https://github.com/dasch-swiss/dsp-api/issues/3232)) ([ae2e7dd](https://github.com/dasch-swiss/dsp-api/commit/ae2e7dde25b6a2c91306830411eb28fc48eb6bd9))
+
+
+### Documentation
+
+* Improve documentation on segments ([#3241](https://github.com/dasch-swiss/dsp-api/issues/3241)) ([82534ab](https://github.com/dasch-swiss/dsp-api/commit/82534abc5a860bf6ba3a2b11e2d7480e84e66185))
+
+
+### Enhancements
+
+* X-Asset-Ingested: skip Sipi temp move for updates (DEV-3504) ([#3219](https://github.com/dasch-swiss/dsp-api/issues/3219)) ([8cf4e9d](https://github.com/dasch-swiss/dsp-api/commit/8cf4e9dc5c93261179c1e6fa927448e84899a67f))
+
+
+### Bug Fixes
+
+* Improve labels in ontology for display in App (DEV-3535) ([#3208](https://github.com/dasch-swiss/dsp-api/issues/3208)) ([dbb166b](https://github.com/dasch-swiss/dsp-api/commit/dbb166b8239d90430c70a4b60c30e0249d6b1def))
+
 ## [30.13.0](https://github.com/dasch-swiss/dsp-api/compare/v30.12.0...v30.13.0) (2024-05-02)
 
 
