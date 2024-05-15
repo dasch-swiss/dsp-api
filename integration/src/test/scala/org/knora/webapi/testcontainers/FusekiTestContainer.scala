@@ -21,7 +21,7 @@ import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
 
 import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.testcontainers.TestContainerOps.StartableOps
+import org.knora.webapi.testcontainers.TestContainerOps.toLayer
 
 final class FusekiTestContainer extends GenericContainer[FusekiTestContainer](BuildInfo.fuseki) {
 

@@ -10,18 +10,17 @@ import zio.*
 
 object ZioTestContainers {
 
-  def toZio[T <: Startable](self: T): URIO[Scope, T] = { // using `logError.ignore` because there's no point to try to recover if starting/stopping the container fails
-    val acquire = ZIO.attemptBlocking(self.start()).logError.ignore.as(self)
-    val release = (container: T) => ZIO.attemptBlocking(container.stop()).logError.ignore
+  def toZio[T <: Startable](self: T): URIO[Scope, T] = {
+    val acquire = ZIO.attemptBlocking(self.start()).orDie.as(self)
+    val release = (container: T) => ZIO.succeed(container.stop())
     ZIO.acquireRelease(acquire)(release)
   }
 
-  def toLayer[T <: Startable: Tag](container: T): ULayer[T] =
-    ZLayer.scoped(toZio(container))
+  def toLayer[T <: Startable: Tag](self: T): ULayer[T] = ZLayer.scoped(toZio(self))
 }
 
 object TestContainerOps {
-  implicit final class StartableOps[T <: Startable](private val self: T) extends AnyVal {
+  extension [T <: Startable](self: T) {
     def toZio: URIO[Scope, T]                   = ZioTestContainers.toZio(self)
     def toLayer(implicit ev: Tag[T]): ULayer[T] = ZioTestContainers.toLayer(self)
   }
