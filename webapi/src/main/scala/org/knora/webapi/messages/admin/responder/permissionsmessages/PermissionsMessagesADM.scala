@@ -318,6 +318,8 @@ case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(
  * resource class / property combination inside a specific project. A successful response will be a
  * [[DefaultObjectAccessPermissionsStringResponseADM]].
  *
+ * NOTE: only used in tests now, can be refactored to a direct call.
+ *
  * @param projectIri       the project for which the default object permissions need to be retrieved.
  * @param resourceClassIri the resource class which can also cary default object access permissions.
  * @param propertyIri      the property type which can also cary default object access permissions.

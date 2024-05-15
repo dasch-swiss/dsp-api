@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.admin
 
-import zio.ZLayer
+import zio.URLayer
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.IriService
@@ -22,5 +22,5 @@ object AdminModule {
 
   type Provided = AdminDomainModule.Provided
 
-  val layer: ZLayer[Dependencies, Nothing, Provided] = AdminRepoModule.layer >>> AdminDomainModule.layer
+  val layer: URLayer[Dependencies, Provided] = AdminRepoModule.layer >>> AdminDomainModule.layer
 }

@@ -32,6 +32,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
+import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.domain.model.User
@@ -57,6 +58,7 @@ final case class CreateResourceV2Handler(
   searchResponderV2: SearchResponderV2,
   getResources: GetResources,
   ontologyRepo: OntologyRepo,
+  permissionsResponder: PermissionsResponder,
 )(implicit val stringFormatter: StringFormatter)
     extends LazyLogging {
 
@@ -739,12 +741,13 @@ final case class CreateResourceV2Handler(
     val permissionsFutures: Map[SmartIri, Task[Map[SmartIri, String]]] = resourceClassProperties.map {
       case (resourceClassIri, propertyIris) =>
         val propertyPermissionsFutures: Map[SmartIri, Task[String]] = propertyIris.toSeq.map { propertyIri =>
-          propertyIri -> resourceUtilV2.getDefaultValuePermissions(
-            projectIri = projectIri,
-            resourceClassIri = resourceClassIri,
-            propertyIri = propertyIri,
-            requestingUser = requestingUser,
-          )
+          propertyIri ->
+            permissionsResponder.getDefaultValuePermissions(
+              projectIri = projectIri,
+              resourceClassIri = resourceClassIri,
+              propertyIri = propertyIri,
+              targetUser = requestingUser,
+            )
         }.toMap
 
         resourceClassIri -> ZioHelper.sequence(propertyPermissionsFutures)

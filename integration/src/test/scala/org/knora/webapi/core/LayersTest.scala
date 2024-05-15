@@ -18,7 +18,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
-import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -119,13 +118,12 @@ object LayersTest {
     ProjectExportStorageService &
     ProjectImportService &
     ProjectRestService &
-    QueryTraverser &
     RepositoryUpdater &
     ResourceUtilV2 &
     ResourcesResponderV2 &
     RestCardinalityService &
     SearchApiRoutes &
-    SearchResponderV2 &
+    SearchResponderV2Module.Provided &
     SipiService &
     StandoffResponderV2 &
     StandoffTagUtilV2 &
@@ -151,9 +149,7 @@ object LayersTest {
       CardinalityHandler.layer,
       CardinalityService.layer,
       ConstructResponseUtilV2Live.layer,
-      ConstructTransformer.layer,
       DspIngestClientLive.layer,
-      GravsearchTypeInspectionRunner.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
@@ -170,7 +166,6 @@ object LayersTest {
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
-      OntologyInferencer.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
@@ -180,7 +175,6 @@ object LayersTest {
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportService.layer,
-      QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoLayers.live,
       ResourceUtilV2Live.layer,
@@ -188,7 +182,7 @@ object LayersTest {
       RestCardinalityServiceLive.layer,
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
-      SearchResponderV2Live.layer,
+      SearchResponderV2Module.layer,
       SipiServiceTestDelegator.layer,
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
