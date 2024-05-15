@@ -24,12 +24,12 @@ object Dependencies {
   val Rdf4jVersion      = "4.3.11"
 
   val ZioConfigVersion            = "4.0.2"
-  val ZioLoggingVersion           = "2.2.3"
+  val ZioLoggingVersion           = "2.2.4"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC26"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.22"
+  val ZioVersion                  = "2.1.1"
 
   // ZIO
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
@@ -77,7 +77,7 @@ object Dependencies {
     "commons-validator" % "commons-validator" % "1.8.0" exclude ("commons-logging", "commons-logging")
 
   // authentication
-  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.0"
+  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.1"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "6.2.4" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
@@ -106,13 +106,13 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.18"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.19.7"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.19.8"
   val wiremock       = "org.wiremock"       % "wiremock"       % "3.5.4"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.10.6"
+  val tapirVersion = "1.10.7"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,

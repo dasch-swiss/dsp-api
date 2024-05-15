@@ -18,7 +18,7 @@ import java.net.Inet6Address
 import java.net.InetAddress
 
 import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.testcontainers.TestContainerOps.StartableOps
+import org.knora.webapi.testcontainers.TestContainerOps.toZio
 
 final class SipiTestContainer
     extends GenericContainer[SipiTestContainer](s"daschswiss/knora-sipi:${BuildInfo.version}") {
@@ -83,7 +83,7 @@ object SipiTestContainer {
   )
 
   val layer: URLayer[SharedVolumes.Images, SipiTestContainer] = {
-    val container = ZLayer.scoped(ZIO.service[SharedVolumes.Images].flatMap(make(_).toZio))
+    val container = ZLayer.scoped(ZIO.serviceWithZIO[SharedVolumes.Images](make(_).toZio))
     (container >>> initSipi).orDie
   }
 }

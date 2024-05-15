@@ -35,32 +35,22 @@ object Logger {
       label("spans", bracketed(spans)) +
       (space + label("cause", cause).highlight).filter(LogFilter.causeNonEmpty)
 
-  private val textLogger: ZLayer[Any, Nothing, Unit] = consoleLogger(
-    ConsoleLoggerConfig(logFormatText, logFilter),
-  )
-
   private val logFormatJson: LogFormat =
     LogFormat.label("name", LoggerNameExtractor.loggerNameAnnotationOrTrace.toLogFormat()) +
       LogFormat.default +
       LogFormat.annotations +
       LogFormat.spans
 
-  private val jsonLogger: ZLayer[Any, Nothing, Unit] = consoleJsonLogger(
-    ConsoleLoggerConfig(logFormatJson, logFilter),
-  )
+  private val textLogger: ULayer[Unit] = consoleLogger(ConsoleLoggerConfig(logFormatText, logFilter))
+  private val jsonLogger: ULayer[Unit] = consoleJsonLogger(ConsoleLoggerConfig(logFormatJson, logFilter))
 
   private val useJsonLogger = sys.env.getOrElse("DSP_API_LOG_APPENDER", "TEXT") == "JSON"
 
-  private val logger: ZLayer[Any, Nothing, Unit] =
-    if (useJsonLogger) jsonLogger
-    else textLogger
+  private val logger: ULayer[Unit] = if (useJsonLogger) jsonLogger else textLogger
 
-  def fromEnv(): ZLayer[Any, Nothing, Unit & Unit] =
-    Runtime.removeDefaultLoggers >>> logger >+> Slf4jBridge.initialize
+  def fromEnv(): ULayer[Unit] = Runtime.removeDefaultLoggers >>> logger >+> Slf4jBridge.initialize
 
-  def json(): ZLayer[Any, Nothing, Unit & Unit] =
-    Runtime.removeDefaultLoggers >>> jsonLogger >+> Slf4jBridge.initialize
+  def json(): ULayer[Unit] = Runtime.removeDefaultLoggers >>> jsonLogger >+> Slf4jBridge.initialize
 
-  def text(): ZLayer[Any, Nothing, Unit & Unit] =
-    Runtime.removeDefaultLoggers >>> textLogger >+> Slf4jBridge.initialize
+  def text(): ULayer[Unit] = Runtime.removeDefaultLoggers >>> textLogger >+> Slf4jBridge.initialize
 }
