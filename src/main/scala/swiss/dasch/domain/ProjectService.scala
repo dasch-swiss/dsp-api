@@ -56,6 +56,12 @@ final case class ProjectService(
       .getProjectFolder(shortcode)
       .flatMap(path => ZIO.whenZIO(Files.isDirectory(path))(ZIO.succeed(path)))
 
+  def findOrCreateProject(shortcode: ProjectShortcode): IO[IOException, ProjectFolder] =
+    findProject(shortcode).flatMap {
+      case Some(prj) => ZIO.succeed(prj)
+      case None      => storage.createProjectFolder(shortcode)
+    }
+
   def findAssetInfosOfProject(shortcode: ProjectShortcode): ZStream[Any, Throwable, AssetInfo] =
     ZStream
       .fromZIOOption(findProject(shortcode).some)

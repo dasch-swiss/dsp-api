@@ -94,7 +94,7 @@ final case class ProjectsEndpointsHandler(
       authorizationHandler.ensureProjectWritable(principal, shortcode) *>
         ZIO.scoped {
           for {
-            prj <- projectService.findProject(shortcode).some.mapError(projectNotFoundOrServerError(_, shortcode))
+            prj <- projectService.findOrCreateProject(shortcode).mapError(InternalServerError(_))
             tmpDir <-
               storageService.createTempDirectoryScoped(s"${prj.shortcode}-ingest").mapError(InternalServerError(_))
             tmpFile = tmpDir / filename.value

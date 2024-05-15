@@ -23,6 +23,7 @@ import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZoneOffset}
 
 trait StorageService {
+  def createProjectFolder(projectShortcode: ProjectShortcode): IO[IOException, ProjectFolder]
   def getProjectFolder(projectShortcode: ProjectShortcode): UIO[ProjectFolder]
   def getAssetFolder(asset: AssetRef): UIO[AssetFolder]
   def getAssetsBaseFolder(): UIO[AssetsBaseFolder]
@@ -109,6 +110,9 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
 
   override def getAssetsBaseFolder(): UIO[AssetsBaseFolder] =
     ZIO.succeed(AssetsBaseFolder.from(config))
+
+  override def createProjectFolder(shortcode: ProjectShortcode): IO[IOException, ProjectFolder] =
+    getProjectFolder(shortcode).tap(f => createDirectories(f.path))
 
   override def getProjectFolder(shortcode: ProjectShortcode): UIO[ProjectFolder] =
     getAssetsBaseFolder().map(assetDir => ProjectFolder.unsafeFrom(assetDir / shortcode.toString))
