@@ -19,7 +19,6 @@ import java.net.InetAddress
 
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.testcontainers.TestContainerOps.toZio
-import org.knora.webapi.testcontainers.TestContainerOps.toLayer
 
 final class SipiTestContainer
     extends GenericContainer[SipiTestContainer](s"daschswiss/knora-sipi:${BuildInfo.version}") {
