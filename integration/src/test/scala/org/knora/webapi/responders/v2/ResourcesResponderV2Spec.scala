@@ -1048,10 +1048,8 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
-            valueContent = HierarchicalListValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasListNode = "http://rdfh.ch/lists/0001/treeList03",
-            ),
+            valueContent =
+              HierarchicalListValueContentV2(ApiV2Complex, "http://rdfh.ch/lists/0001/treeList03", None, None),
           ),
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri -> Seq(
@@ -1555,8 +1553,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = HierarchicalListValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasListNode = "http://rdfh.ch/lists/0001/nonexistent-list-node",
+              ApiV2Complex,
+              "http://rdfh.ch/lists/0001/nonexistent-list-node",
+              None,
+              None,
             ),
           ),
         ),
