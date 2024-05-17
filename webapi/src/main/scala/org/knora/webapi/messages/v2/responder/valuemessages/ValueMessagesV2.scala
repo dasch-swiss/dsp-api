@@ -2366,7 +2366,7 @@ object HierarchicalListValueContentV2 {
                .fail(BadRequestException(s"List node IRI <$listValueAsListNode> is not a Knora data IRI"))
                .when(!listValueAsListNode.isKnoraDataIri)
         comment <- JsonLDUtil.getComment(jsonLDObject)
-      } yield HierarchicalListValueContentV2(ApiV2Complex, listValueAsListNode.toString, comment)
+      } yield HierarchicalListValueContentV2(ApiV2Complex, listValueAsListNode.toString, None, comment)
   }
 }
 
