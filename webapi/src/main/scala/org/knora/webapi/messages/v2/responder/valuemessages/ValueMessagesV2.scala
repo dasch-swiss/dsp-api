@@ -2281,8 +2281,8 @@ object TimeValueContentV2 {
 case class HierarchicalListValueContentV2(
   ontologySchema: OntologySchema,
   valueHasListNode: IRI,
-  listNodeLabel: Option[String] = None,
-  comment: Option[String] = None,
+  listNodeLabel: Option[String],
+  comment: Option[String],
 ) extends ValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
