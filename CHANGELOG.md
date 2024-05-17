@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.9.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.9.0...v0.9.1) (2024-05-17)
+
+
+### Bug Fixes
+
+* Create the project folder if it does not exist yet when ingesting individual assets (DEV-3620) ([#216](https://github.com/dasch-swiss/dsp-ingest/issues/216)) ([b0d823a](https://github.com/dasch-swiss/dsp-ingest/commit/b0d823a3a74a00f292099d2818a6b4d96dbe3a2a))
+
+
+### Maintenance
+
+* Dependency updates ([#215](https://github.com/dasch-swiss/dsp-ingest/issues/215)) ([42a9cb6](https://github.com/dasch-swiss/dsp-ingest/commit/42a9cb6d389ce64340ca9e02b2cdf79db4166b42))
+* Minor dependency updates ([#214](https://github.com/dasch-swiss/dsp-ingest/issues/214)) ([fdd2004](https://github.com/dasch-swiss/dsp-ingest/commit/fdd2004bfe1b589012e6c19a51d2ffd6ee1a248e))
+* Patch dependency updates ([#213](https://github.com/dasch-swiss/dsp-ingest/issues/213)) ([c37eb76](https://github.com/dasch-swiss/dsp-ingest/commit/c37eb762b779e05ac477ec7997a7560df77bd27e))
+* Update deprecated Node.js 16 actions ([#211](https://github.com/dasch-swiss/dsp-ingest/issues/211)) ([ef40d4b](https://github.com/dasch-swiss/dsp-ingest/commit/ef40d4b1dc543a0a8cc07cec95dfa1ca3392c915))
+* Update knora-sipi to v30.14.0 ([#217](https://github.com/dasch-swiss/dsp-ingest/issues/217)) ([3ac8a13](https://github.com/dasch-swiss/dsp-ingest/commit/3ac8a134e221057ea2cdc915f72a02dab8712a11))
+
 ## [0.9.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.8.3...v0.9.0) (2024-05-03)
 
 
