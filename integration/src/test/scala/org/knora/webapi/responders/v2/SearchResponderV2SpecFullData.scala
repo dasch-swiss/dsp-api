@@ -45,10 +45,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
     deletionInfo = None,
   )
   val listValueTemplateReadOtherValue: ReadOtherValueV2 = ReadOtherValueV2(
-    valueContent = HierarchicalListValueContentV2(
-      ontologySchema = InternalSchema,
-      valueHasListNode = "",
-    ),
+    valueContent = HierarchicalListValueContentV2(InternalSchema, "", None, None),
     valueIri = "",
     valueHasUUID = UuidUtil.decode("d34d34d3-4d34-d34d-3496-2b2dfef6a5b9"),
     permissions =
@@ -285,10 +282,8 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         values = Map(
           booksHasTextType.toSmartIri -> Vector(
             listValueTemplateReadOtherValue.copy(
-              valueContent = HierarchicalListValueContentV2(
-                ontologySchema = InternalSchema,
-                valueHasListNode = "http://rdfh.ch/lists/0001/ynm02-03",
-              ),
+              valueContent =
+                HierarchicalListValueContentV2(InternalSchema, "http://rdfh.ch/lists/0001/ynm02-03", None, None),
               valueIri = "http://rdfh.ch/0001/book-instance-02/values/has-list-value-01",
               valueHasUUID = UuidUtil.decode("d34d34d3-4d34-d34d-3496-2b2dfef6a5b9"),
             ),
@@ -306,10 +301,8 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         values = Map(
           booksHasTextType.toSmartIri -> Vector(
             listValueTemplateReadOtherValue.copy(
-              valueContent = HierarchicalListValueContentV2(
-                ontologySchema = InternalSchema,
-                valueHasListNode = "http://rdfh.ch/lists/0001/ynm02-04",
-              ),
+              valueContent =
+                HierarchicalListValueContentV2(InternalSchema, "http://rdfh.ch/lists/0001/ynm02-04", None, None),
               valueIri = "http://rdfh.ch/0001/book-instance-03/values/has-list-value-02",
               valueHasUUID = UuidUtil.decode("d34d3496-2b2d-fef6-a5b9-efdf6a7b5ab3"),
             ),
@@ -322,10 +315,8 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         values = Map(
           booksHasTextType.toSmartIri -> Vector(
             listValueTemplateReadOtherValue.copy(
-              valueContent = HierarchicalListValueContentV2(
-                ontologySchema = InternalSchema,
-                valueHasListNode = "http://rdfh.ch/lists/0001/ynm02-05",
-              ),
+              valueContent =
+                HierarchicalListValueContentV2(InternalSchema, "http://rdfh.ch/lists/0001/ynm02-05", None, None),
               valueIri = "http://rdfh.ch/0001/book-instance-04/values/has-list-value-03",
               valueHasUUID = UuidUtil.decode("d34962b2-dfef-6a5b-9efd-a76f7a7b6ead"),
             ),
