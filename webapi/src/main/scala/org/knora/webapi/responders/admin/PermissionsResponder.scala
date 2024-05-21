@@ -103,20 +103,6 @@ final case class PermissionsResponder(
         ResourceEntityType,
         targetUser,
       )
-    case DefaultObjectAccessPermissionsStringForPropertyGetADM(
-          projectIri,
-          resourceClassIri,
-          propertyTypeIri,
-          targetUser,
-          _,
-        ) =>
-      defaultObjectAccessPermissionsStringForEntityGetADM(
-        projectIri,
-        resourceClassIri,
-        Some(propertyTypeIri),
-        PropertyEntityType,
-        targetUser,
-      )
     case PermissionByIriGetRequestADM(permissionIri, requestingUser) =>
       permissionByIriGetRequestADM(permissionIri, requestingUser)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
@@ -1779,15 +1765,33 @@ final case class PermissionsResponder(
     propertyIri: SmartIri,
     targetUser: User,
   ): Task[String] =
-    defaultObjectAccessPermissionsStringForEntityGetADM(
-      projectIri = projectIri,
-      resourceClassIri = resourceClassIri.toString,
-      propertyIri = Some(propertyIri.toString),
-      entityType = PropertyEntityType,
-      targetUser = targetUser,
-    ).map {
-      _.permissionLiteral
-    }
+    for {
+      _ <- ZIO.getOrFailWith(BadRequestException(s"Invalid project IRI $projectIri"))(
+             ProjectIri.from(projectIri).toOption,
+           )
+
+      _ <- ZIO.unless(resourceClassIri.isKnoraEntityIri) {
+             ZIO.fail(BadRequestException(s"Invalid resource class IRI: $resourceClassIri"))
+           }
+
+      _ <- ZIO.unless(propertyIri.isKnoraEntityIri) {
+             ZIO.fail(BadRequestException(s"Invalid property IRI: $propertyIri"))
+           }
+
+      _ <- ZIO.when(targetUser.isAnonymousUser) {
+             ZIO.fail(BadRequestException("Anonymous Users are not allowed."))
+           }
+
+      permissionLiteral <- defaultObjectAccessPermissionsStringForEntityGetADM(
+                             projectIri = projectIri,
+                             resourceClassIri = resourceClassIri.toString,
+                             propertyIri = Some(propertyIri.toString),
+                             entityType = PropertyEntityType,
+                             targetUser = targetUser,
+                           ).map {
+                             _.permissionLiteral
+                           }
+    } yield permissionLiteral
 }
 
 object PermissionsResponder {
