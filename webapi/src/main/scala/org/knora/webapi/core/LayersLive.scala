@@ -69,7 +69,6 @@ object LayersLive {
    */
   type DspEnvironmentLive =
     // format: off
-    AdminModule.Provided &
     ActorSystem &
     AdminApiEndpoints &
     AdminModule.Provided &
@@ -107,7 +106,6 @@ object LayersLive {
     ProjectRestService &
     QueryTraverser &
     RepositoryUpdater &
-    ResourceUtilV2 &
     ResourceUtilV2 &
     ResourcesResponderV2 &
     RestCardinalityService &

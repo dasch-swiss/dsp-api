@@ -44,6 +44,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
+import org.knora.webapi.responders.admin.PermissionsResponder
 
 final case class CreateResourceV2Handler(
   appConfig: AppConfig,
@@ -57,6 +58,7 @@ final case class CreateResourceV2Handler(
   searchResponderV2: SearchResponderV2,
   getResources: GetResources,
   ontologyRepo: OntologyRepo,
+  permissionsResponder: PermissionsResponder,
 )(implicit val stringFormatter: StringFormatter)
     extends LazyLogging {
 
@@ -739,12 +741,13 @@ final case class CreateResourceV2Handler(
     val permissionsFutures: Map[SmartIri, Task[Map[SmartIri, String]]] = resourceClassProperties.map {
       case (resourceClassIri, propertyIris) =>
         val propertyPermissionsFutures: Map[SmartIri, Task[String]] = propertyIris.toSeq.map { propertyIri =>
-          propertyIri -> resourceUtilV2.getDefaultValuePermissions(
-            projectIri = projectIri,
-            resourceClassIri = resourceClassIri,
-            propertyIri = propertyIri,
-            requestingUser = requestingUser,
-          )
+          propertyIri ->
+            permissionsResponder.getDefaultValuePermissions(
+              projectIri = projectIri,
+              resourceClassIri = resourceClassIri,
+              propertyIri = propertyIri,
+              requestingUser = requestingUser,
+            )
         }.toMap
 
         resourceClassIri -> ZioHelper.sequence(propertyPermissionsFutures)

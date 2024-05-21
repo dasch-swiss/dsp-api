@@ -53,6 +53,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.responders.admin.PermissionsResponder
 
 trait GetResources {
   def getResourcesV2(
@@ -87,6 +88,7 @@ final case class ResourcesResponderV2(
   knoraProjectService: KnoraProjectService,
   searchResponderV2: SearchResponderV2,
   ontologyRepo: OntologyRepo,
+  permissionsResponder: PermissionsResponder,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
     with LazyLogging
@@ -104,6 +106,7 @@ final case class ResourcesResponderV2(
     searchResponderV2,
     this,
     ontologyRepo,
+    permissionsResponder: PermissionsResponder,
   )
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
@@ -2000,11 +2003,11 @@ final case class ResourcesResponderV2(
 }
 
 object ResourcesResponderV2 {
-  val layer: URLayer[
-    AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectService & MessageRelay & PermissionUtilADM &
-      ResourceUtilV2 & StandoffTagUtilV2 & SearchResponderV2 & StringFormatter & TriplestoreService & OntologyRepo,
-    ResourcesResponderV2,
-  ] = ZLayer.fromZIO {
+  type Dependencies = AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectService & MessageRelay &
+    PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & SearchResponderV2 & StringFormatter & TriplestoreService &
+    OntologyRepo & PermissionsResponder
+
+  val layer: URLayer[Dependencies, ResourcesResponderV2] = ZLayer.fromZIO {
     for {
       config  <- ZIO.service[AppConfig]
       iriS    <- ZIO.service[IriService]
@@ -2014,11 +2017,12 @@ object ResourcesResponderV2 {
       su      <- ZIO.service[StandoffTagUtilV2]
       ru      <- ZIO.service[ResourceUtilV2]
       pu      <- ZIO.service[PermissionUtilADM]
-      pr      <- ZIO.service[KnoraProjectService]
+      kps     <- ZIO.service[KnoraProjectService]
       sr      <- ZIO.service[SearchResponderV2]
       or      <- ZIO.service[OntologyRepo]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, pr, sr, or)(sf))
+      pr      <- ZIO.service[PermissionsResponder]
+      handler <- mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, kps, sr, or, pr)(sf))
     } yield handler
   }
 }

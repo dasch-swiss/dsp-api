@@ -48,6 +48,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
+import org.knora.webapi.responders.admin.PermissionsResponder
 
 /**
  * Handles requests to read and write Knora values.
@@ -80,6 +81,7 @@ final case class ValuesResponderV2Live(
   resourceUtilV2: ResourceUtilV2,
   searchResponderV2: SearchResponderV2,
   triplestoreService: TriplestoreService,
+  permissionsResponder: PermissionsResponder,
 )(implicit val stringFormatter: StringFormatter)
     extends ValuesResponderV2
     with MessageHandler {
@@ -278,7 +280,7 @@ final case class ValuesResponderV2Live(
 
         // Get the default permissions for the new value.
         defaultValuePermissions <-
-          resourceUtilV2.getDefaultValuePermissions(
+          permissionsResponder.getDefaultValuePermissions(
             projectIri = resourceInfo.projectADM.id,
             resourceClassIri = resourceInfo.resourceClassIri,
             propertyIri = submittedInternalPropertyIri,
@@ -2445,7 +2447,8 @@ object ValuesResponderV2Live {
       ts      <- ZIO.service[TriplestoreService]
       sr      <- ZIO.service[SearchResponderV2]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, sr, ts)(sf))
+      pr      <- ZIO.service[PermissionsResponder]
+      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, sr, ts, pr)(sf))
     } yield handler
   }
 }
