@@ -141,7 +141,7 @@ function make_image_file_info(extension)
 end
 
 function make_audio_file_info(extension)
-    if not table.contains(audio_extensions, extension) then
+    if not table_contains(audio_extensions, extension) then
         return nil
     else
         return {
@@ -152,7 +152,7 @@ function make_audio_file_info(extension)
 end
 
 function make_video_file_info(extension)
-    if not table.contains(video_extensions, extension) then
+    if not table_contains(video_extensions, extension) then
         return nil
     else
         return {
@@ -163,7 +163,7 @@ function make_video_file_info(extension)
 end
 
 function make_text_file_info(extension)
-    if not table.contains(text_extensions, extension) then
+    if not table_contains(text_extensions, extension) then
         return nil
     else
         return {
@@ -174,7 +174,7 @@ function make_text_file_info(extension)
 end
 
 function make_document_file_info(extension)
-    if not table.contains(document_extensions, extension) then
+    if not table_contains(document_extensions, extension) then
         return nil
     else
         return {
@@ -185,7 +185,7 @@ function make_document_file_info(extension)
 end
 
 function make_archive_file_info(extension)
-    if not table.contains(archive_extensions, extension) then
+    if not table_contains(archive_extensions, extension) then
         return nil
     else
         return {
@@ -210,17 +210,17 @@ function get_file_info(filename, mimetype)
 
     if extension == nil then
         return nil
-    elseif table.contains(image_mime_types, mimetype) then
+    elseif table_contains(image_mime_types, mimetype) then
         return make_image_file_info(extension)
-    elseif table.contains(audio_mime_types, mimetype) then
+    elseif table_contains(audio_mime_types, mimetype) then
         return make_audio_file_info(extension)
-    elseif table.contains(video_mime_types, mimetype) then
+    elseif table_contains(video_mime_types, mimetype) then
         return make_video_file_info(extension)
-    elseif table.contains(text_mime_types, mimetype) then
+    elseif table_contains(text_mime_types, mimetype) then
         return make_text_file_info(extension)
-    elseif table.contains(document_mime_types, mimetype) then
+    elseif table_contains(document_mime_types, mimetype) then
         return make_document_file_info(extension)
-    elseif table.contains(archive_mime_types, mimetype) then
+    elseif table_contains(archive_mime_types, mimetype) then
         return make_archive_file_info(extension)
     else
 

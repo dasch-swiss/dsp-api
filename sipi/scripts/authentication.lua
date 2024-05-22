@@ -74,7 +74,7 @@ function _decode_jwt(token_str)
     -- check audience of token
     local audience = decoded_token["aud"]
     local expected_audience = "Sipi"
-    if audience == nil or not table.contains(audience, expected_audience) then
+    if audience == nil or not table_contains(audience, expected_audience) then
         return _send_unauthorized_error("Invalid 'aud' (audience) in token, expected: " .. expected_audience .. ".")
     end
 
