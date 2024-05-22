@@ -27,6 +27,8 @@ import scala.util.Try
 import dsp.valueobjects.UuidUtil
 import org.knora.sipi.MockDspApiServer.verify.*
 import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 
@@ -41,7 +43,7 @@ object SipiIT extends ZIOSpecDefault {
       .map(url => Request.get(url).addHeaders(Headers(headers)))
       .flatMap(Client.request(_))
 
-  private def createJwt(scope: String): UIO[String] = for {
+  private def createJwt(scope: AuthScope): UIO[String] = for {
     now  <- Clock.instant
     uuid <- Random.nextUUID
     exp   = now.plusSeconds(3600)
@@ -52,7 +54,7 @@ object SipiIT extends ZIOSpecDefault {
               issuedAt = Some(now.getEpochSecond),
               expiration = Some(exp.getEpochSecond),
               jwtId = Some(UuidUtil.base64Encode(uuid)),
-            ) + ("scope", scope)
+            ) + ("scope", scope.toScopeString)
   } yield JwtZIOJson.encode(
     """{"typ":"JWT","alg":"HS256"}""",
     claim.toJson,
@@ -70,7 +72,7 @@ object SipiIT extends ZIOSpecDefault {
       ) {
         for {
           _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
-          jwt <- createJwt("admin")
+          jwt <- createJwt(AuthScope.admin)
           response <- requestGet(
                         Root / prefix / imageTestfile / "file",
                         Header.Cookie(
@@ -94,7 +96,7 @@ object SipiIT extends ZIOSpecDefault {
       ) {
         for {
           _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
-          jwt <- createJwt("admin")
+          jwt <- createJwt(AuthScope.admin)
           response <- requestGet(
                         Root / prefix / imageTestfile / "file",
                         Header.Cookie(NonEmptyChunk(Cookie.Request("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999", jwt))),
@@ -109,7 +111,7 @@ object SipiIT extends ZIOSpecDefault {
       ) {
         for {
           _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
-          jwt <- createJwt("write:project:" + prefix)
+          jwt <- createJwt(AuthScope.write(Shortcode.unsafeFrom(prefix)))
           response <- requestGet(
                         Root / prefix / imageTestfile / "full" / "max" / "0" / "default.jpg",
                         Header.Cookie(NonEmptyChunk(Cookie.Request("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999", jwt))),
