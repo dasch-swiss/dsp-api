@@ -162,17 +162,8 @@ function _is_system_or_project_admin(token, shortcode)
         local write_prj_scope = "write:project:" .. shortcode
         local scopes = str_splitString(token["scope"], " ")
         log("pre_flight - scopes: " .. tableToString(scopes), server.loglevel.LOG_DEBUG)
-        return _table_contains(scopes, "admin") or _table_contains(scopes, write_prj_scope)
+        return table.contains(scopes, "admin") or table.contains(scopes, write_prj_scope)
     end
-end
-
-function _table_contains(table, what)
-    for _, value in pairs(table) do
-        if value == what then
-            return true
-        end
-    end
-    return false
 end
 
 function _file_not_found_response()
