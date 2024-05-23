@@ -17,6 +17,8 @@ object Scope {
   val admin: Scope = Scope(Set(ScopeValue.Admin))
 
   def from(scopeValues: Seq[ScopeValue]): Scope = scopeValues.foldLeft(Scope.empty)(_ + _)
+  def read(project: Shortcode): Scope           = Scope(Set(ScopeValue.Read(project)))
+  def write(project: Shortcode): Scope          = Scope(Set(ScopeValue.Write(project)))
 }
 
 sealed trait ScopeValue {

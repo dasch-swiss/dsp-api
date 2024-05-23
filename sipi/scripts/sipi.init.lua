@@ -103,8 +103,8 @@ function pre_flight(prefix, identifier, cookie)
     end
 
     local token, error = auth_get_jwt_decoded()
-    if error == nil and token ~= nil and token["sub"] == "http://www.knora.org/ontology/knora-admin#SystemUser" then
-        log("pre_flight - always allow access for system user", server.loglevel.LOG_DEBUG)
+    if error == nil and _is_system_or_project_admin(token, prefix) then
+        log("pre_flight - always allow access for system or project admin", server.loglevel.LOG_DEBUG)
         return 'allow', filepath
     end
 
@@ -148,6 +148,20 @@ function pre_flight(prefix, identifier, cookie)
     else
         -- invalid permission code
         return 'deny'
+    end
+end
+
+--- Checks if the user is a system or project admin.
+--- @param token table The decoded JWT token.
+--- @param shortcode string The shortcode of the project.
+--- @return boolean True if the user is a system or project admin, false otherwise.
+function _is_system_or_project_admin(token, shortcode)
+    if shortcode == nil or token == nil or token["scope"] == nil then
+        return false
+    else
+        local write_prj_scope = "write:project:" .. shortcode
+        local scopes = str_splitString(token["scope"], " ")
+        return table_contains(scopes, "admin") or table_contains(scopes, write_prj_scope)
     end
 end
 

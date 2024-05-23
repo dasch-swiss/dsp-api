@@ -1,19 +1,16 @@
 -- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
 
---------------------------------------------------------------------------
--- Checks whether a table contains a value.
--- @param table the table to be checked.
--- @param search_value the value to look for.
--- @param a boolean indicating whether the table contains the value.
---------------------------------------------------------------------------
-function table.contains(table, search_value)
+--- Checks whether a table contains a value.
+--- @param table table to be checked.
+--- @param what any value to look for.
+--- @return boolean indicating whether the table contains the value.
+function table_contains(table, what)
   for _, value in pairs(table) do
-    if value == search_value then
+    if value == what then
       return true
     end
   end
-
   return false
 end
 
