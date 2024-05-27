@@ -148,7 +148,7 @@ case class TriplestoreServiceLive(
       .body(query.sparql)
       .contentType(mimeTypeApplicationSparqlUpdate)
 
-    trackQueryDuration(query, doHttpRequestSttp(request)).unit
+    trackQueryDuration(query, doHttpRequest(request)).unit
   }
 
   /**
@@ -247,7 +247,7 @@ case class TriplestoreServiceLive(
                   .body(rdfContents)
                   .contentType(mimeTypeTextTurtle)
       _ <- ZIO.console.flatMap(_.printLine(s"INSERT: ${request.uri}"))
-      _ <- doHttpRequestSttp(request).map(_.body).flatMap(ensuringBody(_))
+      _ <- doHttpRequest(request).map(_.body).flatMap(ensuringBody(_))
     } yield ()
 
   /**
@@ -282,7 +282,7 @@ case class TriplestoreServiceLive(
    */
   private def checkTriplestoreInitialized(): Task[Boolean] =
     for {
-      response <- doHttpRequestSttp(
+      response <- doHttpRequest(
                     authenticatedRequest
                       .get(targetHostUri.addPath(paths.checkServer))
                       .header("Accept", mimeTypeApplicationJson),
@@ -314,7 +314,7 @@ case class TriplestoreServiceLive(
         }
 
       _ <-
-        doHttpRequestSttp(
+        doHttpRequest(
           authenticatedRequest
             .post(targetHostUri.addPath(paths.datasets))
             .contentType(mimeTypeTextTurtle)
@@ -342,7 +342,7 @@ case class TriplestoreServiceLive(
             .get(targetHostUri.addPath(paths.get).addParam("graph", s"${graphIri.value}"))
             .header("Accept", mimeTypeTextTurtle),
         )
-      response <- doHttpRequestSttp(request)
+      response <- doHttpRequest(request)
       rdfBody  <- ensuringBody(response.body).map(RdfStringSource(_))
       _ <- ZIO.attemptBlocking {
              RdfFormatUtil.turtleToQuadsFile(rdfBody, graphIri.value, outputFile.toFile.toPath, outputFormat, APPEND)
@@ -362,7 +362,7 @@ case class TriplestoreServiceLive(
     val params  = Map(("query", query.sparql), ("timeout", timeout.toSeconds.toString))
     val uri     = targetHostUri.addPath(paths.query).addParams(params)
     val request = authenticatedRequest.post(uri).header("Accept", acceptMimeType)
-    trackQueryDuration(query, doHttpRequestSttp(request).map(_.body.merge))
+    trackQueryDuration(query, doHttpRequest(request).map(_.body.merge))
   }
 
   private def trackQueryDuration[T](query: SparqlQuery, reqTask: Task[T]): Task[T] = {
@@ -398,7 +398,7 @@ case class TriplestoreServiceLive(
       case MigrateAllGraphs =>
         for {
           response <-
-            doHttpRequestSttp(
+            doHttpRequest(
               authenticatedRequest
                 .get(targetHostUri.addPath(paths.repository))
                 .header("Accept", mimeTypeApplicationNQuads),
@@ -429,10 +429,10 @@ case class TriplestoreServiceLive(
           .contentType(mimeTypeApplicationNQuads, "UTF-8")
           .body(_),
       )
-      .flatMap(doHttpRequestSttp)
+      .flatMap(doHttpRequest)
       .unit
 
-  private def doHttpRequestSttp[T](
+  private def doHttpRequest[T](
     request: Request[Either[String, String], Any],
   ): Task[Response[Either[String, String]]] = {
     def executeQuery(request: Request[Either[String, String], Any]): Task[Response[Either[String, String]]] = {
