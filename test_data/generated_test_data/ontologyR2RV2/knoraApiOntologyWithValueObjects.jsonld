@@ -1248,6 +1248,12 @@
             "@id": "knora-api:ColorValue"
         },
         {
+            "@id": "knora-api:CustomFormattedText",
+            "@type": "owl:Class",
+            "rdfs:label": "Custom Formatted Text",
+            "rdfs:comment": "Indicates that a text value is formatted in terms of its ontology and when instantiated, using a project defined custom standoff formatting."
+        },
+        {
             "knora-api:isValueClass": true,
             "rdfs:subClassOf": [
                 {
@@ -2619,6 +2625,12 @@
                 }
             ],
             "knora-api:isValueClass": true
+        },
+        {
+            "@id": "knora-api:FormattedText",
+            "@type": "owl:Class",
+            "rdfs:label": "Formatted Text",
+            "rdfs:comment": "Indicates that a text value is formatted in terms of its ontology and when instantiated, using DSP standard standoff formatting."
         },
         {
             "knora-api:isValueClass": true,
@@ -6788,6 +6800,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasTextValueType"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:isDeleted"
                     },
                     "owl:maxCardinality": 1,
@@ -6892,6 +6911,10 @@
                 }
             ],
             "knora-api:isValueClass": true
+        },
+        {
+            "@id": "knora-api:TextValueType",
+            "@type": "owl:Class"
         },
         {
             "@id": "knora-api:TimeBase",
@@ -7034,6 +7057,18 @@
             "rdfs:comment": "Represents a timestamp",
             "@type": "owl:Class",
             "@id": "knora-api:TimeValue"
+        },
+        {
+            "@id": "knora-api:UndefinedTextType",
+            "@type": "owl:Class",
+            "rdfs:label": "Undefined Text Type",
+            "rdfs:comment": "Indicates that a text value is not well defined because its ontological definition does not match the instantiated data."
+        },
+        {
+            "@id": "knora-api:UnformattedText",
+            "@type": "owl:Class",
+            "rdfs:label": "Unformatted Text",
+            "rdfs:comment": "Indicates that a text value is unformatted in terms of its ontology and when instantiated."
         },
         {
             "@id": "knora-api:UriBase",
@@ -8451,6 +8486,30 @@
                 "@id": "knora-api:TextRepresentation"
             },
             "rdfs:comment": "Connects a Representation to a text file"
+        },
+        {
+            "rdfs:label": "has text value property type",
+            "@type": "owl:AnnotationProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:TextValueType"
+            },
+            "@id": "knora-api:hasTextValuePropertyType",
+            "knora-api:subjectType": {
+                "@id": "owl:ObjectProperty"
+            },
+            "rdfs:comment": "Indicates the type of text value property."
+        },
+        {
+            "rdfs:label": "has text value type",
+            "@type": "owl:ObjectProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:TextValueType"
+            },
+            "@id": "knora-api:hasTextValueType",
+            "knora-api:subjectType": {
+                "@id": "knora-api:TextValue"
+            },
+            "rdfs:comment": "Indicates the type of text value."
         },
         {
             "rdfs:label": "Title",
