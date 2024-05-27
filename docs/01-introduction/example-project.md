@@ -15,18 +15,6 @@ DSP-API comes with two example projects, called `incunabula` and
 a reduced version of a real research project on early printed books. It
 is designed to store an image of each page of each book, as well as RDF
 data about books, pages, their contents, and relationships between them.
-At the moment, only the RDF data is provided in the example project, not
-the images.
-
-The `incunabula` ontology is in the file `incunabula-onto.ttl`, and its
-data is in the file `incunabula-demo-data.ttl`. Both these files are in
-a standard RDF file format called
-[Turtle](https://www.w3.org/TR/turtle/). The DSP-API distribution includes
-sample scripts (in the `webapi/scripts` directory) for importing these
-files directly into different triplestores. If you are starting a new
-project from scratch, you can adapt these scripts to import your
-ontology (and any existing RDF data) into your triplestore for use with
-DSP-API.
 
 ## The Incunabula Ontology
 
@@ -114,7 +102,7 @@ have the same predicate; a comma (`,`) is used to avoid repeating the
 predicate. The definition of `:title` says:
 
 * `rdf:type owl:ObjectProperty`: It is an `owl:ObjectProperty`. There are
-  two kinds of OWL properties: object properties and datatype properties. 
+  two kinds of OWL properties: object properties and datatype properties.
   Object properties point to objects, which have IRIs and
   can have their own properties. Datatype properties point to literal
   values, such as strings and integers.
@@ -174,10 +162,10 @@ relationship is expressed using the property `incunabula:partOf`:
 
 The key things to notice here are:
 
-* `rdfs:subPropertyOf knora-base:isPartOf`: The `knora-base` ontology provides a generic `isPartOf` property to express 
-  part-whole relationships. A project may use `knora-base:isPartOf` directly, however creating a subproperty such as 
+* `rdfs:subPropertyOf knora-base:isPartOf`: The `knora-base` ontology provides a generic `isPartOf` property to express
+  part-whole relationships. A project may use `knora-base:isPartOf` directly, however creating a subproperty such as
   `incunabula:partOf` will allow to customize the property further, e.g. by giving it a more descriptive label.  
-  It is important to note that `knora-base:isPartOf` is a subproperty of `knora-base:hasLinkTo`. Any property that 
+  It is important to note that `knora-base:isPartOf` is a subproperty of `knora-base:hasLinkTo`. Any property that
   points to a `knora-base:Resource` must be a subproperty of `knora-base:hasLinkTo`. Such a
   property is called a *link property*.
 * `knora-base:objectClassConstraint :book`: The object of this property must be a member of the class `incunabula:book`,
