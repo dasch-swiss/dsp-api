@@ -57,6 +57,8 @@ object OntologyConstants {
     val WithRestrictions: IRI = OwlPrefixExpansion + "withRestrictions"
     val OnDatatype: IRI       = OwlPrefixExpansion + "onDatatype"
 
+    val OneOf: IRI = OwlPrefixExpansion + "oneOf"
+
     /**
      * Cardinality IRIs expressed as OWL restrictions, which specify the properties that resources of
      * a particular type can have.

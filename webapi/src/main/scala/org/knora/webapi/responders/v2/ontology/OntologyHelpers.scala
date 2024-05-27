@@ -686,7 +686,7 @@ object OntologyHelpers {
     // Get any other predicates of the class.
 
     val otherPreds: Map[SmartIri, PredicateInfoV2] = getEntityPredicatesFromConstructResponse(
-      classDefMap - OntologyConstants.Rdfs.SubClassOf.toSmartIri,
+      classDefMap - OntologyConstants.Rdfs.SubClassOf.toSmartIri - OntologyConstants.Owl.OneOf.toSmartIri,
     )
 
     ClassInfoContentV2(
