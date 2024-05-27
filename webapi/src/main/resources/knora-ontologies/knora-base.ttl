@@ -2571,7 +2571,7 @@
 :hasTextValuePropertyType a owl:AnnotationProperty ;
     rdfs:label "has text value property type"@en ;
     rdfs:comment "Indicates the type of text value property."@en ;
-    :subjectClassConstraint owl:ObjectProperty ;
+    :subjectClassConstraint :hasValue ;
     :objectClassConstraint  :TextValueType .
 
 
