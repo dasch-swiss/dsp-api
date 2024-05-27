@@ -245,7 +245,7 @@ case class TriplestoreServiceLive(
                   .post(targetHostUri.addPath(paths.data).addParam("graph", graphName))
                   .body(rdfContents)
                   .contentType(mimeTypeTextTurtle)
-      _ <- ZIO.console.flatMap(_.printLine(s"INSERT: ${request.uri}"))
+      _ <- ZIO.logDebug(s"INSERT: ${request.uri}")
       _ <- doHttpRequest(request).map(_.body).flatMap(ensuringBody(_))
     } yield ()
 
