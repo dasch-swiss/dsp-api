@@ -235,10 +235,9 @@ case class TriplestoreServiceLive(
   private def insertObjectIntoTriplestore(rdfDataObject: RdfDataObject): Task[Unit] =
     for {
       graphName <- ZIO
-                     .succeed(rdfDataObject.name)
-                     .filterOrFail(_.toLowerCase != "default")(
-                       TriplestoreUnsupportedFeatureException("Requests to the default graph are not supported"),
-                     )
+                     .fail(TriplestoreUnsupportedFeatureException("Requests to the default graph are not supported"))
+                     .when(rdfDataObject.name.toLowerCase == "default")
+                     .as(rdfDataObject.name)
       rdfContents <- ZIO
                        .readFile(Paths.get("..", rdfDataObject.path))
                        .orElse(ZIO.attemptBlocking(Source.fromResource(rdfDataObject.path).mkString))
