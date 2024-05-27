@@ -453,12 +453,12 @@ case class TriplestoreServiceLive(
         .unless(response.code.isSuccess) {
           val statusResponseMsg = s"Triplestore responded with HTTP code ${response.code}"
 
-          (response.code.code, response.body.toOption) match {
+          (response.code.code, response.body.merge) match {
             case (404, _) =>
               ZIO.fail(NotFoundException.notFound)
-            case (400, Some(response)) if response.contains("Text search parse error") =>
+            case (400, response) if response.contains("Text search parse error") =>
               ZIO.fail(BadRequestException(s"$response"))
-            case (503, Some(response)) if response.contains("Query timed out") =>
+            case (503, response) if response.contains("Query timed out") =>
               ZIO.fail(TriplestoreTimeoutException(s"$statusResponseMsg: $response"))
             case _ =>
               ZIO.fail(TriplestoreResponseException(statusResponseMsg))
