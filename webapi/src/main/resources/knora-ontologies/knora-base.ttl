@@ -155,17 +155,18 @@
 ###  http://www.knora.org/ontology/knora-base#hasComment
 
 :hasComment
-    rdf:type                owl:ObjectProperty ;
-    rdfs:label              "Kommentar"@de,
-                            "Comment"@en,
-                            "Commentaire"@fr,
-                            "Commento"@it ;
-    rdfs:comment            """Represents a comment on a resource as a knora-base:TextValue"""@de ;
-    :subjectClassConstraint :Resource ;
-    :objectClassConstraint  :TextValue ;
-    :isEditable             true ;
-    salsah-gui:guiElement   salsah-gui:Richtext ;
-    rdfs:subPropertyOf      :hasValue .
+    rdf:type                  owl:ObjectProperty ;
+    rdfs:label                "Kommentar"@de,
+                              "Comment"@en,
+                              "Commentaire"@fr,
+                              "Commento"@it ;
+    rdfs:comment              """Represents a comment on a resource as a knora-base:TextValue"""@de ;
+    :subjectClassConstraint   :Resource ;
+    :objectClassConstraint    :TextValue ;
+    :isEditable               true ;
+    salsah-gui:guiElement     salsah-gui:Richtext ;
+    :hasTextValuePropertyType :UndefinedTextType ;
+    rdfs:subPropertyOf        :hasValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasExtResValue
@@ -2158,6 +2159,9 @@
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :valueHasMapping ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :hasTextValueType  ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
 
 
@@ -2511,6 +2515,7 @@
     rdfs:comment            "Deprecated in favour of :Segment"@en ;
     rdfs:subPropertyOf      :hasLinkToValue .
 
+
 ###  http://www.knora.org/ontology/knora-base#hasSequenceBounds
 
 :hasSequenceBounds
@@ -2522,3 +2527,58 @@
                            "Sequence Bounds"@en ;
     rdfs:comment           "Deprecated in favour of :Segment"@en ;
     rdfs:comment           "Indicates the bounds of a sequence, i.e. the start and end point in the containing resource."@en .
+
+
+### http://www.knora.org/ontology/knora-base#TextValueType
+
+:TextValueType a rdf:Alt ;
+    rdf:_1 :UnformattedText ;
+    rdf:_2 :FormattedText ;
+    rdf:_3 :CustomFormattedText ;
+    rdf:_4 :UndefinedTextType .
+
+
+### http://www.knora.org/ontology/knora-base#UnformattedText
+
+:UnformattedText a owl:Class ;
+    rdfs:label "Unformatted Text"@en ;
+    rdfs:comment "Indicates that a text value is unformatted in terms of its ontology and when instantiated."@en .
+
+
+### http://www.knora.org/ontology/knora-base#FormattedText
+
+:FormattedText a owl:Class ;
+    rdfs:label "Formatted Text"@en ;
+    rdfs:comment "Indicates that a text value is formatted in terms of its ontology and when instantiated, using DSP standard standoff formatting."@en .
+
+
+### http://www.knora.org/ontology/knora-base#CustomFormattedText
+
+:CustomFormattedText a owl:Class ;
+    rdfs:label "Custom Formatted Text"@en ;
+    rdfs:comment "Indicates that a text value is formatted in terms of its ontology and when instantiated, using a project defined custom standoff formatting."@en .
+
+
+### http://www.knora.org/ontology/knora-base#UndefinedTextType
+
+:UndefinedTextType a owl:Class ;
+    rdfs:label "Undefined Text Type"@en ;
+    rdfs:comment "Indicates that a text value is not well defined because its ontological definition does not match the instantiated data."@en .
+
+
+### http://www.knora.org/ontology/knora-base#hasTextValuePropertyType
+
+:hasTextValuePropertyType a owl:AnnotationProperty ;
+    rdfs:label "has text value property type"@en ;
+    rdfs:comment "Indicates the type of text value property."@en ;
+    :subjectClassConstraint owl:ObjectProperty ;
+    :objectClassConstraint  :TextValueType .
+
+
+### http://www.knora.org/ontology/knora-base#hasTextValueType
+
+:hasTextValueType a owl:ObjectProperty ;
+    rdfs:label "has text value type"@en ;
+    rdfs:comment "Indicates the type of text value."@en ;
+    :subjectClassConstraint :TextValue ;
+    :objectClassConstraint  :TextValueType .
