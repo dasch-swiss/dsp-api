@@ -2531,11 +2531,11 @@
 
 ### http://www.knora.org/ontology/knora-base#TextValueType
 
-:TextValueType a rdf:Alt ;
-    rdf:_1 :UnformattedText ;
-    rdf:_2 :FormattedText ;
-    rdf:_3 :CustomFormattedText ;
-    rdf:_4 :UndefinedTextType .
+:TextValueType a owl:Class ;
+    owl:oneOf ( :UnformattedText
+                :FormattedText
+                :CustomFormattedText
+                :UndefinedTextType ) .
 
 
 ### http://www.knora.org/ontology/knora-base#UnformattedText
