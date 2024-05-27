@@ -76,6 +76,8 @@ object OntologyConstants {
       Ontology,
       Class,
       Restriction,
+      ObjectProperty,
+      KnoraBase.TextValueType,
     )
   }
 
@@ -303,6 +305,8 @@ object OntologyConstants {
     val StillImageExternalFileValue: IRI = KnoraBasePrefixExpansion + "StillImageExternalFileValue"
     val MovingImageFileValue: IRI        = KnoraBasePrefixExpansion + "MovingImageFileValue"
     val TextFileValue: IRI               = KnoraBasePrefixExpansion + "TextFileValue"
+
+    val TextValueType: IRI = KnoraBasePrefixExpansion + "TextValueType"
 
     val FileValueClasses: Set[IRI] = Set(
       FileValue,
