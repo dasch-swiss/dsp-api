@@ -61,6 +61,7 @@ import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 
 object LayersLive {
 
@@ -154,6 +155,7 @@ object LayersLive {
       OntologyHelpersLive.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
+      OntologyServiceLive.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,
