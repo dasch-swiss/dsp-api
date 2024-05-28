@@ -1,4 +1,4 @@
-We provide an [OpenAPI](https://spec.openapis.org/oas/latest.html) specification.
+We provide an [OpenAPI](https://spec.openapis.org/oas/latest.html) specification for certain endpoints and are working on providing this for all endpoints.
 The latest version is located at [api.dasch.swiss/api/docs/docs.yaml](https://api.dasch.swiss/api/docs/docs.yaml).
 For an interactive documentation of all API endpoints,
 please visit [api.dasch.swiss/api/docs/](https://api.dasch.swiss/api/docs/).
