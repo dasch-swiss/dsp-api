@@ -20,6 +20,7 @@ object Configuration {
     storage: StorageConfig,
     sipi: SipiConfig,
     ingest: IngestConfig,
+    features: Features,
   )
 
   final case class JwtConfig(
@@ -44,9 +45,16 @@ object Configuration {
 
   final case class IngestConfig(bulkMaxParallel: Int)
 
+  final case class Features(allowEraseProject: Boolean = false)
+
   private val configDescriptor = deriveConfig[ApplicationConf].mapKey(toKebabCase)
 
-  private type AllConfigs = ServiceConfig with JwtConfig with StorageConfig with SipiConfig with IngestConfig
+  private type AllConfigs = ServiceConfig
+    with JwtConfig
+    with StorageConfig
+    with SipiConfig
+    with IngestConfig
+    with Features
 
   val layer: ZLayer[Any, Config.Error, AllConfigs] = {
     val applicationConf = ZLayer.fromZIO(
@@ -56,6 +64,7 @@ object Configuration {
       applicationConf.project(_.storage) ++
       applicationConf.project(_.jwt) ++
       applicationConf.project(_.sipi) ++
-      applicationConf.project(_.ingest)
+      applicationConf.project(_.ingest) ++
+      applicationConf.project(_.features)
   }
 }

@@ -47,5 +47,6 @@ object BaseEndpoints {
       oneOfVariant(statusCode(StatusCode.ServiceUnavailable).and(jsonBody[ApiProblem.Unhealthy])),
       oneOfVariant(statusCode(StatusCode.Conflict).and(jsonBody[ApiProblem.Conflict])),
       oneOfVariant(statusCode(StatusCode.Unauthorized).and(jsonBody[ApiProblem.Unauthorized])),
+      oneOfVariant(statusCode(StatusCode.Forbidden).and(jsonBody[ApiProblem.Forbidden])),
     )
 }

@@ -5,6 +5,7 @@
 
 package swiss.dasch.api
 
+import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
@@ -26,6 +27,8 @@ import zio.json.*
 import zio.nio.file.Files
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+import zio.ZLayer
+import swiss.dasch.config.Configuration.Features
 
 object ProjectsEndpointSpec extends ZIOSpecDefault {
 
@@ -279,10 +282,31 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
       },
     )
 
+  private val projectsSuite = suite("/admin/projects/{shortcode}")(
+    test("DELETE ./erase should delete the project folder") {
+      val shortcode = ProjectShortcode.unsafeFrom("1111")
+      for {
+        prjFolder <- StorageService.getProjectFolder(shortcode)
+        // given a project folder with a file exists
+        assetFolder = prjFolder / "as" / "df"
+        _          <- Files.createDirectories(assetFolder)
+        _          <- Files.createFile(assetFolder / "asdf-test.txt")
+        // when deleting the project via the api
+        res <- executeRequest(
+                 Request
+                   .delete(URL(Root / "projects" / s"${shortcode.value}" / "erase"))
+                   .addHeader("Authorization", "Bearer fakeToken"),
+               )
+        prjFolderWasDeleted <- Files.exists(prjFolder).negate
+      } yield assertTrue(res.status == Status.Ok, prjFolderWasDeleted)
+    },
+  )
+
   val spec = suite("ProjectsEndpoint")(
     projectExportSuite,
     projectImportSuite,
     assetInfoSuite,
+    projectsSuite,
     test("GET /projects should list non-empty project in test folders") {
       val req = Request.get(URL(Root / "projects")).addHeader("Authorization", "Bearer fakeToken")
       for {
@@ -305,6 +329,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     CsvService.layer,
     CommandExecutorLive.layer,
     FileChecksumServiceLive.layer,
+    ZLayer.succeed(Features(allowEraseProject = true)),
     StillImageService.layer,
     ImportServiceLive.layer,
     IngestService.layer,

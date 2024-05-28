@@ -85,4 +85,9 @@ object ApiProblem {
   object Unauthorized {
     given codec: JsonCodec[Unauthorized] = DeriveJsonCodec.gen[Unauthorized]
   }
+
+  case class Forbidden(reason: String) extends ApiProblem
+  object Forbidden {
+    given codec: JsonCodec[Forbidden] = DeriveJsonCodec.gen[Forbidden]
+  }
 }
