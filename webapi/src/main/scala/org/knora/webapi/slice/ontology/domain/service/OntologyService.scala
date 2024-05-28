@@ -9,28 +9,29 @@ import zio.*
 
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 trait OntologyService {
-  def getProjectIriForOntologyIri(ontologyIri: String): Task[Option[String]]
+  def getProjectIriForOntologyIri(ontologyIri: InternalIri): Task[Option[String]]
 }
 
 final case class OntologyServiceLive(ontologyCache: OntologyCache) extends OntologyService {
-  def getProjectIriForOntologyIri(ontologyIri: String): Task[Option[String]] =
+  def getProjectIriForOntologyIri(ontologyIri: InternalIri): Task[Option[String]] =
     ontologyCache.getCacheData.map { cacheData =>
       cacheData.ontologies.map { case (k, v) => k.toString() -> v }
-        .get(ontologyIri)
+        .get(ontologyIri.value)
         .flatMap(_.ontologyMetadata.projectIri.map(_.toString()))
     }
 }
 
 object OntologyServiceLive {
-  def isBuiltInOntology(ontologyIri: String): Boolean =
-    OntologyConstants.BuiltInOntologyLabels.contains(ontologyIri)
+  def isBuiltInOntology(ontologyIri: InternalIri): Boolean =
+    OntologyConstants.BuiltInOntologyLabels.contains(ontologyIri.value)
 
-  def isSharedOntology(ontologyIri: String): Boolean =
-    ontologyIri.split("/")(4) == "shared"
+  def isSharedOntology(ontologyIri: InternalIri): Boolean =
+    ontologyIri.value.split("/")(4) == "shared"
 
-  def isBuiltInOrSharedOntology(ontologyIri: String): Boolean =
+  def isBuiltInOrSharedOntology(ontologyIri: InternalIri): Boolean =
     isBuiltInOntology(ontologyIri) || isSharedOntology(ontologyIri)
 
   val layer = ZLayer.derive[OntologyServiceLive]

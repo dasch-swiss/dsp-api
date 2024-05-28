@@ -128,7 +128,8 @@ final case class CreateResourceV2Handler(
            ZIO.fail(BadRequestException(s"Resources cannot be created in project <$projectIri>")),
          )
 
-    resourceClassOntologyIri = createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity.toString
+    resourceClassOntologyIri =
+      createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity.toInternalIri
     resourceClassProjectIri <-
       ontologyService
         .getProjectIriForOntologyIri(resourceClassOntologyIri)
