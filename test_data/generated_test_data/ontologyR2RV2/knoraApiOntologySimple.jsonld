@@ -1015,7 +1015,9 @@
         },
         {
             "@id": "knora-api:TextValueType",
-            "@type": "owl:Class"
+            "@type": "owl:Class",
+            "rdfs:label": "Text Value Type",
+            "rdfs:comment": "Indicates a type of text value."
         },
         {
             "@id": "knora-api:UndefinedTextType",
