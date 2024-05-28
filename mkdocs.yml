@@ -107,7 +107,7 @@ nav:
 plugins:
   - include-markdown
   - search
-  - git-revision-date
+  - git-revision-date-localized
   - neoteroi.mkdocsoad:
       use_pymdownx: true
 
