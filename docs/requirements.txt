@@ -2,7 +2,7 @@ mkdocs
 mkdocs-material
 mkdocs-monorepo-plugin
 mkdocs-include-markdown-plugin
-mkdocs-git-revision-date-plugin
-mike==1.1.2
-neoteroi-mkdocs==1.0.2
+mkdocs-git-revision-date-localized-plugin
+mike
+neoteroi-mkdocs
 
