@@ -6,6 +6,8 @@
 package org.knora.webapi.slice.admin.domain.service
 
 import sttp.capabilities.zio.ZioStreams
+import sttp.client3.Empty
+import sttp.client3.RequestT
 import sttp.client3.SttpBackend
 import sttp.client3.UriContext
 import sttp.client3.asStreamAlways
@@ -70,10 +72,11 @@ final case class DspIngestClientLive(
 
   private def projectsPath(shortcode: Shortcode) = s"${dspIngestConfig.baseUrl}/projects/${shortcode.value}"
 
-  private val authenticatedRequest = jwtService
-    .createJwtForDspIngest()
-    .map(_.jwtString)
-    .map(basicRequest.auth.bearer(_))
+  private val authenticatedRequest: ZIO[Any, Nothing, RequestT[Empty, Either[String, String], Any]] =
+    jwtService
+      .createJwtForDspIngest()
+      .map(_.jwtString)
+      .map(basicRequest.auth.bearer(_))
 
   override def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
     for {
