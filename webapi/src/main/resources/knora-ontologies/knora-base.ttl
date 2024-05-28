@@ -2531,11 +2531,13 @@
 
 ### http://www.knora.org/ontology/knora-base#TextValueType
 
-:TextValueType a owl:Class ;
-    owl:oneOf ( :UnformattedText
-                :FormattedText
-                :CustomFormattedText
-                :UndefinedTextType ) .
+:TextValueType ovl:equivalentClass [ a owl:Class ;
+                                     owl:oneOf ( :UnformattedText
+                                                 :FormattedText
+                                                 :CustomFormattedText
+                                                 :UndefinedTextType ) ] ;
+    rdfs:label "Text Value Type"@en ;
+    rdfs:comment "Indicates a type of text value."@en .
 
 
 ### http://www.knora.org/ontology/knora-base#UnformattedText
