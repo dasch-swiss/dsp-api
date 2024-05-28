@@ -1193,5 +1193,5 @@ public discussion on proposed entities to be shared. Once a consensus was reache
 
 The Knora base ontology has the property `kb:ontologyVersion`, whose object is a string that indicates the deployed
 version of all the DSP-API built-in ontologies. This allows the
-[repository update program](../04-publishing-deployment/updates.md) to determine which repository updates are needed
+repository update program to determine which repository updates are needed
 when DSP-API is upgraded.
