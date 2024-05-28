@@ -59,9 +59,11 @@ case class TriplestoreServiceLive(
     extends TriplestoreService
     with FusekiTriplestore {
 
-  private val targetHost = new HttpHost(triplestoreConfig.host, triplestoreConfig.fuseki.port, "http")
-  private val targetHostUri =
-    uri"${(targetHost).toURI}"
+  private val targetHostUri = {
+    val proto = if (triplestoreConfig.useHttps) "https" else "http"
+    val host  = new HttpHost(triplestoreConfig.host, triplestoreConfig.fuseki.port, proto)
+    uri"${(host).toURI}"
+  }
 
   // NOTE: possibly quickRequest might be used instead of basicRequest (no Either)
   private val authenticatedRequest: RequestT[Empty, Either[String, String], Any] =
