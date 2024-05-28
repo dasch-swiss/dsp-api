@@ -2531,7 +2531,7 @@
 
 ### http://www.knora.org/ontology/knora-base#TextValueType
 
-:TextValueType ovl:equivalentClass [ a owl:Class ;
+:TextValueType owl:equivalentClass [ a owl:Class ;
                                      owl:oneOf ( :UnformattedText
                                                  :FormattedText
                                                  :CustomFormattedText
