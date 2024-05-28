@@ -5,10 +5,10 @@
 
 package org.knora.webapi.slice.ontology.domain.service
 
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-
 import zio.*
+
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 trait OntologyService {
   def getProjectIriForOntologyIri(ontologyIri: String): Task[Option[String]]
