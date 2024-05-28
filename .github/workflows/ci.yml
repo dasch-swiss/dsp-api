@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - 'main'
+      - "main"
   release:
     types: [published]
 
@@ -16,7 +16,7 @@ jobs:
     name: Build and Run Tests
     strategy:
       matrix:
-        java-version: [ 21 ]
+        java-version: [21]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout current branch
@@ -50,12 +50,12 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-      - name: Install requirements (pip, npm, apt)
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r docs/requirements.txt
-      - name: Build docs
-        run: mkdocs build
+        with:
+          fetch-depth: 0
+      - name: Setup just
+        uses: extractions/setup-just@v1
+      - name: Build docs with just
+        run: just docs-build
 
   publish-docker-image:
     if: (github.ref == 'refs/heads/main' && github.event_name != 'release') || startsWith(github.ref, 'refs/tags/')
@@ -66,7 +66,7 @@ jobs:
       tag: ${{ steps.docker_image_tag.outputs.tag }}
     strategy:
       matrix:
-        java-version: [ 21 ]
+        java-version: [21]
     steps:
       - name: Checkout current branch
         uses: actions/checkout@v4
@@ -110,15 +110,14 @@ jobs:
           curl -f -u "${JENKINS_BASIC_AUTH_USER}:${JENKINS_BASIC_AUTH_PASS}" \
                -X POST "${JENKINS_DEV_WEBHOOK}" \
                -d "Service=ingest&Version=${IMAGE_TAG}"
- 
-  send-chat-notification:
-      name: Send google chat notification
-      needs: [publish-docker-image]
-      runs-on: ubuntu-latest
-      if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
-      steps:
-        - name: Send notification to google chat room "DSP releases"
-          uses: lakto/google-chat-action@main
-          with:
-            url: ${{ secrets.GOOGLE_CHAT_DSP_RELEASES_WEBHOOK_URL }}
 
+  send-chat-notification:
+    name: Send google chat notification
+    needs: [publish-docker-image]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
+    steps:
+      - name: Send notification to google chat room "DSP releases"
+        uses: lakto/google-chat-action@main
+        with:
+          url: ${{ secrets.GOOGLE_CHAT_DSP_RELEASES_WEBHOOK_URL }}

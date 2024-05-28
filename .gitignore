@@ -240,4 +240,5 @@ localdev/storage/
 site/
 # Virtual env file for mkdocs dependencies
 .venv
-
+# Generated openapi yaml files
+docs/openapi/*.yml
