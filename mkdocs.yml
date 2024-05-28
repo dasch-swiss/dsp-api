@@ -49,7 +49,6 @@ nav:
   - Publishing and Deployment:
       - Publishing: 04-publishing-deployment/publishing.md
       - Configuration: 04-publishing-deployment/configuration.md
-      - Updating Repositories when Upgrading DSP-API: 04-publishing-deployment/updates.md
   - DSP Internals:
       - Design:
           - Architectural Decision Records (ADR):
