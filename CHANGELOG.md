@@ -1,5 +1,33 @@
 # Changelog
 
+## [30.15.0](https://github.com/dasch-swiss/dsp-api/compare/v30.14.0...v30.15.0) (2024-05-29)
+
+
+### Maintenance
+
+* Introduce OntologyService and refactor resource creation ([#3255](https://github.com/dasch-swiss/dsp-api/issues/3255)) ([21b82bf](https://github.com/dasch-swiss/dsp-api/commit/21b82bf629f786565ab70f4325f0c5152a9da79e))
+* Move actor message constructor exceptions, remove the message ([#3249](https://github.com/dasch-swiss/dsp-api/issues/3249)) ([5f840c0](https://github.com/dasch-swiss/dsp-api/commit/5f840c0006cbf7891b2931ba83dd7e3fc5b75125))
+* Remove repo upgrade test and unused scripts and data ([#3253](https://github.com/dasch-swiss/dsp-api/issues/3253)) ([d7d7db7](https://github.com/dasch-swiss/dsp-api/commit/d7d7db77801c80556b7646be59aa5ba6a1cfcc5c))
+* SipiServiceLive: Sttp instead of Apache HTTP (DEV-1627) ([#3257](https://github.com/dasch-swiss/dsp-api/issues/3257)) ([211caa2](https://github.com/dasch-swiss/dsp-api/commit/211caa27a9bd66fcd3c58091fea39859d9bf428e))
+* TestClientService: STTP instead of Apache HTTP (DEV-1627) ([#3256](https://github.com/dasch-swiss/dsp-api/issues/3256)) ([ecb6f8e](https://github.com/dasch-swiss/dsp-api/commit/ecb6f8e582cf2743a6bfdc021e89dd9657bc6049))
+* TriplestoreServiceLive: use Sttp with ZIO instead of Apache HTTP (DEV-1627) ([#3251](https://github.com/dasch-swiss/dsp-api/issues/3251)) ([0488add](https://github.com/dasch-swiss/dsp-api/commit/0488add9f2538322f055c0717b258af6620c2fe3))
+
+
+### Documentation
+
+* Render OpenAPI content into md document, remove generated ymls from git (DEV-3443) ([#3254](https://github.com/dasch-swiss/dsp-api/issues/3254)) ([7f7c0b6](https://github.com/dasch-swiss/dsp-api/commit/7f7c0b6fb051961f393a82f36dace19e8022d186))
+
+
+### Enhancements
+
+* Add model to knora-base to allow for explicitly stating text value types in ontology and data ([#3252](https://github.com/dasch-swiss/dsp-api/issues/3252)) ([95cda7a](https://github.com/dasch-swiss/dsp-api/commit/95cda7a1272ff3af65f0a26243ea73ceb780c55a))
+* **sipi:** Allow read all images for users with write:project:XXXX scope (DEV-2628) ([#3250](https://github.com/dasch-swiss/dsp-api/issues/3250)) ([9489ecd](https://github.com/dasch-swiss/dsp-api/commit/9489ecd64b77563533e7279a4eccc5a8825d932d))
+
+
+### Bug Fixes
+
+* Fix comment on list values (DEV-3647) ([#3247](https://github.com/dasch-swiss/dsp-api/issues/3247)) ([cb933b7](https://github.com/dasch-swiss/dsp-api/commit/cb933b750cd393ff91e151371fb00bf3321b7c5b))
+
 ## [30.14.0](https://github.com/dasch-swiss/dsp-api/compare/v30.13.0...v30.14.0) (2024-05-15)
 
 
