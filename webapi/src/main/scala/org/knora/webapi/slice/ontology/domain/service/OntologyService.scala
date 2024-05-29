@@ -26,7 +26,7 @@ final case class OntologyServiceLive(ontologyCache: OntologyCache) extends Ontol
 
 object OntologyServiceLive {
   def isBuiltInOntology(ontologyIri: InternalIri): Boolean =
-    OntologyConstants.BuiltInOntologyLabels.contains(ontologyIri.value)
+    OntologyConstants.BuiltInOntologyLabels.contains(ontologyIri.value.split("/").last)
 
   def isSharedOntology(ontologyIri: InternalIri): Boolean =
     ontologyIri.value.split("/")(4) == "shared"
