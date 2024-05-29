@@ -114,9 +114,6 @@ final case class SipiServiceLive(
       ),
     )
 
-    def moveFileUrl(token: String): Uri =
-      uri"${sipiConfig.internalBaseUrl}/${sipiConfig.moveFileRoute}?token=$token"
-
     val params = Map(
       ("filename" -> moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
       ("prefix"   -> moveTemporaryFileToPermanentStorageRequestV2.prefix),
@@ -124,7 +121,7 @@ final case class SipiServiceLive(
 
     for {
       token <- jwt
-      url    = moveFileUrl(token.jwtString)
+      url    = uri"${sipiConfig.internalBaseUrl}/${sipiConfig.moveFileRoute}?token=${token.jwtString}"
       _     <- doSipiRequest(quickRequest.post(url).body(params))
     } yield SuccessResponseV2("Moved file to permanent storage.")
   }
@@ -220,9 +217,11 @@ final case class SipiServiceLive(
           _ => ZIO.logDebug(s"Downloaded ${targetDir / targetFilename}"),
         )
         .fold(_ => None, Some(_))
+
     def downloadAsset(asset: Asset, jwt: Jwt): Task[Option[Path]] =
       ZIO.logDebug(s"Downloading ${Asset.logString(asset)}") *>
         SipiRoutes.file(asset).flatMap(executeDownloadRequest(_, jwt, asset.internalFilename))
+
     def downloadKnoraJson(asset: Asset, jwt: Jwt): Task[Option[Path]] =
       ZIO.logDebug(s"Downloading knora.json for  ${Asset.logString(asset)}") *>
         SipiRoutes.knoraJson(asset).flatMap(executeDownloadRequest(_, jwt, s"${asset.internalFilename}_knora.json"))
