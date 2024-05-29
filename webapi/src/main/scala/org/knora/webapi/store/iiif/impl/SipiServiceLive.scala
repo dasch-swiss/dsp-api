@@ -54,6 +54,7 @@ import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
 import org.knora.webapi.util.ZScopedJavaIoStreams
+import sttp.model.Uri
 
 /**
  * Makes requests to Sipi.
@@ -166,9 +167,7 @@ final case class SipiServiceLive(
    * @return a [[SuccessResponseV2]].
    */
   def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] = {
-
-    val jwt = jwtService.createJwt(
-      deleteTemporaryFileRequestV2.requestingUser,
+    val deleteRequestContent =
       Map(
         "knora-data" -> JsObject(
           Map(
@@ -176,19 +175,14 @@ final case class SipiServiceLive(
             "filename"   -> JsString(deleteTemporaryFileRequestV2.internalFilename),
           ),
         ),
-      ),
-    )
-
-    def deleteUrl(token: String): Task[String] =
-      ZIO.succeed(
-        s"${sipiConfig.internalBaseUrl}/${sipiConfig.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token",
       )
 
+    val url: String => Uri = s =>
+      uri"${sipiConfig.internalBaseUrl}/${sipiConfig.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=${s}"
+
     for {
-      token   <- jwt
-      url     <- deleteUrl(token.jwtString)
-      request <- ZIO.succeed(new HttpDelete(url))
-      _       <- doSipiRequest(request)
+      token <- jwtService.createJwt(deleteTemporaryFileRequestV2.requestingUser, deleteRequestContent)
+      _     <- doSipiRequestS(quickRequest.delete(url(token.jwtString)))
     } yield SuccessResponseV2("Deleted temporary file.")
   }
 
@@ -198,14 +192,17 @@ final case class SipiServiceLive(
    * @param textFileRequest the request message.
    */
   def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
-    doSipiRequestS(quickRequest.get(uri"${textFileRequest.fileUrl}")).map(SipiGetTextFileResponse(_)).catchAll { ex =>
-      val msg =
-        s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${ex.getMessage}"
-      (ex match {
-        case (_: NotFoundException | _: BadRequestException | _: SipiException) => ZIO.die(SipiException(msg))
-        case other                                                              => ZIO.logError(msg) *> ZIO.die(SipiException(msg))
-      })
-    }
+    doSipiRequestS
+      .apply(quickRequest.get(uri"${textFileRequest.fileUrl}"))
+      .map(SipiGetTextFileResponse(_))
+      .catchAll { ex =>
+        val msg =
+          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${ex.getMessage}"
+        (ex match {
+          case (_: NotFoundException | _: BadRequestException | _: SipiException) => ZIO.die(SipiException(msg))
+          case other                                                              => ZIO.logError(msg) *> ZIO.die(SipiException(msg))
+        })
+      }
 
   /**
    * Makes an HTTP request to Sipi and returns the response.
