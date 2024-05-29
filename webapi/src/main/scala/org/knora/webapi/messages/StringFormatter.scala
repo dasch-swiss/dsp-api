@@ -932,7 +932,10 @@ class StringFormatter private (
     override def isKnoraInternalEntityIri: Boolean = isKnoraInternalDefinitionIri && isKnoraEntityIri
 
     override def isKnoraApiV2DefinitionIri: Boolean =
-      iriInfo.iriType == KnoraDefinitionIri && iriInfo.ontologySchema.isInstanceOf[ApiV2Schema]
+      iriInfo.iriType == KnoraDefinitionIri && (iriInfo.ontologySchema match {
+        case Some(_: ApiV2Schema) => true
+        case _                    => false
+      })
 
     override def isKnoraApiV2EntityIri: Boolean = isKnoraApiV2DefinitionIri && isKnoraEntityIri
 
