@@ -279,6 +279,12 @@
             "@id": "knora-api:Color"
         },
         {
+            "@id": "knora-api:CustomFormattedText",
+            "@type": "owl:Class",
+            "rdfs:label": "Custom Formatted Text",
+            "rdfs:comment": "Indicates that a text value is formatted in terms of its ontology and when instantiated, using a project defined custom standoff formatting."
+        },
+        {
             "rdfs:label": "Representation (3D)",
             "rdfs:subClassOf": [
                 {
@@ -455,6 +461,12 @@
                 "@id": "xsd:anyURI"
             },
             "@id": "knora-api:File"
+        },
+        {
+            "@id": "knora-api:FormattedText",
+            "@type": "owl:Class",
+            "rdfs:label": "Formatted Text",
+            "rdfs:comment": "Indicates that a text value is formatted in terms of its ontology and when instantiated, using DSP standard standoff formatting."
         },
         {
             "rdfs:label": "Geometry specification",
@@ -1002,6 +1014,24 @@
             "@id": "knora-api:TextRepresentation"
         },
         {
+            "@id": "knora-api:TextValueType",
+            "@type": "owl:Class",
+            "rdfs:label": "Text Value Type",
+            "rdfs:comment": "Indicates a type of text value."
+        },
+        {
+            "@id": "knora-api:UndefinedTextType",
+            "@type": "owl:Class",
+            "rdfs:label": "Undefined Text Type",
+            "rdfs:comment": "Indicates that a text value is not well defined because its ontological definition does not match the instantiated data."
+        },
+        {
+            "@id": "knora-api:UnformattedText",
+            "@type": "owl:Class",
+            "rdfs:label": "Unformatted Text",
+            "rdfs:comment": "Indicates that a text value is unformatted in terms of its ontology and when instantiated."
+        },
+        {
             "rdfs:label": "Videosegment",
             "rdfs:subClassOf": [
                 {
@@ -1480,6 +1510,30 @@
                 "@id": "knora-api:File"
             },
             "@id": "knora-api:hasTextFile"
+        },
+        {
+            "rdfs:label": "has text value property type",
+            "rdfs:comment": "Indicates the type of text value property.",
+            "@type": "owl:AnnotationProperty",
+            "knora-api:subjectType": {
+                "@id": "owl:ObjectProperty"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:TextValueType"
+            },
+            "@id": "knora-api:hasTextValuePropertyType"
+        },
+        {
+            "rdfs:label": "has text value type",
+            "rdfs:comment": "Indicates the type of text value.",
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "xsd:string"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:TextValueType"
+            },
+            "@id": "knora-api:hasTextValueType"
         },
         {
             "rdfs:label": "Title",
