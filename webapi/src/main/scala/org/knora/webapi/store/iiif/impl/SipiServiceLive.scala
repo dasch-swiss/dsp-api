@@ -197,48 +197,15 @@ final case class SipiServiceLive(
    *
    * @param textFileRequest the request message.
    */
-  def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] = {
-
-    // helper method to handle errors
-    def handleErrors(ex: Throwable) = ex match {
-      case notFoundException: NotFoundException =>
-        ZIO.die(
-          NotFoundException(
-            s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${notFoundException.message}",
-          ),
-        )
-
-      case badRequestException: BadRequestException =>
-        ZIO.die(
-          SipiException(
-            s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${badRequestException.message}",
-          ),
-        )
-
-      case sipiException: SipiException =>
-        ZIO.die(
-          SipiException(
-            s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${sipiException.message}",
-            sipiException.cause,
-          ),
-        )
-
-      case other =>
-        ZIO.logError(
-          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${other.getMessage}",
-        ) *>
-          ZIO.die(
-            SipiException(
-              s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${other.getMessage}",
-            ),
-          )
+  def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
+    doSipiRequestS(quickRequest.get(uri"${textFileRequest.fileUrl}")).map(SipiGetTextFileResponse(_)).catchAll { ex =>
+      val msg =
+        s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${ex.getMessage}"
+      (ex match {
+        case (_: NotFoundException | _: BadRequestException | _: SipiException) => ZIO.die(SipiException(msg))
+        case other                                                              => ZIO.logError(msg) *> ZIO.die(SipiException(msg))
+      })
     }
-
-    for {
-      request     <- ZIO.succeed(new HttpGet(textFileRequest.fileUrl))
-      responseStr <- doSipiRequest(request).catchAll(ex => handleErrors(ex))
-    } yield SipiGetTextFileResponse(responseStr)
-  }
 
   /**
    * Makes an HTTP request to Sipi and returns the response.
