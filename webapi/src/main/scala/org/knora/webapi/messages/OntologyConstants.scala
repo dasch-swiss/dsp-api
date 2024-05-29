@@ -57,6 +57,9 @@ object OntologyConstants {
     val WithRestrictions: IRI = OwlPrefixExpansion + "withRestrictions"
     val OnDatatype: IRI       = OwlPrefixExpansion + "onDatatype"
 
+    val OneOf: IRI           = OwlPrefixExpansion + "oneOf"
+    val EquivalentClass: IRI = OwlPrefixExpansion + "equivalentClass"
+
     /**
      * Cardinality IRIs expressed as OWL restrictions, which specify the properties that resources of
      * a particular type can have.
@@ -76,6 +79,8 @@ object OntologyConstants {
       Ontology,
       Class,
       Restriction,
+      ObjectProperty,
+      KnoraBase.TextValueType,
     )
   }
 
@@ -303,6 +308,8 @@ object OntologyConstants {
     val StillImageExternalFileValue: IRI = KnoraBasePrefixExpansion + "StillImageExternalFileValue"
     val MovingImageFileValue: IRI        = KnoraBasePrefixExpansion + "MovingImageFileValue"
     val TextFileValue: IRI               = KnoraBasePrefixExpansion + "TextFileValue"
+
+    val TextValueType: IRI = KnoraBasePrefixExpansion + "TextValueType"
 
     val FileValueClasses: Set[IRI] = Set(
       FileValue,
