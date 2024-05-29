@@ -87,13 +87,14 @@ final case class SipiServiceLive(
    */
   override def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse] =
     for {
-      jwt     <- jwtService.createJwt(KnoraSystemInstances.Users.SystemUser)
-      request  = new HttpGet(s"${sipiConfig.internalBaseUrl}/tmp/$filename/knora.json")
-      _        = request.addHeader(new BasicHeader("Authorization", s"Bearer ${jwt.jwtString}"))
-      bodyStr <- doSipiRequest(request)
+      jwt <- jwtService.createJwt(KnoraSystemInstances.Users.SystemUser)
+      request = quickRequest
+                  .get(uri"${sipiConfig.internalBaseUrl}/tmp/$filename/knora.json")
+                  .header("Authorization", s"Bearer ${jwt.jwtString}")
+      body <- doSipiRequestS(request)
       res <- ZIO
-               .fromEither(bodyStr.fromJson[FileMetadataSipiResponse])
-               .mapError(e => SipiException(s"Invalid response from Sipi: $e, $bodyStr"))
+               .fromEither(body.fromJson[FileMetadataSipiResponse])
+               .mapError(e => SipiException(s"Invalid response from Sipi: $e, $body"))
     } yield res
 
   override def getFileMetadataFromDspIngest(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse] =
