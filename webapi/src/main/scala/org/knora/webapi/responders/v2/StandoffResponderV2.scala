@@ -508,10 +508,7 @@ final case class StandoffResponderV2(
       result <-
         IriLocker.runWithIriLock(
           apiRequestID,
-          stringFormatter
-            .createMappingLockIriForProject(
-              projectIri.toString,
-            ), // use a special project specific IRI to lock the creation of mappings for the given project
+          s"${projectIri.toString}/mappings",
           createMappingAndCheck(
             xml = xml,
             label = label,
