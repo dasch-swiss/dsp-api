@@ -120,7 +120,6 @@ final case class SipiServiceLive(
   def moveTemporaryFileToPermanentStorage(
     moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
   ): Task[SuccessResponseV2] = {
-
     // create the JWT token with the necessary permission
     val jwt = jwtService.createJwt(
       moveTemporaryFileToPermanentStorageRequestV2.requestingUser,
@@ -135,29 +134,18 @@ final case class SipiServiceLive(
       ),
     )
 
-    // builds the url for the operation
-    def moveFileUrl(token: String) =
-      ZIO.succeed(s"${sipiConfig.internalBaseUrl}/${sipiConfig.moveFileRoute}?token=$token")
+    def moveFileUrl(token: String): Uri =
+      uri"${sipiConfig.internalBaseUrl}/${sipiConfig.moveFileRoute}?token=$token"
 
-    // build the form to send together with the request
-    val formParams = new util.ArrayList[NameValuePair]()
-    formParams.add(new BasicNameValuePair("filename", moveTemporaryFileToPermanentStorageRequestV2.internalFilename))
-    formParams.add(new BasicNameValuePair("prefix", moveTemporaryFileToPermanentStorageRequestV2.prefix))
-    val requestEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
-
-    // build the request
-    def request(url: String, requestEntity: UrlEncodedFormEntity) = {
-      val req = new HttpPost(url)
-      req.setEntity(requestEntity)
-      req
-    }
+    val params = Map(
+      ("filename" -> moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
+      ("prefix"   -> moveTemporaryFileToPermanentStorageRequestV2.prefix),
+    )
 
     for {
-      token   <- jwt
-      url     <- moveFileUrl(token.jwtString)
-      entity  <- ZIO.succeed(requestEntity)
-      request <- ZIO.succeed(request(url, entity))
-      _       <- doSipiRequest(request)
+      token <- jwt
+      url    = moveFileUrl(token.jwtString)
+      _     <- doSipiRequestS(quickRequest.post(url).body(params))
     } yield SuccessResponseV2("Moved file to permanent storage.")
   }
 
