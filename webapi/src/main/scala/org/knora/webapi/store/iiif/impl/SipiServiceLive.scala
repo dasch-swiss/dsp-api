@@ -23,6 +23,11 @@ import org.apache.http.message.BasicHeader
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import spray.json.*
+import sttp.capabilities.zio.ZioStreams
+import sttp.client3
+import sttp.client3.*
+import sttp.client3.SttpBackend
+import sttp.client3.httpclient.zio.HttpClientZioBackend
 import zio.*
 import zio.json.DecoderOps
 import zio.nio.file.Path
@@ -61,6 +66,7 @@ final case class SipiServiceLive(
   private val sipiConfig: Sipi,
   private val jwtService: JwtService,
   private val httpClient: CloseableHttpClient,
+  private val sttp: SttpBackend[Task, ZioStreams],
   private val dspIngestClient: DspIngestClient,
 ) extends SipiService {
 
@@ -288,6 +294,31 @@ final case class SipiServiceLive(
     }
   }
 
+  private def doSipiRequestS(request: Request[String, Any]): Task[String] =
+    sttp
+      .send(request)
+      .flatMap { response =>
+        if (response.isSuccess) {
+          ZIO.succeed(response.body)
+        } else {
+          val sipiErrorMsg = SipiUtil.getSipiErrorMessage(response.body)
+
+          if (response.code.code == 404) {
+            ZIO.fail(NotFoundException(sipiErrorMsg))
+          } else if (response.isClientError) {
+            ZIO.fail(BadRequestException(s"Sipi responded with HTTP status code ${response.code.code}: $sipiErrorMsg"))
+          } else {
+            ZIO.fail(SipiException(s"Sipi responded with HTTP status code ${response.code.code}: $sipiErrorMsg"))
+          }
+        }
+      }
+      .catchAll {
+        case badRequestException: BadRequestException => ZIO.fail(badRequestException)
+        case notFoundException: NotFoundException     => ZIO.fail(notFoundException)
+        case sipiException: SipiException             => ZIO.fail(sipiException)
+        case e: Exception                             => ZIO.logError(e.getMessage) *> ZIO.fail(SipiException("Failed to connect to Sipi", e))
+      }
+
   /**
    * Downloads an asset and its knora.json from Sipi.
    *
@@ -404,12 +435,14 @@ object SipiServiceLive {
     ZIO.attemptBlocking(httpClient.close()).logError.ignore <* ZIO.logInfo(">>> Release Sipi IIIF Service <<<")
 
   val layer: URLayer[AppConfig & DspIngestClient & JwtService, SipiServiceLive] =
-    ZLayer.scoped {
-      for {
-        config          <- ZIO.serviceWith[AppConfig](_.sipi)
-        jwtService      <- ZIO.service[JwtService]
-        httpClient      <- ZIO.acquireRelease(acquire(config))(release)
-        dspIngestClient <- ZIO.service[DspIngestClient]
-      } yield SipiServiceLive(config, jwtService, httpClient, dspIngestClient)
-    }
+    HttpClientZioBackend.layer().orDie >+>
+      ZLayer.scoped {
+        for {
+          config          <- ZIO.serviceWith[AppConfig](_.sipi)
+          jwtService      <- ZIO.service[JwtService]
+          httpClient      <- ZIO.acquireRelease(acquire(config))(release)
+          dspIngestClient <- ZIO.service[DspIngestClient]
+          sttp            <- ZIO.service[SttpBackend[Task, ZioStreams]]
+        } yield SipiServiceLive(config, jwtService, httpClient, sttp, dspIngestClient)
+      }
 }
