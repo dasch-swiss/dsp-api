@@ -272,6 +272,9 @@ object StringFormatter {
     StringFormatter.initForTest()
     StringFormatter.getGeneralInstance
   }
+
+  def isKnoraOntologyIri(iri: SmartIri): Boolean =
+    iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName)
 }
 
 /**
@@ -985,16 +988,10 @@ class StringFormatter private (
       }
 
     override def getOntologyName: String =
-      iriInfo.ontologyName match {
-        case Some(name) => name
-        case None       => throw DataConversionException(s"Expected a Knora ontology IRI: $iri")
-      }
+      iriInfo.ontologyName.getOrElse(throw DataConversionException(s"Expected a Knora ontology IRI: $iri"))
 
     override def getEntityName: String =
-      iriInfo.entityName match {
-        case Some(name) => name
-        case None       => throw DataConversionException(s"Expected a Knora entity IRI: $iri")
-      }
+      iriInfo.entityName.getOrElse(throw DataConversionException(s"Expected a Knora entity IRI: $iri"))
 
     override def getOntologySchema: Option[OntologySchema] = iriInfo.ontologySchema
 
@@ -1627,16 +1624,6 @@ class StringFormatter private (
   }
 
   /**
-   * Creates an IRI used as a lock for the creation of mappings inside a given project.
-   * This method will always return the same IRI for the given project IRI.
-   *
-   * @param projectIri the IRI of the project the mapping will belong to.
-   * @return an IRI used as a lock for the creation of mappings inside a given project.
-   */
-  def createMappingLockIriForProject(projectIri: IRI): IRI =
-    s"$projectIri/mappings"
-
-  /**
    * Validates a custom value IRI, throwing [[BadRequestException]] if the IRI is not valid.
    *
    * @param customValueIri the custom value IRI to be validated.
@@ -1660,18 +1647,10 @@ class StringFormatter private (
     customValueIri
   }
 
-  def isKnoraOntologyIri(iri: SmartIri): Boolean =
-    iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName)
-
   def unescapeStringLiteralSeq(stringLiteralSeq: StringLiteralSequenceV2): StringLiteralSequenceV2 =
     StringLiteralSequenceV2(
       stringLiterals = stringLiteralSeq.stringLiterals.map(stringLiteral =>
         StringLiteralV2.from(Iri.fromSparqlEncodedString(stringLiteral.value), stringLiteral.language),
       ),
     )
-  def unescapeOptionalString(optionalString: Option[String]): Option[String] =
-    optionalString match {
-      case Some(s: String) => Some(Iri.fromSparqlEncodedString(s))
-      case None            => None
-    }
 }

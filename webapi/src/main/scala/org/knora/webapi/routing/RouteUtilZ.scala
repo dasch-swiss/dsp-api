@@ -48,13 +48,11 @@ object RouteUtilZ {
   def decodeUuid(uuidStr: String): IO[BadRequestException, UUID] =
     ZIO.attempt(UuidUtil.decode(uuidStr)).orElseFail(BadRequestException(s"Invalid value UUID: $uuidStr"))
 
-  def ensureExternalOntologyName(iri: SmartIri): ZIO[StringFormatter, BadRequestException, SmartIri] =
-    ZIO.serviceWithZIO[StringFormatter] { sf =>
-      if (sf.isKnoraOntologyIri(iri)) {
-        ZIO.fail(BadRequestException(s"Internal ontology <$iri> cannot be served"))
-      } else {
-        ZIO.succeed(iri)
-      }
+  def ensureExternalOntologyName(iri: SmartIri): IO[BadRequestException, SmartIri] =
+    if (StringFormatter.isKnoraOntologyIri(iri)) {
+      ZIO.fail(BadRequestException(s"Internal ontology <$iri> cannot be served"))
+    } else {
+      ZIO.succeed(iri)
     }
 
   def ensureIsKnoraOntologyIri(iri: SmartIri): IO[BadRequestException, SmartIri] =

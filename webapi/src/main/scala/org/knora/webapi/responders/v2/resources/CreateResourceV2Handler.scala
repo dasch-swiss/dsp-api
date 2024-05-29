@@ -42,6 +42,8 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.ontology.domain.service.OntologyService
+import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
@@ -59,6 +61,7 @@ final case class CreateResourceV2Handler(
   getResources: GetResources,
   ontologyRepo: OntologyRepo,
   permissionsResponder: PermissionsResponder,
+  ontologyService: OntologyService,
 )(implicit val stringFormatter: StringFormatter)
     extends LazyLogging {
 
@@ -94,76 +97,73 @@ final case class CreateResourceV2Handler(
     createResourceRequestV2: CreateResourceRequestV2,
   ): Task[ReadResourcesSequenceV2] =
     for {
-      // Don't allow anonymous users to create resources.
-      _ <- ZIO.when(createResourceRequestV2.requestingUser.isAnonymousUser) {
-             ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create resources"))
-           }
-
-      // Ensure that the project isn't the system project or the shared ontologies project.
+      _         <- ensureNotAnonymousUser(createResourceRequestV2.requestingUser)
+      _         <- ensureClassBelongsToProjectOntology(createResourceRequestV2)
       projectIri = createResourceRequestV2.createResource.projectADM.id
-      _ <-
-        ZIO.when(
-          projectIri == KnoraProjectRepo.builtIn.SystemProject.id.value || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
-        )(ZIO.fail(BadRequestException(s"Resources cannot be created in project <$projectIri>")))
-
-      // Ensure that the resource class isn't from a non-shared ontology in another project.
-
-      resourceClassOntologyIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity
-      readOntologyMetadataV2 <- messageRelay
-                                  .ask[ReadOntologyMetadataV2](
-                                    OntologyMetadataGetByIriRequestV2(
-                                      Set(resourceClassOntologyIri),
-                                      createResourceRequestV2.requestingUser,
-                                    ),
-                                  )
-      ontologyMetadata <- ZIO
-                            .fromOption(readOntologyMetadataV2.ontologies.headOption)
-                            .orElseFail(BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
-      ontologyProjectIri <-
-        ZIO
-          .fromOption(ontologyMetadata.projectIri)
-          .mapBoth(
-            _ => InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"),
-            _.toString(),
-          )
-
-      _ <-
-        ZIO.when(
-          projectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri),
-        ) {
-          val msg =
-            s"Cannot create a resource in project <$projectIri> with resource class <${createResourceRequestV2.createResource.resourceClassIri}>, which is defined in a non-shared ontology in another project"
-          ZIO.fail(BadRequestException(msg))
-        }
-
-      // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
-      // create a new resource in the given project.
-
-      internalResourceClassIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri
-                                             .toOntologySchema(InternalSchema)
-
-      _ <- ZIO.when(
-             !createResourceRequestV2.requestingUser.permissions
-               .hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri),
-           ) {
-             val msg =
-               s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>"
-             ZIO.fail(ForbiddenException(msg))
-           }
+      _         <- ensureUserHasPermission(createResourceRequestV2, projectIri)
 
       resourceIri <-
         iriService.checkOrCreateEntityIri(
           createResourceRequestV2.createResource.resourceIri,
           stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode),
         )
-
-      // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
       taskResult <- IriLocker.runWithIriLock(
                       createResourceRequestV2.apiRequestID,
                       resourceIri,
                       makeTask(createResourceRequestV2, resourceIri),
                     )
     } yield taskResult
+
+  private def ensureNotAnonymousUser(user: User): Task[Unit] =
+    ZIO
+      .when(user.isAnonymousUser)(ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create resources")))
+      .ignore
+
+  private def ensureClassBelongsToProjectOntology(createResourceRequestV2: CreateResourceRequestV2): Task[Unit] = for {
+    projectIri <- ZIO.succeed(createResourceRequestV2.createResource.projectADM.id)
+    isSystemOrSharedProject =
+      projectIri == KnoraProjectRepo.builtIn.SystemProject.id.value ||
+        projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
+    _ <- ZIO.when(isSystemOrSharedProject)(
+           ZIO.fail(BadRequestException(s"Resources cannot be created in project <$projectIri>")),
+         )
+
+    resourceClassOntologyIri =
+      createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity.toInternalIri
+    resourceClassProjectIri <-
+      ontologyService
+        .getProjectIriForOntologyIri(resourceClassOntologyIri)
+        .someOrFail(BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
+
+    _ <-
+      ZIO
+        .fail(
+          BadRequestException(
+            s"Cannot create a resource in project <$projectIri> with resource class <${createResourceRequestV2.createResource.resourceClassIri}>, which is defined in a non-shared ontology in another project",
+          ),
+        )
+        .unless(
+          projectIri == resourceClassProjectIri || OntologyServiceLive.isBuiltInOrSharedOntology(
+            resourceClassOntologyIri,
+          ),
+        )
+  } yield ()
+
+  private def ensureUserHasPermission(createResourceRequestV2: CreateResourceRequestV2, projectIri: String) = for {
+    internalResourceClassIri <-
+      ZIO.succeed(createResourceRequestV2.createResource.resourceClassIri.toOntologySchema(InternalSchema))
+    _ <-
+      ZIO
+        .fail(
+          ForbiddenException(
+            s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>",
+          ),
+        )
+        .unless(
+          createResourceRequestV2.requestingUser.permissions
+            .hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri),
+        )
+  } yield ()
 
   private def makeTask(
     createResourceRequestV2: CreateResourceRequestV2,
