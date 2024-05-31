@@ -74,6 +74,10 @@ case class SparqlSelectResultBody(bindings: Seq[VariableResultsRow]) {
   require(bindings.forall(_.rowMap.nonEmpty), "Empty rows are not allowed in a SparqlSelectResponseBody")
 }
 
+case class SparqlSelectResultBodyUnchecked(bindings: Seq[VariableResultsRow]) {
+  def asChecked = SparqlSelectResultBody(bindings.filter(_.rowMap.keySet.nonEmpty))
+}
+
 /**
  * Represents a row of results in the result of a SPARQL SELECT query.
  *

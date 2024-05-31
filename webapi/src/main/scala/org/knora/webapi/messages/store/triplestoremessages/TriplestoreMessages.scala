@@ -471,9 +471,7 @@ object SparqlResultProtocol extends DefaultJsonProtocol {
     }
 
   implicit val SparqlSelectResponseBodyFormatZ: JsonDecoder[SparqlSelectResultBody] =
-    DeriveJsonDecoder.gen[SparqlSelectResultBody].map { body =>
-      body.copy(bindings = body.bindings.filter(_.rowMap.keySet.nonEmpty))
-    }
+    DeriveJsonDecoder.gen[SparqlSelectResultBodyUnchecked].map(_.asChecked)
 
   implicit val headerDecoder: JsonDecoder[SparqlSelectResultHeader] = DeriveJsonDecoder.gen[SparqlSelectResultHeader]
   implicit val responseDecoder: JsonDecoder[SparqlSelectResult]     = DeriveJsonDecoder.gen[SparqlSelectResult]
