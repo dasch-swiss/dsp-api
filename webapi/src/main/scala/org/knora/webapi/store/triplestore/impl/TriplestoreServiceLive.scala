@@ -10,8 +10,6 @@ import org.apache.http.HttpHost
 import sttp.capabilities.zio.ZioStreams
 import sttp.client3.Empty
 import sttp.client3.Request
-import zio.json.*
-import zio.json.ast.Json
 import sttp.client3.RequestT
 import sttp.client3.Response
 import sttp.client3.SttpBackend
@@ -20,6 +18,8 @@ import sttp.client3.UriContext
 import sttp.client3.basicRequest
 import sttp.client3.httpclient.zio.HttpClientZioBackend
 import zio.*
+import zio.json.*
+import zio.json.ast.Json
 import zio.metrics.Metric
 import zio.nio.file.Path as NioPath
 
