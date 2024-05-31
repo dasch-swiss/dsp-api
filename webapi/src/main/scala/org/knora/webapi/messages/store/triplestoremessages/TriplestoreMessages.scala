@@ -451,58 +451,32 @@ case class DateTimeLiteralV2(value: Instant) extends LiteralV2 {
 // JSON formatting
 
 /**
- * A spray-json protocol that parses JSON returned by a SPARQL endpoint. Empty values and empty rows are
+ * A ZIO json protocol that parses JSON returned by a SPARQL endpoint. Empty values and empty rows are
  * ignored.
  */
 object SparqlResultProtocol extends DefaultJsonProtocol {
+  import zio.json._
+  import zio.json.ast.Json
+  import cats.implicits._
 
-  /**
-   * Converts a [[JsValue]] to a [[VariableResultsRow]].
-   */
-  implicit object VariableResultsJsonFormat extends JsonFormat[VariableResultsRow] {
-    def read(jsonVal: JsValue): VariableResultsRow = {
-
-      // Collapse the JSON structure into a simpler Map of SPARQL variable names to values.
-      val mapToWrap: Map[String, String] = jsonVal.asJsObject.fields.foldLeft(Map.empty[String, String]) {
-        case (acc, (key, value)) =>
-          value.asJsObject.getFields("value") match {
-            case Seq(JsString(valueStr)) if valueStr.nonEmpty => // Ignore empty strings.
-              acc + (key -> valueStr)
-            case _ => acc
-          }
+  implicit val VariableResultsZioJsonFormat: JsonDecoder[VariableResultsRow] =
+    JsonDecoder[Json.Obj].map { obj =>
+      val mapToWrap: Map[String, String] = obj.fields.toList.foldMap { case (key, value) =>
+        value.asObject.foldMap(_.get("value").flatMap(_.asString).filter(_.nonEmpty).foldMap(s => Map(key -> s)))
       }
 
-      // Wrap that Map in an ErrorHandlingMap that will gracefully report errors about missing values when they
-      // are accessed later.
-      VariableResultsRow(
-        new ErrorHandlingMap(
-          mapToWrap,
-          { (key: String) => s"No value found for SPARQL query variable '$key' in query result row" },
-        ),
-      )
+      // Wrapped in an ErrorHandlingMap which gracefully reports errors about accessing missing values.
+      val keyMissing = (key: String) => s"No value found for SPARQL query variable '$key' in query result row"
+      VariableResultsRow(new ErrorHandlingMap(mapToWrap, keyMissing))
     }
 
-    def write(variableResultsRow: VariableResultsRow): JsValue = ???
-  }
+  implicit val SparqlSelectResponseBodyFormatZ: JsonDecoder[SparqlSelectResultBody] =
+    DeriveJsonDecoder.gen[SparqlSelectResultBody].map { body =>
+      body.copy(bindings = body.bindings.filter(_.rowMap.keySet.nonEmpty))
+    }
 
-  /**
-   * Converts a [[JsValue]] to a [[SparqlSelectResultBody]].
-   */
-  implicit object SparqlSelectResponseBodyFormat extends JsonFormat[SparqlSelectResultBody] {
-    def read(jsonVal: JsValue): SparqlSelectResultBody =
-      jsonVal.asJsObject.fields.get("bindings") match {
-        case Some(bindingsJson: JsArray) =>
-          // Filter out empty rows.
-          SparqlSelectResultBody(bindingsJson.convertTo[Seq[VariableResultsRow]].filter(_.rowMap.keySet.nonEmpty))
-
-        case _ => SparqlSelectResultBody(Nil)
-      }
-
-    def write(sparqlSelectResponseBody: SparqlSelectResultBody): JsValue = ???
-  }
-
-  implicit val headerFormat: JsonFormat[SparqlSelectResultHeader] = jsonFormat1(SparqlSelectResultHeader.apply)
-  implicit val responseFormat: JsonFormat[SparqlSelectResult]     = jsonFormat2(SparqlSelectResult.apply)
+  implicit val headerDecoder: JsonDecoder[SparqlSelectResultHeader] = DeriveJsonDecoder.gen[SparqlSelectResultHeader]
+  implicit val responseDecoder: JsonDecoder[SparqlSelectResult]     = DeriveJsonDecoder.gen[SparqlSelectResult]
 }
 
 /**

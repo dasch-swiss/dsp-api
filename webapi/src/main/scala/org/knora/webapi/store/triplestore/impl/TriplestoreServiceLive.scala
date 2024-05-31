@@ -7,10 +7,11 @@ package org.knora.webapi.store.triplestore.impl
 
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.HttpHost
-import spray.json.*
 import sttp.capabilities.zio.ZioStreams
 import sttp.client3.Empty
 import sttp.client3.Request
+import zio.json.*
+import zio.json.ast.Json
 import sttp.client3.RequestT
 import sttp.client3.Response
 import sttp.client3.SttpBackend
@@ -94,14 +95,12 @@ case class TriplestoreServiceLive(
    * @param query          the SPARQL SELECT query string.
    * @return a [[SparqlSelectResult]].
    */
-  override def query(query: Select): Task[SparqlSelectResult] = {
-    def parseJsonResponse(sparql: String, resultStr: String): IO[TriplestoreException, SparqlSelectResult] =
+  override def query(query: Select): Task[SparqlSelectResult] =
+    executeSparqlQuery(query).flatMap { resultStr =>
       ZIO
-        .attemptBlocking(resultStr.parseJson.convertTo[SparqlSelectResult])
-        .orElse(processError(sparql, resultStr))
-
-    executeSparqlQuery(query).flatMap(parseJsonResponse(query.sparql, _))
-  }
+        .fromEither(resultStr.fromJson[SparqlSelectResult])
+        .orElse(processError(query.sparql, resultStr))
+    }
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
@@ -163,7 +162,14 @@ case class TriplestoreServiceLive(
     for {
       resultString <- executeSparqlQuery(query)
       _            <- ZIO.logDebug(s"sparqlHttpAsk - resultString: $resultString")
-      result       <- ZIO.attemptBlocking(resultString.parseJson.asJsObject.getFields("boolean").head.convertTo[Boolean])
+      result <-
+        ZIO
+          .fromEither(for {
+            obj     <- resultString.fromJson[Json.Obj]
+            boolean <- obj.get("boolean").toRight("Missing \"boolean\" key.")
+            result  <- boolean.asBoolean.toRight("Boolean value expected.")
+          } yield result)
+          .mapError(Throwable(_))
     } yield result
 
   /**
@@ -288,14 +294,8 @@ case class TriplestoreServiceLive(
                       .get(targetHostUri.addPath(paths.checkServer))
                       .header("Accept", mimeTypeApplicationJson),
                   )
-      expectedFound <- ZIO.attempt {
-                         JsonParser(response.body.toOption.getOrElse(""))
-                           .convertTo[FusekiServer]
-                           .datasets
-                           .find(dataset => dataset.dsName == s"/${fusekiConfig.repositoryName}" && dataset.dsState)
-                           .nonEmpty
-                       }
-    } yield expectedFound
+      fusekiServer <- ZIO.fromEither(response.body.toOption.getOrElse("").fromJson[FusekiServer]).mapError(Throwable(_))
+    } yield fusekiServer.datasets.find(ds => ds.dsName == s"/${fusekiConfig.repositoryName}" && ds.dsState).nonEmpty
 
   /**
    * Initialize the Jena Fuseki triplestore. Currently only works for
