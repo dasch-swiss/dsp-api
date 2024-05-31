@@ -5,15 +5,12 @@
 
 package org.knora.webapi.messages.store.sipimessages
 
-import org.apache.pekko
-import spray.json.*
+import zio.json.*
 
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.traits.RequestWithSender
 import org.knora.webapi.slice.admin.domain.model.User
-
-import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 /**
  * An abstract trait for messages that can be sent to the [[org.knora.webapi.store.iiif.api.SipiService]]
@@ -90,13 +87,11 @@ case class SipiUploadWithoutProcessingResponseEntry(
  *
  * @param uploadedFiles the information about each file that was uploaded.
  */
-case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
+case class SipiUploadResponse(uploadedFiles: List[SipiUploadResponseEntry])
 
-object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] =
-    jsonFormat4(SipiUploadResponseEntry.apply)
-  implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] =
-    jsonFormat1(SipiUploadResponse.apply)
+object SipiUploadResponseJsonProtocol {
+  implicit val entry: JsonCodec[SipiUploadResponseEntry] = DeriveJsonCodec.gen[SipiUploadResponseEntry]
+  implicit val response: JsonCodec[SipiUploadResponse]   = DeriveJsonCodec.gen[SipiUploadResponse]
 }
 
 /**
@@ -104,12 +99,11 @@ object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonP
  *
  * @param uploadedFiles the information about each file that was uploaded.
  */
-case class SipiUploadWithoutProcessingResponse(uploadedFiles: Seq[SipiUploadWithoutProcessingResponseEntry])
+case class SipiUploadWithoutProcessingResponse(uploadedFiles: List[SipiUploadWithoutProcessingResponseEntry])
 
-object SipiUploadWithoutProcessingResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val sipiUploadWithoutProcessingResponseEntryFormat
-    : RootJsonFormat[SipiUploadWithoutProcessingResponseEntry] =
-    jsonFormat3(SipiUploadWithoutProcessingResponseEntry.apply)
-  implicit val sipiUploadWithoutProcessingResponseFormat: RootJsonFormat[SipiUploadWithoutProcessingResponse] =
-    jsonFormat1(SipiUploadWithoutProcessingResponse.apply)
+object SipiUploadWithoutProcessingResponseJsonProtocol {
+  implicit val withoutResponseEntryCodec: JsonCodec[SipiUploadWithoutProcessingResponseEntry] =
+    DeriveJsonCodec.gen[SipiUploadWithoutProcessingResponseEntry]
+  implicit val withoutResponseCodec: JsonCodec[SipiUploadWithoutProcessingResponse] =
+    DeriveJsonCodec.gen[SipiUploadWithoutProcessingResponse]
 }

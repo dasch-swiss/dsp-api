@@ -5,12 +5,7 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import org.apache.pekko
-import spray.json.DefaultJsonProtocol
-import spray.json.JsonFormat
-import spray.json.RootJsonFormat
-
-import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import zio.json.*
 
 /**
  * Represents a response from Fuseki about the state of the Fuseki server.
@@ -35,7 +30,11 @@ case class FusekiServer(
  * @param dsState    the state of the dataset.
  * @param dsServices the services available for the dataset.
  */
-case class FusekiDataset(dsName: String, dsState: Boolean, dsServices: Seq[FusekiService])
+case class FusekiDataset(
+  @jsonField("ds.name") dsName: String,
+  @jsonField("ds.state") dsState: Boolean,
+  @jsonField("ds.services") dsServices: Seq[FusekiService],
+)
 
 /**
  * Represets a service available for a Fuseki dataset.
@@ -44,16 +43,17 @@ case class FusekiDataset(dsName: String, dsState: Boolean, dsServices: Seq[Fusek
  * @param srvDescription a description of the service.
  * @param srvEndpoints   the endpoints provided by the service.
  */
-case class FusekiService(srvType: String, srvDescription: String, srvEndpoints: Seq[String])
+case class FusekiService(
+  @jsonField("srv.type") srvType: String,
+  @jsonField("srv.description") srvDescription: String,
+  @jsonField("srv.endpoints") srvEndpoints: Seq[String],
+)
 
 /**
  * Parses server status responses from Fuseki.
  */
-object FusekiJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val fusekiServiceFormat: JsonFormat[FusekiService] =
-    jsonFormat(FusekiService.apply, "srv.type", "srv.description", "srv.endpoints")
-  implicit val fusekiDatasetFormat: JsonFormat[FusekiDataset] =
-    jsonFormat(FusekiDataset.apply, "ds.name", "ds.state", "ds.services")
-  implicit val fusekiServerFormat: RootJsonFormat[FusekiServer] =
-    jsonFormat4(FusekiServer.apply)
+object FusekiJsonProtocol {
+  implicit val fusekiServiceFormat: JsonCodec[FusekiService] = DeriveJsonCodec.gen[FusekiService]
+  implicit val fusekiDatasetFormat: JsonCodec[FusekiDataset] = DeriveJsonCodec.gen[FusekiDataset]
+  implicit val fusekiServerFormat: JsonCodec[FusekiServer]   = DeriveJsonCodec.gen[FusekiServer]
 }
