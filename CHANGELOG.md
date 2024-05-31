@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.10.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.9.1...v0.10.0) (2024-05-28)
+
+
+### Enhancements
+
+* Add endpoint for erasing projects permanently (DEV-3680) ([#218](https://github.com/dasch-swiss/dsp-ingest/issues/218)) ([18fbd48](https://github.com/dasch-swiss/dsp-ingest/commit/18fbd48a1bd2ad705e80d566c7f188a867fd6958))
+
+
+### Documentation
+
+* Remove generated OpenAPI ymls from git and cleanup python/just setup (DEV-3443) ([#219](https://github.com/dasch-swiss/dsp-ingest/issues/219)) ([e5d16bf](https://github.com/dasch-swiss/dsp-ingest/commit/e5d16bf3893d94e27e3cfd643b69a0c3b0bb677b))
+
 ## [0.9.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.9.0...v0.9.1) (2024-05-17)
 
 
