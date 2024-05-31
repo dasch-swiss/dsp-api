@@ -9,14 +9,14 @@ import org.apache.http
 import org.apache.http.entity.ContentType
 import org.apache.pekko
 import org.apache.pekko.actor.ActorSystem
-import spray.json.*
-import spray.json.JsObject
 import sttp.capabilities.zio.ZioStreams
 import sttp.client3
 import sttp.client3.*
 import sttp.client3.SttpBackend
 import sttp.client3.httpclient.zio.HttpClientZioBackend
 import zio.*
+import zio.json.*
+import zio.json.ast.Json
 
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
@@ -139,10 +139,10 @@ final case class TestClientService(
   /**
    * Performs a http request and tries to parse the response body as Json.
    */
-  def getResponseJson(request: pekko.http.scaladsl.model.HttpRequest): Task[JsObject] =
+  def getResponseJson(request: pekko.http.scaladsl.model.HttpRequest): Task[Json.Obj] =
     for {
       body <- getResponseString(request)
-      json <- ZIO.succeed(body.parseJson.asJsObject)
+      json <- ZIO.fromEither(body.fromJson[Json.Obj]).mapError(Throwable(_))
     } yield json
 
   /**
@@ -171,7 +171,8 @@ final case class TestClientService(
                        .contentType(file.mimeType.toString)
                    }
       response <- doSipiRequest(quickRequest.post(url).multipartBody(multiparts))
-    } yield response.parseJson.asJsObject.convertTo[SipiUploadResponse]
+      json     <- ZIO.fromEither(response.fromJson[SipiUploadResponse]).mapError(Throwable(_))
+    } yield json
 
   /**
    * Uploads a file to the IIIF Service's "upload_without_processing" route and returns the information in Sipi's response.
@@ -193,7 +194,8 @@ final case class TestClientService(
                        .contentType(file.mimeType.toString)
                    }
       response <- doSipiRequest(quickRequest.post(url).multipartBody(multiparts))
-    } yield response.parseJson.asJsObject.convertTo[SipiUploadWithoutProcessingResponse]
+      json     <- ZIO.fromEither(response.fromJson[SipiUploadWithoutProcessingResponse]).mapError(Throwable(_))
+    } yield json
 
   private def doSipiRequest[T](request: Request[String, Any]): Task[String] =
     sttp.send(request).flatMap { response =>

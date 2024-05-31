@@ -317,10 +317,10 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       )
       val sipiRequest  = Post(s"${baseInternalSipiUrl}/upload?token=$loginToken", sipiFormData)
       val sipiResponse = singleAwaitingRequest(sipiRequest)
-      val uploadedFile = responseToString(sipiResponse).parseJson.asJsObject
-        .convertTo[SipiUploadResponse]
-        .uploadedFiles
-        .head
+      val uploadedFile = {
+        import zio.json.*
+        responseToString(sipiResponse).fromJson[SipiUploadResponse].toOption.get.uploadedFiles.head
+      }
 
       // create FileRepresentation in API
       val uploadFileJson = UploadFileRequest

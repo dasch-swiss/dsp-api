@@ -9,7 +9,6 @@ import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
 import pdi.jwt.JwtZIOJson
-import spray.json.JsString
 import zio.IO
 import zio.NonEmptyChunk
 import zio.Scope
@@ -18,6 +17,7 @@ import zio.ZLayer
 import zio.json.DecoderOps
 import zio.json.DeriveJsonDecoder
 import zio.json.JsonDecoder
+import zio.json.ast.Json
 import zio.test.Gen
 import zio.test.Spec
 import zio.test.TestAspect
@@ -132,7 +132,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
   val spec: Spec[TestEnvironment with Scope, Any] = (suite("JwtService")(
     test("create a token") {
       for {
-        token    <- JwtService(_.createJwt(user, Map("foo" -> JsString("bar"))))
+        token    <- JwtService(_.createJwt(user, Map("foo" -> Json.Str("bar"))))
         userIri  <- getClaim(token.jwtString, _.subject)
         audience <- getClaim(token.jwtString, _.audience.getOrElse(Set.empty))
         scope    <- getScopeClaimValue(token.jwtString)

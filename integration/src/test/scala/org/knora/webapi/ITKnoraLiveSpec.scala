@@ -14,8 +14,8 @@ import org.apache.pekko.testkit.TestKitBase
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import spray.json.*
 import zio.*
+import zio.json.ast.Json
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
@@ -141,7 +141,7 @@ abstract class ITKnoraLiveSpec
         .getOrThrowFiberFailure()
     }
 
-  protected def getResponseJson(request: HttpRequest): JsObject =
+  protected def getResponseJson(request: HttpRequest): Json.Obj =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(

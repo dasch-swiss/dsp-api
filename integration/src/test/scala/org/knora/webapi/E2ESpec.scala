@@ -14,9 +14,9 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import spray.json.*
 import zio.*
 import zio.json.*
+import zio.json.ast.Json
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -145,7 +145,7 @@ abstract class E2ESpec
       } yield obj,
     )
 
-  protected def getResponseAsJson(request: HttpRequest): JsObject =
+  protected def getResponseAsJson(request: HttpRequest): Json.Obj =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseJson(request)))
 
   protected def getResponseAsJsonLD(request: HttpRequest): JsonLDDocument =

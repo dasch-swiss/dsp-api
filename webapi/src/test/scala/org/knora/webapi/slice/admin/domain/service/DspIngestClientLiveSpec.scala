@@ -20,7 +20,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
-import spray.json.JsValue
 import zio.Console
 import zio.Random
 import zio.Scope
@@ -33,6 +32,7 @@ import zio.ZLayer
 import zio.json.DeriveJsonEncoder
 import zio.json.EncoderOps
 import zio.json.JsonEncoder
+import zio.json.ast.Json
 import zio.nio.file.Files
 import zio.test.Spec
 import zio.test.TestAspect
@@ -132,10 +132,10 @@ object DspIngestClientLiveSpecLayers {
   val jwtServiceMockLayer: ULayer[JwtService] = ZLayer.succeed {
     val unsupported = ZIO.die(new UnsupportedOperationException("not implemented"))
     new JwtService {
-      override def createJwtForDspIngest(): UIO[Jwt]                              = ZIO.succeed(Jwt("mock-jwt-string-value", Long.MaxValue))
-      override def createJwt(user: User, content: Map[String, JsValue]): UIO[Jwt] = unsupported
-      override def isTokenValid(token: String): Boolean                           = throw new UnsupportedOperationException("not implemented")
-      override def extractUserIriFromToken(token: String): Task[Option[IRI]]      = unsupported
+      override def createJwtForDspIngest(): UIO[Jwt]                           = ZIO.succeed(Jwt("mock-jwt-string-value", Long.MaxValue))
+      override def createJwt(user: User, content: Map[String, Json]): UIO[Jwt] = unsupported
+      override def isTokenValid(token: String): Boolean                        = throw new UnsupportedOperationException("not implemented")
+      override def extractUserIriFromToken(token: String): Task[Option[IRI]]   = unsupported
     }
   }
 

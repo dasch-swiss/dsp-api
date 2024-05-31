@@ -5,7 +5,6 @@
 
 package org.knora.webapi.store.iiif.impl
 
-import spray.json.*
 import sttp.capabilities.zio.ZioStreams
 import sttp.client3
 import sttp.client3.*
@@ -14,6 +13,7 @@ import sttp.client3.httpclient.zio.HttpClientZioBackend
 import sttp.model.Uri
 import zio.*
 import zio.json.DecoderOps
+import zio.json.ast.Json
 import zio.nio.file.Path
 
 import java.net.URI
@@ -104,12 +104,10 @@ final case class SipiServiceLive(
     val jwt = jwtService.createJwt(
       moveTemporaryFileToPermanentStorageRequestV2.requestingUser,
       Map(
-        "knora-data" -> JsObject(
-          Map(
-            "permission" -> JsString("StoreFile"),
-            "filename"   -> JsString(moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
-            "prefix"     -> JsString(moveTemporaryFileToPermanentStorageRequestV2.prefix),
-          ),
+        "knora-data" -> Json.Obj(
+          "permission" -> Json.Str("StoreFile"),
+          "filename"   -> Json.Str(moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
+          "prefix"     -> Json.Str(moveTemporaryFileToPermanentStorageRequestV2.prefix),
         ),
       ),
     )
@@ -135,11 +133,9 @@ final case class SipiServiceLive(
   def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] = {
     val deleteRequestContent =
       Map(
-        "knora-data" -> JsObject(
-          Map(
-            "permission" -> JsString("DeleteTempFile"),
-            "filename"   -> JsString(deleteTemporaryFileRequestV2.internalFilename),
-          ),
+        "knora-data" -> Json.Obj(
+          "permission" -> Json.Str("DeleteTempFile"),
+          "filename"   -> Json.Str(deleteTemporaryFileRequestV2.internalFilename),
         ),
       )
 

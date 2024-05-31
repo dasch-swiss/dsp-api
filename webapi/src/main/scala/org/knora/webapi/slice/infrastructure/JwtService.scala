@@ -11,8 +11,6 @@ import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
 import pdi.jwt.JwtZIOJson
-import spray.json.JsObject
-import spray.json.JsValue
 import zio.Clock
 import zio.Duration
 import zio.Random
@@ -21,6 +19,7 @@ import zio.UIO
 import zio.ZIO
 import zio.ZLayer
 import zio.durationInt
+import zio.json.ast.Json
 
 import scala.util.Failure
 import scala.util.Success
@@ -56,7 +55,7 @@ trait JwtService {
    * @param content   any other content to be included in the token.
    * @return a [[String]] containing the JWT.
    */
-  def createJwt(user: User, content: Map[String, JsValue] = Map.empty): UIO[Jwt]
+  def createJwt(user: User, content: Map[String, Json] = Map.empty): UIO[Jwt]
 
   def createJwtForDspIngest(): UIO[Jwt]
 
@@ -90,9 +89,11 @@ final case class JwtServiceLive(
   private val logger                  = Logger(LoggerFactory.getLogger(this.getClass))
   private val audience                = Set("Knora", "Sipi", dspIngestConfig.audience)
 
-  override def createJwt(user: User, content: Map[String, JsValue] = Map.empty): UIO[Jwt] =
+  override def createJwt(user: User, content: Map[String, Json] = Map.empty): UIO[Jwt] =
     calculateScope(user)
-      .flatMap(scope => createJwtToken(jwtConfig.issuerAsString(), user.id, audience, scope, Some(JsObject(content))))
+      .flatMap(scope =>
+        createJwtToken(jwtConfig.issuerAsString(), user.id, audience, scope, Some(Json.Obj(content.toSeq: _*))),
+      )
 
   private def calculateScope(user: User) =
     if (user.isSystemAdmin || user.isSystemUser) { ZIO.succeed(Scope.admin) }
@@ -131,7 +132,7 @@ final case class JwtServiceLive(
     subject: IRI,
     audience: Set[IRI],
     scope: Scope,
-    content: Option[JsObject] = None,
+    content: Option[Json.Obj] = None,
     expiration: Option[Duration] = None,
   ) =
     for {
@@ -139,7 +140,7 @@ final case class JwtServiceLive(
       uuid <- Random.nextUUID
       exp   = now.plus(expiration.getOrElse(jwtConfig.expiration))
       claim = JwtClaim(
-                content = content.getOrElse(JsObject.empty).compactPrint,
+                content = content.getOrElse(Json.Obj()).toString,
                 issuer = Some(issuer),
                 subject = Some(subject),
                 audience = Some(audience),
