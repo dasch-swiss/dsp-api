@@ -107,7 +107,7 @@ object Dependencies {
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.18"
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "1.19.8"
-  val wiremock       = "org.wiremock"       % "wiremock"       % "3.5.4"
+  val wiremock       = "org.wiremock"       % "wiremock"       % "3.6.0"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
