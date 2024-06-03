@@ -24,10 +24,10 @@ object Dependencies {
   val Rdf4jVersion      = "4.3.11"
 
   val ZioConfigVersion            = "4.0.2"
-  val ZioLoggingVersion           = "2.2.4"
+  val ZioLoggingVersion           = "2.3.0"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC26"
+  val ZioPreludeVersion           = "1.0.0-RC27"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.1.1"
 
@@ -74,13 +74,13 @@ object Dependencies {
 
   // input validation
   val commonsValidator =
-    "commons-validator" % "commons-validator" % "1.8.0" exclude ("commons-logging", "commons-logging")
+    "commons-validator" % "commons-validator" % "1.9.0" exclude ("commons-logging", "commons-logging")
 
   // authentication
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.1"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.2.4" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "6.3.0" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.78.1"
 
   // caching
@@ -107,7 +107,7 @@ object Dependencies {
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.18"
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "1.19.8"
-  val wiremock       = "org.wiremock"       % "wiremock"       % "3.5.4"
+  val wiremock       = "org.wiremock"       % "wiremock"       % "3.6.0"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
