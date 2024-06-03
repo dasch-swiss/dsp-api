@@ -74,7 +74,7 @@ object SipiIT extends ZIOSpecDefault {
           _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
           jwt <- createJwt(AuthScope.admin)
           response <- requestGet(
-                        Path.roott / prefix / imageTestfile / "file",
+                        Path.root / prefix / imageTestfile / "file",
                         Header.Cookie(
                           NonEmptyChunk(
                             Cookie.Request(
@@ -98,7 +98,7 @@ object SipiIT extends ZIOSpecDefault {
           _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
           jwt <- createJwt(AuthScope.admin)
           response <- requestGet(
-                        Path.Path.root / prefix / imageTestfile / "file",
+                        Path.root / prefix / imageTestfile / "file",
                         Header.Cookie(NonEmptyChunk(Cookie.Request("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999", jwt))),
                       )
           requestToDspApiContainsJwt <- MockDspApiServer.verifyAuthBearerTokenReceived(jwt)
