@@ -13,7 +13,7 @@ import zio.metrics.connectors.prometheus.PrometheusPublisher
  * Provides the '/metrics' endpoint serving the metrics in prometheus format.
  */
 final case class PrometheusRoutes(prometheus: PrometheusPublisher) {
-  val routes = Routes(Method.GET / "metrics" -> handler(prometheus.get.map(Response.text(_))))
+  val routes: Routes[Any, Nothing] = Routes(Method.GET / "metrics" -> handler(prometheus.get.map(Response.text)))
 }
 object PrometheusRoutes {
   val layer = ZLayer.derive[PrometheusRoutes]
