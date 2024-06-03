@@ -309,7 +309,13 @@ object OntologyConstants {
     val MovingImageFileValue: IRI        = KnoraBasePrefixExpansion + "MovingImageFileValue"
     val TextFileValue: IRI               = KnoraBasePrefixExpansion + "TextFileValue"
 
-    val TextValueType: IRI = KnoraBasePrefixExpansion + "TextValueType"
+    val HasTextValueType: IRI         = KnoraBasePrefixExpansion + "hasTextValueType"
+    val HasTextValuePropertyType: IRI = KnoraBasePrefixExpansion + "hasTextValuePropertyType"
+    val TextValueType: IRI            = KnoraBasePrefixExpansion + "TextValueType"
+    val UnformattedText: IRI          = KnoraBasePrefixExpansion + "UnformattedText"
+    val FormattedText: IRI            = KnoraBasePrefixExpansion + "FormattedText"
+    val CustomFormattedText: IRI      = KnoraBasePrefixExpansion + "CustomFormattedText"
+    val UndefinedTextType: IRI        = KnoraBasePrefixExpansion + "UndefinedTextType"
 
     val FileValueClasses: Set[IRI] = Set(
       FileValue,
