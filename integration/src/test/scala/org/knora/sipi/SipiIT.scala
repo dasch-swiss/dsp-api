@@ -74,7 +74,7 @@ object SipiIT extends ZIOSpecDefault {
           _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
           jwt <- createJwt(AuthScope.admin)
           response <- requestGet(
-                        Root / prefix / imageTestfile / "file",
+                        Path.roott / prefix / imageTestfile / "file",
                         Header.Cookie(
                           NonEmptyChunk(
                             Cookie.Request(
@@ -98,7 +98,7 @@ object SipiIT extends ZIOSpecDefault {
           _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
           jwt <- createJwt(AuthScope.admin)
           response <- requestGet(
-                        Root / prefix / imageTestfile / "file",
+                        Path.Path.root / prefix / imageTestfile / "file",
                         Header.Cookie(NonEmptyChunk(Cookie.Request("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999", jwt))),
                       )
           requestToDspApiContainsJwt <- MockDspApiServer.verifyAuthBearerTokenReceived(jwt)
@@ -113,7 +113,7 @@ object SipiIT extends ZIOSpecDefault {
           _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
           jwt <- createJwt(AuthScope.write(Shortcode.unsafeFrom(prefix)))
           response <- requestGet(
-                        Root / prefix / imageTestfile / "full" / "max" / "0" / "default.jpg",
+                        Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jpg",
                         Header.Cookie(NonEmptyChunk(Cookie.Request("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999", jwt))),
                       )
           noInteraction <- MockDspApiServer.verifyNoInteraction
@@ -144,7 +144,7 @@ object SipiIT extends ZIOSpecDefault {
                  |}""".stripMargin.fromJson[Json]
             for {
               _        <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, permissionCode = 2)
-              response <- requestGet(Root / prefix / imageTestfile / "knora.json")
+              response <- requestGet(Path.root / prefix / imageTestfile / "knora.json")
               json     <- response.body.asString.map(_.fromJson[Json])
               expected <- SipiTestContainer.portAndHost.map { case (port, host) => expectedJson(port, host) }
             } yield assertTrue(
@@ -163,7 +163,7 @@ object SipiIT extends ZIOSpecDefault {
           test("When getting the file, then Sipi responds with Not Found") {
             for {
               server   <- MockDspApiServer.resetAndGetWireMockServer
-              response <- requestGet(Root / prefix / "doesnotexist.jp2" / "file")
+              response <- requestGet(Path.root / prefix / "doesnotexist.jp2" / "file")
             } yield assertTrue(response.status == Status.NotFound, verifyNoInteractionWith(server))
           },
         ),
@@ -178,7 +178,7 @@ object SipiIT extends ZIOSpecDefault {
             val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
             for {
               server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
-              response <- requestGet(Root / prefix / imageTestfile / "file")
+              response <- requestGet(Path.root / prefix / imageTestfile / "file")
             } yield assertTrue(
               response.status == Status.Ok,
               verifySingleGetRequest(server, dspApiPermissionPath),
@@ -194,7 +194,7 @@ object SipiIT extends ZIOSpecDefault {
             val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
             for {
               server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
-              response <- requestGet(Root / prefix / imageTestfile / "file")
+              response <- requestGet(Path.root / prefix / imageTestfile / "file")
             } yield assertTrue(
               response.status == Status.Unauthorized,
               verifySingleGetRequest(server, dspApiPermissionPath),
@@ -208,7 +208,7 @@ object SipiIT extends ZIOSpecDefault {
             val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
             for {
               server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 404)
-              response <- requestGet(Root / prefix / imageTestfile / "file")
+              response <- requestGet(Path.root / prefix / imageTestfile / "file")
             } yield assertTrue(
               response.status == Status.NotFound,
               verifySingleGetRequest(server, dspApiPermissionPath),
@@ -228,7 +228,7 @@ object SipiIT extends ZIOSpecDefault {
           for {
             server <- MockDspApiServer.resetAndGetWireMockServer
             response <-
-              requestGet(Root / prefix / "doesnotexist.jp2" / "full" / "max" / "0" / "default.jp2")
+              requestGet(Path.root / prefix / "doesnotexist.jp2" / "full" / "max" / "0" / "default.jp2")
           } yield assertTrue(response.status == Status.NotFound, verifyNoInteractionWith(server))
         },
       ),
@@ -243,7 +243,7 @@ object SipiIT extends ZIOSpecDefault {
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
-            response <- requestGet(Root / prefix / imageTestfile / "full/max/0/default.jp2")
+            response <- requestGet(Path.root / prefix / imageTestfile / "full/max/0/default.jp2")
           } yield assertTrue(
             response.status == Status.Ok,
             verifySingleGetRequest(server, dspApiPermissionPath),
@@ -259,7 +259,7 @@ object SipiIT extends ZIOSpecDefault {
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
-            response <- requestGet(Root / prefix / imageTestfile / "full/max/0/default.jp2")
+            response <- requestGet(Path.root / prefix / imageTestfile / "full/max/0/default.jp2")
           } yield assertTrue(
             response.status == Status.Unauthorized,
             verifySingleGetRequest(server, dspApiPermissionPath),
@@ -273,7 +273,7 @@ object SipiIT extends ZIOSpecDefault {
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 404)
-            response <- requestGet(Root / prefix / imageTestfile / "full/max/0/default.jp2")
+            response <- requestGet(Path.root / prefix / imageTestfile / "full/max/0/default.jp2")
           } yield assertTrue(
             response.status == Status.NotFound,
             verifySingleGetRequest(server, dspApiPermissionPath),
@@ -291,7 +291,7 @@ object SipiIT extends ZIOSpecDefault {
       test("health check works") {
         for {
           server   <- MockDspApiServer.resetAndGetWireMockServer
-          response <- requestGet(Root / "server" / "test.html")
+          response <- requestGet(Path.root / "server" / "test.html")
         } yield assertTrue(response.status.isSuccess, verifyNoInteractionWith(server))
       },
     )
