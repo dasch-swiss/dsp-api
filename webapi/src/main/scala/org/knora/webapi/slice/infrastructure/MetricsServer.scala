@@ -22,15 +22,15 @@ import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.core.State
 import org.knora.webapi.slice.admin.api.AdminApiEndpoints
 import org.knora.webapi.slice.common.api.ApiV2Endpoints
-import org.knora.webapi.slice.infrastructure.api.PrometheusApp
+import org.knora.webapi.slice.infrastructure.api.PrometheusRoutes
 
 object MetricsServer {
 
   private val metricsServer
-    : ZIO[AdminApiEndpoints & ApiV2Endpoints & KnoraApi & PrometheusApp & Server, Nothing, Unit] = for {
+    : ZIO[AdminApiEndpoints & ApiV2Endpoints & KnoraApi & PrometheusRoutes & Server, Nothing, Unit] = for {
     docs       <- DocsServer.docsEndpoints.map(endpoints => ZioHttpInterpreter().toHttp(endpoints))
-    prometheus <- ZIO.service[PrometheusApp]
-    _          <- Server.install(prometheus.route ++ docs)
+    prometheus <- ZIO.service[PrometheusRoutes]
+    _          <- Server.install(prometheus.routes ++ docs)
     _          <- ZIO.never.as(())
   } yield ()
 
@@ -58,7 +58,7 @@ object MetricsServer {
                Runtime.enableRuntimeMetrics,
                Runtime.enableFiberRoots,
                DefaultJvmMetrics.live.unit,
-               PrometheusApp.layer,
+               PrometheusRoutes.layer,
              )
     } yield ()
 }
