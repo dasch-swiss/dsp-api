@@ -12,13 +12,12 @@ val sipiVersion                 = "v30.14.0"
 val tapirVersion                = "1.10.8"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "4.0.2"
-val zioHttpVersion              = "3.0.0-RC6"
 val zioJsonVersion              = "0.6.2"
 val zioLoggingVersion           = "2.3.0"
 val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
-val zioPreludeVersion           = "1.0.0-RC26"
+val zioPreludeVersion           = "1.0.0-RC27"
 val zioVersion                  = "2.1.1"
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
@@ -77,7 +76,6 @@ lazy val root = (project in file("."))
       "dev.zio"              %% "zio-config"                        % zioConfigVersion,
       "dev.zio"              %% "zio-config-magnolia"               % zioConfigVersion,
       "dev.zio"              %% "zio-config-typesafe"               % zioConfigVersion,
-      "dev.zio"              %% "zio-http"                          % zioHttpVersion,
       "dev.zio"              %% "zio-json"                          % zioJsonVersion,
       "dev.zio"              %% "zio-json-interop-refined"          % zioJsonVersion,
       "dev.zio"              %% "zio-metrics-connectors"            % zioMetricsConnectorsVersion,
