@@ -9,7 +9,7 @@ import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import swiss.dasch.infrastructure.{Health, HealthCheckService, Metrics}
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.version.BuildInfo
-import zio.http.{Request, Root, Status, URL}
+import zio.http.{Path, Request, Status, URL}
 import zio.json.ast.Json
 import zio.json.{DecoderOps, EncoderOps}
 import zio.test.{ZIOSpecDefault, assertTrue}
@@ -29,7 +29,7 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
     test("when healthy should return status UP") {
       for {
         _        <- MockHealthCheckService.setHealthUp()
-        response <- executeRequest(Request.get(URL(Root / "health")))
+        response <- executeRequest(Request.get(URL(Path.root / "health")))
         bodyJson <- response.body.asString
         status    = response.status
       } yield assertTrue(
@@ -40,7 +40,7 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
     test("when unhealthy should return status DOWN") {
       for {
         _        <- MockHealthCheckService.setHealthDown()
-        response <- executeRequest(Request.get(URL(Root / "health")))
+        response <- executeRequest(Request.get(URL(Path.root / "health")))
         bodyJson <- response.body.asString
         status    = response.status
       } yield {
@@ -54,7 +54,7 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
   val infoEndpointSuite = suite("get /info")(
     test("should return 200") {
       for {
-        response     <- executeRequest(Request.get(URL(Root / "info")))
+        response     <- executeRequest(Request.get(URL(Path.root / "info")))
         bodyAsString <- response.body.asString
         status        = response.status
       } yield {

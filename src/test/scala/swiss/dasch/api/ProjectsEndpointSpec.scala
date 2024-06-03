@@ -42,7 +42,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
   private val projectExportSuite = {
     def postExport(shortcode: String | ProjectShortcode) = {
       val request = Request
-        .post(URL(Root / "projects" / shortcode.toString / "export"), Body.empty)
+        .post(URL(Path.root / "projects" / shortcode.toString / "export"), Body.empty)
         .updateHeaders(_.addHeader("Authorization", "Bearer fakeToken"))
       executeRequest(request)
     }
@@ -91,7 +91,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
       body: Body,
       headers: Headers,
     ) = {
-      val url     = URL(Root / "projects" / shortcode.toString / "import")
+      val url     = URL(Path.root / "projects" / shortcode.toString / "import")
       val request = Request.post(url, body).updateHeaders(_ => headers.addHeader("Authorization", "Bearer fakeToken"))
       executeRequest(request)
     }
@@ -167,13 +167,13 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     suite("/projects/<shortcode>/asset/<assetId>")(
       test("given the project folder does not exist should return Not Found") {
         val req = Request
-          .get(URL(Root / "projects" / "0666" / "assets" / "7l5QJAtPnv5-lLmBPfO7U40"))
+          .get(URL(Path.root / "projects" / "0666" / "assets" / "7l5QJAtPnv5-lLmBPfO7U40"))
           .addHeader("Authorization", "Bearer fakeToken")
         executeRequest(req).map(response => assertTrue(response.status == Status.NotFound))
       },
       test("given the project folder exists but the asset info file does not exist should return Not Found") {
         val req = Request
-          .get(URL(Root / "projects" / "0666" / "assets" / "7l5QJAtPnv5-lLmBPfO7U40"))
+          .get(URL(Path.root / "projects" / "0666" / "assets" / "7l5QJAtPnv5-lLmBPfO7U40"))
           .addHeader("Authorization", "Bearer fakeToken")
         StorageService
           .getProjectFolder(ProjectShortcode.unsafeFrom("0666"))
@@ -184,7 +184,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
         for {
           ref <- AssetInfoFileTestHelper.createInfoFile("txt", "txt").map(_.assetRef)
           req = Request
-                  .get(URL(Root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value))
+                  .get(URL(Path.root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value))
                   .addHeader("Authorization", "Bearer fakeToken")
           // when
           response <- executeRequest(req)
@@ -217,7 +217,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
                    )
                    .map(_.assetRef)
           req = Request
-                  .get(URL(Root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value))
+                  .get(URL(Path.root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value))
                   .addHeader("Authorization", "Bearer fakeToken")
           // when
           response <- executeRequest(req)
@@ -256,7 +256,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
                    )
                    .map(_.assetRef)
           req = Request
-                  .get(URL(Root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value))
+                  .get(URL(Path.root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value))
                   .addHeader("Authorization", "Bearer fakeToken")
           // when
           response <- executeRequest(req)
@@ -294,7 +294,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
         // when deleting the project via the api
         res <- executeRequest(
                  Request
-                   .delete(URL(Root / "projects" / s"${shortcode.value}" / "erase"))
+                   .delete(URL(Path.root / "projects" / s"${shortcode.value}" / "erase"))
                    .addHeader("Authorization", "Bearer fakeToken"),
                )
         prjFolderWasDeleted <- Files.exists(prjFolder).negate
@@ -308,7 +308,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     assetInfoSuite,
     projectsSuite,
     test("GET /projects should list non-empty project in test folders") {
-      val req = Request.get(URL(Root / "projects")).addHeader("Authorization", "Bearer fakeToken")
+      val req = Request.get(URL(Path.root / "projects")).addHeader("Authorization", "Bearer fakeToken")
       for {
         response <- executeRequest(req)
         body     <- response.body.asString

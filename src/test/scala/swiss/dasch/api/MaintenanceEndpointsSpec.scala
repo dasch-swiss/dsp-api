@@ -41,7 +41,7 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
       body: List[MappingEntry] = List.empty,
     ) =
       Request
-        .post(URL(Root / "maintenance" / "create-originals" / shortcode.toString), Body.fromString(body.toJson))
+        .post(URL(Path.root / "maintenance" / "create-originals" / shortcode.toString), Body.fromString(body.toJson))
         .updateHeaders(
           _.addHeader(Header.ContentType(MediaType.application.json))
             .addHeader(Header.Authorization.name, "Bearer fakeToken"),
@@ -115,7 +115,7 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
     suite("/maintenance/needs-originals should")(
       test("should return 204 and create a report") {
         val request = Request
-          .get(URL(Root / "maintenance" / "needs-originals"))
+          .get(URL(Path.root / "maintenance" / "needs-originals"))
           .addHeader(Header.Authorization.name, "Bearer fakeToken")
         for {
           response <- executeRequest(request)
@@ -127,7 +127,7 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
       },
       test("should return 204 and create an extended report") {
         val url: URL =
-          URL(Root / "maintenance" / "needs-originals").addQueryParams(QueryParams(("imagesOnly", Chunk("false"))))
+          URL(Path.root / "maintenance" / "needs-originals").addQueryParams(QueryParams(("imagesOnly", Chunk("false"))))
         val request = Request
           .get(url)
           .addHeader(Header.Authorization.name, "Bearer fakeToken")
@@ -151,7 +151,7 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
     suite("/maintenance/needs-top-left-correction should")(
       test("should return 204 and create a report") {
         val request = Request
-          .get(URL(Root / "maintenance" / "needs-top-left-correction"))
+          .get(URL(Path.root / "maintenance" / "needs-top-left-correction"))
           .addHeader(Header.Authorization.name, "Bearer fakeToken")
         for {
           _        <- SipiClientMock.setOrientation(OrientationValue.Rotate270CW)
