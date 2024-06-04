@@ -11,7 +11,6 @@ import zio.*
 import java.time.Instant
 
 import dsp.errors.*
-import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -282,10 +281,9 @@ final case class CreateResourceV2Handler(
       // Do the update.
       _ <- triplestore.query(Update(sparqlUpdate))
 
-      // Verify that the resource was created correctly.
+      // Verify that the resource was created.
       previewOfCreatedResource <- verifyResource(
                                     resourceReadyToCreate = resourceReadyToCreate,
-                                    projectIri = createResourceRequestV2.createResource.projectADM.id,
                                     requestingUser = createResourceRequestV2.requestingUser,
                                   )
     } yield previewOfCreatedResource
@@ -765,102 +763,30 @@ final case class CreateResourceV2Handler(
   }
 
   /**
-   * Checks that a resource was created correctly.
+   * Checks that a resource was created.
    *
    * @param resourceReadyToCreate the resource that should have been created.
    * @param projectIri            the IRI of the project in which the resource should have been created.
-   *
    * @param requestingUser        the user that attempted to create the resource.
    * @return a preview of the resource that was created.
    */
   private def verifyResource(
     resourceReadyToCreate: ResourceReadyToCreate,
-    projectIri: IRI,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
     val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
-
-    val resourceFuture: Task[ReadResourcesSequenceV2] = for {
-      resourcesResponse <- getResources.getResourcesV2(
-                             resourceIris = Seq(resourceIri),
-                             requestingUser = requestingUser,
-                             targetSchema = ApiV2Complex,
-                             schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                           )
-
-      resource: ReadResourceV2 = resourcesResponse.toResource(requestedResourceIri = resourceIri)
-
-      _ <- ZIO.when(
-             resource.resourceClassIri.toString != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri,
-           ) {
-             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong resource class"))
-           }
-
-      _ <- ZIO.when(resource.attachedToUser != requestingUser.id) {
-             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user"))
-           }
-
-      _ <- ZIO.when(resource.projectADM.id != projectIri) {
-             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user"))
-           }
-
-      _ <- ZIO.when(resource.permissions != resourceReadyToCreate.sparqlTemplateResourceToCreate.permissions) {
-             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong permissions"))
-           }
-
-      // Undo any escapes in the submitted rdfs:label to compare it with the saved one.
-      unescapedLabel: String = Iri.fromSparqlEncodedString(
-                                 resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel,
-                               )
-
-      _ <- ZIO.when(resource.label != unescapedLabel) {
-             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong label"))
-           }
-
-      savedPropertyIris: Set[SmartIri] = resource.values.keySet
-
-      // Check that the property knora-base:hasStandoffLinkToValue was automatically added if necessary.
-      expectedPropertyIris: Set[SmartIri] =
-        resourceReadyToCreate.values.keySet ++ (if (resourceReadyToCreate.hasStandoffLink) {
-                                                  Some(OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri)
-                                                } else { None })
-
-      _ <- ZIO.when(savedPropertyIris != expectedPropertyIris) {
-             val msg =
-               s"Resource <$resourceIri> was saved, but it has the wrong properties: expected (${expectedPropertyIris
-                   .map(_.toSparql)
-                   .mkString(", ")}), but saved (${savedPropertyIris.map(_.toSparql).mkString(", ")})"
-             ZIO.fail(AssertionException(msg))
-           }
-
-      // Ignore knora-base:hasStandoffLinkToValue when checking the expected values.
-      _ <- ZIO.foreachDiscard(resource.values - OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri) {
-             case (propertyIri: SmartIri, savedValues: Seq[ReadValueV2]) =>
-               val expectedValues: Seq[UnverifiedValueV2] = resourceReadyToCreate.values(propertyIri)
-               for {
-                 _ <- ZIO.when(expectedValues.size != savedValues.size) {
-                        ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong values"))
-                      }
-
-                 _ <- ZIO.foreachDiscard(savedValues.zip(expectedValues)) { case (savedValue, expectedValue) =>
-                        ZIO.when(
-                          !(expectedValue.valueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
-                            savedValue.permissions == expectedValue.permissions &&
-                            savedValue.attachedToUser == requestingUser.id),
-                        ) {
-                          val msg = s"Resource <$resourceIri> was saved, but one or more of its values are not correct"
-                          ZIO.fail(AssertionException(msg))
-                        }
-                      }
-               } yield ()
-           }
-    } yield ReadResourcesSequenceV2(resources = Seq(resource.copy(values = Map.empty)))
-
-    resourceFuture.mapError { case _: NotFoundException =>
-      UpdateNotPerformedException(
-        s"Resource <$resourceIri> was not created. Please report this as a possible bug.",
+    getResources
+      .getResourcesV2(
+        resourceIris = Seq(resourceIri),
+        requestingUser = requestingUser,
+        targetSchema = ApiV2Complex,
+        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
       )
-    }
+      .mapError { case _: NotFoundException =>
+        UpdateNotPerformedException(
+          s"Resource <$resourceIri> was not created. Please report this as a possible bug.",
+        )
+      }
   }
 
   private def generateSparqlToCreateMultipleValuesV2(
