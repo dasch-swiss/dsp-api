@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.infrastructure.api
 
 import sttp.model.StatusCode
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import sttp.tapir.*
 import sttp.tapir.AnyEndpoint
 import sttp.tapir.generic.auto.*
@@ -22,6 +23,7 @@ import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
+import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
@@ -86,7 +88,7 @@ final case class ManagementEndpoints(baseEndpoints: BaseEndpoints) {
     .out(jsonBody[HealthResponse])
     .out(statusCode)
 
-  private[infrastructure] val postStartCompaction = baseEndpoints.publicEndpoint.post
+  private[infrastructure] val postStartCompaction = baseEndpoints.securedEndpoint.post
     .in("start-compaction")
     .out(jsonBody[String])
     .out(statusCode)
@@ -104,6 +106,7 @@ final case class ManagementRoutes(
   mapper: HandlerMapper,
   tapirToPekko: TapirToPekkoInterpreter,
   triplestore: TriplestoreService,
+  auth: AuthorizationRestService,
 ) {
 
   private val versionEndpointHandler =
@@ -119,17 +122,23 @@ final case class ManagementRoutes(
     }
 
   private val startCompactionHandler =
-    PublicEndpointHandler[Unit, (String, StatusCode)](
+    SecuredEndpointHandler[Unit, (String, StatusCode)](
       endpoint.postStartCompaction,
-      _ => {
-        triplestore.compact().map { allowed =>
-          ("", if (allowed) StatusCode.Ok else StatusCode.Forbidden)
-        }
-      },
+      user =>
+        _ =>
+          for {
+            _       <- auth.ensureSystemAdmin(user)
+            success <- triplestore.compact()
+          } yield ("", if (success) StatusCode.Ok else StatusCode.Forbidden),
     )
 
-  val routes = List(versionEndpointHandler, healthEndpointHandler, startCompactionHandler)
-    .map(mapper.mapPublicEndpointHandler(_))
+  val routes = (
+    List(versionEndpointHandler, healthEndpointHandler)
+      .map(mapper.mapPublicEndpointHandler(_))
+      ++
+        List(startCompactionHandler)
+          .map(mapper.mapSecuredEndpointHandler(_))
+  )
     .map(tapirToPekko.toRoute)
 }
 
