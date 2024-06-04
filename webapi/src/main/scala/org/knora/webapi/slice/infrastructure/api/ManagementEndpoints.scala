@@ -23,6 +23,7 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class VersionResponse(
   webapi: String,
@@ -85,6 +86,11 @@ final case class ManagementEndpoints(baseEndpoints: BaseEndpoints) {
     .out(jsonBody[HealthResponse])
     .out(statusCode)
 
+  private[infrastructure] val postStartCompaction = baseEndpoints.publicEndpoint.post
+    .in("start-compaction")
+    .out(jsonBody[String])
+    .out(statusCode)
+
   val endpoints: Seq[AnyEndpoint] = List(getVersion, getHealth).map(_.tag("Management"))
 }
 
@@ -97,6 +103,7 @@ final case class ManagementRoutes(
   state: State,
   mapper: HandlerMapper,
   tapirToPekko: TapirToPekkoInterpreter,
+  triplestore: TriplestoreService,
 ) {
 
   private val versionEndpointHandler =
@@ -111,7 +118,17 @@ final case class ManagementRoutes(
       (response, if (response.status) StatusCode.Ok else StatusCode.ServiceUnavailable)
     }
 
-  val routes = List(versionEndpointHandler, healthEndpointHandler)
+  private val startCompactionHandler =
+    PublicEndpointHandler[Unit, (String, StatusCode)](
+      endpoint.postStartCompaction,
+      _ => {
+        triplestore.compact().map { allowed =>
+          ("", if (allowed) StatusCode.Ok else StatusCode.Forbidden)
+        }
+      },
+    )
+
+  val routes = List(versionEndpointHandler, healthEndpointHandler, startCompactionHandler)
     .map(mapper.mapPublicEndpointHandler(_))
     .map(tapirToPekko.toRoute)
 }

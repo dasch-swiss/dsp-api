@@ -22,10 +22,13 @@ trait FusekiTriplestore {
 
 case class FusekiPaths(config: Fuseki) {
   val checkServer: List[String] = List("$", "server")
-  val repository: List[String]  = List(config.repositoryName)
-  val data: List[String]        = repository :+ "data"
-  val get: List[String]         = repository :+ "get"
-  val query: List[String]       = repository :+ "query"
-  val update: List[String]      = repository :+ "update"
   val datasets: List[String]    = List("$", "datasets")
+  val tasks: List[String]       = List("$", "tasks")
+  val compact: List[String]     = List("$", "compact", config.repositoryName)
+
+  val repository: List[String] = List(config.repositoryName)
+  val data: List[String]       = repository :+ "data"
+  val get: List[String]        = repository :+ "get"
+  val query: List[String]      = repository :+ "query"
+  val update: List[String]     = repository :+ "update"
 }
