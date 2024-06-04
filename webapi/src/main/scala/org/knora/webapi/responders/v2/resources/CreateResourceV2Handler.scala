@@ -267,9 +267,9 @@ final case class CreateResourceV2Handler(
         ProjectService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM).value
 
       // Generate SPARQL for creating the resource.
-      sparqlUpdate = sparql.v2.txt.createNewResources(
+      sparqlUpdate = sparql.v2.txt.createNewResource(
                        dataNamedGraph = dataNamedGraph,
-                       resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
+                       resourceToCreate = resourceReadyToCreate.sparqlTemplateResourceToCreate,
                        projectIri = createResourceRequestV2.createResource.projectADM.id,
                        creatorIri = createResourceRequestV2.requestingUser.id,
                      )
