@@ -34,10 +34,10 @@ services:
       - "1024:1024"
     volumes:
       - /tmp:/tmp
-      - ${LOCAL_HOME}/sipi/config:/sipi/config:delegated
-      - ${LOCAL_HOME}/sipi/images:/sipi/images:delegated
-      - ${LOCAL_HOME}/sipi/server:/sipi/server:delegated
-      - ${LOCAL_HOME}/sipi/scripts:/sipi/scripts:delegated
+      - ./sipi/config:/sipi/config:delegated
+      - ./sipi/images:/sipi/images:delegated
+      - ./sipi/server:/sipi/server:delegated
+      - ./sipi/scripts:/sipi/scripts:delegated
     networks:
       - knora-net
     environment:
@@ -67,8 +67,8 @@ services:
     ports:
       - "3340:3340"
     volumes:
-      - ${LOCAL_HOME}/sipi/images:/opt/images:delegated
-      - ${LOCAL_HOME}/sipi/tmp-dsp-ingest:/opt/temp:delegated
+      - ./sipi/images:/opt/images:delegated
+      - ./sipi/tmp-dsp-ingest:/opt/temp:delegated
     networks:
       - knora-net
     environment:
