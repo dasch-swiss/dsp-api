@@ -2156,29 +2156,21 @@ object ValuesResponderV2Live {
     maybeCustomIri: Option[SmartIri],
     maybeCustomUUID: Option[UUID],
   ): IO[BadRequestException, UUID] =
-    // Is there any custom value UUID given?
-    maybeCustomUUID match {
-      case Some(customValueUUID) =>
-        // Yes. Check that if a custom IRI is given, it ends with the same UUID
-        if (maybeCustomIri.flatMap(_.getUuid).forall(_ == customValueUUID)) {
-          ZIO.succeed(customValueUUID)
-        } else {
-          ZIO.fail(
-            BadRequestException(
-              s" Given custom IRI ${maybeCustomIri.get} should contain the given custom UUID ${UuidUtil
-                  .base64Encode(customValueUUID)}.",
-            ),
-          )
-        }
-      case None =>
-        // No. Is there a custom IRI given?
-        maybeCustomIri match {
-          case Some(customIri: SmartIri) =>
-            // Yes. Get the UUID from the given value IRI
-            ZIO
-              .fromOption(customIri.getUuid)
-              .orElseFail(BadRequestException(s"Invalid UUID in IRI: $customIri"))
-          case None => Random.nextUUID
-        }
+    (maybeCustomIri, maybeCustomUUID) match {
+      case (Some(customIri: SmartIri), Some(customValueUUID)) => combineCustoms(customIri, customValueUUID)
+      case (None, Some(customValueUUID))                      => ZIO.succeed(customValueUUID)
+      case (Some(customIri), None) =>
+        ZIO.fromOption(customIri.getUuid).orElseFail(BadRequestException(s"Invalid UUID in IRI: $customIri"))
+      case (None, None) => Random.nextUUID
+
     }
+
+  private def combineCustoms(iri: SmartIri, uuid: UUID): IO[BadRequestException, UUID] =
+    if (iri.getUuid.contains(uuid)) ZIO.succeed(uuid)
+    else
+      ZIO.fail(
+        BadRequestException(
+          s"Given custom IRI $iri should contain the given custom UUID ${UuidUtil.base64Encode(uuid)}.",
+        ),
+      )
 }
