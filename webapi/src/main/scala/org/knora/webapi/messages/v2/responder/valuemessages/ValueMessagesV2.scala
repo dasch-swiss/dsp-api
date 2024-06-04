@@ -21,12 +21,10 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
@@ -52,11 +50,6 @@ import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.WithAsIs
-
-/**
- * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
- */
-sealed trait ValuesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
 
 /**
  * Represents a successful response to a create value Request.
@@ -256,9 +249,9 @@ case class GenerateSparqlToCreateMultipleValuesRequestV2(
   values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]],
   creationDate: Instant,
   requestingUser: User,
-) extends ValuesResponderRequestV2 {
+) {
   lazy val flatValues: Iterable[GenerateSparqlForValueInNewResourceV2] = values.values.flatten
-}
+} // TODO: can this be removed too?
 
 case class GenerateSparqlForValueInNewResourceV2(
   valueContent: ValueContentV2,

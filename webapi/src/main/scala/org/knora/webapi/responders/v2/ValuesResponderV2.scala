@@ -15,7 +15,6 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
@@ -35,7 +34,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -48,7 +46,6 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.util.ZioHelper
 
 /**
  * Handles requests to read and write Knora values.
@@ -83,18 +80,7 @@ final case class ValuesResponderV2Live(
   triplestoreService: TriplestoreService,
   permissionsResponder: PermissionsResponder,
 )(implicit val stringFormatter: StringFormatter)
-    extends ValuesResponderV2
-    with MessageHandler {
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean =
-    message.isInstanceOf[ValuesResponderRequestV2] // TODO: REMOVE!
-
-  /**
-   * Receives a message of type [[ValuesResponderRequestV2]], and returns an appropriate response message.
-   */
-  override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
-  }
+    extends ValuesResponderV2 {
 
   /**
    * Creates a new value in an existing resource.
@@ -2154,20 +2140,7 @@ final case class ValuesResponderV2Live(
 }
 
 object ValuesResponderV2Live {
-  val layer = ZLayer.fromZIO {
-    for {
-      config  <- ZIO.service[AppConfig]
-      is      <- ZIO.service[IriService]
-      mr      <- ZIO.service[MessageRelay]
-      pu      <- ZIO.service[PermissionUtilADM]
-      ru      <- ZIO.service[ResourceUtilV2]
-      ts      <- ZIO.service[TriplestoreService]
-      sr      <- ZIO.service[SearchResponderV2]
-      sf      <- ZIO.service[StringFormatter]
-      pr      <- ZIO.service[PermissionsResponder]
-      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, sr, ts, pr)(sf))
-    } yield handler
-  }
+  val layer = ZLayer.derive[ValuesResponderV2Live]
 
   /**
    * Make a new value UUID considering optional custom value UUID and custom value IRI.

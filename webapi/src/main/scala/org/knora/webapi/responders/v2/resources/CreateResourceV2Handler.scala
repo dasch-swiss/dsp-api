@@ -19,7 +19,10 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
+import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.*
@@ -35,8 +38,11 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.slice.admin.api.model.*
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
@@ -47,12 +53,6 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
-import org.knora.webapi.slice.admin.domain.model.Permission
 
 final case class CreateResourceV2Handler(
   appConfig: AppConfig,
