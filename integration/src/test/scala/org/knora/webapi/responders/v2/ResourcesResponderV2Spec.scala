@@ -986,6 +986,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some("this is text without standoff"),
+              textValueType = TextValueType.UnformattedText,
             ),
           ),
         ),
@@ -997,6 +998,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
               standoff = sampleStandoff,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
               mapping = standardMapping,
+              textValueType = TextValueType.FormattedText,
             ),
           ),
         ),
@@ -1284,6 +1286,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some("test title"),
+              textValueType = TextValueType.UnformattedText,
             ),
           ),
         ),
@@ -1292,12 +1295,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some("test publoc 1"),
+              textValueType = TextValueType.UnformattedText,
             ),
           ),
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some("test publoc 2"),
+              textValueType = TextValueType.UnformattedText,
             ),
           ),
         ),
@@ -1331,6 +1336,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some("test title"),
+              textValueType = TextValueType.UnformattedText,
             ),
           ),
         ),
@@ -1339,6 +1345,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some("test pagenum"),
+              textValueType = TextValueType.UnformattedText,
             ),
           ),
         ),
@@ -1372,18 +1379,21 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some("test title 1"),
+              textValueType = TextValueType.UnformattedText,
             ),
           ),
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some("test title 2"),
+              textValueType = TextValueType.UnformattedText,
             ),
           ),
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some("test title 1"),
+              textValueType = TextValueType.UnformattedText,
             ),
           ),
         ),
@@ -1417,6 +1427,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some("test title"),
+              textValueType = TextValueType.UnformattedText,
             ),
           ),
         ),
@@ -1522,6 +1533,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
               standoff = standoffWithInvalidLink,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
               mapping = standardMapping,
+              textValueType = TextValueType.FormattedText,
             ),
           ),
         ),
@@ -1590,6 +1602,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some("invalid text value"),
+              textValueType = TextValueType.UnformattedText,
             ),
           ),
         ),
@@ -2156,6 +2169,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
               standoff = sampleStandoffForErasingResource,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
               mapping = standardMapping,
+              textValueType = TextValueType.FormattedText,
             ),
           ),
         ),
@@ -2200,6 +2214,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
                 standoff = Vector(sampleStandoffForErasingResource.head),
                 mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
                 mapping = standardMapping,
+                textValueType = TextValueType.FormattedText,
               ),
             ),
             anythingUserProfile,
@@ -2542,6 +2557,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
               valueContent = TextValueContentV2(
                 ontologySchema = ApiV2Complex,
                 maybeValueHasString = Some(testValue),
+                textValueType = TextValueType.UnformattedText,
               ),
               valueIri = Some(newValueIri.toSmartIri),
               permissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser"),
