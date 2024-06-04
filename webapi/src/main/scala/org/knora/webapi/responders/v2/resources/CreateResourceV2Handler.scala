@@ -874,14 +874,14 @@ final case class CreateResourceV2Handler(
       sparqlForStandoffLinks <-
         generateInsertSparqlForStandoffLinksInMultipleValues(
           resourceIri = resourceIri,
-          values = values,
+          values = values.values.flatten,
           creationDate = creationDate,
         )
 
       // Generate SPARQL for each value.
       sparqlForPropertyValueFutures =
         values.map { case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
-          val values = valuesToCreate.zipWithIndex.map {
+          val values = ZIO.foreach(valuesToCreate.zipWithIndex) {
             case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
               generateInsertSparqlWithUnverifiedValue(
                 resourceIri = resourceIri,
@@ -892,7 +892,7 @@ final case class CreateResourceV2Handler(
                 requestingUser = requestingUser,
               )
           }
-          propertyIri -> ZIO.collectAll(values)
+          propertyIri -> values
         }
 
       sparqlForPropertyValues <- ZioHelper.sequence(sparqlForPropertyValueFutures)
@@ -1024,7 +1024,7 @@ final case class CreateResourceV2Handler(
 
   private def generateInsertSparqlForStandoffLinksInMultipleValues(
     resourceIri: IRI,
-    values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]],
+    values: Iterable[GenerateSparqlForValueInNewResourceV2],
     creationDate: Instant,
   ): Task[Option[String]] = {
     // To create LinkValues for the standoff links in the values to be created, we need to compute
@@ -1033,7 +1033,7 @@ final case class CreateResourceV2Handler(
 
     // First, get the standoff link targets from all the text values to be created.
     val standoffLinkTargetsPerTextValue: Vector[Set[IRI]] =
-      values.values.flatten.foldLeft(Vector.empty[Set[IRI]]) {
+      values.foldLeft(Vector.empty[Set[IRI]]) {
         case (standoffLinkTargetsAcc: Vector[Set[IRI]], createValueV2: GenerateSparqlForValueInNewResourceV2) =>
           createValueV2.valueContent match {
             case textValueContentV2: TextValueContentV2
