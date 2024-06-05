@@ -22,7 +22,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionA
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
@@ -1047,3 +1046,22 @@ final case class CreateResourceV2Handler(
   }
 
 }
+
+/**
+ * Represents a resource to be created with its index, label, IRI, permissions, and SPARQL for creating its values
+ *
+ * @param resourceIri          the IRI of the resource to be created.
+ * @param permissions          the permissions user has for creating the new resource.
+ * @param sparqlForValues      the SPARQL for creating the values of the resource.
+ * @param resourceClassIri     the type of the resource to be created.
+ * @param resourceLabel        the label of the resource.
+ * @param resourceCreationDate the creation date that should be attached to the resource.
+ */
+case class SparqlTemplateResourceToCreate(
+  resourceIri: IRI,
+  permissions: String,
+  sparqlForValues: String,
+  resourceClassIri: IRI,
+  resourceLabel: String,
+  resourceCreationDate: Instant,
+)
