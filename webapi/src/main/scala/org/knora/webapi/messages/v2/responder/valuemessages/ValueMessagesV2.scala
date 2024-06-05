@@ -21,12 +21,10 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
@@ -52,11 +50,6 @@ import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.WithAsIs
-
-/**
- * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
- */
-sealed trait ValuesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
 
 /**
  * Represents a successful response to a create value Request.
@@ -228,60 +221,12 @@ object DeleteValueV2 {
     }
 }
 
-/**
- * Requests SPARQL for creating multiple values in a new, empty resource. The resource ''must'' be a new, empty
- * resource, i.e. it must have no values. This message is used only internally by Knora, and is not part of the Knora
- * v1 API. All pre-update checks must already have been performed before this message is sent. Specifically, the
- * sender must ensure that:
- *
- * - The requesting user has permission to add values to the resource.
- * - Each submitted value is consistent with the `knora-base:objectClassConstraint` of the property that is supposed
- * to point to it.
- * - The resource class has a suitable cardinality for each submitted value.
- * - All required values are provided.
- * - Redundant values are not submitted.
- * - Any custom permissions in values have been validated and correctly formatted.
- * - The target resources of link values and standoff links exist, if they are expected to exist.
- * - The list nodes referred to by list values exist.
- *
- * A successful response will be a [[GenerateSparqlToCreateMultipleValuesResponseV2]].
- *
- * @param resourceIri    the IRI of the resource in which values are to be created.
- * @param values         a map of property IRIs to the values to be added for each property.
- * @param creationDate   an xsd:dateTimeStamp that will be attached to the values.
- * @param requestingUser the user that is creating the values.
- */
-case class GenerateSparqlToCreateMultipleValuesRequestV2(
-  resourceIri: IRI,
-  values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]],
-  creationDate: Instant,
-  requestingUser: User,
-) extends ValuesResponderRequestV2 {
-  lazy val flatValues: Iterable[GenerateSparqlForValueInNewResourceV2] = values.values.flatten
-}
-
 case class GenerateSparqlForValueInNewResourceV2(
   valueContent: ValueContentV2,
   customValueIri: Option[SmartIri],
   customValueUUID: Option[UUID],
   customValueCreationDate: Option[Instant],
   permissions: String,
-)
-
-/**
- * Represents a response to a [[GenerateSparqlToCreateMultipleValuesRequestV2]], providing a string that can be
- * included in the `INSERT DATA` clause of a SPARQL update operation to create the requested values.
- *
- * @param insertSparql     a string containing statements that must be inserted into the INSERT clause of the SPARQL
- *                         update that will create the values.
- * @param unverifiedValues a map of property IRIs to [[UnverifiedValueV2]] objects describing
- *                         the values that should have been created.
- * @param hasStandoffLink  `true` if the property `knora-base:hasStandoffLinkToValue` was automatically added.
- */
-case class GenerateSparqlToCreateMultipleValuesResponseV2(
-  insertSparql: String,
-  unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]],
-  hasStandoffLink: Boolean,
 )
 
 /**

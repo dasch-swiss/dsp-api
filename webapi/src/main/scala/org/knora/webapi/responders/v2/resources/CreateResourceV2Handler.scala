@@ -11,7 +11,6 @@ import zio.*
 import java.time.Instant
 
 import dsp.errors.*
-import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -19,7 +18,10 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
+import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.*
@@ -35,8 +37,11 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.slice.admin.api.model.*
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
@@ -267,23 +272,28 @@ final case class CreateResourceV2Handler(
         ProjectService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM).value
 
       // Generate SPARQL for creating the resource.
-      sparqlUpdate = sparql.v2.txt.createNewResources(
+      sparqlUpdate = sparql.v2.txt.createNewResource(
                        dataNamedGraph = dataNamedGraph,
-                       resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
+                       resourceToCreate = resourceReadyToCreate.sparqlTemplateResourceToCreate,
                        projectIri = createResourceRequestV2.createResource.projectADM.id,
                        creatorIri = createResourceRequestV2.requestingUser.id,
                      )
       // Do the update.
       _ <- triplestore.query(Update(sparqlUpdate))
 
-      // Verify that the resource was created correctly.
+      // Verify that the resource was created.
       previewOfCreatedResource <- verifyResource(
                                     resourceReadyToCreate = resourceReadyToCreate,
-                                    projectIri = createResourceRequestV2.createResource.projectADM.id,
                                     requestingUser = createResourceRequestV2.requestingUser,
                                   )
     } yield previewOfCreatedResource
   }
+
+  private case class GenerateSparqlToCreateMultipleValuesResponseV2(
+    insertSparql: String,
+    unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]],
+    hasStandoffLink: Boolean,
+  )
 
   /**
    * Generates a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating a resource and its values.
@@ -438,16 +448,12 @@ final case class CreateResourceV2Handler(
         )
 
       // Ask the values responder for SPARQL for generating the values.
-      sparqlForValuesResponse <-
-        messageRelay
-          .ask[GenerateSparqlToCreateMultipleValuesResponseV2](
-            GenerateSparqlToCreateMultipleValuesRequestV2(
-              resourceIri = resourceIri,
-              values = valuesWithValidatedPermissions,
-              creationDate = creationDate,
-              requestingUser = requestingUser,
-            ),
-          )
+      sparqlForValuesResponse <- generateSparqlToCreateMultipleValuesV2(
+                                   resourceIri = resourceIri,
+                                   values = valuesWithValidatedPermissions,
+                                   creationDate = creationDate,
+                                   requestingUser = requestingUser,
+                                 )
     } yield ResourceReadyToCreate(
       sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
         resourceIri = resourceIri,
@@ -757,101 +763,287 @@ final case class CreateResourceV2Handler(
   }
 
   /**
-   * Checks that a resource was created correctly.
+   * Checks that a resource was created.
    *
    * @param resourceReadyToCreate the resource that should have been created.
    * @param projectIri            the IRI of the project in which the resource should have been created.
-   *
    * @param requestingUser        the user that attempted to create the resource.
    * @return a preview of the resource that was created.
    */
   private def verifyResource(
     resourceReadyToCreate: ResourceReadyToCreate,
-    projectIri: IRI,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
     val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
-
-    val resourceFuture: Task[ReadResourcesSequenceV2] = for {
-      resourcesResponse <- getResources.getResourcesV2(
-                             resourceIris = Seq(resourceIri),
-                             requestingUser = requestingUser,
-                             targetSchema = ApiV2Complex,
-                             schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                           )
-
-      resource: ReadResourceV2 = resourcesResponse.toResource(requestedResourceIri = resourceIri)
-
-      _ <- ZIO.when(
-             resource.resourceClassIri.toString != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri,
-           ) {
-             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong resource class"))
-           }
-
-      _ <- ZIO.when(resource.attachedToUser != requestingUser.id) {
-             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user"))
-           }
-
-      _ <- ZIO.when(resource.projectADM.id != projectIri) {
-             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user"))
-           }
-
-      _ <- ZIO.when(resource.permissions != resourceReadyToCreate.sparqlTemplateResourceToCreate.permissions) {
-             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong permissions"))
-           }
-
-      // Undo any escapes in the submitted rdfs:label to compare it with the saved one.
-      unescapedLabel: String = Iri.fromSparqlEncodedString(
-                                 resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel,
-                               )
-
-      _ <- ZIO.when(resource.label != unescapedLabel) {
-             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong label"))
-           }
-
-      savedPropertyIris: Set[SmartIri] = resource.values.keySet
-
-      // Check that the property knora-base:hasStandoffLinkToValue was automatically added if necessary.
-      expectedPropertyIris: Set[SmartIri] =
-        resourceReadyToCreate.values.keySet ++ (if (resourceReadyToCreate.hasStandoffLink) {
-                                                  Some(OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri)
-                                                } else { None })
-
-      _ <- ZIO.when(savedPropertyIris != expectedPropertyIris) {
-             val msg =
-               s"Resource <$resourceIri> was saved, but it has the wrong properties: expected (${expectedPropertyIris
-                   .map(_.toSparql)
-                   .mkString(", ")}), but saved (${savedPropertyIris.map(_.toSparql).mkString(", ")})"
-             ZIO.fail(AssertionException(msg))
-           }
-
-      // Ignore knora-base:hasStandoffLinkToValue when checking the expected values.
-      _ <- ZIO.foreachDiscard(resource.values - OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri) {
-             case (propertyIri: SmartIri, savedValues: Seq[ReadValueV2]) =>
-               val expectedValues: Seq[UnverifiedValueV2] = resourceReadyToCreate.values(propertyIri)
-               for {
-                 _ <- ZIO.when(expectedValues.size != savedValues.size) {
-                        ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong values"))
-                      }
-
-                 _ <- ZIO.foreachDiscard(savedValues.zip(expectedValues)) { case (savedValue, expectedValue) =>
-                        ZIO.when(
-                          !(expectedValue.valueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
-                            savedValue.permissions == expectedValue.permissions &&
-                            savedValue.attachedToUser == requestingUser.id),
-                        ) {
-                          val msg = s"Resource <$resourceIri> was saved, but one or more of its values are not correct"
-                          ZIO.fail(AssertionException(msg))
-                        }
-                      }
-               } yield ()
-           }
-    } yield ReadResourcesSequenceV2(resources = Seq(resource.copy(values = Map.empty)))
-
-    resourceFuture.mapError { case _: NotFoundException =>
-      UpdateNotPerformedException(
-        s"Resource <$resourceIri> was not created. Please report this as a possible bug.",
+    getResources
+      .getResourcesV2(
+        resourceIris = Seq(resourceIri),
+        requestingUser = requestingUser,
+        targetSchema = ApiV2Complex,
+        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
       )
+      .mapError { case _: NotFoundException =>
+        UpdateNotPerformedException(
+          s"Resource <$resourceIri> was not created. Please report this as a possible bug.",
+        )
+      }
+  }
+
+  private def generateSparqlToCreateMultipleValuesV2(
+    resourceIri: IRI,
+    values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]],
+    creationDate: Instant,
+    requestingUser: User,
+  ): Task[GenerateSparqlToCreateMultipleValuesResponseV2] =
+    for {
+      // Generate SPARQL to create links and LinkValues for standoff links in text values.
+      sparqlForStandoffLinks <-
+        generateInsertSparqlForStandoffLinksInMultipleValues(
+          resourceIri = resourceIri,
+          values = values.values.flatten,
+          creationDate = creationDate,
+        )
+
+      // Generate SPARQL for each value.
+      sparqlForPropertyValueFutures =
+        values.map { case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
+          val values = ZIO.foreach(valuesToCreate.zipWithIndex) {
+            case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
+              generateInsertSparqlWithUnverifiedValue(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                valueToCreate = valueToCreate,
+                valueHasOrder = valueHasOrder,
+                resourceCreationDate = creationDate,
+                requestingUser = requestingUser,
+              )
+          }
+          propertyIri -> values
+        }
+
+      sparqlForPropertyValues <- ZioHelper.sequence(sparqlForPropertyValueFutures)
+
+      // Concatenate all the generated SPARQL.
+      allInsertSparql: String =
+        sparqlForPropertyValues.values.flatten
+          .map(_.insertSparql)
+          .mkString("\n\n") + "\n\n" + sparqlForStandoffLinks.getOrElse("")
+
+      // Collect all the unverified values.
+      unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]] =
+        sparqlForPropertyValues.map { case (propertyIri, unverifiedValuesWithSparql) =>
+          propertyIri -> unverifiedValuesWithSparql.map(
+            _.unverifiedValue,
+          )
+        }
+    } yield GenerateSparqlToCreateMultipleValuesResponseV2(
+      insertSparql = allInsertSparql,
+      unverifiedValues = unverifiedValues,
+      hasStandoffLink = sparqlForStandoffLinks.isDefined,
+    )
+
+  /**
+   * Represents SPARQL generated to create one of multiple values in a new resource.
+   *
+   * @param insertSparql    the generated SPARQL.
+   * @param unverifiedValue an [[UnverifiedValueV2]] representing the value that is to be created.
+   */
+  private case class InsertSparqlWithUnverifiedValue(insertSparql: String, unverifiedValue: UnverifiedValueV2)
+
+  /**
+   * Generates SPARQL to create one of multiple values in a new resource.
+   *
+   * @param resourceIri          the IRI of the resource.
+   * @param propertyIri          the IRI of the property that will point to the value.
+   * @param valueToCreate        the value to be created.
+   * @param valueHasOrder        the value's `knora-base:valueHasOrder`.
+   * @param resourceCreationDate the creation date of the resource.
+   * @param requestingUser       the user making the request.
+   * @return a [[InsertSparqlWithUnverifiedValue]] containing the generated SPARQL and an [[UnverifiedValueV2]].
+   */
+  private def generateInsertSparqlWithUnverifiedValue(
+    resourceIri: IRI,
+    propertyIri: SmartIri,
+    valueToCreate: GenerateSparqlForValueInNewResourceV2,
+    valueHasOrder: Int,
+    resourceCreationDate: Instant,
+    requestingUser: User,
+  ): Task[InsertSparqlWithUnverifiedValue] =
+    for {
+      // Make new value UUID.
+      newValueUUID <-
+        ValuesResponderV2Live.makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
+      newValueIri <-
+        iriService.checkOrCreateEntityIri(
+          valueToCreate.customValueIri,
+          stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID)),
+        )
+
+      // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
+      // use resource creation date for the value.
+      valueCreationDate: Instant = valueToCreate.customValueCreationDate.getOrElse(resourceCreationDate)
+
+      // Generate the SPARQL.
+      insertSparql: String =
+        valueToCreate.valueContent match {
+          case linkValueContentV2: LinkValueContentV2 =>
+            // We're creating a link.
+
+            // Construct a SparqlTemplateLinkUpdate to tell the SPARQL template how to create
+            // the link and its LinkValue.
+            val sparqlTemplateLinkUpdate = SparqlTemplateLinkUpdate(
+              linkPropertyIri = propertyIri.fromLinkValuePropToLinkProp,
+              directLinkExists = false,
+              insertDirectLink = true,
+              deleteDirectLink = false,
+              linkValueExists = false,
+              linkTargetExists = linkValueContentV2.referredResourceExists,
+              newLinkValueIri = newValueIri,
+              linkTargetIri = linkValueContentV2.referredResourceIri,
+              currentReferenceCount = 0,
+              newReferenceCount = 1,
+              newLinkValueCreator = requestingUser.id,
+              newLinkValuePermissions = valueToCreate.permissions,
+            )
+
+            // Generate SPARQL for the link.
+            sparql.v2.txt
+              .generateInsertStatementsForCreateLink(
+                resourceIri = resourceIri,
+                linkUpdate = sparqlTemplateLinkUpdate,
+                creationDate = valueCreationDate,
+                newValueUUID = newValueUUID,
+                maybeComment = valueToCreate.valueContent.comment,
+                maybeValueHasOrder = Some(valueHasOrder),
+              )
+              .toString()
+
+          case otherValueContentV2 =>
+            // We're creating an ordinary value. Generate SPARQL for it.
+            sparql.v2.txt
+              .generateInsertStatementsForCreateValue(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                value = otherValueContentV2,
+                newValueIri = newValueIri,
+                newValueUUID = newValueUUID,
+                linkUpdates = Seq.empty[
+                  SparqlTemplateLinkUpdate,
+                ], // This is empty because we have to generate SPARQL for standoff links separately.
+                valueCreator = requestingUser.id,
+                valuePermissions = valueToCreate.permissions,
+                creationDate = valueCreationDate,
+                maybeValueHasOrder = Some(valueHasOrder),
+              )
+              .toString()
+        }
+    } yield InsertSparqlWithUnverifiedValue(
+      insertSparql = insertSparql,
+      unverifiedValue = UnverifiedValueV2(
+        newValueIri = newValueIri,
+        newValueUUID = newValueUUID,
+        valueContent = valueToCreate.valueContent.unescape,
+        permissions = valueToCreate.permissions,
+        creationDate = valueCreationDate,
+      ),
+    )
+
+  private def generateInsertSparqlForStandoffLinksInMultipleValues(
+    resourceIri: IRI,
+    values: Iterable[GenerateSparqlForValueInNewResourceV2],
+    creationDate: Instant,
+  ): Task[Option[String]] = {
+    // To create LinkValues for the standoff links in the values to be created, we need to compute
+    // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
+    // that have standoff links to a particular target resource.
+
+    // First, get the standoff link targets from all the text values to be created.
+    val standoffLinkTargetsPerTextValue: Vector[Set[IRI]] =
+      values.foldLeft(Vector.empty[Set[IRI]]) {
+        case (standoffLinkTargetsAcc: Vector[Set[IRI]], createValueV2: GenerateSparqlForValueInNewResourceV2) =>
+          createValueV2.valueContent match {
+            case textValueContentV2: TextValueContentV2
+                if textValueContentV2.standoffLinkTagTargetResourceIris.nonEmpty =>
+              standoffLinkTargetsAcc :+ textValueContentV2.standoffLinkTagTargetResourceIris
+
+            case _ => standoffLinkTargetsAcc
+          }
+      }
+
+    if (standoffLinkTargetsPerTextValue.nonEmpty) {
+      // Combine those resource references into a single list, so if there are n text values with a link to
+      // some IRI, the list will contain that IRI n times.
+      val allStandoffLinkTargets: Vector[IRI] = standoffLinkTargetsPerTextValue.flatten
+
+      // Now we need to count the number of times each IRI occurs in allStandoffLinkTargets. To do this, first
+      // use groupBy(identity). The groupBy method takes a function that returns a key for each item in the
+      // collection, and makes a Map in which items with the same key are grouped together. The identity
+      // function just returns its argument. So groupBy(identity) makes a Map[IRI, Vector[IRI]] in which each
+      // IRI points to a sequence of the same IRI repeated as many times as it occurred in allStandoffLinkTargets.
+      val allStandoffLinkTargetsGrouped: Map[IRI, Vector[IRI]] = allStandoffLinkTargets.groupBy(identity)
+
+      // Replace each Vector[IRI] with its size. That's the number of text values containing
+      // standoff links to that IRI.
+      val initialReferenceCounts: Map[IRI, Int] = allStandoffLinkTargetsGrouped.view.mapValues(_.size).toMap
+
+      // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
+      // and one LinkValue with its initial reference count.
+      val standoffLinkUpdatesFutures: Seq[Task[SparqlTemplateLinkUpdate]] = initialReferenceCounts.toSeq.map {
+        case (targetIri, initialReferenceCount) =>
+          for {
+            newValueIri <- makeUnusedValueIri(resourceIri)
+          } yield SparqlTemplateLinkUpdate(
+            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+            directLinkExists = false,
+            insertDirectLink = true,
+            deleteDirectLink = false,
+            linkValueExists = false,
+            linkTargetExists =
+              true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
+            newLinkValueIri = newValueIri,
+            linkTargetIri = targetIri,
+            currentReferenceCount = 0,
+            newReferenceCount = initialReferenceCount,
+            newLinkValueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
+            newLinkValuePermissions = standoffLinkValuePermissions,
+          )
+      }
+      for {
+        standoffLinkUpdates <- ZIO.collectAll(standoffLinkUpdatesFutures)
+        // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
+        sparqlInsert =
+          sparql.v2.txt
+            .generateInsertStatementsForStandoffLinks(
+              resourceIri = resourceIri,
+              linkUpdates = standoffLinkUpdates,
+              creationDate = creationDate,
+            )
+            .toString()
+      } yield Some(sparqlInsert)
+    } else {
+      ZIO.succeed(None)
     }
   }
+
+  /**
+   * A convenience method for generating an unused random value IRI.
+   *
+   * @param resourceIri the IRI of the containing resource.
+   * @return the new value IRI.
+   */
+  private def makeUnusedValueIri(resourceIri: IRI): Task[IRI] =
+    iriService.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri))
+
+  /**
+   * The permissions that are granted by every `knora-base:LinkValue` describing a standoff link.
+   */
+  private lazy val standoffLinkValuePermissions: String = {
+    val permissions: Set[PermissionADM] = Set(
+      PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraUserRepo.builtIn.SystemUser.id.value),
+      PermissionADM.from(Permission.ObjectAccess.View, KnoraGroupRepo.builtIn.UnknownUser.id.value),
+    )
+
+    PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)
+  }
+
 }

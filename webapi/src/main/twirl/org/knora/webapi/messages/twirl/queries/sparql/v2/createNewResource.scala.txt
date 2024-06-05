@@ -17,7 +17,7 @@
  * @param creatorIri        the IRI of the creator of the resources.
  *@
 @(dataNamedGraph: IRI,
-  resourcesToCreate: Seq[SparqlTemplateResourceToCreate],
+  resourceToCreate: SparqlTemplateResourceToCreate,
   projectIri: IRI,
   creatorIri: IRI)
 
@@ -29,16 +29,14 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 INSERT DATA {
     GRAPH <@dataNamedGraph> {
-        @for(res <- resourcesToCreate) {
-            <@res.resourceIri> rdf:type <@res.resourceClassIri> ;
-                knora-base:isDeleted false ;
-                knora-base:attachedToUser <@creatorIri> ;
-                knora-base:attachedToProject <@projectIri> ;
-                rdfs:label """@res.resourceLabel""" ;
- 				knora-base:hasPermissions "@res.permissions" ;
-                knora-base:creationDate "@res.resourceCreationDate"^^xsd:dateTime .
+        <@resourceToCreate.resourceIri> rdf:type <@resourceToCreate.resourceClassIri> ;
+            knora-base:isDeleted false ;
+            knora-base:attachedToUser <@creatorIri> ;
+            knora-base:attachedToProject <@projectIri> ;
+            rdfs:label """@resourceToCreate.resourceLabel""" ;
+            knora-base:hasPermissions "@resourceToCreate.permissions" ;
+            knora-base:creationDate "@resourceToCreate.resourceCreationDate"^^xsd:dateTime .
 
-            @res.sparqlForValues
-        }
+        @resourceToCreate.sparqlForValues
     }
 }
