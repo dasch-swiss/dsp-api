@@ -26,8 +26,6 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.responders.v2.ontology.OntologyHelpers
-import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
@@ -70,6 +68,10 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpers
+import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
+import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpersLive
+import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpersLive
 
 object LayersTest {
 
@@ -110,10 +112,11 @@ object LayersTest {
     ListsResponderV2 &
     MessageRelay &
     OntologyCache &
-    OntologyHelpers &
+    OntologyCacheHelpers &
     OntologyInferencer &
     OntologyRepo &
     OntologyResponderV2 &
+    OntologyTriplestoreHelpers &
     PermissionRestService &
     PermissionUtilADM &
     PermissionsResponder &
@@ -169,10 +172,11 @@ object LayersTest {
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
-      OntologyHelpersLive.layer,
+      OntologyCacheHelpersLive.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
       OntologyServiceLive.layer,
+      OntologyTriplestoreHelpersLive.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,
