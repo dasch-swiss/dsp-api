@@ -18,11 +18,11 @@ import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
+import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpers
+import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
-import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpers
 
 final case class AppRouter private (system: pekko.actor.ActorSystem, ref: ActorRef)
 
