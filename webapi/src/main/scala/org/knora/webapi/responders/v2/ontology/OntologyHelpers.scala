@@ -37,101 +37,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
-trait OntologyHelpers {
-
-  /**
-   * Reads an ontology's metadata.
-   *
-   * @param internalOntologyIri the ontology's internal IRI.
-   * @return an [[OntologyMetadataV2]], or [[None]] if the ontology is not found.
-   */
-  def loadOntologyMetadata(internalOntologyIri: SmartIri): Task[Option[OntologyMetadataV2]]
-
-  /**
-   * Gets the set of subjects that refer to an ontology or its entities.
-   *
-   * @param ontology the ontology.
-   * @return the set of subjects that refer to the ontology or its entities.
-   */
-  def getSubjectsUsingOntology(ontology: ReadOntologyV2): Task[Set[IRI]]
-
-  /**
-   * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
-   *
-   * @param propertyIri the IRI of the property to be loaded.
-   * @return a [[PropertyInfoContentV2]] representing the property definition.
-   */
-  def loadPropertyDefinition(propertyIri: SmartIri): Task[PropertyInfoContentV2]
-
-  /**
-   * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV2]] describing both resource and property entities.
-   *
-   * @param classIris      the IRIs of the resource entities to be queried.
-   * @param propertyIris   the IRIs of the property entities to be queried.
-   * @param requestingUser the user making the request.
-   * @return an [[EntityInfoGetResponseV2]].
-   */
-  def getEntityInfoResponseV2(
-    classIris: Set[SmartIri] = Set.empty[SmartIri],
-    propertyIris: Set[SmartIri] = Set.empty[SmartIri],
-    requestingUser: User,
-  ): Task[EntityInfoGetResponseV2]
-
-  /**
-   * Requests information about OWL classes in a single ontology.
-   *
-   * @param classIris      the IRIs (internal or external) of the classes to query for.
-   * @param requestingUser the user making the request.
-   * @return a [[ReadOntologyV2]].
-   */
-  def getClassDefinitionsFromOntologyV2(
-    classIris: Set[SmartIri],
-    allLanguages: Boolean,
-    requestingUser: User,
-  ): Task[ReadOntologyV2]
-
-  /**
-   * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].
-   *
-   * @param classIri the IRI of the class to be loaded.
-   * @return a [[ClassInfoContentV2]] representing the class definition.
-   */
-  def loadClassDefinition(classIri: SmartIri): Task[ClassInfoContentV2]
-
-  /**
-   * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
-   * an error message fitting for the "before update" case.
-   *
-   * @param internalOntologyIri          the internal IRI of the ontology.
-   * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
-   * @return a failed Future if the expected last modification date is not found.
-   */
-  def checkOntologyLastModificationDateBeforeUpdate(
-    internalOntologyIri: SmartIri,
-    expectedLastModificationDate: Instant,
-  ): Task[Unit]
-
-  /**
-   * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
-   * an error message fitting for the "after update" case.
-   *
-   * @param internalOntologyIri          the internal IRI of the ontology.
-   * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
-   * @return a failed Future if the expected last modification date is not found.
-   */
-  def checkOntologyLastModificationDateAfterUpdate(
-    internalOntologyIri: SmartIri,
-    expectedLastModificationDate: Instant,
-  ): Task[Unit]
-
-  /**
-   * Checks whether the requesting user has permission to update an ontology.
-   *
-   * @param internalOntologyIri the internal IRI of the ontology.
-   * @param requestingUser      the user making the request.
-   * @return `true` if the user has permission to update the ontology
-   */
-  def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: User): Task[Boolean]
+object OntologyHelpers {
 
   /**
    * Checks whether an ontology IRI is valid for an update.
@@ -139,33 +45,31 @@ trait OntologyHelpers {
    * @param externalOntologyIri the external IRI of the ontology.
    * @return a failed Future if the IRI is not valid for an update.
    */
-  def checkExternalOntologyIriForUpdate(externalOntologyIri: SmartIri): Task[Unit]
+  def checkExternalOntologyIriForUpdate(externalOntologyIri: SmartIri): Task[Unit] =
+    if (!externalOntologyIri.isKnoraOntologyIri) {
+      ZIO.fail(BadRequestException(s"Invalid ontology IRI for request: $externalOntologyIri}"))
+    } else if (!externalOntologyIri.getOntologySchema.contains(ApiV2Complex)) {
+      ZIO.fail(BadRequestException(s"Invalid ontology schema for request: $externalOntologyIri"))
+    } else if (externalOntologyIri.isKnoraBuiltInDefinitionIri) {
+      ZIO.fail(BadRequestException(s"Ontology $externalOntologyIri cannot be modified via the Knora API"))
+    } else {
+      ZIO.succeed(())
+    }
 
   /**
-   * Before an update of an ontology entity, checks that the entity's external IRI, and that of its ontology,
-   * are valid, and checks that the user has permission to update the ontology.
+   * Checks whether an entity IRI is valid for an update.
    *
-   * @param externalOntologyIri the external IRI of the ontology.
-   * @param externalEntityIri   the external IRI of the entity.
-   * @param requestingUser      the user making the request.
+   * @param externalEntityIri the external IRI of the entity.
+   * @return a failed Future if the entity IRI is not valid for an update, or is not from the specified ontology.
    */
-  def checkOntologyAndEntityIrisForUpdate(
-    externalOntologyIri: SmartIri,
-    externalEntityIri: SmartIri,
-    requestingUser: User,
-  ): Task[Unit]
-
-  /**
-   * Throws an exception if the requesting user does not have permission to update an ontology.
-   *
-   * @param internalOntologyIri the internal IRI of the ontology.
-   * @param requestingUser      the user making the request.
-   * @return the project IRI.
-   */
-  def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, requestingUser: User): Task[SmartIri]
-}
-
-object OntologyHelpers {
+  def checkExternalEntityIriForUpdate(externalEntityIri: SmartIri): Task[Unit] =
+    if (!externalEntityIri.isKnoraApiV2EntityIri) {
+      ZIO.fail(BadRequestException(s"Invalid entity IRI for request: $externalEntityIri"))
+    } else if (!externalEntityIri.getOntologySchema.contains(ApiV2Complex)) {
+      ZIO.fail(BadRequestException(s"Invalid ontology schema for request: $externalEntityIri"))
+    } else {
+      ZIO.succeed(())
+    }
 
   /**
    * Constructs a map of property IRIs to [[ReadPropertyInfoV2]] instances, based on property definitions loaded from the
@@ -1560,11 +1464,23 @@ object OntologyHelpers {
   }
 }
 
-final case class OntologyHelpersLive(
-  triplestore: TriplestoreService,
-  ontologyCache: OntologyCache,
-)(implicit val stringFormatter: StringFormatter)
-    extends OntologyHelpers {
+trait OntologyTriplestoreHelpers {
+
+  /**
+   * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].
+   *
+   * @param classIri the IRI of the class to be loaded.
+   * @return a [[ClassInfoContentV2]] representing the class definition.
+   */
+  def loadClassDefinition(classIri: SmartIri): Task[ClassInfoContentV2]
+
+  /**
+   * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
+   *
+   * @param propertyIri the IRI of the property to be loaded.
+   * @return a [[PropertyInfoContentV2]] representing the property definition.
+   */
+  def loadPropertyDefinition(propertyIri: SmartIri): Task[PropertyInfoContentV2]
 
   /**
    * Reads an ontology's metadata.
@@ -1572,6 +1488,48 @@ final case class OntologyHelpersLive(
    * @param internalOntologyIri the ontology's internal IRI.
    * @return an [[OntologyMetadataV2]], or [[None]] if the ontology is not found.
    */
+  def loadOntologyMetadata(internalOntologyIri: SmartIri): Task[Option[OntologyMetadataV2]]
+
+  /**
+   * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
+   * an error message fitting for the "before update" case.
+   *
+   * @param internalOntologyIri          the internal IRI of the ontology.
+   * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
+   * @return a failed Future if the expected last modification date is not found.
+   */
+  def checkOntologyLastModificationDateBeforeUpdate(
+    internalOntologyIri: SmartIri,
+    expectedLastModificationDate: Instant,
+  ): Task[Unit]
+
+  /**
+   * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
+   * an error message fitting for the "after update" case.
+   *
+   * @param internalOntologyIri          the internal IRI of the ontology.
+   * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
+   * @return a failed Future if the expected last modification date is not found.
+   */
+  def checkOntologyLastModificationDateAfterUpdate(
+    internalOntologyIri: SmartIri,
+    expectedLastModificationDate: Instant,
+  ): Task[Unit]
+
+  /**
+   * Gets the set of subjects that refer to an ontology or its entities.
+   *
+   * @param ontology the ontology.
+   * @return the set of subjects that refer to the ontology or its entities.
+   */
+  def getSubjectsUsingOntology(ontology: ReadOntologyV2): Task[Set[IRI]]
+}
+
+final case class OntologyTriplestoreHelpersLive(
+  triplestore: TriplestoreService,
+  stringFormatter: StringFormatter,
+) extends OntologyTriplestoreHelpers {
+
   override def loadOntologyMetadata(internalOntologyIri: SmartIri): Task[Option[OntologyMetadataV2]] = {
     for {
       _ <- ZIO.when(!internalOntologyIri.getOntologySchema.contains(InternalSchema)) {
@@ -1620,7 +1578,7 @@ final case class OntologyHelpersLive(
                   s"Ontology $internalOntologyIri has more than one knora-base:attachedToProject",
                 )
               } else {
-                projectIris.head.toSmartIri
+                stringFormatter.toSmartIri(projectIris.head)
               }
 
               if (!internalOntologyIri.isKnoraBuiltInDefinitionIri) {
@@ -1692,11 +1650,66 @@ final case class OntologyHelpersLive(
   }
 
   /**
-   * Gets the set of subjects that refer to an ontology or its entities.
+   * Checks that the last modification date of an ontology is the same as the one we expect it to be.
    *
-   * @param ontology the ontology.
-   * @return the set of subjects that refer to the ontology or its entities.
+   * @param internalOntologyIri          the internal IRI of the ontology.
+   * @param expectedLastModificationDate the last modification date that the ontology is expected to have.
+   * @param errorFun                     a function that throws an exception. It will be called if the expected last modification date is not found.
+   * @return a failed Future if the expected last modification date is not found.
    */
+  private def checkOntologyLastModificationDate(
+    internalOntologyIri: SmartIri,
+    expectedLastModificationDate: Instant,
+    errorFun: => Nothing,
+  ): Task[Unit] =
+    for {
+      existingOntologyMetadata <- loadOntologyMetadata(internalOntologyIri)
+
+      _ = existingOntologyMetadata match {
+            case Some(metadata) =>
+              metadata.lastModificationDate match {
+                case Some(lastModificationDate) =>
+                  if (lastModificationDate != expectedLastModificationDate) {
+                    errorFun
+                  }
+
+                case None =>
+                  throw InconsistentRepositoryDataException(
+                    s"Ontology $internalOntologyIri has no ${OntologyConstants.KnoraBase.LastModificationDate}",
+                  )
+              }
+
+            case None =>
+              throw NotFoundException(
+                s"Ontology $internalOntologyIri (corresponding to ${internalOntologyIri.toOntologySchema(ApiV2Complex)}) not found",
+              )
+          }
+    } yield ()
+
+  override def checkOntologyLastModificationDateBeforeUpdate(
+    internalOntologyIri: SmartIri,
+    expectedLastModificationDate: Instant,
+  ): Task[Unit] =
+    checkOntologyLastModificationDate(
+      internalOntologyIri = internalOntologyIri,
+      expectedLastModificationDate = expectedLastModificationDate,
+      errorFun = throw EditConflictException(
+        s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been modified by another user, please reload it and try again.",
+      ),
+    )
+
+  override def checkOntologyLastModificationDateAfterUpdate(
+    internalOntologyIri: SmartIri,
+    expectedLastModificationDate: Instant,
+  ): Task[Unit] =
+    checkOntologyLastModificationDate(
+      internalOntologyIri = internalOntologyIri,
+      expectedLastModificationDate = expectedLastModificationDate,
+      errorFun = throw UpdateNotPerformedException(
+        s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} was not updated. Please report this as a possible bug.",
+      ),
+    )
+
   override def getSubjectsUsingOntology(ontology: ReadOntologyV2): Task[Set[IRI]] =
     for {
       isOntologyUsedSparql <- ZIO.attempt(
@@ -1713,39 +1726,37 @@ final case class OntologyHelpersLive(
       subjects = isOntologyUsedResponse.getColOrThrow("s").toSet
     } yield subjects
 
-  /**
-   * Before an update of an ontology entity, checks that the entity's external IRI, and that of its ontology,
-   * are valid, and checks that the user has permission to update the ontology.
-   *
-   * @param externalOntologyIri the external IRI of the ontology.
-   * @param externalEntityIri   the external IRI of the entity.
-   * @param requestingUser      the user making the request.
-   */
-  override def checkOntologyAndEntityIrisForUpdate(
-    externalOntologyIri: SmartIri,
-    externalEntityIri: SmartIri,
-    requestingUser: User,
-  ): Task[Unit] =
-    for {
-      _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
-      _ <- checkExternalEntityIriForUpdate(externalEntityIri)
-      _ <- checkPermissionsForOntologyUpdate(
-             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema),
-             requestingUser = requestingUser,
-           )
-    } yield ()
-
-  /**
-   * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
-   *
-   * @param propertyIri the IRI of the property to be loaded.
-   * @return a [[PropertyInfoContentV2]] representing the property definition.
-   */
   override def loadPropertyDefinition(propertyIri: SmartIri): Task[PropertyInfoContentV2] =
     triplestore
       .query(Construct(sparql.v2.txt.getPropertyDefinition(propertyIri)))
-      .flatMap(_.asExtended)
-      .map(constructResponse => OntologyHelpers.constructResponseToPropertyDefinition(propertyIri, constructResponse))
+      .flatMap(_.asExtended(stringFormatter))
+      .map(constructResponse =>
+        OntologyHelpers.constructResponseToPropertyDefinition(propertyIri, constructResponse)(stringFormatter),
+      )
+
+  override def loadClassDefinition(classIri: SmartIri): Task[ClassInfoContentV2] =
+    triplestore
+      .query(Construct(sparql.v2.txt.getClassDefinition(classIri)))
+      .flatMap(_.asExtended(stringFormatter))
+      .map(OntologyHelpers.constructResponseToClassDefinition(classIri, _)(stringFormatter))
+}
+
+object OntologyTriplestoreHelpersLive { val layer = ZLayer.derive[OntologyTriplestoreHelpersLive] }
+
+trait OntologyCacheHelpers {
+
+  /**
+   * Requests information about OWL classes in a single ontology.
+   *
+   * @param classIris      the IRIs (internal or external) of the classes to query for.
+   * @param requestingUser the user making the request.
+   * @return a [[ReadOntologyV2]].
+   */
+  def getClassDefinitionsFromOntologyV2(
+    classIris: Set[SmartIri],
+    allLanguages: Boolean,
+    requestingUser: User,
+  ): Task[ReadOntologyV2]
 
   /**
    * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV2]] describing both resource and property entities.
@@ -1755,6 +1766,89 @@ final case class OntologyHelpersLive(
    * @param requestingUser the user making the request.
    * @return an [[EntityInfoGetResponseV2]].
    */
+  def getEntityInfoResponseV2(
+    classIris: Set[SmartIri] = Set.empty[SmartIri],
+    propertyIris: Set[SmartIri] = Set.empty[SmartIri],
+    requestingUser: User,
+  ): Task[EntityInfoGetResponseV2]
+
+  /**
+   * Before an update of an ontology entity, checks that the entity's external IRI, and that of its ontology,
+   * are valid, and checks that the user has permission to update the ontology.
+   *
+   * @param externalOntologyIri the external IRI of the ontology.
+   * @param externalEntityIri   the external IRI of the entity.
+   * @param requestingUser      the user making the request.
+   */
+  final def checkOntologyAndEntityIrisForUpdate(
+    externalOntologyIri: SmartIri,
+    externalEntityIri: SmartIri,
+    requestingUser: User,
+  ): Task[Unit] =
+    for {
+      _ <- OntologyHelpers.checkExternalOntologyIriForUpdate(externalOntologyIri)
+      _ <- OntologyHelpers.checkExternalEntityIriForUpdate(externalEntityIri)
+      _ <- checkPermissionsForOntologyUpdate(
+             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema),
+             requestingUser = requestingUser,
+           )
+    } yield ()
+
+  /**
+   * Throws an exception if the requesting user does not have permission to update an ontology.
+   *
+   * @param internalOntologyIri the internal IRI of the ontology.
+   * @param requestingUser      the user making the request.
+   * @return the project IRI.
+   */
+  def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, requestingUser: User): Task[SmartIri]
+
+  /**
+   * Checks whether the requesting user has permission to update an ontology.
+   *
+   * @param internalOntologyIri the internal IRI of the ontology.
+   * @param requestingUser      the user making the request.
+   * @return `true` if the user has permission to update the ontology
+   */
+  def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: User): Task[Boolean]
+}
+
+final case class OntologyCacheHelpersLive(
+  ontologyCache: OntologyCache,
+) extends OntologyCacheHelpers {
+
+  override def getClassDefinitionsFromOntologyV2(
+    classIris: Set[SmartIri],
+    allLanguages: Boolean,
+    requestingUser: User,
+  ): Task[ReadOntologyV2] =
+    for {
+      cacheData <- ontologyCache.getCacheData
+
+      ontologyIris = classIris.map(_.getOntologyFromEntity)
+
+      _ = if (ontologyIris.size != 1) {
+            throw BadRequestException(s"Only one ontology may be queried per request")
+          }
+
+      classInfoResponse  <- getEntityInfoResponseV2(classIris = classIris, requestingUser = requestingUser)
+      internalOntologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
+
+      // Are we returning data in the user's preferred language, or in all available languages?
+      userLang =
+        if (!allLanguages) {
+          // Just the user's preferred language.
+          Some(requestingUser.lang)
+        } else {
+          // All available languages.
+          None
+        }
+    } yield ReadOntologyV2(
+      ontologyMetadata = cacheData.ontologies(internalOntologyIri).ontologyMetadata,
+      classes = classInfoResponse.classInfoMap,
+      userLang = userLang,
+    )
+
   override def getEntityInfoResponseV2(
     classIris: Set[SmartIri] = Set.empty[SmartIri],
     propertyIris: Set[SmartIri] = Set.empty[SmartIri],
@@ -1953,163 +2047,6 @@ final case class OntologyHelpersLive(
     } yield response
   }
 
-  /**
-   * Requests information about OWL classes in a single ontology.
-   *
-   * @param classIris      the IRIs (internal or external) of the classes to query for.
-   * @param requestingUser the user making the request.
-   * @return a [[ReadOntologyV2]].
-   */
-  override def getClassDefinitionsFromOntologyV2(
-    classIris: Set[SmartIri],
-    allLanguages: Boolean,
-    requestingUser: User,
-  ): Task[ReadOntologyV2] =
-    for {
-      cacheData <- ontologyCache.getCacheData
-
-      ontologyIris = classIris.map(_.getOntologyFromEntity)
-
-      _ = if (ontologyIris.size != 1) {
-            throw BadRequestException(s"Only one ontology may be queried per request")
-          }
-
-      classInfoResponse  <- getEntityInfoResponseV2(classIris = classIris, requestingUser = requestingUser)
-      internalOntologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
-
-      // Are we returning data in the user's preferred language, or in all available languages?
-      userLang =
-        if (!allLanguages) {
-          // Just the user's preferred language.
-          Some(requestingUser.lang)
-        } else {
-          // All available languages.
-          None
-        }
-    } yield ReadOntologyV2(
-      ontologyMetadata = cacheData.ontologies(internalOntologyIri).ontologyMetadata,
-      classes = classInfoResponse.classInfoMap,
-      userLang = userLang,
-    )
-
-  /**
-   * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].
-   *
-   * @param classIri the IRI of the class to be loaded.
-   * @return a [[ClassInfoContentV2]] representing the class definition.
-   */
-  override def loadClassDefinition(classIri: SmartIri): Task[ClassInfoContentV2] =
-    triplestore
-      .query(Construct(sparql.v2.txt.getClassDefinition(classIri)))
-      .flatMap(_.asExtended)
-      .map(OntologyHelpers.constructResponseToClassDefinition(classIri, _))
-
-  /**
-   * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
-   * an error message fitting for the "before update" case.
-   *
-   * @param internalOntologyIri          the internal IRI of the ontology.
-   * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
-   * @return a failed Future if the expected last modification date is not found.
-   */
-  override def checkOntologyLastModificationDateBeforeUpdate(
-    internalOntologyIri: SmartIri,
-    expectedLastModificationDate: Instant,
-  ): Task[Unit] =
-    checkOntologyLastModificationDate(
-      internalOntologyIri = internalOntologyIri,
-      expectedLastModificationDate = expectedLastModificationDate,
-      errorFun = throw EditConflictException(
-        s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been modified by another user, please reload it and try again.",
-      ),
-    )
-
-  /**
-   * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
-   * an error message fitting for the "after update" case.
-   *
-   * @param internalOntologyIri          the internal IRI of the ontology.
-   * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
-   * @return a failed Future if the expected last modification date is not found.
-   */
-  override def checkOntologyLastModificationDateAfterUpdate(
-    internalOntologyIri: SmartIri,
-    expectedLastModificationDate: Instant,
-  ): Task[Unit] =
-    checkOntologyLastModificationDate(
-      internalOntologyIri = internalOntologyIri,
-      expectedLastModificationDate = expectedLastModificationDate,
-      errorFun = throw UpdateNotPerformedException(
-        s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} was not updated. Please report this as a possible bug.",
-      ),
-    )
-
-  /**
-   * Checks that the last modification date of an ontology is the same as the one we expect it to be.
-   *
-   * @param internalOntologyIri          the internal IRI of the ontology.
-   * @param expectedLastModificationDate the last modification date that the ontology is expected to have.
-   * @param errorFun                     a function that throws an exception. It will be called if the expected last modification date is not found.
-   * @return a failed Future if the expected last modification date is not found.
-   */
-  private def checkOntologyLastModificationDate(
-    internalOntologyIri: SmartIri,
-    expectedLastModificationDate: Instant,
-    errorFun: => Nothing,
-  ): Task[Unit] =
-    for {
-      existingOntologyMetadata <- loadOntologyMetadata(internalOntologyIri)
-
-      _ = existingOntologyMetadata match {
-            case Some(metadata) =>
-              metadata.lastModificationDate match {
-                case Some(lastModificationDate) =>
-                  if (lastModificationDate != expectedLastModificationDate) {
-                    errorFun
-                  }
-
-                case None =>
-                  throw InconsistentRepositoryDataException(
-                    s"Ontology $internalOntologyIri has no ${OntologyConstants.KnoraBase.LastModificationDate}",
-                  )
-              }
-
-            case None =>
-              throw NotFoundException(
-                s"Ontology $internalOntologyIri (corresponding to ${internalOntologyIri.toOntologySchema(ApiV2Complex)}) not found",
-              )
-          }
-    } yield ()
-
-  /**
-   * Checks whether the requesting user has permission to update an ontology.
-   *
-   * @param internalOntologyIri the internal IRI of the ontology.
-   * @param requestingUser      the user making the request.
-   * @return `true` if the user has permission to update the ontology
-   */
-  override def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: User): Task[Boolean] =
-    for {
-      cacheData <- ontologyCache.getCacheData
-
-      projectIri =
-        cacheData.ontologies
-          .getOrElse(
-            internalOntologyIri,
-            throw NotFoundException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} not found"),
-          )
-          .ontologyMetadata
-          .projectIri
-          .get
-    } yield requestingUser.permissions.isProjectAdmin(projectIri.toString) || requestingUser.permissions.isSystemAdmin
-
-  /**
-   * Throws an exception if the requesting user does not have permission to update an ontology.
-   *
-   * @param internalOntologyIri the internal IRI of the ontology.
-   * @param requestingUser      the user making the request.
-   * @return the project IRI.
-   */
   override def checkPermissionsForOntologyUpdate(
     internalOntologyIri: SmartIri,
     requestingUser: User,
@@ -2136,40 +2073,20 @@ final case class OntologyHelpersLive(
 
     } yield projectIri
 
-  /**
-   * Checks whether an ontology IRI is valid for an update.
-   *
-   * @param externalOntologyIri the external IRI of the ontology.
-   * @return a failed Future if the IRI is not valid for an update.
-   */
-  override def checkExternalOntologyIriForUpdate(externalOntologyIri: SmartIri): Task[Unit] =
-    if (!externalOntologyIri.isKnoraOntologyIri) {
-      ZIO.fail(BadRequestException(s"Invalid ontology IRI for request: $externalOntologyIri}"))
-    } else if (!externalOntologyIri.getOntologySchema.contains(ApiV2Complex)) {
-      ZIO.fail(BadRequestException(s"Invalid ontology schema for request: $externalOntologyIri"))
-    } else if (externalOntologyIri.isKnoraBuiltInDefinitionIri) {
-      ZIO.fail(BadRequestException(s"Ontology $externalOntologyIri cannot be modified via the Knora API"))
-    } else {
-      ZIO.succeed(())
-    }
+  override def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: User): Task[Boolean] =
+    for {
+      cacheData <- ontologyCache.getCacheData
 
-  /**
-   * Checks whether an entity IRI is valid for an update.
-   *
-   * @param externalEntityIri the external IRI of the entity.
-   * @return a failed Future if the entity IRI is not valid for an update, or is not from the specified ontology.
-   */
-  private def checkExternalEntityIriForUpdate(externalEntityIri: SmartIri): Task[Unit] =
-    if (!externalEntityIri.isKnoraApiV2EntityIri) {
-      ZIO.fail(BadRequestException(s"Invalid entity IRI for request: $externalEntityIri"))
-    } else if (!externalEntityIri.getOntologySchema.contains(ApiV2Complex)) {
-      ZIO.fail(BadRequestException(s"Invalid ontology schema for request: $externalEntityIri"))
-    } else {
-      ZIO.succeed(())
-    }
-
+      projectIri =
+        cacheData.ontologies
+          .getOrElse(
+            internalOntologyIri,
+            throw NotFoundException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} not found"),
+          )
+          .ontologyMetadata
+          .projectIri
+          .get
+    } yield requestingUser.permissions.isProjectAdmin(projectIri.toString) || requestingUser.permissions.isSystemAdmin
 }
 
-object OntologyHelpersLive {
-  val layer = ZLayer.derive[OntologyHelpersLive]
-}
+object OntologyCacheHelpersLive { val layer = ZLayer.derive[OntologyCacheHelpersLive] }
