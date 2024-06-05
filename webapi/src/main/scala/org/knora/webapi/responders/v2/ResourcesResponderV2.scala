@@ -55,6 +55,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 
 trait GetResources {
   def getResourcesV2(
@@ -91,6 +92,7 @@ final case class ResourcesResponderV2(
   ontologyRepo: OntologyRepo,
   permissionsResponder: PermissionsResponder,
   ontologyService: OntologyService,
+  resourcesRepo: ResourcesRepo,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
     with LazyLogging
@@ -100,7 +102,7 @@ final case class ResourcesResponderV2(
     appConfig,
     iriService,
     messageRelay,
-    triplestore,
+    resourcesRepo,
     constructResponseUtilV2,
     standoffTagUtilV2,
     resourceUtilV2,
@@ -2022,7 +2024,8 @@ object ResourcesResponderV2 {
       sf      <- ZIO.service[StringFormatter]
       pr      <- ZIO.service[PermissionsResponder]
       os      <- ZIO.service[OntologyService]
-      handler <- mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, kps, sr, or, pr, os)(sf))
+      rr      <- ZIO.service[ResourcesRepo]
+      handler <- mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, kps, sr, or, pr, os, rr)(sf))
     } yield handler
   }
 }

@@ -48,15 +48,15 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.slice.resources.repo.service.ResourceReadyToCreate
+import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.util.ZioHelper
 
 final case class CreateResourceV2Handler(
   appConfig: AppConfig,
   iriService: IriService,
   messageRelay: MessageRelay,
-  triplestore: TriplestoreService,
+  resourcesRepo: ResourcesRepo,
   constructResponseUtilV2: ConstructResponseUtilV2,
   standoffTagUtilV2: StandoffTagUtilV2,
   resourceUtilV2: ResourceUtilV2,
@@ -68,20 +68,6 @@ final case class CreateResourceV2Handler(
   ontologyService: OntologyService,
 )(implicit val stringFormatter: StringFormatter)
     extends LazyLogging {
-
-  /**
-   * Represents a resource that is ready to be created and whose contents can be verified afterwards.
-   *
-   * @param sparqlTemplateResourceToCreate a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating
-   *                                       the resource.
-   * @param values                         the resource's values for verification.
-   * @param hasStandoffLink                `true` if the property `knora-base:hasStandoffLinkToValue` was automatically added.
-   */
-  private case class ResourceReadyToCreate(
-    sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
-    values: Map[SmartIri, Seq[UnverifiedValueV2]],
-    hasStandoffLink: Boolean,
-  )
 
   /**
    * Creates a new resource.
@@ -266,19 +252,14 @@ final case class CreateResourceV2Handler(
                                  requestingUser = createResourceRequestV2.requestingUser,
                                )
 
-      // Get the IRI of the named graph in which the resource will be created.
-      dataNamedGraph =
-        ProjectService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM).value
+      dataNamedGraph = ProjectService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM)
 
-      // Generate SPARQL for creating the resource.
-      sparqlUpdate = sparql.v2.txt.createNewResource(
-                       dataNamedGraph = dataNamedGraph,
-                       resourceToCreate = resourceReadyToCreate.sparqlTemplateResourceToCreate,
-                       projectIri = createResourceRequestV2.createResource.projectADM.id,
-                       creatorIri = createResourceRequestV2.requestingUser.id,
-                     )
-      // Do the update.
-      _ <- triplestore.query(Update(sparqlUpdate))
+      _ <- resourcesRepo.createNewResource(
+             dataGraphIri = dataNamedGraph,
+             resource = resourceReadyToCreate,
+             projectIri = createResourceRequestV2.createResource.projectADM.id,
+             userIri = createResourceRequestV2.requestingUser.id,
+           )
 
       // Verify that the resource was created.
       previewOfCreatedResource <- verifyResource(

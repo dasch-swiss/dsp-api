@@ -62,6 +62,7 @@ import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 
 object LayersLive {
 
@@ -166,6 +167,7 @@ object LayersLive {
       RepositoryUpdater.layer,
       ResourceInfoLayers.live,
       ResourceUtilV2Live.layer,
+      ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
       RestCardinalityServiceLive.layer,
       SearchApiRoutes.layer,
