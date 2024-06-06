@@ -117,8 +117,7 @@ final case class ManagementRoutes(
 
   private val createHealthResponse: UIO[(HealthResponse, StatusCode)] =
     state.getAppState.map { s =>
-      val response = HealthResponse.from(s)
-      (response, if (response.status) StatusCode.Ok else StatusCode.ServiceUnavailable)
+      (HealthResponse.from(s), if (response.status) StatusCode.Ok else StatusCode.ServiceUnavailable)
     }
 
   private val startCompactionHandler =
@@ -129,7 +128,7 @@ final case class ManagementRoutes(
           for {
             _       <- auth.ensureSystemAdmin(user)
             success <- triplestore.compact()
-          } yield ("", if (success) StatusCode.Ok else StatusCode.Forbidden),
+          } yield if (success) ("ok", StatusCode.Ok) else ("forbidden", StatusCode.Forbidden),
     )
 
   val routes = (
