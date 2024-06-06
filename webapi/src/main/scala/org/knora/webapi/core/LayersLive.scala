@@ -53,6 +53,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
@@ -166,6 +167,7 @@ object LayersLive {
       RepositoryUpdater.layer,
       ResourceInfoLayers.live,
       ResourceUtilV2Live.layer,
+      ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
       RestCardinalityServiceLive.layer,
       SearchApiRoutes.layer,

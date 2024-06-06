@@ -15,8 +15,6 @@ import scala.util.Try
 import dsp.constants.SalsahGui
 import dsp.errors.*
 import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -30,7 +28,6 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
@@ -1564,9 +1561,6 @@ object OntologyHelpers {
 }
 
 final case class OntologyHelpersLive(
-  appConfig: AppConfig,
-  iriService: IriService,
-  messageRelay: MessageRelay,
   triplestore: TriplestoreService,
   ontologyCache: OntologyCache,
 )(implicit val stringFormatter: StringFormatter)
