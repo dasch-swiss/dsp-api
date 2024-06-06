@@ -117,7 +117,8 @@ final case class ManagementRoutes(
 
   private val createHealthResponse: UIO[(HealthResponse, StatusCode)] =
     state.getAppState.map { s =>
-      (HealthResponse.from(s), if (response.status) StatusCode.Ok else StatusCode.ServiceUnavailable)
+      val response = HealthResponse.from(s)
+      (response, if (response.status) StatusCode.Ok else StatusCode.ServiceUnavailable)
     }
 
   private val startCompactionHandler =
