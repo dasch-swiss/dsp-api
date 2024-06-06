@@ -165,6 +165,7 @@ final case class Fuseki(
   username: String,
   password: String,
   queryLoggingThreshold: Duration = Duration.ofMillis(1000),
+  allowCompaction: Boolean = false,
 )
 
 final case class InstrumentationServerConfig(
