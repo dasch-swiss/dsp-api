@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.infrastructure.api
 
 import sttp.model.StatusCode
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import sttp.tapir.*
 import sttp.tapir.AnyEndpoint
 import sttp.tapir.generic.auto.*
@@ -20,6 +19,7 @@ import zio.json.JsonCodec
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.http.version.BuildInfo
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
