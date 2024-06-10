@@ -153,6 +153,17 @@ final case class ProjectsEndpoints(
       .out(jsonBody[ProjectOperationResponseADM])
       .description("Deletes a project identified by the IRI.")
 
+    val deleteAdminProjectsByProjectShortcodeErase = baseEndpoints.securedEndpoint.delete
+      .in(projectsByShortcode / "erase")
+      .out(jsonBody[ProjectOperationResponseADM])
+      .description(
+        """|!ATTENTION! Erase a project with the given shortcode.
+           |This will permanently and irrecoverably remove the project and all of its assets.
+           |Authorization: Requires system admin permissions.
+           |Only available if the feature has been configured on the server side.
+           |_Not yet implemented_""".stripMargin,
+      )
+
     val getAdminProjectsExports = baseEndpoints.securedEndpoint.get
       .in(projectsBase / `export`)
       .out(jsonBody[Chunk[ProjectExportInfoResponse]])
@@ -209,6 +220,7 @@ final case class ProjectsEndpoints(
       Public.getAdminProjectsKeywordsByProjectIri,
     ) ++ Seq(
       Secured.deleteAdminProjectsByIri,
+      Secured.deleteAdminProjectsByProjectShortcodeErase,
       Secured.getAdminProjectsByIriAllData,
       Secured.getAdminProjectsByProjectIriAdminMembers,
       Secured.getAdminProjectsByProjectIriMembers,

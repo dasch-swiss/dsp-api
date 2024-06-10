@@ -8,7 +8,9 @@ package org.knora.webapi.slice.admin.api.service
 import zio.*
 
 import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
+import org.knora.webapi.config.Features
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
@@ -43,6 +45,7 @@ final case class ProjectRestService(
   projectImportService: ProjectImportService,
   userService: UserService,
   auth: AuthorizationRestService,
+  features: Features,
 ) {
 
   /**
@@ -122,6 +125,18 @@ final case class ProjectRestService(
                     .updateProject(project, ProjectUpdateRequest(status = Some(Status.Inactive)))
                     .map(ProjectOperationResponseADM.apply)
       external <- format.toExternal(internal)
+    } yield external
+
+  def eraseProject(shortcode: Shortcode, user: User): Task[ProjectOperationResponseADM] =
+    for {
+      _ <- auth.ensureSystemAdmin(user)
+      _ <- ZIO.unless(features.allowEraseProject)(
+             ZIO.fail(ForbiddenException("The feature to erase projects is not enabled.")),
+           )
+      internal <- projectService
+                    .findByShortcode(shortcode)
+                    .someOrFail(NotFoundException(s"$shortcode not found"))
+      external <- format.toExternal(ProjectOperationResponseADM(internal))
     } yield external
 
   /**

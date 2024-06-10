@@ -40,6 +40,7 @@ final case class AppConfig(
   instrumentationServerConfig: InstrumentationServerConfig,
   jwt: JwtConfig,
   dspIngest: DspIngestConfig,
+  features: Features,
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
 }
@@ -173,8 +174,12 @@ final case class InstrumentationServerConfig(
   interval: Duration,
 )
 
+final case class Features(
+  allowEraseProject: Boolean = false,
+)
+
 object AppConfig {
-  type AppConfigurationsTest = AppConfig & DspIngestConfig & Triplestore
+  type AppConfigurationsTest = AppConfig & DspIngestConfig & Triplestore & Features
   type AppConfigurations     = AppConfigurationsTest & InstrumentationServerConfig & JwtConfig & KnoraApi
 
   val descriptor: Config[AppConfig] = deriveConfig[AppConfig].mapKey(toKebabCase)
@@ -193,6 +198,7 @@ object AppConfig {
       appConfigLayer.project(_.dspIngest) ++
       appConfigLayer.project(_.triplestore) ++
       appConfigLayer.project(_.instrumentationServerConfig) ++
+      appConfigLayer.project(_.features) ++
       appConfigLayer.project { appConfig =>
         val jwtConfig = appConfig.jwt
         val issuerFromConfigOrDefault: Option[String] =
