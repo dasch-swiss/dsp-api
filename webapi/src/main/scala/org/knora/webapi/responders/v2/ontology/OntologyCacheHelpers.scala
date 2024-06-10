@@ -6,7 +6,9 @@
 package org.knora.webapi.responders.v2.ontology
 
 import zio.*
+
 import scala.collection.immutable
+
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.SmartIri
