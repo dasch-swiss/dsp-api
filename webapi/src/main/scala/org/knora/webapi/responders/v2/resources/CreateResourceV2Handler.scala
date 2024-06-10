@@ -767,8 +767,7 @@ final case class CreateResourceV2Handler(
     requestingUser: User,
   ): Task[String] =
     for {
-      // Generate SPARQL to create links and LinkValues for standoff links in text values.
-      sparqlForStandoffLinks <-
+      sparqlForStandoffLinks <- // XXX: use this value differently
         generateInsertSparqlForStandoffLinksInMultipleValues(
           resourceIri = resourceIri,
           values = values.values.flatten,
@@ -798,7 +797,7 @@ final case class CreateResourceV2Handler(
       allInsertSparql: String =
         sparqlForPropertyValues.values.flatten
           .map(_.insertSparql)
-          .mkString("\n\n") + "\n\n" + sparqlForStandoffLinks.getOrElse("")
+          .mkString("\n\n")
     } yield allInsertSparql
 
   /**
@@ -867,7 +866,7 @@ final case class CreateResourceV2Handler(
 
             // Generate SPARQL for the link.
             sparql.v2.txt
-              .generateInsertStatementsForCreateLink(
+              .generateInsertStatementsForCreateLink( // XXX: todo
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
                 creationDate = valueCreationDate,
@@ -880,15 +879,12 @@ final case class CreateResourceV2Handler(
           case otherValueContentV2 =>
             // We're creating an ordinary value. Generate SPARQL for it.
             sparql.v2.txt
-              .generateInsertStatementsForCreateValue(
+              .generateInsertStatementsForCreateValue( // XXX: todo
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
                 value = otherValueContentV2,
                 newValueIri = newValueIri,
                 newValueUUID = newValueUUID,
-                linkUpdates = Seq.empty[
-                  SparqlTemplateLinkUpdate,
-                ], // This is empty because we have to generate SPARQL for standoff links separately.
                 valueCreator = requestingUser.id,
                 valuePermissions = valueToCreate.permissions,
                 creationDate = valueCreationDate,
@@ -974,7 +970,7 @@ final case class CreateResourceV2Handler(
           sparql.v2.txt
             .generateInsertStatementsForStandoffLinks(
               resourceIri = resourceIri,
-              linkUpdates = standoffLinkUpdates,
+              linkUpdates = standoffLinkUpdates, // XXX: return only this
               creationDate = creationDate,
             )
             .toString()

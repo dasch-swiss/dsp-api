@@ -69,7 +69,7 @@ object ResourcesRepoLive {
         dataNamedGraph = dataGraphIri.value,
         resourceToCreate = resourceToCreate,
         projectIri = projectIri,
-        creatorIri = creatorIri,
+        creatorIri = creatorIri, // XXX: needs more stuff
       ),
     )
 }
