@@ -256,24 +256,18 @@ final case class CreateResourceV2Handler(
 
       _ <- resourcesRepo.createNewResource(
              dataGraphIri = dataNamedGraph,
-             resource = resourceReadyToCreate,
+             resource = resourceReadyToCreate.sparqlTemplateResourceToCreate,
              projectIri = createResourceRequestV2.createResource.projectADM.id,
              userIri = createResourceRequestV2.requestingUser.id,
            )
 
       // Verify that the resource was created.
       previewOfCreatedResource <- verifyResource(
-                                    resourceReadyToCreate = resourceReadyToCreate,
+                                    resourceIri = resourceReadyToCreate.resourceIri,
                                     requestingUser = createResourceRequestV2.requestingUser,
                                   )
     } yield previewOfCreatedResource
   }
-
-  private case class GenerateSparqlToCreateMultipleValuesResponseV2(
-    insertSparql: String,
-    unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]],
-    hasStandoffLink: Boolean,
-  )
 
   /**
    * Generates a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating a resource and its values.
@@ -428,23 +422,22 @@ final case class CreateResourceV2Handler(
         )
 
       // Ask the values responder for SPARQL for generating the values.
-      sparqlForValuesResponse <- generateSparqlToCreateMultipleValuesV2(
-                                   resourceIri = resourceIri,
-                                   values = valuesWithValidatedPermissions,
-                                   creationDate = creationDate,
-                                   requestingUser = requestingUser,
-                                 )
+      insertSparql <- generateSparqlToCreateMultipleValuesV2(
+                        resourceIri = resourceIri,
+                        values = valuesWithValidatedPermissions,
+                        creationDate = creationDate,
+                        requestingUser = requestingUser,
+                      )
     } yield ResourceReadyToCreate(
+      resourceIri = resourceIri,
       sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
         resourceIri = resourceIri,
         permissions = resourcePermissions,
-        sparqlForValues = sparqlForValuesResponse.insertSparql,
+        sparqlForValues = insertSparql,
         resourceClassIri = internalCreateResource.resourceClassIri.toString,
         resourceLabel = internalCreateResource.label,
         resourceCreationDate = creationDate,
       ),
-      values = sparqlForValuesResponse.unverifiedValues,
-      hasStandoffLink = sparqlForValuesResponse.hasStandoffLink,
     )
   }
 
@@ -745,16 +738,15 @@ final case class CreateResourceV2Handler(
   /**
    * Checks that a resource was created.
    *
-   * @param resourceReadyToCreate the resource that should have been created.
-   * @param projectIri            the IRI of the project in which the resource should have been created.
-   * @param requestingUser        the user that attempted to create the resource.
+   * @param resourceIri    the IRI of the resource that should have been created.
+   * @param projectIri     the IRI of the project in which the resource should have been created.
+   * @param requestingUser the user that attempted to create the resource.
    * @return a preview of the resource that was created.
    */
   private def verifyResource(
-    resourceReadyToCreate: ResourceReadyToCreate,
+    resourceIri: IRI,
     requestingUser: User,
-  ): Task[ReadResourcesSequenceV2] = {
-    val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
+  ): Task[ReadResourcesSequenceV2] =
     getResources
       .getResourcesV2(
         resourceIris = Seq(resourceIri),
@@ -767,14 +759,13 @@ final case class CreateResourceV2Handler(
           s"Resource <$resourceIri> was not created. Please report this as a possible bug.",
         )
       }
-  }
 
   private def generateSparqlToCreateMultipleValuesV2(
     resourceIri: IRI,
     values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]],
     creationDate: Instant,
     requestingUser: User,
-  ): Task[GenerateSparqlToCreateMultipleValuesResponseV2] =
+  ): Task[String] =
     for {
       // Generate SPARQL to create links and LinkValues for standoff links in text values.
       sparqlForStandoffLinks <-
@@ -808,19 +799,7 @@ final case class CreateResourceV2Handler(
         sparqlForPropertyValues.values.flatten
           .map(_.insertSparql)
           .mkString("\n\n") + "\n\n" + sparqlForStandoffLinks.getOrElse("")
-
-      // Collect all the unverified values.
-      unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]] =
-        sparqlForPropertyValues.map { case (propertyIri, unverifiedValuesWithSparql) =>
-          propertyIri -> unverifiedValuesWithSparql.map(
-            _.unverifiedValue,
-          )
-        }
-    } yield GenerateSparqlToCreateMultipleValuesResponseV2(
-      insertSparql = allInsertSparql,
-      unverifiedValues = unverifiedValues,
-      hasStandoffLink = sparqlForStandoffLinks.isDefined,
-    )
+    } yield allInsertSparql
 
   /**
    * Represents SPARQL generated to create one of multiple values in a new resource.

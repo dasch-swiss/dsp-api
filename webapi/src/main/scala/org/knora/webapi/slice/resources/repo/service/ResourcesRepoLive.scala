@@ -8,9 +8,7 @@ package org.knora.webapi.slice.resources.repo.service
 import zio.*
 
 import dsp.constants.SalsahGui.IRI
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.v2.responder.valuemessages.UnverifiedValueV2
 import org.knora.webapi.responders.v2.resources.SparqlTemplateResourceToCreate
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -25,15 +23,14 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  * @param hasStandoffLink                `true` if the property `knora-base:hasStandoffLinkToValue` was automatically added.
  */
 case class ResourceReadyToCreate(
+  resourceIri: IRI,
   sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
-  values: Map[SmartIri, Seq[UnverifiedValueV2]],
-  hasStandoffLink: Boolean,
 )
 
 trait ResourcesRepo {
   def createNewResource(
     dataGraphIri: InternalIri,
-    resource: ResourceReadyToCreate,
+    resource: SparqlTemplateResourceToCreate,
     userIri: IRI,
     projectIri: IRI,
   ): Task[Unit]
@@ -43,21 +40,36 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService) extends Reso
 
   def createNewResource(
     dataGraphIri: InternalIri,
-    resource: ResourceReadyToCreate,
+    resource: SparqlTemplateResourceToCreate,
     userIri: IRI,
     projectIri: IRI,
   ): Task[Unit] =
     triplestore.query(
-      Update(
-        sparql.v2.txt.createNewResource(
-          dataNamedGraph = dataGraphIri.value,
-          resourceToCreate = resource.sparqlTemplateResourceToCreate,
-          projectIri = projectIri,
-          creatorIri = userIri,
-        ),
+      ResourcesRepoLive.createNewResourceQuery(
+        dataGraphIri,
+        resource,
+        projectIri,
+        userIri,
       ),
     )
 
 }
 
-object ResourcesRepoLive { val layer = ZLayer.derive[ResourcesRepoLive] }
+object ResourcesRepoLive {
+  val layer = ZLayer.derive[ResourcesRepoLive]
+
+  private[service] def createNewResourceQuery(
+    dataGraphIri: InternalIri,
+    resourceToCreate: SparqlTemplateResourceToCreate,
+    projectIri: IRI,
+    creatorIri: IRI,
+  ): Update =
+    Update(
+      sparql.v2.txt.createNewResource(
+        dataNamedGraph = dataGraphIri.value,
+        resourceToCreate = resourceToCreate,
+        projectIri = projectIri,
+        creatorIri = creatorIri,
+      ),
+    )
+}
