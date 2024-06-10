@@ -22,7 +22,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionA
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
@@ -49,15 +48,15 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.slice.resources.repo.service.ResourceReadyToCreate
+import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.util.ZioHelper
 
 final case class CreateResourceV2Handler(
   appConfig: AppConfig,
   iriService: IriService,
   messageRelay: MessageRelay,
-  triplestore: TriplestoreService,
+  resourcesRepo: ResourcesRepo,
   constructResponseUtilV2: ConstructResponseUtilV2,
   standoffTagUtilV2: StandoffTagUtilV2,
   resourceUtilV2: ResourceUtilV2,
@@ -69,20 +68,6 @@ final case class CreateResourceV2Handler(
   ontologyService: OntologyService,
 )(implicit val stringFormatter: StringFormatter)
     extends LazyLogging {
-
-  /**
-   * Represents a resource that is ready to be created and whose contents can be verified afterwards.
-   *
-   * @param sparqlTemplateResourceToCreate a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating
-   *                                       the resource.
-   * @param values                         the resource's values for verification.
-   * @param hasStandoffLink                `true` if the property `knora-base:hasStandoffLinkToValue` was automatically added.
-   */
-  private case class ResourceReadyToCreate(
-    sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
-    values: Map[SmartIri, Seq[UnverifiedValueV2]],
-    hasStandoffLink: Boolean,
-  )
 
   /**
    * Creates a new resource.
@@ -267,19 +252,14 @@ final case class CreateResourceV2Handler(
                                  requestingUser = createResourceRequestV2.requestingUser,
                                )
 
-      // Get the IRI of the named graph in which the resource will be created.
-      dataNamedGraph =
-        ProjectService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM).value
+      dataNamedGraph = ProjectService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM)
 
-      // Generate SPARQL for creating the resource.
-      sparqlUpdate = sparql.v2.txt.createNewResource(
-                       dataNamedGraph = dataNamedGraph,
-                       resourceToCreate = resourceReadyToCreate.sparqlTemplateResourceToCreate,
-                       projectIri = createResourceRequestV2.createResource.projectADM.id,
-                       creatorIri = createResourceRequestV2.requestingUser.id,
-                     )
-      // Do the update.
-      _ <- triplestore.query(Update(sparqlUpdate))
+      _ <- resourcesRepo.createNewResource(
+             dataGraphIri = dataNamedGraph,
+             resource = resourceReadyToCreate,
+             projectIri = createResourceRequestV2.createResource.projectADM.id,
+             userIri = createResourceRequestV2.requestingUser.id,
+           )
 
       // Verify that the resource was created.
       previewOfCreatedResource <- verifyResource(
@@ -1047,3 +1027,22 @@ final case class CreateResourceV2Handler(
   }
 
 }
+
+/**
+ * Represents a resource to be created with its index, label, IRI, permissions, and SPARQL for creating its values
+ *
+ * @param resourceIri          the IRI of the resource to be created.
+ * @param permissions          the permissions user has for creating the new resource.
+ * @param sparqlForValues      the SPARQL for creating the values of the resource.
+ * @param resourceClassIri     the type of the resource to be created.
+ * @param resourceLabel        the label of the resource.
+ * @param resourceCreationDate the creation date that should be attached to the resource.
+ */
+case class SparqlTemplateResourceToCreate(
+  resourceIri: IRI,
+  permissions: String,
+  sparqlForValues: String,
+  resourceClassIri: IRI,
+  resourceLabel: String,
+  resourceCreationDate: Instant,
+)

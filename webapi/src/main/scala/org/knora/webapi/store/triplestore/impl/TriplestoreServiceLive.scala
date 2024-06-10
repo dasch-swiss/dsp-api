@@ -20,6 +20,7 @@ import sttp.client3.httpclient.zio.HttpClientZioBackend
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
+import zio.json.ast.JsonCursor
 import zio.metrics.Metric
 import zio.nio.file.Path as NioPath
 
@@ -296,6 +297,36 @@ case class TriplestoreServiceLive(
                   )
       fusekiServer <- ZIO.fromEither(response.body.toOption.getOrElse("").fromJson[FusekiServer]).mapError(Throwable(_))
     } yield fusekiServer.datasets.find(ds => ds.dsName == s"/${fusekiConfig.repositoryName}" && ds.dsState).nonEmpty
+
+  override def compact(): Task[Boolean] =
+    ZIO
+      .when(fusekiConfig.allowCompaction) {
+        for {
+          _      <- ZIO.logInfo("Starting compaction")
+          request = authenticatedRequest.post(targetHostUri.addPath(paths.compact).addParam("deleteOld", "true"))
+          body   <- doHttpRequest(request)
+          json   <- ZIO.fromEither(body.body.merge.fromJson[Json]).mapError(new RuntimeException(_))
+          cursor  = JsonCursor.field("taskId").isString
+          taskId <- ZIO.fromEither(json.get(cursor)).mapBoth(new RuntimeException(_), _.value)
+          _      <- ZIO.logInfo(s"Awaiting compaction task: $taskId")
+          _      <- awaitOnce(isFinished(taskId)).repeatWhileEquals(false)
+          _      <- ZIO.logInfo("Compaction finished.")
+        } yield ()
+      }
+      .map(_.isDefined)
+
+  private def awaitOnce[A](z: UIO[A]): UIO[Boolean] =
+    z.flatMap {
+      case true  => ZIO.succeed(true)
+      case false => ZIO.sleep(20.seconds).as(false)
+    }
+
+  private def isFinished(taskId: String): UIO[Boolean] =
+    (for {
+      _    <- ZIO.logDebug(s"Checking compaction task: $taskId")
+      body <- doHttpRequest(authenticatedRequest.get(targetHostUri.addPath(paths.tasks).addPath(taskId)))
+      json <- ZIO.fromEither(body.body.merge.fromJson[Json]).mapError(new RuntimeException(_))
+    } yield json.get(JsonCursor.field("finished").isString).isRight).orDie
 
   /**
    * Initialize the Jena Fuseki triplestore. Currently only works for

@@ -10,6 +10,7 @@ import zio.*
 
 import org.knora.sipi.SipiServiceTestDelegator
 import org.knora.sipi.WhichSipiService
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfig.AppConfigurationsTest
 import org.knora.webapi.config.AppConfigForTestContainers
@@ -48,13 +49,17 @@ import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
+import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
+import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
@@ -88,30 +93,28 @@ object LayersTest {
     AdminApiEndpoints &
     AdminModule.Provided &
     ApiRoutes &
-    ApiV2Endpoints &
     AppRouter &
     AssetPermissionsResponder &
     Authenticator &
     AuthorizationRestService &
     CardinalityHandler &
+    CardinalityService &
     ConstructResponseUtilV2 &
     DspIngestClient &
     GravsearchTypeInspectionRunner &
     GroupRestService &
-    HttpServer &
-    IIIFRequestMessageHandler &
     InferenceOptimizationService &
     InvalidTokenCache &
     IriConverter &
+    IriService &
     JwtService &
     ListsResponder &
-    ListsResponderV2 &
     MessageRelay &
     OntologyCache &
     OntologyHelpers &
     OntologyInferencer &
     OntologyRepo &
-    OntologyResponderV2 &
+    OntologyService &
     PermissionRestService &
     PermissionUtilADM &
     PermissionsResponder &
@@ -119,14 +122,14 @@ object LayersTest {
     ProjectExportStorageService &
     ProjectImportService &
     ProjectRestService &
-    RepositoryUpdater &
+    ResourceInfoEndpoints &
     ResourceUtilV2 &
-    ResourcesResponderV2 &
+    ResourcesRepo &
     RestCardinalityService &
     SearchApiRoutes &
+    SearchEndpoints &
     SearchResponderV2Module.Provided &
     SipiService &
-    StandoffResponderV2 &
     StandoffTagUtilV2 &
     State &
     StringFormatter &
@@ -134,14 +137,23 @@ object LayersTest {
     TriplestoreService &
     UserRestService &
     ValuesResponderV2
+
+  type CommonR1 =
+    ApiV2Endpoints &
+    HttpServer &
+    IIIFRequestMessageHandler &
+    ListsResponderV2 &
+    OntologyResponderV2 &
+    RepositoryUpdater &
+    ResourcesResponderV2 &
+    StandoffResponderV2
   // format: on
 
-  private val commonLayersForAllIntegrationTests =
+  private val commonLayersForAllIntegrationTests1 =
     ZLayer.makeSome[CommonR0, CommonR](
       AdminApiModule.layer,
       AdminModule.layer,
       ApiRoutes.layer,
-      ApiV2Endpoints.layer,
       AppRouter.layer,
       AssetPermissionsResponder.layer,
       AuthenticatorLive.layer,
@@ -152,8 +164,6 @@ object LayersTest {
       ConstructResponseUtilV2Live.layer,
       DspIngestClientLive.layer,
       HandlerMapper.layer,
-      HttpServer.layer,
-      IIIFRequestMessageHandlerLive.layer,
       InferenceOptimizationService.layer,
       InvalidTokenCache.layer,
       IriConverter.layer,
@@ -161,14 +171,12 @@ object LayersTest {
       JwtServiceLive.layer,
       KnoraResponseRenderer.layer,
       ListsResponder.layer,
-      ListsResponderV2.layer,
       ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
       OntologyRepoLive.layer,
-      OntologyResponderV2Live.layer,
       OntologyServiceLive.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
@@ -177,16 +185,14 @@ object LayersTest {
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportService.layer,
-      RepositoryUpdater.layer,
       ResourceInfoLayers.live,
       ResourceUtilV2Live.layer,
-      ResourcesResponderV2.layer,
+      ResourcesRepoLive.layer,
       RestCardinalityServiceLive.layer,
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,
       SipiServiceTestDelegator.layer,
-      StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
       StringFormatter.live,
@@ -194,6 +200,28 @@ object LayersTest {
       TestClientService.layer,
       TriplestoreServiceLive.layer,
       ValuesResponderV2Live.layer,
+    )
+
+  private val commonLayersForAllIntegrationTests2 =
+    ZLayer.makeSome[
+      CommonR0 & CommonR,
+      CommonR1,
+    ](
+      OntologyResponderV2Live.layer,
+      StandoffResponderV2.layer,
+      ResourcesResponderV2.layer,
+      RepositoryUpdater.layer,
+      HttpServer.layer,
+      ApiV2Endpoints.layer,
+      ListsResponderV2.layer,
+      IIIFRequestMessageHandlerLive.layer,
+      IriService.layer,
+    )
+
+  private val commonLayersForAllIntegrationTests =
+    ZLayer.makeSome[CommonR0, CommonR & CommonR1](
+      commonLayersForAllIntegrationTests1,
+      commonLayersForAllIntegrationTests2,
     )
 
   private val fusekiAndSipiTestcontainers =

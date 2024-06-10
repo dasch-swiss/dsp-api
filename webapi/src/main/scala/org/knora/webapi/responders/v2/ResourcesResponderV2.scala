@@ -49,6 +49,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
+import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -91,6 +92,7 @@ final case class ResourcesResponderV2(
   ontologyRepo: OntologyRepo,
   permissionsResponder: PermissionsResponder,
   ontologyService: OntologyService,
+  resourcesRepo: ResourcesRepo,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
     with LazyLogging
@@ -100,7 +102,7 @@ final case class ResourcesResponderV2(
     appConfig,
     iriService,
     messageRelay,
-    triplestore,
+    resourcesRepo,
     constructResponseUtilV2,
     standoffTagUtilV2,
     resourceUtilV2,
@@ -2022,7 +2024,8 @@ object ResourcesResponderV2 {
       sf      <- ZIO.service[StringFormatter]
       pr      <- ZIO.service[PermissionsResponder]
       os      <- ZIO.service[OntologyService]
-      handler <- mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, kps, sr, or, pr, os)(sf))
+      rr      <- ZIO.service[ResourcesRepo]
+      handler <- mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, kps, sr, or, pr, os, rr)(sf))
     } yield handler
   }
 }
