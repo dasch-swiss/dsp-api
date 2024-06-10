@@ -301,6 +301,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
   override def dropGraph(graphName: IRI): Task[Unit] =
     notImplemented
 
+  override def compact(): Task[Boolean] = ZIO.succeed(false)
 }
 
 object TriplestoreServiceInMemory {
