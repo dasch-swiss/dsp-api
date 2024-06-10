@@ -42,11 +42,39 @@ DELETE {
 
         @* Insert the class. *@
 
-        @{
-            org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForPredicates(
-                entityIri = classDef.classIri,
-                predicates = classDef.predicates.values
-            )
+        @for(predicate <- classDef.predicates.values) {
+
+            @for(obj <- predicate.objects) {
+
+                @obj match {
+
+                    case SmartIriLiteralV2(iri) => {
+
+                        <@classDef.classIri> <@predicate.predicateIri> <@iri> .
+
+                    }
+
+                    case StringLiteralV2(text, Some(lang)) => {
+
+                        <@classDef.classIri> <@predicate.predicateIri> """@text"""@@@lang .
+
+                    }
+
+                    case StringLiteralV2(text, None) => {
+
+                        <@classDef.classIri> <@predicate.predicateIri> """@text""" .
+
+                    }
+
+                    case BooleanLiteralV2(booleanVal) => {
+
+                        <@classDef.classIri> <@predicate.predicateIri> "@booleanVal"^^xsd:boolean .
+
+                    }
+                }
+
+            }
+
         }
 
         @for(baseClass <- classDef.subClassOf) {

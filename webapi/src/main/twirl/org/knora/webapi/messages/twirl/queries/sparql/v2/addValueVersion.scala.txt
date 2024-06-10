@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  *@
 
+@import dsp.errors.SparqlGenerationException
+@import dsp.valueobjects.UuidUtil
 @import java.time.Instant
 @import java.util.UUID
-@import dsp.valueobjects.UuidUtil
-@import org.knora.webapi.IRI
+@import org.knora.webapi._
 @import org.knora.webapi.messages.SmartIri
 @import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -93,9 +94,214 @@ DELETE {
             knora-base:valueHasString """@value.valueHasString""" ;
             knora-base:valueHasUUID ?currentValueUUID .
 
-        @{
-            org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForValueContent(value = value,
-                                                                          newValueIri = newValueIri)
+
+        @value match {
+
+            case textValue: TextValueContentV2 => {
+
+                @if(!textValue.valueHasLanguage.isEmpty) {
+                    <@newValueIri> knora-base:valueHasLanguage """@textValue.valueHasLanguage.get""" .
+                }
+
+                @if(textValue.standoff.nonEmpty) {
+
+                    @* Create a Standoff node for each standoff tag. *@
+
+                    @textValue.mappingIri match {
+                        case Some(definedMappingIri) => {
+                            <@newValueIri> knora-base:valueHasMapping <@definedMappingIri> .
+                        }
+
+                        case None => {}
+                    }
+
+                    <@newValueIri> knora-base:valueHasMaxStandoffStartIndex @textValue.computedMaxStandoffStartIndex.get .
+
+                    @for((createStandoff: CreateStandoffTagV2InTriplestore, standoffNodeIndex) <- textValue.prepareForSparqlInsert(newValueIri).zipWithIndex) {
+
+                        <@newValueIri> knora-base:valueHasStandoff <@createStandoff.standoffTagInstanceIri> .
+
+                        <@createStandoff.standoffTagInstanceIri>
+
+                                @*
+
+                                Check for optional standoff properties
+
+                                *@
+
+                                @if(createStandoff.standoffNode.endIndex.isDefined) {
+                                    knora-base:standoffTagHasEndIndex @createStandoff.standoffNode.endIndex.get ;
+                                }
+
+                                @if(createStandoff.startParentIri.isDefined) {
+                                    knora-base:standoffTagHasStartParent <@createStandoff.startParentIri.get> ;
+                                }
+
+                                @if(createStandoff.endParentIri.isDefined) {
+                                    knora-base:standoffTagHasEndParent <@createStandoff.endParentIri.get> ;
+                                }
+
+                                @if(createStandoff.standoffNode.originalXMLID.isDefined) {
+                                    knora-base:standoffTagHasOriginalXMLID """@createStandoff.standoffNode.originalXMLID.get""" ;
+                                }
+
+                                @*
+
+                                Handle standoff class specific standoff properties
+
+                                *@
+                                @for(createProperty <- createStandoff.standoffNode.attributes) {
+
+                                    <@createProperty.standoffPropertyIri> @createProperty.rdfValue ;
+
+                                }
+
+                                knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex ;
+                                knora-base:standoffTagHasUUID "@{UuidUtil.base64Encode(createStandoff.standoffNode.uuid)}" ;
+                                knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
+                                knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
+                                rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .
+
+                    }
+
+                }
+            }
+
+
+            case intValue: IntegerValueContentV2 => {
+
+                <@newValueIri> knora-base:valueHasInteger @intValue.valueHasInteger .
+
+            }
+
+            case decimalValue: DecimalValueContentV2 => {
+
+                <@newValueIri> knora-base:valueHasDecimal "@decimalValue.valueHasDecimal"^^xsd:decimal .
+
+            }
+
+            case booleanValue: BooleanValueContentV2 => {
+
+                <@newValueIri> knora-base:valueHasBoolean @booleanValue.valueHasBoolean .
+
+            }
+
+            case uriValue: UriValueContentV2 => {
+
+                <@newValueIri> knora-base:valueHasUri """@uriValue.valueHasUri"""^^xsd:anyURI .
+
+            }
+
+            case dateValue: DateValueContentV2 => {
+
+                <@newValueIri> knora-base:valueHasStartJDN @dateValue.valueHasStartJDN ;
+                                     knora-base:valueHasEndJDN @dateValue.valueHasEndJDN ;
+                                     knora-base:valueHasStartPrecision "@dateValue.valueHasStartPrecision" ;
+                                     knora-base:valueHasEndPrecision "@dateValue.valueHasEndPrecision" ;
+                                     knora-base:valueHasCalendar "@dateValue.valueHasCalendar" .
+
+            }
+
+            case colorValue: ColorValueContentV2 => {
+
+                <@newValueIri> knora-base:valueHasColor """@colorValue.valueHasColor""" .
+
+            }
+
+            case geometryValue: GeomValueContentV2 => {
+
+                <@newValueIri> knora-base:valueHasGeometry """@geometryValue.valueHasGeometry""" .
+
+            }
+
+            case fileValueContentV2: FileValueContentV2 => {
+                <@newValueIri> knora-base:internalFilename """@fileValueContentV2.fileValue.internalFilename""" ;
+                    knora-base:internalMimeType """@fileValueContentV2.fileValue.internalMimeType""" .
+
+                @fileValueContentV2.fileValue.originalFilename match {
+                    case Some(definedOriginalFilename) => {
+                        <@newValueIri> knora-base:originalFilename """@definedOriginalFilename""" .
+                    }
+
+                    case None => {}
+                }
+
+                @fileValueContentV2.fileValue.originalMimeType match {
+                    case Some(definedOriginalMimeType) => {
+                        <@newValueIri> knora-base:originalMimeType """@definedOriginalMimeType""" .
+                    }
+
+                    case None => {}
+                }
+
+                @fileValueContentV2 match {
+                    case stillImageFileValue: StillImageFileValueContentV2 => {
+                        <@newValueIri> knora-base:dimX @stillImageFileValue.dimX ;
+                            knora-base:dimY @stillImageFileValue.dimY .
+                    }
+
+                    case stillImageFileValue: StillImageExternalFileValueContentV2 => {
+                        <@newValueIri> knora-base:externalUrl """@stillImageFileValue.externalUrl.value.toString""" .
+                    }
+
+                    case documentFileValue: DocumentFileValueContentV2 => {
+                        @documentFileValue.dimX match {
+                            case Some(definedDimX) => {
+                                <@newValueIri> knora-base:dimX @definedDimX .
+                            }
+
+                            case None => {}
+                        }
+
+                        @documentFileValue.dimY match {
+                            case Some(definedDimY) => {
+                                <@newValueIri> knora-base:dimY @definedDimY .
+                            }
+
+                            case None => {}
+                        }
+
+                        @documentFileValue.pageCount match {
+                            case Some(definedPageCount) => {
+                                <@newValueIri> knora-base:pageCount @definedPageCount .
+                            }
+
+                            case None => {}
+                        }
+                    }
+
+                    case _ => {}
+                }
+            }
+
+            case listValue: HierarchicalListValueContentV2 => {
+
+                <@newValueIri> knora-base:valueHasListNode <@listValue.valueHasListNode> .
+
+            }
+
+            case intervalValue: IntervalValueContentV2 => {
+
+                <@newValueIri> knora-base:valueHasIntervalStart "@intervalValue.valueHasIntervalStart"^^xsd:decimal ;
+                                     knora-base:valueHasIntervalEnd "@intervalValue.valueHasIntervalEnd"^^xsd:decimal .
+
+            }
+
+            case timeValue: TimeValueContentV2 => {
+
+                <@newValueIri> knora-base:valueHasTimeStamp "@timeValue.valueHasTimeStamp"^^xsd:dateTime  .
+
+            }
+
+            case geonameValue: GeonameValueContentV2 => {
+
+                <@newValueIri> knora-base:valueHasGeonameCode """@geonameValue.valueHasGeonameCode""" .
+
+            }
+
+            case other => {
+                @{throw SparqlGenerationException(s"Value object $other is not supported in this SPARQL template"); ()}
+            }
         }
 
         @* Insert the value's comment, if given. *@
