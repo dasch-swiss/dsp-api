@@ -32,7 +32,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 final case class CardinalityHandler(
   ontologyCache: OntologyCache,
   triplestoreService: TriplestoreService,
-  ontologyHelpers: OntologyHelpers,
+  ontologyCacheHelpers: OntologyCacheHelpers,
+  ontologyTriplestoreHelpers: OntologyTriplestoreHelpers,
 )(implicit val stringFormatter: StringFormatter) {
 
   /**
@@ -51,7 +52,7 @@ final case class CardinalityHandler(
       cacheData <- ontologyCache.getCacheData
 
       _ <- // Check that the ontology exists and has not been updated by another user since the client last read it.
-        ontologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
           internalOntologyIri = internalOntologyIri,
           expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
         )
@@ -191,7 +192,7 @@ final case class CardinalityHandler(
       ontology   = cacheData.ontologies(internalOntologyIri)
 
       // Check that the ontology exists and has not been updated by another user since the client last read it.
-      _ <- ontologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
              internalOntologyIri,
              deleteCardinalitiesFromClassRequest.lastModificationDate,
            )
@@ -319,11 +320,11 @@ final case class CardinalityHandler(
       _ <- triplestoreService.query(Update(updateSparql))
 
       // Check that the ontology's last modification date was updated.
-      _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
+      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
 
       // Check that the data that was saved corresponds to the data that was submitted.
 
-      loadedClassDef <- ontologyHelpers.loadClassDefinition(internalClassIri)
+      loadedClassDef <- ontologyTriplestoreHelpers.loadClassDefinition(internalClassIri)
 
       _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
             throw InconsistentRepositoryDataException(
@@ -345,7 +346,7 @@ final case class CardinalityHandler(
 
       // Read the data back from the cache.
 
-      response <- ontologyHelpers.getClassDefinitionsFromOntologyV2(
+      response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                     Set(internalClassIri),
                     allLanguages = true,
                     deleteCardinalitiesFromClassRequest.requestingUser,
