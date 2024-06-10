@@ -2312,6 +2312,11 @@
 
 :relatesToValue
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "Related Resources"@en ,
+                            "Verknüpfte Ressourcen"@de ,
+                            "Ressources associées"@fr ,
+                            "Risorse correlate"@it ;
+    rdfs:comment            "Indicates that this resource relates to another resource"@en ;
     :objectClassConstraint  :LinkValue ;
     :subjectClassConstraint :Resource ;
     :isEditable             true ;
