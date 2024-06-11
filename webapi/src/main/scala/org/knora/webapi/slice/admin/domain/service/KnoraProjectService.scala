@@ -10,7 +10,6 @@ import zio.NonEmptyChunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
@@ -75,6 +74,8 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo) {
         DuplicateValueException(s"Project with the shortname: '${shortname.value}' already exists"),
       )
 
+  def erase(project: KnoraProject): Task[Unit] = knoraProjectRepo.delete(project)
+
   def updateProject(project: KnoraProject, updateReq: ProjectUpdateRequest): Task[KnoraProject] =
     for {
       desc <- updateReq.description match {
@@ -96,6 +97,7 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo) {
                    ),
                  )
     } yield updated
+
 }
 
 object KnoraProjectService {

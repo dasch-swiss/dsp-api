@@ -12,14 +12,14 @@ import zio.ZLayer
 
 import scala.annotation.nowarn
 import scala.reflect.ClassTag
-
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.EhCache
 
 final case class EntityCache[I <: StringValue, E <: EntityWithId[I]](cache: EhCache[I, E]) {
-  def put(value: E): E      = { cache.put(value.id, value); value }
-  def get(id: I): Option[E] = cache.get(id)
+  def put(value: E): E          = { cache.put(value.id, value); value }
+  def get(id: I): Option[E]     = cache.get(id)
+  def remove(value: E): Boolean = cache.remove(value.id, value)
 }
 
 object EntityCache {

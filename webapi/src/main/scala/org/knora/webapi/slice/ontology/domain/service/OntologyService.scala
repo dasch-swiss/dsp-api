@@ -22,6 +22,7 @@ final case class OntologyServiceLive(ontologyCache: OntologyCache) extends Ontol
         .get(ontologyIri.value)
         .flatMap(_.ontologyMetadata.projectIri.map(_.toString()))
     }
+    
 }
 
 object OntologyServiceLive {

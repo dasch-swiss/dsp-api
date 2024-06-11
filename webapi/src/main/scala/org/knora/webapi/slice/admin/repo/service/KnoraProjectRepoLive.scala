@@ -11,7 +11,6 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
-
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -69,6 +68,12 @@ final case class KnoraProjectRepoLive(
       .die(new IllegalArgumentException("Update not supported for built-in projects"))
       .when(project.id.isBuiltInProjectIri) *>
       super.save(project)
+
+  override def delete(project: KnoraProject): Task[Unit] =
+    ZIO
+      .die(new IllegalArgumentException("Erase not supported for built-in projects"))
+      .when(project.id.isBuiltInProjectIri) *>
+      super.delete(project)
 }
 
 object KnoraProjectRepoLive {

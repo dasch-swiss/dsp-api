@@ -16,13 +16,13 @@ import zio.ZIO
 import zio.ZLayer
 
 import scala.reflect.ClassTag
-
 import org.knora.webapi.slice.infrastructure.CacheManager.defaultCacheConfigBuilder
 
 final case class EhCache[K, V](cache: org.ehcache.Cache[K, V]) {
-  def put(key: K, value: V): Unit = cache.put(key, value)
-  def get(key: K): Option[V]      = Option(cache.get(key))
-  def clear(): Unit               = cache.clear()
+  def put(key: K, value: V): Unit       = cache.put(key, value)
+  def get(key: K): Option[V]            = Option(cache.get(key))
+  def remove(key: K, value: V): Boolean = cache.remove(key, value)
+  def clear(): Unit                     = cache.clear()
 }
 
 final case class CacheManager(manager: org.ehcache.CacheManager, knownCaches: Ref[Set[EhCache[_, _]]]) {

@@ -10,11 +10,11 @@ import zio.nio.file.*
 import zio.test.*
 
 import java.io.IOException
-
 import org.knora.webapi.config.Fuseki
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.testcontainers.FusekiTestContainer
 
 object ProjectImportServiceIT extends ZIOSpecDefault {
@@ -132,6 +132,8 @@ final case class DspIngestClientITMock() extends DspIngestClient {
         originalMimeType = Some("text/plain"),
       ),
     )
+
+  override def eraseProject(shortcode: Shortcode): Task[Unit] = ZIO.unit
 }
 object DspIngestClientITMock {
   val layer = ZLayer.derive[DspIngestClientITMock]

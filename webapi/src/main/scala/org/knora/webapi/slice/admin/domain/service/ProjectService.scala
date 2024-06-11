@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.domain.service
 
 import zio.*
-
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses
@@ -14,6 +13,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
+import org.knora.webapi.slice.admin.domain.service.ProjectService.projectDataNamedGraphV2
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
@@ -91,6 +91,8 @@ final case class ProjectService(
 
   def updateProject(project: KnoraProject, updateReq: ProjectUpdateRequest): Task[Project] =
     knoraProjectService.updateProject(project, updateReq).flatMap(toProject)
+
+  def erase(project: KnoraProject): Task[Unit] = knoraProjectService.erase(project)
 }
 
 object ProjectService {

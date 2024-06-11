@@ -8,7 +8,6 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.Chunk
 import zio.NonEmptyChunk
 import zio.Task
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
@@ -16,9 +15,9 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
-import org.knora.webapi.slice.common.repo.service.Repository
+import org.knora.webapi.slice.common.repo.service.CrudRepository
 
-trait KnoraProjectRepo extends Repository[KnoraProject, ProjectIri] {
+trait KnoraProjectRepo extends CrudRepository[KnoraProject, ProjectIri] {
   def save(project: KnoraProject): Task[KnoraProject]
   def findByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]]
   def findByShortname(shortname: Shortname): Task[Option[KnoraProject]]

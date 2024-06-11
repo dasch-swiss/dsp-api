@@ -48,4 +48,6 @@ abstract class AbstractInMemoryCrudRepository[Entity, Id](entities: Ref[Chunk[En
    * @return all instances of the type.
    */
   override def findAll(): Task[Chunk[Entity]] = entities.get
+
+  def erase(entity: Entity): Task[Unit] = delete(entity)
 }

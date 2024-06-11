@@ -7,7 +7,6 @@ package org.knora.webapi.slice.admin.repo.service
 
 import zio.Task
 import zio.ZIO
-
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
@@ -21,4 +20,6 @@ abstract class CachingEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
     cache.get(id).fold(super.findById(id).map(_.map(cache.put)))(ZIO.some(_))
 
   override def save(entity: E): Task[E] = super.save(entity).map(cache.put)
+
+  override def delete(entity: E): Task[Unit] = super.delete(entity) <* ZIO.succeed(cache.remove(entity))
 }

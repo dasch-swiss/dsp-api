@@ -33,7 +33,6 @@ import zio.stream.ZSink
 
 import java.io.IOException
 import scala.concurrent.duration.DurationInt
-
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -43,6 +42,8 @@ trait DspIngestClient {
   def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path]
 
   def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path]
+
+  def eraseProject(shortcode: Shortcode): Task[Unit]
 
   def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse]
 }
@@ -99,6 +100,12 @@ final case class DspIngestClientLive(
       response <- ZIO.blocking(request.send(backend = sttpBackend))
       _        <- ZIO.logInfo(s"Response from ingest :${response.code}")
     } yield exportFile
+
+  override def eraseProject(shortcode: Shortcode): Task[Unit] = for {
+    request  <- authenticatedRequest.map(_.delete(uri"${projectsPath(shortcode)}/erase"))
+    response <- ZIO.blocking(request.send(backend = sttpBackend))
+    _        <- ZIO.logInfo(s"Response from ingest :${response.code}")
+  } yield ()
 
   override def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = ZIO.scoped {
     for {
