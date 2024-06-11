@@ -52,32 +52,15 @@
         @value match {
 
             case linkValueContentV2: LinkValueContentV2 => {
-                @defining(
-                    SparqlTemplateLinkUpdate(
-                        linkPropertyIri = propertyIri.fromLinkValuePropToLinkProp,
-                        directLinkExists = false,
-                        insertDirectLink = true,
-                        deleteDirectLink = false,
-                        linkValueExists = false,
-                        linkTargetExists = linkValueContentV2.referredResourceExists,
-                        newLinkValueIri = newValueIri,
-                        linkTargetIri = linkValueContentV2.referredResourceIri,
-                        currentReferenceCount = 0,
-                        newReferenceCount = 1,
-                        newLinkValueCreator = requestingUser.id,
-                        newLinkValuePermissions = valueToCreate.permissions,
-                    )
-                ) { linkUpdate =>
 
-                    <@resourceIri> <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+                <@resourceIri> <@propertyIri.stripSuffix("Value")> <@linkValueContentV2.referredResourceIri> .
 
-                    <@newValueIri> rdf:subject <@resourceIri> ;
-                        rdf:predicate <@linkUpdate.linkPropertyIri> ;
-                        rdf:object <@linkUpdate.linkTargetIri> ;
-                    #     knora-base:valueHasString "@linkUpdate.linkTargetIri"^^xsd:string ;
-                        knora-base:valueHasRefCount @linkUpdate.newReferenceCount .
-
-                }
+                <@newValueIri> rdf:subject <@resourceIri> ;
+                    rdf:predicate <@propertyIri.stripSuffix("Value")> ;
+                    rdf:object <@linkValueContentV2.referredResourceIri> ;
+                #     knora-base:valueHasString "@linkValueContentV2.referredResourceIri"^^xsd:string ;
+                    knora-base:valueHasRefCount 1 .
+                
             }
 
             case textValue: TextValueContentV2 => {
