@@ -63,7 +63,6 @@ INSERT DATA {
                     <@newValueInfo.newValueIri> rdf:subject <@newValueInfo.resourceIri> ;
                         rdf:predicate <@newValueInfo.propertyIri.stripSuffix("Value")> ;
                         rdf:object <@linkValueContentV2.referredResourceIri> ;
-                    #     knora-base:valueHasString "@linkValueContentV2.referredResourceIri"^^xsd:string ;
                         knora-base:valueHasRefCount 1 .
 
                 }
@@ -308,20 +307,10 @@ INSERT DATA {
                 knora-base:valueHasString "@linkUpdate.linkTargetIri" ;
                 knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
                 knora-base:isDeleted false ;
-                knora-base:valueCreationDate "@creationDate"^^xsd:dateTime .
-
-            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
-                knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
-
-            @*
-
-            If this template is being used to create a single text value containing standoff links, the new LinkValue
-            we are creating may be a new version of an existing LinkValue (linkUpdate.linkValueExists will be true).
-            In that case, the WHERE clause will have already bound a SPARQL variable ?linkValue@linkValueIndex,
-            containing the IRI of the existing LinkValue. Therefore, add a triple indicating that the new LinkValue
-            is a new version of the existing one, and copy the UUID from the existing one.
-            *@
-            <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{UuidUtil.base64Encode(UUID.randomUUID)}" .
+                knora-base:valueCreationDate "@creationDate"^^xsd:dateTime ;
+                knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
+                knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" ;
+                knora-base:valueHasUUID "@linkUpdate.valueUuid" .
 
             @* Attach the new LinkValue to its containing resource. *@
             <@resourceIri> <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .

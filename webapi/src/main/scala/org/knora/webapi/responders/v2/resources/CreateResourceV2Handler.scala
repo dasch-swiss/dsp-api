@@ -11,6 +11,7 @@ import zio.*
 import java.time.Instant
 
 import dsp.errors.*
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -834,12 +835,13 @@ final case class CreateResourceV2Handler(
           for {
             newValueIri <- makeUnusedValueIri(resourceIri)
           } yield NewLinkValueInfo(
-            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
             newLinkValueIri = newValueIri,
             linkTargetIri = targetIri,
             newReferenceCount = initialReferenceCount,
             newLinkValueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
             newLinkValuePermissions = standoffLinkValuePermissions,
+            valueUuid = UuidUtil.makeRandomBase64EncodedUuid,
           )
       }
       ZIO.collectAll(standoffLinkUpdatesFutures)

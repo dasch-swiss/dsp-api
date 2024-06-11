@@ -52,12 +52,13 @@ case class SparqlTemplateLinkUpdate(
 )
 
 final case class NewLinkValueInfo(
-  linkPropertyIri: SmartIri,
+  linkPropertyIri: IRI,
   newLinkValueIri: IRI,
   linkTargetIri: IRI,
   newReferenceCount: Int,
   newLinkValueCreator: IRI,
   newLinkValuePermissions: String,
+  valueUuid: String,
 )
 
 final case class NewValueInfo(
