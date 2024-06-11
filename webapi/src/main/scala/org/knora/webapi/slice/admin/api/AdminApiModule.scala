@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.api
 
+import zio.URLayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
@@ -12,6 +13,7 @@ import org.knora.webapi.config.Features
 import org.knora.webapi.responders.admin.AssetPermissionsResponder
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.admin.PermissionsResponder
+import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionRestService
@@ -36,44 +38,47 @@ import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-object AdminApiModule {
-
-  type Dependencies =
-    // format: off
-    AdministrativePermissionService &
-    AppConfig &
-    AssetPermissionsResponder &
-    AuthorizationRestService &
-    BaseEndpoints &
-    CacheManager &
-    Features &
-    GroupService &
-    HandlerMapper &
-    KnoraGroupService &
-    KnoraProjectService &
-    KnoraResponseRenderer &
-    KnoraUserService &
-    KnoraUserToUserConverter &
-    ListsResponder &
-    MaintenanceService &
-    OntologyCache &
-    PasswordService &
-    PermissionsResponder &
-    ProjectEraseService &
-    ProjectExportService &
-    ProjectImportService &
-    ProjectService &
-    TapirToPekkoInterpreter &
-    TriplestoreService &
-    UserService
-    // format: on
-
-  type Provided = AdminApiEndpoints & AdminApiRoutes &
-    // the `*RestService`s are only exposed for the integration tests
-    GroupRestService & UserRestService & ProjectRestService & PermissionRestService
-
-  val layer: ZLayer[Dependencies, Nothing, Provided] =
-    ZLayer.makeSome[Dependencies, Provided](
+object AdminApiModule
+    extends URModule[
+      // format: off
+      AdministrativePermissionService &
+      AppConfig &
+      AssetPermissionsResponder &
+      AuthorizationRestService &
+      BaseEndpoints &
+      CacheManager &
+      Features &
+      GroupService &
+      HandlerMapper &
+      KnoraGroupService &
+      KnoraProjectService &
+      KnoraResponseRenderer &
+      KnoraUserService &
+      KnoraUserToUserConverter &
+      ListsResponder &
+      MaintenanceService &
+      OntologyCache &
+      PasswordService &
+      PermissionsResponder &
+      ProjectEraseService &
+      ProjectExportService &
+      ProjectImportService &
+      ProjectService &
+      TapirToPekkoInterpreter &
+      TriplestoreService &
+      UserService
+      ,
+      AdminApiEndpoints &
+      AdminApiRoutes &
+      // the `*RestService`s are only exposed for the integration tests
+      GroupRestService &
+      PermissionRestService &
+      ProjectRestService &
+      UserRestService
+      // format: on
+    ] { self =>
+  inline def layer: URLayer[self.Dependencies, self.Provided] =
+    ZLayer.makeSome[self.Dependencies, self.Provided](
       AdminApiEndpoints.layer,
       AdminApiRoutes.layer,
       FilesEndpoints.layer,
