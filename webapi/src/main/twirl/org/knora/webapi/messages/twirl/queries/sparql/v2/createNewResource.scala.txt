@@ -289,7 +289,7 @@ INSERT DATA {
             <@newValueInfo.newValueIri> knora-base:attachedToUser <@newValueInfo.valueCreator> ;
                 knora-base:hasPermissions "@newValueInfo.valuePermissions"^^xsd:string ;
                 knora-base:valueHasOrder @newValueInfo.valueHasOrder ;
-                knora-base:valueCreationDate "@creationDate"^^xsd:dateTime .
+                knora-base:valueCreationDate "@newValueInfo.creationDate"^^xsd:dateTime .
 
 
 
