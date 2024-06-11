@@ -783,70 +783,42 @@ final case class CreateResourceV2Handler(
                 (propertyIri, valueToCreate, valueHasOrder)
             }
         }.toList) { case (propertyIri, valueToCreate, valueHasOrder) =>
-          generateInsertSparqlWithUnverifiedValue(
-            resourceIri = resourceIri,
-            propertyIri = propertyIri,
-            valueToCreate = valueToCreate,
-            valueHasOrder = valueHasOrder,
-            resourceCreationDate = creationDate,
-            requestingUser = requestingUser,
-          )
+          for {
+            // Make new value UUID.
+            newValueUUID <-
+              ValuesResponderV2Live.makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
+            newValueIri <-
+              iriService.checkOrCreateEntityIri(
+                valueToCreate.customValueIri,
+                stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID)),
+              )
+
+            // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
+            // use resource creation date for the value.
+            valueCreationDate: Instant = valueToCreate.customValueCreationDate.getOrElse(creationDate)
+
+            // Generate the SPARQL.
+            insertSparql: String =
+              // We're creating an ordinary value. Generate SPARQL for it.
+              sparql.v2.txt
+                .generateInsertStatementsForCreateValue( // XXX: todo
+                  resourceIri = resourceIri,
+                  propertyIri = propertyIri.toIri,
+                  value = valueToCreate.valueContent,
+                  newValueIri = newValueIri,
+                  newValueUUID = newValueUUID,
+                  valueCreator = requestingUser.id,
+                  valuePermissions = valueToCreate.permissions,
+                  creationDate = valueCreationDate,
+                  maybeValueHasOrder = Some(valueHasOrder),
+                )
+                .toString()
+          } yield insertSparql
         }
 
       // Concatenate all the generated SPARQL.
       allInsertSparql: String = sparqlForPropertyValues.mkString("\n\n")
     } yield allInsertSparql
-
-  /**
-   * Generates SPARQL to create one of multiple values in a new resource.
-   *
-   * @param resourceIri          the IRI of the resource.
-   * @param propertyIri          the IRI of the property that will point to the value.
-   * @param valueToCreate        the value to be created.
-   * @param valueHasOrder        the value's `knora-base:valueHasOrder`.
-   * @param resourceCreationDate the creation date of the resource.
-   * @param requestingUser       the user making the request.
-   * @return a [[InsertSparqlWithUnverifiedValue]] containing the generated SPARQL and an [[UnverifiedValueV2]].
-   */
-  private def generateInsertSparqlWithUnverifiedValue(
-    resourceIri: IRI,
-    propertyIri: SmartIri,
-    valueToCreate: GenerateSparqlForValueInNewResourceV2,
-    valueHasOrder: Int,
-    resourceCreationDate: Instant,
-    requestingUser: User,
-  ): Task[String] =
-    for {
-      // Make new value UUID.
-      newValueUUID <-
-        ValuesResponderV2Live.makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
-      newValueIri <-
-        iriService.checkOrCreateEntityIri(
-          valueToCreate.customValueIri,
-          stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID)),
-        )
-
-      // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
-      // use resource creation date for the value.
-      valueCreationDate: Instant = valueToCreate.customValueCreationDate.getOrElse(resourceCreationDate)
-
-      // Generate the SPARQL.
-      insertSparql: String =
-        // We're creating an ordinary value. Generate SPARQL for it.
-        sparql.v2.txt
-          .generateInsertStatementsForCreateValue( // XXX: todo
-            resourceIri = resourceIri,
-            propertyIri = propertyIri.toIri,
-            value = valueToCreate.valueContent,
-            newValueIri = newValueIri,
-            newValueUUID = newValueUUID,
-            valueCreator = requestingUser.id,
-            valuePermissions = valueToCreate.permissions,
-            creationDate = valueCreationDate,
-            maybeValueHasOrder = Some(valueHasOrder),
-          )
-          .toString()
-    } yield insertSparql
 
   private def generateInsertSparqlForStandoffLinksInMultipleValues(
     resourceIri: IRI,
