@@ -1,6 +1,7 @@
 package org.knora.webapi.slice.admin.domain.service
 
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -19,6 +20,7 @@ final case class ProjectEraseService(
   groupService: KnoraGroupService,
   userService: KnoraUserService,
   adminPermissionRepo: AdministrativePermissionRepo,
+  defaultObjectAccessPermissionRepo: DefaultObjectAccessPermissionRepo,
 ) {
 
   def eraseProject(project: KnoraProject): Task[Unit] = for {
@@ -31,17 +33,17 @@ final case class ProjectEraseService(
     _              <- groupService.deleteAll(groupsToDelete)
 
     // cleanup permissions
-    _ <- adminPermissionRepo.findByProject(project).flatMap(adminPermissionRepo.deleteAll(_))
+    _ <- adminPermissionRepo.findByProject(project).flatMap(adminPermissionRepo.deleteAll)
+    _ <- defaultObjectAccessPermissionRepo.findByProject(project).flatMap(defaultObjectAccessPermissionRepo.deleteAll)
 
     // remove ontology and data graphs
-    graphsToDelete <- projectService.getNamedGraphsForProject(project).map(_.map(_.value))
-    _              <- ZIO.foreachDiscard(graphsToDelete)(triplestore.dropGraph)
+    graphsToDelete <- projectService.getNamedGraphsForProject(project)
+    _              <- ZIO.foreachDiscard(graphsToDelete)(triplestore.dropGraphByIri)
     _              <- ontologyCache.loadOntologies()
 
     // remove knora project and project in ingest
     _ <- projectService.erase(project)
     _ <- ingestClient.eraseProject(project.shortcode).logError.ignore
-    // TODO: remove doap/lists
 
   } yield ()
 

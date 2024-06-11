@@ -9,11 +9,11 @@ import org.eclipse.rdf4j.model.Namespace
 import org.eclipse.rdf4j.model.impl.SimpleNamespace
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.KnoraBasePrefixExpansion
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 
 object Vocabulary {
   object KnoraAdmin {
@@ -54,9 +54,10 @@ object Vocabulary {
     val projectShortname: Iri               = Rdf.iri(KnoraAdminPrefixExpansion, "projectShortname")
 
     // permission properties
-    val AdministrativePermission: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "AdministrativePermission")
-    val forProject: Iri               = Rdf.iri(KnoraAdminPrefixExpansion, "forProject")
-    val forGroup: Iri                 = Rdf.iri(KnoraAdminPrefixExpansion, "forGroup")
+    val AdministrativePermission: Iri      = Rdf.iri(KnoraAdminPrefixExpansion, "AdministrativePermission")
+    val DefaultObjectAccessPermission: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "DefaultObjectAccessPermission")
+    val forProject: Iri                    = Rdf.iri(KnoraAdminPrefixExpansion, "forProject")
+    val forGroup: Iri                      = Rdf.iri(KnoraAdminPrefixExpansion, "forGroup")
   }
 
   object KnoraBase {
