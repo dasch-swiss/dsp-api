@@ -65,7 +65,7 @@ INSERT DATA {
                         rdf:object <@linkValueContentV2.referredResourceIri> ;
                     #     knora-base:valueHasString "@linkValueContentV2.referredResourceIri"^^xsd:string ;
                         knora-base:valueHasRefCount 1 .
-                    
+
                 }
 
                 case textValue: TextValueContentV2 => {
@@ -293,7 +293,6 @@ INSERT DATA {
 
             @* Attach the value to the resource. *@
             <@newValueInfo.resourceIri> <@newValueInfo.propertyIri> <@newValueInfo.newValueIri> .
-        
         }
 
 
