@@ -10,12 +10,12 @@ import zio.*
 import java.time.Instant
 
 import dsp.constants.SalsahGui.IRI
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.v2.resources.SparqlTemplateResourceToCreate
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.messages.twirl.NewLinkValueInfo
 
 /**
  * Represents a resource that is ready to be created and whose contents can be verified afterwards.
@@ -28,7 +28,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 case class ResourceReadyToCreate(
   resourceIri: IRI,
   sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
-  linkUpdates: Seq[SparqlTemplateLinkUpdate],
+  linkUpdates: Seq[NewLinkValueInfo],
   creationDate: Instant,
 )
 
