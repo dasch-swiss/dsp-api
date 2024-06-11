@@ -775,27 +775,26 @@ final case class CreateResourceV2Handler(
   ): Task[String] =
     for {
 
-      _ <- ZIO.unit
-      // Generate SPARQL for each value.
-      sparqlForPropertyValueFutures =
-        values.map { case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
-          ZIO.foreach(valuesToCreate.zipWithIndex) {
-            case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
-              generateInsertSparqlWithUnverifiedValue(
-                resourceIri = resourceIri,
-                propertyIri = propertyIri,
-                valueToCreate = valueToCreate,
-                valueHasOrder = valueHasOrder,
-                resourceCreationDate = creationDate,
-                requestingUser = requestingUser,
-              )
-          }
+      sparqlForPropertyValues <-
+        ZIO.foreach(values.flatMap {
+          case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
+            valuesToCreate.zipWithIndex.map {
+              case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
+                (propertyIri, valueToCreate, valueHasOrder)
+            }
+        }.toList) { case (propertyIri, valueToCreate, valueHasOrder) =>
+          generateInsertSparqlWithUnverifiedValue(
+            resourceIri = resourceIri,
+            propertyIri = propertyIri,
+            valueToCreate = valueToCreate,
+            valueHasOrder = valueHasOrder,
+            resourceCreationDate = creationDate,
+            requestingUser = requestingUser,
+          )
         }
 
-      sparqlForPropertyValues <- ZioHelper.sequence(sparqlForPropertyValueFutures)
-
       // Concatenate all the generated SPARQL.
-      allInsertSparql: String = sparqlForPropertyValues.flatten.mkString("\n\n")
+      allInsertSparql: String = sparqlForPropertyValues.mkString("\n\n")
     } yield allInsertSparql
 
   /**
