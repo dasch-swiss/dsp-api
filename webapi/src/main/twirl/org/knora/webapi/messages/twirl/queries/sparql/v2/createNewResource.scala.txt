@@ -6,7 +6,6 @@
 @import java.time.Instant
 @import org.knora.webapi.IRI
 @import org.knora.webapi.messages.v2.responder.valuemessages._
-@import org.knora.webapi.responders.v2.resources.SparqlTemplateResourceToCreate
 @import org.knora.webapi.messages.twirl.NewLinkValueInfo
 @import org.knora.webapi.messages.twirl.NewValueInfo
 @import dsp.valueobjects.UuidUtil
@@ -14,20 +13,19 @@
 @import java.util.UUID
 
 @**
- * Creates new resources.
- *
- * @param dataNamedGraph    the named graph in which the project stores its data.
- * @param resourcesToCreate a collection of resources to be created.
- * @param projectIri        the IRI of the project in which the resources are to be created.
- * @param creatorIri        the IRI of the creator of the resources.
+ * Creates a new resource.
  *@
 @(dataNamedGraph: IRI,
-  resourceToCreate: SparqlTemplateResourceToCreate,
   projectIri: IRI,
   creatorIri: IRI,
-  linkUpdates: Seq[NewLinkValueInfo],
   creationDate: Instant,
-  newValueInfos: Seq[NewValueInfo])
+  resourceIri: IRI,
+  resourceClassIri: IRI,
+  resourceLabel: String,
+  permissions: String,
+  linkUpdates: Seq[NewLinkValueInfo],
+  newValueInfos: Seq[NewValueInfo]
+)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -37,13 +35,13 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 INSERT DATA {
     GRAPH <@dataNamedGraph> {
-        <@resourceToCreate.resourceIri> rdf:type <@resourceToCreate.resourceClassIri> ;
+        <@resourceIri> rdf:type <@resourceClassIri> ;
             knora-base:isDeleted false ;
             knora-base:attachedToUser <@creatorIri> ;
             knora-base:attachedToProject <@projectIri> ;
-            rdfs:label """@resourceToCreate.resourceLabel""" ;
-            knora-base:hasPermissions "@resourceToCreate.permissions" ;
-            knora-base:creationDate "@resourceToCreate.resourceCreationDate"^^xsd:dateTime .
+            rdfs:label """@resourceLabel""" ;
+            knora-base:hasPermissions "@permissions" ;
+            knora-base:creationDate "@creationDate"^^xsd:dateTime .
 
         @for(newValueInfo <- newValueInfos) {
             # Value: @newValueInfo.newValueIri
@@ -301,11 +299,11 @@ INSERT DATA {
 
         @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
 
-            <@resourceToCreate.resourceIri> <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+            <@resourceIri> <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
 
             @* Insert a LinkValue for the resource reference. *@
             <@linkUpdate.newLinkValueIri> rdf:type knora-base:LinkValue ;
-                rdf:subject <@resourceToCreate.resourceIri> ;
+                rdf:subject <@resourceIri> ;
                 rdf:predicate <@linkUpdate.linkPropertyIri> ;
                 rdf:object <@linkUpdate.linkTargetIri> ;
                 knora-base:valueHasString "@linkUpdate.linkTargetIri" ;
@@ -327,7 +325,7 @@ INSERT DATA {
             <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{UuidUtil.base64Encode(UUID.randomUUID)}" .
 
             @* Attach the new LinkValue to its containing resource. *@
-            <@resourceToCreate.resourceIri> <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
+            <@resourceIri> <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
         }
     }
 }
