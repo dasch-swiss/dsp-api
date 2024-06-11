@@ -11,7 +11,6 @@ import zio.Task
 import zio.UIO
 import zio.ZIO
 import zio.ZLayer
-
 import dsp.errors.DuplicateValueException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.responders.IriService
@@ -22,6 +21,7 @@ import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
@@ -49,6 +49,8 @@ case class KnoraUserService(
   def findByProjectAdminMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =
     userRepo.findByProjectAdminMembership(project.id)
 
+  def findByGroupMembership(group: KnoraGroup): Task[Chunk[KnoraUser]] =
+    findByGroupMembership(group.id)
   def findByGroupMembership(groupIri: GroupIri): Task[Chunk[KnoraUser]] =
     userRepo.findByGroupMembership(groupIri)
 
@@ -143,6 +145,9 @@ case class KnoraUserService(
     user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup.filterNot(_ == group.groupIri)))).orDie
   } yield user
 
+  def removeUsersFromGroup(users: Seq[KnoraUser], group: KnoraGroup): UIO[Unit] =
+    ZIO.foreachDiscard(users)(removeUserFromKnoraGroup(_, group.id))
+
   def removeUserFromKnoraGroup(user: KnoraUser, groupIri: GroupIri): UIO[KnoraUser] =
     userRepo.save(user.copy(isInGroup = user.isInGroup.filterNot(_ == groupIri))).orDie
 
@@ -161,14 +166,16 @@ case class KnoraUserService(
    * @param project The project to remove the user from
    * @return        The updated user. If the user is not a member of the project, an error is returned.
    */
-  def removeUserFromProject(
-    user: KnoraUser,
-    project: Project,
-  ): IO[UserServiceError, KnoraUser] = for {
+  def removeUserFromProject(user: KnoraUser, project: Project): IO[UserServiceError, KnoraUser] =
+    removeUserFromProjectIri(user, project.projectIri)
+
+  def removeUsersFromProject(users: Seq[KnoraUser], project: KnoraProject): UIO[Unit] =
+    ZIO.foreachDiscard(users)(removeUserFromProjectIri(_, project.id).ignore)
+
+  private def removeUserFromProjectIri(user: KnoraUser, projectIri: ProjectIri) = for {
     _ <- ZIO
-           .fail(UserServiceError(s"User ${user.id.value} is not member of project ${project.projectIri.value}."))
-           .unless(user.isInProject.contains(project.projectIri))
-    projectIri               = project.projectIri
+           .fail(UserServiceError(s"User ${user.id.value} is not member of project ${projectIri.value}."))
+           .unless(user.isInProject.contains(projectIri))
     newIsInProject           = user.isInProject.filterNot(_ == projectIri)
     newIsInProjectAdminGroup = user.isInProjectAdminGroup.filterNot(_ == projectIri)
     theChange                = UserChangeRequest(projects = Some(newIsInProject), projectsAdmin = Some(newIsInProjectAdminGroup))
@@ -211,16 +218,21 @@ case class KnoraUserService(
    * @param project The project from which the user is to be removed as project admin.
    * @return        The updated user. If the user is not an admin member of the project, an error is returned.
    */
-  def removeUserFromProjectAsAdmin(
-    user: KnoraUser,
-    project: Project,
-  ): IO[UserServiceError, KnoraUser] = for {
-    _ <- ZIO
-           .fail(UserServiceError(s"User ${user.id.value} is not admin member of project ${project.projectIri.value}."))
-           .unless(user.isInProjectAdminGroup.contains(project.projectIri))
-    theChange = UserChangeRequest(projectsAdmin = Some(user.isInProjectAdminGroup.filterNot(_ == project.projectIri)))
-    user     <- updateUser(user, theChange).orDie
-  } yield user
+  def removeUserFromProjectAsAdmin(user: KnoraUser, project: Project): IO[UserServiceError, KnoraUser] =
+    removeUserFromProjectIriAsAdmin(user, project.projectIri)
+
+  def removeUsersFromProjectAsAdmin(users: Seq[KnoraUser], project: KnoraProject): UIO[Unit] =
+    ZIO.foreachDiscard(users)(removeUserFromProjectIriAsAdmin(_, project.id).ignore)
+
+  private def removeUserFromProjectIriAsAdmin(user: KnoraUser, projectIri: ProjectIri) =
+    for {
+      _ <-
+        ZIO
+          .fail(UserServiceError(s"User ${user.id.value} is not admin member of project ${projectIri.value}."))
+          .unless(user.isInProjectAdminGroup.contains(projectIri))
+      theChange = UserChangeRequest(projectsAdmin = Some(user.isInProjectAdminGroup.filterNot(_ == projectIri)))
+      user     <- updateUser(user, theChange).orDie
+    } yield user
 
   def changePassword(knoraUser: KnoraUser, newPassword: Password): UIO[KnoraUser] = {
     val newPasswordHash = passwordService.hashPassword(newPassword)
