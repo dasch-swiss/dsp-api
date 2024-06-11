@@ -275,6 +275,12 @@ object StringFormatter {
 
   def isKnoraOntologyIri(iri: SmartIri): Boolean =
     iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName)
+
+  def makeValueIri(resourceIri: IRI, uuid: String): IRI =
+    s"$resourceIri/values/$uuid"
+
+  def makeValueIri(resourceIri: IRI, uuid: UUID): IRI =
+    makeValueIri(resourceIri, UuidUtil.base64Encode(uuid))
 }
 
 /**
@@ -1595,7 +1601,7 @@ class StringFormatter private (
       case Some(uuid: UUID) => UuidUtil.base64Encode(uuid)
       case _                => UuidUtil.makeRandomBase64EncodedUuid
     }
-    s"$resourceIri/values/$valueUUID"
+    StringFormatter.makeValueIri(resourceIri, valueUUID)
   }
 
   /**

@@ -270,7 +270,7 @@ final case class CreateResourceV2Handler(
   }
 
   /**
-   * Generates a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating a resource and its values.
+   * Generates a [[ResourceReadyToCreate]] describing SPARQL for creating a resource and its values.
    * This method does pre-update checks that have to be done for each new resource individually, even when
    * multiple resources are being created in a single request.
    *
@@ -437,13 +437,12 @@ final case class CreateResourceV2Handler(
       newValueInfos <-
         ZIO.foreach(valuesWithIndex) { case (propertyIri, valueToCreate, valueHasOrder) =>
           for {
-            // Make new value UUID.
             newValueUUID <-
               ValuesResponderV2Live.makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
             newValueIri <-
               iriService.checkOrCreateEntityIri(
                 valueToCreate.customValueIri,
-                stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID)),
+                StringFormatter.makeValueIri(resourceIri, newValueUUID),
               )
 
             // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
@@ -886,7 +885,7 @@ final case class CreateResourceV2Handler(
  * @param resourceLabel        the label of the resource.
  * @param resourceCreationDate the creation date that should be attached to the resource.
  */
-case class SparqlTemplateResourceToCreate(
+case class SparqlTemplateResourceToCreate( // XXX: remove me
   resourceIri: IRI,
   permissions: String,
   resourceClassIri: IRI,
