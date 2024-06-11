@@ -13,6 +13,7 @@ import org.knora.webapi.responders.v2.resources.SparqlTemplateResourceToCreate
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import java.time.Instant
 
 /**
  * Represents a resource that is ready to be created and whose contents can be verified afterwards.
@@ -25,6 +26,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 case class ResourceReadyToCreate(
   resourceIri: IRI,
   sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
+  linkUpdates: Seq[SparqlTemplateLinkUpdate],
+  creationDate: Instant,
 )
 
 trait ResourcesRepo {
@@ -70,6 +73,8 @@ object ResourcesRepoLive {
         resourceToCreate = resourceToCreate,
         projectIri = projectIri,
         creatorIri = creatorIri, // XXX: needs more stuff
+        linkUpdates = ???,
+        creationDate = ???,
       ),
     )
 }

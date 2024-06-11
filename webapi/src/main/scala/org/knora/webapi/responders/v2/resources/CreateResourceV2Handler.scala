@@ -771,13 +771,12 @@ final case class CreateResourceV2Handler(
         generateInsertSparqlForStandoffLinksInMultipleValues(
           resourceIri = resourceIri,
           values = values.values.flatten,
-          creationDate = creationDate,
         )
 
       // Generate SPARQL for each value.
       sparqlForPropertyValueFutures =
         values.map { case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
-          val values = ZIO.foreach(valuesToCreate.zipWithIndex) {
+          ZIO.foreach(valuesToCreate.zipWithIndex) {
             case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
               generateInsertSparqlWithUnverifiedValue(
                 resourceIri = resourceIri,
@@ -788,25 +787,13 @@ final case class CreateResourceV2Handler(
                 requestingUser = requestingUser,
               )
           }
-          propertyIri -> values
         }
 
       sparqlForPropertyValues <- ZioHelper.sequence(sparqlForPropertyValueFutures)
 
       // Concatenate all the generated SPARQL.
-      allInsertSparql: String =
-        sparqlForPropertyValues.values.flatten
-          .map(_.insertSparql)
-          .mkString("\n\n")
+      allInsertSparql: String = sparqlForPropertyValues.flatten.mkString("\n\n")
     } yield allInsertSparql
-
-  /**
-   * Represents SPARQL generated to create one of multiple values in a new resource.
-   *
-   * @param insertSparql    the generated SPARQL.
-   * @param unverifiedValue an [[UnverifiedValueV2]] representing the value that is to be created.
-   */
-  private case class InsertSparqlWithUnverifiedValue(insertSparql: String, unverifiedValue: UnverifiedValueV2)
 
   /**
    * Generates SPARQL to create one of multiple values in a new resource.
@@ -826,7 +813,7 @@ final case class CreateResourceV2Handler(
     valueHasOrder: Int,
     resourceCreationDate: Instant,
     requestingUser: User,
-  ): Task[InsertSparqlWithUnverifiedValue] =
+  ): Task[String] =
     for {
       // Make new value UUID.
       newValueUUID <-
@@ -892,22 +879,12 @@ final case class CreateResourceV2Handler(
               )
               .toString()
         }
-    } yield InsertSparqlWithUnverifiedValue(
-      insertSparql = insertSparql,
-      unverifiedValue = UnverifiedValueV2(
-        newValueIri = newValueIri,
-        newValueUUID = newValueUUID,
-        valueContent = valueToCreate.valueContent.unescape,
-        permissions = valueToCreate.permissions,
-        creationDate = valueCreationDate,
-      ),
-    )
+    } yield insertSparql
 
   private def generateInsertSparqlForStandoffLinksInMultipleValues(
     resourceIri: IRI,
     values: Iterable[GenerateSparqlForValueInNewResourceV2],
-    creationDate: Instant,
-  ): Task[Option[String]] = {
+  ): Task[Option[Seq[SparqlTemplateLinkUpdate]]] = {
     // To create LinkValues for the standoff links in the values to be created, we need to compute
     // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
     // that have standoff links to a particular target resource.
@@ -965,16 +942,7 @@ final case class CreateResourceV2Handler(
       }
       for {
         standoffLinkUpdates <- ZIO.collectAll(standoffLinkUpdatesFutures)
-        // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
-        sparqlInsert =
-          sparql.v2.txt
-            .generateInsertStatementsForStandoffLinks(
-              resourceIri = resourceIri,
-              linkUpdates = standoffLinkUpdates, // XXX: return only this
-              creationDate = creationDate,
-            )
-            .toString()
-      } yield Some(sparqlInsert)
+      } yield Some(standoffLinkUpdates)
     } else {
       ZIO.succeed(None)
     }
