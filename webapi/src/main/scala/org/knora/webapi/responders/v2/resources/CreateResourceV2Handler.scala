@@ -421,15 +421,18 @@ final case class CreateResourceV2Handler(
           requestingUser = requestingUser,
         )
 
+      linkUpdates <- generateInsertSparqlForStandoffLinksInMultipleValues(
+                       resourceIri = resourceIri,
+                       values = valuesWithValidatedPermissions.values.flatten,
+                     )
+
       // Ask the values responder for SPARQL for generating the values.
-      x <- generateSparqlToCreateMultipleValuesV2(
-             resourceIri = resourceIri,
-             values = valuesWithValidatedPermissions,
-             creationDate = creationDate,
-             requestingUser = requestingUser,
-           )
-      insertSparql = x._1
-      linkUpdates  = x._2
+      insertSparql <- generateSparqlToCreateMultipleValuesV2(
+                        resourceIri = resourceIri,
+                        values = valuesWithValidatedPermissions,
+                        creationDate = creationDate,
+                        requestingUser = requestingUser,
+                      )
     } yield ResourceReadyToCreate(
       resourceIri = resourceIri,
       sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
@@ -769,13 +772,10 @@ final case class CreateResourceV2Handler(
     values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]],
     creationDate: Instant,
     requestingUser: User,
-  ): Task[Tuple2[String, Seq[SparqlTemplateLinkUpdate]]] =
+  ): Task[String] =
     for {
-      sparqlTemplateLinkUpdates <- generateInsertSparqlForStandoffLinksInMultipleValues(
-                                     resourceIri = resourceIri,
-                                     values = values.values.flatten,
-                                   )
 
+      _ <- ZIO.unit
       // Generate SPARQL for each value.
       sparqlForPropertyValueFutures =
         values.map { case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
@@ -796,7 +796,7 @@ final case class CreateResourceV2Handler(
 
       // Concatenate all the generated SPARQL.
       allInsertSparql: String = sparqlForPropertyValues.flatten.mkString("\n\n")
-    } yield (allInsertSparql, sparqlTemplateLinkUpdates)
+    } yield allInsertSparql
 
   /**
    * Generates SPARQL to create one of multiple values in a new resource.
