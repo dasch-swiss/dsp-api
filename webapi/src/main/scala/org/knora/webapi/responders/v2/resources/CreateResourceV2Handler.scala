@@ -22,7 +22,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionA
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.twirl.NewLinkValueInfo
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
@@ -51,6 +50,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.slice.resources.repo.service.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.util.ZioHelper
+import org.knora.webapi.messages.twirl.NewValueInfo
 
 final case class CreateResourceV2Handler(
   appConfig: AppConfig,
@@ -426,14 +426,16 @@ final case class CreateResourceV2Handler(
                        values = valuesWithValidatedPermissions.values.flatten,
                      )
 
-      sparqlForPropertyValues <-
-        ZIO.foreach(valuesWithValidatedPermissions.flatMap {
-          case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
-            valuesToCreate.zipWithIndex.map {
-              case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
-                (propertyIri, valueToCreate, valueHasOrder)
-            }
-        }.toList) { case (propertyIri, valueToCreate, valueHasOrder) =>
+      valuesWithIndex = valuesWithValidatedPermissions.flatMap {
+                          case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
+                            valuesToCreate.zipWithIndex.map {
+                              case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
+                                (propertyIri, valueToCreate, valueHasOrder)
+                            }
+                        }.toList
+
+      newValueInfos <-
+        ZIO.foreach(valuesWithIndex) { case (propertyIri, valueToCreate, valueHasOrder) =>
           for {
             // Make new value UUID.
             newValueUUID <-
@@ -447,41 +449,30 @@ final case class CreateResourceV2Handler(
             // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
             // use resource creation date for the value.
             valueCreationDate: Instant = valueToCreate.customValueCreationDate.getOrElse(creationDate)
-
-            // Generate the SPARQL.
-            insertSparql: String =
-              // We're creating an ordinary value. Generate SPARQL for it.
-              sparql.v2.txt
-                .generateInsertStatementsForCreateValue( // XXX: todo
-                  resourceIri = resourceIri,
-                  propertyIri = propertyIri.toIri,
-                  value = valueToCreate.valueContent,
-                  newValueIri = newValueIri,
-                  newValueUUID = newValueUUID,
-                  valueCreator = requestingUser.id,
-                  valuePermissions = valueToCreate.permissions,
-                  creationDate = valueCreationDate,
-                  maybeValueHasOrder = Some(valueHasOrder),
-                )
-                .toString()
-          } yield insertSparql
+          } yield NewValueInfo(
+            resourceIri = resourceIri,
+            propertyIri = propertyIri.toIri,
+            value = valueToCreate.valueContent,
+            newValueIri = newValueIri,
+            newValueUUID = newValueUUID,
+            valueCreator = requestingUser.id,
+            valuePermissions = valueToCreate.permissions,
+            creationDate = valueCreationDate,
+            valueHasOrder = valueHasOrder,
+          )
         }
-
-      // Concatenate all the generated SPARQL.
-      insertSparql: String = sparqlForPropertyValues.mkString("\n\n")
-
     } yield ResourceReadyToCreate(
       resourceIri = resourceIri,
       sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
         resourceIri = resourceIri,
         permissions = resourcePermissions,
-        sparqlForValues = insertSparql,
         resourceClassIri = internalCreateResource.resourceClassIri.toString,
         resourceLabel = internalCreateResource.label,
         resourceCreationDate = creationDate,
       ),
       linkUpdates = linkUpdates,
       creationDate = creationDate,
+      newValueInfos = newValueInfos,
     )
   }
 
@@ -898,7 +889,6 @@ final case class CreateResourceV2Handler(
 case class SparqlTemplateResourceToCreate(
   resourceIri: IRI,
   permissions: String,
-  sparqlForValues: String,
   resourceClassIri: IRI,
   resourceLabel: String,
   resourceCreationDate: Instant,
