@@ -10,13 +10,13 @@ import zio.*
 import java.time.Instant
 
 import dsp.constants.SalsahGui.IRI
+import org.knora.webapi.messages.twirl.NewLinkValueInfo
+import org.knora.webapi.messages.twirl.NewValueInfo
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.v2.resources.SparqlTemplateResourceToCreate
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.messages.twirl.NewLinkValueInfo
-import org.knora.webapi.messages.twirl.NewValueInfo
 
 /**
  * Represents a resource that is ready to be created and whose contents can be verified afterwards.

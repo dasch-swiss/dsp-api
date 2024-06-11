@@ -5,11 +5,12 @@
 
 package org.knora.webapi.messages.twirl
 
+import java.time.Instant
+import java.util.UUID
+
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
-import java.util.UUID
-import java.time.Instant
 
 /**
  * Contains instructions that can be given to a SPARQL template for updating direct links and `knora-base:LinkValue`
