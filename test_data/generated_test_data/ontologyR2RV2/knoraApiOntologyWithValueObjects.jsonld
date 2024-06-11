@@ -9146,19 +9146,21 @@
         },
         {
             "knora-api:isLinkValueProperty": true,
+            "rdfs:label": "Related Resources",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkToValue"
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Resource"
-            },
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:LinkValue"
             },
-            "@id": "knora-api:relatesToValue"
+            "@id": "knora-api:relatesToValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "rdfs:comment": "Indicates that this resource relates to another resource"
         },
         {
             "@id": "knora-api:resourceIcon",
