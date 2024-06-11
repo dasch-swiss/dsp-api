@@ -8,7 +8,6 @@
 @import dsp.errors.SparqlGenerationException
 @import dsp.valueobjects.UuidUtil
 @import org.knora.webapi._
-@import org.knora.webapi.messages.SmartIri
 @import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v2.responder.valuemessages._
 
@@ -31,7 +30,7 @@
  * @param the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
  *@
 @(resourceIri: IRI,
-  propertyIri: SmartIri,
+  propertyIri: IRI,
   value: ValueContentV2,
   newValueIri: IRI,
   newValueUUID: UUID,
@@ -51,6 +50,35 @@
 
 
         @value match {
+
+            case linkValueContentV2: LinkValueContentV2 => {
+                @defining(
+                    SparqlTemplateLinkUpdate(
+                        linkPropertyIri = propertyIri.fromLinkValuePropToLinkProp,
+                        directLinkExists = false,
+                        insertDirectLink = true,
+                        deleteDirectLink = false,
+                        linkValueExists = false,
+                        linkTargetExists = linkValueContentV2.referredResourceExists,
+                        newLinkValueIri = newValueIri,
+                        linkTargetIri = linkValueContentV2.referredResourceIri,
+                        currentReferenceCount = 0,
+                        newReferenceCount = 1,
+                        newLinkValueCreator = requestingUser.id,
+                        newLinkValuePermissions = valueToCreate.permissions,
+                    )
+                ) { linkUpdate =>
+
+                    <@resourceIri> <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+
+                    <@newValueIri> rdf:subject <@resourceIri> ;
+                        rdf:predicate <@linkUpdate.linkPropertyIri> ;
+                        rdf:object <@linkUpdate.linkTargetIri> ;
+                    #     knora-base:valueHasString "@linkUpdate.linkTargetIri"^^xsd:string ;
+                        knora-base:valueHasRefCount @linkUpdate.newReferenceCount .
+
+                }
+            }
 
             case textValue: TextValueContentV2 => {
 

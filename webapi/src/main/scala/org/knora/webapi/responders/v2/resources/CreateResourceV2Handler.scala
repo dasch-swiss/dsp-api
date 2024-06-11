@@ -833,55 +833,20 @@ final case class CreateResourceV2Handler(
 
       // Generate the SPARQL.
       insertSparql: String =
-        valueToCreate.valueContent match {
-          case linkValueContentV2: LinkValueContentV2 =>
-            // We're creating a link.
-
-            // Construct a SparqlTemplateLinkUpdate to tell the SPARQL template how to create
-            // the link and its LinkValue.
-            val sparqlTemplateLinkUpdate = SparqlTemplateLinkUpdate(
-              linkPropertyIri = propertyIri.fromLinkValuePropToLinkProp,
-              directLinkExists = false,
-              insertDirectLink = true,
-              deleteDirectLink = false,
-              linkValueExists = false,
-              linkTargetExists = linkValueContentV2.referredResourceExists,
-              newLinkValueIri = newValueIri,
-              linkTargetIri = linkValueContentV2.referredResourceIri,
-              currentReferenceCount = 0,
-              newReferenceCount = 1,
-              newLinkValueCreator = requestingUser.id,
-              newLinkValuePermissions = valueToCreate.permissions,
-            )
-
-            // Generate SPARQL for the link.
-            sparql.v2.txt
-              .generateInsertStatementsForCreateLink( // XXX: todo
-                resourceIri = resourceIri,
-                linkUpdate = sparqlTemplateLinkUpdate,
-                creationDate = valueCreationDate,
-                newValueUUID = newValueUUID,
-                maybeComment = valueToCreate.valueContent.comment,
-                maybeValueHasOrder = Some(valueHasOrder),
-              )
-              .toString()
-
-          case otherValueContentV2 =>
-            // We're creating an ordinary value. Generate SPARQL for it.
-            sparql.v2.txt
-              .generateInsertStatementsForCreateValue( // XXX: todo
-                resourceIri = resourceIri,
-                propertyIri = propertyIri,
-                value = otherValueContentV2,
-                newValueIri = newValueIri,
-                newValueUUID = newValueUUID,
-                valueCreator = requestingUser.id,
-                valuePermissions = valueToCreate.permissions,
-                creationDate = valueCreationDate,
-                maybeValueHasOrder = Some(valueHasOrder),
-              )
-              .toString()
-        }
+        // We're creating an ordinary value. Generate SPARQL for it.
+        sparql.v2.txt
+          .generateInsertStatementsForCreateValue( // XXX: todo
+            resourceIri = resourceIri,
+            propertyIri = propertyIri.toIri,
+            value = valueToCreate.valueContent,
+            newValueIri = newValueIri,
+            newValueUUID = newValueUUID,
+            valueCreator = requestingUser.id,
+            valuePermissions = valueToCreate.permissions,
+            creationDate = valueCreationDate,
+            maybeValueHasOrder = Some(valueHasOrder),
+          )
+          .toString()
     } yield insertSparql
 
   private def generateInsertSparqlForStandoffLinksInMultipleValues(
