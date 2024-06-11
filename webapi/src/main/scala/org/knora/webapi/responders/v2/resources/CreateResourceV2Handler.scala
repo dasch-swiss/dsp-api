@@ -256,7 +256,7 @@ final case class CreateResourceV2Handler(
 
       _ <- resourcesRepo.createNewResource(
              dataGraphIri = dataNamedGraph,
-             resource = resourceReadyToCreate.sparqlTemplateResourceToCreate,
+             resource = resourceReadyToCreate,
              projectIri = createResourceRequestV2.createResource.projectADM.id,
              userIri = createResourceRequestV2.requestingUser.id,
            )
@@ -422,12 +422,14 @@ final case class CreateResourceV2Handler(
         )
 
       // Ask the values responder for SPARQL for generating the values.
-      insertSparql <- generateSparqlToCreateMultipleValuesV2(
-                        resourceIri = resourceIri,
-                        values = valuesWithValidatedPermissions,
-                        creationDate = creationDate,
-                        requestingUser = requestingUser,
-                      )
+      x <- generateSparqlToCreateMultipleValuesV2(
+             resourceIri = resourceIri,
+             values = valuesWithValidatedPermissions,
+             creationDate = creationDate,
+             requestingUser = requestingUser,
+           )
+      insertSparql = x._1
+      linkUpdates  = x._2
     } yield ResourceReadyToCreate(
       resourceIri = resourceIri,
       sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
@@ -438,6 +440,8 @@ final case class CreateResourceV2Handler(
         resourceLabel = internalCreateResource.label,
         resourceCreationDate = creationDate,
       ),
+      linkUpdates = linkUpdates,
+      creationDate = creationDate,
     )
   }
 
@@ -765,13 +769,12 @@ final case class CreateResourceV2Handler(
     values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]],
     creationDate: Instant,
     requestingUser: User,
-  ): Task[String] =
+  ): Task[Tuple2[String, Seq[SparqlTemplateLinkUpdate]]] =
     for {
-      sparqlForStandoffLinks <- // XXX: use this value differently
-        generateInsertSparqlForStandoffLinksInMultipleValues(
-          resourceIri = resourceIri,
-          values = values.values.flatten,
-        )
+      sparqlTemplateLinkUpdates <- generateInsertSparqlForStandoffLinksInMultipleValues(
+                                     resourceIri = resourceIri,
+                                     values = values.values.flatten,
+                                   )
 
       // Generate SPARQL for each value.
       sparqlForPropertyValueFutures =
@@ -793,7 +796,7 @@ final case class CreateResourceV2Handler(
 
       // Concatenate all the generated SPARQL.
       allInsertSparql: String = sparqlForPropertyValues.flatten.mkString("\n\n")
-    } yield allInsertSparql
+    } yield (allInsertSparql, sparqlTemplateLinkUpdates)
 
   /**
    * Generates SPARQL to create one of multiple values in a new resource.
@@ -884,7 +887,7 @@ final case class CreateResourceV2Handler(
   private def generateInsertSparqlForStandoffLinksInMultipleValues(
     resourceIri: IRI,
     values: Iterable[GenerateSparqlForValueInNewResourceV2],
-  ): Task[Option[Seq[SparqlTemplateLinkUpdate]]] = {
+  ): Task[Seq[SparqlTemplateLinkUpdate]] = {
     // To create LinkValues for the standoff links in the values to be created, we need to compute
     // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
     // that have standoff links to a particular target resource.
@@ -940,11 +943,9 @@ final case class CreateResourceV2Handler(
             newLinkValuePermissions = standoffLinkValuePermissions,
           )
       }
-      for {
-        standoffLinkUpdates <- ZIO.collectAll(standoffLinkUpdatesFutures)
-      } yield Some(standoffLinkUpdates)
+      ZIO.collectAll(standoffLinkUpdatesFutures)
     } else {
-      ZIO.succeed(None)
+      ZIO.succeed(Seq.empty[SparqlTemplateLinkUpdate])
     }
   }
 

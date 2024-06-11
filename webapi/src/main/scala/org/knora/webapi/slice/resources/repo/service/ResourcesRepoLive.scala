@@ -14,6 +14,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import java.time.Instant
+import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 
 /**
  * Represents a resource that is ready to be created and whose contents can be verified afterwards.
@@ -33,7 +34,7 @@ case class ResourceReadyToCreate(
 trait ResourcesRepo {
   def createNewResource(
     dataGraphIri: InternalIri,
-    resource: SparqlTemplateResourceToCreate,
+    resource: ResourceReadyToCreate,
     userIri: IRI,
     projectIri: IRI,
   ): Task[Unit]
@@ -43,7 +44,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService) extends Reso
 
   def createNewResource(
     dataGraphIri: InternalIri,
-    resource: SparqlTemplateResourceToCreate,
+    resource: ResourceReadyToCreate,
     userIri: IRI,
     projectIri: IRI,
   ): Task[Unit] =
@@ -63,18 +64,18 @@ object ResourcesRepoLive {
 
   private[service] def createNewResourceQuery(
     dataGraphIri: InternalIri,
-    resourceToCreate: SparqlTemplateResourceToCreate,
+    resourceToCreate: ResourceReadyToCreate,
     projectIri: IRI,
     creatorIri: IRI,
   ): Update =
     Update(
       sparql.v2.txt.createNewResource(
         dataNamedGraph = dataGraphIri.value,
-        resourceToCreate = resourceToCreate,
+        resourceToCreate = resourceToCreate.sparqlTemplateResourceToCreate,
         projectIri = projectIri,
-        creatorIri = creatorIri, // XXX: needs more stuff
-        linkUpdates = ???,
-        creationDate = ???,
+        creatorIri = creatorIri,
+        linkUpdates = resourceToCreate.linkUpdates,
+        creationDate = resourceToCreate.creationDate,
       ),
     )
 }
