@@ -33,6 +33,7 @@ import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
+import org.knora.webapi.slice.security.Authenticator as WebApiAuthenticator
 import org.knora.webapi.store.iiif.api.SipiService
 
 /**
@@ -82,7 +83,7 @@ object ApiRoutes {
 
   private type ApiRoutesRuntime =
     AppConfig & AuthorizationRestService & core.State & IriConverter & MessageRelay & ProjectService &
-      RestCardinalityService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService &
+      RestCardinalityService & WebApiAuthenticator & SearchApiRoutes & SearchResponderV2 & SipiService &
       StringFormatter & UserService & ValuesResponderV2
 
   /**

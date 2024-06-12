@@ -20,7 +20,6 @@ import java.net.URI
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -32,21 +31,17 @@ import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.infrastructure.Scope as AuthScope
+import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
 
-/**
- * Makes requests to Sipi.
- *
- * @param sipiConfig   The application's configuration
- * @param jwtService         The JWT Service to handle JWT Tokens
- * @param httpClient  The HTTP Client
- */
 final case class SipiServiceLive(
   private val sipiConfig: Sipi,
   private val jwtService: JwtService,
+  private val scopeResolver: ScopeResolver,
   private val sttp: SttpBackend[Task, ZioStreams],
   private val dspIngestClient: DspIngestClient,
 ) extends SipiService {
@@ -67,7 +62,7 @@ final case class SipiServiceLive(
    */
   override def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse] =
     for {
-      jwt <- jwtService.createJwt(KnoraSystemInstances.Users.SystemUser)
+      jwt <- jwtService.createJwt(KnoraSystemInstances.Users.SystemUser.userIri, AuthScope.admin)
       request = quickRequest
                   .get(uri"${sipiConfig.internalBaseUrl}/tmp/$filename/knora.json")
                   .header("Authorization", s"Bearer ${jwt.jwtString}")
@@ -100,27 +95,26 @@ final case class SipiServiceLive(
   def moveTemporaryFileToPermanentStorage(
     moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
   ): Task[SuccessResponseV2] = {
-    // create the JWT token with the necessary permission
-    val jwt = jwtService.createJwt(
-      moveTemporaryFileToPermanentStorageRequestV2.requestingUser,
-      Map(
-        "knora-data" -> Json.Obj(
-          "permission" -> Json.Str("StoreFile"),
-          "filename"   -> Json.Str(moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
-          "prefix"     -> Json.Str(moveTemporaryFileToPermanentStorageRequestV2.prefix),
-        ),
-      ),
-    )
-
+    val user = moveTemporaryFileToPermanentStorageRequestV2.requestingUser
     val params = Map(
       ("filename" -> moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
       ("prefix"   -> moveTemporaryFileToPermanentStorageRequestV2.prefix),
     )
-
     for {
-      token <- jwt
-      url    = uri"${sipiConfig.internalBaseUrl}/${sipiConfig.moveFileRoute}?token=${token.jwtString}"
-      _     <- doSipiRequest(quickRequest.post(url).body(params))
+      scope <- scopeResolver.resolve(user)
+      token <- jwtService.createJwt(
+                 user.userIri,
+                 scope,
+                 Map(
+                   "knora-data" -> Json.Obj(
+                     "permission" -> Json.Str("StoreFile"),
+                     "filename"   -> Json.Str(moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
+                     "prefix"     -> Json.Str(moveTemporaryFileToPermanentStorageRequestV2.prefix),
+                   ),
+                 ),
+               )
+      url = uri"${sipiConfig.internalBaseUrl}/${sipiConfig.moveFileRoute}?token=${token.jwtString}"
+      _  <- doSipiRequest(quickRequest.post(url).body(params))
     } yield SuccessResponseV2("Moved file to permanent storage.")
   }
 
@@ -142,8 +136,10 @@ final case class SipiServiceLive(
     val url: String => Uri = s =>
       uri"${sipiConfig.internalBaseUrl}/${sipiConfig.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=${s}"
 
+    val user = deleteTemporaryFileRequestV2.requestingUser
     for {
-      token <- jwtService.createJwt(deleteTemporaryFileRequestV2.requestingUser, deleteRequestContent)
+      scope <- scopeResolver.resolve(user)
+      token <- jwtService.createJwt(user.userIri, scope, deleteRequestContent)
       _     <- doSipiRequest(quickRequest.delete(url(token.jwtString)))
     } yield SuccessResponseV2("Deleted temporary file.")
   }
@@ -156,7 +152,7 @@ final case class SipiServiceLive(
   def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
     doSipiRequest
       .apply(quickRequest.get(uri"${textFileRequest.fileUrl}"))
-      .map(SipiGetTextFileResponse(_))
+      .map(SipiGetTextFileResponse.apply)
       .catchAll { ex =>
         val msg =
           s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${ex.getMessage}"
@@ -223,7 +219,8 @@ final case class SipiServiceLive(
         SipiRoutes.knoraJson(asset).flatMap(executeDownloadRequest(_, jwt, s"${asset.internalFilename}_knora.json"))
 
     for {
-      jwt             <- jwtService.createJwt(user)
+      scope           <- scopeResolver.resolve(user)
+      jwt             <- jwtService.createJwt(user.userIri, scope)
       assetDownloaded <- downloadAsset(asset, jwt)
       _               <- downloadKnoraJson(asset, jwt).when(assetDownloaded.isDefined)
     } yield assetDownloaded
@@ -231,14 +228,6 @@ final case class SipiServiceLive(
 }
 
 object SipiServiceLive {
-  val layer: URLayer[AppConfig & DspIngestClient & JwtService, SipiServiceLive] =
-    HttpClientZioBackend.layer().orDie >+>
-      ZLayer.scoped {
-        for {
-          config          <- ZIO.serviceWith[AppConfig](_.sipi)
-          jwtService      <- ZIO.service[JwtService]
-          dspIngestClient <- ZIO.service[DspIngestClient]
-          sttp            <- ZIO.service[SttpBackend[Task, ZioStreams]]
-        } yield SipiServiceLive(config, jwtService, sttp, dspIngestClient)
-      }
+  val layer: URLayer[Sipi & DspIngestClient & JwtService & ScopeResolver, SipiServiceLive] =
+    HttpClientZioBackend.layer().orDie >>> ZLayer.derive[SipiServiceLive]
 }

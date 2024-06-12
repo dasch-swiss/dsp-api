@@ -12,11 +12,11 @@ import zio.ZIO
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.admin.api.model.ProjectRestrictedViewSettingsADM
+import org.knora.webapi.slice.security.Authenticator
 
 /**
  * End-to-End (E2E) test specification for Sipi access.

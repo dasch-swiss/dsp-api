@@ -22,7 +22,6 @@ import zio.nio.file.Path
 
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
-import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.slice.admin.api.AdminApiEndpoints
 import org.knora.webapi.slice.admin.api.FilesEndpoints
 import org.knora.webapi.slice.admin.api.GroupsEndpoints
@@ -36,6 +35,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
+import org.knora.webapi.slice.security.Authenticator
 
 final case class DocsNoopAuthenticator() extends Authenticator {
   override def getUserADM(requestContext: RequestContext): Task[User]                                    = ???

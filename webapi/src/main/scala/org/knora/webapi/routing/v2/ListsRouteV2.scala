@@ -13,9 +13,9 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.listsmessages.ListGetRequestV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetRequestV2
-import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.security.Authenticator
 
 import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.Route

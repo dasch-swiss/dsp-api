@@ -14,9 +14,9 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.Authenticatio
 import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginApiRequestPayloadV2
-import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.security.Authenticator
 
 /**
  * A route providing API v2 authentication support. It allows the creation of "sessions", which are used in the SALSAH app.
