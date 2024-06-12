@@ -25,6 +25,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
 import org.knora.webapi.slice.admin.domain.service.PasswordService
+import org.knora.webapi.slice.admin.domain.service.ProjectEraseService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
@@ -58,6 +59,7 @@ object AdminApiModule {
     OntologyCache &
     PasswordService &
     PermissionsResponder &
+    ProjectEraseService &
     ProjectExportService &
     ProjectImportService &
     ProjectService &

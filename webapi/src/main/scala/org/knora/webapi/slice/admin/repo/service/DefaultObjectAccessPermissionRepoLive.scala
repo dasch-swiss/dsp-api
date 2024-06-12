@@ -15,27 +15,19 @@ import zio.NonEmptyChunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
-import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
-import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
-import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
-import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
-import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.Permission
-import org.knora.webapi.slice.admin.domain.model.Permission.Administrative
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 
 final case class DefaultObjectAccessPermissionRepoLive(
   triplestore: TriplestoreService,

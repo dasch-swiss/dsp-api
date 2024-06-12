@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio.*
-
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
@@ -28,6 +27,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.ProjectEraseService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
@@ -41,6 +41,7 @@ final case class ProjectRestService(
   projectService: ProjectService,
   knoraProjectService: KnoraProjectService,
   permissionResponder: PermissionsResponder,
+  projectEraseService: ProjectEraseService,
   projectExportService: ProjectExportService,
   projectImportService: ProjectImportService,
   userService: UserService,
@@ -136,6 +137,10 @@ final case class ProjectRestService(
       internal <- projectService
                     .findByShortcode(shortcode)
                     .someOrFail(NotFoundException(s"$shortcode not found"))
+      project <- knoraProjectService
+                   .findByShortcode(shortcode)
+                   .someOrFail(NotFoundException(s"$shortcode not found"))
+      _        <- projectEraseService.eraseProject(project)
       external <- format.toExternal(ProjectOperationResponseADM(internal))
     } yield external
 

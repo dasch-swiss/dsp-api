@@ -10,10 +10,13 @@ import zio.URLayer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.AdminDomainModule
+import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.admin.repo.AdminRepoModule
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object AdminModule {
@@ -22,8 +25,11 @@ object AdminModule {
     // format: off
     AppConfig &
     CacheManager &
+    DspIngestClient &
     IriService &
+    IriConverter &
     OntologyRepo &
+    OntologyCache &
     PredicateObjectMapper &
     TriplestoreService
     // format: on

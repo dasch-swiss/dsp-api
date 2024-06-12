@@ -14,7 +14,6 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixEx
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.KnoraBasePrefixExpansion
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
-import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 
 object Vocabulary {
   object KnoraAdmin {

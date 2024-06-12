@@ -3,6 +3,7 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.Chunk
 import zio.Task
 import zio.ZIO
+import zio.ZLayer
 
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
@@ -58,4 +59,8 @@ final case class ProjectEraseService(
     ZIO.foreachDiscard(groupsToRemove)(group =>
       userService.findByGroupMembership(group).flatMap(userService.removeUsersFromGroup(_, group)),
     )
+}
+
+object ProjectEraseService {
+  val layer = ZLayer.derive[ProjectEraseService]
 }
