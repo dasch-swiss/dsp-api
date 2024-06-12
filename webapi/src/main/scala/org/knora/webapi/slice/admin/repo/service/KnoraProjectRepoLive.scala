@@ -11,6 +11,7 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
+
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject

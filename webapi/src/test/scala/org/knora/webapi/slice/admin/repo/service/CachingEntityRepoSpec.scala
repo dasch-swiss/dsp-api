@@ -2,6 +2,13 @@ package org.knora.webapi.slice.admin.repo.service
 import org.eclipse.rdf4j.common.net.ParsedIRI
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import zio.IO
+import zio.NonEmptyChunk
+import zio.ZIO
+import zio.ZLayer
+import zio.test.*
+
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.repo.rdf.Errors
@@ -9,12 +16,6 @@ import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
-import zio.IO
-import zio.ZIO
-import zio.ZLayer
-import zio.test.*
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-import zio.NonEmptyChunk
 
 object CachingEntityRepoSpec extends ZIOSpecDefault {
 

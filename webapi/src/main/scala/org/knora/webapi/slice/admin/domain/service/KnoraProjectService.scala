@@ -10,6 +10,7 @@ import zio.NonEmptyChunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest

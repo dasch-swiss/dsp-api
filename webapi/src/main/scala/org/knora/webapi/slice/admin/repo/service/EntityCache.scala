@@ -12,6 +12,7 @@ import zio.ZLayer
 
 import scala.annotation.nowarn
 import scala.reflect.ClassTag
+
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.EhCache

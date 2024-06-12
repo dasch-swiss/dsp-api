@@ -1,5 +1,9 @@
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.Chunk
+import zio.Task
+import zio.ZIO
+
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
@@ -7,9 +11,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import zio.Chunk
-import zio.Task
-import zio.ZIO
 
 final case class ProjectEraseService(
   projectService: ProjectService,

@@ -16,6 +16,7 @@ import zio.ZIO
 import zio.ZLayer
 
 import scala.reflect.ClassTag
+
 import org.knora.webapi.slice.infrastructure.CacheManager.defaultCacheConfigBuilder
 
 final case class EhCache[K, V](cache: org.ehcache.Cache[K, V]) {

@@ -22,6 +22,7 @@ import zio.NonEmptyChunk
 import zio.Task
 import zio.ZIO
 import zio.stream.ZStream
+
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError

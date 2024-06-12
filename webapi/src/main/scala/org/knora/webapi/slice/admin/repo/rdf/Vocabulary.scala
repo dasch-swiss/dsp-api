@@ -9,6 +9,7 @@ import org.eclipse.rdf4j.model.Namespace
 import org.eclipse.rdf4j.model.impl.SimpleNamespace
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.KnoraBasePrefixExpansion
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
