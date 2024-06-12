@@ -5,12 +5,9 @@
 
 @import java.time.Instant
 @import org.knora.webapi.IRI
-@import org.knora.webapi.messages.v2.responder.valuemessages._
-@import org.knora.webapi.messages.twirl.NewLinkValueInfo
-@import org.knora.webapi.messages.twirl.NewValueInfo
+@import org.knora.webapi.messages.twirl._
+@import org.knora.webapi.messages.twirl.TypeSpecificValueInfo._
 @import dsp.valueobjects.UuidUtil
-@import dsp.errors.SparqlGenerationException
-@import java.util.UUID
 
 @**
  * Creates a new resource.
@@ -44,254 +41,195 @@ INSERT DATA {
             knora-base:creationDate "@creationDate"^^xsd:dateTime .
 
         @for(newValueInfo <- newValueInfos) {
-            # Value: @newValueInfo.newValueIri
+            # Value: @newValueInfo.valueIri
             # Property: @newValueInfo.propertyIri
 
             @* Construct the value. *@
-            <@newValueInfo.newValueIri> rdf:type <@newValueInfo.value.valueType> ;
+            <@newValueInfo.valueIri> rdf:type <@newValueInfo.valueTypeIri> ;
                 knora-base:isDeleted false  ;
-                knora-base:valueHasString """@newValueInfo.value.valueHasString""" ;
-                knora-base:valueHasUUID "@{UuidUtil.base64Encode(newValueInfo.newValueUUID)}" .
-
+                knora-base:valueHasString """@newValueInfo.valueHasString""" ;
+                knora-base:valueHasUUID "@{UuidUtil.base64Encode(newValueInfo.valueUUID)}" .
 
             @newValueInfo.value match {
 
-                case linkValueContentV2: LinkValueContentV2 => {
+                case linkValue: LinkValueInfo => {
+                    <@newValueInfo.resourceIri> <@newValueInfo.propertyIri.stripSuffix("Value")> <@linkValue.referredResourceIri> .
 
-                    <@newValueInfo.resourceIri> <@newValueInfo.propertyIri.stripSuffix("Value")> <@linkValueContentV2.referredResourceIri> .
-
-                    <@newValueInfo.newValueIri> rdf:subject <@newValueInfo.resourceIri> ;
+                    <@newValueInfo.valueIri> rdf:subject <@newValueInfo.resourceIri> ;
                         rdf:predicate <@newValueInfo.propertyIri.stripSuffix("Value")> ;
-                        rdf:object <@linkValueContentV2.referredResourceIri> ;
+                        rdf:object <@linkValue.referredResourceIri> ;
                         knora-base:valueHasRefCount 1 .
-
                 }
 
-                case textValue: TextValueContentV2 => {
-
-                    @if(!textValue.valueHasLanguage.isEmpty) {
-                        <@newValueInfo.newValueIri> knora-base:valueHasLanguage """@textValue.valueHasLanguage.get""" .
+                case textValue: UnformattedTextValueInfo => {
+                    textValue.valueHasLanguage.foreach { language => 
+                        <@newValueInfo.valueIri> knora-base:valueHasLanguage """@language""" .
                     }
+                }
 
-                    @if(textValue.standoff.nonEmpty) {
+                case textValue: FormattedTextValueInfo => {
+                    textValue.valueHasLanguage.foreach { language => 
+                        <@newValueInfo.valueIri> knora-base:valueHasLanguage """@language""" .
+                    }
+                    <@newValueInfo.valueIri> knora-base:valueHasMapping <@textValue.mappingIri> .
+                    <@newValueInfo.valueIri> knora-base:valueHasMaxStandoffStartIndex @textValue.maxStandoffStartIndex .
 
-                        @* Create a Standoff node for each standoff tag. *@
+                    @* Create a Standoff node for each standoff tag. *@
+                    @for(createStandoff: StandoffTagInfo <- textValue.standoff) {
 
-                        @textValue.mappingIri match {
-                            case Some(definedMappingIri) => {
-                                <@newValueInfo.newValueIri> knora-base:valueHasMapping <@definedMappingIri> .
-                            }
+                        <@newValueInfo.valueIri> knora-base:valueHasStandoff <@createStandoff.standoffTagInstanceIri> .
 
-                            case None => {}
-                        }
+                        <@createStandoff.standoffTagInstanceIri>
+                                @*
+                                Check for optional standoff properties
+                                *@
+                                @createStandoff.endIndex.foreach { index =>
+                                    knora-base:standoffTagHasEndIndex @index ;
+                                }
+                                @createStandoff.startParentIri.foreach { iri => 
+                                    knora-base:standoffTagHasStartParent <@iri> ;
+                                }
+                                @createStandoff.endParentIri.foreach { iri => 
+                                    knora-base:standoffTagHasEndParent <@iri> ;
+                                }
+                                @createStandoff.originalXMLID.foreach { id => 
+                                    knora-base:standoffTagHasOriginalXMLID """@id""" ;
+                                }
 
-                        <@newValueInfo.newValueIri> knora-base:valueHasMaxStandoffStartIndex @textValue.computedMaxStandoffStartIndex.get .
+                                @*
+                                Handle standoff class specific standoff properties
+                                *@
+                                @for(createProperty <- createStandoff.attributes) {
+                                    <@createProperty.propertyIri> @createProperty.value ;
+                                }
 
-                        @for((createStandoff: CreateStandoffTagV2InTriplestore, standoffNodeIndex) <- textValue.prepareForSparqlInsert(newValueInfo.newValueIri).zipWithIndex) {
-
-                            <@newValueInfo.newValueIri> knora-base:valueHasStandoff <@createStandoff.standoffTagInstanceIri> .
-
-                            <@createStandoff.standoffTagInstanceIri>
-
-                                    @*
-
-                                    Check for optional standoff properties
-
-                                    *@
-
-                                    @if(createStandoff.standoffNode.endIndex.isDefined) {
-                                        knora-base:standoffTagHasEndIndex @createStandoff.standoffNode.endIndex.get ;
-                                    }
-
-                                    @if(createStandoff.startParentIri.isDefined) {
-                                        knora-base:standoffTagHasStartParent <@createStandoff.startParentIri.get> ;
-                                    }
-
-                                    @if(createStandoff.endParentIri.isDefined) {
-                                        knora-base:standoffTagHasEndParent <@createStandoff.endParentIri.get> ;
-                                    }
-
-                                    @if(createStandoff.standoffNode.originalXMLID.isDefined) {
-                                        knora-base:standoffTagHasOriginalXMLID """@createStandoff.standoffNode.originalXMLID.get""" ;
-                                    }
-
-                                    @*
-
-                                    Handle standoff class specific standoff properties
-
-                                    *@
-                                    @for(createProperty <- createStandoff.standoffNode.attributes) {
-
-                                        <@createProperty.standoffPropertyIri> @createProperty.rdfValue ;
-
-                                    }
-
-                                    knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex ;
-                                    knora-base:standoffTagHasUUID "@{UuidUtil.base64Encode(createStandoff.standoffNode.uuid)}" ;
-                                    knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
-                                    knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
-                                    rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .
-
-                        }
-
+                                knora-base:standoffTagHasStartIndex @createStandoff.startIndex ;
+                                knora-base:standoffTagHasUUID "@{UuidUtil.base64Encode(createStandoff.uuid)}" ;
+                                knora-base:standoffTagHasStart @createStandoff.startPosition ;
+                                knora-base:standoffTagHasEnd @createStandoff.endPosition ;
+                                rdf:type <@createStandoff.standoffTagClassIri> .
                     }
                 }
 
 
-                case intValue: IntegerValueContentV2 => {
-
-                    <@newValueInfo.newValueIri> knora-base:valueHasInteger @intValue.valueHasInteger .
-
+                case intValue: IntegerValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:valueHasInteger @intValue.valueHasInteger .
                 }
 
-                case decimalValue: DecimalValueContentV2 => {
-
-                    <@newValueInfo.newValueIri> knora-base:valueHasDecimal "@decimalValue.valueHasDecimal"^^xsd:decimal .
-
+                case decimalValue: DecimalValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:valueHasDecimal "@decimalValue.valueHasDecimal"^^xsd:decimal .
                 }
 
-                case booleanValue: BooleanValueContentV2 => {
-
-                    <@newValueInfo.newValueIri> knora-base:valueHasBoolean @booleanValue.valueHasBoolean .
-
+                case booleanValue: BooleanValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:valueHasBoolean @booleanValue.valueHasBoolean .
                 }
 
-                case uriValue: UriValueContentV2 => {
-
-                    <@newValueInfo.newValueIri> knora-base:valueHasUri """@uriValue.valueHasUri"""^^xsd:anyURI .
-
+                case uriValue: UriValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:valueHasUri """@uriValue.valueHasUri"""^^xsd:anyURI .
                 }
 
-                case dateValue: DateValueContentV2 => {
-
-                    <@newValueInfo.newValueIri> knora-base:valueHasStartJDN @dateValue.valueHasStartJDN ;
+                case dateValue: DateValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:valueHasStartJDN @dateValue.valueHasStartJDN ;
                                         knora-base:valueHasEndJDN @dateValue.valueHasEndJDN ;
                                         knora-base:valueHasStartPrecision "@dateValue.valueHasStartPrecision" ;
                                         knora-base:valueHasEndPrecision "@dateValue.valueHasEndPrecision" ;
                                         knora-base:valueHasCalendar "@dateValue.valueHasCalendar" .
-
                 }
 
-                case colorValue: ColorValueContentV2 => {
-
-                    <@newValueInfo.newValueIri> knora-base:valueHasColor """@colorValue.valueHasColor""" .
-
+                case colorValue: ColorValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:valueHasColor """@colorValue.valueHasColor""" .
                 }
 
-                case geometryValue: GeomValueContentV2 => {
-
-                    <@newValueInfo.newValueIri> knora-base:valueHasGeometry """@geometryValue.valueHasGeometry""" .
-
+                case geometryValue: GeomValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:valueHasGeometry """@geometryValue.valueHasGeometry""" .
                 }
 
-                case fileValueContentV2: FileValueContentV2 => {
-                    <@newValueInfo.newValueIri> knora-base:internalFilename """@fileValueContentV2.fileValue.internalFilename""" ;
-                        knora-base:internalMimeType """@fileValueContentV2.fileValue.internalMimeType""" .
-
-                    @fileValueContentV2.fileValue.originalFilename match {
-                        case Some(definedOriginalFilename) => {
-                            <@newValueInfo.newValueIri> knora-base:originalFilename """@definedOriginalFilename""" .
-                        }
-
-                        case None => {}
+                case fileValue: StillImageFileValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:internalFilename """@fileValue.internalFilename""" ;
+                        knora-base:internalMimeType """@fileValue.internalMimeType""" ;
+                        knora-base:dimX @fileValue.dimX ;
+                        knora-base:dimY @fileValue.dimY .
+                    @fileValue.originalFilename.foreach { originalFilename =>
+                        <@newValueInfo.valueIri> knora-base:originalFilename """@originalFilename""" .
                     }
-
-                    @fileValueContentV2.fileValue.originalMimeType match {
-                        case Some(definedOriginalMimeType) => {
-                            <@newValueInfo.newValueIri> knora-base:originalMimeType """@definedOriginalMimeType""" .
-                        }
-
-                        case None => {}
-                    }
-
-                    @fileValueContentV2 match {
-                        case stillImageFileValue: StillImageFileValueContentV2 => {
-                            <@newValueInfo.newValueIri> knora-base:dimX @stillImageFileValue.dimX ;
-                                knora-base:dimY @stillImageFileValue.dimY .
-                        }
-
-                        case stillImageFileValue: StillImageExternalFileValueContentV2 => {
-                            <@newValueInfo.newValueIri> knora-base:externalUrl """@stillImageFileValue.externalUrl.value.toString""" .
-                        }
-
-                        case documentFileValue: DocumentFileValueContentV2 => {
-                            @documentFileValue.dimX match {
-                                case Some(definedDimX) => {
-                                    <@newValueInfo.newValueIri> knora-base:dimX @definedDimX .
-                                }
-
-                                case None => {}
-                            }
-
-                            @documentFileValue.dimY match {
-                                case Some(definedDimY) => {
-                                    <@newValueInfo.newValueIri> knora-base:dimY @definedDimY .
-                                }
-
-                                case None => {}
-                            }
-
-                            @documentFileValue.pageCount match {
-                                case Some(definedPageCount) => {
-                                    <@newValueInfo.newValueIri> knora-base:pageCount @definedPageCount .
-                                }
-
-                                case None => {}
-                            }
-                        }
-
-                        case _ => {}
+                    @fileValue.originalMimeType.foreach { originalMimeType =>
+                        <@newValueInfo.valueIri> knora-base:originalMimeType """@originalMimeType""" .
                     }
                 }
 
-                case listValue: HierarchicalListValueContentV2 => {
-
-                    <@newValueInfo.newValueIri> knora-base:valueHasListNode <@listValue.valueHasListNode> .
-
+                case fileValue: StillImageExternalFileValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:internalFilename """@fileValue.internalFilename""" ;
+                        knora-base:internalMimeType """@fileValue.internalMimeType""" ;
+                        knora-base:externalUrl """@fileValue.externalUrl""" .
+                    @fileValue.originalFilename.foreach { originalFilename =>
+                        <@newValueInfo.valueIri> knora-base:originalFilename """@originalFilename""" .
+                    }
+                    @fileValue.originalMimeType.foreach { originalMimeType =>
+                        <@newValueInfo.valueIri> knora-base:originalMimeType """@originalMimeType""" .
+                    }
                 }
 
-                case intervalValue: IntervalValueContentV2 => {
+                case fileValue: DocumentFileValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:internalFilename """@fileValue.internalFilename""" ;
+                        knora-base:internalMimeType """@fileValue.internalMimeType""" .
+                    @fileValue.originalFilename.foreach { originalFilename =>
+                        <@newValueInfo.valueIri> knora-base:originalFilename """@originalFilename""" .
+                    }
+                    @fileValue.originalMimeType.foreach { originalMimeType =>
+                        <@newValueInfo.valueIri> knora-base:originalMimeType """@originalMimeType""" .
+                    }
+                    @fileValue.dimX.foreach { dimX =>
+                        <@newValueInfo.valueIri> knora-base:dimX @dimX .
+                    }
+                    @fileValue.dimY.foreach { dimY =>
+                        <@newValueInfo.valueIri> knora-base:dimY @dimY .
+                    }
+                    @fileValue.pageCount.foreach { pageCount =>
+                        <@newValueInfo.valueIri> knora-base:pageCount @pageCount .
+                    }
+                }
 
-                    <@newValueInfo.newValueIri> knora-base:valueHasIntervalStart "@intervalValue.valueHasIntervalStart"^^xsd:decimal ;
+                case fileValue: OtherFileValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:internalFilename """@fileValue.internalFilename""" ;
+                        knora-base:internalMimeType """@fileValue.internalMimeType""" .
+                    @fileValue.originalFilename.foreach { originalFilename =>
+                        <@newValueInfo.valueIri> knora-base:originalFilename """@originalFilename""" .
+                    }
+                    @fileValue.originalMimeType.foreach { originalMimeType =>
+                        <@newValueInfo.valueIri> knora-base:originalMimeType """@originalMimeType""" .
+                    }
+                }
+
+                case listValue: HierarchicalListValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:valueHasListNode <@listValue.valueHasListNode> .
+                }
+
+                case intervalValue: IntervalValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:valueHasIntervalStart "@intervalValue.valueHasIntervalStart"^^xsd:decimal ;
                                         knora-base:valueHasIntervalEnd "@intervalValue.valueHasIntervalEnd"^^xsd:decimal .
-
                 }
 
-                case timeValue: TimeValueContentV2 => {
-
-                    <@newValueInfo.newValueIri> knora-base:valueHasTimeStamp "@timeValue.valueHasTimeStamp"^^xsd:dateTime  .
-
+                case timeValue: TimeValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:valueHasTimeStamp "@timeValue.valueHasTimeStamp"^^xsd:dateTime  .
                 }
 
-                case geonameValue: GeonameValueContentV2 => {
-
-                    <@newValueInfo.newValueIri> knora-base:valueHasGeonameCode """@geonameValue.valueHasGeonameCode""" .
-
-                }
-
-                case other => {
-                    @{throw SparqlGenerationException(s"Value object $other is not supported in this SPARQL template"); ()}
+                case geonameValue: GeonameValueInfo => {
+                    <@newValueInfo.valueIri> knora-base:valueHasGeonameCode """@geonameValue.valueHasGeonameCode""" .
                 }
             }
 
             @* Insert the value's comment, if given. *@
-            @newValueInfo.value.comment match {
-                case Some(commentStr) => {
-                    <@newValueInfo.newValueIri> knora-base:valueHasComment """@commentStr""" .
-                }
-
-                case None => {}
+            @newValueInfo.comment.foreach { commentStr =>
+                <@newValueInfo.valueIri> knora-base:valueHasComment """@commentStr""" .
             }
 
-            <@newValueInfo.newValueIri> knora-base:attachedToUser <@newValueInfo.valueCreator> ;
+            <@newValueInfo.valueIri> knora-base:attachedToUser <@newValueInfo.valueCreator> ;
                 knora-base:hasPermissions "@newValueInfo.valuePermissions"^^xsd:string ;
                 knora-base:valueHasOrder @newValueInfo.valueHasOrder ;
                 knora-base:valueCreationDate "@newValueInfo.creationDate"^^xsd:dateTime .
 
-
-
             @* Attach the value to the resource. *@
-            <@newValueInfo.resourceIri> <@newValueInfo.propertyIri> <@newValueInfo.newValueIri> .
+            <@newValueInfo.resourceIri> <@newValueInfo.propertyIri> <@newValueInfo.valueIri> .
         }
 
 

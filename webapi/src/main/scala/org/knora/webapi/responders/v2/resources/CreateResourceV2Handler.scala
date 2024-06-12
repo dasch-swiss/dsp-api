@@ -449,16 +449,21 @@ final case class CreateResourceV2Handler(
             // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
             // use resource creation date for the value.
             valueCreationDate: Instant = valueToCreate.customValueCreationDate.getOrElse(creationDate)
+
+            valueInfo = ???
           } yield NewValueInfo(
             resourceIri = resourceIri,
             propertyIri = propertyIri.toIri,
-            value = valueToCreate.valueContent,
-            newValueIri = newValueIri,
-            newValueUUID = newValueUUID,
+            value = valueInfo,
+            valueIri = newValueIri,
+            valueTypeIri = valueToCreate.valueContent.valueType.toString(),
+            valueUUID = newValueUUID,
             valueCreator = requestingUser.id,
             valuePermissions = valueToCreate.permissions,
             creationDate = valueCreationDate,
             valueHasOrder = valueHasOrder,
+            valueHasString = valueToCreate.valueContent.valueHasString,
+            comment = valueToCreate.valueContent.comment,
           )
         }
     } yield ResourceReadyToCreate(
