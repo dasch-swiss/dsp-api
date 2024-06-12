@@ -43,6 +43,7 @@ import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.JwtServiceLive
+import org.knora.webapi.slice.infrastructure.ScopeResolver
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -175,6 +176,7 @@ object LayersLive {
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
       RestCardinalityServiceLive.layer,
+      ScopeResolver.layer,
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,

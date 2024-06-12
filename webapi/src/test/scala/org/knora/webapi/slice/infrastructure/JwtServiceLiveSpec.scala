@@ -29,7 +29,6 @@ import zio.test.check
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
-
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
@@ -47,10 +46,8 @@ import org.knora.webapi.slice.admin.domain.model.Permission.Administrative
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 
 final case class ScopeJs(scope: String)
 object ScopeJs {
@@ -76,11 +73,6 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
       permissions = PermissionsDataADM(),
     )
 
-  private val systemAdminPermissions = PermissionsDataADM(
-    groupsPerProject =
-      Map(KnoraProjectRepo.builtIn.SystemProject.id.value -> Seq(KnoraGroupRepo.builtIn.SystemAdmin.id.value)),
-  )
-
   private val shortcode  = Shortcode.unsafeFrom("0001")
   private val projectIri = ProjectIri.makeNew
   private val project1 = KnoraProject(
@@ -94,11 +86,6 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
-  )
-
-  private val projectAdminProject1Permissions = PermissionsDataADM(
-    administrativePermissionsPerProject =
-      Map(project1.id.value -> Set(PermissionADM.from(Administrative.ProjectAdminAll))),
   )
 
   private val dspIngestAudience = "https://dsp-ingest/audience"
@@ -131,7 +118,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
   val spec: Spec[TestEnvironment with Scope, Any] = (suite("JwtService")(
     test("create a token") {
       for {
-        token    <- JwtService(_.createJwt(user, Map("foo" -> Json.Str("bar"))))
+        token    <- JwtService(_.createJwt(user.userIri, AuthScope.empty, Map("foo" -> Json.Str("bar"))))
         userIri  <- getClaim(token.jwtString, _.subject)
         audience <- getClaim(token.jwtString, _.audience.getOrElse(Set.empty))
         scope    <- getScopeClaimValue(token.jwtString)
@@ -143,7 +130,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     },
     test("create a token with admin scope for system admins") {
       for {
-        token <- JwtService(_.createJwt(user.copy(permissions = systemAdminPermissions)))
+        token <- JwtService(_.createJwt(user.userIri, AuthScope.admin))
         scope <- getScopeClaimValue(token.jwtString)
       } yield assertTrue(scope == "admin")
     },
@@ -156,13 +143,13 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     test("create a token with admin scope for project admins") {
       for {
         _     <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(project1))
-        token <- JwtService(_.createJwt(user.copy(permissions = projectAdminProject1Permissions)))
+        token <- JwtService(_.createJwt(user.userIri, AuthScope.write(Shortcode.unsafeFrom("0001"))))
         scope <- getScopeClaimValue(token.jwtString)
       } yield assertTrue(scope == "write:project:0001")
     },
     test("create a token with dsp-ingest audience for sys admins") {
       for {
-        token            <- JwtService(_.createJwt(user.copy(permissions = systemAdminPermissions)))
+        token            <- JwtService(_.createJwt(user.userIri, AuthScope.admin))
         userIriByService <- JwtService(_.extractUserIriFromToken(token.jwtString))
         userIri          <- getClaim(token.jwtString, _.subject)
         audience         <- getClaim(token.jwtString, _.audience.getOrElse(Set.empty))
@@ -186,7 +173,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     },
     test("validate a self issued token") {
       for {
-        token   <- JwtService(_.createJwt(user))
+        token   <- JwtService(_.createJwt(user.userIri, AuthScope.empty))
         isValid <- ZIO.serviceWith[JwtService](_.isTokenValid(token.jwtString))
       } yield assertTrue(isValid)
     },
@@ -227,8 +214,6 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
       CacheManager.layer,
       InvalidTokenCache.layer,
       JwtServiceLive.layer,
-      KnoraProjectRepoInMemory.layer,
-      KnoraProjectService.layer,
       dspIngestConfigLayer,
       jwtConfigLayer,
     )
