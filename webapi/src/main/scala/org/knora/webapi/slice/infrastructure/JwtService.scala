@@ -29,17 +29,7 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
-import org.knora.webapi.routing.InvalidTokenCache
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.Permission.Administrative
-import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.ProjectAdminAll
-import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.ProjectResourceCreateAll
-import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.ProjectResourceCreateRestricted
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.infrastructure.ScopeValue.Write
+import org.knora.webapi.slice.admin.domain.model.UserIri
 
 case class Jwt(jwtString: String, expiration: Long)
 
@@ -55,7 +45,7 @@ trait JwtService {
    * @param content   any other content to be included in the token.
    * @return a [[String]] containing the JWT.
    */
-  def createJwt(user: User, content: Map[String, Json] = Map.empty): UIO[Jwt]
+  def createJwt(user: UserIri, scope: Scope, content: Map[String, Json] = Map.empty): UIO[Jwt]
 
   def createJwtForDspIngest(): UIO[Jwt]
 
@@ -81,7 +71,6 @@ trait JwtService {
 final case class JwtServiceLive(
   private val jwtConfig: JwtConfig,
   private val dspIngestConfig: DspIngestConfig,
-  private val knoraProjectService: KnoraProjectService,
   private val cache: InvalidTokenCache,
 ) extends JwtService {
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
@@ -89,34 +78,8 @@ final case class JwtServiceLive(
   private val logger                  = Logger(LoggerFactory.getLogger(this.getClass))
   private val audience                = Set("Knora", "Sipi", dspIngestConfig.audience)
 
-  override def createJwt(user: User, content: Map[String, Json] = Map.empty): UIO[Jwt] =
-    calculateScope(user)
-      .flatMap(scope =>
-        createJwtToken(jwtConfig.issuerAsString(), user.id, audience, scope, Some(Json.Obj(content.toSeq: _*))),
-      )
-
-  private def calculateScope(user: User) =
-    if (user.isSystemAdmin || user.isSystemUser) { ZIO.succeed(Scope.admin) }
-    else { mapUserPermissionsToScope(user) }
-
-  private def mapUserPermissionsToScope(user: User): UIO[Scope] =
-    ZIO
-      .foreach(user.permissions.administrativePermissionsPerProject.toSeq) { case (prjIri, permission) =>
-        knoraProjectService
-          .findById(ProjectIri.unsafeFrom(prjIri))
-          .orDie
-          .map(_.map(prj => mapPermissionToScope(permission, prj.shortcode)).getOrElse(Set.empty))
-      }
-      .map(scopeValues => Scope.from(scopeValues.flatten))
-
-  private def mapPermissionToScope(permission: Set[PermissionADM], shortcode: Shortcode): Set[ScopeValue] =
-    permission
-      .map(_.name)
-      .flatMap(Administrative.fromToken)
-      .flatMap {
-        case ProjectResourceCreateAll | ProjectResourceCreateRestricted | ProjectAdminAll => Some(Write(shortcode))
-        case _                                                                            => None
-      }
+  override def createJwt(userIri: UserIri, scope: Scope, content: Map[String, Json] = Map.empty): UIO[Jwt] =
+    createJwtToken(jwtConfig.issuerAsString(), userIri.value, audience, scope, Some(Json.Obj(content.toSeq: _*)))
 
   override def createJwtForDspIngest(): UIO[Jwt] =
     createJwtToken(

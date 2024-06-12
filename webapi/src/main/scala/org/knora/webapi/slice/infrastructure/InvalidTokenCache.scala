@@ -3,13 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.routing
+package org.knora.webapi.slice.infrastructure
 
 import zio.ZIO
 import zio.ZLayer
-
-import org.knora.webapi.slice.infrastructure.CacheManager
-import org.knora.webapi.slice.infrastructure.EhCache
 
 final case class InvalidTokenCache(cache: EhCache[String, String]) {
   def put(token: String): Unit         = cache.put(token, "")
