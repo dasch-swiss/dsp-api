@@ -147,16 +147,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                      |            # Property: fooProperty
                      |
                      |            
-                     |            <fooValue> rdf:type <http://api.knora.org/ontology/knora-api/v2#IntValue> ;
+                     |            <fooValue> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
                      |                knora-base:isDeleted false  ;
                      |                knora-base:valueHasString \"\"\"42\"\"\" ;
                      |                knora-base:valueHasUUID \"$uuidEncoded\" .
                      |
-                     |
                      |            
-                     |
                      |                    <fooValue> knora-base:valueHasInteger 42 .
-                     |
                      |                
                      |
                      |            
@@ -166,8 +163,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                      |                knora-base:hasPermissions \"fooValuePermissions\"^^xsd:string ;
                      |                knora-base:valueHasOrder 1 ;
                      |                knora-base:valueCreationDate \"2024-01-01T10:00:00.673298Z\"^^xsd:dateTime .
-                     |
-                     |
                      |
                      |            
                      |            <fooResource> <fooProperty> <fooValue> .
