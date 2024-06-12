@@ -20,7 +20,6 @@ import java.net.URI
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances

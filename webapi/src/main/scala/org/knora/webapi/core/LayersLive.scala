@@ -41,8 +41,6 @@ import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
-import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.infrastructure.JwtServiceLive
 import org.knora.webapi.slice.infrastructure.ScopeResolver
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
@@ -93,7 +91,6 @@ object LayersLive {
     InfrastructureModule.Provided &
     InstrumentationServerConfig &
     IriConverter &
-    JwtService &
     ListsResponder &
     ListsResponderV2 &
     MessageRelay &
@@ -113,6 +110,7 @@ object LayersLive {
     ResourceUtilV2 &
     ResourcesResponderV2 &
     RestCardinalityService &
+    ScopeResolver &
     SearchApiRoutes &
     SearchResponderV2Module.Provided &
     SipiService &
@@ -150,7 +148,6 @@ object LayersLive {
       InfrastructureModule.layer,
       IriConverter.layer,
       IriService.layer,
-      JwtServiceLive.layer,
       KnoraResponseRenderer.layer,
       ListsResponder.layer,
       ListsResponderV2.layer,

@@ -7,21 +7,27 @@ package org.knora.webapi.slice.infrastructure
 
 import zio.ZLayer
 
+import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.config.JwtConfig
+
 object InfrastructureModule {
 
   type Dependencies =
     // format: off
-    Any
+    DspIngestConfig &
+    JwtConfig
     // format: on
 
   type Provided =
     // format: off
     CacheManager &
-    InvalidTokenCache
+    InvalidTokenCache &
+    JwtService
     // format: on
 
   val layer = ZLayer.makeSome[Dependencies, Provided](
     CacheManager.layer,
     InvalidTokenCache.layer,
+    JwtServiceLive.layer,
   )
 }

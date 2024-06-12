@@ -7,7 +7,6 @@ package org.knora.webapi.core
 
 import org.apache.pekko
 import zio.*
-
 import org.knora.sipi.SipiServiceTestDelegator
 import org.knora.sipi.WhichSipiService
 import org.knora.webapi.config.AppConfig
@@ -45,8 +44,7 @@ import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
-import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.infrastructure.JwtServiceLive
+import org.knora.webapi.slice.infrastructure.ScopeResolver
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -111,7 +109,6 @@ object LayersTest {
     InferenceOptimizationService &
     IriConverter &
     IriService &
-    JwtService &
     ListsResponder &
     MessageRelay &
     OntologyCache &
@@ -173,7 +170,6 @@ object LayersTest {
       InferenceOptimizationService.layer,
       IriConverter.layer,
       IriService.layer,
-      JwtServiceLive.layer,
       KnoraResponseRenderer.layer,
       ListsResponder.layer,
       ManagementEndpoints.layer,
@@ -195,6 +191,7 @@ object LayersTest {
       ResourceUtilV2Live.layer,
       ResourcesRepoLive.layer,
       RestCardinalityServiceLive.layer,
+      ScopeResolver.layer,
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,

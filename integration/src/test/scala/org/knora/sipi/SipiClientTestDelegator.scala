@@ -111,6 +111,5 @@ case class SipiServiceTestDelegator(
 }
 
 object SipiServiceTestDelegator {
-  val layer: ZLayer[AppConfig & DspIngestClient & JwtService & WhichSipiService, Nothing, SipiService] =
-    SipiServiceMock.layer >+> SipiServiceLive.layer >>> ZLayer.derive[SipiServiceTestDelegator]
+  val layer = SipiServiceMock.layer >+> SipiServiceLive.layer >>> ZLayer.derive[SipiServiceTestDelegator]
 }
