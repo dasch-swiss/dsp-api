@@ -6,6 +6,8 @@
 @import org.knora.webapi._
 @import org.knora.webapi.messages.SmartIri
 @import org.knora.webapi.messages.v2.responder.ontologymessages._
+@import org.knora.webapi.messages.StringFormatter
+@import org.knora.webapi.messages.store.triplestoremessages._
 @import java.time.Instant
 
 @*
@@ -42,8 +44,45 @@ DELETE {
 
         @* Insert the property. *@
 
-        @{
-            org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForCreateProperty(propertyDef)
+        @for(predicate <- propertyDef.predicates.values) {
+
+            @for(obj <- predicate.objects) {
+
+                @obj match {
+
+                    case SmartIriLiteralV2(iri) => {
+
+                        <@propertyDef.propertyIri> <@predicate.predicateIri> <@iri> .
+
+                    }
+
+                    case StringLiteralV2(text, Some(lang)) => {
+
+                        <@propertyDef.propertyIri> <@predicate.predicateIri> """@text"""@@@lang .
+
+                    }
+
+                    case StringLiteralV2(text, None) => {
+
+                        <@propertyDef.propertyIri> <@predicate.predicateIri> """@text""" .
+
+                    }
+
+                    case BooleanLiteralV2(booleanVal) => {
+
+                        <@propertyDef.propertyIri> <@predicate.predicateIri> "@booleanVal"^^xsd:boolean .
+
+                    }
+                }
+
+            }
+
+        }
+
+        @for(superProp <- propertyDef.subPropertyOf) {
+
+            <@propertyDef.propertyIri> rdfs:subPropertyOf <@superProp> .
+
         }
 
         @* Also insert a link value property if requested. *@
@@ -52,8 +91,45 @@ DELETE {
 
             case Some(linkValuePropertyInfoContent) => {
 
-                @{
-                    org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForCreateProperty(linkValuePropertyInfoContent)
+                @for(predicate <- linkValuePropertyInfoContent.predicates.values) {
+
+                    @for(obj <- predicate.objects) {
+
+                        @obj match {
+
+                            case SmartIriLiteralV2(iri) => {
+
+                                <@linkValuePropertyInfoContent.propertyIri> <@predicate.predicateIri> <@iri> .
+
+                            }
+
+                            case StringLiteralV2(text, Some(lang)) => {
+
+                                <@linkValuePropertyInfoContent.propertyIri> <@predicate.predicateIri> """@text"""@@@lang .
+
+                            }
+
+                            case StringLiteralV2(text, None) => {
+
+                                <@linkValuePropertyInfoContent.propertyIri> <@predicate.predicateIri> """@text""" .
+
+                            }
+
+                            case BooleanLiteralV2(booleanVal) => {
+
+                                <@linkValuePropertyInfoContent.propertyIri> <@predicate.predicateIri> "@booleanVal"^^xsd:boolean .
+
+                            }
+                        }
+
+                    }
+
+                }
+
+                @for(superProp <- linkValuePropertyInfoContent.subPropertyOf) {
+
+                    <@linkValuePropertyInfoContent.propertyIri> rdfs:subPropertyOf <@superProp> .
+
                 }
 
             }

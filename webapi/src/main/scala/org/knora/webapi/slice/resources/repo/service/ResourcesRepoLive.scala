@@ -7,27 +7,24 @@ package org.knora.webapi.slice.resources.repo.service
 
 import zio.*
 
+import java.time.Instant
+
 import dsp.constants.SalsahGui.IRI
-import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.twirl.NewLinkValueInfo
+import org.knora.webapi.messages.twirl.NewValueInfo
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.v2.responder.valuemessages.UnverifiedValueV2
-import org.knora.webapi.responders.v2.resources.SparqlTemplateResourceToCreate
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-/**
- * Represents a resource that is ready to be created and whose contents can be verified afterwards.
- *
- * @param sparqlTemplateResourceToCreate a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating
- *                                       the resource.
- * @param values                         the resource's values for verification.
- * @param hasStandoffLink                `true` if the property `knora-base:hasStandoffLinkToValue` was automatically added.
- */
 case class ResourceReadyToCreate(
-  sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
-  values: Map[SmartIri, Seq[UnverifiedValueV2]],
-  hasStandoffLink: Boolean,
+  resourceIri: IRI,
+  resourceClassIri: IRI,
+  resourceLabel: String,
+  creationDate: Instant,
+  permissions: String,
+  newValueInfos: Seq[NewValueInfo],
+  linkUpdates: Seq[NewLinkValueInfo],
 )
 
 trait ResourcesRepo {
@@ -48,16 +45,37 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService) extends Reso
     projectIri: IRI,
   ): Task[Unit] =
     triplestore.query(
-      Update(
-        sparql.v2.txt.createNewResource(
-          dataNamedGraph = dataGraphIri.value,
-          resourceToCreate = resource.sparqlTemplateResourceToCreate,
-          projectIri = projectIri,
-          creatorIri = userIri,
-        ),
+      ResourcesRepoLive.createNewResourceQuery(
+        dataGraphIri,
+        resource,
+        projectIri,
+        userIri,
       ),
     )
 
 }
 
-object ResourcesRepoLive { val layer = ZLayer.derive[ResourcesRepoLive] }
+object ResourcesRepoLive {
+  val layer = ZLayer.derive[ResourcesRepoLive]
+
+  private[service] def createNewResourceQuery(
+    dataGraphIri: InternalIri,
+    resourceToCreate: ResourceReadyToCreate,
+    projectIri: IRI,
+    creatorIri: IRI,
+  ): Update =
+    Update(
+      sparql.v2.txt.createNewResource(
+        dataNamedGraph = dataGraphIri.value,
+        projectIri = projectIri,
+        creatorIri = creatorIri,
+        creationDate = resourceToCreate.creationDate,
+        resourceIri = resourceToCreate.resourceIri,
+        resourceClassIri = resourceToCreate.resourceClassIri,
+        resourceLabel = resourceToCreate.resourceLabel,
+        permissions = resourceToCreate.permissions,
+        linkUpdates = resourceToCreate.linkUpdates,
+        newValueInfos = resourceToCreate.newValueInfos,
+      ),
+    )
+}

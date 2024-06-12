@@ -275,6 +275,9 @@ object StringFormatter {
 
   def isKnoraOntologyIri(iri: SmartIri): Boolean =
     iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName)
+
+  def makeValueIri(resourceIri: IRI, uuid: UUID): IRI =
+    s"$resourceIri/values/${UuidUtil.base64Encode(uuid)}"
 }
 
 /**

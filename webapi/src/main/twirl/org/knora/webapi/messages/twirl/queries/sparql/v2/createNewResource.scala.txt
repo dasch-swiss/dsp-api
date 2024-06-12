@@ -6,20 +6,26 @@
 @import java.time.Instant
 @import org.knora.webapi.IRI
 @import org.knora.webapi.messages.v2.responder.valuemessages._
-@import org.knora.webapi.responders.v2.resources.SparqlTemplateResourceToCreate
+@import org.knora.webapi.messages.twirl.NewLinkValueInfo
+@import org.knora.webapi.messages.twirl.NewValueInfo
+@import dsp.valueobjects.UuidUtil
+@import dsp.errors.SparqlGenerationException
+@import java.util.UUID
 
 @**
- * Creates new resources.
- *
- * @param dataNamedGraph    the named graph in which the project stores its data.
- * @param resourcesToCreate a collection of resources to be created.
- * @param projectIri        the IRI of the project in which the resources are to be created.
- * @param creatorIri        the IRI of the creator of the resources.
+ * Creates a new resource.
  *@
 @(dataNamedGraph: IRI,
-  resourceToCreate: SparqlTemplateResourceToCreate,
   projectIri: IRI,
-  creatorIri: IRI)
+  creatorIri: IRI,
+  creationDate: Instant,
+  resourceIri: IRI,
+  resourceClassIri: IRI,
+  resourceLabel: String,
+  permissions: String,
+  linkUpdates: Seq[NewLinkValueInfo],
+  newValueInfos: Seq[NewValueInfo]
+)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -29,14 +35,285 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 INSERT DATA {
     GRAPH <@dataNamedGraph> {
-        <@resourceToCreate.resourceIri> rdf:type <@resourceToCreate.resourceClassIri> ;
+        <@resourceIri> rdf:type <@resourceClassIri> ;
             knora-base:isDeleted false ;
             knora-base:attachedToUser <@creatorIri> ;
             knora-base:attachedToProject <@projectIri> ;
-            rdfs:label """@resourceToCreate.resourceLabel""" ;
-            knora-base:hasPermissions "@resourceToCreate.permissions" ;
-            knora-base:creationDate "@resourceToCreate.resourceCreationDate"^^xsd:dateTime .
+            rdfs:label """@resourceLabel""" ;
+            knora-base:hasPermissions "@permissions" ;
+            knora-base:creationDate "@creationDate"^^xsd:dateTime .
 
-        @resourceToCreate.sparqlForValues
+        @for(newValueInfo <- newValueInfos) {
+            # Value: @newValueInfo.newValueIri
+            # Property: @newValueInfo.propertyIri
+
+            @* Construct the value. *@
+            <@newValueInfo.newValueIri> rdf:type <@newValueInfo.value.valueType> ;
+                knora-base:isDeleted false  ;
+                knora-base:valueHasString """@newValueInfo.value.valueHasString""" ;
+                knora-base:valueHasUUID "@{UuidUtil.base64Encode(newValueInfo.newValueUUID)}" .
+
+
+            @newValueInfo.value match {
+
+                case linkValueContentV2: LinkValueContentV2 => {
+
+                    <@newValueInfo.resourceIri> <@newValueInfo.propertyIri.stripSuffix("Value")> <@linkValueContentV2.referredResourceIri> .
+
+                    <@newValueInfo.newValueIri> rdf:subject <@newValueInfo.resourceIri> ;
+                        rdf:predicate <@newValueInfo.propertyIri.stripSuffix("Value")> ;
+                        rdf:object <@linkValueContentV2.referredResourceIri> ;
+                        knora-base:valueHasRefCount 1 .
+
+                }
+
+                case textValue: TextValueContentV2 => {
+
+                    @if(!textValue.valueHasLanguage.isEmpty) {
+                        <@newValueInfo.newValueIri> knora-base:valueHasLanguage """@textValue.valueHasLanguage.get""" .
+                    }
+
+                    @if(textValue.standoff.nonEmpty) {
+
+                        @* Create a Standoff node for each standoff tag. *@
+
+                        @textValue.mappingIri match {
+                            case Some(definedMappingIri) => {
+                                <@newValueInfo.newValueIri> knora-base:valueHasMapping <@definedMappingIri> .
+                            }
+
+                            case None => {}
+                        }
+
+                        <@newValueInfo.newValueIri> knora-base:valueHasMaxStandoffStartIndex @textValue.computedMaxStandoffStartIndex.get .
+
+                        @for((createStandoff: CreateStandoffTagV2InTriplestore, standoffNodeIndex) <- textValue.prepareForSparqlInsert(newValueInfo.newValueIri).zipWithIndex) {
+
+                            <@newValueInfo.newValueIri> knora-base:valueHasStandoff <@createStandoff.standoffTagInstanceIri> .
+
+                            <@createStandoff.standoffTagInstanceIri>
+
+                                    @*
+
+                                    Check for optional standoff properties
+
+                                    *@
+
+                                    @if(createStandoff.standoffNode.endIndex.isDefined) {
+                                        knora-base:standoffTagHasEndIndex @createStandoff.standoffNode.endIndex.get ;
+                                    }
+
+                                    @if(createStandoff.startParentIri.isDefined) {
+                                        knora-base:standoffTagHasStartParent <@createStandoff.startParentIri.get> ;
+                                    }
+
+                                    @if(createStandoff.endParentIri.isDefined) {
+                                        knora-base:standoffTagHasEndParent <@createStandoff.endParentIri.get> ;
+                                    }
+
+                                    @if(createStandoff.standoffNode.originalXMLID.isDefined) {
+                                        knora-base:standoffTagHasOriginalXMLID """@createStandoff.standoffNode.originalXMLID.get""" ;
+                                    }
+
+                                    @*
+
+                                    Handle standoff class specific standoff properties
+
+                                    *@
+                                    @for(createProperty <- createStandoff.standoffNode.attributes) {
+
+                                        <@createProperty.standoffPropertyIri> @createProperty.rdfValue ;
+
+                                    }
+
+                                    knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex ;
+                                    knora-base:standoffTagHasUUID "@{UuidUtil.base64Encode(createStandoff.standoffNode.uuid)}" ;
+                                    knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
+                                    knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
+                                    rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .
+
+                        }
+
+                    }
+                }
+
+
+                case intValue: IntegerValueContentV2 => {
+
+                    <@newValueInfo.newValueIri> knora-base:valueHasInteger @intValue.valueHasInteger .
+
+                }
+
+                case decimalValue: DecimalValueContentV2 => {
+
+                    <@newValueInfo.newValueIri> knora-base:valueHasDecimal "@decimalValue.valueHasDecimal"^^xsd:decimal .
+
+                }
+
+                case booleanValue: BooleanValueContentV2 => {
+
+                    <@newValueInfo.newValueIri> knora-base:valueHasBoolean @booleanValue.valueHasBoolean .
+
+                }
+
+                case uriValue: UriValueContentV2 => {
+
+                    <@newValueInfo.newValueIri> knora-base:valueHasUri """@uriValue.valueHasUri"""^^xsd:anyURI .
+
+                }
+
+                case dateValue: DateValueContentV2 => {
+
+                    <@newValueInfo.newValueIri> knora-base:valueHasStartJDN @dateValue.valueHasStartJDN ;
+                                        knora-base:valueHasEndJDN @dateValue.valueHasEndJDN ;
+                                        knora-base:valueHasStartPrecision "@dateValue.valueHasStartPrecision" ;
+                                        knora-base:valueHasEndPrecision "@dateValue.valueHasEndPrecision" ;
+                                        knora-base:valueHasCalendar "@dateValue.valueHasCalendar" .
+
+                }
+
+                case colorValue: ColorValueContentV2 => {
+
+                    <@newValueInfo.newValueIri> knora-base:valueHasColor """@colorValue.valueHasColor""" .
+
+                }
+
+                case geometryValue: GeomValueContentV2 => {
+
+                    <@newValueInfo.newValueIri> knora-base:valueHasGeometry """@geometryValue.valueHasGeometry""" .
+
+                }
+
+                case fileValueContentV2: FileValueContentV2 => {
+                    <@newValueInfo.newValueIri> knora-base:internalFilename """@fileValueContentV2.fileValue.internalFilename""" ;
+                        knora-base:internalMimeType """@fileValueContentV2.fileValue.internalMimeType""" .
+
+                    @fileValueContentV2.fileValue.originalFilename match {
+                        case Some(definedOriginalFilename) => {
+                            <@newValueInfo.newValueIri> knora-base:originalFilename """@definedOriginalFilename""" .
+                        }
+
+                        case None => {}
+                    }
+
+                    @fileValueContentV2.fileValue.originalMimeType match {
+                        case Some(definedOriginalMimeType) => {
+                            <@newValueInfo.newValueIri> knora-base:originalMimeType """@definedOriginalMimeType""" .
+                        }
+
+                        case None => {}
+                    }
+
+                    @fileValueContentV2 match {
+                        case stillImageFileValue: StillImageFileValueContentV2 => {
+                            <@newValueInfo.newValueIri> knora-base:dimX @stillImageFileValue.dimX ;
+                                knora-base:dimY @stillImageFileValue.dimY .
+                        }
+
+                        case stillImageFileValue: StillImageExternalFileValueContentV2 => {
+                            <@newValueInfo.newValueIri> knora-base:externalUrl """@stillImageFileValue.externalUrl.value.toString""" .
+                        }
+
+                        case documentFileValue: DocumentFileValueContentV2 => {
+                            @documentFileValue.dimX match {
+                                case Some(definedDimX) => {
+                                    <@newValueInfo.newValueIri> knora-base:dimX @definedDimX .
+                                }
+
+                                case None => {}
+                            }
+
+                            @documentFileValue.dimY match {
+                                case Some(definedDimY) => {
+                                    <@newValueInfo.newValueIri> knora-base:dimY @definedDimY .
+                                }
+
+                                case None => {}
+                            }
+
+                            @documentFileValue.pageCount match {
+                                case Some(definedPageCount) => {
+                                    <@newValueInfo.newValueIri> knora-base:pageCount @definedPageCount .
+                                }
+
+                                case None => {}
+                            }
+                        }
+
+                        case _ => {}
+                    }
+                }
+
+                case listValue: HierarchicalListValueContentV2 => {
+
+                    <@newValueInfo.newValueIri> knora-base:valueHasListNode <@listValue.valueHasListNode> .
+
+                }
+
+                case intervalValue: IntervalValueContentV2 => {
+
+                    <@newValueInfo.newValueIri> knora-base:valueHasIntervalStart "@intervalValue.valueHasIntervalStart"^^xsd:decimal ;
+                                        knora-base:valueHasIntervalEnd "@intervalValue.valueHasIntervalEnd"^^xsd:decimal .
+
+                }
+
+                case timeValue: TimeValueContentV2 => {
+
+                    <@newValueInfo.newValueIri> knora-base:valueHasTimeStamp "@timeValue.valueHasTimeStamp"^^xsd:dateTime  .
+
+                }
+
+                case geonameValue: GeonameValueContentV2 => {
+
+                    <@newValueInfo.newValueIri> knora-base:valueHasGeonameCode """@geonameValue.valueHasGeonameCode""" .
+
+                }
+
+                case other => {
+                    @{throw SparqlGenerationException(s"Value object $other is not supported in this SPARQL template"); ()}
+                }
+            }
+
+            @* Insert the value's comment, if given. *@
+            @newValueInfo.value.comment match {
+                case Some(commentStr) => {
+                    <@newValueInfo.newValueIri> knora-base:valueHasComment """@commentStr""" .
+                }
+
+                case None => {}
+            }
+
+            <@newValueInfo.newValueIri> knora-base:attachedToUser <@newValueInfo.valueCreator> ;
+                knora-base:hasPermissions "@newValueInfo.valuePermissions"^^xsd:string ;
+                knora-base:valueHasOrder @newValueInfo.valueHasOrder ;
+                knora-base:valueCreationDate "@newValueInfo.creationDate"^^xsd:dateTime .
+
+
+
+            @* Attach the value to the resource. *@
+            <@newValueInfo.resourceIri> <@newValueInfo.propertyIri> <@newValueInfo.newValueIri> .
+        }
+
+
+        @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
+
+            <@resourceIri> <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+
+            @* Insert a LinkValue for the resource reference. *@
+            <@linkUpdate.newLinkValueIri> rdf:type knora-base:LinkValue ;
+                rdf:subject <@resourceIri> ;
+                rdf:predicate <@linkUpdate.linkPropertyIri> ;
+                rdf:object <@linkUpdate.linkTargetIri> ;
+                knora-base:valueHasString "@linkUpdate.linkTargetIri" ;
+                knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
+                knora-base:isDeleted false ;
+                knora-base:valueCreationDate "@creationDate"^^xsd:dateTime ;
+                knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
+                knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" ;
+                knora-base:valueHasUUID "@linkUpdate.valueUuid" .
+
+            @* Attach the new LinkValue to its containing resource. *@
+            <@resourceIri> <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
+        }
     }
 }

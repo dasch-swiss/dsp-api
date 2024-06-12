@@ -14,8 +14,6 @@
  * The number of rows returned per matching resource is equal to the number of values that matched in the resource,
  * plus one if the resource's label matched.
  *
- * This template is used only by searchFulltext.scala.txt.
- *
  * @param searchTerms search terms.
  * @param limitToProject limit search to the given project.
  * @param limitToResourceClass limit search to given resource class.

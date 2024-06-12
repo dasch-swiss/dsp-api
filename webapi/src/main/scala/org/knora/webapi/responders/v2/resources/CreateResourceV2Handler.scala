@@ -11,6 +11,7 @@ import zio.*
 import java.time.Instant
 
 import dsp.errors.*
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -21,8 +22,8 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.messages.twirl.NewLinkValueInfo
+import org.knora.webapi.messages.twirl.NewValueInfo
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
@@ -263,20 +264,14 @@ final case class CreateResourceV2Handler(
 
       // Verify that the resource was created.
       previewOfCreatedResource <- verifyResource(
-                                    resourceReadyToCreate = resourceReadyToCreate,
+                                    resourceIri = resourceReadyToCreate.resourceIri,
                                     requestingUser = createResourceRequestV2.requestingUser,
                                   )
     } yield previewOfCreatedResource
   }
 
-  private case class GenerateSparqlToCreateMultipleValuesResponseV2(
-    insertSparql: String,
-    unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]],
-    hasStandoffLink: Boolean,
-  )
-
   /**
-   * Generates a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating a resource and its values.
+   * Generates a [[ResourceReadyToCreate]] describing SPARQL for creating a resource and its values.
    * This method does pre-update checks that have to be done for each new resource individually, even when
    * multiple resources are being created in a single request.
    *
@@ -427,24 +422,53 @@ final case class CreateResourceV2Handler(
           requestingUser = requestingUser,
         )
 
-      // Ask the values responder for SPARQL for generating the values.
-      sparqlForValuesResponse <- generateSparqlToCreateMultipleValuesV2(
-                                   resourceIri = resourceIri,
-                                   values = valuesWithValidatedPermissions,
-                                   creationDate = creationDate,
-                                   requestingUser = requestingUser,
-                                 )
+      linkUpdates <- generateInsertSparqlForStandoffLinksInMultipleValues(
+                       resourceIri = resourceIri,
+                       values = valuesWithValidatedPermissions.values.flatten,
+                     )
+
+      valuesWithIndex = valuesWithValidatedPermissions.flatMap {
+                          case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
+                            valuesToCreate.zipWithIndex.map {
+                              case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
+                                (propertyIri, valueToCreate, valueHasOrder)
+                            }
+                        }.toList
+
+      newValueInfos <-
+        ZIO.foreach(valuesWithIndex) { case (propertyIri, valueToCreate, valueHasOrder) =>
+          for {
+            newValueUUID <-
+              ValuesResponderV2Live.makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
+            newValueIri <-
+              iriService.checkOrCreateEntityIri(
+                valueToCreate.customValueIri,
+                StringFormatter.makeValueIri(resourceIri, newValueUUID),
+              )
+
+            // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
+            // use resource creation date for the value.
+            valueCreationDate: Instant = valueToCreate.customValueCreationDate.getOrElse(creationDate)
+          } yield NewValueInfo(
+            resourceIri = resourceIri,
+            propertyIri = propertyIri.toIri,
+            value = valueToCreate.valueContent,
+            newValueIri = newValueIri,
+            newValueUUID = newValueUUID,
+            valueCreator = requestingUser.id,
+            valuePermissions = valueToCreate.permissions,
+            creationDate = valueCreationDate,
+            valueHasOrder = valueHasOrder,
+          )
+        }
     } yield ResourceReadyToCreate(
-      sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
-        resourceIri = resourceIri,
-        permissions = resourcePermissions,
-        sparqlForValues = sparqlForValuesResponse.insertSparql,
-        resourceClassIri = internalCreateResource.resourceClassIri.toString,
-        resourceLabel = internalCreateResource.label,
-        resourceCreationDate = creationDate,
-      ),
-      values = sparqlForValuesResponse.unverifiedValues,
-      hasStandoffLink = sparqlForValuesResponse.hasStandoffLink,
+      resourceIri = resourceIri,
+      resourceClassIri = internalCreateResource.resourceClassIri.toString,
+      resourceLabel = internalCreateResource.label,
+      creationDate = creationDate,
+      permissions = resourcePermissions,
+      newValueInfos = newValueInfos,
+      linkUpdates = linkUpdates,
     )
   }
 
@@ -745,16 +769,15 @@ final case class CreateResourceV2Handler(
   /**
    * Checks that a resource was created.
    *
-   * @param resourceReadyToCreate the resource that should have been created.
-   * @param projectIri            the IRI of the project in which the resource should have been created.
-   * @param requestingUser        the user that attempted to create the resource.
+   * @param resourceIri    the IRI of the resource that should have been created.
+   * @param projectIri     the IRI of the project in which the resource should have been created.
+   * @param requestingUser the user that attempted to create the resource.
    * @return a preview of the resource that was created.
    */
   private def verifyResource(
-    resourceReadyToCreate: ResourceReadyToCreate,
+    resourceIri: IRI,
     requestingUser: User,
-  ): Task[ReadResourcesSequenceV2] = {
-    val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
+  ): Task[ReadResourcesSequenceV2] =
     getResources
       .getResourcesV2(
         resourceIris = Seq(resourceIri),
@@ -767,172 +790,11 @@ final case class CreateResourceV2Handler(
           s"Resource <$resourceIri> was not created. Please report this as a possible bug.",
         )
       }
-  }
-
-  private def generateSparqlToCreateMultipleValuesV2(
-    resourceIri: IRI,
-    values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]],
-    creationDate: Instant,
-    requestingUser: User,
-  ): Task[GenerateSparqlToCreateMultipleValuesResponseV2] =
-    for {
-      // Generate SPARQL to create links and LinkValues for standoff links in text values.
-      sparqlForStandoffLinks <-
-        generateInsertSparqlForStandoffLinksInMultipleValues(
-          resourceIri = resourceIri,
-          values = values.values.flatten,
-          creationDate = creationDate,
-        )
-
-      // Generate SPARQL for each value.
-      sparqlForPropertyValueFutures =
-        values.map { case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
-          val values = ZIO.foreach(valuesToCreate.zipWithIndex) {
-            case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
-              generateInsertSparqlWithUnverifiedValue(
-                resourceIri = resourceIri,
-                propertyIri = propertyIri,
-                valueToCreate = valueToCreate,
-                valueHasOrder = valueHasOrder,
-                resourceCreationDate = creationDate,
-                requestingUser = requestingUser,
-              )
-          }
-          propertyIri -> values
-        }
-
-      sparqlForPropertyValues <- ZioHelper.sequence(sparqlForPropertyValueFutures)
-
-      // Concatenate all the generated SPARQL.
-      allInsertSparql: String =
-        sparqlForPropertyValues.values.flatten
-          .map(_.insertSparql)
-          .mkString("\n\n") + "\n\n" + sparqlForStandoffLinks.getOrElse("")
-
-      // Collect all the unverified values.
-      unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]] =
-        sparqlForPropertyValues.map { case (propertyIri, unverifiedValuesWithSparql) =>
-          propertyIri -> unverifiedValuesWithSparql.map(
-            _.unverifiedValue,
-          )
-        }
-    } yield GenerateSparqlToCreateMultipleValuesResponseV2(
-      insertSparql = allInsertSparql,
-      unverifiedValues = unverifiedValues,
-      hasStandoffLink = sparqlForStandoffLinks.isDefined,
-    )
-
-  /**
-   * Represents SPARQL generated to create one of multiple values in a new resource.
-   *
-   * @param insertSparql    the generated SPARQL.
-   * @param unverifiedValue an [[UnverifiedValueV2]] representing the value that is to be created.
-   */
-  private case class InsertSparqlWithUnverifiedValue(insertSparql: String, unverifiedValue: UnverifiedValueV2)
-
-  /**
-   * Generates SPARQL to create one of multiple values in a new resource.
-   *
-   * @param resourceIri          the IRI of the resource.
-   * @param propertyIri          the IRI of the property that will point to the value.
-   * @param valueToCreate        the value to be created.
-   * @param valueHasOrder        the value's `knora-base:valueHasOrder`.
-   * @param resourceCreationDate the creation date of the resource.
-   * @param requestingUser       the user making the request.
-   * @return a [[InsertSparqlWithUnverifiedValue]] containing the generated SPARQL and an [[UnverifiedValueV2]].
-   */
-  private def generateInsertSparqlWithUnverifiedValue(
-    resourceIri: IRI,
-    propertyIri: SmartIri,
-    valueToCreate: GenerateSparqlForValueInNewResourceV2,
-    valueHasOrder: Int,
-    resourceCreationDate: Instant,
-    requestingUser: User,
-  ): Task[InsertSparqlWithUnverifiedValue] =
-    for {
-      // Make new value UUID.
-      newValueUUID <-
-        ValuesResponderV2Live.makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
-      newValueIri <-
-        iriService.checkOrCreateEntityIri(
-          valueToCreate.customValueIri,
-          stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID)),
-        )
-
-      // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
-      // use resource creation date for the value.
-      valueCreationDate: Instant = valueToCreate.customValueCreationDate.getOrElse(resourceCreationDate)
-
-      // Generate the SPARQL.
-      insertSparql: String =
-        valueToCreate.valueContent match {
-          case linkValueContentV2: LinkValueContentV2 =>
-            // We're creating a link.
-
-            // Construct a SparqlTemplateLinkUpdate to tell the SPARQL template how to create
-            // the link and its LinkValue.
-            val sparqlTemplateLinkUpdate = SparqlTemplateLinkUpdate(
-              linkPropertyIri = propertyIri.fromLinkValuePropToLinkProp,
-              directLinkExists = false,
-              insertDirectLink = true,
-              deleteDirectLink = false,
-              linkValueExists = false,
-              linkTargetExists = linkValueContentV2.referredResourceExists,
-              newLinkValueIri = newValueIri,
-              linkTargetIri = linkValueContentV2.referredResourceIri,
-              currentReferenceCount = 0,
-              newReferenceCount = 1,
-              newLinkValueCreator = requestingUser.id,
-              newLinkValuePermissions = valueToCreate.permissions,
-            )
-
-            // Generate SPARQL for the link.
-            sparql.v2.txt
-              .generateInsertStatementsForCreateLink(
-                resourceIri = resourceIri,
-                linkUpdate = sparqlTemplateLinkUpdate,
-                creationDate = valueCreationDate,
-                newValueUUID = newValueUUID,
-                maybeComment = valueToCreate.valueContent.comment,
-                maybeValueHasOrder = Some(valueHasOrder),
-              )
-              .toString()
-
-          case otherValueContentV2 =>
-            // We're creating an ordinary value. Generate SPARQL for it.
-            sparql.v2.txt
-              .generateInsertStatementsForCreateValue(
-                resourceIri = resourceIri,
-                propertyIri = propertyIri,
-                value = otherValueContentV2,
-                newValueIri = newValueIri,
-                newValueUUID = newValueUUID,
-                linkUpdates = Seq.empty[
-                  SparqlTemplateLinkUpdate,
-                ], // This is empty because we have to generate SPARQL for standoff links separately.
-                valueCreator = requestingUser.id,
-                valuePermissions = valueToCreate.permissions,
-                creationDate = valueCreationDate,
-                maybeValueHasOrder = Some(valueHasOrder),
-              )
-              .toString()
-        }
-    } yield InsertSparqlWithUnverifiedValue(
-      insertSparql = insertSparql,
-      unverifiedValue = UnverifiedValueV2(
-        newValueIri = newValueIri,
-        newValueUUID = newValueUUID,
-        valueContent = valueToCreate.valueContent.unescape,
-        permissions = valueToCreate.permissions,
-        creationDate = valueCreationDate,
-      ),
-    )
 
   private def generateInsertSparqlForStandoffLinksInMultipleValues(
     resourceIri: IRI,
     values: Iterable[GenerateSparqlForValueInNewResourceV2],
-    creationDate: Instant,
-  ): Task[Option[String]] = {
+  ): Task[Seq[NewLinkValueInfo]] = {
     // To create LinkValues for the standoff links in the values to be created, we need to compute
     // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
     // that have standoff links to a particular target resource.
@@ -968,40 +830,23 @@ final case class CreateResourceV2Handler(
 
       // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
       // and one LinkValue with its initial reference count.
-      val standoffLinkUpdatesFutures: Seq[Task[SparqlTemplateLinkUpdate]] = initialReferenceCounts.toSeq.map {
+      val standoffLinkUpdatesFutures: Seq[Task[NewLinkValueInfo]] = initialReferenceCounts.toSeq.map {
         case (targetIri, initialReferenceCount) =>
           for {
             newValueIri <- makeUnusedValueIri(resourceIri)
-          } yield SparqlTemplateLinkUpdate(
-            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-            directLinkExists = false,
-            insertDirectLink = true,
-            deleteDirectLink = false,
-            linkValueExists = false,
-            linkTargetExists =
-              true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
+          } yield NewLinkValueInfo(
+            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
             newLinkValueIri = newValueIri,
             linkTargetIri = targetIri,
-            currentReferenceCount = 0,
             newReferenceCount = initialReferenceCount,
             newLinkValueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
             newLinkValuePermissions = standoffLinkValuePermissions,
+            valueUuid = UuidUtil.makeRandomBase64EncodedUuid,
           )
       }
-      for {
-        standoffLinkUpdates <- ZIO.collectAll(standoffLinkUpdatesFutures)
-        // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
-        sparqlInsert =
-          sparql.v2.txt
-            .generateInsertStatementsForStandoffLinks(
-              resourceIri = resourceIri,
-              linkUpdates = standoffLinkUpdates,
-              creationDate = creationDate,
-            )
-            .toString()
-      } yield Some(sparqlInsert)
+      ZIO.collectAll(standoffLinkUpdatesFutures)
     } else {
-      ZIO.succeed(None)
+      ZIO.succeed(Seq.empty[NewLinkValueInfo])
     }
   }
 
@@ -1027,22 +872,3 @@ final case class CreateResourceV2Handler(
   }
 
 }
-
-/**
- * Represents a resource to be created with its index, label, IRI, permissions, and SPARQL for creating its values
- *
- * @param resourceIri          the IRI of the resource to be created.
- * @param permissions          the permissions user has for creating the new resource.
- * @param sparqlForValues      the SPARQL for creating the values of the resource.
- * @param resourceClassIri     the type of the resource to be created.
- * @param resourceLabel        the label of the resource.
- * @param resourceCreationDate the creation date that should be attached to the resource.
- */
-case class SparqlTemplateResourceToCreate(
-  resourceIri: IRI,
-  permissions: String,
-  sparqlForValues: String,
-  resourceClassIri: IRI,
-  resourceLabel: String,
-  resourceCreationDate: Instant,
-)
