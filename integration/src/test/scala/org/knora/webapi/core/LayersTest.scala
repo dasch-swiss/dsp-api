@@ -7,6 +7,7 @@ package org.knora.webapi.core
 
 import org.apache.pekko
 import zio.*
+
 import org.knora.sipi.SipiServiceTestDelegator
 import org.knora.sipi.WhichSipiService
 import org.knora.webapi.config.AppConfig
@@ -128,6 +129,7 @@ object LayersTest {
     ResourceUtilV2 &
     ResourcesRepo &
     RestCardinalityService &
+    ScopeResolver &
     SearchApiRoutes &
     SearchEndpoints &
     SearchResponderV2Module.Provided &

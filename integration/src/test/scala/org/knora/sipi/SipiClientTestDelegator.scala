@@ -10,7 +10,6 @@ import zio.ULayer
 import zio.ZLayer
 import zio.nio.file.Path
 
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
@@ -20,8 +19,6 @@ import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.Asset
-import org.knora.webapi.slice.admin.domain.service.DspIngestClient
-import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
