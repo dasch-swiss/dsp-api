@@ -21,7 +21,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 object ResourcesRepoLiveSpec extends ZIOSpecDefault {
-  def spec: Spec[Environment & (TestEnvironment & Scope), Any] = tests.provide(Layer.layer)
+  def spec: Spec[Environment & (TestEnvironment & Scope), Any] = tests.provide(StringFormatter.test)
 
   val tests: Spec[StringFormatter, Nothing] =
     suite("ResourcesRepoLiveSpec")(
@@ -276,8 +276,4 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       },
     )
 
-}
-
-object Layer {
-  val layer: ULayer[StringFormatter] = ZLayer.fromZIO(ZIO.succeed(StringFormatter.getInitializedTestInstance))
 }
