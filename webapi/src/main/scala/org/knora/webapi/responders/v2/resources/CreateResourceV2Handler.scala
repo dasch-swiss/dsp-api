@@ -450,7 +450,7 @@ final case class CreateResourceV2Handler(
             // use resource creation date for the value.
             valueCreationDate: Instant = valueToCreate.customValueCreationDate.getOrElse(creationDate)
 
-            valueInfo =
+            valueInfo <-
               valueToCreate.valueContent match
                 case DateValueContentV2(
                       _,
@@ -461,12 +461,14 @@ final case class CreateResourceV2Handler(
                       valueHasCalendar,
                       _,
                     ) =>
-                  DateValueInfo(
-                    valueHasStartJDN = valueHasStartJDN,
-                    valueHasEndJDN = valueHasEndJDN,
-                    valueHasStartPrecision = valueHasStartPrecision,
-                    valueHasEndPrecision = valueHasEndPrecision,
-                    valueHasCalendar = valueHasCalendar,
+                  ZIO.succeed(
+                    DateValueInfo(
+                      valueHasStartJDN = valueHasStartJDN,
+                      valueHasEndJDN = valueHasEndJDN,
+                      valueHasStartPrecision = valueHasStartPrecision,
+                      valueHasEndPrecision = valueHasEndPrecision,
+                      valueHasCalendar = valueHasCalendar,
+                    ),
                   )
                 case TextValueContentV2(
                       _,
@@ -478,81 +480,95 @@ final case class CreateResourceV2Handler(
                       xslt,
                       _,
                     ) =>
-                  ???
+                  ZIO.succeed(???) // XXX: implement
                 case IntegerValueContentV2(_, valueHasInteger, _) =>
-                  IntegerValueInfo(valueHasInteger)
+                  ZIO.succeed(IntegerValueInfo(valueHasInteger))
                 case DecimalValueContentV2(_, valueHasDecimal, _) =>
-                  DecimalValueInfo(valueHasDecimal)
+                  ZIO.succeed(DecimalValueInfo(valueHasDecimal))
                 case BooleanValueContentV2(_, valueHasBoolean, _) =>
-                  BooleanValueInfo(valueHasBoolean)
+                  ZIO.succeed(BooleanValueInfo(valueHasBoolean))
                 case GeomValueContentV2(_, valueHasGeometry, _) =>
-                  GeomValueInfo(valueHasGeometry)
+                  ZIO.succeed(GeomValueInfo(valueHasGeometry))
                 case IntervalValueContentV2(_, valueHasIntervalStart, valueHasIntervalEnd, _) =>
-                  IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd)
+                  ZIO.succeed(IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd))
                 case TimeValueContentV2(_, valueHasTimeStamp, _) =>
-                  TimeValueInfo(valueHasTimeStamp)
+                  ZIO.succeed(TimeValueInfo(valueHasTimeStamp))
                 case HierarchicalListValueContentV2(_, valueHasListNode, listNodeLabel, _) =>
-                  HierarchicalListValueInfo(valueHasListNode)
+                  ZIO.succeed(HierarchicalListValueInfo(valueHasListNode))
                 case ColorValueContentV2(_, valueHasColor, _) =>
-                  ColorValueInfo(valueHasColor)
+                  ZIO.succeed(ColorValueInfo(valueHasColor))
                 case UriValueContentV2(_, valueHasUri, _) =>
-                  UriValueInfo(valueHasUri)
+                  ZIO.succeed(UriValueInfo(valueHasUri))
                 case GeonameValueContentV2(_, valueHasGeonameCode, _) =>
-                  GeonameValueInfo(valueHasGeonameCode)
+                  ZIO.succeed(GeonameValueInfo(valueHasGeonameCode))
                 case StillImageFileValueContentV2(_, fileValue, dimX, dimY, _) =>
-                  StillImageFileValueInfo(
-                    internalFilename = fileValue.internalFilename,
-                    internalMimeType = fileValue.internalMimeType,
-                    originalFilename = fileValue.originalFilename,
-                    originalMimeType = fileValue.originalMimeType,
-                    dimX = dimX,
-                    dimY = dimY,
+                  ZIO.succeed(
+                    StillImageFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                      dimX = dimX,
+                      dimY = dimY,
+                    ),
                   )
                 case StillImageExternalFileValueContentV2(_, fileValue, externalUrl, _) =>
-                  StillImageExternalFileValueInfo(
-                    internalFilename = fileValue.internalFilename,
-                    internalMimeType = fileValue.internalMimeType,
-                    originalFilename = fileValue.originalFilename,
-                    originalMimeType = fileValue.originalMimeType,
-                    externalUrl = externalUrl.value.toString(),
+                  ZIO.succeed(
+                    StillImageExternalFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                      externalUrl = externalUrl.value.toString(),
+                    ),
                   )
                 case DocumentFileValueContentV2(_, fileValue, pageCount, dimX, dimY, _) =>
-                  DocumentFileValueInfo(
-                    internalFilename = fileValue.internalFilename,
-                    internalMimeType = fileValue.internalMimeType,
-                    originalFilename = fileValue.originalFilename,
-                    originalMimeType = fileValue.originalMimeType,
-                    dimX = dimX,
-                    dimY = dimY,
-                    pageCount = pageCount,
+                  ZIO.succeed(
+                    DocumentFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                      dimX = dimX,
+                      dimY = dimY,
+                      pageCount = pageCount,
+                    ),
                   )
                 case ArchiveFileValueContentV2(_, fileValue, _) =>
-                  OtherFileValueInfo(
-                    internalFilename = fileValue.internalFilename,
-                    internalMimeType = fileValue.internalMimeType,
-                    originalFilename = fileValue.originalFilename,
-                    originalMimeType = fileValue.originalMimeType,
+                  ZIO.succeed(
+                    OtherFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                    ),
                   )
                 case TextFileValueContentV2(_, fileValue, _) =>
-                  OtherFileValueInfo(
-                    internalFilename = fileValue.internalFilename,
-                    internalMimeType = fileValue.internalMimeType,
-                    originalFilename = fileValue.originalFilename,
-                    originalMimeType = fileValue.originalMimeType,
+                  ZIO.succeed(
+                    OtherFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                    ),
                   )
                 case AudioFileValueContentV2(_, fileValue, _) =>
-                  OtherFileValueInfo(
-                    internalFilename = fileValue.internalFilename,
-                    internalMimeType = fileValue.internalMimeType,
-                    originalFilename = fileValue.originalFilename,
-                    originalMimeType = fileValue.originalMimeType,
+                  ZIO.succeed(
+                    OtherFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                    ),
                   )
                 case MovingImageFileValueContentV2(_, fileValue, _) =>
-                  OtherFileValueInfo(
-                    internalFilename = fileValue.internalFilename,
-                    internalMimeType = fileValue.internalMimeType,
-                    originalFilename = fileValue.originalFilename,
-                    originalMimeType = fileValue.originalMimeType,
+                  ZIO.succeed(
+                    OtherFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                    ),
                   )
                 case LinkValueContentV2(
                       _,
@@ -562,8 +578,8 @@ final case class CreateResourceV2Handler(
                       nestedResource,
                       _,
                     ) =>
-                  LinkValueInfo(referredResourceIri)
-                case DeletedValueContentV2(_, _) => ???
+                  ZIO.succeed(LinkValueInfo(referredResourceIri))
+                case _: DeletedValueContentV2 => ZIO.fail(BadRequestException("Deleted values cannot be created"))
 
           } yield NewValueInfo(
             resourceIri = resourceIri,
