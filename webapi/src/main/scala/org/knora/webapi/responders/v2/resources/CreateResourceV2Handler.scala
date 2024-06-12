@@ -52,6 +52,8 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.slice.resources.repo.service.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.util.ZioHelper
+import org.knora.webapi.messages.twirl.StandoffTagInfo
+import org.knora.webapi.messages.twirl.StandoffAttribute
 
 final case class CreateResourceV2Handler(
   appConfig: AppConfig,
@@ -470,17 +472,33 @@ final case class CreateResourceV2Handler(
                       valueHasCalendar = valueHasCalendar,
                     ),
                   )
-                case TextValueContentV2(
-                      _,
-                      maybeValueHasString,
-                      valueHasLanguage,
-                      standoff,
-                      mappingIri,
-                      mapping,
-                      xslt,
-                      _,
-                    ) =>
-                  ZIO.succeed(???) // XXX: implement
+                case TextValueContentV2(_, _, valueHasLanguage, _, None, _, _, _) =>
+                  ZIO.succeed(UnformattedTextValueInfo(valueHasLanguage))
+                case tv @ TextValueContentV2(_, _, valueHasLanguage, _, Some(mappingIri), _, _, _) =>
+                  val standoffInfo = tv
+                    .prepareForSparqlInsert(newValueIri)
+                    .map(standoffTag =>
+                      StandoffTagInfo(
+                        standoffTagClassIri = standoffTag.standoffNode.standoffTagClassIri.toString(),
+                        standoffTagInstanceIri = standoffTag.standoffTagInstanceIri,
+                        startParentIri = standoffTag.startParentIri,
+                        endParentIri = standoffTag.endParentIri,
+                        uuid = standoffTag.standoffNode.uuid,
+                        originalXMLID = standoffTag.standoffNode.originalXMLID,
+                        startIndex = standoffTag.standoffNode.startIndex,
+                        endIndex = standoffTag.standoffNode.endIndex,
+                        startPosition = standoffTag.standoffNode.startPosition,
+                        endPosition = standoffTag.standoffNode.endPosition,
+                        attributes = standoffTag.standoffNode.attributes
+                          .map(attr => StandoffAttribute(attr.standoffPropertyIri.toString(), attr.rdfValue)),
+                      ),
+                    )
+                  ZIO
+                    .fromOption(tv.computedMaxStandoffStartIndex)
+                    .orElseFail(StandoffInternalException("Max standoff start index not computed"))
+                    .map(standoffStartIndex =>
+                      FormattedTextValueInfo(valueHasLanguage, mappingIri, standoffStartIndex, standoffInfo),
+                    )
                 case IntegerValueContentV2(_, valueHasInteger, _) =>
                   ZIO.succeed(IntegerValueInfo(valueHasInteger))
                 case DecimalValueContentV2(_, valueHasDecimal, _) =>
