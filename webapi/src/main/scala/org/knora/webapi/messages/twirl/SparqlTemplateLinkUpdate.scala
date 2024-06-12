@@ -5,8 +5,12 @@
 
 package org.knora.webapi.messages.twirl
 
+import java.time.Instant
+import java.util.UUID
+
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 
 /**
  * Contains instructions that can be given to a SPARQL template for updating direct links and `knora-base:LinkValue`
@@ -45,4 +49,26 @@ case class SparqlTemplateLinkUpdate(
   newReferenceCount: Int,
   newLinkValueCreator: IRI,
   newLinkValuePermissions: String,
+)
+
+final case class NewLinkValueInfo(
+  linkPropertyIri: IRI,
+  newLinkValueIri: IRI,
+  linkTargetIri: IRI,
+  newReferenceCount: Int,
+  newLinkValueCreator: IRI,
+  newLinkValuePermissions: String,
+  valueUuid: String,
+)
+
+final case class NewValueInfo(
+  resourceIri: IRI,
+  propertyIri: IRI,
+  value: ValueContentV2,
+  newValueIri: IRI,
+  newValueUUID: UUID,
+  valueCreator: IRI,
+  valuePermissions: String,
+  creationDate: Instant,
+  valueHasOrder: Int,
 )

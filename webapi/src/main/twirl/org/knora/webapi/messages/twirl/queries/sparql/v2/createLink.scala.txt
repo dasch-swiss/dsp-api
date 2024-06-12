@@ -5,6 +5,8 @@
 
 @import java.time.Instant
 @import java.util.UUID
+@import dsp.errors.SparqlGenerationException
+@import dsp.valueobjects.UuidUtil
 @import org.knora.webapi._
 @import org.knora.webapi.messages.StringFormatter
 @import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
@@ -46,14 +48,40 @@ DELETE {
         @* Update the link source's last modification date. *@
         ?resource knora-base:lastModificationDate "@creationDate"^^xsd:dateTime .
 
-        @{
-            org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForCreateLink(resourceIri = resourceIri,
-                                                                        linkUpdate = linkUpdate,
-                                                                        creationDate = creationDate,
-                                                                        newValueUUID = newValueUUID,
-                                                                        maybeComment = maybeComment,
-                                                                        maybeValueHasOrder = None)
+        
+        # Value: @linkUpdate.newLinkValueIri
+        # Property: @linkUpdate.linkPropertyIri
+
+        @* Insert a direct link between the source and target resources. *@
+        @if(linkUpdate.insertDirectLink) {
+            <@resourceIri> <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+        } else {
+            @{throw SparqlGenerationException(s"LinkUpdate.insertDirectLink must be true in this SPARQL template (for value @index)"); ()}
         }
+
+        @* Insert a LinkValue describing the link. *@
+        <@linkUpdate.newLinkValueIri> rdf:type knora-base:LinkValue ;
+            rdf:subject <@resourceIri> ;
+            rdf:predicate <@linkUpdate.linkPropertyIri> ;
+            rdf:object <@linkUpdate.linkTargetIri> ;
+            knora-base:valueHasString "@linkUpdate.linkTargetIri"^^xsd:string ;
+            knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
+            @maybeComment match {
+                case Some(comment) => {
+                    knora-base:valueHasComment """@comment""" ;
+                }
+
+                case None => {}
+            }
+            knora-base:valueHasOrder ?nextOrder ;
+            knora-base:isDeleted false ;
+            knora-base:valueHasUUID "@{UuidUtil.base64Encode(newValueUUID)}" ;
+            knora-base:valueCreationDate "@creationDate"^^xsd:dateTime ;
+            knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
+            knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions"^^xsd:string .
+
+        @* Attach the new LinkValue to its containing resource. *@
+        <@resourceIri> <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
 
     }
 }
@@ -74,8 +102,62 @@ WHERE {
         ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
     }
 
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateWhereStatementsForCreateLink(resourceIri = resourceIri,
-                                                                   linkUpdate = linkUpdate)
+    # Value: @linkUpdate.newLinkValueIri
+    # Property: @linkUpdate.linkPropertyIri
+
+    BIND(IRI("@linkUpdate.linkPropertyIri") AS ?linkProperty)
+    BIND(IRI("@{linkUpdate.linkPropertyIri}Value") AS ?linkValueProperty)
+    BIND(IRI("@linkUpdate.newLinkValueIri") AS ?newLinkValue)
+    BIND(IRI("@linkUpdate.linkTargetIri") AS ?linkTarget)
+
+  @if(linkUpdate.linkTargetExists) {
+  
+        @* Make sure the link target is a knora-base:Resource. *@
+
+        ?linkTarget rdf:type ?linkTargetClass .
+        ?linkTargetClass rdfs:subClassOf* knora-base:Resource .
+
+        @* Do nothing if the target resource belongs to the wrong OWL class. *@
+
+        ?linkProperty knora-base:objectClassConstraint ?expectedTargetClass .
+        ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
+
+        @* Do nothing if the target resource doesn't exist or is marked as deleted. *@
+
+        ?linkTarget knora-base:isDeleted false .
+
+        @* Do nothing if the source resource's OWL class has no cardinality for the link property. *@
+        ?resourceClass rdfs:subClassOf* ?restriction .
+        ?restriction a owl:Restriction .
+        ?restriction owl:onProperty ?linkProperty .
+
     }
+
+    @if(linkUpdate.directLinkExists) {
+        @{throw SparqlGenerationException("linkUpdate.directLinkExists must be false in this SPARQL template"); ()}
+    }
+
+    @if(linkUpdate.linkValueExists) {
+        @{throw SparqlGenerationException("linkUpdate.linkValueExists must be false in this SPARQL template"); ()}
+    }
+
+    @*
+
+    Bind a variable for knora-base:valueHasOrder for the new value.
+
+    We have to do a subquery to determine the next available knora-base:valueHasOrder. This works as follows: if the
+    property already has one or more (non-deleted) values in the resource, find the one with the highest order, add 1
+    to its order, and give the resulting order to the new value. Otherwise, give the new value an order of 0.
+
+    *@
+
+    {
+        SELECT ((MAX(?order)) AS ?maxOrder) (IF(BOUND(?maxOrder), ?maxOrder + 1, 0) AS ?nextOrder)
+        WHERE {
+            <@resourceIri> <@{linkUpdate.linkPropertyIri}Value> ?otherLinkValue .
+            ?otherLinkValue knora-base:valueHasOrder ?order ;
+                knora-base:isDeleted false .
+        }
+    }
+
 }
