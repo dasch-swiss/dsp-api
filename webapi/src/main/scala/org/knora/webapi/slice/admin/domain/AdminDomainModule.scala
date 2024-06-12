@@ -24,12 +24,18 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object AdminDomainModule {
 
   type Dependencies =
-    AppConfig & AdminRepoModule.Provided & IriService & OntologyRepo & TriplestoreService
+    // format: off
+    AdminRepoModule.Provided &
+    AppConfig & 
+    CacheManager &
+    IriService &
+    OntologyRepo &
+    TriplestoreService
+    // format: on
 
   type Provided =
     // format: off
     AdministrativePermissionService &
-    CacheManager &
     GroupService &
     KnoraGroupService &
     KnoraProjectService &

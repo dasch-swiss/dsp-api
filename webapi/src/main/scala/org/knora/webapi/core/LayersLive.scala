@@ -40,6 +40,7 @@ import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
+import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.JwtServiceLive
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
@@ -88,6 +89,7 @@ object LayersLive {
     GroupRestService &
     HttpServer &
     IIIFRequestMessageHandler &
+    InfrastructureModule.Provided &
     InstrumentationServerConfig &
     InvalidTokenCache &
     IriConverter &
@@ -145,6 +147,7 @@ object LayersLive {
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
+      InfrastructureModule.layer,
       InvalidTokenCache.layer,
       IriConverter.layer,
       IriService.layer,
