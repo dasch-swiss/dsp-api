@@ -16,7 +16,6 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
-import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
@@ -24,6 +23,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionT
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.twirl.NewLinkValueInfo
 import org.knora.webapi.messages.twirl.NewValueInfo
+import org.knora.webapi.messages.twirl.TypeSpecificValueInfo.*
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
@@ -52,7 +52,6 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.slice.resources.repo.service.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.util.ZioHelper
-import org.knora.webapi.messages.twirl.TypeSpecificValueInfo.*
 
 final case class CreateResourceV2Handler(
   appConfig: AppConfig,

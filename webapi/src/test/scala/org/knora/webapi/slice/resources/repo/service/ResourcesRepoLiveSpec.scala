@@ -12,11 +12,11 @@ import java.time.Instant
 import java.util.UUID
 
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.NewLinkValueInfo
 import org.knora.webapi.messages.twirl.NewValueInfo
-import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
+import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
@@ -109,13 +109,16 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             NewValueInfo(
               resourceIri = resourceIri,
               propertyIri = "fooProperty",
-              value = IntegerValueContentV2(ApiV2Complex, 42),
               valueIri = valueIri,
+              valueTypeIri = OntologyConstants.KnoraBase.IntValue,
               valueUUID = uuid,
-              valueCreator = valueCreator,
+              value = TypeSpecificValueInfo.IntegerValueInfo(42),
               valuePermissions = valuePermissions,
+              valueCreator = valueCreator,
               creationDate = valueCreationDate,
               valueHasOrder = 1,
+              valueHasString = "42",
+              comment = None,
             ),
           ),
           linkUpdates = Seq.empty,
