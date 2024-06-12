@@ -62,13 +62,13 @@ INSERT DATA {
                 }
 
                 case textValue: UnformattedTextValueInfo => {
-                    textValue.valueHasLanguage.foreach { language => 
+                    @textValue.valueHasLanguage.foreach { language => 
                         <@newValueInfo.valueIri> knora-base:valueHasLanguage """@language""" .
                     }
                 }
 
                 case textValue: FormattedTextValueInfo => {
-                    textValue.valueHasLanguage.foreach { language => 
+                    @textValue.valueHasLanguage.foreach { language => 
                         <@newValueInfo.valueIri> knora-base:valueHasLanguage """@language""" .
                     }
                     <@newValueInfo.valueIri> knora-base:valueHasMapping <@textValue.mappingIri> .
