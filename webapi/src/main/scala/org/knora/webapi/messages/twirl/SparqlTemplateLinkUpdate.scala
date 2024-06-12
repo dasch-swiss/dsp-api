@@ -10,8 +10,8 @@ import java.util.UUID
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.DatePrecisionV2
 import org.knora.webapi.messages.util.CalendarNameV2
+import org.knora.webapi.messages.util.DatePrecisionV2
 
 /**
  * Contains instructions that can be given to a SPARQL template for updating direct links and `knora-base:LinkValue`
