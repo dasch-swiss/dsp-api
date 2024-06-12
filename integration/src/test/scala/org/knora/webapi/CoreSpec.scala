@@ -28,7 +28,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.infrastructure.ScopeResolver
+import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.util.LogAspect
 
 abstract class CoreSpec

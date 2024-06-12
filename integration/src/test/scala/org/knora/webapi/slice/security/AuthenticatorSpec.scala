@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.routing
+package org.knora.webapi.slice.security
 
 import org.apache.pekko.testkit.ImplicitSender
 import org.scalatest.PrivateMethodTester
@@ -15,6 +15,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User

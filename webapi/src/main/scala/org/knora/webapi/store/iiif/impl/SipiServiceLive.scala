@@ -32,7 +32,7 @@ import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
-import org.knora.webapi.slice.infrastructure.ScopeResolver
+import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.errors.SipiException

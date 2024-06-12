@@ -19,9 +19,9 @@ import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages.*
-import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.security.Authenticator
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.

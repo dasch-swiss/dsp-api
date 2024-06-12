@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.routing
+package org.knora.webapi.slice.security
 
 import org.apache.commons.codec.binary.Base32
 import org.apache.pekko.http.scaladsl.model.*
@@ -26,8 +26,6 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.*
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
-import org.knora.webapi.routing.Authenticator.BAD_CRED_NONE_SUPPLIED
-import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -37,7 +35,8 @@ import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.infrastructure.InvalidTokenCache
 import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.infrastructure.ScopeResolver
+import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NONE_SUPPLIED
+import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NOT_VALID
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]

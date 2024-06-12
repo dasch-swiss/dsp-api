@@ -41,7 +41,6 @@ import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
-import org.knora.webapi.slice.infrastructure.ScopeResolver
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -58,6 +57,8 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
+import org.knora.webapi.slice.security.ScopeResolver
+import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -81,7 +82,6 @@ object LayersLive {
     AppConfigurations &
     AppRouter &
     AssetPermissionsResponder &
-    Authenticator &
     AuthorizationRestService &
     CardinalityHandler &
     ConstructResponseUtilV2 &
@@ -110,7 +110,7 @@ object LayersLive {
     ResourceUtilV2 &
     ResourcesResponderV2 &
     RestCardinalityService &
-    ScopeResolver &
+    SecurityModule.Provided &
     SearchApiRoutes &
     SearchResponderV2Module.Provided &
     SipiService &
@@ -135,7 +135,6 @@ object LayersLive {
       AppConfig.layer,
       AppRouter.layer,
       AssetPermissionsResponder.layer,
-      AuthenticatorLive.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
       CardinalityHandler.layer,
@@ -173,7 +172,7 @@ object LayersLive {
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
       RestCardinalityServiceLive.layer,
-      ScopeResolver.layer,
+      SecurityModule.layer,
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,
