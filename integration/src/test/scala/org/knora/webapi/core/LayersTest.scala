@@ -109,7 +109,6 @@ object LayersTest {
     GroupRestService &
     InfrastructureModule.Provided &
     InferenceOptimizationService &
-    InvalidTokenCache &
     IriConverter &
     IriService &
     JwtService &
@@ -172,7 +171,6 @@ object LayersTest {
       HandlerMapper.layer,
       InfrastructureModule.layer,
       InferenceOptimizationService.layer,
-      InvalidTokenCache.layer,
       IriConverter.layer,
       IriService.layer,
       JwtServiceLive.layer,

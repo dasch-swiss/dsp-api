@@ -36,7 +36,6 @@ import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.routing.InvalidTokenCache
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri

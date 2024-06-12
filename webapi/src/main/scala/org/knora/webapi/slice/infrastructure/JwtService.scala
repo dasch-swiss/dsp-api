@@ -30,7 +30,6 @@ import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
-import org.knora.webapi.routing.InvalidTokenCache
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission.Administrative

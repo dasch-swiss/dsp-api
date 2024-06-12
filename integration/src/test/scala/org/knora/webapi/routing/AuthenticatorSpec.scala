@@ -18,6 +18,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.infrastructure.InvalidTokenCache
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 object AuthenticatorSpec {

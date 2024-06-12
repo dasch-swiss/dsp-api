@@ -91,7 +91,6 @@ object LayersLive {
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
     InstrumentationServerConfig &
-    InvalidTokenCache &
     IriConverter &
     JwtService &
     ListsResponder &
@@ -148,7 +147,6 @@ object LayersLive {
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
-      InvalidTokenCache.layer,
       IriConverter.layer,
       IriService.layer,
       JwtServiceLive.layer,

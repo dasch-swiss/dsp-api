@@ -16,10 +16,12 @@ object InfrastructureModule {
 
   type Provided =
     // format: off
-    CacheManager
+    CacheManager &
+    InvalidTokenCache
     // format: on
 
   val layer = ZLayer.makeSome[Dependencies, Provided](
     CacheManager.layer,
+    InvalidTokenCache.layer,
   )
 }
