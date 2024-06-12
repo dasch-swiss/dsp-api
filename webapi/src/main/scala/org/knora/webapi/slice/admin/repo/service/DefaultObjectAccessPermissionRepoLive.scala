@@ -15,7 +15,6 @@ import zio.NonEmptyChunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
