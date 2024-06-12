@@ -40,8 +40,7 @@ import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
-import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.infrastructure.JwtServiceLive
+import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -58,6 +57,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
+import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -81,17 +81,15 @@ object LayersLive {
     AppConfigurations &
     AppRouter &
     AssetPermissionsResponder &
-    Authenticator &
     AuthorizationRestService &
     CardinalityHandler &
     ConstructResponseUtilV2 &
     GroupRestService &
     HttpServer &
     IIIFRequestMessageHandler &
+    InfrastructureModule.Provided &
     InstrumentationServerConfig &
-    InvalidTokenCache &
     IriConverter &
-    JwtService &
     ListsResponder &
     ListsResponderV2 &
     MessageRelay &
@@ -111,6 +109,7 @@ object LayersLive {
     ResourceUtilV2 &
     ResourcesResponderV2 &
     RestCardinalityService &
+    SecurityModule.Provided &
     SearchApiRoutes &
     SearchResponderV2Module.Provided &
     SipiService &
@@ -135,7 +134,6 @@ object LayersLive {
       AppConfig.layer,
       AppRouter.layer,
       AssetPermissionsResponder.layer,
-      AuthenticatorLive.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
       CardinalityHandler.layer,
@@ -145,10 +143,9 @@ object LayersLive {
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
-      InvalidTokenCache.layer,
+      InfrastructureModule.layer,
       IriConverter.layer,
       IriService.layer,
-      JwtServiceLive.layer,
       KnoraResponseRenderer.layer,
       ListsResponder.layer,
       ListsResponderV2.layer,
@@ -174,6 +171,7 @@ object LayersLive {
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
       RestCardinalityServiceLive.layer,
+      SecurityModule.layer,
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,

@@ -44,12 +44,13 @@ import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.dspIngestConfigLayer
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.jwtServiceMockLayer
 import org.knora.webapi.slice.admin.domain.service.HttpMockServer.TestPort
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 
 object DspIngestClientLiveSpec extends ZIOSpecDefault {
 
@@ -132,10 +133,10 @@ object DspIngestClientLiveSpecLayers {
   val jwtServiceMockLayer: ULayer[JwtService] = ZLayer.succeed {
     val unsupported = ZIO.die(new UnsupportedOperationException("not implemented"))
     new JwtService {
-      override def createJwtForDspIngest(): UIO[Jwt]                           = ZIO.succeed(Jwt("mock-jwt-string-value", Long.MaxValue))
-      override def createJwt(user: User, content: Map[String, Json]): UIO[Jwt] = unsupported
-      override def isTokenValid(token: String): Boolean                        = throw new UnsupportedOperationException("not implemented")
-      override def extractUserIriFromToken(token: String): Task[Option[IRI]]   = unsupported
+      override def createJwtForDspIngest(): UIO[Jwt]                                                = ZIO.succeed(Jwt("mock-jwt-string-value", Long.MaxValue))
+      override def createJwt(user: UserIri, scope: AuthScope, content: Map[String, Json]): UIO[Jwt] = unsupported
+      override def isTokenValid(token: String): Boolean                                             = throw new UnsupportedOperationException("not implemented")
+      override def extractUserIriFromToken(token: String): Task[Option[IRI]]                        = unsupported
     }
   }
 

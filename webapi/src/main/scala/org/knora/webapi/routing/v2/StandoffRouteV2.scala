@@ -22,10 +22,10 @@ import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestMetadataV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestXMLV2
-import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.security.Authenticator
 
 import pekko.actor.ActorSystem
 import pekko.http.scaladsl.model.Multipart

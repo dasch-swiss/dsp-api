@@ -28,6 +28,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.util.LogAspect
 
 abstract class CoreSpec
@@ -111,5 +112,8 @@ abstract class CoreSpec
       runtime.unsafe.shutdown()
     }
 
-  protected def createJwtTokenString(user: User) = ZIO.serviceWithZIO[JwtService](_.createJwt(user)).map(_.jwtString)
+  protected def createJwtTokenString(user: User): ZIO[ScopeResolver & JwtService, Nothing, String] = for {
+    scope <- ZIO.serviceWithZIO[ScopeResolver](_.resolve(user))
+    token <- ZIO.serviceWithZIO[JwtService](_.createJwt(user.userIri, scope))
+  } yield token.jwtString
 }
