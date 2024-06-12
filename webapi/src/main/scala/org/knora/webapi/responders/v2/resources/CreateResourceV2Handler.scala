@@ -52,6 +52,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.slice.resources.repo.service.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.util.ZioHelper
+import org.knora.webapi.messages.twirl.TypeSpecificValueInfo.*
 
 final case class CreateResourceV2Handler(
   appConfig: AppConfig,
@@ -450,7 +451,121 @@ final case class CreateResourceV2Handler(
             // use resource creation date for the value.
             valueCreationDate: Instant = valueToCreate.customValueCreationDate.getOrElse(creationDate)
 
-            valueInfo = ???
+            valueInfo =
+              valueToCreate.valueContent match
+                case DateValueContentV2(
+                      _,
+                      valueHasStartJDN,
+                      valueHasEndJDN,
+                      valueHasStartPrecision,
+                      valueHasEndPrecision,
+                      valueHasCalendar,
+                      _,
+                    ) =>
+                  DateValueInfo(
+                    valueHasStartJDN = valueHasStartJDN,
+                    valueHasEndJDN = valueHasEndJDN,
+                    valueHasStartPrecision = valueHasStartPrecision,
+                    valueHasEndPrecision = valueHasEndPrecision,
+                    valueHasCalendar = valueHasCalendar,
+                  )
+                case TextValueContentV2(
+                      _,
+                      maybeValueHasString,
+                      valueHasLanguage,
+                      standoff,
+                      mappingIri,
+                      mapping,
+                      xslt,
+                      _,
+                    ) =>
+                  ???
+                case IntegerValueContentV2(_, valueHasInteger, _) =>
+                  IntegerValueInfo(valueHasInteger)
+                case DecimalValueContentV2(_, valueHasDecimal, _) =>
+                  DecimalValueInfo(valueHasDecimal)
+                case BooleanValueContentV2(_, valueHasBoolean, _) =>
+                  BooleanValueInfo(valueHasBoolean)
+                case GeomValueContentV2(_, valueHasGeometry, _) =>
+                  GeomValueInfo(valueHasGeometry)
+                case IntervalValueContentV2(_, valueHasIntervalStart, valueHasIntervalEnd, _) =>
+                  IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd)
+                case TimeValueContentV2(_, valueHasTimeStamp, _) =>
+                  TimeValueInfo(valueHasTimeStamp)
+                case HierarchicalListValueContentV2(_, valueHasListNode, listNodeLabel, _) =>
+                  HierarchicalListValueInfo(valueHasListNode)
+                case ColorValueContentV2(_, valueHasColor, _) =>
+                  ColorValueInfo(valueHasColor)
+                case UriValueContentV2(_, valueHasUri, _) =>
+                  UriValueInfo(valueHasUri)
+                case GeonameValueContentV2(_, valueHasGeonameCode, _) =>
+                  GeonameValueInfo(valueHasGeonameCode)
+                case StillImageFileValueContentV2(_, fileValue, dimX, dimY, _) =>
+                  StillImageFileValueInfo(
+                    internalFilename = fileValue.internalFilename,
+                    internalMimeType = fileValue.internalMimeType,
+                    originalFilename = fileValue.originalFilename,
+                    originalMimeType = fileValue.originalMimeType,
+                    dimX = dimX,
+                    dimY = dimY,
+                  )
+                case StillImageExternalFileValueContentV2(_, fileValue, externalUrl, _) =>
+                  StillImageExternalFileValueInfo(
+                    internalFilename = fileValue.internalFilename,
+                    internalMimeType = fileValue.internalMimeType,
+                    originalFilename = fileValue.originalFilename,
+                    originalMimeType = fileValue.originalMimeType,
+                    externalUrl = externalUrl.value.toString(),
+                  )
+                case DocumentFileValueContentV2(_, fileValue, pageCount, dimX, dimY, _) =>
+                  DocumentFileValueInfo(
+                    internalFilename = fileValue.internalFilename,
+                    internalMimeType = fileValue.internalMimeType,
+                    originalFilename = fileValue.originalFilename,
+                    originalMimeType = fileValue.originalMimeType,
+                    dimX = dimX,
+                    dimY = dimY,
+                    pageCount = pageCount,
+                  )
+                case ArchiveFileValueContentV2(_, fileValue, _) =>
+                  OtherFileValueInfo(
+                    internalFilename = fileValue.internalFilename,
+                    internalMimeType = fileValue.internalMimeType,
+                    originalFilename = fileValue.originalFilename,
+                    originalMimeType = fileValue.originalMimeType,
+                  )
+                case TextFileValueContentV2(_, fileValue, _) =>
+                  OtherFileValueInfo(
+                    internalFilename = fileValue.internalFilename,
+                    internalMimeType = fileValue.internalMimeType,
+                    originalFilename = fileValue.originalFilename,
+                    originalMimeType = fileValue.originalMimeType,
+                  )
+                case AudioFileValueContentV2(_, fileValue, _) =>
+                  OtherFileValueInfo(
+                    internalFilename = fileValue.internalFilename,
+                    internalMimeType = fileValue.internalMimeType,
+                    originalFilename = fileValue.originalFilename,
+                    originalMimeType = fileValue.originalMimeType,
+                  )
+                case MovingImageFileValueContentV2(_, fileValue, _) =>
+                  OtherFileValueInfo(
+                    internalFilename = fileValue.internalFilename,
+                    internalMimeType = fileValue.internalMimeType,
+                    originalFilename = fileValue.originalFilename,
+                    originalMimeType = fileValue.originalMimeType,
+                  )
+                case LinkValueContentV2(
+                      _,
+                      referredResourceIri,
+                      referredResourceExists,
+                      isIncomingLink,
+                      nestedResource,
+                      _,
+                    ) =>
+                  LinkValueInfo(referredResourceIri)
+                case DeletedValueContentV2(_, _) => ???
+
           } yield NewValueInfo(
             resourceIri = resourceIri,
             propertyIri = propertyIri.toIri,
