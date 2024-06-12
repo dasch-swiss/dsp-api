@@ -43,6 +43,8 @@ import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
+import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.JwtServiceLive
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
@@ -105,6 +107,7 @@ object LayersTest {
     DspIngestClient &
     GravsearchTypeInspectionRunner &
     GroupRestService &
+    InfrastructureModule.Provided &
     InferenceOptimizationService &
     InvalidTokenCache &
     IriConverter &
@@ -167,6 +170,7 @@ object LayersTest {
       ConstructResponseUtilV2Live.layer,
       DspIngestClientLive.layer,
       HandlerMapper.layer,
+      InfrastructureModule.layer,
       InferenceOptimizationService.layer,
       InvalidTokenCache.layer,
       IriConverter.layer,

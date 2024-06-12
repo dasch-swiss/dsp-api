@@ -20,11 +20,21 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object AdminRepoModule {
 
-  type Dependencies = TriplestoreService
-  type Provided     = AdministrativePermissionRepo & CacheManager & KnoraGroupRepo & KnoraProjectRepo & KnoraUserRepo
+  type Dependencies = 
+    // format: off
+    TriplestoreService & 
+    CacheManager
+    // format: on
+
+  type Provided =
+    // format: off
+    AdministrativePermissionRepo & 
+    KnoraGroupRepo & 
+    KnoraProjectRepo & 
+    KnoraUserRepo
+    // format: on
 
   val layer = ZLayer.makeSome[Dependencies, Provided](
-    CacheManager.layer,
     KnoraGroupRepoLive.layer,
     KnoraProjectRepoLive.layer,
     KnoraUserRepoLive.layer,
