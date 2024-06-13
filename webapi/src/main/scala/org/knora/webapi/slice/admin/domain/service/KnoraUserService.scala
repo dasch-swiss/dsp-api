@@ -11,6 +11,7 @@ import zio.Task
 import zio.UIO
 import zio.ZIO
 import zio.ZLayer
+
 import dsp.errors.DuplicateValueException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.responders.IriService
@@ -33,11 +34,11 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.IsGroupMember
-import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.IsProjectMember
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.IsProjectAdminMember
+import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.IsProjectMember
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.NotGroupMember
-import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.NotProjectMember
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.NotProjectAdminMember
+import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.NotProjectMember
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.UserChangeRequest
 import org.knora.webapi.slice.common.Value.StringValue
 

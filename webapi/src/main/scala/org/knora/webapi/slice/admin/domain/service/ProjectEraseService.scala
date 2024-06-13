@@ -10,11 +10,11 @@ import zio.Task
 import zio.UIO
 import zio.ZIO
 import zio.ZLayer
+
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
