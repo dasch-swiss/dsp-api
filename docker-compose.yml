@@ -81,6 +81,7 @@ services:
       - JWT_ISSUER=0.0.0.0:3333
       - JWT_SECRET=UP 4888, nice 4-8-4 steam engine
       - SIPI_USE_LOCAL_DEV=false
+      - ALLOW_ERASE_PROJECT=true
 #      - JWT_DISABLE_AUTH=true # Uncomment this line if you want to disable authentication for the ingest service
     deploy:
       resources:
@@ -115,6 +116,7 @@ services:
       - KNORA_WEBAPI_DSP_INGEST_AUDIENCE=http://localhost:3340
       - KNORA_WEBAPI_DSP_INGEST_BASE_URL=http://ingest:3340
       - DSP_API_LOG_LEVEL=INFO
+      - ALLOW_ERASE_PROJECT=true
       # - DSP_API_LOG_APPENDER=JSON # if this variable is set, JSON logs are activated locally
     deploy:
       resources:
