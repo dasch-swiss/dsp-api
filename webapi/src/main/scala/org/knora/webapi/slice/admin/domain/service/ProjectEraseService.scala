@@ -10,11 +10,11 @@ import zio.Task
 import zio.UIO
 import zio.ZIO
 import zio.ZLayer
-
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
@@ -28,6 +28,8 @@ final case class ProjectEraseService(
   private val triplestore: TriplestoreService,
   private val userService: KnoraUserService,
 ) {
+  private def logPrefix(project: KnoraProject): String = logPrefix(project.shortcode)
+  private def logPrefix(shortcode: Shortcode): String  = s"ERASE - $shortcode:"
 
   def eraseProject(project: KnoraProject): Task[Unit] = for {
     groupsToDelete <- groupService.findByProject(project)
@@ -39,6 +41,7 @@ final case class ProjectEraseService(
   } yield ()
 
   private def cleanUpUsersAndGroups(project: KnoraProject, groups: Chunk[KnoraGroup]): UIO[Unit] = for {
+    _ <- ZIO.logInfo(s"${logPrefix(project)} cleaning up groups ${groups.map(_.id)}")
     _ <- removeUserProjectAdminMemberships(project).logError.ignore
     _ <- removeUserProjectMemberShips(project).logError.ignore
     _ <- removeUserGroupMemberShips(groups).logError.ignore
@@ -59,12 +62,14 @@ final case class ProjectEraseService(
   private def cleanUpPermissions(project: KnoraProject) = for {
     ap   <- apRepo.findByProject(project)
     doap <- doapRepo.findByProject(project)
+    _    <- ZIO.logInfo(s"${logPrefix(project)} cleaning permissions ap ${ap.map(_.id)} , doap ${doap.map(_.id)}")
     _    <- apRepo.deleteAll(ap)
     _    <- doapRepo.deleteAll(doap)
   } yield ()
 
   private def removeOntologyAndDataGraphs(project: KnoraProject) = for {
     graphsToDelete <- projectService.getNamedGraphsForProject(project)
+    _              <- ZIO.logInfo(s"${logPrefix(project)} removing graphs ${graphsToDelete.map(_.value)}")
     _              <- ZIO.foreachDiscard(graphsToDelete)(triplestore.dropGraphByIri)
     _              <- ontologyCache.loadOntologies()
   } yield ()

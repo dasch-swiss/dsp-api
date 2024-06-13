@@ -141,6 +141,7 @@ final case class ProjectRestService(
       project <- knoraProjectService
                    .findByShortcode(shortcode)
                    .someOrFail(NotFoundException(s"$shortcode not found"))
+      _        <- ZIO.logInfo(s"${user.userIri} erases project $shortcode")
       _        <- projectEraseService.eraseProject(project)
       external <- format.toExternal(ProjectOperationResponseADM(internal))
     } yield external
