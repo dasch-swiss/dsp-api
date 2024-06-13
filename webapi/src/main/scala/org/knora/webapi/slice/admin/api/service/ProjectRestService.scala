@@ -132,7 +132,7 @@ final case class ProjectRestService(
   def eraseProject(shortcode: Shortcode, user: User): Task[ProjectOperationResponseADM] =
     for {
       _ <- auth.ensureSystemAdmin(user)
-      _ <- ZIO.unless(features.allowEraseProject)(
+      _ <- ZIO.unless(features.allowEraseProjects)(
              ZIO.fail(ForbiddenException("The feature to erase projects is not enabled.")),
            )
       internal <- projectService

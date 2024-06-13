@@ -174,9 +174,7 @@ final case class InstrumentationServerConfig(
   interval: Duration,
 )
 
-final case class Features(
-  allowEraseProject: Boolean = false,
-)
+final case class Features(allowEraseProjects: Boolean)
 
 object AppConfig {
   type AppConfigurationsTest = AppConfig & DspIngestConfig & Triplestore & Features & Sipi
@@ -188,7 +186,7 @@ object AppConfig {
     val appConfigLayer = ZLayer {
       val source = TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
       read(descriptor from source)
-        .tap(c => ZIO.logInfo("Feature: ALLOW_ERASE_PROJECT enabled").when(c.features.allowEraseProject))
+        .tap(c => ZIO.logInfo("Feature: ALLOW_ERASE_PROJECTS enabled").when(c.features.allowEraseProjects))
         .orDie
     }
     projectAppConfigurations(appConfigLayer).tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))

@@ -105,7 +105,7 @@ final case class DspIngestClientLive(
   override def eraseProject(shortcode: Shortcode): Task[Unit] = for {
     request  <- authenticatedRequest.map(_.delete(uri"${projectsPath(shortcode)}/erase"))
     response <- ZIO.blocking(request.send(backend = sttpBackend))
-    _        <- ZIO.logInfo(s"Response from ingest :${response.code}")
+    _        <- ZIO.logInfo(s"Response from ingest :${response.body}")
   } yield ()
 
   override def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = ZIO.scoped {
