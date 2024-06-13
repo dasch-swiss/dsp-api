@@ -17,7 +17,6 @@ import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.repo.service.CrudRepository
-import org.knora.webapi.slice.common.repo.service.Repository
 
 trait KnoraGroupRepo extends CrudRepository[KnoraGroup, GroupIri] {
 
