@@ -160,8 +160,7 @@ final case class ProjectsEndpoints(
         """|!ATTENTION! Erase a project with the given shortcode.
            |This will permanently and irrecoverably remove the project and all of its assets.
            |Authorization: Requires system admin permissions.
-           |Only available if the feature has been configured on the server side.
-           |_Not yet implemented_""".stripMargin,
+           |Only available if the feature has been configured on the server side.""".stripMargin,
       )
 
     val getAdminProjectsExports = baseEndpoints.securedEndpoint.get
