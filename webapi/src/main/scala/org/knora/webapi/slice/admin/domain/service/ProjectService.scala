@@ -14,7 +14,6 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
-import org.knora.webapi.slice.admin.domain.service.ProjectService.projectDataNamedGraphV2
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
@@ -76,14 +75,6 @@ final case class ProjectService(
       restrictedView,
     )
 
-  def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] = {
-    val projectGraph = ProjectService.projectDataNamedGraphV2(project)
-    ontologyRepo
-      .findByProject(project.id)
-      .map(_.map(_.ontologyMetadata.ontologyIri.toInternalIri))
-      .map(_ :+ projectGraph)
-  }
-
   def setProjectRestrictedView(project: Project, settings: RestrictedView): Task[RestrictedView] =
     knoraProjectService.setProjectRestrictedView(toKnoraProject(project, settings), settings)
 
@@ -92,8 +83,6 @@ final case class ProjectService(
 
   def updateProject(project: KnoraProject, updateReq: ProjectUpdateRequest): Task[Project] =
     knoraProjectService.updateProject(project, updateReq).flatMap(toProject)
-
-  def erase(project: KnoraProject): Task[Unit] = knoraProjectService.erase(project)
 }
 
 object ProjectService {

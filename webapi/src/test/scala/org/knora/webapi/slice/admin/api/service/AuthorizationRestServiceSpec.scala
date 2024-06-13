@@ -28,6 +28,10 @@ import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLiveSpec.ontology
+import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 
@@ -145,6 +149,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
     KnoraProjectService.layer,
     KnoraUserRepoLive.layer,
     KnoraUserService.layer,
+    OntologyRepoInMemory.emptyLayer,
     PasswordService.layer,
     StringFormatter.live,
     TriplestoreServiceLive.layer,

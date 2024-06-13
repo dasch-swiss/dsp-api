@@ -36,7 +36,8 @@ case class KnoraGroupService(
 
   def findByProject(project: KnoraProject): Task[Chunk[KnoraGroup]] = knoraGroupRepo.findByProjectIri(project.id)
 
-  def deleteAll(groups: Seq[KnoraGroup]): Task[Unit] = knoraGroupRepo.deleteAll(groups)
+  def deleteAll(groups: Seq[KnoraGroup]): Task[Unit] =
+    knoraGroupRepo.deleteAll(groups)
 
   def createGroup(request: GroupCreateRequest, project: KnoraProject): Task[KnoraGroup] =
     for {

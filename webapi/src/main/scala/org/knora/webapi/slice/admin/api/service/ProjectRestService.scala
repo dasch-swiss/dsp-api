@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio.*
+
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException

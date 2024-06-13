@@ -1,7 +1,13 @@
+/*
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.admin.domain.service
 
 import zio.Chunk
 import zio.Task
+import zio.UIO
 import zio.ZIO
 import zio.ZLayer
 
@@ -10,43 +16,33 @@ import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRe
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class ProjectEraseService(
-  projectService: ProjectService,
-  ontologyCache: OntologyCache,
-  iriConverter: IriConverter,
-  triplestore: TriplestoreService,
-  ingestClient: DspIngestClient,
-  groupService: KnoraGroupService,
-  userService: KnoraUserService,
-  adminPermissionRepo: AdministrativePermissionRepo,
-  defaultObjectAccessPermissionRepo: DefaultObjectAccessPermissionRepo,
+  private val apRepo: AdministrativePermissionRepo,
+  private val doapRepo: DefaultObjectAccessPermissionRepo,
+  private val groupService: KnoraGroupService,
+  private val ingestClient: DspIngestClient,
+  private val ontologyCache: OntologyCache,
+  private val projectService: KnoraProjectService,
+  private val triplestore: TriplestoreService,
+  private val userService: KnoraUserService,
 ) {
 
   def eraseProject(project: KnoraProject): Task[Unit] = for {
-
-    // cleanup users and groups
     groupsToDelete <- groupService.findByProject(project)
-    _              <- removeUserProjectAdminMemberships(project)
-    _              <- removeUserProjectMemberShips(project)
-    _              <- removeUserGroupMemberShips(groupsToDelete)
-    _              <- groupService.deleteAll(groupsToDelete)
+    _              <- cleanUpUsersAndGroups(project, groupsToDelete)
+    _              <- cleanUpPermissions(project)
+    _              <- removeOntologyAndDataGraphs(project)
+    _              <- projectService.erase(project)
+    _              <- ingestClient.eraseProject(project.shortcode).logError.ignore
+  } yield ()
 
-    // cleanup permissions
-    _ <- adminPermissionRepo.findByProject(project).flatMap(adminPermissionRepo.deleteAll)
-    _ <- defaultObjectAccessPermissionRepo.findByProject(project).flatMap(defaultObjectAccessPermissionRepo.deleteAll)
-
-    // remove ontology and data graphs
-    graphsToDelete <- projectService.getNamedGraphsForProject(project)
-    _              <- ZIO.foreachDiscard(graphsToDelete)(triplestore.dropGraphByIri)
-    _              <- ontologyCache.loadOntologies()
-
-    // remove knora project and project in ingest
-    _ <- projectService.erase(project)
-    _ <- ingestClient.eraseProject(project.shortcode).logError.ignore
-
+  private def cleanUpUsersAndGroups(project: KnoraProject, groups: Chunk[KnoraGroup]): UIO[Unit] = for {
+    _ <- removeUserProjectAdminMemberships(project).logError.ignore
+    _ <- removeUserProjectMemberShips(project).logError.ignore
+    _ <- removeUserGroupMemberShips(groups).logError.ignore
+    _ <- groupService.deleteAll(groups).orDie
   } yield ()
 
   private def removeUserProjectAdminMemberships(project: KnoraProject) =
@@ -57,8 +53,21 @@ final case class ProjectEraseService(
 
   private def removeUserGroupMemberShips(groupsToRemove: Chunk[KnoraGroup]) =
     ZIO.foreachDiscard(groupsToRemove)(group =>
-      userService.findByGroupMembership(group).flatMap(userService.removeUsersFromGroup(_, group)),
+      userService.findByGroupMembership(group).flatMap(userService.removeUsersFromKnoraGroup(_, group)),
     )
+
+  private def cleanUpPermissions(project: KnoraProject) = for {
+    ap   <- apRepo.findByProject(project)
+    doap <- doapRepo.findByProject(project)
+    _    <- apRepo.deleteAll(ap)
+    _    <- doapRepo.deleteAll(doap)
+  } yield ()
+
+  private def removeOntologyAndDataGraphs(project: KnoraProject) = for {
+    graphsToDelete <- projectService.getNamedGraphsForProject(project)
+    _              <- ZIO.foreachDiscard(graphsToDelete)(triplestore.dropGraphByIri)
+    _              <- ontologyCache.loadOntologies()
+  } yield ()
 }
 
 object ProjectEraseService {
