@@ -62,13 +62,13 @@ INSERT DATA {
                 }
 
                 case textValue: UnformattedTextValueInfo => {
-                    @textValue.valueHasLanguage.foreach { language => 
+                    @textValue.valueHasLanguage.map { language => 
                         <@newValueInfo.valueIri> knora-base:valueHasLanguage """@language""" .
                     }
                 }
 
                 case textValue: FormattedTextValueInfo => {
-                    @textValue.valueHasLanguage.foreach { language => 
+                    @textValue.valueHasLanguage.map { language => 
                         <@newValueInfo.valueIri> knora-base:valueHasLanguage """@language""" .
                     }
                     <@newValueInfo.valueIri> knora-base:valueHasMapping <@textValue.mappingIri> .
@@ -83,16 +83,16 @@ INSERT DATA {
                                 @*
                                 Check for optional standoff properties
                                 *@
-                                @createStandoff.endIndex.foreach { index =>
+                                @createStandoff.endIndex.map { index =>
                                     knora-base:standoffTagHasEndIndex @index ;
                                 }
-                                @createStandoff.startParentIri.foreach { iri => 
+                                @createStandoff.startParentIri.map { iri => 
                                     knora-base:standoffTagHasStartParent <@iri> ;
                                 }
-                                @createStandoff.endParentIri.foreach { iri => 
+                                @createStandoff.endParentIri.map { iri => 
                                     knora-base:standoffTagHasEndParent <@iri> ;
                                 }
-                                @createStandoff.originalXMLID.foreach { id => 
+                                @createStandoff.originalXMLID.map { id => 
                                     knora-base:standoffTagHasOriginalXMLID """@id""" ;
                                 }
 
@@ -149,10 +149,10 @@ INSERT DATA {
                         knora-base:internalMimeType """@fileValue.internalMimeType""" ;
                         knora-base:dimX @fileValue.dimX ;
                         knora-base:dimY @fileValue.dimY .
-                    @fileValue.originalFilename.foreach { originalFilename =>
+                    @fileValue.originalFilename.map { originalFilename =>
                         <@newValueInfo.valueIri> knora-base:originalFilename """@originalFilename""" .
                     }
-                    @fileValue.originalMimeType.foreach { originalMimeType =>
+                    @fileValue.originalMimeType.map { originalMimeType =>
                         <@newValueInfo.valueIri> knora-base:originalMimeType """@originalMimeType""" .
                     }
                 }
@@ -161,10 +161,10 @@ INSERT DATA {
                     <@newValueInfo.valueIri> knora-base:internalFilename """@fileValue.internalFilename""" ;
                         knora-base:internalMimeType """@fileValue.internalMimeType""" ;
                         knora-base:externalUrl """@fileValue.externalUrl""" .
-                    @fileValue.originalFilename.foreach { originalFilename =>
+                    @fileValue.originalFilename.map { originalFilename =>
                         <@newValueInfo.valueIri> knora-base:originalFilename """@originalFilename""" .
                     }
-                    @fileValue.originalMimeType.foreach { originalMimeType =>
+                    @fileValue.originalMimeType.map { originalMimeType =>
                         <@newValueInfo.valueIri> knora-base:originalMimeType """@originalMimeType""" .
                     }
                 }
@@ -172,19 +172,19 @@ INSERT DATA {
                 case fileValue: DocumentFileValueInfo => {
                     <@newValueInfo.valueIri> knora-base:internalFilename """@fileValue.internalFilename""" ;
                         knora-base:internalMimeType """@fileValue.internalMimeType""" .
-                    @fileValue.originalFilename.foreach { originalFilename =>
+                    @fileValue.originalFilename.map { originalFilename =>
                         <@newValueInfo.valueIri> knora-base:originalFilename """@originalFilename""" .
                     }
-                    @fileValue.originalMimeType.foreach { originalMimeType =>
+                    @fileValue.originalMimeType.map { originalMimeType =>
                         <@newValueInfo.valueIri> knora-base:originalMimeType """@originalMimeType""" .
                     }
-                    @fileValue.dimX.foreach { dimX =>
+                    @fileValue.dimX.map { dimX =>
                         <@newValueInfo.valueIri> knora-base:dimX @dimX .
                     }
-                    @fileValue.dimY.foreach { dimY =>
+                    @fileValue.dimY.map { dimY =>
                         <@newValueInfo.valueIri> knora-base:dimY @dimY .
                     }
-                    @fileValue.pageCount.foreach { pageCount =>
+                    @fileValue.pageCount.map { pageCount =>
                         <@newValueInfo.valueIri> knora-base:pageCount @pageCount .
                     }
                 }
@@ -192,10 +192,10 @@ INSERT DATA {
                 case fileValue: OtherFileValueInfo => {
                     <@newValueInfo.valueIri> knora-base:internalFilename """@fileValue.internalFilename""" ;
                         knora-base:internalMimeType """@fileValue.internalMimeType""" .
-                    @fileValue.originalFilename.foreach { originalFilename =>
+                    @fileValue.originalFilename.map { originalFilename =>
                         <@newValueInfo.valueIri> knora-base:originalFilename """@originalFilename""" .
                     }
-                    @fileValue.originalMimeType.foreach { originalMimeType =>
+                    @fileValue.originalMimeType.map { originalMimeType =>
                         <@newValueInfo.valueIri> knora-base:originalMimeType """@originalMimeType""" .
                     }
                 }
@@ -219,7 +219,7 @@ INSERT DATA {
             }
 
             @* Insert the value's comment, if given. *@
-            @newValueInfo.comment.foreach { commentStr =>
+            @newValueInfo.comment.map { commentStr =>
                 <@newValueInfo.valueIri> knora-base:valueHasComment """@commentStr""" .
             }
 
