@@ -329,7 +329,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     CsvService.layer,
     CommandExecutorLive.layer,
     FileChecksumServiceLive.layer,
-    ZLayer.succeed(Features(allowEraseProject = true)),
+    ZLayer.succeed(Features(allowEraseProjects = true)),
     StillImageService.layer,
     ImportServiceLive.layer,
     IngestService.layer,

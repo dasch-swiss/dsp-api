@@ -81,7 +81,7 @@ final case class ProjectsEndpointsHandler(
       shortcode =>
         authorizationHandler.ensureAdminScope(userSession) *>
           projectService.findProject(shortcode).some.mapError(projectNotFoundOrServerError(_, shortcode)) *> {
-            if (features.allowEraseProject) {
+            if (features.allowEraseProjects) {
               projectService
                 .deleteProject(shortcode)
                 .mapBoth(
