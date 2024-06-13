@@ -187,7 +187,9 @@ object AppConfig {
   val layer: ULayer[AppConfigurations] = {
     val appConfigLayer = ZLayer {
       val source = TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
-      read(descriptor from source).orDie
+      read(descriptor from source)
+        .tap(c => ZIO.logInfo("Feature: ALLOW_ERASE_PROJECT enabled").when(c.features.allowEraseProject))
+        .orDie
     }
     projectAppConfigurations(appConfigLayer).tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))
   }
