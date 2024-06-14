@@ -69,6 +69,12 @@ final case class KnoraProjectRepoLive(
       .die(new IllegalArgumentException("Update not supported for built-in projects"))
       .when(project.id.isBuiltInProjectIri) *>
       super.save(project)
+
+  override def delete(project: KnoraProject): Task[Unit] =
+    ZIO
+      .die(new IllegalArgumentException("Erase not supported for built-in projects"))
+      .when(project.id.isBuiltInProjectIri) *>
+      super.delete(project)
 }
 
 object KnoraProjectRepoLive {

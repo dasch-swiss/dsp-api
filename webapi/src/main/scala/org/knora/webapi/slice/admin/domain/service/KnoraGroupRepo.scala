@@ -15,21 +15,16 @@ import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
-import org.knora.webapi.slice.common.repo.service.Repository
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.repo.service.CrudRepository
 
-trait KnoraGroupRepo extends Repository[KnoraGroup, GroupIri] {
+trait KnoraGroupRepo extends CrudRepository[KnoraGroup, GroupIri] {
 
   def findByName(name: GroupName): Task[Option[KnoraGroup]]
 
   def existsByName(name: GroupName): Task[Boolean] = findByName(name).map(_.isDefined)
 
-  /**
-   * Saves the user group, returns the created data. Updates not supported.
-   *
-   * @param group The [[KnoraGroup]] to be saved, can be an update or a creation.
-   * @return      The saved entity.
-   */
-  def save(group: KnoraGroup): Task[KnoraGroup]
+  def findByProjectIri(projectIri: ProjectIri): Task[Chunk[KnoraGroup]]
 }
 
 object KnoraGroupRepo {

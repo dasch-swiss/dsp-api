@@ -20,6 +20,8 @@ import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TestTripleStore
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -113,10 +115,12 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
       } yield assertTrue(actualDimension == expectedDimension)
     },
   ).provide(
-    MaintenanceService.layer,
-    KnoraProjectService.layer,
+    IriConverter.layer,
     KnoraProjectRepoInMemory.layer,
-    emptyDatasetRefLayer >>> TriplestoreServiceInMemory.layer,
+    KnoraProjectService.layer,
+    MaintenanceService.layer,
+    OntologyRepoInMemory.emptyLayer,
     StringFormatter.test,
+    emptyDatasetRefLayer >>> TriplestoreServiceInMemory.layer,
   )
 }

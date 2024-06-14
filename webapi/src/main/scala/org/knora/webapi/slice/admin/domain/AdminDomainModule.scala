@@ -19,6 +19,8 @@ import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceServic
 import org.knora.webapi.slice.admin.repo.AdminRepoModule
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object AdminDomainModule {
@@ -28,8 +30,11 @@ object AdminDomainModule {
     AdminRepoModule.Provided &
     AppConfig & 
     CacheManager &
+    DspIngestClient &
     IriService &
+    IriConverter &
     OntologyRepo &
+    OntologyCache &
     TriplestoreService
     // format: on
 
@@ -44,6 +49,7 @@ object AdminDomainModule {
     MaintenanceService &
     PasswordService &
     ProjectService &
+    ProjectEraseService &
     UserService
     // format: on
 
@@ -56,6 +62,7 @@ object AdminDomainModule {
     KnoraUserToUserConverter.layer,
     MaintenanceService.layer,
     PasswordService.layer,
+    ProjectEraseService.layer,
     ProjectService.layer,
     UserService.layer,
   )

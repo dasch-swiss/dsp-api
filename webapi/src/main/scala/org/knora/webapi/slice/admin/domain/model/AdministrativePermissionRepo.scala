@@ -10,7 +10,7 @@ import zio.Task
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.service.EntityWithId
-import org.knora.webapi.slice.common.repo.service.Repository
+import org.knora.webapi.slice.common.repo.service.CrudRepository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 final case class AdministrativePermission(
@@ -53,9 +53,11 @@ object AdministrativePermissionPart {
   )
 }
 
-trait AdministrativePermissionRepo extends Repository[AdministrativePermission, PermissionIri] {
+trait AdministrativePermissionRepo extends CrudRepository[AdministrativePermission, PermissionIri] {
 
   def findByGroupAndProject(groupIri: GroupIri, projectIri: ProjectIri): Task[Option[AdministrativePermission]]
 
-  def save(permission: AdministrativePermission): Task[AdministrativePermission]
+  def findByProject(projectIri: ProjectIri): Task[Chunk[AdministrativePermission]]
+
+  final def findByProject(project: KnoraProject): Task[Chunk[AdministrativePermission]] = findByProject(project.id)
 }

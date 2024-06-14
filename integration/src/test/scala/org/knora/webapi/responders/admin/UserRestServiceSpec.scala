@@ -463,7 +463,7 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         )
         assertFailsWithA[BadRequestException](
           exit,
-          "User http://rdfh.ch/users/normaluser is not a member of project http://rdfh.ch/projects/00FF. A user needs to be a member of the project to be added as project admin.",
+          "User http://rdfh.ch/users/normaluser is not member of project http://rdfh.ch/projects/00FF.",
         )
       }
 

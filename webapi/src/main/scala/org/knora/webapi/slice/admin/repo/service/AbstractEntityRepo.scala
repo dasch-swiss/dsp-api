@@ -27,7 +27,7 @@ import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.slice.common.repo.service.Repository
+import org.knora.webapi.slice.common.repo.service.CrudRepository
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -51,7 +51,7 @@ final case class EntityProperties(req: NonEmptyChunk[Iri], opt: Chunk[Iri] = Chu
 abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
   triplestore: TriplestoreService,
   mapper: RdfEntityMapper[E],
-) extends Repository[E, Id] {
+) extends CrudRepository[E, Id] {
   self =>
 
   protected def resourceClass: ParsedIRI
@@ -145,6 +145,27 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
       .delete(deletePattern)
       .where(wherePattern)
 
+    Update(query.getQueryString)
+  }
+
+  override def deleteById(id: Id): Task[Unit] = findById(id).flatMap {
+    case None    => ZIO.unit
+    case Some(e) => delete(e)
+  }
+
+  override def delete(entity: E): Task[Unit] = triplestore.query(eraseQuery(entity))
+
+  private def eraseQuery(entity: E): Update = {
+    val deletePattern = Rdf
+      .iri(entity.id.value)
+      .isA(Rdf.iri(resourceClass.toString))
+      .andHas(variable("p"), variable("o"))
+    val query = Queries
+      .MODIFY()
+      .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
+      .`with`(namedGraphIri)
+      .delete(deletePattern)
+      .where(deletePattern)
     Update(query.getQueryString)
   }
 }

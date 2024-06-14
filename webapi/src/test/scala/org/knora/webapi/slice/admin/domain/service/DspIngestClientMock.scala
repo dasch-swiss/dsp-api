@@ -13,6 +13,7 @@ import zio.nio.file.Path
 
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 final case class DspIngestClientMock() extends DspIngestClient {
   override def exportProject(shortcode: KnoraProject.Shortcode): ZIO[Scope, Throwable, Path] =
@@ -32,6 +33,8 @@ final case class DspIngestClientMock() extends DspIngestClient {
         originalMimeType = Some("text/plain"),
       ),
     )
+
+  def eraseProject(shortcode: Shortcode): Task[Unit] = ZIO.unit
 }
 
 object DspIngestClientMock {
