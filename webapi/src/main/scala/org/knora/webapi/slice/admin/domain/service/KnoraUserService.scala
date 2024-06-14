@@ -11,7 +11,6 @@ import zio.Task
 import zio.UIO
 import zio.ZIO
 import zio.ZLayer
-
 import dsp.errors.DuplicateValueException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.responders.IriService
@@ -250,26 +249,27 @@ object KnoraUserService {
     sealed trait UserServiceError {
       def message: String
     }
+
     private def msg(userIri: UserIri, reason: String, value: StringValue) =
       s"User ${userIri.value} is $reason ${value.value}."
 
     final case class NotGroupMember(userIri: UserIri, groupIri: GroupIri) extends UserServiceError {
-      override def message: String = msg(userIri, "is not member of group", groupIri)
+      override def message: String = msg(userIri, "not member of group", groupIri)
     }
     final case class IsGroupMember(userIri: UserIri, groupIri: GroupIri) extends UserServiceError {
-      override def message: String = s"User ${userIri.value} is already member of group ${groupIri.value}."
+      override def message: String = msg(userIri, "already member of group", groupIri)
     }
     final case class NotProjectMember(userIri: UserIri, projectIri: ProjectIri) extends UserServiceError {
-      override def message: String = s"User ${userIri.value} is not member of project ${projectIri.value}."
+      override def message: String = msg(userIri, "not member of project", projectIri)
     }
     final case class IsProjectMember(userIri: UserIri, projectIri: ProjectIri) extends UserServiceError {
-      override def message: String = s"User ${userIri.value} is already member of project ${projectIri.value}."
+      override def message: String = msg(userIri, "already member of project", projectIri)
     }
     final case class NotProjectAdminMember(userIri: UserIri, projectIri: ProjectIri) extends UserServiceError {
-      override def message: String = s"User ${userIri.value} is not admin of project ${projectIri.value}."
+      override def message: String = msg(userIri, "not admin of project", projectIri)
     }
     final case class IsProjectAdminMember(userIri: UserIri, projectIri: ProjectIri) extends UserServiceError {
-      override def message: String = s"User ${userIri.value} is already admin of project ${projectIri.value}."
+      override def message: String = msg(userIri, "already admin of project", projectIri)
     }
   }
 
