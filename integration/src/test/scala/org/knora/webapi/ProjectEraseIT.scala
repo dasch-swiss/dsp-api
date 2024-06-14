@@ -153,7 +153,7 @@ object ProjectEraseIT extends E2EZSpec {
           )
         },
         test("when called as root then it should delete the project graph") {
-          def doesGraphExist(graphName: InternalIri) = db(_.query(Ask(s"ASK { GRAPH <${graphName.value}> {} }"))
+          def doesGraphExist(graphName: InternalIri) = db(_.query(Ask(s"ASK { GRAPH <${graphName.value}> {} }")))
           for {
             // given
             project  <- getProject
