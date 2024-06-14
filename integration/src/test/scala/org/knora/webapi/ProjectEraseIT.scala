@@ -153,7 +153,7 @@ object ProjectEraseIT extends E2EZSpec {
           )
         },
         test("when called as root then it should delete the project graph") {
-          def doesGraphExist(graphName: InternalIri) = Ask(s"ASK { GRAPH <${graphName.value}> {} }")
+          def doesGraphExist(graphName: InternalIri) = db(_.query(Ask(s"ASK { GRAPH <${graphName.value}> {} }"))
           for {
             // given
             project  <- getProject
@@ -165,13 +165,13 @@ object ProjectEraseIT extends E2EZSpec {
                                    |    <http://example.org/resource> <http://example.org/property> "value".
                                    |  }
                                    |}""".stripMargin)))
-            graphExisted <- db(_.query(doesGraphExist(graphName)))
+            graphExisted <- doesGraphExist(graphName)
 
             // when
             erased <- AdminApiRestClient.eraseProjectAsRoot(shortcode)
 
             // then
-            graphDeleted <- db(_.query(doesGraphExist(graphName))).negate
+            graphDeleted <- doesGraphExist(graphName).negate
           } yield assertTrue(
             erased.status == Status.Ok,
             graphExisted,
