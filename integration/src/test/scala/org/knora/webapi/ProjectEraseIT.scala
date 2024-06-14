@@ -5,7 +5,6 @@
 
 package org.knora.webapi
 import zio.ZIO
-import zio.http.Response
 import zio.http.Status
 import zio.test.Spec
 import zio.test.TestAspect
@@ -37,12 +36,18 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 object ProjectEraseIT extends E2EZSpec {
 
   private val users    = ZIO.serviceWithZIO[KnoraUserService]
   private val projects = ZIO.serviceWithZIO[KnoraProjectService]
   private val groups   = ZIO.serviceWithZIO[KnoraGroupService]
+  private val ts       = ZIO.serviceWithZIO[TriplestoreService]
 
   private def getUser(userIri: UserIri) = users(_.findById(userIri)).someOrFail(Exception(s"Must be present $userIri"))
   private val shortcode                 = Shortcode.unsafeFrom("9999")
@@ -145,6 +150,32 @@ object ProjectEraseIT extends E2EZSpec {
             !user.isInProjectAdminGroup.contains(project.id),
             !user.isInGroup.contains(group),
             groupWasDeleted,
+          )
+        },
+        test("when called as root then it should delete the project graph") {
+          def doesGraphExist(graphName: InternalIri) = Ask(s"ASK { GRAPH <${graphName.value}> {} }")
+          for {
+            // given
+            project  <- getProject
+            graphName = ProjectService.projectDataNamedGraphV2(project)
+            _ <- // insert something into the project graph, otherwise it does not exist
+              ts(_.query(Update(s"""
+                                   |INSERT DATA {
+                                   |  GRAPH <${graphName.value}> {
+                                   |    <http://example.org/resource> <http://example.org/property> "value".
+                                   |  }
+                                   |}""".stripMargin)))
+            graphExisted <- ts(_.query(doesGraphExist(graphName)))
+
+            // when
+            erased <- AdminApiRestClient.eraseProjectAsRoot(shortcode)
+
+            // then
+            graphDeleted <- ts(_.query(doesGraphExist(graphName))).negate
+          } yield assertTrue(
+            erased.status == Status.Ok,
+            graphExisted,
+            graphDeleted,
           )
         },
       ) @@ TestAspect.before(createProject)
