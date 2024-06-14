@@ -1,4 +1,11 @@
 package org.knora.webapi
+import zio.ZIO
+import zio.http.Response
+import zio.http.Status
+import zio.test.Spec
+import zio.test.TestAspect
+import zio.test.assertTrue
+
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
@@ -25,12 +32,6 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
-import zio.ZIO
-import zio.http.Response
-import zio.http.Status
-import zio.test.Spec
-import zio.test.TestAspect
-import zio.test.assertTrue
 
 object ProjectEraseIT extends E2EZSpec {
 
