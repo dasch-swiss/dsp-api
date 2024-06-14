@@ -47,7 +47,7 @@ object ProjectEraseIT extends E2EZSpec {
   private val users    = ZIO.serviceWithZIO[KnoraUserService]
   private val projects = ZIO.serviceWithZIO[KnoraProjectService]
   private val groups   = ZIO.serviceWithZIO[KnoraGroupService]
-  private val ts       = ZIO.serviceWithZIO[TriplestoreService]
+  private val db       = ZIO.serviceWithZIO[TriplestoreService]
 
   private def getUser(userIri: UserIri) = users(_.findById(userIri)).someOrFail(Exception(s"Must be present $userIri"))
   private val shortcode                 = Shortcode.unsafeFrom("9999")
@@ -159,19 +159,19 @@ object ProjectEraseIT extends E2EZSpec {
             project  <- getProject
             graphName = ProjectService.projectDataNamedGraphV2(project)
             _ <- // insert something into the project graph, otherwise it does not exist
-              ts(_.query(Update(s"""
+              db(_.query(Update(s"""
                                    |INSERT DATA {
                                    |  GRAPH <${graphName.value}> {
                                    |    <http://example.org/resource> <http://example.org/property> "value".
                                    |  }
                                    |}""".stripMargin)))
-            graphExisted <- ts(_.query(doesGraphExist(graphName)))
+            graphExisted <- db(_.query(doesGraphExist(graphName)))
 
             // when
             erased <- AdminApiRestClient.eraseProjectAsRoot(shortcode)
 
             // then
-            graphDeleted <- ts(_.query(doesGraphExist(graphName))).negate
+            graphDeleted <- db(_.query(doesGraphExist(graphName))).negate
           } yield assertTrue(
             erased.status == Status.Ok,
             graphExisted,
