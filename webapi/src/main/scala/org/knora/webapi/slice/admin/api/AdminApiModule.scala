@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.api
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.Features
 import org.knora.webapi.responders.admin.AssetPermissionsResponder
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.admin.PermissionsResponder
@@ -24,6 +25,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
 import org.knora.webapi.slice.admin.domain.service.PasswordService
+import org.knora.webapi.slice.admin.domain.service.ProjectEraseService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
@@ -44,6 +46,7 @@ object AdminApiModule {
     AuthorizationRestService &
     BaseEndpoints &
     CacheManager &
+    Features &
     GroupService &
     HandlerMapper &
     KnoraGroupService &
@@ -56,6 +59,7 @@ object AdminApiModule {
     OntologyCache &
     PasswordService &
     PermissionsResponder &
+    ProjectEraseService &
     ProjectExportService &
     ProjectImportService &
     ProjectService &

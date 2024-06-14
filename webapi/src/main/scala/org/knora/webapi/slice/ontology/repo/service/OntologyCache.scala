@@ -474,6 +474,13 @@ trait OntologyCache {
     updatedOntologyData: ReadOntologyV2,
     updatedClassIri: SmartIri,
   ): Task[OntologyCacheData]
+
+  /**
+   * Loads and caches all ontology information.
+   *
+   * @return [[Unit]]
+   */
+  final def loadOntologies(): Task[Unit] = loadOntologies(KnoraSystemInstances.Users.SystemUser)
 }
 
 final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef: Ref[OntologyCacheData])(implicit

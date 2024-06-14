@@ -21,6 +21,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.common.repo.service.AbstractInMemoryCrudRepository
 import org.knora.webapi.slice.infrastructure.CacheManager
@@ -31,6 +32,9 @@ final case class KnoraGroupRepoInMemory(groups: Ref[Chunk[KnoraGroup]])
     with KnoraGroupRepo {
   override def findByName(name: GroupName): Task[Option[KnoraGroup]] =
     groups.get.map(_.find(_.groupName == name))
+
+  override def findByProjectIri(projectIri: KnoraProject.ProjectIri): Task[Chunk[KnoraGroup]] =
+    groups.get.map(_.filter(_.belongsToProject.contains(projectIri)))
 }
 
 object KnoraGroupRepoInMemory {

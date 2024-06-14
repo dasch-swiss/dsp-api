@@ -18,6 +18,7 @@ import zio.ZIO
 import zio.ZLayer
 
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.BelongsToProject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -60,6 +61,9 @@ final case class KnoraGroupRepoLive(
   override def findByName(name: GroupName): Task[Option[KnoraGroup]] =
     findOneByTriplePattern(_.has(groupName, Rdf.literalOf(name.value)))
       .map(_.orElse(KnoraGroupRepo.builtIn.findOneBy(_.groupName == name)))
+
+  override def findByProjectIri(projectIri: ProjectIri): Task[Chunk[KnoraGroup]] =
+    findAllByTriplePattern(_.has(belongsToProject, Rdf.iri(projectIri.value)))
 }
 
 object KnoraGroupRepoLive {

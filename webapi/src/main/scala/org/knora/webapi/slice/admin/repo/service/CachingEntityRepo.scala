@@ -21,4 +21,6 @@ abstract class CachingEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
     cache.get(id).fold(super.findById(id).map(_.map(cache.put)))(ZIO.some(_))
 
   override def save(entity: E): Task[E] = super.save(entity).map(cache.put)
+
+  override def delete(entity: E): Task[Unit] = super.delete(entity) <* ZIO.succeed(cache.remove(entity))
 }

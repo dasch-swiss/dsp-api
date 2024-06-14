@@ -144,6 +144,8 @@ trait TriplestoreService {
   def dropGraph(graphName: String): Task[Unit]
 
   def compact(): Task[Boolean]
+
+  final def dropGraphByIri(graphName: InternalIri): Task[Unit] = dropGraph(graphName.value)
 }
 
 object TriplestoreService {

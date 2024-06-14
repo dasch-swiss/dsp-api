@@ -20,8 +20,10 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
-final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo) {
+final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontologyRepo: OntologyRepo) {
   def findById(id: ProjectIri): Task[Option[KnoraProject]]         = knoraProjectRepo.findById(id)
   def existsById(id: ProjectIri): Task[Boolean]                    = knoraProjectRepo.existsById(id)
   def findByShortcode(code: Shortcode): Task[Option[KnoraProject]] = knoraProjectRepo.findByShortcode(code)
@@ -75,6 +77,8 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo) {
         DuplicateValueException(s"Project with the shortname: '${shortname.value}' already exists"),
       )
 
+  def erase(project: KnoraProject): Task[Unit] = knoraProjectRepo.delete(project)
+
   def updateProject(project: KnoraProject, updateReq: ProjectUpdateRequest): Task[KnoraProject] =
     for {
       desc <- updateReq.description match {
@@ -96,6 +100,14 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo) {
                    ),
                  )
     } yield updated
+
+  def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] = {
+    val projectGraph = ProjectService.projectDataNamedGraphV2(project)
+    ontologyRepo
+      .findByProject(project.id)
+      .map(_.map(_.ontologyMetadata.ontologyIri.toInternalIri))
+      .map(_ :+ projectGraph)
+  }
 }
 
 object KnoraProjectService {
