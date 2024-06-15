@@ -1869,9 +1869,8 @@ final case class ResourcesResponderV2(
       ZIO
         .fromOption(
           allResourceVersions.find { case (_, resource) =>
-            resource.values.exists(item =>
-              item._1 == propertyIri && item._2.exists(value => value.valueIri == previousValueIri),
-            )
+            resource.values
+              .exists(item => item._1 == propertyIri && item._2.exists(value => value.valueIri == previousValueIri), )
           },
         )
         .orElseFail(NotFoundException(s"Could not find the previous value of ${currentVersionOfValue.valueIri}"))
