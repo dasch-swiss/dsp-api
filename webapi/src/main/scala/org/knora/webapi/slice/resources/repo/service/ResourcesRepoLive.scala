@@ -5,32 +5,29 @@
 
 package org.knora.webapi.slice.resources.repo.service
 
+import org.eclipse.rdf4j.model.Namespace
+import org.eclipse.rdf4j.model.impl.SimpleNamespace
+import org.eclipse.rdf4j.model.vocabulary.RDF
+import org.eclipse.rdf4j.model.vocabulary.RDFS
+import org.eclipse.rdf4j.model.vocabulary.XSD
+import org.eclipse.rdf4j.sparqlbuilder.core.query.InsertDataQuery
+import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
 import zio.*
 
 import java.time.Instant
+import java.util.UUID
 
 import dsp.constants.SalsahGui.IRI
 import org.knora.webapi.messages.twirl.NewLinkValueInfo
 import org.knora.webapi.messages.twirl.NewValueInfo
+import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.query.InsertDataQuery
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphName
-import org.eclipse.rdf4j.sparqlbuilder.core.Variable
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.Namespace
-import org.eclipse.rdf4j.model.impl.SimpleNamespace
-import org.eclipse.rdf4j.model.vocabulary.XSD
 
 case class ResourceReadyToCreate(
   resourceIri: IRI,
@@ -100,6 +97,14 @@ object ResourcesRepoLive {
     projectIri: IRI,
     creatorIri: IRI,
   ) = {
+    val graph = iri(dataGraphIri.value)
+
+    val query: InsertDataQuery =
+      Queries
+        .INSERT_DATA()
+        .into(graph)
+        .prefix(KnoraBaseVocab.NS, RDF.NS, RDFS.NS, XSD.NS)
+
     val resourcePattern =
       Rdf
         .iri(resourceToCreate.resourceIri)
@@ -111,24 +116,99 @@ object ResourcesRepoLive {
         .andHas(KnoraBaseVocab.hasPermissions, Rdf.literalOf(resourceToCreate.permissions))
         .andHas(KnoraBaseVocab.creationDate, Rdf.literalOfType(resourceToCreate.creationDate.toString(), XSD.DATETIME))
 
+    query.insertData(resourcePattern)
+
     for (newValueInfo <- resourceToCreate.newValueInfos) {
       val valuePattern =
         Rdf
-          .iri(newValueInfo.newValueIri)
-          .isA(iri(newValueInfo.value.valueType.toString()))
+          .iri(newValueInfo.valueIri)
+          .isA(iri(newValueInfo.valueTypeIri))
+          .andHas(KnoraBaseVocab.isDeleted, Rdf.literalOf(false))
+          .andHas(KnoraBaseVocab.valueHasString, Rdf.literalOf(newValueInfo.valueHasString))
+          .andHas(KnoraBaseVocab.valueHasUUID, Rdf.literalOf(newValueInfo.valueUUID.toString))
+          .andHas(KnoraBaseVocab.attachedToUser, iri(newValueInfo.valueCreator))
+          .andHas(KnoraBaseVocab.valueHasOrder, Rdf.literalOf(newValueInfo.valueHasOrder))
+          .andHas(
+            KnoraBaseVocab.valueCreationDate,
+            Rdf.literalOfType(newValueInfo.creationDate.toString(), XSD.DATETIME),
+          )
 
-      resourcePattern.and(valuePattern)
+      newValueInfo.comment.foreach(comment =>
+        valuePattern.andHas(KnoraBaseVocab.valueHasComment, Rdf.literalOf(comment)),
+      )
+
+      newValueInfo.value match
+        case TypeSpecificValueInfo.LinkValueInfo(referredResourceIri)         => ???
+        case TypeSpecificValueInfo.UnformattedTextValueInfo(valueHasLanguage) => ???
+        case TypeSpecificValueInfo.FormattedTextValueInfo(
+              valueHasLanguage,
+              mappingIri,
+              maxStandoffStartIndex,
+              standoff,
+            ) =>
+          ???
+        case TypeSpecificValueInfo.IntegerValueInfo(valueHasInteger) =>
+          valuePattern.andHas(KnoraBaseVocab.valueHasInteger, Rdf.literalOf(valueHasInteger))
+        case TypeSpecificValueInfo.DecimalValueInfo(valueHasDecimal) =>
+          valuePattern.andHas(KnoraBaseVocab.valueHasDecimal, Rdf.literalOf(valueHasDecimal))
+        case TypeSpecificValueInfo.BooleanValueInfo(valueHasBoolean) =>
+          valuePattern.andHas(KnoraBaseVocab.valueHasBoolean, Rdf.literalOf(valueHasBoolean))
+        case TypeSpecificValueInfo.UriValueInfo(valueHasUri) => ???
+        case TypeSpecificValueInfo.DateValueInfo(
+              valueHasStartJDN,
+              valueHasEndJDN,
+              valueHasStartPrecision,
+              valueHasEndPrecision,
+              valueHasCalendar,
+            ) =>
+          ???
+        case TypeSpecificValueInfo.ColorValueInfo(valueHasColor)   => ???
+        case TypeSpecificValueInfo.GeomValueInfo(valueHasGeometry) => ???
+        case TypeSpecificValueInfo.StillImageFileValueInfo(
+              internalFilename,
+              internalMimeType,
+              originalFilename,
+              originalMimeType,
+              dimX,
+              dimY,
+            ) =>
+          ???
+        case TypeSpecificValueInfo.StillImageExternalFileValueInfo(
+              internalFilename,
+              internalMimeType,
+              originalFilename,
+              originalMimeType,
+              externalUrl,
+            ) =>
+          ???
+        case TypeSpecificValueInfo.DocumentFileValueInfo(
+              internalFilename,
+              internalMimeType,
+              originalFilename,
+              originalMimeType,
+              dimX,
+              dimY,
+              pageCount,
+            ) =>
+          ???
+        case TypeSpecificValueInfo.OtherFileValueInfo(
+              internalFilename,
+              internalMimeType,
+              originalFilename,
+              originalMimeType,
+            ) =>
+          ???
+        case TypeSpecificValueInfo.HierarchicalListValueInfo(valueHasListNode)                   => ???
+        case TypeSpecificValueInfo.IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd) => ???
+        case TypeSpecificValueInfo.TimeValueInfo(valueHasTimeStamp)                              => ???
+        case TypeSpecificValueInfo.GeonameValueInfo(valueHasGeonameCode)                         => ???
+
+      resourcePattern.andHas(iri(newValueInfo.propertyIri), Rdf.iri(newValueInfo.valueIri))
+
+      query.insertData(valuePattern)
     }
 
-    val graph = iri(dataGraphIri.value)
-
-    val queryTotal: InsertDataQuery =
-      Queries
-        .INSERT_DATA(resourcePattern)
-        .into(graph)
-        .prefix(KnoraBaseVocab.NS, RDF.NS, RDFS.NS, XSD.NS)
-
-    Update(queryTotal.getQueryString())
+    Update(query.getQueryString())
   }
 }
 
@@ -142,6 +222,16 @@ object KnoraBaseVocab {
   val attachedToProject = iri(kb + "attachedToProject")
   val hasPermissions    = iri(kb + "hasPermissions")
   val creationDate      = iri(kb + "creationDate")
+
+  val valueHasString    = iri(kb + "valueHasString")
+  val valueHasUUID      = iri(kb + "valueHasUUID")
+  val valueHasComment   = iri(kb + "valueHasComment")
+  val valueHasOrder     = iri(kb + "valueHasOrder")
+  val valueCreationDate = iri(kb + "valueCreationDate")
+
+  val valueHasInteger = iri(kb + "valueHasInteger")
+  val valueHasBoolean = iri(kb + "valueHasBoolean")
+  val valueHasDecimal = iri(kb + "valueHasDecimal")
 }
 
 object Run extends ZIOAppDefault {
@@ -149,13 +239,61 @@ object Run extends ZIOAppDefault {
   override def run = Console.printLine(prettyRes)
 
   val graphIri         = InternalIri("fooGraph")
-  val projectIri       = "fooProject"
-  val userIri          = "fooUser"
-  val resourceIri      = "fooResource"
+  val projectIri       = "fooProjectIri"
+  val userIri          = "fooUserIri"
+  val resourceIri      = "fooResourceIri"
   val resourceClassIri = "fooClass"
   val label            = "fooLabel"
   val creationDate     = Instant.parse("2024-01-01T10:00:00.673298Z")
   val permissions      = "fooPermissions"
+
+  val values = List(
+    // int value
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = "fooIntProperty",
+      valueIri = "fooIntValueIri",
+      valueTypeIri = "IntValue",
+      valueUUID = UUID.randomUUID(),
+      value = TypeSpecificValueInfo.IntegerValueInfo(42),
+      valuePermissions = permissions,
+      valueCreator = userIri,
+      creationDate = creationDate,
+      valueHasOrder = 1,
+      valueHasString = "42",
+      comment = Some("fooComment on integer value containing \"double quotes\". \nAnd a newline."),
+    ),
+    // bool value
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = "fooBoolProp",
+      valueIri = "fooBoolValueIri",
+      valueTypeIri = "BoolValue",
+      valueUUID = UUID.randomUUID(),
+      value = TypeSpecificValueInfo.BooleanValueInfo(true),
+      valuePermissions = permissions,
+      valueCreator = userIri,
+      creationDate = creationDate,
+      valueHasOrder = 2,
+      valueHasString = "true",
+      comment = None,
+    ),
+    // decimal value
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = "fooDecimalProp",
+      valueIri = "fooDecimalValueIri",
+      valueTypeIri = "DecimalValue",
+      valueUUID = UUID.randomUUID(),
+      value = TypeSpecificValueInfo.DecimalValueInfo(42.42),
+      valuePermissions = permissions,
+      valueCreator = userIri,
+      creationDate = creationDate,
+      valueHasOrder = 3,
+      valueHasString = "42.42",
+      comment = None,
+    ),
+  )
 
   val resourceDefinition = ResourceReadyToCreate(
     resourceIri = resourceIri,
@@ -163,7 +301,7 @@ object Run extends ZIOAppDefault {
     resourceLabel = label,
     creationDate = creationDate,
     permissions = permissions,
-    newValueInfos = Seq.empty,
+    newValueInfos = values,
     linkUpdates = Seq.empty,
   )
 
