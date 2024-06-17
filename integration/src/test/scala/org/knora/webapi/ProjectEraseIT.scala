@@ -5,6 +5,7 @@
 
 package org.knora.webapi
 import zio.Chunk
+import zio.NonEmptyChunk
 import zio.ZIO
 import zio.http.Status
 import zio.test.Spec
@@ -23,8 +24,10 @@ import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionPart
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
+import org.knora.webapi.slice.admin.domain.model.ForWhat.Group
 import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -44,6 +47,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
+import org.knora.webapi.slice.admin.domain.service.DefaultObjectAccessPermissionService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
@@ -61,6 +65,7 @@ object ProjectEraseIT extends E2EZSpec {
   private val groups   = ZIO.serviceWithZIO[KnoraGroupService]
   private val db       = ZIO.serviceWithZIO[TriplestoreService]
   private val aps      = ZIO.serviceWithZIO[AdministrativePermissionService]
+  private val doaps    = ZIO.serviceWithZIO[DefaultObjectAccessPermissionService]
 
   private def getUser(userIri: UserIri) = users(_.findById(userIri)).someOrFail(Exception(s"Must be present $userIri"))
   private val shortcode                 = Shortcode.unsafeFrom("9999")
@@ -223,13 +228,15 @@ object ProjectEraseIT extends E2EZSpec {
           } yield assertTrue(ontologyGraphExists, graphDeleted)
         },
         test("when called as root then it should delete administrative permissions") {
-          val perm = AdministrativePermissionPart.Simple
-            .from(ProjectResourceCreateAll)
-            .getOrElse(throw Exception("should not happen"))
           for {
-            project    <- getProject
-            group      <- createGroup(project)
-            ap         <- aps(_.create(project, group, Chunk(perm)))
+            project <- getProject
+            group   <- createGroup(project)
+            perms = Chunk(
+                      AdministrativePermissionPart.Simple
+                        .from(ProjectResourceCreateAll)
+                        .getOrElse(throw Exception("should not happen")),
+                    )
+            ap         <- aps(_.create(project, group, perms))
             wasPresent <- aps(_.findByGroupAndProject(group.id, project.id)).map(_.nonEmpty)
 
             // when
@@ -237,6 +244,24 @@ object ProjectEraseIT extends E2EZSpec {
 
             // then
             wasDeleted <- aps(_.findByGroupAndProject(group.id, project.id)).map(_.isEmpty)
+          } yield assertTrue(wasPresent, wasDeleted)
+        },
+        test("when called as root then it should delete the default object access permissions") {
+          for {
+            project <- getProject
+            group   <- createGroup(project)
+            perms = Chunk(
+                      DefaultObjectAccessPermissionPart(Permission.ObjectAccess.View, NonEmptyChunk(group.id)),
+                      DefaultObjectAccessPermissionPart(Permission.ObjectAccess.Modify, NonEmptyChunk(group.id)),
+                    )
+            doap       <- doaps(_.create(project, Group(group.id), perms))
+            wasPresent <- doaps(_.findByProject(project.id)).map(_.nonEmpty)
+
+            // when
+            erased <- AdminApiRestClient.eraseProjectAsRoot(shortcode)
+
+            // then
+            wasDeleted <- doaps(_.findByProject(project.id)).map(_.isEmpty)
           } yield assertTrue(wasPresent, wasDeleted)
         },
       ) @@ TestAspect.before(createProject)

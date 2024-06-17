@@ -41,6 +41,7 @@ object AdminDomainModule {
   type Provided =
     // format: off
     AdministrativePermissionService &
+    DefaultObjectAccessPermissionService &
     GroupService &
     KnoraGroupService &
     KnoraProjectService &
@@ -55,6 +56,7 @@ object AdminDomainModule {
 
   val layer = ZLayer.makeSome[Dependencies, Provided](
     AdministrativePermissionService.layer,
+    DefaultObjectAccessPermissionService.layer,
     GroupService.layer,
     KnoraGroupService.layer,
     KnoraProjectService.layer,
