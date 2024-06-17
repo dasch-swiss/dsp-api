@@ -196,7 +196,6 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .out(statusCode(StatusCode.Accepted))
     .description(
       "Triggers an ingest on the project with the given shortcode. " +
-        "Currently only supports ingest of images. " +
         "The files are expected to be in the `tmp/<project_shortcode>` directory. " +
         "Authorization: admin scope required.",
     )
@@ -216,8 +215,9 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
   val getBulkIngestMappingCsv = base.secureEndpoint.get
     .in(projects / shortcodePathVar / "bulk-ingest" / "mapping.csv")
     .description(
-      "Get the current result of the bulk ingest, may be incomplete. " +
+      "Get the current result of the bulk ingest. " +
         "The result is a csv with the following structure: `original,derivative`. " +
+        "Will return 409 Conflict if a bulk-ingest is currently running for the project." +
         "Authorization: admin scope required.",
     )
     .out(stringBody)
