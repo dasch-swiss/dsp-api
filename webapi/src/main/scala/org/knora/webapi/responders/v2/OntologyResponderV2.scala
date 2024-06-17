@@ -12,7 +12,6 @@ import zio.ZIO
 import zio.ZLayer
 
 import java.time.Instant
-
 import dsp.constants.SalsahGui
 import dsp.errors.*
 import org.knora.webapi.*
@@ -65,9 +64,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  *
  * The API v1 ontology responder, which is read-only, delegates most of its work to this responder.
  */
-trait OntologyResponderV2
-
-final case class OntologyResponderV2Live(
+final case class OntologyResponderV2(
   appConfig: AppConfig,
   cardinalityHandler: CardinalityHandler,
   cardinalityService: CardinalityService,
@@ -79,8 +76,7 @@ final case class OntologyResponderV2Live(
   knoraProjectService: KnoraProjectService,
   triplestoreService: TriplestoreService,
 )(implicit val stringFormatter: StringFormatter)
-    extends OntologyResponderV2
-    with MessageHandler
+    extends MessageHandler
     with LazyLogging {
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[OntologiesResponderRequestV2]
@@ -441,7 +437,7 @@ final case class OntologyResponderV2Live(
    * @param createOntologyRequest the request message.
    * @return a [[SuccessResponseV2]].
    */
-  private def createOntology(createOntologyRequest: CreateOntologyRequestV2): Task[ReadOntologyMetadataV2] = {
+  def createOntology(createOntologyRequest: CreateOntologyRequestV2): Task[ReadOntologyMetadataV2] = {
     def makeTaskFuture(internalOntologyIri: SmartIri): Task[ReadOntologyMetadataV2] =
       for {
         // Make sure the ontology doesn't already exist.
@@ -522,7 +518,9 @@ final case class OntologyResponderV2Live(
       // check if the requesting user is allowed to create an ontology
       _ <-
         ZIO.when(
-          !(requestingUser.permissions.isProjectAdmin(projectIri.toString) || requestingUser.permissions.isSystemAdmin),
+          !(requestingUser.permissions.isProjectAdmin(
+            projectIri.toString,
+          ) || requestingUser.permissions.isSystemAdmin || requestingUser.isSystemUser),
         ) {
           val msg =
             s"A new ontology in the project ${createOntologyRequest.projectIri} can only be created by an admin of that project, or by a system admin."
@@ -2984,7 +2982,7 @@ final case class OntologyResponderV2Live(
   }
 }
 
-object OntologyResponderV2Live {
+object OntologyResponderV2 {
   val layer: URLayer[
     AppConfig & CardinalityHandler & CardinalityService & IriService & KnoraProjectService & MessageRelay &
       OntologyCache & OntologyTriplestoreHelpers & OntologyCacheHelpers & OntologyRepo & StringFormatter &
@@ -3003,7 +3001,7 @@ object OntologyResponderV2Live {
       or       <- ZIO.service[OntologyRepo]
       sf       <- ZIO.service[StringFormatter]
       ts       <- ZIO.service[TriplestoreService]
-      responder = OntologyResponderV2Live(ac, ch, cs, is, oc, och, oth, or, kr, ts)(sf)
+      responder = OntologyResponderV2(ac, ch, cs, is, oc, och, oth, or, kr, ts)(sf)
       _        <- ZIO.serviceWithZIO[MessageRelay](_.subscribe(responder))
     } yield responder
   }

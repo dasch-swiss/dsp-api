@@ -10,8 +10,12 @@ import zio.test.Spec
 import zio.test.TestAspect
 import zio.test.assertTrue
 
+import java.util.UUID
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
+import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
@@ -38,6 +42,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -108,6 +113,8 @@ object ProjectEraseIT extends E2EZSpec {
     user    <- users(_.addUserToProjectAsAdmin(user, project))
   } yield (user, group)
 
+  private def doesGraphExist(graphName: InternalIri) = db(_.query(Ask(s"ASK { GRAPH <${graphName.value}> {} }")))
+
   override def e2eSpec: Spec[ProjectEraseIT.env, Any] =
     suiteAll(s"The erasing project endpoint ${AdminApiRestClient.projectsShortcodeErasePath}") {
 
@@ -153,7 +160,6 @@ object ProjectEraseIT extends E2EZSpec {
           )
         },
         test("when called as root then it should delete the project graph") {
-          def doesGraphExist(graphName: InternalIri) = db(_.query(Ask(s"ASK { GRAPH <${graphName.value}> {} }")))
           for {
             // given
             project  <- getProject
@@ -177,6 +183,30 @@ object ProjectEraseIT extends E2EZSpec {
             graphExisted,
             graphDeleted,
           )
+        },
+        test("when called as root then it should delete the ontology graph") {
+          for {
+            project         <- getProject
+            projectSmartIri <- ZIO.serviceWithZIO[IriConverter](_.asSmartIri(project.id.value))
+            req = CreateOntologyRequestV2(
+                    "test",
+                    projectSmartIri,
+                    false,
+                    "some label",
+                    None,
+                    UUID.randomUUID(),
+                    KnoraSystemInstances.Users.SystemUser,
+                  )
+            onto                <- ZIO.serviceWithZIO[OntologyResponderV2](_.createOntology(req))
+            ontologyGraphName    = onto.ontologies.head.ontologyIri.toInternalIri
+            ontologyGraphExists <- doesGraphExist(ontologyGraphName)
+
+            // when
+            erased <- AdminApiRestClient.eraseProjectAsRoot(shortcode)
+
+            // then
+            graphDeleted <- doesGraphExist(ontologyGraphName).negate
+          } yield assertTrue(ontologyGraphExists, graphDeleted)
         },
       ) @@ TestAspect.before(createProject)
     }

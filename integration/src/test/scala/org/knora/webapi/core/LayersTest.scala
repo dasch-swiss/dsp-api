@@ -211,7 +211,7 @@ object LayersTest {
       CommonR0 & CommonR,
       CommonR1,
     ](
-      OntologyResponderV2Live.layer,
+      OntologyResponderV2.layer,
       StandoffResponderV2.layer,
       ResourcesResponderV2.layer,
       RepositoryUpdater.layer,
