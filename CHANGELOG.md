@@ -1,5 +1,30 @@
 # Changelog
 
+## [30.16.0](https://github.com/dasch-swiss/dsp-api/compare/v30.15.0...v30.16.0) (2024-06-14)
+
+
+### Maintenance
+
+* Add missing labels and comment to relatesToValue ([#3273](https://github.com/dasch-swiss/dsp-api/issues/3273)) ([02debbc](https://github.com/dasch-swiss/dsp-api/commit/02debbced8cc92c48132eaec600b86bed5c7920a))
+* Add ontology constants for text value types ([#3266](https://github.com/dasch-swiss/dsp-api/issues/3266)) ([854a6c8](https://github.com/dasch-swiss/dsp-api/commit/854a6c893c7e004ad601b1f3900105f7ba0681c5))
+* Create resources repo ([#3269](https://github.com/dasch-swiss/dsp-api/issues/3269)) ([351b3e0](https://github.com/dasch-swiss/dsp-api/commit/351b3e00d1bac6636ff3a8cf9f5897562a1ea135))
+* Dependency updates ([#3263](https://github.com/dasch-swiss/dsp-api/issues/3263)) ([1cdf380](https://github.com/dasch-swiss/dsp-api/commit/1cdf380688fa271bc242e128afa9f2f8742320ed))
+* Introduce InfrastructureModule ([#3274](https://github.com/dasch-swiss/dsp-api/issues/3274)) ([2a35586](https://github.com/dasch-swiss/dsp-api/commit/2a355861802ce4b7c866566f18814777a84bd5fd))
+* Minor dependency updates ([#3262](https://github.com/dasch-swiss/dsp-api/issues/3262)) ([6c39954](https://github.com/dasch-swiss/dsp-api/commit/6c39954f3ee1d1171720bc33bfdfae62d9ba158b))
+* Move JwtService to infrastructure package and remove project service dependency from it ([#3275](https://github.com/dasch-swiss/dsp-api/issues/3275)) ([0484780](https://github.com/dasch-swiss/dsp-api/commit/048478037c7f7f67015780ffb47255720345c79a))
+* Patch dependency updates ([#3261](https://github.com/dasch-swiss/dsp-api/issues/3261)) ([d7fe791](https://github.com/dasch-swiss/dsp-api/commit/d7fe791fd7451df8387652bf0475cbd60585dab7))
+* Remove LOCAL_HOME from docker compose ([#3264](https://github.com/dasch-swiss/dsp-api/issues/3264)) ([b9b5760](https://github.com/dasch-swiss/dsp-api/commit/b9b5760af3aa82ca26b3f63b7ad3dde5193f445a))
+* Remove MessageRelay from Value Responder ([#3268](https://github.com/dasch-swiss/dsp-api/issues/3268)) ([11e38a8](https://github.com/dasch-swiss/dsp-api/commit/11e38a8b8f962ebb993f53647f7c2d0196591945))
+* Remove nested template calls ([#3271](https://github.com/dasch-swiss/dsp-api/issues/3271)) ([affee1f](https://github.com/dasch-swiss/dsp-api/commit/affee1fc660ca426f035f139b4060b6fcb6bfe84))
+* Remove Spray Json from files refactored during DEV-1627 ([#3259](https://github.com/dasch-swiss/dsp-api/issues/3259)) ([08c4633](https://github.com/dasch-swiss/dsp-api/commit/08c4633e5d27f733f6fdb3f3072a43bd76111a05))
+* Separate ontology helpers accessing cache and triplestore ([#3270](https://github.com/dasch-swiss/dsp-api/issues/3270)) ([f2edd6f](https://github.com/dasch-swiss/dsp-api/commit/f2edd6f829200beb29f2b2503bd0c137d93e9a7d))
+
+
+### Enhancements
+
+* Add endpoint to erase projects (DEV-3681) ([#3272](https://github.com/dasch-swiss/dsp-api/issues/3272)) ([488788a](https://github.com/dasch-swiss/dsp-api/commit/488788a57c6c572aa76388016b0c3ff13bf1ef6b))
+* Compaction endpoint, guarded (DEV-3703) ([#3265](https://github.com/dasch-swiss/dsp-api/issues/3265)) ([d5576b5](https://github.com/dasch-swiss/dsp-api/commit/d5576b51868345554aa1f20da972f18848bbc626))
+
 ## [30.15.0](https://github.com/dasch-swiss/dsp-api/compare/v30.14.0...v30.15.0) (2024-05-29)
 
 

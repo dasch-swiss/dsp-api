@@ -44,6 +44,8 @@ trait DspIngestClient {
 
   def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path]
 
+  def eraseProject(shortcode: Shortcode): Task[Unit]
+
   def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse]
 }
 
@@ -99,6 +101,12 @@ final case class DspIngestClientLive(
       response <- ZIO.blocking(request.send(backend = sttpBackend))
       _        <- ZIO.logInfo(s"Response from ingest :${response.code}")
     } yield exportFile
+
+  override def eraseProject(shortcode: Shortcode): Task[Unit] = for {
+    request  <- authenticatedRequest.map(_.delete(uri"${projectsPath(shortcode)}/erase"))
+    response <- ZIO.blocking(request.send(backend = sttpBackend))
+    _        <- ZIO.logInfo(s"Response from ingest :${response.body}")
+  } yield ()
 
   override def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = ZIO.scoped {
     for {

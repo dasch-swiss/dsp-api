@@ -40,6 +40,7 @@ final case class AppConfig(
   instrumentationServerConfig: InstrumentationServerConfig,
   jwt: JwtConfig,
   dspIngest: DspIngestConfig,
+  features: Features,
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
 }
@@ -173,8 +174,10 @@ final case class InstrumentationServerConfig(
   interval: Duration,
 )
 
+final case class Features(allowEraseProjects: Boolean)
+
 object AppConfig {
-  type AppConfigurationsTest = AppConfig & DspIngestConfig & Triplestore & Sipi
+  type AppConfigurationsTest = AppConfig & DspIngestConfig & Triplestore & Features & Sipi
   type AppConfigurations     = AppConfigurationsTest & InstrumentationServerConfig & JwtConfig & KnoraApi
 
   val descriptor: Config[AppConfig] = deriveConfig[AppConfig].mapKey(toKebabCase)
@@ -182,7 +185,9 @@ object AppConfig {
   val layer: ULayer[AppConfigurations] = {
     val appConfigLayer = ZLayer {
       val source = TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
-      read(descriptor from source).orDie
+      read(descriptor from source)
+        .tap(c => ZIO.logInfo("Feature: ALLOW_ERASE_PROJECTS enabled").when(c.features.allowEraseProjects))
+        .orDie
     }
     projectAppConfigurations(appConfigLayer).tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))
   }
@@ -194,6 +199,7 @@ object AppConfig {
       appConfigLayer.project(_.dspIngest) ++
       appConfigLayer.project(_.triplestore) ++
       appConfigLayer.project(_.instrumentationServerConfig) ++
+      appConfigLayer.project(_.features) ++
       appConfigLayer.project { appConfig =>
         val jwtConfig = appConfig.jwt
         val issuerFromConfigOrDefault: Option[String] =

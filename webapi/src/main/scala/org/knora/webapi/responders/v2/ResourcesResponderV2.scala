@@ -1867,13 +1867,9 @@ final case class ResourcesResponderV2(
     // find the version of resource which has a value with previousValueIri
     versionDateAndPreviousVersion <-
       ZIO
-        .fromOption(
-          allResourceVersions.find { case (_, resource) =>
-            resource.values.exists(item =>
-              item._1 == propertyIri && item._2.exists(value => value.valueIri == previousValueIri),
-            )
-          },
-        )
+        .fromOption(allResourceVersions.find { case (_, resource) =>
+          resource.values.get(propertyIri).exists(_.exists(_.valueIri == previousValueIri))
+        })
         .orElseFail(NotFoundException(s"Could not find the previous value of ${currentVersionOfValue.valueIri}"))
     (previousVersionDate, previousVersionOfResource) = versionDateAndPreviousVersion
 

@@ -75,14 +75,6 @@ final case class ProjectService(
       restrictedView,
     )
 
-  def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] = {
-    val projectGraph = ProjectService.projectDataNamedGraphV2(project)
-    ontologyRepo
-      .findByProject(project.id)
-      .map(_.map(_.ontologyMetadata.ontologyIri.toInternalIri))
-      .map(_ :+ projectGraph)
-  }
-
   def setProjectRestrictedView(project: Project, settings: RestrictedView): Task[RestrictedView] =
     knoraProjectService.setProjectRestrictedView(toKnoraProject(project, settings), settings)
 

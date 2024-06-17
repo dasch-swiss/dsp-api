@@ -10,7 +10,8 @@ import java.util.UUID
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
+import org.knora.webapi.messages.util.CalendarNameV2
+import org.knora.webapi.messages.util.DatePrecisionV2
 
 /**
  * Contains instructions that can be given to a SPARQL template for updating direct links and `knora-base:LinkValue`
@@ -64,11 +65,91 @@ final case class NewLinkValueInfo(
 final case class NewValueInfo(
   resourceIri: IRI,
   propertyIri: IRI,
-  value: ValueContentV2,
-  newValueIri: IRI,
-  newValueUUID: UUID,
-  valueCreator: IRI,
+  valueIri: IRI,
+  valueTypeIri: IRI,
+  valueUUID: UUID,
+  value: TypeSpecificValueInfo,
   valuePermissions: String,
+  valueCreator: IRI,
   creationDate: Instant,
   valueHasOrder: Int,
+  valueHasString: String,
+  comment: Option[String],
 )
+
+final case class StandoffAttribute(
+  propertyIri: IRI,
+  value: String,
+)
+
+final case class StandoffTagInfo(
+  standoffTagClassIri: IRI,
+  standoffTagInstanceIri: IRI,
+  startParentIri: Option[IRI],
+  endParentIri: Option[IRI],
+  uuid: UUID,
+  originalXMLID: Option[String],
+  startIndex: Int,
+  endIndex: Option[Int],
+  startPosition: Int,
+  endPosition: Int,
+  attributes: Seq[StandoffAttribute],
+)
+
+enum TypeSpecificValueInfo {
+  case LinkValueInfo(referredResourceIri: IRI)
+  case UnformattedTextValueInfo(valueHasLanguage: Option[String])
+  case FormattedTextValueInfo(
+    valueHasLanguage: Option[String],
+    mappingIri: IRI,
+    maxStandoffStartIndex: Int,
+    standoff: Seq[StandoffTagInfo],
+  )
+  case IntegerValueInfo(valueHasInteger: Int)
+  case DecimalValueInfo(valueHasDecimal: BigDecimal)
+  case BooleanValueInfo(valueHasBoolean: Boolean)
+  case UriValueInfo(valueHasUri: String)
+  case DateValueInfo(
+    valueHasStartJDN: Int,
+    valueHasEndJDN: Int,
+    valueHasStartPrecision: DatePrecisionV2,
+    valueHasEndPrecision: DatePrecisionV2,
+    valueHasCalendar: CalendarNameV2,
+  )
+  case ColorValueInfo(valueHasColor: String)
+  case GeomValueInfo(valueHasGeometry: String)
+  case StillImageFileValueInfo(
+    internalFilename: String,
+    internalMimeType: String,
+    originalFilename: Option[String],
+    originalMimeType: Option[String],
+    dimX: Int,
+    dimY: Int,
+  )
+  case StillImageExternalFileValueInfo(
+    internalFilename: String,
+    internalMimeType: String,
+    originalFilename: Option[String],
+    originalMimeType: Option[String],
+    externalUrl: String,
+  )
+  case DocumentFileValueInfo(
+    internalFilename: String,
+    internalMimeType: String,
+    originalFilename: Option[String],
+    originalMimeType: Option[String],
+    dimX: Option[Int],
+    dimY: Option[Int],
+    pageCount: Option[Int],
+  )
+  case OtherFileValueInfo(
+    internalFilename: String,
+    internalMimeType: String,
+    originalFilename: Option[String],
+    originalMimeType: Option[String],
+  )
+  case HierarchicalListValueInfo(valueHasListNode: IRI)
+  case IntervalValueInfo(valueHasIntervalStart: BigDecimal, valueHasIntervalEnd: BigDecimal)
+  case TimeValueInfo(valueHasTimeStamp: Instant)
+  case GeonameValueInfo(valueHasGeonameCode: String)
+}

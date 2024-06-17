@@ -12,7 +12,7 @@ import scala.collection.immutable.Seq
 object Dependencies {
   // should be the same version as in docker-compose.yml,
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
-  val fusekiImage = "daschswiss/apache-jena-fuseki:5.0.0-2"
+  val fusekiImage = "daschswiss/apache-jena-fuseki:5.0.0-3"
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.12.2"
 
@@ -21,7 +21,7 @@ object Dependencies {
   val PekkoActorVersion = "1.0.2"
   val PekkoHttpVersion  = "1.0.1"
   val JenaVersion       = "5.0.0"
-  val Rdf4jVersion      = "4.3.11"
+  val Rdf4jVersion      = "4.3.12"
 
   val ZioConfigVersion            = "4.0.2"
   val ZioLoggingVersion           = "2.3.0"
@@ -29,14 +29,14 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC27"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.1.1"
+  val ZioVersion                  = "2.1.3"
 
   // ZIO
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
   val zioConfig             = "dev.zio"                       %% "zio-config"                % ZioConfigVersion
   val zioConfigMagnolia     = "dev.zio"                       %% "zio-config-magnolia"       % ZioConfigVersion
   val zioConfigTypesafe     = "dev.zio"                       %% "zio-config-typesafe"       % ZioConfigVersion
-  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.6.2"
+  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.0"
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
@@ -46,8 +46,8 @@ object Dependencies {
 
   // refined
   val refined = Seq(
-    "eu.timepit" %% "refined"                  % "0.11.1",
-    "dev.zio"    %% "zio-json-interop-refined" % "0.6.2",
+    "eu.timepit" %% "refined"                  % "0.11.2",
+    "dev.zio"    %% "zio-json-interop-refined" % "0.7.0",
   )
 
   // zio-test and friends
@@ -80,7 +80,10 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.1"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.3.0" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "6.3.0" exclude (
+      "commons-logging",
+      "commons-logging",
+    ) exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.78.1"
 
   // caching
@@ -112,7 +115,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.10.8"
+  val tapirVersion = "1.10.9"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
