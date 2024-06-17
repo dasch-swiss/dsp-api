@@ -16,7 +16,6 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
-import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
@@ -24,6 +23,9 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionT
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.twirl.NewLinkValueInfo
 import org.knora.webapi.messages.twirl.NewValueInfo
+import org.knora.webapi.messages.twirl.StandoffAttribute
+import org.knora.webapi.messages.twirl.StandoffTagInfo
+import org.knora.webapi.messages.twirl.TypeSpecificValueInfo.*
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
@@ -449,16 +451,167 @@ final case class CreateResourceV2Handler(
             // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
             // use resource creation date for the value.
             valueCreationDate: Instant = valueToCreate.customValueCreationDate.getOrElse(creationDate)
+
+            valueInfo <-
+              valueToCreate.valueContent match
+                case DateValueContentV2(
+                      _,
+                      valueHasStartJDN,
+                      valueHasEndJDN,
+                      valueHasStartPrecision,
+                      valueHasEndPrecision,
+                      valueHasCalendar,
+                      _,
+                    ) =>
+                  ZIO.succeed(
+                    DateValueInfo(
+                      valueHasStartJDN = valueHasStartJDN,
+                      valueHasEndJDN = valueHasEndJDN,
+                      valueHasStartPrecision = valueHasStartPrecision,
+                      valueHasEndPrecision = valueHasEndPrecision,
+                      valueHasCalendar = valueHasCalendar,
+                    ),
+                  )
+                case TextValueContentV2(_, _, valueHasLanguage, _, None, _, _, _) =>
+                  ZIO.succeed(UnformattedTextValueInfo(valueHasLanguage))
+                case tv @ TextValueContentV2(_, _, valueHasLanguage, _, Some(mappingIri), _, _, _) =>
+                  val standoffInfo = tv
+                    .prepareForSparqlInsert(newValueIri)
+                    .map(standoffTag =>
+                      StandoffTagInfo(
+                        standoffTagClassIri = standoffTag.standoffNode.standoffTagClassIri.toString(),
+                        standoffTagInstanceIri = standoffTag.standoffTagInstanceIri,
+                        startParentIri = standoffTag.startParentIri,
+                        endParentIri = standoffTag.endParentIri,
+                        uuid = standoffTag.standoffNode.uuid,
+                        originalXMLID = standoffTag.standoffNode.originalXMLID,
+                        startIndex = standoffTag.standoffNode.startIndex,
+                        endIndex = standoffTag.standoffNode.endIndex,
+                        startPosition = standoffTag.standoffNode.startPosition,
+                        endPosition = standoffTag.standoffNode.endPosition,
+                        attributes = standoffTag.standoffNode.attributes
+                          .map(attr => StandoffAttribute(attr.standoffPropertyIri.toString(), attr.rdfValue)),
+                      ),
+                    )
+                  ZIO
+                    .fromOption(tv.computedMaxStandoffStartIndex)
+                    .orElseFail(StandoffInternalException("Max standoff start index not computed"))
+                    .map(standoffStartIndex =>
+                      FormattedTextValueInfo(valueHasLanguage, mappingIri, standoffStartIndex, standoffInfo),
+                    )
+                case IntegerValueContentV2(_, valueHasInteger, _) =>
+                  ZIO.succeed(IntegerValueInfo(valueHasInteger))
+                case DecimalValueContentV2(_, valueHasDecimal, _) =>
+                  ZIO.succeed(DecimalValueInfo(valueHasDecimal))
+                case BooleanValueContentV2(_, valueHasBoolean, _) =>
+                  ZIO.succeed(BooleanValueInfo(valueHasBoolean))
+                case GeomValueContentV2(_, valueHasGeometry, _) =>
+                  ZIO.succeed(GeomValueInfo(valueHasGeometry))
+                case IntervalValueContentV2(_, valueHasIntervalStart, valueHasIntervalEnd, _) =>
+                  ZIO.succeed(IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd))
+                case TimeValueContentV2(_, valueHasTimeStamp, _) =>
+                  ZIO.succeed(TimeValueInfo(valueHasTimeStamp))
+                case HierarchicalListValueContentV2(_, valueHasListNode, listNodeLabel, _) =>
+                  ZIO.succeed(HierarchicalListValueInfo(valueHasListNode))
+                case ColorValueContentV2(_, valueHasColor, _) =>
+                  ZIO.succeed(ColorValueInfo(valueHasColor))
+                case UriValueContentV2(_, valueHasUri, _) =>
+                  ZIO.succeed(UriValueInfo(valueHasUri))
+                case GeonameValueContentV2(_, valueHasGeonameCode, _) =>
+                  ZIO.succeed(GeonameValueInfo(valueHasGeonameCode))
+                case StillImageFileValueContentV2(_, fileValue, dimX, dimY, _) =>
+                  ZIO.succeed(
+                    StillImageFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                      dimX = dimX,
+                      dimY = dimY,
+                    ),
+                  )
+                case StillImageExternalFileValueContentV2(_, fileValue, externalUrl, _) =>
+                  ZIO.succeed(
+                    StillImageExternalFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                      externalUrl = externalUrl.value.toString(),
+                    ),
+                  )
+                case DocumentFileValueContentV2(_, fileValue, pageCount, dimX, dimY, _) =>
+                  ZIO.succeed(
+                    DocumentFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                      dimX = dimX,
+                      dimY = dimY,
+                      pageCount = pageCount,
+                    ),
+                  )
+                case ArchiveFileValueContentV2(_, fileValue, _) =>
+                  ZIO.succeed(
+                    OtherFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                    ),
+                  )
+                case TextFileValueContentV2(_, fileValue, _) =>
+                  ZIO.succeed(
+                    OtherFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                    ),
+                  )
+                case AudioFileValueContentV2(_, fileValue, _) =>
+                  ZIO.succeed(
+                    OtherFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                    ),
+                  )
+                case MovingImageFileValueContentV2(_, fileValue, _) =>
+                  ZIO.succeed(
+                    OtherFileValueInfo(
+                      internalFilename = fileValue.internalFilename,
+                      internalMimeType = fileValue.internalMimeType,
+                      originalFilename = fileValue.originalFilename,
+                      originalMimeType = fileValue.originalMimeType,
+                    ),
+                  )
+                case LinkValueContentV2(
+                      _,
+                      referredResourceIri,
+                      referredResourceExists,
+                      isIncomingLink,
+                      nestedResource,
+                      _,
+                    ) =>
+                  ZIO.succeed(LinkValueInfo(referredResourceIri))
+                case _: DeletedValueContentV2 => ZIO.fail(BadRequestException("Deleted values cannot be created"))
+
           } yield NewValueInfo(
             resourceIri = resourceIri,
             propertyIri = propertyIri.toIri,
-            value = valueToCreate.valueContent,
-            newValueIri = newValueIri,
-            newValueUUID = newValueUUID,
+            value = valueInfo,
+            valueIri = newValueIri,
+            valueTypeIri = valueToCreate.valueContent.valueType.toString(),
+            valueUUID = newValueUUID,
             valueCreator = requestingUser.id,
             valuePermissions = valueToCreate.permissions,
             creationDate = valueCreationDate,
             valueHasOrder = valueHasOrder,
+            valueHasString = valueToCreate.valueContent.valueHasString,
+            comment = valueToCreate.valueContent.comment,
           )
         }
     } yield ResourceReadyToCreate(

@@ -12,11 +12,11 @@ import java.time.Instant
 import java.util.UUID
 
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.NewLinkValueInfo
 import org.knora.webapi.messages.twirl.NewValueInfo
-import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
+import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
@@ -109,13 +109,16 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             NewValueInfo(
               resourceIri = resourceIri,
               propertyIri = "fooProperty",
-              value = IntegerValueContentV2(ApiV2Complex, 42),
-              newValueIri = valueIri,
-              newValueUUID = uuid,
-              valueCreator = valueCreator,
+              valueIri = valueIri,
+              valueTypeIri = OntologyConstants.KnoraBase.IntValue,
+              valueUUID = uuid,
+              value = TypeSpecificValueInfo.IntegerValueInfo(42),
               valuePermissions = valuePermissions,
+              valueCreator = valueCreator,
               creationDate = valueCreationDate,
               valueHasOrder = 1,
+              valueHasString = "42",
+              comment = None,
             ),
           ),
           linkUpdates = Seq.empty,
@@ -144,16 +147,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                      |            # Property: fooProperty
                      |
                      |            
-                     |            <fooValue> rdf:type <http://api.knora.org/ontology/knora-api/v2#IntValue> ;
+                     |            <fooValue> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
                      |                knora-base:isDeleted false  ;
                      |                knora-base:valueHasString \"\"\"42\"\"\" ;
                      |                knora-base:valueHasUUID \"$uuidEncoded\" .
                      |
-                     |
                      |            
-                     |
                      |                    <fooValue> knora-base:valueHasInteger 42 .
-                     |
                      |                
                      |
                      |            
@@ -163,8 +163,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                      |                knora-base:hasPermissions \"fooValuePermissions\"^^xsd:string ;
                      |                knora-base:valueHasOrder 1 ;
                      |                knora-base:valueCreationDate \"2024-01-01T10:00:00.673298Z\"^^xsd:dateTime .
-                     |
-                     |
                      |
                      |            
                      |            <fooResource> <fooProperty> <fooValue> .

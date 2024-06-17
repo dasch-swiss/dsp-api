@@ -16,6 +16,8 @@ import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTest
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.UserIri
 
 abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
@@ -94,6 +96,18 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       data     <- response.body.asString.mapError(_.getMessage)
     } yield data
 
+  def sendDeleteRequest(url: String, token: Option[String]): ZIO[env, String, Response] =
+    (for {
+      client   <- ZIO.service[Client]
+      urlStr    = s"http://localhost:3333$url"
+      urlFull  <- ZIO.fromEither(URL.decode(urlStr))
+      _        <- ZIO.logDebug(s"POST  ${urlFull.encode}")
+      bearer    = token.map(Header.Authorization.Bearer.apply)
+      headers   = Headers(List(Header.ContentType(MediaType.application.json)) ++ bearer.toList)
+      request   = Request.delete(urlFull).addHeaders(headers)
+      response <- client.request(request)
+    } yield response).mapError(_.getMessage)
+
   def getToken(email: String, password: String): ZIO[env, String, String] =
     for {
       response <-
@@ -122,4 +136,35 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
     } yield lmd.value
   }
 
+  object AdminApiRestClient {
+    private val shortcodePlaceholder                       = ":shortcode"
+    private def replace(shortcode: Shortcode, url: String) = url.replace(shortcodePlaceholder, shortcode.value)
+
+    val projectsShortcodePath: String      = s"/admin/projects/shortcode/$shortcodePlaceholder"
+    val projectsShortcodeErasePath: String = s"$projectsShortcodePath/erase"
+
+    private val userIriPlaceholder                     = ":userIri"
+    private def replace(userIri: UserIri, url: String) = url.replace(userIriPlaceholder, userIri.value)
+
+    val usersPath                       = "/admin/users"
+    val usersIriPath                    = s"$usersPath/iri/$userIriPlaceholder"
+    val usersIriProjectMemberships      = s"$usersIriPath/project-memberships"
+    val usersIriProjectAdminMemberships = s"$usersIriPath/project-admin-memberships"
+    val usersIriGroupMemberships        = s"$usersIriPath/group-memberships"
+
+    def eraseProjectAsRoot(shortcode: Shortcode): ZIO[env, String, Response] = for {
+      jwt      <- getRootToken.map(Some.apply)
+      response <- sendDeleteRequest(replace(shortcode, projectsShortcodeErasePath), jwt)
+    } yield response
+
+    def getProjectAsRoot(shortcode: Shortcode): ZIO[env, String, Response] = for {
+      jwt      <- getRootToken.map(Some.apply)
+      response <- sendGetRequest(replace(shortcode, projectsShortcodePath))
+    } yield response
+
+    def getUserAsRoot(userIri: UserIri): ZIO[env, IRI, Response] = for {
+      jwt      <- getRootToken.map(Some.apply)
+      response <- sendGetRequest(replace(userIri, usersIriPath))
+    } yield response
+  }
 }
