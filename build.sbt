@@ -82,11 +82,11 @@ lazy val root: Project = Project(id = "root", file("."))
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
 addCommandAlias(
   "headerCreateAll",
-  "; all webapi/headerCreate webapi/Test/headerCreate integration/headerCreate",
+  "; all webapi/headerCreate webapi/Test/headerCreate integration/headerCreate integration/Test/headerCreate",
 )
 addCommandAlias(
   "headerCheckAll",
-  "; all webapi/headerCheck webapi/Test/headerCheck integration/headerCheck",
+  "; all webapi/headerCheck webapi/Test/headerCheck integration/headerCheck integration/Test/headerCheck",
 )
 addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check; headerCheckAll")
 addCommandAlias("it", "integration/test")
