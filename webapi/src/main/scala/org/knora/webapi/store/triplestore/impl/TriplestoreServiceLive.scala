@@ -514,7 +514,7 @@ object TriplestoreServiceLive {
   val layer: URLayer[Triplestore & StringFormatter, TriplestoreService] =
     HttpClientZioBackend
       .layer(
-        SttpBackendOptions.connectionTimeout(2.hours),
+        SttpBackendOptions.connectionTimeout(200.hours),
       )
       .orDie >+>
       ZLayer.scoped {

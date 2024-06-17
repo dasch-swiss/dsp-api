@@ -95,7 +95,7 @@ final case class DspIngestClientLive(
       exportFile = tempDir / "export.zip"
       request <- authenticatedRequest.map {
                    _.post(uri"${projectsPath(shortcode)}/export")
-                     .readTimeout(30.minutes)
+                     .readTimeout(3000.minutes)
                      .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(exportFile.toFile))))
                  }
       response <- ZIO.blocking(request.send(backend = sttpBackend))
