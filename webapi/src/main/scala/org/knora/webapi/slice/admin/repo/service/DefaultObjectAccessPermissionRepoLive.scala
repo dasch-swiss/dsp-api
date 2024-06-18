@@ -17,16 +17,27 @@ import zio.ZIO
 import zio.ZLayer
 
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefix
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
+import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.Group
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClass
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClassAndProperty
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class DefaultObjectAccessPermissionRepoLive(
@@ -40,31 +51,91 @@ final case class DefaultObjectAccessPermissionRepoLive(
 
   override protected def entityProperties: EntityProperties =
     EntityProperties(
-      NonEmptyChunk(Vocabulary.KnoraAdmin.forProject),
+      NonEmptyChunk(Vocabulary.KnoraAdmin.forProject, Vocabulary.KnoraBase.hasPermissions),
+      Chunk(Vocabulary.KnoraAdmin.forGroup, Vocabulary.KnoraAdmin.forProperty, Vocabulary.KnoraAdmin.forResourceClass),
     )
 
   override def findByProject(projectIri: ProjectIri): Task[Chunk[DefaultObjectAccessPermission]] =
     findAllByTriplePattern(_.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)))
-
-  override def save(entity: DefaultObjectAccessPermission): Task[DefaultObjectAccessPermission] =
-    ZIO.die(UnsupportedOperationException("Mapper not yet fully implemented"))
 }
 
 object DefaultObjectAccessPermissionRepoLive {
   private val mapper = new RdfEntityMapper[DefaultObjectAccessPermission] {
 
-    override def toEntity(resource: RdfResource): IO[RdfError, DefaultObjectAccessPermission] =
-      for {
-        id <- resource.iri.flatMap { iri =>
-                ZIO.fromEither(PermissionIri.from(iri.value).left.map(ConversionError.apply))
-              }
-        forProject <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.ForProject).map(_.head)
-      } yield DefaultObjectAccessPermission(id, forProject)
+    private val permissionsDelimiter = '|'
+
+    override def toEntity(resource: RdfResource): IO[RdfError, DefaultObjectAccessPermission] = for {
+      id <- resource.iri.flatMap { iri =>
+              ZIO.fromEither(PermissionIri.from(iri.value).left.map(ConversionError.apply))
+            }
+      forProject          <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.ForProject).map(_.head)
+      forGroup            <- resource.getObjectIrisConvert[GroupIri](KnoraAdmin.ForGroup).map(_.headOption)
+      forResourceClass    <- resource.getObjectIrisConvert[InternalIri](KnoraAdmin.ForResourceClass).map(_.headOption)
+      forResourceProperty <- resource.getObjectIrisConvert[InternalIri](KnoraAdmin.ForProperty).map(_.headOption)
+      forWhat <-
+        ZIO.fromEither(ForWhat.from(forGroup, forResourceClass, forResourceProperty)).mapError(ConversionError.apply)
+      permissions <- parsePermissions(resource)
+    } yield DefaultObjectAccessPermission(id, forProject, forWhat, permissions)
+
+    private def parsePermissions(resource: RdfResource) = for {
+      permissionStr     <- resource.getStringLiteralOrFail[String](KnoraBase.HasPermissions)(Right(_))
+      parsedPermissions <- parsePermission(permissionStr)
+    } yield parsedPermissions
+
+    private def parsePermission(permission: String): IO[RdfError, Chunk[DefaultObjectAccessPermissionPart]] = {
+      def collectAllValidOrAllErrors(acc: Either[String, Chunk[GroupIri]], next: Either[String, GroupIri]) =
+        (acc, next) match {
+          case (Right(vs), Right(v)) => Right(vs :+ v)
+          case (Left(es), Left(e))   => Left(es + "; " + e)
+          case (Left(es), _)         => Left(es)
+          case (_, Left(e))          => Left(e)
+        }
+      ZIO
+        .foreach(Chunk.fromIterable(permission.split(permissionsDelimiter).map(_.trim))) { token =>
+          token.split(' ') match {
+            case Array(token, groups) => {
+              val part: Either[String, DefaultObjectAccessPermissionPart] =
+                Permission.ObjectAccess
+                  .fromToken(token)
+                  .toRight("No valid Object Access token")
+                  .flatMap { permission =>
+                    Chunk
+                      .fromIterable(groups.split(','))
+                      .map(GroupIri.from)
+                      .foldLeft[Either[String, Chunk[GroupIri]]](Right(Chunk.empty))(collectAllValidOrAllErrors)
+                      .flatMap(NonEmptyChunk.fromChunk(_).toRight(s"No groupIris found for $permission"))
+                      .map(DefaultObjectAccessPermissionPart(permission, _))
+                  }
+              ZIO.fromEither(part).mapError(ConversionError.apply)
+            }
+            case _ => ZIO.fail(ConversionError("Invalid hasPermission pattern"))
+          }
+        }
+    }
 
     override def toTriples(entity: DefaultObjectAccessPermission): TriplePattern = {
       val id = Rdf.iri(entity.id.value)
-      id.isA(Vocabulary.KnoraAdmin.DefaultObjectAccessPermission)
+      val pat: TriplePattern = id
+        .isA(Vocabulary.KnoraAdmin.DefaultObjectAccessPermission)
         .andHas(Vocabulary.KnoraAdmin.forProject, Rdf.iri(entity.forProject.value))
+        .andHas(Vocabulary.KnoraBase.hasPermissions, toStringLiteral(entity.permission))
+
+      entity.forWhat match {
+        case ForWhat.Group(g)          => pat.andHas(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(g.value))
+        case ForWhat.ResourceClass(rc) => pat.andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))
+        case ForWhat.Property(p)       => pat.andHas(Vocabulary.KnoraAdmin.forProperty, Rdf.iri(p.value))
+        case ForWhat.ResourceClassAndProperty(rc, p) =>
+          pat
+            .andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))
+            .andHas(Vocabulary.KnoraAdmin.forProperty, Rdf.iri(p.value))
+      }
+    }
+
+    private def toStringLiteral(permissions: Chunk[DefaultObjectAccessPermissionPart]): String = {
+      def withOutPrefixExpansion(str: String) = str.replace(KnoraAdminPrefixExpansion, KnoraAdminPrefix)
+      permissions
+        .map(p => s"${p.permission.token} ${p.groups.map(_.value).map(withOutPrefixExpansion).mkString(",")}")
+        .mkString(permissionsDelimiter.toString)
     }
   }
 

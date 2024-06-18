@@ -77,13 +77,14 @@ final case class ProjectEraseService(
     )
 
   private def cleanUpPermissions(project: KnoraProject) = for {
-    ap   <- apRepo.findByProject(project)
-    doap <- doapRepo.findByProject(project)
-    _ <- ZIO.logInfo(
-           s"${logPrefix(project)} Removing permissions ap ${mkString(ap.map(_.id))} , doap ${mkString(doap.map(_.id))}",
-         )
-    _ <- apRepo.deleteAll(ap)
-    _ <- doapRepo.deleteAll(doap)
+    aps   <- apRepo.findByProject(project)
+    doaps <- doapRepo.findByProject(project)
+    _ <-
+      ZIO.logInfo(
+        s"${logPrefix(project)} Removing permissions ap ${mkString(aps.map(_.id))} , doap ${mkString(doaps.map(_.id))}",
+      )
+    _ <- apRepo.deleteAll(aps)
+    _ <- doapRepo.deleteAll(doaps)
   } yield ()
 
   private def removeOntologyAndDataGraphs(project: KnoraProject) = for {

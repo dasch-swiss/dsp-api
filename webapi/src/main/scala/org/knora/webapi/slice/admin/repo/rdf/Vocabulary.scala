@@ -58,6 +58,8 @@ object Vocabulary {
     val DefaultObjectAccessPermission: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "DefaultObjectAccessPermission")
     val forProject: Iri                    = Rdf.iri(KnoraAdminPrefixExpansion, "forProject")
     val forGroup: Iri                      = Rdf.iri(KnoraAdminPrefixExpansion, "forGroup")
+    val forProperty: Iri                   = Rdf.iri(KnoraAdminPrefixExpansion, "forProperty")
+    val forResourceClass: Iri              = Rdf.iri(KnoraAdminPrefixExpansion, "forResourceClass")
   }
 
   object KnoraBase {
