@@ -9,9 +9,9 @@ import zio.Task
 import zio.ZLayer
 
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
-import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionPart
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
-import org.knora.webapi.slice.admin.domain.model.ForWhat
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri

@@ -9,6 +9,8 @@ import zio.Chunk
 import zio.NonEmptyChunk
 import zio.Task
 
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.service.EntityWithId
 import org.knora.webapi.slice.common.repo.service.CrudRepository
@@ -21,28 +23,33 @@ final case class DefaultObjectAccessPermission(
   permission: Chunk[DefaultObjectAccessPermissionPart],
 ) extends EntityWithId[PermissionIri]
 
-enum ForWhat {
-  case Group(iri: GroupIri)
-  case ResourceClass(iri: InternalIri)
-  case Property(iri: InternalIri)
-  case ResourceClassAndProperty(resourceClass: InternalIri, property: InternalIri)
-}
-object ForWhat {
-  def from(
-    group: Option[GroupIri],
-    resourceClass: Option[InternalIri],
-    property: Option[InternalIri],
-  ): Either[String, ForWhat] =
-    (group, resourceClass, property) match {
-      case (None, Some(rc: InternalIri), Some(p: InternalIri)) => Right(ResourceClassAndProperty(rc, p))
-      case (None, None, Some(p: InternalIri))                  => Right(Property(p))
-      case (None, Some(rc: InternalIri), None)                 => Right(ResourceClass(rc))
-      case (Some(g: GroupIri), None, None)                     => Right(Group(g))
-      case _                                                   => Left(s"Invalid combination of group $group resourceClass $resourceClass and property $property.")
-    }
-}
+object DefaultObjectAccessPermission {
+  enum ForWhat {
+    case Group(iri: GroupIri)
+    case ResourceClass(iri: InternalIri)
+    case Property(iri: InternalIri)
+    case ResourceClassAndProperty(resourceClass: InternalIri, property: InternalIri)
+  }
+  object ForWhat {
+    def from(
+      group: Option[GroupIri],
+      resourceClass: Option[InternalIri],
+      property: Option[InternalIri],
+    ): Either[String, ForWhat] =
+      (group, resourceClass, property) match {
+        case (None, Some(rc: InternalIri), Some(p: InternalIri)) => Right(ResourceClassAndProperty(rc, p))
+        case (None, None, Some(p: InternalIri))                  => Right(Property(p))
+        case (None, Some(rc: InternalIri), None)                 => Right(ResourceClass(rc))
+        case (Some(g: GroupIri), None, None)                     => Right(Group(g))
+        case _                                                   => Left(s"Invalid combination of group $group resourceClass $resourceClass and property $property.")
+      }
+  }
 
-final case class DefaultObjectAccessPermissionPart(permission: Permission.ObjectAccess, groups: NonEmptyChunk[GroupIri])
+  final case class DefaultObjectAccessPermissionPart(
+    permission: Permission.ObjectAccess,
+    groups: NonEmptyChunk[GroupIri],
+  )
+}
 
 trait DefaultObjectAccessPermissionRepo extends CrudRepository[DefaultObjectAccessPermission, PermissionIri] {
 

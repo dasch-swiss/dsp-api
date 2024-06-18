@@ -24,10 +24,10 @@ import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
-import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionPart
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.Group
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
-import org.knora.webapi.slice.admin.domain.model.ForWhat.Group
 import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
