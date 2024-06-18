@@ -62,6 +62,22 @@ object TestData {
       comment = None,
     )
 
+  def boolValueDefinition(uuid: UUID) =
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = propertyIri,
+      valueIri = valueIri,
+      valueTypeIri = OntologyConstants.KnoraBase.BooleanValue,
+      valueUUID = uuid,
+      value = TypeSpecificValueInfo.BooleanValueInfo(true),
+      valuePermissions = valuePermissions,
+      valueCreator = valueCreator,
+      creationDate = valueCreationDate,
+      valueHasOrder = 1,
+      valueHasString = "true",
+      comment = None,
+    )
+
 }
 
 object ResourcesRepoLiveSpec extends ZIOSpecDefault {
@@ -125,35 +141,87 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       val uuidEncoded = UuidUtil.base64Encode(uuid)
       val resource    = resourceDefinition.copy(newValueInfos = List(intValueDefinition(uuid)))
 
-      val expected =
-        Update(s"""|
-                   |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                   |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                   |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                   |
-                   |INSERT DATA {
-                   |    GRAPH <${graphIri.value}> {
-                   |        <$resourceIri> rdf:type <$resourceClassIri> ;
-                   |            rdfs:label "$label" ;
-                   |            knora-base:isDeleted false ;
-                   |            knora-base:attachedToUser <$userIri> ;
-                   |            knora-base:attachedToProject <$projectIri> ;
-                   |            knora-base:hasPermissions "$permissions" ;
-                   |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-                   |            <$propertyIri> <$valueIri> .
-                   |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
-                   |            knora-base:isDeleted false  ;
-                   |            knora-base:valueHasString "42" ;
-                   |            knora-base:valueHasUUID "$uuidEncoded" ;
-                   |            knora-base:attachedToUser <$valueCreator> ;
-                   |            knora-base:hasPermissions "$valuePermissions" ;
-                   |            knora-base:valueHasOrder 1 ;
-                   |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
-                   |            knora-base:valueHasInteger 42 .
-                   |    }
-                   |}
-                   |""".stripMargin)
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <$propertyIri> <$valueIri> .
+            |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "42" ;
+            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:valueHasInteger 42 .
+            |    }
+            |}
+            |""".stripMargin,
+      )
+
+      val result = ResourcesRepoLive.createNewResourceQueryWithBuilder(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      val reference = ResourcesRepoLive.createNewResourceQuery(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+    },
+    test("Create a new resource with a boolean value") {
+      val uuid        = UUID.randomUUID()
+      val uuidEncoded = UuidUtil.base64Encode(uuid)
+      val resource    = resourceDefinition.copy(newValueInfos = List(boolValueDefinition(uuid)))
+
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <$propertyIri> <$valueIri> .
+            |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#BooleanValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "true" ;
+            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:valueHasBoolean true .
+            |    }
+            |}
+            |""".stripMargin,
+      )
 
       val result = ResourcesRepoLive.createNewResourceQueryWithBuilder(
         dataGraphIri = graphIri,
@@ -266,5 +334,27 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       //   assertTrue(expected.sparql == result.sparql)
       // },
     )
+  // TODO:
+  // - add test for other value types
+  //   - link value
+  //   - text value (unformatted)
+  //   - text value (formatted)
+  //   - decimal value
+  //   - uri value
+  //   - date value
+  //   - color value
+  //   - geometry value
+  //   - still image file value
+  //   - still image external file value
+  //   - document file value
+  //   - other file value
+  //   - hierarchical list value
+  //   - interval value
+  //   - time value
+  //   - geoname value
+  // - bring back the link stuff (and figure out what's the deal)
+  // - add test for creating a resource with multiple values
+  // - add test for creating a resource with multiple links
+  // - add test for creating a resource with comment (and other optionals)
 
 }

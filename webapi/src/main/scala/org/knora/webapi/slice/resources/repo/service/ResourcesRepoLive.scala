@@ -259,36 +259,6 @@ object Run extends ZIOAppDefault {
   val permissions      = "fooPermissions"
 
   val values = List(
-    // int value
-    NewValueInfo(
-      resourceIri = resourceIri,
-      propertyIri = "fooIntProperty",
-      valueIri = "fooIntValueIri",
-      valueTypeIri = "IntValue",
-      valueUUID = UUID.randomUUID(),
-      value = TypeSpecificValueInfo.IntegerValueInfo(42),
-      valuePermissions = permissions,
-      valueCreator = userIri,
-      creationDate = creationDate,
-      valueHasOrder = 1,
-      valueHasString = "42",
-      comment = Some("fooComment on integer value containing \"double quotes\". \nAnd a newline."),
-    ),
-    // bool value
-    NewValueInfo(
-      resourceIri = resourceIri,
-      propertyIri = "fooBoolProp",
-      valueIri = "fooBoolValueIri",
-      valueTypeIri = "BoolValue",
-      valueUUID = UUID.randomUUID(),
-      value = TypeSpecificValueInfo.BooleanValueInfo(true),
-      valuePermissions = permissions,
-      valueCreator = userIri,
-      creationDate = creationDate,
-      valueHasOrder = 2,
-      valueHasString = "true",
-      comment = None,
-    ),
     // decimal value
     NewValueInfo(
       resourceIri = resourceIri,
