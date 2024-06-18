@@ -165,7 +165,8 @@ object ResourcesRepoLive {
             .andHas(KnoraBaseVocab.valueHasCalendar, Rdf.literalOf(calendar.toString()))
         case TypeSpecificValueInfo.ColorValueInfo(valueHasColor) =>
           valuePattern.andHas(KnoraBaseVocab.valueHasColor, Rdf.literalOf(valueHasColor))
-        case TypeSpecificValueInfo.GeomValueInfo(valueHasGeometry) => ???
+        case TypeSpecificValueInfo.GeomValueInfo(valueHasGeometry) =>
+          valuePattern.andHas(KnoraBaseVocab.valueHasGeometry, Rdf.literalOf(valueHasGeometry))
         case TypeSpecificValueInfo.StillImageFileValueInfo(
               internalFilename,
               internalMimeType,
@@ -241,5 +242,6 @@ object KnoraBaseVocab {
   val valueHasEndPrecision   = iri(kb + "valueHasEndPrecision")
   val valueHasCalendar       = iri(kb + "valueHasCalendar")
   val valueHasColor          = iri(kb + "valueHasColor")
+  val valueHasGeometry       = iri(kb + "valueHasGeometry")
 
 }

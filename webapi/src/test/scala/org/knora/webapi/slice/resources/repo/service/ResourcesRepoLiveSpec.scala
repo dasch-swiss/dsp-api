@@ -150,6 +150,25 @@ object TestData {
       comment = None,
     )
 
+  def geometryValueDefinition(uuid: UUID) =
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = propertyIri,
+      valueIri = valueIri,
+      valueTypeIri = OntologyConstants.KnoraBase.GeomValue,
+      valueUUID = uuid,
+      value = TypeSpecificValueInfo.GeomValueInfo(
+        """{"status":"active","lineColor":"#33ff33","lineWidth":2,"points":[{"x":0.20226843100189035,"y":0.3090909090909091},{"x":0.6389413988657845,"y":0.3594405594405594}],"type":"rectangle","original_index":0}""",
+      ),
+      valuePermissions = valuePermissions,
+      valueCreator = valueCreator,
+      creationDate = valueCreationDate,
+      valueHasOrder = 1,
+      valueHasString =
+        """{"status":"active","lineColor":"#33ff33","lineWidth":2,"points":[{"x":0.20226843100189035,"y":0.3090909090909091},{"x":0.6389413988657845,"y":0.3594405594405594}],"type":"rectangle","original_index":0}""",
+      comment = None,
+    )
+
 }
 
 object ResourcesRepoLiveSpec extends ZIOSpecDefault {
@@ -514,6 +533,56 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       )
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
+    test("Create a new resource with a geometry value") {
+      val uuid        = UUID.randomUUID()
+      val uuidEncoded = UuidUtil.base64Encode(uuid)
+      val resource    = resourceDefinition.copy(newValueInfos = List(geometryValueDefinition(uuid)))
+
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <$propertyIri> <$valueIri> .
+            |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#GeomValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "{\\"status\\":\\"active\\",\\"lineColor\\":\\"#33ff33\\",\\"lineWidth\\":2,\\"points\\":[{\\"x\\":0.20226843100189035,\\"y\\":0.3090909090909091},{\\"x\\":0.6389413988657845,\\"y\\":0.3594405594405594}],\\"type\\":\\"rectangle\\",\\"original_index\\":0}" ;
+            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:valueHasGeometry "{\\"status\\":\\"active\\",\\"lineColor\\":\\"#33ff33\\",\\"lineWidth\\":2,\\"points\\":[{\\"x\\":0.20226843100189035,\\"y\\":0.3090909090909091},{\\"x\\":0.6389413988657845,\\"y\\":0.3594405594405594}],\\"type\\":\\"rectangle\\",\\"original_index\\":0}" .
+            |    }
+            |}
+            |""".stripMargin,
+      )
+
+      val result = ResourcesRepoLive.createNewResourceQueryWithBuilder(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      val reference = ResourcesRepoLive.createNewResourceQuery(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+    },
   )
 
   val tests: Spec[StringFormatter, Nothing] =
@@ -615,7 +684,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
   //   - link value
   //   - text value (unformatted)
   //   - text value (formatted)
-  //   - geometry value
   //   - still image file value
   //   - still image external file value
   //   - document file value
