@@ -5,10 +5,12 @@
 
 package org.knora.webapi.slice.admin.domain
 
+import zio.URLayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.IriService
+import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
@@ -23,47 +25,44 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-object AdminDomainModule {
-
-  type Dependencies =
-    // format: off
-    AdminRepoModule.Provided &
-    AppConfig & 
-    CacheManager &
-    DspIngestClient &
-    IriService &
-    IriConverter &
-    OntologyRepo &
-    OntologyCache &
-    TriplestoreService
-    // format: on
-
-  type Provided =
-    // format: off
-    AdministrativePermissionService &
-    GroupService &
-    KnoraGroupService &
-    KnoraProjectService &
-    KnoraUserService &
-    KnoraUserToUserConverter &
-    MaintenanceService &
-    PasswordService &
-    ProjectService &
-    ProjectEraseService &
-    UserService
-    // format: on
-
-  val layer = ZLayer.makeSome[Dependencies, Provided](
-    AdministrativePermissionService.layer,
-    GroupService.layer,
-    KnoraGroupService.layer,
-    KnoraProjectService.layer,
-    KnoraUserService.layer,
-    KnoraUserToUserConverter.layer,
-    MaintenanceService.layer,
-    PasswordService.layer,
-    ProjectEraseService.layer,
-    ProjectService.layer,
-    UserService.layer,
-  )
+object AdminDomainModule
+    extends URModule[
+      // format: off
+      AdminRepoModule.Provided &
+      AppConfig &
+      CacheManager &
+      DspIngestClient &
+      IriConverter &
+      IriService &
+      OntologyCache &
+      OntologyRepo &
+      TriplestoreService
+      ,
+      AdministrativePermissionService &
+      GroupService &
+      KnoraGroupService &
+      KnoraProjectService &
+      KnoraUserService &
+      KnoraUserToUserConverter &
+      MaintenanceService &
+      PasswordService &
+      ProjectEraseService &
+      ProjectService &
+      UserService
+      // format: on
+    ] { self =>
+  inline def layer: URLayer[self.Dependencies, self.Provided] =
+    ZLayer.makeSome[self.Dependencies, self.Provided](
+      AdministrativePermissionService.layer,
+      GroupService.layer,
+      KnoraGroupService.layer,
+      KnoraProjectService.layer,
+      KnoraUserService.layer,
+      KnoraUserToUserConverter.layer,
+      MaintenanceService.layer,
+      PasswordService.layer,
+      ProjectEraseService.layer,
+      ProjectService.layer,
+      UserService.layer,
+    )
 }
