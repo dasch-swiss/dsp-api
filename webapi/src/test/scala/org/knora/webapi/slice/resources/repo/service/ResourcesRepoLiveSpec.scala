@@ -20,7 +20,52 @@ import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
+object TestData {
+
+  val graphIri          = InternalIri("foo:Graph")
+  val projectIri        = "foo:ProjectIri"
+  val userIri           = "foo:UserIri"
+  val resourceIri       = "foo:ResourceInstanceIri"
+  val resourceClassIri  = "foo:ClassIri"
+  val label             = "foo Label"
+  val creationDate      = Instant.parse("2024-01-01T10:00:00.673298Z")
+  val permissions       = "fooPermissionsString"
+  val valueIri          = "foo:ValueIri"
+  val valueCreator      = "foo:ValueCreatorIri"
+  val valuePermissions  = "fooValuePermissions"
+  val valueCreationDate = Instant.parse("2024-01-01T12:00:00.673298Z")
+  val propertyIri       = "foo:propertyIri"
+
+  val resourceDefinition = ResourceReadyToCreate(
+    resourceIri = resourceIri,
+    resourceClassIri = resourceClassIri,
+    resourceLabel = label,
+    creationDate = creationDate,
+    permissions = permissions,
+    newValueInfos = Seq.empty,
+    linkUpdates = Seq.empty,
+  )
+
+  def intValueDefinition(uuid: UUID) =
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = propertyIri,
+      valueIri = valueIri,
+      valueTypeIri = OntologyConstants.KnoraBase.IntValue,
+      valueUUID = uuid,
+      value = TypeSpecificValueInfo.IntegerValueInfo(42),
+      valuePermissions = valuePermissions,
+      valueCreator = valueCreator,
+      creationDate = valueCreationDate,
+      valueHasOrder = 1,
+      valueHasString = "42",
+      comment = None,
+    )
+
+}
+
 object ResourcesRepoLiveSpec extends ZIOSpecDefault {
+  import TestData.*
 
   private def assertUpdateQueriesEqual(expected: Update, actual: Update) = {
     val parsedExpected = UpdateFactory.create(expected.sparql)
@@ -35,29 +80,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
   }
 
   def spec: Spec[Environment & (TestEnvironment & Scope), Any] = tests.provide(StringFormatter.test)
-
-  val graphIri          = InternalIri("foo:Graph")
-  val projectIri        = "foo:ProjectIri"
-  val userIri           = "foo:UserIri"
-  val resourceIri       = "foo:ResourceInstanceIri"
-  val resourceClassIri  = "foo:ClassIri"
-  val label             = "foo Label"
-  val creationDate      = Instant.parse("2024-01-01T10:00:00.673298Z")
-  val permissions       = "fooPermissionsString"
-  val valueIri          = "foo:ValueIri"
-  val valueCreator      = "foo:valueCreatorIri"
-  val valuePermissions  = "fooValuePermissions"
-  val valueCreationDate = Instant.parse("2024-01-01T12:00:00.673298Z")
-
-  val resourceDefinition = ResourceReadyToCreate(
-    resourceIri = resourceIri,
-    resourceClassIri = resourceClassIri,
-    resourceLabel = label,
-    creationDate = creationDate,
-    permissions = permissions,
-    newValueInfos = Seq.empty,
-    linkUpdates = Seq.empty,
-  )
 
   val createResourceWithoutValuesTest = test("Create a new resource query without values") {
     val expected =
@@ -101,25 +123,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     test("Create a new resource with an integer value") {
       val uuid        = UUID.randomUUID()
       val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val propertyIri = "foo:Property"
-      val values = List(
-        NewValueInfo(
-          resourceIri = resourceIri,
-          propertyIri = "foo:Property",
-          valueIri = valueIri,
-          valueTypeIri = OntologyConstants.KnoraBase.IntValue,
-          valueUUID = uuid,
-          value = TypeSpecificValueInfo.IntegerValueInfo(42),
-          valuePermissions = valuePermissions,
-          valueCreator = valueCreator,
-          creationDate = valueCreationDate,
-          valueHasOrder = 1,
-          valueHasString = "42",
-          comment = None,
-        ),
-      )
-
-      val resource = resourceDefinition.copy(newValueInfos = values)
+      val resource    = resourceDefinition.copy(newValueInfos = List(intValueDefinition(uuid)))
 
       val expected =
         Update(s"""|
