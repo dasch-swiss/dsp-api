@@ -158,7 +158,7 @@ object ResourcesRepoLive {
         case TypeSpecificValueInfo.BooleanValueInfo(valueHasBoolean) =>
           valuePattern.andHas(KnoraBaseVocab.valueHasBoolean, Rdf.literalOf(valueHasBoolean))
         case TypeSpecificValueInfo.UriValueInfo(valueHasUri) =>
-          valuePattern.andHas(KnoraBaseVocab.valueHasUri, Rdf.literalOf(valueHasUri))
+          valuePattern.andHas(KnoraBaseVocab.valueHasUri, Rdf.literalOfType(valueHasUri, XSD.ANYURI))
         case TypeSpecificValueInfo.DateValueInfo(startJDN, endJDN, startPrecision, endPrecision, calendar) =>
           valuePattern
             .andHas(KnoraBaseVocab.valueHasStartJDN, Rdf.literalOf(startJDN))
@@ -259,21 +259,6 @@ object Run extends ZIOAppDefault {
   val permissions      = "fooPermissions"
 
   val values = List(
-    // uri value
-    NewValueInfo(
-      resourceIri = resourceIri,
-      propertyIri = "fooUriProp",
-      valueIri = "fooUriValueIri",
-      valueTypeIri = "UriValue",
-      valueUUID = UUID.randomUUID(),
-      value = TypeSpecificValueInfo.UriValueInfo("http://example.com"),
-      valuePermissions = permissions,
-      valueCreator = userIri,
-      creationDate = creationDate,
-      valueHasOrder = 4,
-      valueHasString = "http://example.com",
-      comment = None,
-    ),
     // date value
     NewValueInfo(
       resourceIri = resourceIri,
