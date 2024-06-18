@@ -259,21 +259,6 @@ object Run extends ZIOAppDefault {
   val permissions      = "fooPermissions"
 
   val values = List(
-    // decimal value
-    NewValueInfo(
-      resourceIri = resourceIri,
-      propertyIri = "fooDecimalProp",
-      valueIri = "fooDecimalValueIri",
-      valueTypeIri = "DecimalValue",
-      valueUUID = UUID.randomUUID(),
-      value = TypeSpecificValueInfo.DecimalValueInfo(42.42),
-      valuePermissions = permissions,
-      valueCreator = userIri,
-      creationDate = creationDate,
-      valueHasOrder = 3,
-      valueHasString = "42.42",
-      comment = None,
-    ),
     // uri value
     NewValueInfo(
       resourceIri = resourceIri,
