@@ -67,7 +67,7 @@ object AdministrativePermissionRepoLiveSpec extends ZIOSpecDefault {
         notfoundAfterDelete <- repo(_.findById(saved.id)).map(_.isEmpty)
       } yield assertTrue(foundAfterSave, notfoundAfterDelete)
     },
-    test("should write valid permission literal with knora-admin: prefix") {
+    test("should write valid permission literal with the 'knora-admin:' prefix") {
       val expected = permission(
         Chunk(
           AdministrativePermissionPart.Simple.unsafeFrom(ProjectResourceCreateAll),
