@@ -120,7 +120,7 @@ final case class CardinalityHandler(
               // turn the propertyIri into a ReadPropertyInfoV2
               .map(propertyIri => cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri))
               .filter(_.isLinkProp)                 // we are only interested in link properties
-              .map(_.entityInfoContent.propertyIri),// turn whatever is left back to a propertyIri
+              .map(_.entityInfoContent.propertyIri), // turn whatever is left back to a propertyIri
           )
           .fold(e => throw e.head, v => v)
 
@@ -262,7 +262,7 @@ final case class CardinalityHandler(
               // turn the propertyIri into a ReadPropertyInfoV2
               .map(propertyIri => cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri))
               .filter(_.isLinkProp)                 // we are only interested in link properties
-              .map(_.entityInfoContent.propertyIri),// turn whatever is left back to a propertyIri
+              .map(_.entityInfoContent.propertyIri), // turn whatever is left back to a propertyIri
           )
           .fold(e => throw e.head, v => v)
 
