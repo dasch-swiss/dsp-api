@@ -19,6 +19,8 @@ import org.knora.webapi.messages.twirl.NewValueInfo
 import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.messages.util.DatePrecisionDay
+import org.knora.webapi.messages.util.CalendarNameGregorian
 
 object TestData {
 
@@ -78,7 +80,7 @@ object TestData {
       comment = None,
     )
 
-  def DecimalValueDefinition(uuid: UUID) =
+  def decimalValueDefinition(uuid: UUID) =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
@@ -94,7 +96,7 @@ object TestData {
       comment = None,
     )
 
-  def UriValueDefinition(uuid: UUID) =
+  def uriValueDefinition(uuid: UUID) =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
@@ -107,6 +109,28 @@ object TestData {
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "http://example.com",
+      comment = None,
+    )
+
+  def dateValueDefinition(uuid: UUID) =
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = propertyIri,
+      valueIri = valueIri,
+      valueTypeIri = OntologyConstants.KnoraBase.DateValue,
+      valueUUID = uuid,
+      value = TypeSpecificValueInfo.DateValueInfo(
+        0,
+        0,
+        DatePrecisionDay,
+        DatePrecisionDay,
+        CalendarNameGregorian,
+      ),
+      valuePermissions = valuePermissions,
+      valueCreator = valueCreator,
+      creationDate = valueCreationDate,
+      valueHasOrder = 1,
+      valueHasString = "2024-01-01",
       comment = None,
     )
 
@@ -273,7 +297,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     test("Create a new resource with a decimal value") {
       val uuid        = UUID.randomUUID()
       val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(DecimalValueDefinition(uuid)))
+      val resource    = resourceDefinition.copy(newValueInfos = List(decimalValueDefinition(uuid)))
 
       val expected = Update(
         s"""|
@@ -323,7 +347,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     test("Create a new resource with a URI value") {
       val uuid        = UUID.randomUUID()
       val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(UriValueDefinition(uuid)))
+      val resource    = resourceDefinition.copy(newValueInfos = List(uriValueDefinition(uuid)))
 
       val expected = Update(
         s"""|
@@ -351,6 +375,60 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
             |            knora-base:valueHasUri "http://example.com"^^xsd:anyURI .
+            |    }
+            |}
+            |""".stripMargin,
+      )
+
+      val result = ResourcesRepoLive.createNewResourceQueryWithBuilder(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      val reference = ResourcesRepoLive.createNewResourceQuery(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+    },
+    test("Create a new resource with a date value") {
+      val uuid        = UUID.randomUUID()
+      val uuidEncoded = UuidUtil.base64Encode(uuid)
+      val resource    = resourceDefinition.copy(newValueInfos = List(dateValueDefinition(uuid)))
+
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <$propertyIri> <$valueIri> .
+            |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#DateValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "2024-01-01" ;
+            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:valueHasStartJDN 0 ;
+            |            knora-base:valueHasEndJDN 0 ;
+            |            knora-base:valueHasStartPrecision "DAY" ;
+            |            knora-base:valueHasEndPrecision "DAY" ;
+            |            knora-base:valueHasCalendar "GREGORIAN" .
             |    }
             |}
             |""".stripMargin,
@@ -471,9 +549,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
   //   - link value
   //   - text value (unformatted)
   //   - text value (formatted)
-  //   - decimal value
-  //   - uri value
-  //   - date value
   //   - color value
   //   - geometry value
   //   - still image file value
