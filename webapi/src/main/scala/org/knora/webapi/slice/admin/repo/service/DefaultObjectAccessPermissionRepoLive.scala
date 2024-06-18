@@ -22,12 +22,12 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixEx
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
-import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionPart
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.Group
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClass
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClassAndProperty
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
-import org.knora.webapi.slice.admin.domain.model.ForWhat
-import org.knora.webapi.slice.admin.domain.model.ForWhat.Group
-import org.knora.webapi.slice.admin.domain.model.ForWhat.ResourceClass
-import org.knora.webapi.slice.admin.domain.model.ForWhat.ResourceClassAndProperty
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -82,7 +82,14 @@ object DefaultObjectAccessPermissionRepoLive {
       parsedPermissions <- parsePermission(permissionStr)
     } yield parsedPermissions
 
-    private def parsePermission(permission: String): IO[RdfError, Chunk[DefaultObjectAccessPermissionPart]] =
+    private def parsePermission(permission: String): IO[RdfError, Chunk[DefaultObjectAccessPermissionPart]] = {
+      def collectAllValidOrAllErrors(acc: Either[String, Chunk[GroupIri]], next: Either[String, GroupIri]) =
+        (acc, next) match {
+          case (Right(vs), Right(v)) => Right(vs :+ v)
+          case (Left(es), Left(e))   => Left(es + "; " + e)
+          case (Left(es), _)         => Left(es)
+          case (_, Left(e))          => Left(e)
+        }
       ZIO
         .foreach(Chunk.fromIterable(permission.split(permissionsDelimiter).map(_.trim))) { token =>
           token.split(' ') match {
@@ -95,12 +102,7 @@ object DefaultObjectAccessPermissionRepoLive {
                     Chunk
                       .fromIterable(groups.split(','))
                       .map(GroupIri.from)
-                      .foldLeft[Either[String, Chunk[GroupIri]]](Right(Chunk.empty)) {
-                        case (Left(as), Left(a))   => Left(as + "; " + a)
-                        case (Left(as), _)         => Left(as)
-                        case (_, Left(a))          => Left(a)
-                        case (Right(bs), Right(b)) => Right(bs :+ b)
-                      }
+                      .foldLeft[Either[String, Chunk[GroupIri]]](Right(Chunk.empty))(collectAllValidOrAllErrors)
                       .flatMap(NonEmptyChunk.fromChunk(_).toRight(s"No groupIris found for $permission"))
                       .map(DefaultObjectAccessPermissionPart(permission, _))
                   }
@@ -109,6 +111,7 @@ object DefaultObjectAccessPermissionRepoLive {
             case _ => ZIO.fail(ConversionError("Invalid hasPermission pattern"))
           }
         }
+    }
 
     override def toTriples(entity: DefaultObjectAccessPermission): TriplePattern = {
       val id = Rdf.iri(entity.id.value)
