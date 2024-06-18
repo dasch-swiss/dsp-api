@@ -15,8 +15,9 @@ import zio.NonEmptyChunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefix
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
@@ -125,14 +126,16 @@ object AdministrativePermissionRepoLive {
         .andHas(Vocabulary.KnoraAdmin.forProject, Rdf.iri(entity.forProject.value))
         .andHas(Vocabulary.KnoraBase.hasPermissions, toStringLiteral(entity.permissions))
     }
-    private def toStringLiteral(permissions: Chunk[AdministrativePermissionPart]): String =
+    private def toStringLiteral(permissions: Chunk[AdministrativePermissionPart]): String = {
+      def useKnoraAdminPrefix(str: String) = str.replace(KnoraAdminPrefixExpansion, KnoraAdminPrefix)
       permissions.map {
         case AdministrativePermissionPart.Simple(permission) => permission.token
         case AdministrativePermissionPart.ResourceCreateRestricted(iris) =>
           s"${Permission.Administrative.ProjectResourceCreateRestricted.token} ${iris.map(_.value).mkString(",")}"
         case AdministrativePermissionPart.ProjectAdminGroupRestricted(groups) =>
-          s"${Permission.Administrative.ProjectAdminGroupRestricted.token} ${groups.map(_.value).mkString(",")}"
+          s"${Permission.Administrative.ProjectAdminGroupRestricted.token} ${groups.map(_.value).map(useKnoraAdminPrefix).mkString(",")}"
       }.mkString(permissionsDelimiter.toString)
+    }
   }
 
   val layer = ZLayer.succeed(mapper) >>> ZLayer.derive[AdministrativePermissionRepoLive]
