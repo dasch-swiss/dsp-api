@@ -19,11 +19,14 @@ import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.repo.rdf.LangString
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 object RdfConversions {
 
   def withPrefixExpansion[A](f: String => Either[String, A]): String => Either[String, A] =
     (str: String) => f(str.replace(KnoraAdminPrefix, KnoraAdminPrefixExpansion))
+
+  implicit val internalIri: String => Either[String, InternalIri] = withPrefixExpansion(str => Right(InternalIri(str)))
 
   // Group properties
   implicit val groupIriConverter: String => Either[String, GroupIri] = withPrefixExpansion(GroupIri.from)

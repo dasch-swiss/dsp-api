@@ -39,6 +39,7 @@ object AdminDomainModule
       TriplestoreService
       ,
       AdministrativePermissionService &
+      DefaultObjectAccessPermissionService &
       GroupService &
       KnoraGroupService &
       KnoraProjectService &
@@ -54,6 +55,7 @@ object AdminDomainModule
   inline def layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       AdministrativePermissionService.layer,
+      DefaultObjectAccessPermissionService.layer,
       GroupService.layer,
       KnoraGroupService.layer,
       KnoraProjectService.layer,

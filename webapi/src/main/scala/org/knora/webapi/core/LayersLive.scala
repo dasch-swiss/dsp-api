@@ -155,7 +155,7 @@ object LayersLive {
       OntologyCacheLive.layer,
       OntologyCacheHelpersLive.layer,
       OntologyRepoLive.layer,
-      OntologyResponderV2Live.layer,
+      OntologyResponderV2.layer,
       OntologyServiceLive.layer,
       OntologyTriplestoreHelpersLive.layer,
       PermissionUtilADMLive.layer,
