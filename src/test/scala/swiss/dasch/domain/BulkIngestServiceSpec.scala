@@ -14,6 +14,7 @@ import zio.*
 
 import java.io.IOException
 import zio.test.TestAspect
+import zio.stream.ZStream
 
 object BulkIngestServiceSpec extends ZIOSpecDefault {
   // accessor functions for testing
@@ -79,10 +80,24 @@ object BulkIngestServiceSpec extends ZIOSpecDefault {
     } yield assertTrue(true)
   })
 
+  private val postBulkIngestEndpointSuite = suite("postBulkIngestEndpoint")(test("test bulk-ingest individual upload") {
+    val shortcode = ProjectShortcode.unsafeFrom("0001")
+    for {
+      // given
+      importDir <- StorageService.getTempFolder().map(_ / "import" / shortcode.value)
+      filenames  = List("one", "..", "two", "out.txt")
+      // when
+      _ <- ZIO.serviceWithZIO[BulkIngestService](_.uploadSingleFile(shortcode, filenames, ZStream(0)))
+      // then
+      file <- Files.readAllBytes(importDir / "one" / "two" / "out.txt")
+    } yield assertTrue(file == Chunk(0))
+  })
+
   val spec = suite("BulkIngestServiceLive")(
     finalizeBulkIngestSuite,
     getBulkIngestMappingCsvSuite,
     checkSemaphoresReleased,
+    postBulkIngestEndpointSuite,
   ).provide(
     AssetInfoServiceLive.layer,
     BulkIngestService.layer,

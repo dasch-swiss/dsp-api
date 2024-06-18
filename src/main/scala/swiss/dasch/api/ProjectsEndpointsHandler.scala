@@ -8,21 +8,25 @@ package swiss.dasch.api
 import sttp.capabilities.zio.ZioStreams
 import sttp.model.headers.ContentRange
 import sttp.tapir.ztapir.ZServerEndpoint
+import swiss.dasch.api.ApiProblem.BadRequest
+import swiss.dasch.api.ApiProblem.Conflict
+import swiss.dasch.api.ApiProblem.Forbidden
+import swiss.dasch.api.ApiProblem.InternalServerError
+import swiss.dasch.api.ApiProblem.NotFound
+import swiss.dasch.api.ProjectsEndpointsResponses.AssetCheckResultResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.UploadResponse
 import swiss.dasch.api.*
-import swiss.dasch.api.ApiProblem.{BadRequest, Conflict, InternalServerError, NotFound}
-import swiss.dasch.api.ProjectsEndpointsResponses.{
-  AssetCheckResultResponse,
-  AssetInfoResponse,
-  ProjectResponse,
-  UploadResponse,
-}
+import swiss.dasch.config.Configuration.Features
 import swiss.dasch.domain.*
-import zio.stream.{ZSink, ZStream}
-import zio.{ZIO, ZLayer, stream}
+import zio.ZIO
+import zio.ZLayer
+import zio.stream
+import zio.stream.ZSink
+import zio.stream.ZStream
 
 import java.io.IOException
-import swiss.dasch.config.Configuration.Features
-import swiss.dasch.api.ApiProblem.Forbidden
 
 final case class ProjectsEndpointsHandler(
   bulkIngestService: BulkIngestService,
@@ -165,6 +169,16 @@ final case class ProjectsEndpointsHandler(
               .mapError(_ => NotFound(code)),
       )
 
+  private val postBulkIngestUploadEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postBulkIngestUpload
+    .serverLogic(principal => { case (shortcode, filenames, stream) =>
+      for {
+        _ <- authorizationHandler.ensureAdminScope(principal)
+        _ <- bulkIngestService.uploadSingleFile(shortcode, filenames, stream).mapError { e =>
+               e.map(InternalServerError(_)).getOrElse(failBulkIngestInProgress(shortcode))
+             }
+      } yield ()
+    })
+
   private def failBulkIngestInProgress(code: ProjectShortcode) =
     Conflict(s"A bulk ingest is currently in progress for project ${code.value}.")
 
@@ -216,6 +230,7 @@ final case class ProjectsEndpointsHandler(
       getBulkIngestMappingCsvEndpoint,
       postExportEndpoint,
       getImportEndpoint,
+      postBulkIngestUploadEndpoint,
     )
 }
 

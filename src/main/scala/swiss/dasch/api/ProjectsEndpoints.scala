@@ -171,7 +171,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .out(jsonBody[ProjectResponse])
     .tag(projects)
     .description(
-      """|!ATTENTION! Erase a project with the given shortcode. 
+      """|!ATTENTION! Erase a project with the given shortcode.
          |This will permanently and irrecoveraly remove the project and all of its assets.
          |Authorization: admin scope required.""".stripMargin,
     )
@@ -225,6 +225,16 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .out(header(HeaderNames.ContentDisposition, "attachment; filename=mapping.csv"))
     .tag("bulk-ingest")
 
+  val postBulkIngestUpload = base.secureEndpoint.post
+    .in(projects / shortcodePathVar / "bulk-ingest" / "ingest")
+    .in(paths)
+    .in(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
+    .description(
+      "Uploads a file for consumption with the bulk-ingest route." +
+        "Authorization: admin",
+    )
+    .tag("bulk-ingest")
+
   val postExport = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "export")
     .out(header[String]("Content-Disposition"))
@@ -252,6 +262,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       postBulkIngest,
       postBulkIngestFinalize,
       getBulkIngestMappingCsv,
+      postBulkIngestUpload,
       postExport,
       getImport,
     )

@@ -7,8 +7,12 @@ package swiss.dasch.domain
 
 import swiss.dasch.config.Configuration.IngestConfig
 import zio.*
-import zio.nio.file.{Files, Path}
-import zio.stm.{TMap, TSemaphore}
+import zio.nio.file.Files
+import zio.nio.file.Path
+import zio.stm.TMap
+import zio.stm.TSemaphore
+import zio.stream.ZSink
+import zio.stream.ZStream
 
 import java.io.IOException
 import java.nio.file.StandardOpenOption
@@ -132,6 +136,20 @@ final case class BulkIngestService(
                      Files.readAllLines(mappingCsv).map(_.mkString("\n"))
                    }
       } yield mapping
+    }
+
+  def uploadSingleFile(
+    shortcode: ProjectShortcode,
+    filenames: List[String],
+    stream: ZStream[Any, Throwable, Byte],
+  ): IO[Option[Throwable], Unit] =
+    withSemaphore(shortcode) {
+      for {
+        importFolder <- getImportFolder(shortcode)
+        file          = importFolder / filenames.filter(f => f != "." && f != "..").mkString("/")
+        _            <- ZIO.foreachDiscard(file.parent)(Files.createDirectories(_))
+        _            <- stream.run(ZSink.fromFile(file.toFile))
+      } yield ()
     }
 }
 
