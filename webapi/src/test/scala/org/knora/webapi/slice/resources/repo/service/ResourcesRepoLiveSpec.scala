@@ -134,6 +134,22 @@ object TestData {
       comment = None,
     )
 
+  def colorValueDefinition(uuid: UUID) =
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = propertyIri,
+      valueIri = valueIri,
+      valueTypeIri = OntologyConstants.KnoraBase.ColorValue,
+      valueUUID = uuid,
+      value = TypeSpecificValueInfo.ColorValueInfo("#ff0000"),
+      valuePermissions = valuePermissions,
+      valueCreator = valueCreator,
+      creationDate = valueCreationDate,
+      valueHasOrder = 1,
+      valueHasString = "#ff0000",
+      comment = None,
+    )
+
 }
 
 object ResourcesRepoLiveSpec extends ZIOSpecDefault {
@@ -448,6 +464,56 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       )
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
+    test("Create a new resource with a color value") {
+      val uuid        = UUID.randomUUID()
+      val uuidEncoded = UuidUtil.base64Encode(uuid)
+      val resource    = resourceDefinition.copy(newValueInfos = List(colorValueDefinition(uuid)))
+
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <$propertyIri> <$valueIri> .
+            |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#ColorValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "#ff0000" ;
+            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:valueHasColor "#ff0000" .
+            |    }
+            |}
+            |""".stripMargin,
+      )
+
+      val result = ResourcesRepoLive.createNewResourceQueryWithBuilder(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      val reference = ResourcesRepoLive.createNewResourceQuery(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+    },
   )
 
   val tests: Spec[StringFormatter, Nothing] =
@@ -549,7 +615,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
   //   - link value
   //   - text value (unformatted)
   //   - text value (formatted)
-  //   - color value
   //   - geometry value
   //   - still image file value
   //   - still image external file value

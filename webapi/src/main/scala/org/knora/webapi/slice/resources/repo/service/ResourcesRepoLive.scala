@@ -18,7 +18,6 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
 import zio.*
 
 import java.time.Instant
-import java.util.UUID
 
 import dsp.constants.SalsahGui.IRI
 import dsp.valueobjects.UuidUtil
@@ -26,8 +25,6 @@ import org.knora.webapi.messages.twirl.NewLinkValueInfo
 import org.knora.webapi.messages.twirl.NewValueInfo
 import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.CalendarNameGregorian
-import org.knora.webapi.messages.util.DatePrecisionDay
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -166,7 +163,8 @@ object ResourcesRepoLive {
             .andHas(KnoraBaseVocab.valueHasStartPrecision, Rdf.literalOf(startPrecision.toString()))
             .andHas(KnoraBaseVocab.valueHasEndPrecision, Rdf.literalOf(endPrecision.toString()))
             .andHas(KnoraBaseVocab.valueHasCalendar, Rdf.literalOf(calendar.toString()))
-        case TypeSpecificValueInfo.ColorValueInfo(valueHasColor)   => ???
+        case TypeSpecificValueInfo.ColorValueInfo(valueHasColor) =>
+          valuePattern.andHas(KnoraBaseVocab.valueHasColor, Rdf.literalOf(valueHasColor))
         case TypeSpecificValueInfo.GeomValueInfo(valueHasGeometry) => ???
         case TypeSpecificValueInfo.StillImageFileValueInfo(
               internalFilename,
@@ -242,5 +240,6 @@ object KnoraBaseVocab {
   val valueHasStartPrecision = iri(kb + "valueHasStartPrecision")
   val valueHasEndPrecision   = iri(kb + "valueHasEndPrecision")
   val valueHasCalendar       = iri(kb + "valueHasCalendar")
+  val valueHasColor          = iri(kb + "valueHasColor")
 
 }
