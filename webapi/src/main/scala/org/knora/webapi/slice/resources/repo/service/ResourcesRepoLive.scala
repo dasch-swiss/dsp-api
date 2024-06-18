@@ -21,10 +21,13 @@ import java.time.Instant
 import java.util.UUID
 
 import dsp.constants.SalsahGui.IRI
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.twirl.NewLinkValueInfo
 import org.knora.webapi.messages.twirl.NewValueInfo
 import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
 import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.messages.util.CalendarNameGregorian
+import org.knora.webapi.messages.util.DatePrecisionDay
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -125,8 +128,9 @@ object ResourcesRepoLive {
           .isA(iri(newValueInfo.valueTypeIri))
           .andHas(KnoraBaseVocab.isDeleted, Rdf.literalOf(false))
           .andHas(KnoraBaseVocab.valueHasString, Rdf.literalOf(newValueInfo.valueHasString))
-          .andHas(KnoraBaseVocab.valueHasUUID, Rdf.literalOf(newValueInfo.valueUUID.toString))
+          .andHas(KnoraBaseVocab.valueHasUUID, Rdf.literalOf(UuidUtil.base64Encode(newValueInfo.valueUUID)))
           .andHas(KnoraBaseVocab.attachedToUser, iri(newValueInfo.valueCreator))
+          .andHas(KnoraBaseVocab.hasPermissions, Rdf.literalOf(newValueInfo.valuePermissions))
           .andHas(KnoraBaseVocab.valueHasOrder, Rdf.literalOf(newValueInfo.valueHasOrder))
           .andHas(
             KnoraBaseVocab.valueCreationDate,
@@ -153,15 +157,15 @@ object ResourcesRepoLive {
           valuePattern.andHas(KnoraBaseVocab.valueHasDecimal, Rdf.literalOf(valueHasDecimal))
         case TypeSpecificValueInfo.BooleanValueInfo(valueHasBoolean) =>
           valuePattern.andHas(KnoraBaseVocab.valueHasBoolean, Rdf.literalOf(valueHasBoolean))
-        case TypeSpecificValueInfo.UriValueInfo(valueHasUri) => ???
-        case TypeSpecificValueInfo.DateValueInfo(
-              valueHasStartJDN,
-              valueHasEndJDN,
-              valueHasStartPrecision,
-              valueHasEndPrecision,
-              valueHasCalendar,
-            ) =>
-          ???
+        case TypeSpecificValueInfo.UriValueInfo(valueHasUri) =>
+          valuePattern.andHas(KnoraBaseVocab.valueHasUri, Rdf.literalOf(valueHasUri))
+        case TypeSpecificValueInfo.DateValueInfo(startJDN, endJDN, startPrecision, endPrecision, calendar) =>
+          valuePattern
+            .andHas(KnoraBaseVocab.valueHasStartJDN, Rdf.literalOf(startJDN))
+            .andHas(KnoraBaseVocab.valueHasEndJDN, Rdf.literalOf(endJDN))
+            .andHas(KnoraBaseVocab.valueHasStartPrecision, Rdf.literalOf(startPrecision.toString()))
+            .andHas(KnoraBaseVocab.valueHasEndPrecision, Rdf.literalOf(endPrecision.toString()))
+            .andHas(KnoraBaseVocab.valueHasCalendar, Rdf.literalOf(calendar.toString()))
         case TypeSpecificValueInfo.ColorValueInfo(valueHasColor)   => ???
         case TypeSpecificValueInfo.GeomValueInfo(valueHasGeometry) => ???
         case TypeSpecificValueInfo.StillImageFileValueInfo(
@@ -229,9 +233,16 @@ object KnoraBaseVocab {
   val valueHasOrder     = iri(kb + "valueHasOrder")
   val valueCreationDate = iri(kb + "valueCreationDate")
 
-  val valueHasInteger = iri(kb + "valueHasInteger")
-  val valueHasBoolean = iri(kb + "valueHasBoolean")
-  val valueHasDecimal = iri(kb + "valueHasDecimal")
+  val valueHasInteger        = iri(kb + "valueHasInteger")
+  val valueHasBoolean        = iri(kb + "valueHasBoolean")
+  val valueHasDecimal        = iri(kb + "valueHasDecimal")
+  val valueHasUri            = iri(kb + "valueHasUri")
+  val valueHasStartJDN       = iri(kb + "valueHasStartJDN")
+  val valueHasEndJDN         = iri(kb + "valueHasEndJDN")
+  val valueHasStartPrecision = iri(kb + "valueHasStartPrecision")
+  val valueHasEndPrecision   = iri(kb + "valueHasEndPrecision")
+  val valueHasCalendar       = iri(kb + "valueHasCalendar")
+
 }
 
 object Run extends ZIOAppDefault {
@@ -291,6 +302,42 @@ object Run extends ZIOAppDefault {
       creationDate = creationDate,
       valueHasOrder = 3,
       valueHasString = "42.42",
+      comment = None,
+    ),
+    // uri value
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = "fooUriProp",
+      valueIri = "fooUriValueIri",
+      valueTypeIri = "UriValue",
+      valueUUID = UUID.randomUUID(),
+      value = TypeSpecificValueInfo.UriValueInfo("http://example.com"),
+      valuePermissions = permissions,
+      valueCreator = userIri,
+      creationDate = creationDate,
+      valueHasOrder = 4,
+      valueHasString = "http://example.com",
+      comment = None,
+    ),
+    // date value
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = "fooDateProp",
+      valueIri = "fooDateValueIri",
+      valueTypeIri = "DateValue",
+      valueUUID = UUID.randomUUID(),
+      value = TypeSpecificValueInfo.DateValueInfo(
+        0,
+        0,
+        DatePrecisionDay,
+        DatePrecisionDay,
+        CalendarNameGregorian,
+      ),
+      valuePermissions = permissions,
+      valueCreator = userIri,
+      creationDate = creationDate,
+      valueHasOrder = 5,
+      valueHasString = "2024-01-01T10:00:00.673298Z",
       comment = None,
     ),
   )

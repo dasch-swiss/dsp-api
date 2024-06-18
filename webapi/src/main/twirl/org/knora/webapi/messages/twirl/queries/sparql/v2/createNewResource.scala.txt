@@ -26,29 +26,41 @@
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 INSERT DATA {
     GRAPH <@dataNamedGraph> {
         <@resourceIri> rdf:type <@resourceClassIri> ;
+            rdfs:label """@resourceLabel""" ;
             knora-base:isDeleted false ;
             knora-base:attachedToUser <@creatorIri> ;
             knora-base:attachedToProject <@projectIri> ;
-            rdfs:label """@resourceLabel""" ;
             knora-base:hasPermissions "@permissions" ;
             knora-base:creationDate "@creationDate"^^xsd:dateTime .
+
+            @* Attach the value to the resource. *@
 
         @for(newValueInfo <- newValueInfos) {
             # Value: @newValueInfo.valueIri
             # Property: @newValueInfo.propertyIri
 
+            <@newValueInfo.resourceIri> <@newValueInfo.propertyIri> <@newValueInfo.valueIri> .
             @* Construct the value. *@
             <@newValueInfo.valueIri> rdf:type <@newValueInfo.valueTypeIri> ;
                 knora-base:isDeleted false  ;
                 knora-base:valueHasString """@newValueInfo.valueHasString""" ;
                 knora-base:valueHasUUID "@{UuidUtil.base64Encode(newValueInfo.valueUUID)}" .
+
+            @* Insert the value's comment, if given. *@
+            @newValueInfo.comment.map { commentStr =>
+                <@newValueInfo.valueIri> knora-base:valueHasComment """@commentStr""" .
+            }
+
+            <@newValueInfo.valueIri> knora-base:attachedToUser <@newValueInfo.valueCreator> ;
+                knora-base:hasPermissions "@newValueInfo.valuePermissions"^^xsd:string ;
+                knora-base:valueHasOrder @newValueInfo.valueHasOrder ;
+                knora-base:valueCreationDate "@newValueInfo.creationDate"^^xsd:dateTime .
 
             @newValueInfo.value match {
 
@@ -217,19 +229,6 @@ INSERT DATA {
                     <@newValueInfo.valueIri> knora-base:valueHasGeonameCode """@geonameValue.valueHasGeonameCode""" .
                 }
             }
-
-            @* Insert the value's comment, if given. *@
-            @newValueInfo.comment.map { commentStr =>
-                <@newValueInfo.valueIri> knora-base:valueHasComment """@commentStr""" .
-            }
-
-            <@newValueInfo.valueIri> knora-base:attachedToUser <@newValueInfo.valueCreator> ;
-                knora-base:hasPermissions "@newValueInfo.valuePermissions"^^xsd:string ;
-                knora-base:valueHasOrder @newValueInfo.valueHasOrder ;
-                knora-base:valueCreationDate "@newValueInfo.creationDate"^^xsd:dateTime .
-
-            @* Attach the value to the resource. *@
-            <@newValueInfo.resourceIri> <@newValueInfo.propertyIri> <@newValueInfo.valueIri> .
         }
 
 
