@@ -192,6 +192,52 @@ object TestData {
       comment = None,
     )
 
+  def stillImageExternalFileValueDefinition(uuid: UUID) =
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = propertyIri,
+      valueIri = valueIri,
+      valueTypeIri = OntologyConstants.KnoraBase.StillImageFileValue,
+      valueUUID = uuid,
+      value = TypeSpecificValueInfo.StillImageExternalFileValueInfo(
+        internalFilename = "24159oO1pNg-ByLN1NLlMSJ.jp2",
+        internalMimeType = "image/jp2",
+        originalFilename = None,
+        originalMimeType = None,
+        externalUrl = "http://example.com/foo.jpg",
+      ),
+      valuePermissions = valuePermissions,
+      valueCreator = valueCreator,
+      creationDate = valueCreationDate,
+      valueHasOrder = 1,
+      valueHasString = "foo.jpg",
+      comment = None,
+    )
+
+  def documentFileValueDefinition(uuid: UUID) =
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = propertyIri,
+      valueIri = valueIri,
+      valueTypeIri = OntologyConstants.KnoraBase.DocumentFileValue,
+      valueUUID = uuid,
+      value = TypeSpecificValueInfo.DocumentFileValueInfo(
+        internalFilename = "24159oO1pNg-ByLN1NLlMSJ.pdf",
+        internalMimeType = "application/pdf",
+        originalFilename = Some("foo.pdf"),
+        originalMimeType = Some("application/pdf"),
+        dimX = Some(100),
+        dimY = Some(60),
+        pageCount = Some(10),
+      ),
+      valuePermissions = valuePermissions,
+      valueCreator = valueCreator,
+      creationDate = valueCreationDate,
+      valueHasOrder = 1,
+      valueHasString = "foo.pdf",
+      comment = None,
+    )
+
 }
 
 object ResourcesRepoLiveSpec extends ZIOSpecDefault {
@@ -606,6 +652,102 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       )
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
+    test("Create a new resource with a still image external file value") {
+      val uuid        = UUID.randomUUID()
+      val uuidEncoded = UuidUtil.base64Encode(uuid)
+      val resource    = resourceDefinition.copy(newValueInfos = List(stillImageExternalFileValueDefinition(uuid)))
+
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <$propertyIri> <$valueIri> .
+            |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#StillImageFileValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "foo.jpg" ;
+            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:internalFilename "24159oO1pNg-ByLN1NLlMSJ.jp2" ;
+            |            knora-base:internalMimeType "image/jp2" ;
+            |            knora-base:externalUrl "http://example.com/foo.jpg" .
+            |    }
+            |}
+            |""".stripMargin,
+      )
+      val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+    },
+    test("Create a new resource with a document file value") {
+      val uuid        = UUID.randomUUID()
+      val uuidEncoded = UuidUtil.base64Encode(uuid)
+      val resource    = resourceDefinition.copy(newValueInfos = List(documentFileValueDefinition(uuid)))
+
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <$propertyIri> <$valueIri> .
+            |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#DocumentFileValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "foo.pdf" ;
+            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:internalFilename "24159oO1pNg-ByLN1NLlMSJ.pdf" ;
+            |            knora-base:internalMimeType "application/pdf" ;
+            |            knora-base:originalFilename "foo.pdf" ;
+            |            knora-base:originalMimeType "application/pdf" ;
+            |            knora-base:dimX 100 ;
+            |            knora-base:dimY 60 ;
+            |            knora-base:pageCount 10 .
+            |    }
+            |}
+            |""".stripMargin,
+      )
+      val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+    },
   )
 
   val tests: Spec[StringFormatter, Nothing] =
@@ -707,8 +849,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
   //   - link value
   //   - text value (unformatted)
   //   - text value (formatted)
-  //   - still image file value
-  //   - still image external file value
   //   - document file value
   //   - other file value
   //   - hierarchical list value
