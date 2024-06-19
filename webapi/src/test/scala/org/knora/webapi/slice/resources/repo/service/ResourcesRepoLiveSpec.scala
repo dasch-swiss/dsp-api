@@ -275,6 +275,57 @@ object TestData {
       comment = None,
     )
 
+  def intervalValueDefinition(uuid: UUID) =
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = propertyIri,
+      valueIri = valueIri,
+      valueTypeIri = OntologyConstants.KnoraBase.IntervalValue,
+      valueUUID = uuid,
+      value = TypeSpecificValueInfo.IntervalValueInfo(
+        valueHasIntervalStart = BigDecimal(0.0),
+        valueHasIntervalEnd = BigDecimal(100.0),
+      ),
+      valuePermissions = valuePermissions,
+      valueCreator = valueCreator,
+      creationDate = valueCreationDate,
+      valueHasOrder = 1,
+      valueHasString = "0.0 - 100.0",
+      comment = None,
+    )
+
+  def timeValueDefinition(uuid: UUID) =
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = propertyIri,
+      valueIri = valueIri,
+      valueTypeIri = OntologyConstants.KnoraBase.TimeValue,
+      valueUUID = uuid,
+      value = TypeSpecificValueInfo.TimeValueInfo(Instant.parse("1024-01-01T10:00:00.673298Z")),
+      valuePermissions = valuePermissions,
+      valueCreator = valueCreator,
+      creationDate = valueCreationDate,
+      valueHasOrder = 1,
+      valueHasString = "1024-01-01T10:00:00.673298Z",
+      comment = None,
+    )
+
+  def geonameValueDefinition(uuid: UUID) =
+    NewValueInfo(
+      resourceIri = resourceIri,
+      propertyIri = propertyIri,
+      valueIri = valueIri,
+      valueTypeIri = OntologyConstants.KnoraBase.GeonameValue,
+      valueUUID = uuid,
+      value = TypeSpecificValueInfo.GeonameValueInfo("geoname_code"),
+      valuePermissions = valuePermissions,
+      valueCreator = valueCreator,
+      creationDate = valueCreationDate,
+      valueHasOrder = 1,
+      valueHasString = "geoname_code",
+      comment = None,
+    )
+
 }
 
 object ResourcesRepoLiveSpec extends ZIOSpecDefault {
@@ -876,6 +927,142 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       )
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
+    test("Create a new resource with an interval value") {
+      val uuid        = UUID.randomUUID()
+      val uuidEncoded = UuidUtil.base64Encode(uuid)
+      val resource    = resourceDefinition.copy(newValueInfos = List(intervalValueDefinition(uuid)))
+
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <$propertyIri> <$valueIri> .
+            |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntervalValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "0.0 - 100.0" ;
+            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:valueHasIntervalStart 0.0 ;
+            |            knora-base:valueHasIntervalEnd 100.0 ;
+            |    }
+            |}
+            |""".stripMargin,
+      )
+
+      val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+    },
+    test("Create a new resource with a time value") {
+      val uuid        = UUID.randomUUID()
+      val uuidEncoded = UuidUtil.base64Encode(uuid)
+      val resource    = resourceDefinition.copy(newValueInfos = List(timeValueDefinition(uuid)))
+
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <$propertyIri> <$valueIri> .
+            |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#TimeValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "1024-01-01T10:00:00.673298Z" ;
+            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:valueHasTimeStamp "1024-01-01T10:00:00.673298Z"^^xsd:dateTime .
+            |    }
+            |}
+            |""".stripMargin,
+      )
+
+      val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+    },
+    test("Create a new resource with a geoname value") {
+      val uuid        = UUID.randomUUID()
+      val uuidEncoded = UuidUtil.base64Encode(uuid)
+      val resource    = resourceDefinition.copy(newValueInfos = List(geonameValueDefinition(uuid)))
+
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <$propertyIri> <$valueIri> .
+            |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#GeonameValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "geoname_code" ;
+            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:valueHasGeonameCode "geoname_code" .
+            |    }
+            |}
+            |""".stripMargin,
+      )
+
+      val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+    },
   )
 
   val tests: Spec[StringFormatter, Nothing] =
@@ -977,9 +1164,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
   //   - link value
   //   - text value (unformatted)
   //   - text value (formatted)
-  //   - interval value
-  //   - time value
-  //   - geoname value
   // - bring back the link stuff (and figure out what's the deal)
   // - add test for creating a resource with multiple values
   // - add test for creating a resource with multiple links

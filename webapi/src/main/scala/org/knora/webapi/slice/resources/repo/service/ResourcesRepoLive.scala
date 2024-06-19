@@ -239,9 +239,17 @@ object ResourcesRepoLive {
         )
       case HierarchicalListValueInfo(valueHasListNode) =>
         valuePattern.andHas(KnoraBaseVocab.valueHasListNode, Rdf.iri(valueHasListNode))
-      case IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd) => ???
-      case TimeValueInfo(valueHasTimeStamp)                              => ???
-      case GeonameValueInfo(valueHasGeonameCode)                         => ???
+      case IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd) =>
+        valuePattern
+          .andHas(KnoraBaseVocab.valueHasIntervalStart, Rdf.literalOf(valueHasIntervalStart))
+          .andHas(KnoraBaseVocab.valueHasIntervalEnd, Rdf.literalOf(valueHasIntervalEnd))
+      case TimeValueInfo(valueHasTimeStamp) =>
+        valuePattern.andHas(
+          KnoraBaseVocab.valueHasTimeStamp,
+          Rdf.literalOfType(valueHasTimeStamp.toString(), XSD.DATETIME),
+        )
+      case GeonameValueInfo(valueHasGeonameCode) =>
+        valuePattern.andHas(KnoraBaseVocab.valueHasGeonameCode, Rdf.literalOf(valueHasGeonameCode))
 
     valuePattern
   }
@@ -276,6 +284,10 @@ object KnoraBaseVocab {
   val valueHasColor          = iri(kb + "valueHasColor")
   val valueHasGeometry       = iri(kb + "valueHasGeometry")
   val valueHasListNode       = iri(kb + "valueHasListNode")
+  val valueHasIntervalStart  = iri(kb + "valueHasIntervalStart")
+  val valueHasIntervalEnd    = iri(kb + "valueHasIntervalEnd")
+  val valueHasTimeStamp      = iri(kb + "valueHasTimeStamp")
+  val valueHasGeonameCode    = iri(kb + "valueHasGeonameCode")
 
   val internalFilename = iri(kb + "internalFilename")
   val internalMimeType = iri(kb + "internalMimeType")
