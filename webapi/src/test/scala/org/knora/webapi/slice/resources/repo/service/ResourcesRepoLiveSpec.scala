@@ -16,11 +16,13 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.NewValueInfo
+import org.knora.webapi.messages.twirl.StandoffAttribute
+import org.knora.webapi.messages.twirl.StandoffTagInfo
 import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
+import org.knora.webapi.messages.util.CalendarNameGregorian
+import org.knora.webapi.messages.util.DatePrecisionDay
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.messages.util.DatePrecisionDay
-import org.knora.webapi.messages.util.CalendarNameGregorian
 
 object TestData {
 
@@ -61,7 +63,7 @@ object TestData {
     comment = None,
   )
 
-  val unformattedValueDefinition = NewValueInfo(
+  val unformattedTextValueDefinition = NewValueInfo(
     resourceIri = resourceIri,
     propertyIri = "foo:hasUnformattedTextValue",
     valueIri = "foo:UnformattedTextValueIri",
@@ -73,6 +75,41 @@ object TestData {
     creationDate = valueCreationDate,
     valueHasOrder = 1,
     valueHasString = "this is a text without formatting",
+    comment = None,
+  )
+
+  val standoffTagUuid = UUID.randomUUID()
+  val formattedTextValueDefinition = NewValueInfo(
+    resourceIri = resourceIri,
+    propertyIri = "foo:hasFormattedTextValue",
+    valueIri = "foo:FormattedTextValueIri",
+    valueTypeIri = OntologyConstants.KnoraBase.TextValue,
+    valueUUID = UUID.randomUUID(),
+    value = TypeSpecificValueInfo.FormattedTextValueInfo(
+      valueHasLanguage = Some("en"),
+      mappingIri = "foo:MappingIri",
+      maxStandoffStartIndex = 0,
+      standoff = List(
+        StandoffTagInfo(
+          standoffTagClassIri = "foo:StandoffTagClassIri",
+          standoffTagInstanceIri = "foo:StandoffTagInstanceIri",
+          startParentIri = Some("foo:StartParentIri"),
+          endParentIri = Some("foo:EndParentIri"),
+          uuid = standoffTagUuid,
+          originalXMLID = Some("xml-id"),
+          startIndex = 0,
+          endIndex = Some(3),
+          startPosition = 0,
+          endPosition = 3,
+          attributes = List(StandoffAttribute("foo:attributePropertyIri", "attribute value")),
+        ),
+      ),
+    ),
+    valuePermissions = valuePermissions,
+    valueCreator = valueCreator,
+    creationDate = valueCreationDate,
+    valueHasOrder = 1,
+    valueHasString = "this is a text with formatting",
     comment = None,
   )
 
@@ -445,7 +482,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with an unformatted text value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(unformattedValueDefinition))
+      val resource = resourceDefinition.copy(newValueInfos = List(unformattedTextValueDefinition))
 
       val expected = Update(
         s"""|
@@ -467,7 +504,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:UnformattedTextValueIri> rdf:type <http://www.knora.org/ontology/knora-base#TextValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "this is a text without formatting" ;
-            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(unformattedValueDefinition.valueUUID)}" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(unformattedTextValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -485,6 +522,55 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
         creatorIri = userIri,
       )
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+    },
+    test("Create a new resource with an formatted text value") {
+      val resource = resourceDefinition.copy(newValueInfos = List(formattedTextValueDefinition))
+
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <foo:hasFormattedTextValue> <foo:FormattedTextValueIri> .
+            |        <foo:FormattedTextValueIri> rdf:type <http://www.knora.org/ontology/knora-base#TextValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "this is a text with formatting" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(formattedTextValueDefinition.valueUUID)}" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:valueHasLanguage "en" ;
+            |            knora-base:valueHasMapping <foo:MappingIri> ;
+            |            knora-base:valueHasMaxStandoffStartIndex 0 ;
+            |            knora-base:valueHasStandoff <foo:StandoffTagInstanceIri> .
+            |        <foo:StandoffTagInstanceIri> rdf:type <foo:StandoffTagClassIri> ;
+            |            knora-base:standoffTagHasEndIndex 3 ;
+            |            knora-base:standoffTagHasStartParent <foo:StartParentIri> ;
+            |            knora-base:standoffTagHasEndParent <foo:EndParentIri> ;
+            |            knora-base:standoffTagHasOriginalXMLID "xml-id" ;
+            |            <foo:attributePropertyIri> "attribute value" ;
+            |            knora-base:standoffTagHasStartIndex 0 ;
+            |            knora-base:standoffTagHasUUID "${UuidUtil.base64Encode(standoffTagUuid)}" ;
+            |            knora-base:standoffTagHasStart 0 ;
+            |            knora-base:standoffTagHasEnd 3 .
+            |    }
+            |}
+            |""".stripMargin,
+      )
+      val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+      assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with an integer value") {
       val resource = resourceDefinition.copy(newValueInfos = List(intValueDefinition))
