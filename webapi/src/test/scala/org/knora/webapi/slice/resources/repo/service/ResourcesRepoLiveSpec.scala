@@ -46,6 +46,21 @@ object TestData {
     linkUpdates = Seq.empty,
   )
 
+  val linkValueDefinition = NewValueInfo(
+    resourceIri = resourceIri,
+    propertyIri = "foo:hasLinkToValue",
+    valueIri = "foo:LinkValueIri",
+    valueTypeIri = OntologyConstants.KnoraBase.LinkValue,
+    valueUUID = UUID.randomUUID(),
+    value = TypeSpecificValueInfo.LinkValueInfo("foo:LinkTargetIri"),
+    valuePermissions = valuePermissions,
+    valueCreator = valueCreator,
+    creationDate = valueCreationDate,
+    valueHasOrder = 1,
+    valueHasString = "foo:LinkValueIri",
+    comment = None,
+  )
+
   val intValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
@@ -374,6 +389,46 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
   }
 
   val createResourceWithValueSuite = suite("Create new resource with any type of value")(
+    test("Create a new resource with a link value") {
+      val resource = resourceDefinition.copy(newValueInfos = List(linkValueDefinition))
+
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <foo:hasLinkToValue> <foo:LinkValueIri> ;
+            |            <foo:hasLinkTo> <foo:LinkTargetIri> .
+            |        <foo:LinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "foo:LinkValueIri" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(linkValueDefinition.valueUUID)}" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            rdf:subject <$resourceIri> ;
+            |            rdf:predicate <foo:hasLinkTo> ;
+            |            rdf:object <foo:LinkTargetIri> ;
+            |            knora-base:valueHasRefCount 1 .
+            |    }
+            |}
+            |""".stripMargin,
+      )
+      val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+      assertUpdateQueriesEqual(expected, result)
+    },
     test("Create a new resource with an integer value") {
       val resource = resourceDefinition.copy(newValueInfos = List(intValueDefinition))
 
@@ -1184,12 +1239,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     )
   // TODO:
   // - add test for other value types
-  //   - link value
   //   - text value (unformatted)
   //   - text value (formatted)
   // - bring back the link stuff (and figure out what's the deal)
-  // - add test for creating a resource with multiple values
-  // - add test for creating a resource with multiple links
-  // - add test for creating a resource with comment (and other optionals)
 
 }

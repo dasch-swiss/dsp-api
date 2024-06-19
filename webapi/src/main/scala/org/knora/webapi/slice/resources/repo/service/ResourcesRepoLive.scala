@@ -119,15 +119,20 @@ object ResourcesRepoLive {
     query.insertData(resourcePattern)
 
     for (newValueInfo <- resourceToCreate.newValueInfos) {
-      resourcePattern.andHas(iri(newValueInfo.propertyIri), Rdf.iri(newValueInfo.valueIri))
-      query.insertData(valuePatternForCreateNewResource(newValueInfo))
+      query.insertData(valuePatternForCreateNewResource(newValueInfo, resourcePattern, resourceToCreate.resourceIri))
     }
 
     Update(query.getQueryString())
   }
 
-  private def valuePatternForCreateNewResource(newValueInfo: NewValueInfo): TriplePattern = {
+  private def valuePatternForCreateNewResource(
+    newValueInfo: NewValueInfo,
+    resourcePattern: TriplePattern,
+    resourceIri: IRI,
+  ): TriplePattern = {
     import TypeSpecificValueInfo.*
+
+    resourcePattern.andHas(iri(newValueInfo.propertyIri), Rdf.iri(newValueInfo.valueIri))
 
     val valuePattern =
       Rdf
@@ -147,7 +152,14 @@ object ResourcesRepoLive {
     newValueInfo.comment.foreach(comment => valuePattern.andHas(KnoraBaseVocab.valueHasComment, Rdf.literalOf(comment)))
 
     newValueInfo.value match
-      case LinkValueInfo(referredResourceIri)         => ???
+      case LinkValueInfo(referredResourceIri) =>
+        val directLinkPropertyIri = newValueInfo.propertyIri.stripSuffix("Value")
+        resourcePattern.andHas(Rdf.iri(directLinkPropertyIri), Rdf.iri(referredResourceIri))
+        valuePattern
+          .andHas(RDF.SUBJECT, Rdf.iri(resourceIri))
+          .andHas(RDF.PREDICATE, Rdf.iri(directLinkPropertyIri))
+          .andHas(RDF.OBJECT, Rdf.iri(referredResourceIri))
+          .andHas(KnoraBaseVocab.valueHasRefCount, Rdf.literalOf(1))
       case UnformattedTextValueInfo(valueHasLanguage) => ???
       case FormattedTextValueInfo(valueHasLanguage, mappingIri, maxStandoffStartIndex, standoff) =>
         ???
@@ -288,6 +300,7 @@ object KnoraBaseVocab {
   val valueHasIntervalEnd    = iri(kb + "valueHasIntervalEnd")
   val valueHasTimeStamp      = iri(kb + "valueHasTimeStamp")
   val valueHasGeonameCode    = iri(kb + "valueHasGeonameCode")
+  val valueHasRefCount       = iri(kb + "valueHasRefCount")
 
   val internalFilename = iri(kb + "internalFilename")
   val internalMimeType = iri(kb + "internalMimeType")
