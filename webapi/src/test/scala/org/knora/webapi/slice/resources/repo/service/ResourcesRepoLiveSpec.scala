@@ -1034,10 +1034,64 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
   )
 
+  val createResourceWithMultipleValuesTest = test("Create a resource with multiple values") {
+    val resource = resourceDefinition.copy(newValueInfos = List(intValueDefinition, boolValueDefinition))
+    val expected = Update(
+      s"""|
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |INSERT DATA {
+          |    GRAPH <${graphIri.value}> {
+          |        <$resourceIri> rdf:type <$resourceClassIri> ;
+          |            rdfs:label "$label" ;
+          |            knora-base:isDeleted false ;
+          |            knora-base:attachedToUser <$userIri> ;
+          |            knora-base:attachedToProject <$projectIri> ;
+          |            knora-base:hasPermissions "$permissions" ;
+          |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+          |            <foo:hasInt> <foo:IntValueIri> ;
+          |            <foo:hasBoolean> <foo:BooleanValueIri> .
+          |        <foo:IntValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
+          |            knora-base:isDeleted false  ;
+          |            knora-base:valueHasString "42" ;
+          |            knora-base:valueHasUUID "${UuidUtil.base64Encode(intValueDefinition.valueUUID)}" ;
+          |            knora-base:attachedToUser <$valueCreator> ;
+          |            knora-base:hasPermissions "$valuePermissions" ;
+          |            knora-base:valueHasOrder 1 ;
+          |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+          |            knora-base:valueHasInteger 42 .
+          |        <foo:BooleanValueIri> rdf:type <http://www.knora.org/ontology/knora-base#BooleanValue> ;
+          |            knora-base:isDeleted false  ;
+          |            knora-base:valueHasString "true" ;
+          |            knora-base:valueHasUUID "${UuidUtil.base64Encode(boolValueDefinition.valueUUID)}" ;
+          |            knora-base:attachedToUser <$valueCreator> ;
+          |            knora-base:hasPermissions "$valuePermissions" ;
+          |            knora-base:valueHasOrder 1 ;
+          |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+          |            knora-base:valueHasBoolean true .
+          |    }
+          |}
+          |""".stripMargin,
+    )
+
+    val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+    val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+      dataGraphIri = graphIri,
+      resourceToCreate = resource,
+      projectIri = projectIri,
+      creatorIri = userIri,
+    )
+    assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+  }
+
   val tests: Spec[StringFormatter, Nothing] =
     suite("ResourcesRepoLiveSpec")(
       createResourceWithoutValuesTest,
       createResourceWithValueSuite,
+      createResourceWithMultipleValuesTest,
       // test("Create new resource query with links") {
       //   val graphIri         = InternalIri("fooGraph")
       //   val projectIri       = "fooProject"

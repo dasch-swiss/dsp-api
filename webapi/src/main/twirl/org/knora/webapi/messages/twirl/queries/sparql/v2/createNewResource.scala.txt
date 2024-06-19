@@ -39,13 +39,14 @@ INSERT DATA {
             knora-base:hasPermissions "@permissions" ;
             knora-base:creationDate "@creationDate"^^xsd:dateTime .
 
-            @* Attach the value to the resource. *@
-
+            @* Attach the value to the resource. *@ 
         @for(newValueInfo <- newValueInfos) {
             # Value: @newValueInfo.valueIri
             # Property: @newValueInfo.propertyIri
-
             <@newValueInfo.resourceIri> <@newValueInfo.propertyIri> <@newValueInfo.valueIri> .
+        }
+
+        @for(newValueInfo <- newValueInfos) {
             @* Construct the value. *@
             <@newValueInfo.valueIri> rdf:type <@newValueInfo.valueTypeIri> ;
                 knora-base:isDeleted false  ;
