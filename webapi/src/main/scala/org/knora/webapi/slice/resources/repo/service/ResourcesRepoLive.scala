@@ -228,8 +228,17 @@ object ResourcesRepoLive {
         dimY.foreach(y => valuePattern.andHas(KnoraBaseVocab.dimY, Rdf.literalOf(y)))
         pageCount.foreach(count => valuePattern.andHas(KnoraBaseVocab.pageCount, Rdf.literalOf(count)))
       case OtherFileValueInfo(internalFilename, internalMimeType, originalFilename, originalMimeType) =>
-        ???
-      case HierarchicalListValueInfo(valueHasListNode)                   => ???
+        valuePattern
+          .andHas(KnoraBaseVocab.internalFilename, Rdf.literalOf(internalFilename))
+          .andHas(KnoraBaseVocab.internalMimeType, Rdf.literalOf(internalMimeType))
+        originalFilename.foreach(filename =>
+          valuePattern.andHas(KnoraBaseVocab.originalFilename, Rdf.literalOf(filename)),
+        )
+        originalMimeType.foreach(mimeType =>
+          valuePattern.andHas(KnoraBaseVocab.originalMimeType, Rdf.literalOf(mimeType)),
+        )
+      case HierarchicalListValueInfo(valueHasListNode) =>
+        valuePattern.andHas(KnoraBaseVocab.valueHasListNode, Rdf.iri(valueHasListNode))
       case IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd) => ???
       case TimeValueInfo(valueHasTimeStamp)                              => ???
       case GeonameValueInfo(valueHasGeonameCode)                         => ???
@@ -266,6 +275,7 @@ object KnoraBaseVocab {
   val valueHasCalendar       = iri(kb + "valueHasCalendar")
   val valueHasColor          = iri(kb + "valueHasColor")
   val valueHasGeometry       = iri(kb + "valueHasGeometry")
+  val valueHasListNode       = iri(kb + "valueHasListNode")
 
   val internalFilename = iri(kb + "internalFilename")
   val internalMimeType = iri(kb + "internalMimeType")
