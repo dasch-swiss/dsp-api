@@ -61,6 +61,21 @@ object TestData {
     comment = None,
   )
 
+  val unformattedValueDefinition = NewValueInfo(
+    resourceIri = resourceIri,
+    propertyIri = "foo:hasUnformattedTextValue",
+    valueIri = "foo:UnformattedTextValueIri",
+    valueTypeIri = OntologyConstants.KnoraBase.TextValue,
+    valueUUID = UUID.randomUUID(),
+    value = TypeSpecificValueInfo.UnformattedTextValueInfo(Some("en")),
+    valuePermissions = valuePermissions,
+    valueCreator = valueCreator,
+    creationDate = valueCreationDate,
+    valueHasOrder = 1,
+    valueHasString = "this is a text without formatting",
+    comment = None,
+  )
+
   val intValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
@@ -429,6 +444,48 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
       assertUpdateQueriesEqual(expected, result)
     },
+    test("Create a new resource with an unformatted text value") {
+      val resource = resourceDefinition.copy(newValueInfos = List(unformattedValueDefinition))
+
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <foo:hasUnformattedTextValue> <foo:UnformattedTextValueIri> .
+            |        <foo:UnformattedTextValueIri> rdf:type <http://www.knora.org/ontology/knora-base#TextValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "this is a text without formatting" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(unformattedValueDefinition.valueUUID)}" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:valueHasLanguage "en" .
+            |    }
+            |}
+            |""".stripMargin,
+      )
+      val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+    },
     test("Create a new resource with an integer value") {
       val resource = resourceDefinition.copy(newValueInfos = List(intValueDefinition))
 
@@ -469,7 +526,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
         projectIri = projectIri,
         creatorIri = userIri,
       )
-
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a boolean value") {
@@ -512,7 +568,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
         projectIri = projectIri,
         creatorIri = userIri,
       )
-
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a decimal value") {

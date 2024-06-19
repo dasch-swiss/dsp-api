@@ -160,7 +160,8 @@ object ResourcesRepoLive {
           .andHas(RDF.PREDICATE, Rdf.iri(directLinkPropertyIri))
           .andHas(RDF.OBJECT, Rdf.iri(referredResourceIri))
           .andHas(KnoraBaseVocab.valueHasRefCount, Rdf.literalOf(1))
-      case UnformattedTextValueInfo(valueHasLanguage) => ???
+      case UnformattedTextValueInfo(valueHasLanguage) =>
+        valueHasLanguage.foreach(lang => valuePattern.andHas(KnoraBaseVocab.valueHasLanguage, Rdf.literalOf(lang)))
       case FormattedTextValueInfo(valueHasLanguage, mappingIri, maxStandoffStartIndex, standoff) =>
         ???
       case IntegerValueInfo(valueHasInteger) =>
@@ -301,6 +302,7 @@ object KnoraBaseVocab {
   val valueHasTimeStamp      = iri(kb + "valueHasTimeStamp")
   val valueHasGeonameCode    = iri(kb + "valueHasGeonameCode")
   val valueHasRefCount       = iri(kb + "valueHasRefCount")
+  val valueHasLanguage       = iri(kb + "valueHasLanguage")
 
   val internalFilename = iri(kb + "internalFilename")
   val internalMimeType = iri(kb + "internalMimeType")
