@@ -8,6 +8,7 @@ package org.knora.webapi.store.triplestore.api
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.InsertDataQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
+import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 import play.twirl.api.TxtFormat
 import zio.*
 
@@ -57,6 +58,7 @@ trait TriplestoreService {
    * @return A [[SparqlSelectResult]].
    */
   def query(sparql: Select): Task[SparqlSelectResult]
+  final def select(sparql: SelectQuery): Task[SparqlSelectResult] = query(Select(sparql))
 
   /**
    * Performs a SPARQL update operation, i.e. an INSERT or DELETE query.
@@ -169,6 +171,7 @@ object TriplestoreService {
 
     case class Select(sparql: String, override val timeout: SparqlTimeout = SparqlTimeout.Standard) extends SparqlQuery
     object Select {
+      def apply(sparql: SelectQuery): Select          = Select(sparql.getQueryString)
       def apply(sparql: TxtFormat.Appendable): Select = Select(sparql.toString)
 
       def gravsearch(sparql: TxtFormat.Appendable): Select = Select.gravsearch(sparql.toString)
