@@ -48,13 +48,13 @@ object TestData {
     linkUpdates = Seq.empty,
   )
 
-  def intValueDefinition(uuid: UUID) =
+  val intValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.IntValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.IntegerValueInfo(42),
       valuePermissions = valuePermissions,
       valueCreator = valueCreator,
@@ -64,13 +64,13 @@ object TestData {
       comment = None,
     )
 
-  def boolValueDefinition(uuid: UUID) =
+  val boolValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.BooleanValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.BooleanValueInfo(true),
       valuePermissions = valuePermissions,
       valueCreator = valueCreator,
@@ -80,13 +80,13 @@ object TestData {
       comment = None,
     )
 
-  def decimalValueDefinition(uuid: UUID) =
+  val decimalValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.DecimalValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.DecimalValueInfo(BigDecimal(42.42)),
       valuePermissions = valuePermissions,
       valueCreator = valueCreator,
@@ -96,13 +96,13 @@ object TestData {
       comment = None,
     )
 
-  def uriValueDefinition(uuid: UUID) =
+  val uriValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.UriValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.UriValueInfo("http://example.com"),
       valuePermissions = valuePermissions,
       valueCreator = valueCreator,
@@ -112,13 +112,13 @@ object TestData {
       comment = None,
     )
 
-  def dateValueDefinition(uuid: UUID) =
+  val dateValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.DateValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.DateValueInfo(
         0,
         0,
@@ -134,13 +134,13 @@ object TestData {
       comment = None,
     )
 
-  def colorValueDefinition(uuid: UUID) =
+  val colorValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.ColorValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.ColorValueInfo("#ff0000"),
       valuePermissions = valuePermissions,
       valueCreator = valueCreator,
@@ -150,13 +150,13 @@ object TestData {
       comment = None,
     )
 
-  def geometryValueDefinition(uuid: UUID) =
+  val geometryValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.GeomValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.GeomValueInfo(
         """{"status":"active","lineColor":"#33ff33","lineWidth":2,"points":[{"x":0.20226843100189035,"y":0.3090909090909091},{"x":0.6389413988657845,"y":0.3594405594405594}],"type":"rectangle","original_index":0}""",
       ),
@@ -169,13 +169,13 @@ object TestData {
       comment = None,
     )
 
-  def stillImageFileValueDefinition(uuid: UUID) =
+  val stillImageFileValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.StillImageFileValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.StillImageFileValueInfo(
         internalFilename = "24159oO1pNg-ByLN1NLlMSJ.jp2",
         internalMimeType = "image/jp2",
@@ -192,13 +192,13 @@ object TestData {
       comment = None,
     )
 
-  def stillImageExternalFileValueDefinition(uuid: UUID) =
+  val stillImageExternalFileValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.StillImageFileValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.StillImageExternalFileValueInfo(
         internalFilename = "24159oO1pNg-ByLN1NLlMSJ.jp2",
         internalMimeType = "image/jp2",
@@ -214,13 +214,13 @@ object TestData {
       comment = None,
     )
 
-  def documentFileValueDefinition(uuid: UUID) =
+  val documentFileValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.DocumentFileValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.DocumentFileValueInfo(
         internalFilename = "24159oO1pNg-ByLN1NLlMSJ.pdf",
         internalMimeType = "application/pdf",
@@ -238,13 +238,13 @@ object TestData {
       comment = None,
     )
 
-  def otherFileValueDefinition(uuid: UUID) =
+  val otherFileValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.ArchiveFileValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.OtherFileValueInfo(
         internalFilename = "24159oO1pNg-ByLN1NLlMSJ.zip",
         internalMimeType = "application/zip",
@@ -259,13 +259,13 @@ object TestData {
       comment = None,
     )
 
-  def hierarchicalListValueDefinition(uuid: UUID) =
+  val hierarchicalListValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.ListValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.HierarchicalListValueInfo("foo:ListNodeIri"),
       valuePermissions = valuePermissions,
       valueCreator = valueCreator,
@@ -275,13 +275,13 @@ object TestData {
       comment = None,
     )
 
-  def intervalValueDefinition(uuid: UUID) =
+  val intervalValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.IntervalValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.IntervalValueInfo(
         valueHasIntervalStart = BigDecimal(0.0),
         valueHasIntervalEnd = BigDecimal(100.0),
@@ -294,13 +294,13 @@ object TestData {
       comment = None,
     )
 
-  def timeValueDefinition(uuid: UUID) =
+  val timeValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.TimeValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.TimeValueInfo(Instant.parse("1024-01-01T10:00:00.673298Z")),
       valuePermissions = valuePermissions,
       valueCreator = valueCreator,
@@ -310,13 +310,13 @@ object TestData {
       comment = None,
     )
 
-  def geonameValueDefinition(uuid: UUID) =
+  val geonameValueDefinition =
     NewValueInfo(
       resourceIri = resourceIri,
       propertyIri = propertyIri,
       valueIri = valueIri,
       valueTypeIri = OntologyConstants.KnoraBase.GeonameValue,
-      valueUUID = uuid,
+      valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.GeonameValueInfo("geoname_code"),
       valuePermissions = valuePermissions,
       valueCreator = valueCreator,
@@ -375,11 +375,9 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
   }
 
-  val createResourceWithValueSuite = suite("Create new resource with values")(
+  val createResourceWithValueSuite = suite("Create new resource with any type of value")(
     test("Create a new resource with an integer value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(intValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(intValueDefinition))
 
       val expected = Update(
         s"""|
@@ -401,7 +399,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "42" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(intValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -422,9 +420,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a boolean value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(boolValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(boolValueDefinition))
 
       val expected = Update(
         s"""|
@@ -446,7 +442,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#BooleanValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "true" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(boolValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -467,9 +463,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a decimal value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(decimalValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(decimalValueDefinition))
 
       val expected = Update(
         s"""|
@@ -491,7 +485,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#DecimalValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "42.42" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(decimalValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -511,9 +505,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a URI value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(uriValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(uriValueDefinition))
 
       val expected = Update(
         s"""|
@@ -535,7 +527,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#UriValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "http://example.com" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(uriValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -555,9 +547,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a date value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(dateValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(dateValueDefinition))
 
       val expected = Update(
         s"""|
@@ -579,7 +569,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#DateValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "2024-01-01" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(dateValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -603,9 +593,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a color value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(colorValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(colorValueDefinition))
 
       val expected = Update(
         s"""|
@@ -627,7 +615,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#ColorValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "#ff0000" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(colorValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -648,9 +636,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a geometry value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(geometryValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(geometryValueDefinition))
 
       val expected = Update(
         s"""|
@@ -672,7 +658,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#GeomValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "{\\"status\\":\\"active\\",\\"lineColor\\":\\"#33ff33\\",\\"lineWidth\\":2,\\"points\\":[{\\"x\\":0.20226843100189035,\\"y\\":0.3090909090909091},{\\"x\\":0.6389413988657845,\\"y\\":0.3594405594405594}],\\"type\\":\\"rectangle\\",\\"original_index\\":0}" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(geometryValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -692,9 +678,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a still image file value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(stillImageFileValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(stillImageFileValueDefinition))
 
       val expected = Update(
         s"""|
@@ -716,7 +700,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#StillImageFileValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo.jpg" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(stillImageFileValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -741,9 +725,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a still image external file value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(stillImageExternalFileValueDefinition(uuid)))
+      val resource    = resourceDefinition.copy(newValueInfos = List(stillImageExternalFileValueDefinition))
+      val uuidEncoded = UuidUtil.base64Encode(stillImageExternalFileValueDefinition.valueUUID)
 
       val expected = Update(
         s"""|
@@ -787,9 +770,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a document file value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(documentFileValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(documentFileValueDefinition))
 
       val expected = Update(
         s"""|
@@ -811,7 +792,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#DocumentFileValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo.pdf" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(documentFileValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -837,9 +818,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with another file value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(otherFileValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(otherFileValueDefinition))
 
       val expected = Update(
         s"""|
@@ -861,7 +840,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#ArchiveFileValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo.zip" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(otherFileValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -884,9 +863,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a list value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(hierarchicalListValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(hierarchicalListValueDefinition))
 
       val expected = Update(
         s"""|
@@ -908,7 +885,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#ListValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo list" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(hierarchicalListValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -928,9 +905,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with an interval value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(intervalValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(intervalValueDefinition))
 
       val expected = Update(
         s"""|
@@ -952,7 +927,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntervalValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "0.0 - 100.0" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(intervalValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -974,9 +949,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a time value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(timeValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(timeValueDefinition))
 
       val expected = Update(
         s"""|
@@ -998,7 +971,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#TimeValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "1024-01-01T10:00:00.673298Z" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(timeValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
@@ -1019,9 +992,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a geoname value") {
-      val uuid        = UUID.randomUUID()
-      val uuidEncoded = UuidUtil.base64Encode(uuid)
-      val resource    = resourceDefinition.copy(newValueInfos = List(geonameValueDefinition(uuid)))
+      val resource = resourceDefinition.copy(newValueInfos = List(geonameValueDefinition))
 
       val expected = Update(
         s"""|
@@ -1043,7 +1014,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |        <foo:ValueIri> rdf:type <http://www.knora.org/ontology/knora-base#GeonameValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "geoname_code" ;
-            |            knora-base:valueHasUUID "$uuidEncoded" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(geonameValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
