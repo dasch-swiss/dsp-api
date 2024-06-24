@@ -161,7 +161,7 @@ object UserIri extends StringValueCompanion[UserIri] {
    *
    * `$`: Asserts the end of the string.
    */
-  private val userIriRegEx = """^http://rdfh\.ch/users/[a-zA-Z0-9_-]{4,36}$""".r
+  private val userIriRegEx = """^http://rdfh\.ch/users/[a-zA-Z0-9_-]{4,64}$""".r
 
   private val builtInIris = Seq("SystemUser", "AnonymousUser").map(KnoraAdminPrefixExpansion + _)
 
