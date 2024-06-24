@@ -1,5 +1,12 @@
 # Changelog
 
+## [30.16.2](https://github.com/dasch-swiss/dsp-api/compare/v30.16.1...v30.16.2) (2024-06-24)
+
+
+### Bug Fixes
+
+* Allow shorter usernames (DEV-3797) ([#3292](https://github.com/dasch-swiss/dsp-api/issues/3292)) ([6f31133](https://github.com/dasch-swiss/dsp-api/commit/6f31133cde317687c1fbfced9a90623033decf45))
+
 ## [30.16.1](https://github.com/dasch-swiss/dsp-api/compare/v30.16.0...v30.16.1) (2024-06-24)
 
 
