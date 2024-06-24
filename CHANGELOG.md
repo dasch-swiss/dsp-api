@@ -1,5 +1,27 @@
 # Changelog
 
+## [30.16.1](https://github.com/dasch-swiss/dsp-api/compare/v30.16.0...v30.16.1) (2024-06-24)
+
+
+### Maintenance
+
+* Add integration tests for erasing a project (DEV-3681) ([#3283](https://github.com/dasch-swiss/dsp-api/issues/3283)) ([44e592f](https://github.com/dasch-swiss/dsp-api/commit/44e592f3613b89bbf75ccc79070572df3e891631))
+* Add integration tests for project erasure (DEV-3681) ([#3289](https://github.com/dasch-swiss/dsp-api/issues/3289)) ([bc07d66](https://github.com/dasch-swiss/dsp-api/commit/bc07d66649a9099e80810e49b6d2973bfa9742f7))
+* Fix/Align error messages in KnoraUserService ([#3278](https://github.com/dasch-swiss/dsp-api/issues/3278)) ([645aabc](https://github.com/dasch-swiss/dsp-api/commit/645aabcd9e51ec05048763c8f74f2a3a93dd02df))
+* Introduce model for SliceModules ([#3288](https://github.com/dasch-swiss/dsp-api/issues/3288)) ([2687412](https://github.com/dasch-swiss/dsp-api/commit/268741222f252abee4e094d3931bd7a0f4aed308))
+* Major dependency updates ([#3286](https://github.com/dasch-swiss/dsp-api/issues/3286)) ([f15eb4e](https://github.com/dasch-swiss/dsp-api/commit/f15eb4e6a96752879682800de63d5e4d2b955be2))
+* Minor dependency updates ([#3285](https://github.com/dasch-swiss/dsp-api/issues/3285)) ([844bfa0](https://github.com/dasch-swiss/dsp-api/commit/844bfa0bdb4adbbc70ffe0337202d4d8395d6155))
+* Patch dependency updates ([#3284](https://github.com/dasch-swiss/dsp-api/issues/3284)) ([1ed1506](https://github.com/dasch-swiss/dsp-api/commit/1ed1506893b721f44c76f1fc316cb4e3767d9768))
+* Replace reused datastructures with specific ones for createNewResource.scala.txt template ([#3277](https://github.com/dasch-swiss/dsp-api/issues/3277)) ([43b342e](https://github.com/dasch-swiss/dsp-api/commit/43b342e6642bc5985e5df87084fe5b27e8865ea2))
+* Update apache-jena-fuseki to 5.0.0-3 ([#3282](https://github.com/dasch-swiss/dsp-api/issues/3282)) ([8b74e1a](https://github.com/dasch-swiss/dsp-api/commit/8b74e1a984352896f427e9117950abb958db87e0))
+* Update dsp-app to v11.11.0 ([#3279](https://github.com/dasch-swiss/dsp-api/issues/3279)) ([d1fe63a](https://github.com/dasch-swiss/dsp-api/commit/d1fe63a7b92cc3912fe82b16dc72e4a66b8c04e6))
+
+
+### Bug Fixes
+
+* Add prefix handling to admin permission repo ([#3290](https://github.com/dasch-swiss/dsp-api/issues/3290)) ([88e6b72](https://github.com/dasch-swiss/dsp-api/commit/88e6b7295d9db579d5df5c55e20bd2565e500dd7))
+* Allow for longer user IRIs (DEV-3759) ([#3291](https://github.com/dasch-swiss/dsp-api/issues/3291)) ([b2ef441](https://github.com/dasch-swiss/dsp-api/commit/b2ef44183f77aa05d9c854459a1248a90a3b2745))
+
 ## [30.16.0](https://github.com/dasch-swiss/dsp-api/compare/v30.15.0...v30.16.0) (2024-06-14)
 
 
