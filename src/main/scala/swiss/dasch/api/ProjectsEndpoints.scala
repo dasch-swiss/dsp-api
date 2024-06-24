@@ -197,6 +197,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .description(
       "Triggers an ingest on the project with the given shortcode. " +
         "The files are expected to be in the `tmp/<project_shortcode>` directory. " +
+        "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
         "Authorization: admin scope required.",
     )
     .tag("bulk-ingest")
@@ -208,6 +209,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       "Finalizes the bulk ingest. " +
         "This will remove the files from the `tmp/<project_shortcode>` directory and the directory itself. " +
         "This will remove also the mapping.csv file. " +
+        "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
         "Authorization: admin scope required.",
     )
     .tag("bulk-ingest")
@@ -231,7 +233,8 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .in(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
     .description(
       "Uploads a file for consumption with the bulk-ingest route." +
-        "Authorization: admin",
+        "Will return 409 Conflict if a bulk-ingest is currently running for the project." +
+        "Authorization: admin scope required.",
     )
     .tag("bulk-ingest")
 
