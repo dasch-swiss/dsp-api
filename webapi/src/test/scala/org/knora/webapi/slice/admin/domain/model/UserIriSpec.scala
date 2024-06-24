@@ -40,8 +40,8 @@ object UserIriSpec extends ZIOSpecDefault {
     "http://www.knora.org/ontology/knora-admin#SystemUser",
   )
 
-  val spec = suite("UserIriSpec")(
-    test("") {
+  val spec = suite("UserIri")(
+    test("must not be empty") {
       check(Gen.fromIterable(validIris))(iri => assertTrue(UserIri.from(iri).map(_.value) == Right(iri)))
     },
     test("make new should create a valid user iri") {
