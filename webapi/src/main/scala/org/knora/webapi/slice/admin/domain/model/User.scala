@@ -188,7 +188,7 @@ object Username extends StringValueCompanion[Username] {
    */
   private val UsernameRegex: Regex = (
     "^(?=.{3,50}$)" +
-      // 4 - 50 characters long
+      // 3 - 50 characters long
       "(?![_.-])" +
       // Underscore, hyphen and dot can't be at the start of a username
       "(?!.*[_.-]{2})" +
