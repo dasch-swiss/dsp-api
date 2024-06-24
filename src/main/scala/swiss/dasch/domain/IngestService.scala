@@ -17,14 +17,17 @@ import zio.{IO, Task, ZIO, ZLayer}
 
 import java.io.IOException
 
-final case class IngestService(
+trait IngestService {
+  def ingestFile(fileToIngest: Path, project: ProjectShortcode): Task[Asset]
+}
+
+class IngestServiceLive(
   assetInfo: AssetInfoService,
-  mimeTypeGuesser: MimeTypeGuesser,
   movingImageService: MovingImageService,
   otherFilesService: OtherFilesService,
   stillImageService: StillImageService,
   storage: StorageService,
-) {
+) extends IngestService {
 
   def ingestFile(fileToIngest: Path, project: ProjectShortcode): Task[Asset] =
     for {
@@ -100,9 +103,12 @@ final case class IngestService(
 }
 
 object IngestService {
-
   def ingestFile(fileToIngest: Path, project: ProjectShortcode): ZIO[IngestService, Throwable, Asset] =
     ZIO.serviceWithZIO[IngestService](_.ingestFile(fileToIngest, project))
 
-  def layer = ZLayer.derive[IngestService]
+  def layer: ZLayer[
+    AssetInfoService & StillImageService & StorageService & MimeTypeGuesser & MovingImageService & OtherFilesService,
+    Nothing,
+    IngestServiceLive,
+  ] = ZLayer.derive[IngestServiceLive]
 }

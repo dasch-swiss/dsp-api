@@ -11,6 +11,7 @@ import zio.nio.file.Files
 import zio.nio.file.Path
 import zio.stm.TMap
 import zio.stm.TSemaphore
+import zio.stm.ZSTM
 import zio.stream.ZSink
 import zio.stream.ZStream
 
@@ -32,28 +33,31 @@ final case class BulkIngestService(
   config: IngestConfig,
   semaphoresPerProject: TMap[ProjectShortcode, TSemaphore],
 ) {
-  private def getSemaphore(key: ProjectShortcode): UIO[TSemaphore] =
+  private def acquireSemaphore(key: ProjectShortcode): ZSTM[Any, Nothing, TSemaphore] =
     (for {
       semaphore <- semaphoresPerProject.getOrElseSTM(key, TSemaphore.make(1))
       _         <- semaphoresPerProject.put(key, semaphore)
-    } yield semaphore).commit
+      _         <- semaphore.acquire
+    } yield semaphore)
 
-  private def acquireWithTimeout(sem: TSemaphore): UIO[Unit] =
-    sem.acquire.commit.timeout(Duration.fromMillis(400)).as(())
-
-  private def withSemaphore[E, A](key: ProjectShortcode)(
+  private def withSemaphoreDaemon[E, A](key: ProjectShortcode)(
     zio: IO[E, A],
-  ): IO[Option[E], A] =
-    getSemaphore(key)
-      .tap(acquireWithTimeout(_).asSomeError)
-      .flatMap(sem => zio.logError.ensuring(sem.release.commit).asSomeError)
+  ): IO[Unit, Fiber.Runtime[E, A]] =
+    acquireSemaphore(key).commit
+      .timeout(Duration.fromMillis(400))
+      .someOrFail(())
+      .flatMap(sem => zio.logError.ensuring(sem.release.commit).forkDaemon)
+      .mapError(_ => ())
 
-  def startBulkIngest(shortcode: ProjectShortcode): IO[Option[Nothing], Fiber.Runtime[IOException, IngestResult]] =
-    withSemaphore(shortcode) {
-      doBulkIngest(shortcode).forkDaemon
+  private def withSemaphore[E, A](key: ProjectShortcode)(zio: IO[E, A]): IO[Option[E], A] =
+    withSemaphoreDaemon(key)(zio).mapError(_ => None: Option[Nothing]).flatMap(f => f.join.mapError(Some(_)))
+
+  def startBulkIngest(shortcode: ProjectShortcode): IO[Unit, Fiber.Runtime[IOException, IngestResult]] =
+    withSemaphoreDaemon(shortcode) {
+      doBulkIngest(shortcode)
     }
 
-  private def doBulkIngest(project: ProjectShortcode) =
+  private def doBulkIngest(project: ProjectShortcode): ZIO[Any, IOException, IngestResult] =
     for {
       _           <- ZIO.logInfo(s"Starting bulk ingest for project $project.")
       importDir   <- getImportFolder(project)
@@ -95,7 +99,12 @@ final case class BulkIngestService(
   private def getMappingCsvFile(importDir: _root_.zio.nio.file.Path, project: ProjectShortcode) =
     importDir.parent.head / s"mapping-$project.csv"
 
-  private def ingestFileAndUpdateMapping(project: ProjectShortcode, importDir: Path, mappingFile: Path, file: Path) =
+  private def ingestFileAndUpdateMapping(
+    project: ProjectShortcode,
+    importDir: Path,
+    mappingFile: Path,
+    file: Path,
+  ): UIO[IngestResult] =
     ingestService
       .ingestFile(file, project)
       .flatMap(asset => updateMappingCsv(asset, file, importDir, mappingFile))
@@ -112,9 +121,9 @@ final case class BulkIngestService(
       Files.writeLines(csv, Seq(line), openOptions = Set(StandardOpenOption.APPEND))
     }
 
-  def finalizeBulkIngest(shortcode: ProjectShortcode): IO[Option[Nothing], Fiber.Runtime[IOException, Unit]] =
-    withSemaphore(shortcode) {
-      doFinalize(shortcode).forkDaemon
+  def finalizeBulkIngest(shortcode: ProjectShortcode): IO[Unit, Fiber.Runtime[IOException, Unit]] =
+    withSemaphoreDaemon(shortcode) {
+      doFinalize(shortcode)
     }
 
   private def doFinalize(shortcode: ProjectShortcode): ZIO[Any, IOException, Unit] =
