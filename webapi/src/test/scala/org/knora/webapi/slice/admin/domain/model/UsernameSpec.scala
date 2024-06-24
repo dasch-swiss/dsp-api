@@ -34,6 +34,9 @@ object UsernameSpec extends ZIOSpecDefault {
   )
 
   val spec = suite("UsernameSpec")(
+    test("Username must not be empty") {
+      assertTrue(Username.from("") == Left("Username cannot be empty."))
+    },
     test("should allow valid names") {
       check(Gen.fromIterable(validNames))(it => assertTrue(Username.from(it).map(_.value) == Right(it)))
     },
