@@ -155,6 +155,11 @@ final case class ProjectsEndpoints(
 
     val deleteAdminProjectsByProjectShortcodeErase = baseEndpoints.securedEndpoint.delete
       .in(projectsByShortcode / "erase")
+      .in(
+        query[Boolean]("keepAssets")
+          .default(false)
+          .description("If set to true the assets in ingest will not be removed."),
+      )
       .out(jsonBody[ProjectOperationResponseADM])
       .description(
         """|!ATTENTION! Erase a project with the given shortcode.

@@ -33,13 +33,13 @@ final case class ProjectEraseService(
   private def logPrefix(project: KnoraProject): String   = s"ERASE Project ${project.shortcode.value}:"
   private def mkString(values: Seq[StringValue]): String = s"'${values.map(_.value).mkString(",")}'"
 
-  def eraseProject(project: KnoraProject): Task[Unit] = for {
+  def eraseProject(project: KnoraProject, keepAssets: Boolean): Task[Unit] = for {
     groupsToDelete <- groupService.findByProject(project)
     _              <- cleanUpUsersAndGroups(project, groupsToDelete)
     _              <- cleanUpPermissions(project)
     _              <- removeOntologyAndDataGraphs(project)
     _              <- projectService.erase(project)
-    _              <- ingestClient.eraseProject(project.shortcode).logError.ignore
+    _              <- ingestClient.eraseProject(project.shortcode).logError.ignore.unless(keepAssets)
   } yield ()
 
   private def cleanUpUsersAndGroups(project: KnoraProject, groups: Chunk[KnoraGroup]): UIO[Unit] = for {

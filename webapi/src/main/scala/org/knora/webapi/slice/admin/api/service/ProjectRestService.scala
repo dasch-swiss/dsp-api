@@ -129,7 +129,7 @@ final case class ProjectRestService(
       external <- format.toExternal(internal)
     } yield external
 
-  def eraseProject(shortcode: Shortcode, user: User): Task[ProjectOperationResponseADM] =
+  def eraseProject(shortcode: Shortcode, user: User, keepAssets: Boolean): Task[ProjectOperationResponseADM] =
     for {
       _ <- auth.ensureSystemAdmin(user)
       _ <- ZIO.unless(features.allowEraseProjects)(
@@ -142,7 +142,7 @@ final case class ProjectRestService(
                    .findByShortcode(shortcode)
                    .someOrFail(NotFoundException(s"$shortcode not found"))
       _        <- ZIO.logInfo(s"${user.userIri} erases project $shortcode")
-      _        <- projectEraseService.eraseProject(project)
+      _        <- projectEraseService.eraseProject(project, keepAssets)
       external <- format.toExternal(ProjectOperationResponseADM(internal))
     } yield external
 
