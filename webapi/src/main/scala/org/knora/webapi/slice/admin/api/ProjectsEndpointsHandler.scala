@@ -139,7 +139,7 @@ final case class ProjectsEndpointsHandler(
   val deleteAdminProjectsByProjectShortcodeEraseHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.deleteAdminProjectsByProjectShortcodeErase,
-      user => (id: Shortcode) => restService.eraseProject(id, user),
+      user => (id: Shortcode, keepAssets: Boolean) => restService.eraseProject(id, user, keepAssets),
     )
 
   val getAdminProjectsExportsHandler =
