@@ -105,7 +105,7 @@ object GroupIri extends StringValueCompanion[GroupIri] {
   def from(value: String): Either[String, GroupIri] = value match {
     case _ if value.isEmpty          => Left("Group IRI cannot be empty.")
     case _ if isGroupIriValid(value) => Right(GroupIri(value))
-    case _                           => Left("Group IRI is invalid.")
+    case v                           => Left(s"Group IRI is invalid: $v")
   }
 
   /**
