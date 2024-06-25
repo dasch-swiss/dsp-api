@@ -37,7 +37,7 @@ object GroupIriSpec extends ZIOSpecDefault {
           "http://rdfh.ch/groups/jDEEitJESRi3pDaDjjQ1WQ",
         ),
       )
-      check(invalidIris)(i => assertTrue(GroupIri.from(i) == Left(s"Group IRI is invalid.")))
+      check(invalidIris)(i => assertTrue(GroupIri.from(i) == Left(s"Group IRI is invalid: $i")))
     },
   )
 }
