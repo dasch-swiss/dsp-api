@@ -3085,6 +3085,13 @@ object ClassInfoContentV2 {
 
 }
 
+enum TextValueType {
+  case UnformattedText
+  case FormattedText
+  case CustomFormattedText
+  case UndefinedTextType
+}
+
 /**
  * Represents assertions about an RDF property.
  *
@@ -3099,6 +3106,7 @@ case class PropertyInfoContentV2(
   predicates: Map[SmartIri, PredicateInfoV2] = Map.empty[SmartIri, PredicateInfoV2],
   subPropertyOf: Set[SmartIri] = Set.empty[SmartIri],
   ontologySchema: OntologySchema,
+  textValueType: Option[TextValueType] = None,
 ) extends EntityInfoContentV2
     with KnoraContentV2[PropertyInfoContentV2] {
 
