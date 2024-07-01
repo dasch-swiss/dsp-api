@@ -1,5 +1,22 @@
 # Changelog
 
+## [30.17.0](https://github.com/dasch-swiss/dsp-api/compare/v30.16.2...v30.17.0) (2024-06-28)
+
+
+### Maintenance
+
+* Add IRI to error message when a Group IRI is invalid. ([#3296](https://github.com/dasch-swiss/dsp-api/issues/3296)) ([923a7b0](https://github.com/dasch-swiss/dsp-api/commit/923a7b01e035b791d4f37baa5e348d3510ffc588))
+
+
+### Enhancements
+
+* Add 'keepAssets' query param to erase project endpoint ([#3294](https://github.com/dasch-swiss/dsp-api/issues/3294)) ([23292ff](https://github.com/dasch-swiss/dsp-api/commit/23292ffb9d41cf500396abb466552ea5dd57fdc8))
+
+
+### Bug Fixes
+
+* Smaller granularity for Grafana fuseki durations (DEV-3776) ([#3297](https://github.com/dasch-swiss/dsp-api/issues/3297)) ([a53fe34](https://github.com/dasch-swiss/dsp-api/commit/a53fe34c2cc605f34b9361cb8c95ca1d68906eff))
+
 ## [30.16.2](https://github.com/dasch-swiss/dsp-api/compare/v30.16.1...v30.16.2) (2024-06-24)
 
 
