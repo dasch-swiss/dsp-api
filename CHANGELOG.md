@@ -1,5 +1,12 @@
 # Changelog
 
+## [30.17.1](https://github.com/dasch-swiss/dsp-api/compare/v30.17.0...v30.17.1) (2024-07-01)
+
+
+### Bug Fixes
+
+* The GroupIri should allow "knora-admin:" prefixed iris and expand it ([#3301](https://github.com/dasch-swiss/dsp-api/issues/3301)) ([9a91759](https://github.com/dasch-swiss/dsp-api/commit/9a917592c7e1655d8cca642e1df26e5bc14c0fe2))
+
 ## [30.17.0](https://github.com/dasch-swiss/dsp-api/compare/v30.16.2...v30.17.0) (2024-06-28)
 
 
