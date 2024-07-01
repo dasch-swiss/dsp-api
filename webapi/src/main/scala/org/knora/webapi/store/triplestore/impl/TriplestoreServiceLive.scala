@@ -75,8 +75,8 @@ case class TriplestoreServiceLive(
     Metric.timer(
       "fuseki_request_duration",
       ChronoUnit.MILLIS,
-      // 7 buckets for upper bounds 10ms, 100ms, 1s, 10s, 1.6m, 16.6m, inf
-      Chunk.iterate(10.0, 6)(_ * 10),
+      // 7 buckets for upper bounds: 2 ms, 4 ms, 8 ms, 16 ms, 32 ms, 64 ms, inf
+      Chunk.iterate(2.0, 6)(_ * 2),
     )
 
   private def processError(sparql: String, response: String): IO[TriplestoreException, Nothing] =
