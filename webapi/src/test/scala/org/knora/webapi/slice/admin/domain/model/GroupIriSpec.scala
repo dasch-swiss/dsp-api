@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
+import zio.Chunk
 import zio.test.Gen
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
@@ -15,6 +17,13 @@ object GroupIriSpec extends ZIOSpecDefault {
   override val spec: Spec[Any, Nothing] = suite("GroupIri should")(
     test("not be created from an empty value") {
       assertTrue(GroupIri.from("") == Left("Group IRI cannot be empty."))
+    },
+    test("allow prefixed builtin GroupIris") {
+      val builtIn = Chunk("UnknownUser", "KnownUser", "Creator", "ProjectMember", "ProjectAdmin", "SystemAdmin")
+        .map("knora-admin:" + _)
+      check(Gen.fromIterable(builtIn)) { it =>
+        assertTrue(GroupIri.from(it).map(_.value) == Right(it.replace("knora-admin:", KnoraAdminPrefixExpansion)))
+      }
     },
     test("be created from a valid value") {
       val validIris = Gen.fromIterable(
