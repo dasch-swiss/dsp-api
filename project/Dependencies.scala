@@ -47,7 +47,7 @@ object Dependencies {
   // refined
   val refined = Seq(
     "eu.timepit" %% "refined"                  % "0.11.2",
-    "dev.zio"    %% "zio-json-interop-refined" % "0.7.0",
+    "dev.zio"    %% "zio-json-interop-refined" % "0.7.1",
   )
 
   // zio-test and friends
