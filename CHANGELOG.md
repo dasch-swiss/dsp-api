@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.11.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.10.1...v0.11.0) (2024-06-24)
+
+
+### Enhancements
+
+* Bulk ingest upload route (DEV-3719) ([#226](https://github.com/dasch-swiss/dsp-ingest/issues/226)) ([24aecd4](https://github.com/dasch-swiss/dsp-ingest/commit/24aecd4e6efd61ea2bc923e67e74f51cfae26556))
+
+
+### Bug Fixes
+
+* Fix BulkIngestService locking for forked fibers (DEV-3769) ([#235](https://github.com/dasch-swiss/dsp-ingest/issues/235)) ([46273f9](https://github.com/dasch-swiss/dsp-ingest/commit/46273f95a06fa2cade97b1bb03ff99c0dee34fb6))
+
+
+### Maintenance
+
+* Major dependency updates ([#229](https://github.com/dasch-swiss/dsp-ingest/issues/229)) ([38d3c97](https://github.com/dasch-swiss/dsp-ingest/commit/38d3c9737821a7b629a6dfbb7e0bd8e31f8cff5d))
+* Minor dependency updates ([#228](https://github.com/dasch-swiss/dsp-ingest/issues/228)) ([328e62b](https://github.com/dasch-swiss/dsp-ingest/commit/328e62bf420e2cf6f390dc8af7b88c9ae3b5c304))
+* Patch dependency updates ([#227](https://github.com/dasch-swiss/dsp-ingest/issues/227)) ([c81e68f](https://github.com/dasch-swiss/dsp-ingest/commit/c81e68ff5fabe3028e1db674f0f21a5d0dba5d39))
+* Remove unused sliencer lib ([#233](https://github.com/dasch-swiss/dsp-ingest/issues/233)) ([3894355](https://github.com/dasch-swiss/dsp-ingest/commit/389435514a852f8c5eeabb4004e713c8badadfa4))
+
+
+### Documentation
+
+* Add documentation about project locking and conflict response (DEV-3778) ([#236](https://github.com/dasch-swiss/dsp-ingest/issues/236)) ([cfa89c4](https://github.com/dasch-swiss/dsp-ingest/commit/cfa89c4f626feee53cf619ab8bdf2ac2260ca5b1))
+* Clarify documentation for bulk-ingest mapping and start endpoints ([#230](https://github.com/dasch-swiss/dsp-ingest/issues/230)) ([09c2b96](https://github.com/dasch-swiss/dsp-ingest/commit/09c2b966fdb3011bf8627bedcc18a5b9fb3f4cf0))
+
 ## [0.10.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.10.0...v0.10.1) (2024-06-13)
 
 
