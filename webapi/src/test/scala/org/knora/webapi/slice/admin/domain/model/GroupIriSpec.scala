@@ -5,13 +5,14 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import zio.Chunk
 import zio.test.Gen
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
+
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 
 object GroupIriSpec extends ZIOSpecDefault {
   override val spec: Spec[Any, Nothing] = suite("GroupIri should")(
