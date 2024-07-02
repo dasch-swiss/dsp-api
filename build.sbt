@@ -16,7 +16,7 @@ val sqliteVersion               = "3.46.0.0"
 val tapirVersion                = "1.10.10"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "4.0.2"
-val zioJsonVersion              = "0.7.0"
+val zioJsonVersion              = "0.7.1"
 val zioLoggingVersion           = "2.3.0"
 val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
@@ -97,7 +97,7 @@ lazy val root = (project in file("."))
       "eu.timepit"           %% "refined"                           % "0.11.2",
 
       // csv for reports
-      "com.github.tototoshi" %% "scala-csv" % "1.3.10",
+      "com.github.tototoshi" %% "scala-csv" % "1.4.1",
 
       // logging
       "dev.zio" %% "zio-logging"               % zioLoggingVersion,
