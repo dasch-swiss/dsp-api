@@ -1,5 +1,13 @@
 # Changelog
 
+## [30.17.2](https://github.com/dasch-swiss/dsp-api/compare/v30.17.1...v30.17.2) (2024-07-02)
+
+
+### Maintenance
+
+* Add sqlite to localdev setup ([#3304](https://github.com/dasch-swiss/dsp-api/issues/3304)) ([e5650a7](https://github.com/dasch-swiss/dsp-api/commit/e5650a7fc4429dd05160b9c4f4b71d787b0a96c6))
+* Patch dependency updates ([#3298](https://github.com/dasch-swiss/dsp-api/issues/3298)) ([ae22613](https://github.com/dasch-swiss/dsp-api/commit/ae226132bbc0a0e61fe67e09b31cbcad8348e8ee))
+
 ## [30.17.1](https://github.com/dasch-swiss/dsp-api/compare/v30.17.0...v30.17.1) (2024-07-01)
 
 
