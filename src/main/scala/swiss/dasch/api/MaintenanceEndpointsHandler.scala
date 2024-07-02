@@ -6,7 +6,7 @@
 package swiss.dasch.api
 
 import sttp.tapir.ztapir.ZServerEndpoint
-import swiss.dasch.api.ActionName.{ApplyTopLeftCorrection, UpdateAssetMetadata}
+import swiss.dasch.api.ActionName.{ApplyTopLeftCorrection, ImportProjectsToDb, UpdateAssetMetadata}
 import swiss.dasch.domain.*
 import zio.{ZIO, ZLayer}
 
@@ -36,6 +36,7 @@ final case class MaintenanceEndpointsHandler(
           _ <- action match {
                  case UpdateAssetMetadata    => maintenanceActions.updateAssetMetadata(paths).forkDaemon.logError
                  case ApplyTopLeftCorrection => maintenanceActions.applyTopLeftCorrections(paths).forkDaemon.logError
+                 case ImportProjectsToDb     => maintenanceActions.importProjectsToDb().forkDaemon.logError
                }
         } yield s"work in progress for projects ${paths.map(_.shortcode).mkString(", ")} (for details see logs)"
       })

@@ -8,12 +8,11 @@ package swiss.dasch
 import swiss.dasch.api.*
 import swiss.dasch.config.Configuration
 import swiss.dasch.config.Configuration.{JwtConfig, ServiceConfig, StorageConfig}
+import swiss.dasch.db.{Db, DbMigrator}
 import swiss.dasch.domain.*
 import swiss.dasch.infrastructure.*
 import zio.*
 import zio.http.*
-
-import java.io.IOException
 
 object Main extends ZIOAppDefault {
 
@@ -21,7 +20,8 @@ object Main extends ZIOAppDefault {
     Configuration.layer >+> Logger.layer
 
   override val run: ZIO[Any, Any, Nothing] =
-    (FileSystemCheck.smokeTestOrDie() *>
+    (FileSystemHealthIndicator.smokeTestOrDie() *>
+      DbMigrator.migrateOrDie() *>
       IngestApiServer.startup() *>
       ZIO.never)
       .provide(
@@ -33,9 +33,13 @@ object Main extends ZIOAppDefault {
         CommandExecutorLive.layer,
         Configuration.layer,
         CsvService.layer,
+        Db.dataSourceLive,
+        Db.quillLive,
+        DbHealthIndicator.layer,
+        DbMigrator.layer,
         Endpoints.layer,
         FileChecksumServiceLive.layer,
-        FileSystemCheckLive.layer,
+        FileSystemHealthIndicatorLive.layer,
         HealthCheckServiceLive.layer,
         ImportServiceLive.layer,
         IngestApiServer.layer,
@@ -49,6 +53,7 @@ object Main extends ZIOAppDefault {
         MonitoringEndpointsHandler.layer,
         MovingImageService.layer,
         OtherFilesService.layer,
+        ProjectRepositoryLive.layer,
         ProjectService.layer,
         ProjectsEndpoints.layer,
         ProjectsEndpointsHandler.layer,

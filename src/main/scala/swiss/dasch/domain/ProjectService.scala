@@ -4,32 +4,22 @@
  */
 
 package swiss.dasch.domain
-import eu.timepit.refined.api.{Refined, RefinedTypeOps}
-import eu.timepit.refined.string.MatchesRegex
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.ProjectFolder
-import zio.*
-import zio.json.JsonCodec
 import zio.nio.file.Files.{isDirectory, newDirectoryStream}
 import zio.nio.file.{Files, Path}
 import zio.prelude.ForEachOps
-import zio.schema.Schema
 import zio.stream.ZStream
+import zio.{IO, *}
 
 import java.io.IOException
-
-type ProjectShortcode = String Refined MatchesRegex["""^\p{XDigit}{4,4}$"""]
-
-object ProjectShortcode extends RefinedTypeOps[ProjectShortcode, String] {
-  override def from(str: String): Either[String, ProjectShortcode] = super.from(str.toUpperCase)
-  given schema: Schema[ProjectShortcode]                           = Schema[String].transformOrFail(ProjectShortcode.from, id => Right(id.value))
-  given codec: JsonCodec[ProjectShortcode]                         = JsonCodec[String].transformOrFail(ProjectShortcode.from, _.value)
-}
+import java.sql.SQLException
 
 final case class ProjectService(
-  assetInfos: AssetInfoService,
-  storage: StorageService,
-  checksum: FileChecksumService,
+  private val assetInfos: AssetInfoService,
+  private val storage: StorageService,
+  private val checksum: FileChecksumService,
+  private val projectRepo: ProjectRepository,
 ) {
 
   def listAllProjects(): IO[IOException, Chunk[ProjectFolder]] =
@@ -56,11 +46,8 @@ final case class ProjectService(
       .getProjectFolder(shortcode)
       .flatMap(path => ZIO.whenZIO(Files.isDirectory(path))(ZIO.succeed(path)))
 
-  def findOrCreateProject(shortcode: ProjectShortcode): IO[IOException, ProjectFolder] =
-    findProject(shortcode).flatMap {
-      case Some(prj) => ZIO.succeed(prj)
-      case None      => storage.createProjectFolder(shortcode)
-    }
+  def findOrCreateProject(shortcode: ProjectShortcode): IO[IOException | SQLException, ProjectFolder] =
+    findProject(shortcode).someOrElseZIO(projectRepo.addProject(shortcode) *> storage.createProjectFolder(shortcode))
 
   def findAssetInfosOfProject(shortcode: ProjectShortcode): ZStream[Any, Throwable, AssetInfo] =
     ZStream
@@ -78,8 +65,20 @@ final case class ProjectService(
       .map(_ / "zipped")
       .flatMap(targetFolder => ZipUtility.zipFolder(projectPath, targetFolder).map(Some(_)))
 
-  def deleteProject(shortcode: ProjectShortcode): IO[IOException, Unit] =
-    findProject(shortcode).tapSome { case Some(prj) => Files.deleteRecursive(prj) }.unit
+  def deleteProject(shortcode: ProjectShortcode): IO[IOException | SQLException, Unit] =
+    findProject(shortcode).tapSome { case Some(folder) =>
+      val delete: IO[IOException | SQLException, Unit] =
+        Files.deleteRecursive(folder) *> projectRepo.deleteByShortcode(shortcode)
+      delete
+    }.unit
+
+  def addProjectToDb(shortcode: ProjectShortcode): IO[IOException | SQLException, Unit] = {
+    val zipped: IO[IOException | SQLException, (Option[ProjectFolder], Option[Project])] =
+      (findProject(shortcode) <&> projectRepo.findByShortcode(shortcode))
+    zipped.tapSome { case (Some(folder), None) =>
+      projectRepo.addProject(folder.shortcode).flatMap(p => ZIO.logInfo(s"Imported $folder as $p to database."))
+    }.unit
+  }
 }
 
 object ProjectService {
@@ -91,7 +90,7 @@ object ProjectService {
     ZStream.serviceWithStream[ProjectService](_.findAssetInfosOfProject(shortcode))
   def zipProject(shortcode: ProjectShortcode): ZIO[ProjectService, Throwable, Option[Path]] =
     ZIO.serviceWithZIO[ProjectService](_.zipProject(shortcode))
-  def deleteProject(shortcode: ProjectShortcode): ZIO[ProjectService, IOException, Unit] =
+  def deleteProject(shortcode: ProjectShortcode): ZIO[ProjectService, Throwable, Unit] =
     ZIO.serviceWithZIO[ProjectService](_.deleteProject(shortcode))
 
   val layer = ZLayer.derive[ProjectService]

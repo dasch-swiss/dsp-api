@@ -13,7 +13,7 @@ import zio.{Exit, Scope, ZIO, ZLayer}
 
 import java.io.IOException
 
-object FileSystemCheckLiveSpec extends ZIOSpecDefault {
+object FileSystemHealthIndicatorLiveSpec extends ZIOSpecDefault {
 
   val createOnlyAssetAndTempFolder: ZIO[Scope, Throwable, (String, String)] = for {
     tempStorage <- Files.createTempDirectoryScoped(None, List.empty)
@@ -30,13 +30,13 @@ object FileSystemCheckLiveSpec extends ZIOSpecDefault {
   def spec = suite("FileSystemCheck")(
     test("should pass smoke test given the expected folders exist") {
       for {
-        _ <- FileSystemCheck.smokeTestOrDie()
+        _ <- FileSystemHealthIndicator.smokeTestOrDie()
       } yield assertCompletes
-    }.provide(SpecConfigurations.storageConfigLayer, FileSystemCheckLive.layer),
+    }.provide(SpecConfigurations.storageConfigLayer, FileSystemHealthIndicatorLive.layer),
     test("should fail smoke test given the expected folders do not exist") {
       for {
-        result <- FileSystemCheck.smokeTestOrDie().exit
+        result <- FileSystemHealthIndicator.smokeTestOrDie().exit
       } yield assertTrue(result.isFailure)
-    }.provide(ZLayer.succeed(StorageConfig("does-not-exist", "does-not-exist")), FileSystemCheckLive.layer),
+    }.provide(ZLayer.succeed(StorageConfig("does-not-exist", "does-not-exist")), FileSystemHealthIndicatorLive.layer),
   )
 }

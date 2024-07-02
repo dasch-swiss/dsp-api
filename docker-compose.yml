@@ -7,6 +7,7 @@ services:
     volumes:
       - ./localdev/storage/images:/opt/images:delegated
       - ./localdev/storage/temp:/opt/temp:delegated
+      - ./localdev/storage/db:/opt/db:delegated
     environment:
       - SERVICE_HOST=0.0.0.0
       - SERVICE_PORT=3340
@@ -19,3 +20,5 @@ services:
       - JWT_DISABLE_AUTH=true
       - INGEST_BULK_MAX_PARALLEL=10
       - SIPI_USE_LOCAL_DEV=false
+      - DB_JDBC_URL=jdbc:sqlite:/opt/db/ingest.sqlite
+

@@ -7,16 +7,13 @@ package swiss.dasch.domain
 
 import swiss.dasch.config.Configuration.IngestConfig
 import zio.*
-import zio.nio.file.Files
-import zio.nio.file.Path
-import zio.stm.TMap
-import zio.stm.TSemaphore
-import zio.stm.ZSTM
-import zio.stream.ZSink
-import zio.stream.ZStream
+import zio.nio.file.{Files, Path}
+import zio.stm.{TMap, TSemaphore, ZSTM}
+import zio.stream.{ZSink, ZStream}
 
 import java.io.IOException
 import java.nio.file.StandardOpenOption
+import java.sql.SQLException
 
 case class IngestResult(success: Int = 0, failed: Int = 0) {
   def +(other: IngestResult): IngestResult = IngestResult(success + other.success, failed + other.failed)
@@ -31,6 +28,7 @@ final case class BulkIngestService(
   storage: StorageService,
   ingestService: IngestService,
   config: IngestConfig,
+  projectService: ProjectService,
   semaphoresPerProject: TMap[ProjectShortcode, TSemaphore],
 ) {
   private def acquireSemaphore(key: ProjectShortcode): ZSTM[Any, Nothing, TSemaphore] =
@@ -52,12 +50,12 @@ final case class BulkIngestService(
   private def withSemaphore[E, A](key: ProjectShortcode)(zio: IO[E, A]): IO[Option[E], A] =
     withSemaphoreDaemon(key)(zio).mapError(_ => None: Option[Nothing]).flatMap(f => f.join.mapError(Some(_)))
 
-  def startBulkIngest(shortcode: ProjectShortcode): IO[Unit, Fiber.Runtime[IOException, IngestResult]] =
+  def startBulkIngest(shortcode: ProjectShortcode): IO[Unit, Fiber.Runtime[IOException | SQLException, IngestResult]] =
     withSemaphoreDaemon(shortcode) {
       doBulkIngest(shortcode)
     }
 
-  private def doBulkIngest(project: ProjectShortcode): ZIO[Any, IOException, IngestResult] =
+  private def doBulkIngest(project: ProjectShortcode): IO[IOException | SQLException, IngestResult] =
     for {
       _           <- ZIO.logInfo(s"Starting bulk ingest for project $project.")
       importDir   <- getImportFolder(project)
@@ -66,6 +64,7 @@ final case class BulkIngestService(
       _           <- ZIO.logInfo(s"Import dir: $importDir, mapping file: $mappingFile")
       total       <- StorageService.findInPath(importDir, FileFilters.isNonHiddenRegularFile).runCount
       _           <- ZIO.logInfo(s"Found $total ingest candidates.")
+      _           <- projectService.findOrCreateProject(project)
       sum <-
         StorageService
           .findInPath(importDir, FileFilters.isSupported)

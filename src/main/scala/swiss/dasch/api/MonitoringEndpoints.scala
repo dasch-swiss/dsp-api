@@ -9,7 +9,7 @@ import sttp.tapir.PublicEndpoint
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
-import swiss.dasch.infrastructure.Health
+import swiss.dasch.infrastructure.{AggregatedHealth, Health}
 import swiss.dasch.version.BuildInfo
 import zio.*
 import zio.json.{DeriveJsonCodec, JsonCodec}
@@ -39,10 +39,10 @@ final case class MonitoringEndpoints(base: BaseEndpoints) {
       .out(jsonBody[InfoEndpointResponse].example(InfoEndpointResponse.instance))
       .tag(monitoring)
 
-  val healthEndpoint: PublicEndpoint[Unit, ApiProblem, Health, Any] =
+  val healthEndpoint: PublicEndpoint[Unit, ApiProblem, AggregatedHealth, Any] =
     base.publicEndpoint.get
       .in("health")
-      .out(jsonBody[Health].example(Health.up()))
+      .out(jsonBody[AggregatedHealth].example(AggregatedHealth(Health.Status.UP, None)))
       .tag(monitoring)
 
   val metricsEndpoint: PublicEndpoint[Unit, ApiProblem, String, Any] =

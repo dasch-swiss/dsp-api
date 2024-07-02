@@ -26,6 +26,7 @@ class IngestServiceLive(
   movingImageService: MovingImageService,
   otherFilesService: OtherFilesService,
   stillImageService: StillImageService,
+  projectService: ProjectService,
   storage: StorageService,
 ) extends IngestService {
 
@@ -36,6 +37,7 @@ class IngestServiceLive(
              ZIO.fail(new IllegalArgumentException(s"File $fileToIngest is not a supported file.")),
            )
       ref      <- AssetRef.makeNew(project)
+      _        <- projectService.findOrCreateProject(ref.belongsToProject)
       assetDir <- ensureAssetDirectoryExists(ref)
       asset    <- ingestAsset(fileToIngest, assetDir).tapError(_ => tryCleanup(assetDir).logError.ignore)
       _        <- ZIO.logInfo(s"Successfully ingesting file $fileToIngest as ${asset.ref}")
@@ -106,9 +108,5 @@ object IngestService {
   def ingestFile(fileToIngest: Path, project: ProjectShortcode): ZIO[IngestService, Throwable, Asset] =
     ZIO.serviceWithZIO[IngestService](_.ingestFile(fileToIngest, project))
 
-  def layer: ZLayer[
-    AssetInfoService & StillImageService & StorageService & MimeTypeGuesser & MovingImageService & OtherFilesService,
-    Nothing,
-    IngestServiceLive,
-  ] = ZLayer.derive[IngestServiceLive]
+  def layer = ZLayer.derive[IngestServiceLive]
 }

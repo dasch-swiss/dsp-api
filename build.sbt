@@ -8,7 +8,11 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck;")
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
+val flywayVersion               = "10.15.0"
+val hikariVersion               = "5.1.0"
+val quillVersion                = "4.8.5"
 val sipiVersion                 = "v30.14.0"
+val sqliteVersion               = "3.46.0.0"
 val tapirVersion                = "1.10.9"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "4.0.2"
@@ -45,6 +49,13 @@ val metrics = Seq(
   "dev.zio"                     %% "zio-metrics-connectors-prometheus" % zioMetricsConnectorsVersion,
 )
 
+val db = Seq(
+  "org.xerial"   % "sqlite-jdbc"    % sqliteVersion,
+  "org.flywaydb" % "flyway-core"    % flywayVersion,
+  "com.zaxxer"   % "HikariCP"       % hikariVersion,
+  "io.getquill" %% "quill-jdbc-zio" % quillVersion,
+)
+
 lazy val root = (project in file("."))
   .enablePlugins(JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
   .settings(
@@ -69,7 +80,7 @@ lazy val root = (project in file("."))
            |""".stripMargin,
       ),
     ),
-    libraryDependencies ++= tapir ++ metrics ++ Seq(
+    libraryDependencies ++= db ++ tapir ++ metrics ++ Seq(
       "com.github.jwt-scala" %% "jwt-zio-json"                      % "10.0.1",
       "commons-io"            % "commons-io"                        % "2.16.1",
       "dev.zio"              %% "zio"                               % zioVersion,

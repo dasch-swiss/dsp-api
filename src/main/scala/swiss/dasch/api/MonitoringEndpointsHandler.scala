@@ -24,10 +24,7 @@ case class MonitoringEndpointsHandler(
   val healthEndpoint: ZServerEndpoint[Any, Any] =
     monitoringEndpoints.healthEndpoint
       .zServerLogic(_ =>
-        healthService.check.flatMap {
-          case it if it.isHealthy => ZIO.succeed(it)
-          case _                  => ZIO.fail(ApiProblem.Unhealthy())
-        },
+        healthService.check.filterOrElseWith(_.isHealthy)(res => ZIO.fail(ApiProblem.Unhealthy.from(res))),
       )
 
   val metricsEndpoint: ZServerEndpoint[Any, Any] =

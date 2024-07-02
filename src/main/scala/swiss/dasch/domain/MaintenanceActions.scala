@@ -13,12 +13,12 @@ import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPa
 import swiss.dasch.domain.FileFilters.isJpeg2000
 import swiss.dasch.domain.SipiImageFormat.Tif
 import swiss.dasch.domain.SupportedFileType.MovingImage
-import zio.*
 import zio.json.interop.refined.*
 import zio.json.{DeriveJsonCodec, EncoderOps, JsonCodec, JsonEncoder}
 import zio.nio.file
 import zio.nio.file.{Files, Path}
 import zio.stream.{ZSink, ZStream}
+import zio.*
 
 import java.io.IOException
 
@@ -34,6 +34,7 @@ trait MaintenanceActions {
       .map(_.sum)
       .tap(sum => ZIO.logInfo(s"Finished ${ActionName.ApplyTopLeftCorrection} for $sum files"))
   def createOriginals(projectPath: ProjectFolder, mapping: Map[String, String]): Task[Int]
+  def importProjectsToDb(): Task[Unit]
 }
 
 final case class MaintenanceActionsLive(
@@ -314,6 +315,12 @@ final case class MaintenanceActionsLive(
       checksumOriginal = checksumOriginal,
       checksumDerivative = checksumDerivative,
     )
+
+  override def importProjectsToDb(): Task[Unit] = for {
+    prjFolders <- projectService.listAllProjects()
+    _          <- ZIO.foreachDiscard(prjFolders.map(_.shortcode))(projectService.addProjectToDb)
+  } yield ()
+
 }
 object MaintenanceActionsLive {
   val layer = ZLayer.derive[MaintenanceActionsLive]

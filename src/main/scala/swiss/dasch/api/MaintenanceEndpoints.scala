@@ -27,6 +27,7 @@ object MappingEntry {
 enum ActionName {
   case ApplyTopLeftCorrection extends ActionName
   case UpdateAssetMetadata    extends ActionName
+  case ImportProjectsToDb     extends ActionName
 }
 
 object ActionName {
