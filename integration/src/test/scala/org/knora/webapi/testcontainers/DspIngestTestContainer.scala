@@ -33,6 +33,7 @@ object DspIngestTestContainer {
       .withEnv("JWT_SECRET", "UP 4888, nice 4-8-4 steam engine")
       .withEnv("SIPI_USE_LOCAL_DEV", "false")
       .withEnv("JWT_DISABLE_AUTH", "true")
+      .withEnv("DB_JDBC_URL", "jdbc:sqlite:/tmp/ingest.sqlite")
       .withFileSystemBind(imagesVolume.hostPath, assetDir, BindMode.READ_WRITE)
   }
 
