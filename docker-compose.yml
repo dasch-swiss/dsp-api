@@ -1,5 +1,4 @@
 services:
-
   app:
     image: daschswiss/dsp-app:v11.11.0
     ports:
@@ -69,6 +68,7 @@ services:
     volumes:
       - ./sipi/images:/opt/images:delegated
       - ./sipi/tmp-dsp-ingest:/opt/temp:delegated
+      - ./sipi/db/:/opt/db:delegated
     networks:
       - knora-net
     environment:
@@ -82,7 +82,8 @@ services:
       - JWT_SECRET=UP 4888, nice 4-8-4 steam engine
       - SIPI_USE_LOCAL_DEV=false
       - ALLOW_ERASE_PROJECTS=true
-#      - JWT_DISABLE_AUTH=true # Uncomment this line if you want to disable authentication for the ingest service
+      - DB_JDBC_URL=jdbc:sqlite:/opt/db/ingest.sqlite
+    #      - JWT_DISABLE_AUTH=true # Uncomment this line if you want to disable authentication for the ingest service
     deploy:
       resources:
         limits:
