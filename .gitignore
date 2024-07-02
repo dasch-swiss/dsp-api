@@ -41,7 +41,6 @@ sipi/tmp-dsp-ingest/
 
 dependencies.txt
 /sipi/images/*
-/sipi/db/*
 
 .idea/
 .metals/

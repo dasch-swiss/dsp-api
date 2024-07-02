@@ -68,7 +68,7 @@ services:
     volumes:
       - ./sipi/images:/opt/images:delegated
       - ./sipi/tmp-dsp-ingest:/opt/temp:delegated
-      - ./sipi/db/:/opt/db:delegated
+      - ingest-db:/opt/db:delegated
     networks:
       - knora-net
     environment:
@@ -131,3 +131,4 @@ networks:
 volumes:
   db-home:
   db-import:
+  ingest-db:
