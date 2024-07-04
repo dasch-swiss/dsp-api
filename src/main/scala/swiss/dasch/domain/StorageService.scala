@@ -28,6 +28,8 @@ trait StorageService {
   def getAssetFolder(asset: AssetRef): UIO[AssetFolder]
   def getAssetsBaseFolder(): UIO[AssetsBaseFolder]
   def getTempFolder(): UIO[TempFolder]
+  def getImportFolder(shortcode: ProjectShortcode): UIO[Path] =
+    getTempFolder().map(_ / "import" / shortcode.value)
   def fileExists(path: Path): IO[IOException, Boolean]
   def createTempDirectoryScoped(directoryName: String, prefix: Option[String] = None): ZIO[Scope, IOException, Path]
   def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): Task[A]

@@ -6,6 +6,7 @@
 package swiss.dasch.domain
 
 import swiss.dasch.config.Configuration.IngestConfig
+import swiss.dasch.domain.BulkIngestError.*
 import zio.*
 import zio.nio.file.{Files, Path}
 import zio.stm.{TMap, TSemaphore, ZSTM}
@@ -24,6 +25,13 @@ object IngestResult {
   val failed: IngestResult  = IngestResult(failed = 1)
 }
 
+sealed trait BulkIngestError
+object BulkIngestError {
+  case class ImportFolderDoesNotExist() extends BulkIngestError
+  case class BulkIngestInProgress()     extends BulkIngestError
+  case class IoError(msg: String)       extends BulkIngestError
+}
+
 final case class BulkIngestService(
   storage: StorageService,
   ingestService: IngestService,
@@ -31,12 +39,13 @@ final case class BulkIngestService(
   projectService: ProjectService,
   semaphoresPerProject: TMap[ProjectShortcode, TSemaphore],
 ) {
+
   private def acquireSemaphore(key: ProjectShortcode): ZSTM[Any, Nothing, TSemaphore] =
-    (for {
+    for {
       semaphore <- semaphoresPerProject.getOrElseSTM(key, TSemaphore.make(1))
       _         <- semaphoresPerProject.put(key, semaphore)
       _         <- semaphore.acquire
-    } yield semaphore)
+    } yield semaphore
 
   private def withSemaphoreDaemon[E, A](key: ProjectShortcode)(
     zio: IO[E, A],
@@ -45,20 +54,31 @@ final case class BulkIngestService(
       .timeout(Duration.fromMillis(400))
       .someOrFail(())
       .flatMap(sem => zio.logError.ensuring(sem.release.commit).forkDaemon)
-      .mapError(_ => ())
+      .orElseFail(())
 
   private def withSemaphore[E, A](key: ProjectShortcode)(zio: IO[E, A]): IO[Option[E], A] =
-    withSemaphoreDaemon(key)(zio).mapError(_ => None: Option[Nothing]).flatMap(f => f.join.mapError(Some(_)))
+    withSemaphoreDaemon(key)(zio).orElseFail(None: Option[Nothing]).flatMap(f => f.join.mapError(Some(_)))
 
-  def startBulkIngest(shortcode: ProjectShortcode): IO[Unit, Fiber.Runtime[IOException | SQLException, IngestResult]] =
-    withSemaphoreDaemon(shortcode) {
-      doBulkIngest(shortcode)
-    }
+  def startBulkIngest(
+    shortcode: ProjectShortcode,
+  ): IO[ImportFolderDoesNotExist.type | BulkIngestInProgress.type, Fiber.Runtime[IoError, IngestResult]] = for {
+    _ <- ensureImportFolderExists(shortcode)
+    fiber <- withSemaphoreDaemon(shortcode)(doBulkIngest(shortcode).mapError {
+               case _: IOException  => IoError("Unable to access file system")
+               case _: SQLException => IoError("Unable to access database")
+             }).orElseFail(BulkIngestInProgress)
+  } yield fiber
+
+  private def ensureImportFolderExists(shortcode: ProjectShortcode) =
+    storage
+      .getImportFolder(shortcode)
+      .flatMap(Files.isDirectory(_))
+      .filterOrFail(identity)(ImportFolderDoesNotExist)
 
   private def doBulkIngest(project: ProjectShortcode): IO[IOException | SQLException, IngestResult] =
     for {
       _           <- ZIO.logInfo(s"Starting bulk ingest for project $project.")
-      importDir   <- getImportFolder(project)
+      importDir   <- storage.getImportFolder(project)
       _           <- ZIO.fail(new IOException(s"Import directory '$importDir' does not exist")).unlessZIO(Files.exists(importDir))
       mappingFile <- createMappingFile(project, importDir)
       _           <- ZIO.logInfo(s"Import dir: $importDir, mapping file: $mappingFile")
@@ -83,9 +103,6 @@ final case class BulkIngestService(
       }
     } yield sum
 
-  private def getImportFolder(shortcode: ProjectShortcode): UIO[Path] =
-    storage.getTempFolder().map(_ / "import" / shortcode.toString)
-
   private def createMappingFile(project: ProjectShortcode, importDir: Path): IO[IOException, Path] = {
     val mappingFile = getMappingCsvFile(importDir, project)
     ZIO
@@ -95,7 +112,7 @@ final case class BulkIngestService(
       .as(mappingFile)
   }
 
-  private def getMappingCsvFile(importDir: _root_.zio.nio.file.Path, project: ProjectShortcode) =
+  private def getMappingCsvFile(importDir: Path, project: ProjectShortcode) =
     importDir.parent.head / s"mapping-$project.csv"
 
   private def ingestFileAndUpdateMapping(
@@ -120,15 +137,18 @@ final case class BulkIngestService(
       Files.writeLines(csv, Seq(line), openOptions = Set(StandardOpenOption.APPEND))
     }
 
-  def finalizeBulkIngest(shortcode: ProjectShortcode): IO[Unit, Fiber.Runtime[IOException, Unit]] =
-    withSemaphoreDaemon(shortcode) {
-      doFinalize(shortcode)
-    }
+  def finalizeBulkIngest(
+    shortcode: ProjectShortcode,
+  ): IO[ImportFolderDoesNotExist.type | BulkIngestInProgress.type, Fiber.Runtime[IoError, Unit]] =
+    ensureImportFolderExists(shortcode) *>
+      withSemaphoreDaemon(shortcode) {
+        doFinalize(shortcode).orElseFail(IoError("Unable to access file system"))
+      }.orElseFail(BulkIngestInProgress)
 
   private def doFinalize(shortcode: ProjectShortcode): ZIO[Any, IOException, Unit] =
     for {
       _         <- ZIO.logInfo(s"Finalizing bulk ingest for project $shortcode")
-      importDir <- getImportFolder(shortcode)
+      importDir <- storage.getImportFolder(shortcode)
       mappingCsv = getMappingCsvFile(importDir, shortcode)
       _         <- storage.deleteRecursive(importDir)
       _         <- storage.delete(mappingCsv)
@@ -138,7 +158,7 @@ final case class BulkIngestService(
   def getBulkIngestMappingCsv(shortcode: ProjectShortcode): IO[Option[IOException], Option[String]] =
     withSemaphore(shortcode) {
       for {
-        importDir <- getImportFolder(shortcode)
+        importDir <- storage.getImportFolder(shortcode)
         mappingCsv = getMappingCsvFile(importDir, shortcode)
         mapping <- ZIO.whenZIO(Files.exists(mappingCsv)) {
                      Files.readAllLines(mappingCsv).map(_.mkString("\n"))
@@ -153,7 +173,7 @@ final case class BulkIngestService(
   ): IO[Option[Throwable], Unit] =
     withSemaphore(shortcode) {
       for {
-        importFolder <- getImportFolder(shortcode)
+        importFolder <- storage.getImportFolder(shortcode)
         file          = importFolder / filenames.filter(f => f != "." && f != "..").mkString("/")
         _            <- ZIO.foreachDiscard(file.parent)(Files.createDirectories(_))
         _            <- stream.run(ZSink.fromFile(file.toFile))
