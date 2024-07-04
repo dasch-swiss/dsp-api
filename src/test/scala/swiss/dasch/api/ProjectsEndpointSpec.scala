@@ -272,6 +272,22 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
       },
     )
 
+  private val assetIngestSuite =
+    suite("/projects/<shortcode>/asset/ingest/<filename>.mp3")(
+      test("should ingest successfully") {
+        val req = Request
+          .post(URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "sample.mp3"), Body.fromString("tegxd"))
+          .addHeader("Authorization", "Bearer fakeToken")
+        executeRequest(req).map(response => assertTrue(response.status == Status.Ok))
+      },
+      test("should refuse ingesting without content") {
+        val req = Request
+          .post(URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "sample.mp3"), Body.empty)
+          .addHeader("Authorization", "Bearer fakeToken")
+        executeRequest(req).map(response => assertTrue(response.status.isClientError))
+      },
+    )
+
   private val projectsSuite = suite("/admin/projects/{shortcode}")(
     test("DELETE ./erase should delete the project folder") {
       val shortcode = ProjectShortcode.unsafeFrom("1111")
@@ -292,11 +308,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     },
   )
 
-  val spec = suite("ProjectsEndpoint")(
-    projectExportSuite,
-    projectImportSuite,
-    assetInfoSuite,
-    projectsSuite,
+  val projectShouldListTest =
     test("GET /projects should list non-empty project in test folders") {
       val req = Request.get(URL(Path.root / "projects")).addHeader("Authorization", "Bearer fakeToken")
       for {
@@ -309,7 +321,15 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           body == Chunk(ProjectResponse("0001")).toJson,
         )
       }
-    },
+    }
+
+  val spec = suite("ProjectsEndpoint")(
+    projectExportSuite,
+    projectImportSuite,
+    assetInfoSuite,
+    assetIngestSuite,
+    projectsSuite,
+    projectShouldListTest,
   ).provide(
     AssetInfoServiceLive.layer,
     AuthServiceLive.layer,
