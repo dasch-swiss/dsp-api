@@ -62,7 +62,7 @@ private object Examples {
     _       = StringFormatter.init(config)
   } yield config)(Runtime.default)
 
-  val listGetResponseV2 = ListGetResponseV2(
+  val listGetResponseV2: ListGetResponseV2 = ListGetResponseV2(
     list = ListADM(
       listinfo = ListRootNodeInfoADM(
         id = "http://rdfh.ch/lists/0001/treeList",
