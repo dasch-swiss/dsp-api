@@ -48,6 +48,7 @@ import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiModule
+import org.knora.webapi.slice.lists.domain.ListsService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -148,7 +149,7 @@ object LayersTest {
     ApiV2Endpoints &
     HttpServer &
     IIIFRequestMessageHandler &
-    ListsResponderV2 &
+    ListsService &
     OntologyResponderV2 &
     RepositoryUpdater &
     ResourcesResponderV2 &
@@ -176,7 +177,7 @@ object LayersTest {
       KnoraResponseRenderer.layer,
       ListsApiModule.layer,
       ListsResponder.layer,
-      ListsResponderV2.layer,
+      ListsService.layer,
       ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
@@ -221,7 +222,7 @@ object LayersTest {
       RepositoryUpdater.layer,
       HttpServer.layer,
       ApiV2Endpoints.layer,
-      ListsResponderV2.layer,
+      ListsService.layer,
       IIIFRequestMessageHandlerLive.layer,
       IriService.layer,
     )

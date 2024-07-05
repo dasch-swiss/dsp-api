@@ -3,19 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.responders.v2
+package org.knora.webapi.slice.lists.domain
 
 import zio.*
 
-import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
 import org.knora.webapi.messages.v2.responder.listsmessages.*
 import org.knora.webapi.responders.admin.ListsResponder
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
 
-final case class ListsResponderV2(private val appConfig: AppConfig, private val listsResponder: ListsResponder) {
+final case class ListsService(private val appConfig: AppConfig, private val listsResponder: ListsResponder) {
 
   /**
    * Gets a list from the triplestore.
@@ -24,9 +24,9 @@ final case class ListsResponderV2(private val appConfig: AppConfig, private val 
    * @param requestingUser the user making the request.
    * @return a [[ListGetResponseV2]].
    */
-  def getList(listIri: IRI, requestingUser: User): Task[ListGetResponseV2] =
+  def getList(listIri: ListIri, requestingUser: User): Task[ListGetResponseV2] =
     listsResponder
-      .listGetRequestADM(listIri)
+      .listGetRequestADM(listIri.value)
       .mapAttempt(_.asInstanceOf[ListGetResponseADM])
       .map(resp => ListGetResponseV2(resp.list, requestingUser.lang, appConfig.fallbackLanguage))
 
@@ -38,9 +38,9 @@ final case class ListsResponderV2(private val appConfig: AppConfig, private val 
    * @param requestingUser       the user making the request.
    * @return a  [[NodeGetResponseV2]].
    */
-  def getNode(nodeIri: IRI, requestingUser: User): Task[NodeGetResponseV2] =
+  def getNode(nodeIri: ListIri, requestingUser: User): Task[NodeGetResponseV2] =
     listsResponder
-      .listNodeInfoGetRequestADM(nodeIri)
+      .listNodeInfoGetRequestADM(nodeIri.value)
       .flatMap {
         case ChildNodeInfoGetResponseADM(node) => ZIO.succeed(node)
         case _                                 => ZIO.die(new IllegalStateException(s"No child node found $nodeIri"))
@@ -48,6 +48,6 @@ final case class ListsResponderV2(private val appConfig: AppConfig, private val 
       .map(NodeGetResponseV2(_, requestingUser.lang, appConfig.fallbackLanguage))
 }
 
-object ListsResponderV2 {
-  val layer = ZLayer.derive[ListsResponderV2]
+object ListsService {
+  val layer = ZLayer.derive[ListsService]
 }
