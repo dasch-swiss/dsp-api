@@ -33,6 +33,7 @@ import org.knora.webapi.slice.admin.api.StoreEndpoints
 import org.knora.webapi.slice.admin.api.UsersEndpoints
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
+import org.knora.webapi.slice.lists.api.ListsEndpointsV2
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.slice.security.Authenticator
@@ -61,10 +62,11 @@ object DocsGenerator extends ZIOAppDefault {
       adminEndpoints      <- ZIO.serviceWith[AdminApiEndpoints](_.endpoints)
       managementEndpoints <- ZIO.serviceWith[ManagementEndpoints](_.endpoints)
       v2Endpoints         <- ZIO.serviceWith[ApiV2Endpoints](_.endpoints)
+      listsV2Endpoints    <- ZIO.serviceWith[ListsEndpointsV2](_.endpoints)
       path                 = Path(args.headOption.getOrElse("/tmp"))
       filesWritten <-
         writeToFile(adminEndpoints, path, "admin-api") <*>
-          writeToFile(v2Endpoints, path, "v2") <*>
+          writeToFile(v2Endpoints ++ listsV2Endpoints, path, "v2") <*>
           writeToFile(managementEndpoints, path, "management")
       _ <- ZIO.logInfo(s"Wrote $filesWritten")
     } yield 0
@@ -84,6 +86,7 @@ object DocsGenerator extends ZIOAppDefault {
     StoreEndpoints.layer,
     UsersEndpoints.layer,
     ManagementEndpoints.layer,
+    ListsEndpointsV2.layer,
   )
 
   private def writeToFile(endpoints: Seq[AnyEndpoint], path: Path, name: String) = {

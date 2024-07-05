@@ -29,6 +29,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
+import org.knora.webapi.slice.lists.api.ListsApiV2Routes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -46,6 +47,7 @@ import org.knora.webapi.store.iiif.api.SipiService
 final case class ApiRoutes(
   routeData: KnoraRouteData,
   adminApiRoutes: AdminApiRoutes,
+  listsApiV2Routes: ListsApiV2Routes,
   resourceInfoRoutes: ResourceInfoRoutes,
   searchApiRoutes: SearchApiRoutes,
   managementRoutes: ManagementRoutes,
@@ -67,7 +69,6 @@ final case class ApiRoutes(
               (adminApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes)
                 .reduce(_ ~ _) ~
                 AuthenticationRouteV2().makeRoute ~
-                ListsRouteV2().makeRoute ~
                 OntologiesRouteV2().makeRoute ~
                 ResourcesRouteV2(appConfig).makeRoute ~
                 StandoffRouteV2().makeRoute ~
@@ -84,7 +85,7 @@ object ApiRoutes {
   private type ApiRoutesRuntime =
     AppConfig & AuthorizationRestService & core.State & IriConverter & MessageRelay & ProjectService &
       RestCardinalityService & WebApiAuthenticator & SearchApiRoutes & SearchResponderV2 & SipiService &
-      StringFormatter & UserService & ValuesResponderV2
+      StringFormatter & UserService & ValuesResponderV2 & ListsApiV2Routes
 
   /**
    * All routes composed together.
@@ -99,12 +100,21 @@ object ApiRoutes {
         router             <- ZIO.service[AppRouter]
         appConfig          <- ZIO.service[AppConfig]
         adminApiRoutes     <- ZIO.service[AdminApiRoutes]
+        listsApiV2Routes   <- ZIO.service[ListsApiV2Routes]
         resourceInfoRoutes <- ZIO.service[ResourceInfoRoutes]
         searchApiRoutes    <- ZIO.service[SearchApiRoutes]
         managementRoutes   <- ZIO.service[ManagementRoutes]
         routeData          <- ZIO.succeed(KnoraRouteData(sys, router.ref, appConfig))
         runtime            <- ZIO.runtime[ApiRoutesRuntime]
-      } yield ApiRoutes(routeData, adminApiRoutes, resourceInfoRoutes, searchApiRoutes, managementRoutes, appConfig)(
+      } yield ApiRoutes(
+        routeData,
+        adminApiRoutes,
+        listsApiV2Routes,
+        resourceInfoRoutes,
+        searchApiRoutes,
+        managementRoutes,
+        appConfig,
+      )(
         runtime,
       )
     }

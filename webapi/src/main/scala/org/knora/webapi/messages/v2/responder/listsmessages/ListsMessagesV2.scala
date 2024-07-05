@@ -5,6 +5,10 @@
 
 package org.knora.webapi.messages.v2.responder.listsmessages
 
+import sttp.tapir.Schema
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
+
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.RelayedMessage

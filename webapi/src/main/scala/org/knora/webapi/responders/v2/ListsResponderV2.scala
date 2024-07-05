@@ -41,7 +41,7 @@ final case class ListsResponderV2(appConfig: AppConfig, listsResponder: ListsRes
    * @param requestingUser the user making the request.
    * @return a [[ListGetResponseV2]].
    */
-  private def getList(listIri: IRI, requestingUser: User): Task[ListGetResponseV2] =
+  def getList(listIri: IRI, requestingUser: User): Task[ListGetResponseV2] =
     listsResponder
       .listGetRequestADM(listIri)
       .mapAttempt(_.asInstanceOf[ListGetResponseADM])
@@ -55,7 +55,7 @@ final case class ListsResponderV2(appConfig: AppConfig, listsResponder: ListsRes
    * @param requestingUser       the user making the request.
    * @return a  [[NodeGetResponseV2]].
    */
-  private def getNode(nodeIri: IRI, requestingUser: User): Task[NodeGetResponseV2] =
+  def getNode(nodeIri: IRI, requestingUser: User): Task[NodeGetResponseV2] =
     listsResponder
       .listNodeInfoGetRequestADM(nodeIri)
       .flatMap {

@@ -77,7 +77,7 @@ object AdminApiModule
       UserRestService
       // format: on
     ] { self =>
-  inline def layer: URLayer[self.Dependencies, self.Provided] =
+  val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       AdminApiEndpoints.layer,
       AdminApiRoutes.layer,

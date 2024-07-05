@@ -47,6 +47,7 @@ import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
+import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -110,6 +111,7 @@ object LayersTest {
     InferenceOptimizationService &
     IriConverter &
     IriService &
+    ListsApiModule.Provided &
     ListsResponder &
     MessageRelay &
     OntologyCache &
@@ -172,7 +174,9 @@ object LayersTest {
       IriConverter.layer,
       IriService.layer,
       KnoraResponseRenderer.layer,
+      ListsApiModule.layer,
       ListsResponder.layer,
+      ListsResponderV2.layer,
       ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
