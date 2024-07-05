@@ -25,7 +25,7 @@ import org.knora.webapi.slice.lists.domain.ListsService
 
 class ListsServiceSpec extends CoreSpec with ImplicitSender {
 
-  private val listsService = ZIO.serviceWith[ListsService]
+  private val listsService = ZIO.serviceWithZIO[ListsService]
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
