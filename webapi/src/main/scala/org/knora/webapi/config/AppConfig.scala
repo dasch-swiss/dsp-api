@@ -9,7 +9,6 @@ import com.typesafe.config.ConfigFactory
 import zio.*
 import zio.config.*
 import zio.config.magnolia.*
-import zio.config.magnolia.DeriveConfig.given
 import zio.config.typesafe.*
 
 import java.time.Duration
@@ -180,15 +179,16 @@ object AppConfig {
   type AppConfigurationsTest = AppConfig & DspIngestConfig & Triplestore & Features & Sipi
   type AppConfigurations     = AppConfigurationsTest & InstrumentationServerConfig & JwtConfig & KnoraApi
 
-  val descriptor: Config[AppConfig] = deriveConfig[AppConfig].mapKey(toKebabCase)
+  val parseConfig: UIO[AppConfig] = {
+    val descriptor = deriveConfig[AppConfig].mapKey(toKebabCase)
+    val source     = TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
+    read(descriptor from source).orDie
+  }
 
   val layer: ULayer[AppConfigurations] = {
-    val appConfigLayer = ZLayer {
-      val source = TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
-      read(descriptor from source)
-        .tap(c => ZIO.logInfo("Feature: ALLOW_ERASE_PROJECTS enabled").when(c.features.allowEraseProjects))
-        .orDie
-    }
+    val appConfigLayer = ZLayer.fromZIO(
+      parseConfig.tap(c => ZIO.logInfo("Feature: ALLOW_ERASE_PROJECTS enabled").when(c.features.allowEraseProjects)),
+    )
     projectAppConfigurations(appConfigLayer).tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))
   }
 
