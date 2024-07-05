@@ -8,6 +8,7 @@ package org.knora.webapi.slice.lists.api
 import sttp.tapir.*
 import zio.*
 import zio.ZLayer
+
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
