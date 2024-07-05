@@ -12,7 +12,7 @@ import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 object ListsApiModule
     extends URModule[
       AppConfig & BaseEndpoints & HandlerMapper & ListsResponderV2 & TapirToPekkoInterpreter,
-      ListsApiV2Routes,
+      ListsApiV2Routes & ListsEndpointsV2,
     ] {
   self =>
   val layer: URLayer[self.Dependencies, self.Provided] =
