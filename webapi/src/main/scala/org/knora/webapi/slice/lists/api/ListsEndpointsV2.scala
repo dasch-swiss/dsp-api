@@ -8,9 +8,9 @@ package org.knora.webapi.slice.lists.api
 import sttp.tapir.*
 import zio.*
 import zio.ZLayer
-
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages
 import org.knora.webapi.messages.admin.responder.listsmessages.ListADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListChildNodeADM
@@ -57,7 +57,10 @@ object ListsEndpointsV2 {
 
 private object Examples {
 
-  val appConfig: AppConfig = UnsafeZioRun.runOrThrow(AppConfig.parseConfig)(Runtime.default)
+  val appConfig: AppConfig = UnsafeZioRun.runOrThrow(for {
+    config <- AppConfig.parseConfig
+    _       = StringFormatter.init(config)
+  } yield config)(Runtime.default)
 
   val listGetResponseV2 = ListGetResponseV2(
     list = ListADM(
