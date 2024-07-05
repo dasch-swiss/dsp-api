@@ -34,13 +34,13 @@ final case class ListsEndpointsV2(private val base: BaseEndpoints) {
       .description("The iri to a list.")
       .example(ListIri.unsafeFrom("http://rdfh.ch/lists/0001/" + UuidUtil.makeRandomBase64EncodedUuid))
 
-  val getV2Lists = base.withUserEndpoint
+  val getV2Lists = base.withUserEndpoint.get
     .in("v2" / "lists" / listIri)
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody.example(Examples.listGetResponseV2.format(FormatOptions.default, Examples.appConfig)))
     .description("Returns a list (a graph with all list nodes).")
 
-  val getV2Node = base.withUserEndpoint
+  val getV2Node = base.withUserEndpoint.get
     .in("v2" / "node" / listIri)
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody.example(Examples.nodeGetResponseV2.format(FormatOptions.default, Examples.appConfig)))
