@@ -39,24 +39,24 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
       "succeed with correct email/password" in {
         val credId               = CredentialsIdentifier.EmailIdentifier(Email.unsafeFrom(AuthenticatorSpec.rootUserEmail))
         val correctPasswordCreds = KnoraPasswordCredentialsV2(credId, AuthenticatorSpec.rootUserPassword)
-        val isAuthenticated =
+        val isAuthenticated: Unit =
           UnsafeZioRun.runOrThrow(
-            ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(correctPasswordCreds))),
+            ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(correctPasswordCreds)),
           )
-        assert(isAuthenticated)
+        assert(isAuthenticated == ())
       }
       "fail with unknown email" in {
         val invalidCredId     = CredentialsIdentifier.EmailIdentifier(Email.unsafeFrom("wrongemail@example.com"))
         val invalidEmailCreds = KnoraPasswordCredentialsV2(invalidCredId, "wrongpassword")
         val resF =
-          UnsafeZioRun.run(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(invalidEmailCreds))))
+          UnsafeZioRun.run(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(invalidEmailCreds)))
         assertFailsWithA[BadCredentialsException](resF)
       }
       "fail with wrong password" in {
         val credId               = CredentialsIdentifier.EmailIdentifier(Email.unsafeFrom(AuthenticatorSpec.rootUserEmail))
         val invalidPasswordCreds = KnoraPasswordCredentialsV2(credId, "wrongpassword")
         val actual =
-          UnsafeZioRun.run(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(invalidPasswordCreds))))
+          UnsafeZioRun.run(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(invalidPasswordCreds)))
         assertFailsWithA[BadCredentialsException](actual)
       }
       "succeed with correct token" in {
@@ -64,10 +64,10 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
           for {
             token     <- createJwtTokenString(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA"))
             tokenCreds = KnoraJWTTokenCredentialsV2(token)
-            result    <- ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(tokenCreds)))
+            result    <- ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(tokenCreds))
           } yield result,
         )
-        assert(isAuthenticated)
+        assert(isAuthenticated == ())
       }
       "fail with invalidated token" in {
         val actual = UnsafeZioRun
@@ -75,14 +75,13 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
             token     <- createJwtTokenString(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA"))
             tokenCreds = KnoraJWTTokenCredentialsV2(token)
             _         <- ZIO.serviceWith[InvalidTokenCache](_.put(tokenCreds.jwtToken))
-            result    <- ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(tokenCreds)))
+            result    <- ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(tokenCreds))
           } yield result)
         assertFailsWithA[BadCredentialsException](actual)
       }
       "fail with wrong token" in {
         val invalidTokenCreds = KnoraJWTTokenCredentialsV2("123456")
-        val actual =
-          UnsafeZioRun.run(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(invalidTokenCreds))))
+        val actual            = UnsafeZioRun.run(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(invalidTokenCreds)))
         assertFailsWithA[BadCredentialsException](actual)
       }
     }

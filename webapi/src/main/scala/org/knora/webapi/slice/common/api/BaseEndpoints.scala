@@ -92,7 +92,7 @@ final case class BaseEndpoints(authenticator: Authenticator)(implicit val r: zio
         email <- ZIO.fromEither(Email.from(basic.username)).orElseFail(BadCredentialsException("Invalid credentials."))
         id     = CredentialsIdentifier.EmailIdentifier(email)
         creds  = KnoraPasswordCredentialsV2(id, basic.password.getOrElse(""))
-        user  <- authenticator.getUserADMThroughCredentialsV2(Some(creds)).asRight
+        user  <- authenticator.getUserADMThroughCredentialsV2(creds).asRight
       } yield user,
     )
 }
