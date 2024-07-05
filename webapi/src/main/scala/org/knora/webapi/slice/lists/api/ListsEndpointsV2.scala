@@ -2,6 +2,7 @@ package org.knora.webapi.slice.lists.api
 
 import sttp.tapir.*
 import zio.ZLayer
+
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri

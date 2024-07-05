@@ -5,10 +5,6 @@
 
 package org.knora.webapi.messages.v2.responder.listsmessages
 
-import sttp.tapir.Schema
-import zio.json.DeriveJsonCodec
-import zio.json.JsonCodec
-
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.RelayedMessage
@@ -21,20 +17,11 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequence
 import org.knora.webapi.messages.util.rdf
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
-import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * An abstract trait representing a Knora v2 API request message that can be sent to `ListsResponderV2`.
  */
 sealed trait ListsResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
-
-/**
- * Requests a list. A successful response will be a [[ListGetResponseV2]]
- *
- * @param listIri              the IRI of the list (Iri of the list's root node).
- * @param requestingUser       the user making the request.
- */
-case class ListGetRequestV2(listIri: IRI, requestingUser: User) extends ListsResponderRequestV2
 
 /**
  * An abstract trait providing a convenience method for language handling.
@@ -65,8 +52,6 @@ trait ListResponderResponseV2 {
 }
 
 /**
- * Represents a response to a [[ListGetRequestV2]].
- *
  * @param list         the list to be returned.
  * @param userLang     the user's preferred language.
  * @param fallbackLang the fallback language if the preferred language is not available.
@@ -186,15 +171,6 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
 }
 
 /**
- * Requests a list node. A successful response will be a [[NodeGetResponseV2]]
- *
- * @param nodeIri              the IRI of the node to retrieve.
- */
-case class NodeGetRequestV2(nodeIri: IRI, requestingUser: User) extends ListsResponderRequestV2
-
-/**
- * Represents a response to a [[NodeGetRequestV2]].
- *
  * @param node         the node to be returned.
  * @param userLang     the user's preferred language.
  * @param fallbackLang the fallback language if the preferred language is not available.

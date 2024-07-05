@@ -1,7 +1,8 @@
 package org.knora.webapi.slice.lists.api
-import org.knora.webapi.config.AppConfig
 import zio.URLayer
 import zio.ZLayer
+
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.common.api.BaseEndpoints

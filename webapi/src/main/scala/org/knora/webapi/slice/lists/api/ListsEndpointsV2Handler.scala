@@ -1,6 +1,7 @@
 package org.knora.webapi.slice.lists.api
-import org.knora.webapi.config.AppConfig
 import zio.ZLayer
+
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User

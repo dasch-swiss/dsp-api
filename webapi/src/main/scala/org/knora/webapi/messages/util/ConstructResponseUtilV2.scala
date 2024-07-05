@@ -39,8 +39,6 @@ import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyFlatStatement
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyRdfPropertyValues
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyRdfResources
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetRequestV2
-import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
@@ -50,6 +48,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.responders.v2.ListsResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -422,6 +421,7 @@ object ConstructResponseUtilV2 {
 final case class ConstructResponseUtilV2Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
+  listsResponderV2: ListsResponderV2,
   standoffTagUtilV2: StandoffTagUtilV2,
   projectService: ProjectService,
 )(implicit val stringFormatter: StringFormatter)
@@ -1350,12 +1350,10 @@ final case class ConstructResponseUtilV2Live(
         targetSchema match {
           case ApiV2Simple =>
             for {
-              nodeResponse <- messageRelay.ask[NodeGetResponseV2](NodeGetRequestV2(listNodeIri, requestingUser))
-            } yield listNode.copy(
-              listNodeLabel = nodeResponse.node
-                .getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = appConfig.fallbackLanguage),
-            )
-
+              nodeResponse <- listsResponderV2.getNode(listNodeIri, requestingUser)
+              listNodeLabel =
+                nodeResponse.node.getLabelInPreferredLanguage(requestingUser.lang, appConfig.fallbackLanguage)
+            } yield listNode.copy(listNodeLabel = listNodeLabel)
           case ApiV2Complex => ZIO.succeed(listNode)
         }
 

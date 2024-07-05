@@ -6,22 +6,22 @@
 package org.knora.webapi.responders.v2
 
 import org.apache.pekko
+import org.apache.pekko.testkit.ImplicitSender
+import zio.*
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.v2.responder.listsmessages.ListGetRequestV2
 import org.knora.webapi.messages.v2.responder.listsmessages.ListGetResponseV2
-import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetRequestV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetResponseV2
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import pekko.testkit.ImplicitSender
 
 /**
  * Tests [[ListsResponderV2]].
  */
 class ListsResponderV2Spec extends CoreSpec with ImplicitSender {
   private val listsResponderV2SpecFullData = new ListsResponderV2SpecFullData
+  private val responder                    = ZIO.serviceWith[ListsResponderV2]
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -32,25 +32,17 @@ class ListsResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "The lists responder v2" should {
     "return a list" in {
-      appActor ! ListGetRequestV2(
-        listIri = "http://rdfh.ch/lists/0001/treeList",
-        requestingUser = SharedTestDataADM.anythingUser2,
+      val response = UnsafeZioRun.runOrThrow(
+        responder(_.getList("http://rdfh.ch/lists/0001/treeList", SharedTestDataADM.anythingUser2)),
       )
-
-      expectMsgPF(timeout) { case response: ListGetResponseV2 =>
-        assert(response == listsResponderV2SpecFullData.treeList)
-      }
+      assert(response == listsResponderV2SpecFullData.treeList)
     }
 
     "return a node" in {
-      appActor ! NodeGetRequestV2(
-        nodeIri = "http://rdfh.ch/lists/0001/treeList11",
-        requestingUser = SharedTestDataADM.anythingUser2,
+      val response = UnsafeZioRun.runOrThrow(
+        responder(_.getNode("http://rdfh.ch/lists/0001/treeList11", SharedTestDataADM.anythingUser2)),
       )
-
-      expectMsgPF(timeout) { case response: NodeGetResponseV2 =>
-        assert(response == listsResponderV2SpecFullData.treeNode)
-      }
+      assert(response == listsResponderV2SpecFullData.treeNode)
     }
   }
 }

@@ -9,30 +9,13 @@ import zio.*
 
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
 import org.knora.webapi.messages.v2.responder.listsmessages.*
-import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.model.User
 
-final case class ListsResponderV2(appConfig: AppConfig, listsResponder: ListsResponder) extends MessageHandler {
-
-  def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[ListsResponderRequestV2]
-
-  /**
-   * Receives a message of type [[ListsResponderRequestV2]], and returns an appropriate response message inside a future.
-   */
-  override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ListGetRequestV2(listIri, requestingUser) =>
-      getList(listIri, requestingUser)
-    case NodeGetRequestV2(nodeIri, requestingUser) =>
-      getNode(nodeIri, requestingUser)
-    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
-  }
+final case class ListsResponderV2(private val appConfig: AppConfig, private val listsResponder: ListsResponder) {
 
   /**
    * Gets a list from the triplestore.
@@ -66,15 +49,5 @@ final case class ListsResponderV2(appConfig: AppConfig, listsResponder: ListsRes
 }
 
 object ListsResponderV2 {
-  val layer: URLayer[
-    AppConfig & ListsResponder & MessageRelay,
-    ListsResponderV2,
-  ] = ZLayer.fromZIO {
-    for {
-      ac      <- ZIO.service[AppConfig]
-      lr      <- ZIO.service[ListsResponder]
-      mr      <- ZIO.service[MessageRelay]
-      handler <- mr.subscribe(ListsResponderV2(ac, lr))
-    } yield handler
-  }
+  val layer = ZLayer.derive[ListsResponderV2]
 }
