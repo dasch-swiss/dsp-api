@@ -10,43 +10,11 @@ import spray.json.*
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
-import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.slice.admin.domain.model.*
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
-
-/**
- * Represents an API request payload that asks the Knora API server to authenticate the user and create a JWT token.
- * Only one of IRI, username, or email as identifier is allowed.
- *
- * @param iri      the user's IRI.
- * @param email    the user's email.
- * @param username the user's username.
- * @param password the user's password.
- */
-case class LoginApiRequestPayloadV2(
-  iri: Option[IRI] = None,
-  email: Option[String] = None,
-  username: Option[String] = None,
-  password: String,
-) {
-
-  val identifyingParameterCount: Int = List(
-    iri,
-    email,
-    username,
-  ).flatten.size
-
-  // something needs to be set
-  if (identifyingParameterCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
-
-  if (identifyingParameterCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
-
-  // Password needs to be supplied
-  if (password.isEmpty) throw BadRequestException("Password needs to be supplied.")
-}
 
 sealed trait CredentialsIdentifier
 object CredentialsIdentifier {
@@ -110,8 +78,6 @@ final case class LoginResponse(token: String)
  * A spray-json protocol for generating Knora API v2 JSON for property values.
  */
 trait AuthenticationV2JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
-  implicit val loginApiRequestPayloadV2Format: RootJsonFormat[LoginApiRequestPayloadV2] =
-    jsonFormat(LoginApiRequestPayloadV2.apply, "iri", "email", "username", "password")
   implicit val SessionResponseFormat: RootJsonFormat[LoginResponse] =
     jsonFormat1(LoginResponse.apply)
 }

@@ -13,7 +13,6 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
-import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginApiRequestPayloadV2
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.security.Authenticator
@@ -30,32 +29,6 @@ final case class AuthenticationRouteV2()(
       get { // authenticate credentials
         ctx => RouteUtilV2.complete(ctx, ZIO.serviceWithZIO[Authenticator](_.doAuthenticateV2(ctx)))
       } ~
-        post { // login
-          /* send iri, email, or username, and password in body as:
-           * {
-           *   "iri|username|email": "value_of_iri_username_or_email",
-           *   "password": "userspassword"
-           * }, e.g., for email:
-           * {
-           *   "email": "email@example.com",
-           *   "password": "userspassword"
-           * }
-           *
-           * Returns a JWT token (and session cookie), which can be supplied with every request thereafter in
-           * the authorization header with the bearer scheme: 'Authorization: Bearer abc.def.ghi'
-           */
-          entity(as[LoginApiRequestPayloadV2]) { apiRequest => requestContext =>
-            val task = for {
-              crId <-
-                ZIO
-                  .fromOption(CredentialsIdentifier.fromOptions(apiRequest.iri, apiRequest.email, apiRequest.username))
-                  .orElseFail(BadRequestException("Invalid user identifier."))
-              credentials = KnoraPasswordCredentialsV2(crId, apiRequest.password)
-              res        <- ZIO.serviceWithZIO[Authenticator](_.doLoginV2(credentials))
-            } yield res
-            RouteUtilV2.complete(requestContext, task)
-          }
-        } ~
         // logout
         delete(ctx => RouteUtilV2.complete(ctx, ZIO.serviceWithZIO[Authenticator](_.doLogoutV2(ctx))))
     } ~

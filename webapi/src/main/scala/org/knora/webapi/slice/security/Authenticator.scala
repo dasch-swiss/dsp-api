@@ -41,9 +41,6 @@ import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NOT_VALID
 import org.knora.webapi.slice.security.AuthenticatorErrors.LoginFailed
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
-import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload.IriPassword
 
 sealed trait AuthenticatorErrors
 object AuthenticatorErrors {
@@ -109,7 +106,9 @@ trait Authenticator {
    */
   def doLoginV2(credentials: KnoraPasswordCredentialsV2): Task[HttpResponse]
 
-  def authenticate(payload: LoginPayload): IO[LoginFailed.type, Jwt]
+  def authenticate(userIri: UserIri, password: String): IO[LoginFailed.type, Jwt]
+  def authenticate(username: Username, password: String): IO[LoginFailed.type, Jwt]
+  def authenticate(email: Email, password: String): IO[LoginFailed.type, Jwt]
 
   /**
    * Checks if the credentials provided in [[RequestContext]] are valid.
@@ -167,14 +166,13 @@ final case class AuthenticatorLive(
   override def doLoginV2(credentials: KnoraPasswordCredentialsV2): Task[HttpResponse] =
     for {
       _ <- authenticateCredentialsV2(credentials)
-      userADM <- credentials.identifier match {
-                   case CredentialsIdentifier.IriIdentifier(userIri)       => getUserByIri(userIri)
-                   case CredentialsIdentifier.EmailIdentifier(email)       => getUserByEmail(email)
-                   case CredentialsIdentifier.UsernameIdentifier(username) => getUserByUsername(username)
-                 }
+      user <- credentials.identifier match {
+                case CredentialsIdentifier.IriIdentifier(userIri)       => getUserByIri(userIri)
+                case CredentialsIdentifier.EmailIdentifier(email)       => getUserByEmail(email)
+                case CredentialsIdentifier.UsernameIdentifier(username) => getUserByUsername(username)
+              }
       cookieDomain = Some(appConfig.cookieDomain)
-      scope       <- scopeResolver.resolve(userADM)
-      jwtString   <- jwtService.createJwt(userADM.userIri, scope).map(_.jwtString)
+      jwtString   <- createToken(user).map(_.jwtString)
 
       httpResponse = HttpResponse(
                        headers = List(
@@ -199,23 +197,37 @@ final case class AuthenticatorLive(
 
     } yield httpResponse
 
-  override def authenticate(payload: LoginPayload): IO[LoginFailed.type, Jwt] = {
-    val identifier = payload match {
-      case LoginPayload.IriPassword(iri, _)           => IriIdentifier(iri)
-      case LoginPayload.UsernamePassword(username, _) => UsernameIdentifier(username)
-      case LoginPayload.EmailPassword(email, _)       => EmailIdentifier(email)
-    }
-    (for {
-      _ <- authenticateCredentialsV2(KnoraPasswordCredentialsV2(identifier, payload.password))
-      user <- payload match {
-                case LoginPayload.IriPassword(iri, _)           => getUserByIri(iri)
-                case LoginPayload.UsernamePassword(username, _) => getUserByUsername(username)
-                case LoginPayload.EmailPassword(email, _)       => getUserByEmail(email)
-              }
-      scope <- scopeResolver.resolve(user)
-      jwt   <- jwtService.createJwt(user.userIri, scope)
-    } yield jwt).orElseFail(LoginFailed)
-  }
+  override def authenticate(userIri: UserIri, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt] =
+    for {
+      user <- getUserByIri(userIri).orElseFail(LoginFailed)
+      jwt  <- ensureActiveUserAndPasswordMatch(user, password)
+    } yield jwt
+
+  override def authenticate(username: Username, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt] =
+    for {
+      user <- getUserByUsername(username).orElseFail(LoginFailed)
+      jwt  <- ensureActiveUserAndPasswordMatch(user, password)
+    } yield jwt
+
+  override def authenticate(email: Email, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt] =
+    for {
+      user <- getUserByEmail(email).orElseFail(LoginFailed)
+      jwt  <- ensureActiveUserAndPasswordMatch(user, password)
+    } yield jwt
+
+  /* check if the user is active, if not, then no need to check the password */
+  private def ensureActiveUserAndPasswordMatch(
+    user: User,
+    password: String,
+  ): IO[AuthenticatorErrors.LoginFailed.type, Jwt] =
+    for {
+      _   <- ZIO.fail(LoginFailed).when(!user.isActive)
+      _   <- ZIO.fail(LoginFailed).when(KnoraUserRepo.builtIn.findOneBy(_.id.value == user.id).isDefined)
+      _   <- ZIO.fail(LoginFailed).when(!user.password.exists(passwordService.matchesStr(password, _)))
+      jwt <- createToken(user)
+    } yield jwt
+
+  private def createToken(user: User) = scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _))
 
   /**
    * Returns a simple login form for testing purposes
@@ -416,16 +428,8 @@ final case class AuthenticatorLive(
                     case CredentialsIdentifier.EmailIdentifier(email)       => getUserByEmail(email)
                     case CredentialsIdentifier.UsernameIdentifier(username) => getUserByUsername(username)
                   }
-
-          /* check if the user is active, if not, then no need to check the password */
-          _ <- ZIO.fail(BadCredentialsException(BAD_CRED_NOT_VALID)).when(!user.isActive)
-          _ <-
-            ZIO
-              .fail(BadCredentialsException(BAD_CRED_NOT_VALID))
-              .when(
-                KnoraUserRepo.builtIn.findOneBy(_.id.value == user.id).isDefined ||
-                  !user.password.exists(passwordService.matchesStr(passCreds.password, _)),
-              )
+          _ <- ensureActiveUserAndPasswordMatch(user, passCreds.password)
+                 .orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
         } yield ()
       case KnoraJWTTokenCredentialsV2(jwtToken) =>
         ZIO

@@ -34,16 +34,7 @@ import org.knora.webapi.slice.security.Authenticator
 
 final case class BaseEndpoints(authenticator: Authenticator)(implicit val r: zio.Runtime[Any]) {
 
-  private val defaultErrorOutputs: EndpointOutput.OneOf[RequestRejectedException, RequestRejectedException] =
-    oneOf[RequestRejectedException](
-      oneOfVariant[NotFoundException](statusCode(StatusCode.NotFound).and(jsonBody[NotFoundException])),
-      oneOfVariant[BadRequestException](statusCode(StatusCode.BadRequest).and(jsonBody[BadRequestException])),
-      oneOfVariant[ValidationException](statusCode(StatusCode.BadRequest).and(jsonBody[ValidationException])),
-      oneOfVariant[DuplicateValueException](statusCode(StatusCode.BadRequest).and(jsonBody[DuplicateValueException])),
-      oneOfVariant[GravsearchException](statusCode(StatusCode.BadRequest).and(jsonBody[GravsearchException])),
-    )
-
-  private val secureDefaultErrorOutputs: EndpointOutput.OneOf[RequestRejectedException, RequestRejectedException] =
+  private val errorOutputs: EndpointOutput.OneOf[RequestRejectedException, RequestRejectedException] =
     oneOf[RequestRejectedException](
       // default
       oneOfVariant[NotFoundException](statusCode(StatusCode.NotFound).and(jsonBody[NotFoundException])),
@@ -56,12 +47,12 @@ final case class BaseEndpoints(authenticator: Authenticator)(implicit val r: zio
       oneOfVariant[ForbiddenException](statusCode(StatusCode.Forbidden).and(jsonBody[ForbiddenException])),
     )
 
-  val publicEndpoint = endpoint.errorOut(defaultErrorOutputs)
+  val publicEndpoint = endpoint.errorOut(errorOutputs)
 
   private val endpointWithBearerCookieBasicAuthOptional
     : Endpoint[(Option[String], Option[String], Option[UsernamePassword]), Unit, RequestRejectedException, Unit, Any] =
     endpoint
-      .errorOut(secureDefaultErrorOutputs)
+      .errorOut(errorOutputs)
       .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
       .securityIn(cookie[Option[String]](authenticator.calculateCookieName()))
       .securityIn(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
