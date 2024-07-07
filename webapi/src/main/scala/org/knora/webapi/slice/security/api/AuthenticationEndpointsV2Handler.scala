@@ -86,33 +86,24 @@ case class AuthenticationEndpointsV2Handler(
       val apiUrl = appConfig.knoraApi.externalKnoraApiBaseUrl
       val form =
         s"""
-           |<html>
-           |<body>
-           |<div align="center">
-           |    <section class="container">
+           |<html lang="en">
+           |  <body>
+           |    <div align="center">
+           |      <section class="container">
            |        <div class="login">
-           |            <h1>DSP-API Login</h1>
-           |            <form name="myform" action="$apiUrl/v2/login" method="post">
-           |                <p>
-           |                    <input type="text" name="username" value="" placeholder="Username">
-           |                </p>
-           |                <p>
-           |                    <input type="password" name="password" value="" placeholder="Password">
-           |                </p>
-           |                <p class="submit">
-           |                    <input type="submit" name="submit" value="Login">
-           |                </p>
-           |            </form>
+           |          <h1>DSP-API Login</h1>
+           |          <form name="myform" action="$apiUrl/v2/login" method="post">
+           |            <p><input type="text" name="username" value="" placeholder="Username"></p>
+           |            <p><input type="password" name="password" value="" placeholder="Password"></p>
+           |            <p class="submit"><input type="submit" name="submit" value="Login"></p>
+           |          </form>
            |        </div>
-           |
-           |    </section>
-           |
-           |    <section class="about">
-           |        <p class="about-author">
-           |            &copy; 2015&ndash;2024 <a href="https://dasch.swiss" target="_blank">dasch.swiss</a>
-           |    </section>
-           |</div>
-           |</body>
+           |      </section>
+           |      <section class="about">
+           |        <p class="about-author">&copy; 2015&ndash;2024 <a href="https://dasch.swiss" target="_blank">dasch.swiss</a></p>
+           |      </section>
+           |    </div>
+           |  </body>
            |</html>
             """.stripMargin
       ZIO.succeed(form)
