@@ -76,8 +76,7 @@ final case class ApiRoutes(
               .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS)),
           ) {
             DSPApiDirectives.handleErrors(routeData.appConfig) {
-              AuthenticationRouteV2().makeRoute ~
-                OntologiesRouteV2().makeRoute ~
+              OntologiesRouteV2().makeRoute ~
                 ResourcesRouteV2(routeData.appConfig).makeRoute ~
                 StandoffRouteV2().makeRoute ~
                 ValuesRouteV2().makeRoute ~

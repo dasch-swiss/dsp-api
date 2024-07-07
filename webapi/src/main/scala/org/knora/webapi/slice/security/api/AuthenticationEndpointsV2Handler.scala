@@ -9,14 +9,18 @@ import zio.ZIO
 import zio.ZLayer
 
 import java.time.Instant
+
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
+import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NOT_VALID
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.CheckResponse
+import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginForm
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload.EmailPassword
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload.IriPassword
@@ -46,16 +50,7 @@ case class AuthenticationEndpointsV2Handler(
           case EmailPassword(email, password)       => authenticator.authenticate(email, password)
         }).mapBoth(
           _ => BadCredentialsException(BAD_CRED_NOT_VALID),
-          token =>
-            (
-              CookieValueWithMeta.unsafeApply(
-                domain = Some(appConfig.cookieDomain),
-                httpOnly = true,
-                path = Some("/"),
-                value = token.jwtString,
-              ),
-              TokenResponse(token.jwtString),
-            ),
+          token => setCookieAndResponse(token),
         )
       },
     )
@@ -110,9 +105,31 @@ case class AuthenticationEndpointsV2Handler(
     },
   )
 
+  val postV2Login =
+    PublicEndpointHandler[LoginForm, (CookieValueWithMeta, TokenResponse)](
+      endpoints.postV2Login,
+      (login: LoginForm) => {
+        (for {
+          username <- ZIO.fromEither(Username.from(login.username))
+          token    <- authenticator.authenticate(username, login.password)
+        } yield setCookieAndResponse(token)).orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
+      },
+    )
+
+  private def setCookieAndResponse(token: Jwt) =
+    (
+      CookieValueWithMeta.unsafeApply(
+        domain = Some(appConfig.cookieDomain),
+        httpOnly = true,
+        path = Some("/"),
+        value = token.jwtString,
+      ),
+      TokenResponse(token.jwtString),
+    )
+
   private val secure = List(getV2Authentication).map(mapper.mapSecuredEndpointHandler(_))
   private val public =
-    List(postV2Authentication, deleteV2Authentication, getV2Login).map(mapper.mapPublicEndpointHandler(_))
+    List(postV2Authentication, deleteV2Authentication, getV2Login, postV2Login).map(mapper.mapPublicEndpointHandler(_))
   val allHandlers = secure ++ public
 }
 

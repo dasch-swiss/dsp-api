@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.common.api
 
-import org.apache.pekko.http.scaladsl.model.HttpResponse
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import sttp.apispec.openapi.Server
 import sttp.apispec.openapi.circe.yaml.RichOpenAPI
@@ -50,7 +49,6 @@ final case class DocsNoopAuthenticator() extends Authenticator {
   override def getUserADM(requestContext: RequestContext): Task[User]                                            = ???
   override def calculateCookieName(): String                                                                     = "KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9"
   override def getUserADMThroughCredentialsV2(credentials: KnoraCredentialsV2): Task[User]                       = ???
-  override def doLoginV2(credentials: KnoraCredentialsV2.KnoraPasswordCredentialsV2): Task[HttpResponse]         = ???
   override def authenticateCredentialsV2(credentials: KnoraCredentialsV2): Task[Unit]                            = ???
   override def authenticate(userIri: UserIri, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt]   = ???
   override def authenticate(username: Username, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt] = ???

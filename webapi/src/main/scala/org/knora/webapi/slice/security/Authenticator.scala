@@ -8,11 +8,9 @@ package org.knora.webapi.slice.security
 import org.apache.commons.codec.binary.Base32
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers
-import org.apache.pekko.http.scaladsl.model.headers.HttpCookie
 import org.apache.pekko.http.scaladsl.model.headers.HttpCookiePair
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.util.ByteString
-import spray.json.*
 import zio.*
 
 import java.util.Base64
@@ -88,16 +86,6 @@ trait Authenticator {
    */
   def getUserADMThroughCredentialsV2(credentials: KnoraCredentialsV2): Task[User]
   def verifyJwt(jwtToken: String): Task[User] = getUserADMThroughCredentialsV2(KnoraJWTTokenCredentialsV2(jwtToken))
-
-  /**
-   * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
-   *
-   * @param credentials          the user supplied [[KnoraPasswordCredentialsV2]] containing the user's login information.
-   * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
-   *         the generated session id.
-   */
-  def doLoginV2(credentials: KnoraPasswordCredentialsV2): Task[HttpResponse]
-
   def invalidateToken(jwt: String): Task[Unit]
   def authenticate(userIri: UserIri, password: String): IO[LoginFailed.type, Jwt]
   def authenticate(username: Username, password: String): IO[LoginFailed.type, Jwt]
@@ -132,47 +120,6 @@ final case class AuthenticatorLive(
   private val passwordService: PasswordService,
   private val cache: InvalidTokenCache,
 ) extends Authenticator {
-
-  /**
-   * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
-   *
-   * @param credentials          the user supplied [[KnoraPasswordCredentialsV2]] containing the user's login information.
-   * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
-   *         the generated session id.
-   */
-  override def doLoginV2(credentials: KnoraPasswordCredentialsV2): Task[HttpResponse] =
-    for {
-      _ <- authenticateCredentialsV2(credentials)
-      user <- credentials.identifier match {
-                case CredentialsIdentifier.IriIdentifier(userIri)       => getUserByIri(userIri)
-                case CredentialsIdentifier.EmailIdentifier(email)       => getUserByEmail(email)
-                case CredentialsIdentifier.UsernameIdentifier(username) => getUserByUsername(username)
-              }
-      cookieDomain = Some(appConfig.cookieDomain)
-      jwtString   <- createToken(user).map(_.jwtString)
-
-      httpResponse = HttpResponse(
-                       headers = List(
-                         headers.`Set-Cookie`(
-                           HttpCookie(
-                             calculateCookieName(),
-                             jwtString,
-                             domain = cookieDomain,
-                             path = Some("/"),
-                             httpOnly = true,
-                           ),
-                         ),
-                       ), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
-                       status = StatusCodes.OK,
-                       entity = HttpEntity(
-                         ContentTypes.`application/json`,
-                         JsObject(
-                           "token" -> JsString(jwtString),
-                         ).compactPrint,
-                       ),
-                     )
-
-    } yield httpResponse
 
   override def authenticate(userIri: UserIri, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt] =
     for {

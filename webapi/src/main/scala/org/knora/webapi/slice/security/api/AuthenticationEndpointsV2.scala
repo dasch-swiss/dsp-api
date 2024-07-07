@@ -23,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.CheckResponse
+import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginForm
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
@@ -56,8 +57,14 @@ case class AuthenticationEndpointsV2(
     .in("v2" / "login")
     .out(htmlBodyUtf8)
 
+  val postV2Login = baseEndpoints.publicEndpoint.post
+    .in("v2" / "login")
+    .in(formBody[LoginForm])
+    .out(setCookie(cookieName))
+    .out(jsonBody[TokenResponse])
+
   val endpoints: Seq[AnyEndpoint] =
-    Seq(getV2Authentication.endpoint, postV2Authentication, deleteV2Authentication, getV2Login)
+    Seq(getV2Authentication.endpoint, postV2Authentication, deleteV2Authentication, getV2Login, postV2Login)
 }
 
 object AuthenticationEndpointsV2 {
@@ -108,4 +115,6 @@ object AuthenticationEndpointsV2 {
 
     given loginPayloadCodec: JsonCodec[LoginPayload] = JsonCodec(loginPayloadEncoder, loginPayloadDecoder)
   }
+
+  final case class LoginForm(username: String, password: String)
 }
