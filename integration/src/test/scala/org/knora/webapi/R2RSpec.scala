@@ -29,7 +29,7 @@ import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.PekkoRoutesData
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.LogAspect
@@ -76,8 +76,8 @@ abstract class R2RSpec
   val appActor: ActorRef  = UnsafeZioRun.runOrThrow(ZIO.serviceWith[core.AppRouter](_.ref))
 
   // needed by some tests
-  val appConfig: AppConfig      = UnsafeZioRun.runOrThrow(ZIO.service[AppConfig])
-  val routeData: KnoraRouteData = KnoraRouteData(system, appActor, appConfig)
+  val appConfig: AppConfig       = UnsafeZioRun.runOrThrow(ZIO.service[AppConfig])
+  val routeData: PekkoRoutesData = PekkoRoutesData(system, appActor, appConfig)
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */

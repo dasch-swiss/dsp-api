@@ -5,6 +5,7 @@
 
 package org.knora.webapi.routing
 
+import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.cors.scaladsl.CorsDirectives
 import org.apache.pekko.http.cors.scaladsl.settings.CorsSettings
@@ -38,6 +39,15 @@ import org.knora.webapi.slice.security.api.AuthenticationApiRoutes
 import org.knora.webapi.store.iiif.api.SipiService
 
 /**
+ * Data that needs to be passed to each route.
+ *
+ * @param system    the actor system.
+ * @param appActor  the main application actor.
+ * @param appConfig the application's configuration.
+ */
+case class PekkoRoutesData(system: ActorSystem, appActor: ActorRef, appConfig: AppConfig)
+
+/**
  * All routes composed together and CORS activated based on the
  * the configuration in application.conf (pekko-http-cors).
  *
@@ -45,14 +55,13 @@ import org.knora.webapi.store.iiif.api.SipiService
  * The FIRST matching route is used for handling a request.
  */
 final case class ApiRoutes(
-  routeData: KnoraRouteData,
+  routeData: PekkoRoutesData,
   adminApiRoutes: AdminApiRoutes,
   authenticationApiRoutes: AuthenticationApiRoutes,
   listsApiV2Routes: ListsApiV2Routes,
   resourceInfoRoutes: ResourceInfoRoutes,
   searchApiRoutes: SearchApiRoutes,
   managementRoutes: ManagementRoutes,
-  appConfig: AppConfig,
 )(implicit val runtime: Runtime[ApiRoutes.ApiRoutesRuntime])
     extends AroundDirectives {
 
@@ -61,15 +70,15 @@ final case class ApiRoutes(
   val routes: Route =
     logDuration {
       ServerVersion.addServerHeader {
-        DSPApiDirectives.handleErrors(appConfig) {
+        DSPApiDirectives.handleErrors(routeData.appConfig) {
           CorsDirectives.cors(
             CorsSettings(routeData.system)
               .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS)),
           ) {
-            DSPApiDirectives.handleErrors(appConfig) {
+            DSPApiDirectives.handleErrors(routeData.appConfig) {
               AuthenticationRouteV2().makeRoute ~
                 OntologiesRouteV2().makeRoute ~
-                ResourcesRouteV2(appConfig).makeRoute ~
+                ResourcesRouteV2(routeData.appConfig).makeRoute ~
                 StandoffRouteV2().makeRoute ~
                 ValuesRouteV2().makeRoute ~
                 (adminApiRoutes.routes ++ authenticationApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes)
@@ -106,7 +115,7 @@ object ApiRoutes {
         resourceInfoRoutes      <- ZIO.service[ResourceInfoRoutes]
         searchApiRoutes         <- ZIO.service[SearchApiRoutes]
         managementRoutes        <- ZIO.service[ManagementRoutes]
-        routeData               <- ZIO.succeed(KnoraRouteData(sys, router.ref, appConfig))
+        routeData               <- ZIO.succeed(PekkoRoutesData(sys, router.ref, appConfig))
         runtime                 <- ZIO.runtime[ApiRoutesRuntime]
       } yield ApiRoutes(
         routeData,
@@ -116,7 +125,6 @@ object ApiRoutes {
         resourceInfoRoutes,
         searchApiRoutes,
         managementRoutes,
-        appConfig,
       )(runtime)
     }
 }
