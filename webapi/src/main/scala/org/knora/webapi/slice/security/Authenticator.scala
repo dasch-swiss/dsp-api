@@ -15,7 +15,6 @@ import zio.*
 
 import java.util.Base64
 
-import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.*
@@ -38,12 +37,8 @@ import org.knora.webapi.slice.infrastructure.InvalidTokenCache
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NOT_VALID
-import org.knora.webapi.slice.security.AuthenticatorErrors.LoginFailed
 
-sealed trait AuthenticatorErrors
-object AuthenticatorErrors {
-  case object LoginFailed extends AuthenticatorErrors
-}
+case object LoginFailed
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -64,34 +59,6 @@ trait Authenticator {
   def getUserADM(requestContext: RequestContext): Task[User]
 
   /**
-   * Calculates the cookie name, where the external host and port are encoded as a base32 string
-   * to make the name of the cookie unique between environments.
-   *
-   * The default padding needs to be changed from '=' to '9' because '=' is not allowed inside the cookie!!!
-   * This also needs to be changed in all the places that base32 is used to calculate the cookie name, e.g., sipi.
-   *
-   * @return the calculated cookie name as [[String]]
-   */
-  def calculateCookieName(): String
-
-  /**
-   * Tries to retrieve a [[User]] based on the supplied credentials. If both email/password and session
-   * token are supplied, then the user profile for the session token is returned. This method should only be used
-   * with authenticated credentials.
-   *
-   * @param credentials          the user supplied credentials.
-   * @return a [[User]]
-   *
-   *         [[AuthenticationException]] when the IRI can not be found inside the token, which is probably a bug.
-   */
-  def getUserADMThroughCredentialsV2(credentials: KnoraCredentialsV2): Task[User]
-  def verifyJwt(jwtToken: String): Task[User] = getUserADMThroughCredentialsV2(KnoraJWTTokenCredentialsV2(jwtToken))
-  def invalidateToken(jwt: String): Task[Unit]
-  def authenticate(userIri: UserIri, password: String): IO[LoginFailed.type, Jwt]
-  def authenticate(username: Username, password: String): IO[LoginFailed.type, Jwt]
-  def authenticate(email: Email, password: String): IO[LoginFailed.type, Jwt]
-
-  /**
    * Tries to authenticate the supplied credentials (email/password or token). In the case of email/password,
    * authentication is performed checking if the supplied email/password combination is valid by retrieving the
    * user's profile. In the case of the token, the token itself is validated. If both are supplied, then both need
@@ -105,11 +72,27 @@ trait Authenticator {
    *         when the password does not match; when the supplied token is not valid.
    */
   def authenticateCredentialsV2(credentials: KnoraCredentialsV2): Task[Unit]
+
+  /**
+   * Calculates the cookie name, where the external host and port are encoded as a base32 string
+   * to make the name of the cookie unique between environments.
+   *
+   * The default padding needs to be changed from '=' to '9' because '=' is not allowed inside the cookie!!!
+   * This also needs to be changed in all the places that base32 is used to calculate the cookie name, e.g., sipi.
+   *
+   * @return the calculated cookie name as [[String]]
+   */
+  def calculateCookieName(): String
+
+  def verifyJwt(jwtToken: String): IO[LoginFailed.type, User]
+  def invalidateToken(jwt: String): IO[LoginFailed.type, Unit]
+  def authenticate(userIri: UserIri, password: String): IO[LoginFailed.type, (User, Jwt)]
+  def authenticate(username: Username, password: String): IO[LoginFailed.type, (User, Jwt)]
+  def authenticate(email: Email, password: String): IO[LoginFailed.type, (User, Jwt)]
 }
 
 object Authenticator {
-  val BAD_CRED_NONE_SUPPLIED = "bad credentials: none found"
-  val BAD_CRED_NOT_VALID     = "bad credentials: not valid"
+  val BAD_CRED_NOT_VALID = "bad credentials: not valid"
 }
 
 final case class AuthenticatorLive(
@@ -121,35 +104,26 @@ final case class AuthenticatorLive(
   private val cache: InvalidTokenCache,
 ) extends Authenticator {
 
-  override def authenticate(userIri: UserIri, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt] =
-    for {
-      user <- getUserByIri(userIri).orElseFail(LoginFailed)
-      jwt  <- ensureActiveUserAndPasswordMatch(user, password)
-    } yield jwt
+  override def authenticate(userIri: UserIri, password: String): IO[LoginFailed.type, (User, Jwt)] = for {
+    user <- getUserByIri(userIri).orElseFail(LoginFailed)
+    jwt  <- ensurePasswordMatch(user, password)
+    jwt  <- createToken(user)
+  } yield (user, jwt)
 
-  override def authenticate(username: Username, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt] =
-    for {
-      user <- getUserByUsername(username).orElseFail(LoginFailed)
-      jwt  <- ensureActiveUserAndPasswordMatch(user, password)
-    } yield jwt
+  override def authenticate(username: Username, password: String): IO[LoginFailed.type, (User, Jwt)] = for {
+    user <- getUserByUsername(username).orElseFail(LoginFailed)
+    jwt  <- ensurePasswordMatch(user, password)
+    jwt  <- createToken(user)
+  } yield (user, jwt)
 
-  override def authenticate(email: Email, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt] =
-    for {
-      user <- getUserByEmail(email).orElseFail(LoginFailed)
-      jwt  <- ensureActiveUserAndPasswordMatch(user, password)
-    } yield jwt
+  override def authenticate(email: Email, password: String): IO[LoginFailed.type, (User, Jwt)] = for {
+    user <- getUserByEmail(email).orElseFail(LoginFailed)
+    jwt  <- ensurePasswordMatch(user, password)
+    jwt  <- createToken(user)
+  } yield (user, jwt)
 
-  /* check if the user is active, if not, then no need to check the password */
-  private def ensureActiveUserAndPasswordMatch(
-    user: User,
-    password: String,
-  ): IO[AuthenticatorErrors.LoginFailed.type, Jwt] =
-    for {
-      _   <- ZIO.fail(LoginFailed).when(!user.isActive)
-      _   <- ZIO.fail(LoginFailed).when(KnoraUserRepo.builtIn.findOneBy(_.id.value == user.id).isDefined)
-      _   <- ZIO.fail(LoginFailed).when(!user.password.exists(passwordService.matchesStr(password, _)))
-      jwt <- createToken(user)
-    } yield jwt
+  private def ensurePasswordMatch(user: User, password: String): IO[LoginFailed.type, Unit] =
+    ZIO.fail(LoginFailed).when(!user.password.exists(passwordService.matchesStr(password, _))).unit
 
   private def createToken(user: User) = scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _))
 
@@ -187,28 +161,7 @@ final case class AuthenticatorLive(
    *         when the password does not match; when the supplied token is not valid.
    */
   override def authenticateCredentialsV2(credentials: KnoraCredentialsV2): Task[Unit] =
-    credentials match {
-      case passCreds: KnoraPasswordCredentialsV2 =>
-        for {
-          user <- passCreds.identifier match {
-                    case CredentialsIdentifier.IriIdentifier(userIri)       => getUserByIri(userIri)
-                    case CredentialsIdentifier.EmailIdentifier(email)       => getUserByEmail(email)
-                    case CredentialsIdentifier.UsernameIdentifier(username) => getUserByUsername(username)
-                  }
-          _ <- ensureActiveUserAndPasswordMatch(user, passCreds.password)
-                 .orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
-        } yield ()
-      case KnoraJWTTokenCredentialsV2(jwtToken) =>
-        ZIO
-          .fail(BadCredentialsException(BAD_CRED_NOT_VALID))
-          .unless(jwtService.isTokenValid(jwtToken))
-          .unit
-      case KnoraSessionCredentialsV2(sessionToken) =>
-        ZIO
-          .fail(BadCredentialsException(BAD_CRED_NOT_VALID))
-          .unless(jwtService.isTokenValid(sessionToken))
-          .unit
-    }
+    getUserADMThroughCredentialsV2(credentials).unit
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // HELPER METHODS
@@ -378,83 +331,41 @@ final case class AuthenticatorLive(
    *
    *         [[AuthenticationException]] when the IRI can not be found inside the token, which is probably a bug.
    */
-  override def getUserADMThroughCredentialsV2(credentials: KnoraCredentialsV2): Task[User] =
-    for {
-      _ <- authenticateCredentialsV2(credentials)
-      user <- credentials match {
-                case passCreds: KnoraPasswordCredentialsV2 =>
-                  passCreds.identifier match {
-                    case CredentialsIdentifier.IriIdentifier(userIri)       => getUserByIri(userIri)
-                    case CredentialsIdentifier.EmailIdentifier(email)       => getUserByEmail(email)
-                    case CredentialsIdentifier.UsernameIdentifier(username) => getUserByUsername(username)
-                  }
-                case KnoraJWTTokenCredentialsV2(jwtToken) =>
-                  for {
-                    userIri <-
-                      jwtService
-                        .extractUserIriFromToken(jwtToken)
-                        .some
-                        .orElseFail(
-                          AuthenticationException("No IRI found inside token. Please report this as a possible bug."),
-                        )
-                    iri <- ZIO
-                             .fromEither(UserIri.from(userIri))
-                             .orElseFail(AuthenticationException("Empty user identifier is not allowed."))
-                    user <- getUserByIri(iri)
-                  } yield user
-                case KnoraSessionCredentialsV2(sessionToken) =>
-                  for {
-                    userIri <-
-                      jwtService
-                        .extractUserIriFromToken(sessionToken)
-                        .some
-                        .orElseFail(
-                          AuthenticationException("No IRI found inside token. Please report this as a possible bug."),
-                        )
-                    iri <- ZIO
-                             .fromEither(UserIri.from(userIri))
-                             .orElseFail(AuthenticationException("Empty user identifier is not allowed."))
-                    user <- getUserByIri(iri)
-                  } yield user
-              }
-    } yield user
+  private def getUserADMThroughCredentialsV2(credentials: KnoraCredentialsV2): Task[User] = {
+    credentials match {
+      case credentials: KnoraPasswordCredentialsV2 =>
+        (credentials.identifier match {
+          case IriIdentifier(userIri)       => getUserByIri(userIri)
+          case EmailIdentifier(email)       => getUserByEmail(email)
+          case UsernameIdentifier(username) => getUserByUsername(username)
+        }).tap(ensurePasswordMatch(_, credentials.password))
+      case t @ (_: KnoraSessionCredentialsV2 | _: KnoraJWTTokenCredentialsV2) =>
+        val jwtToken = t match {
+          case KnoraJWTTokenCredentialsV2(token) => token
+          case KnoraSessionCredentialsV2(token)  => token
+        }
+        verifyJwt(jwtToken)
+    }
+  }.orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // TRIPLE STORE ACCESS
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  override def verifyJwt(jwtToken: String): IO[LoginFailed.type, User] = (for {
+    userIri <- jwtService.extractUserIriFromToken(jwtToken).some.map(UserIri.from).right
+    user    <- getUserByIri(userIri)
+  } yield user).orElseFail(LoginFailed)
 
-  /**
-   * Tries to get a [[User]].
-   *
-   * @param iri           the IRI of the user to be queried
-   * @return a [[User]]
-   *
-   *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
-   */
-  private def getUserByIri(iri: UserIri): Task[User] =
-    userService.findUserByIri(iri).someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
+  private def getUserByIri(iri: UserIri): IO[LoginFailed.type, User] =
+    userService.findUserByIri(iri).some.tap(ensureActiveUser).orElseFail(LoginFailed)
 
-  /**
-   * Tries to get a [[User]].
-   *
-   * @param email           the IRI, email, or username of the user to be queried
-   * @return a [[User]]
-   *
-   *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
-   */
-  private def getUserByEmail(email: Email): Task[User] =
-    userService.findUserByEmail(email).someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
+  private def getUserByEmail(email: Email): IO[LoginFailed.type, User] =
+    userService.findUserByEmail(email).some.tap(ensureActiveUser).orElseFail(LoginFailed)
 
-  /**
-   * Tries to get a [[User]].
-   *
-   * @param username           the IRI, email, or username of the user to be queried
-   * @return a [[User]]
-   *
-   *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
-   */
-  private def getUserByUsername(username: Username): Task[User] =
-    userService.findUserByUsername(username).someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
+  private def getUserByUsername(username: Username): IO[LoginFailed.type, User] =
+    userService.findUserByUsername(username).some.tap(ensureActiveUser).orElseFail(LoginFailed)
+
+  private def ensureActiveUser(user: User): IO[LoginFailed.type, Unit] = for {
+    _ <- ZIO.fail(LoginFailed).when(!user.isActive)
+    _ <- ZIO.fail(LoginFailed).when(KnoraUserRepo.builtIn.findOneBy(_.id.value == user.id).isDefined)
+  } yield ()
 
   /**
    * Calculates the cookie name, where the external host and port are encoded as a base32 string
@@ -466,13 +377,12 @@ final case class AuthenticatorLive(
    * @return the calculated cookie name as [[String]]
    */
   override def calculateCookieName(): String = {
-    //
     val base32 = new Base32('9'.toByte)
     "KnoraAuthentication" + base32.encodeAsString(appConfig.knoraApi.externalKnoraApiHostPort.getBytes())
   }
 
-  override def invalidateToken(jwt: String): Task[Unit] =
-    verifyJwt(jwt).logError.unit
+  override def invalidateToken(jwt: String): IO[LoginFailed.type, Unit] =
+    verifyJwt(jwt).as(cache.put(jwt))
 }
 
 object AuthenticatorLive {

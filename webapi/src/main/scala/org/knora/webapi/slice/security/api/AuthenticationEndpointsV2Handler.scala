@@ -50,7 +50,7 @@ case class AuthenticationEndpointsV2Handler(
           case EmailPassword(email, password)       => authenticator.authenticate(email, password)
         }).mapBoth(
           _ => BadCredentialsException(BAD_CRED_NOT_VALID),
-          token => setCookieAndResponse(token),
+          (_, token) => setCookieAndResponse(token),
         )
       },
     )
@@ -59,19 +59,22 @@ case class AuthenticationEndpointsV2Handler(
     PublicEndpointHandler[(Option[String], Option[String]), (CookieValueWithMeta, LogoutResponse)](
       endpoints.deleteV2Authentication,
       (tokenFromBearer: Option[String], tokenFromCookie: Option[String]) => {
-        for {
-          _ <- ZIO.foreachDiscard(Set(tokenFromBearer, tokenFromCookie).flatten)(authenticator.invalidateToken)
-        } yield (
-          CookieValueWithMeta.unsafeApply(
-            domain = Some(appConfig.cookieDomain),
-            expires = Some(Instant.EPOCH),
-            httpOnly = true,
-            maxAge = Some(0),
-            path = Some("/"),
-            value = "",
-          ),
-          LogoutResponse(0, "Logout OK"),
-        )
+        ZIO
+          .foreachDiscard(Set(tokenFromBearer, tokenFromCookie).flatten)(authenticator.invalidateToken)
+          .ignore
+          .as {
+            (
+              CookieValueWithMeta.unsafeApply(
+                domain = Some(appConfig.cookieDomain),
+                expires = Some(Instant.EPOCH),
+                httpOnly = true,
+                maxAge = Some(0),
+                path = Some("/"),
+                value = "",
+              ),
+              LogoutResponse(0, "Logout OK"),
+            )
+          }
       },
     )
 
@@ -112,7 +115,7 @@ case class AuthenticationEndpointsV2Handler(
         (for {
           username <- ZIO.fromEither(Username.from(login.username))
           token    <- authenticator.authenticate(username, login.password)
-        } yield setCookieAndResponse(token)).orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
+        } yield setCookieAndResponse(token._2)).orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
       },
     )
 
