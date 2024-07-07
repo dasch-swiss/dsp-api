@@ -26,21 +26,18 @@ final case class AuthenticationRouteV2()(
 
   def makeRoute: Route =
     path("v2" / "login") {
-      get { // html login interface (necessary for IIIF Authentication API support)
-        ctx => RouteUtilV2.complete(ctx, ZIO.serviceWithZIO[Authenticator](_.presentLoginFormV2(ctx)))
-      } ~
-        post { // called by html login interface (necessary for IIIF Authentication API support)
-          formFields(Symbol("username"), Symbol("password")) { (username, password) => requestContext =>
-            {
-              val task = for {
-                username <-
-                  ZIO.fromEither(Username.from(username)).orElseFail(BadRequestException("Invalid username."))
-                credentials = KnoraPasswordCredentialsV2(CredentialsIdentifier.UsernameIdentifier(username), password)
-                res        <- ZIO.serviceWithZIO[Authenticator](_.doLoginV2(credentials))
-              } yield res
-              RouteUtilV2.complete(requestContext, task)
-            }
+      post { // called by html login interface (necessary for IIIF Authentication API support)
+        formFields(Symbol("username"), Symbol("password")) { (username, password) => requestContext =>
+          {
+            val task = for {
+              username <-
+                ZIO.fromEither(Username.from(username)).orElseFail(BadRequestException("Invalid username."))
+              credentials = KnoraPasswordCredentialsV2(CredentialsIdentifier.UsernameIdentifier(username), password)
+              res        <- ZIO.serviceWithZIO[Authenticator](_.doLoginV2(credentials))
+            } yield res
+            RouteUtilV2.complete(requestContext, task)
           }
         }
+      }
     }
 }

@@ -81,9 +81,49 @@ case class AuthenticationEndpointsV2Handler(
       },
     )
 
+  val getV2Login = PublicEndpointHandler[Unit, String](
+    endpoints.getV2Login,
+    _ => {
+      val apiUrl = appConfig.knoraApi.externalKnoraApiBaseUrl
+      val form =
+        s"""
+           |<html>
+           |<body>
+           |<div align="center">
+           |    <section class="container">
+           |        <div class="login">
+           |            <h1>DSP-API Login</h1>
+           |            <form name="myform" action="$apiUrl/v2/login" method="post">
+           |                <p>
+           |                    <input type="text" name="username" value="" placeholder="Username">
+           |                </p>
+           |                <p>
+           |                    <input type="password" name="password" value="" placeholder="Password">
+           |                </p>
+           |                <p class="submit">
+           |                    <input type="submit" name="submit" value="Login">
+           |                </p>
+           |            </form>
+           |        </div>
+           |
+           |    </section>
+           |
+           |    <section class="about">
+           |        <p class="about-author">
+           |            &copy; 2015&ndash;2022 <a href="https://dasch.swiss" target="_blank">dasch.swiss</a>
+           |    </section>
+           |</div>
+           |</body>
+           |</html>
+            """.stripMargin
+      ZIO.succeed(form)
+    },
+  )
+
   private val secure = List(getV2Authentication).map(mapper.mapSecuredEndpointHandler(_))
-  private val public = List(postV2Authentication, deleteV2Authentication).map(mapper.mapPublicEndpointHandler(_))
-  val allHandlers    = secure ++ public
+  private val public =
+    List(postV2Authentication, deleteV2Authentication, getV2Login).map(mapper.mapPublicEndpointHandler(_))
+  val allHandlers = secure ++ public
 }
 
 object AuthenticationEndpointsV2Handler {

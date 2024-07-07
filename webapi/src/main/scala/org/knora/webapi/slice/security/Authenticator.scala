@@ -16,7 +16,6 @@ import spray.json.*
 import zio.*
 
 import java.util.Base64
-
 import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
@@ -102,14 +101,6 @@ trait Authenticator {
   def authenticate(userIri: UserIri, password: String): IO[LoginFailed.type, Jwt]
   def authenticate(username: Username, password: String): IO[LoginFailed.type, Jwt]
   def authenticate(email: Email, password: String): IO[LoginFailed.type, Jwt]
-
-  /**
-   * Returns a simple login form for testing purposes
-   *
-   * @param requestContext    a [[RequestContext]] containing the http request
-   * @return                  a [[HttpResponse]] with an html login form
-   */
-  def presentLoginFormV2(requestContext: RequestContext): Task[HttpResponse]
 
   /**
    * Tries to authenticate the supplied credentials (email/password or token). In the case of email/password,
@@ -213,53 +204,6 @@ final case class AuthenticatorLive(
     } yield jwt
 
   private def createToken(user: User) = scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _))
-
-  /**
-   * Returns a simple login form for testing purposes
-   *
-   * @param requestContext    a [[RequestContext]] containing the http request
-   * @return                  a [[HttpResponse]] with an html login form
-   */
-  override def presentLoginFormV2(requestContext: RequestContext): Task[HttpResponse] = {
-    val apiUrl = appConfig.knoraApi.externalKnoraApiBaseUrl
-    val form =
-      s"""
-         |<div align="center">
-         |    <section class="container">
-         |        <div class="login">
-         |            <h1>DSP-API Login</h1>
-         |            <form name="myform" action="$apiUrl/v2/login" method="post">
-         |                <p>
-         |                    <input type="text" name="username" value="" placeholder="Username">
-         |                </p>
-         |                <p>
-         |                    <input type="password" name="password" value="" placeholder="Password">
-         |                </p>
-         |                <p class="submit">
-         |                    <input type="submit" name="submit" value="Login">
-         |                </p>
-         |            </form>
-         |        </div>
-         |
-         |    </section>
-         |
-         |    <section class="about">
-         |        <p class="about-author">
-         |            &copy; 2015&ndash;2022 <a href="https://dasch.swiss" target="_blank">dasch.swiss</a>
-         |    </section>
-         |</div>
-        """.stripMargin
-
-    val httpResponse = HttpResponse(
-      status = StatusCodes.OK,
-      entity = HttpEntity(
-        ContentTypes.`text/html(UTF-8)`,
-        form,
-      ),
-    )
-
-    ZIO.succeed(httpResponse)
-  }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // GET USER PROFILE / AUTHENTICATION ENTRY POINT

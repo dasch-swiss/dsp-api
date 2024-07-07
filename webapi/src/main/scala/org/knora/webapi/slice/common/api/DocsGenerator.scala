@@ -51,7 +51,6 @@ final case class DocsNoopAuthenticator() extends Authenticator {
   override def calculateCookieName(): String                                                                     = "KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9"
   override def getUserADMThroughCredentialsV2(credentials: KnoraCredentialsV2): Task[User]                       = ???
   override def doLoginV2(credentials: KnoraCredentialsV2.KnoraPasswordCredentialsV2): Task[HttpResponse]         = ???
-  override def presentLoginFormV2(requestContext: RequestContext): Task[HttpResponse]                            = ???
   override def authenticateCredentialsV2(credentials: KnoraCredentialsV2): Task[Unit]                            = ???
   override def authenticate(userIri: UserIri, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt]   = ???
   override def authenticate(username: Username, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt] = ???

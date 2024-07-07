@@ -52,7 +52,12 @@ case class AuthenticationEndpointsV2(
     .out(setCookie(cookieName))
     .out(jsonBody[LogoutResponse])
 
-  val endpoints: Seq[AnyEndpoint] = Seq(getV2Authentication.endpoint, postV2Authentication, deleteV2Authentication)
+  val getV2Login = baseEndpoints.publicEndpoint.get
+    .in("v2" / "login")
+    .out(htmlBodyUtf8)
+
+  val endpoints: Seq[AnyEndpoint] =
+    Seq(getV2Authentication.endpoint, postV2Authentication, deleteV2Authentication, getV2Login)
 }
 
 object AuthenticationEndpointsV2 {
