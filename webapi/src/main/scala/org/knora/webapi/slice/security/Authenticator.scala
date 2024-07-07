@@ -90,14 +90,6 @@ trait Authenticator {
   def verifyJwt(jwtToken: String): Task[User] = getUserADMThroughCredentialsV2(KnoraJWTTokenCredentialsV2(jwtToken))
 
   /**
-   * Used to logout the user, i.e. returns a header deleting the cookie and puts the token on the 'invalidated' list.
-   *
-   * @param requestContext a [[RequestContext]] containing the http request
-   * @return a [[HttpResponse]]
-   */
-  def doLogoutV2(requestContext: RequestContext): Task[HttpResponse]
-
-  /**
    * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
    *
    * @param credentials          the user supplied [[KnoraPasswordCredentialsV2]] containing the user's login information.
@@ -106,6 +98,7 @@ trait Authenticator {
    */
   def doLoginV2(credentials: KnoraPasswordCredentialsV2): Task[HttpResponse]
 
+  def invalidateToken(jwt: String): UIO[Unit]
   def authenticate(userIri: UserIri, password: String): IO[LoginFailed.type, Jwt]
   def authenticate(username: Username, password: String): IO[LoginFailed.type, Jwt]
   def authenticate(email: Email, password: String): IO[LoginFailed.type, Jwt]
@@ -303,88 +296,6 @@ final case class AuthenticatorLive(
                     )
                   }
     } yield response
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // LOGOUT ENTRY POINT
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Used to logout the user, i.e. returns a header deleting the cookie and puts the token on the 'invalidated' list.
-   *
-   * @param requestContext a [[RequestContext]] containing the http request
-   * @return a [[HttpResponse]]
-   */
-  override def doLogoutV2(requestContext: RequestContext): Task[HttpResponse] = ZIO.attempt {
-
-    val credentials  = extractCredentialsV2(requestContext)
-    val cookieDomain = Some(appConfig.cookieDomain)
-
-    credentials match {
-      case Some(KnoraSessionCredentialsV2(sessionToken)) =>
-        cache.put(sessionToken)
-
-        HttpResponse(
-          headers = List(
-            headers.`Set-Cookie`(
-              HttpCookie(
-                calculateCookieName(),
-                "",
-                domain = cookieDomain,
-                path = Some("/"),
-                httpOnly = true,
-                expires = Some(DateTime(1970, 1, 1, 0, 0, 0)),
-                maxAge = Some(0),
-              ),
-            ),
-          ),
-          status = StatusCodes.OK,
-          entity = HttpEntity(
-            ContentTypes.`application/json`,
-            JsObject(
-              "status"  -> JsNumber(0),
-              "message" -> JsString("Logout OK"),
-            ).compactPrint,
-          ),
-        )
-      case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
-        cache.put(jwtToken)
-
-        HttpResponse(
-          headers = List(
-            headers.`Set-Cookie`(
-              HttpCookie(
-                calculateCookieName(),
-                "",
-                domain = cookieDomain,
-                path = Some("/"),
-                httpOnly = true,
-                expires = Some(DateTime(1970, 1, 1, 0, 0, 0)),
-              ),
-            ),
-          ),
-          status = StatusCodes.OK,
-          entity = HttpEntity(
-            ContentTypes.`application/json`,
-            JsObject(
-              "status"  -> JsNumber(0),
-              "message" -> JsString("Logout OK"),
-            ).compactPrint,
-          ),
-        )
-      case _ =>
-        // nothing to do
-        HttpResponse(
-          status = StatusCodes.OK,
-          entity = HttpEntity(
-            ContentTypes.`application/json`,
-            JsObject(
-              "status"  -> JsNumber(0),
-              "message" -> JsString("Logout OK"),
-            ).compactPrint,
-          ),
-        )
-    }
-  }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // GET USER PROFILE / AUTHENTICATION ENTRY POINT
@@ -704,6 +615,8 @@ final case class AuthenticatorLive(
     "KnoraAuthentication" + base32.encodeAsString(appConfig.knoraApi.externalKnoraApiHostPort.getBytes())
   }
 
+  override def invalidateToken(jwt: String): UIO[Unit] =
+    verifyJwt(jwt).as(cache.put(jwt)).ignore
 }
 
 object AuthenticatorLive {

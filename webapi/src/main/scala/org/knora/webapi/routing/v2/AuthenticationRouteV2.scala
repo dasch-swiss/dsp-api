@@ -28,9 +28,7 @@ final case class AuthenticationRouteV2()(
     path("v2" / "authentication") {
       get { // authenticate credentials
         ctx => RouteUtilV2.complete(ctx, ZIO.serviceWithZIO[Authenticator](_.doAuthenticateV2(ctx)))
-      } ~
-        // logout
-        delete(ctx => RouteUtilV2.complete(ctx, ZIO.serviceWithZIO[Authenticator](_.doLogoutV2(ctx))))
+      }
     } ~
       path("v2" / "login") {
         get { // html login interface (necessary for IIIF Authentication API support)

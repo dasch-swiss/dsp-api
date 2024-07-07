@@ -14,6 +14,7 @@ import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import zio.Chunk
 import zio.IO
 import zio.Task
+import zio.UIO
 import zio.ZIO
 import zio.ZIOAppArgs
 import zio.ZIOAppDefault
@@ -49,7 +50,6 @@ final case class DocsNoopAuthenticator() extends Authenticator {
   override def getUserADM(requestContext: RequestContext): Task[User]                                            = ???
   override def calculateCookieName(): String                                                                     = "KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9"
   override def getUserADMThroughCredentialsV2(credentials: KnoraCredentialsV2): Task[User]                       = ???
-  override def doLogoutV2(requestContext: RequestContext): Task[HttpResponse]                                    = ???
   override def doLoginV2(credentials: KnoraCredentialsV2.KnoraPasswordCredentialsV2): Task[HttpResponse]         = ???
   override def doAuthenticateV2(requestContext: RequestContext): Task[HttpResponse]                              = ???
   override def presentLoginFormV2(requestContext: RequestContext): Task[HttpResponse]                            = ???
@@ -57,6 +57,7 @@ final case class DocsNoopAuthenticator() extends Authenticator {
   override def authenticate(userIri: UserIri, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt]   = ???
   override def authenticate(username: Username, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt] = ???
   override def authenticate(email: Email, password: String): IO[AuthenticatorErrors.LoginFailed.type, Jwt]       = ???
+  override def invalidateToken(jwt: String): UIO[Unit]                                                           = ???
 }
 object DocsNoopAuthenticator {
   val layer = ZLayer.succeed(DocsNoopAuthenticator())

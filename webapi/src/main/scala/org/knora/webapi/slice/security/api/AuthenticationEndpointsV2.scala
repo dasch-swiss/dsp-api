@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.security.api
 
+import sttp.model.headers.WWWAuthenticateChallenge
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
@@ -22,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
+import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
 
 case class AuthenticationEndpointsV2(
@@ -38,6 +40,13 @@ case class AuthenticationEndpointsV2(
     .out(setCookie(cookieName))
     .out(jsonBody[TokenResponse])
 
+  val deleteV2Authentication = baseEndpoints.publicEndpoint.delete
+    .in(basePath)
+    .in(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
+    .in(cookie[Option[String]](cookieName))
+    .out(setCookie(cookieName))
+    .out(jsonBody[LogoutResponse])
+
   val endpoints: Seq[AnyEndpoint] = Seq(postV2Authentication)
 }
 
@@ -48,6 +57,11 @@ object AuthenticationEndpointsV2 {
   final case class TokenResponse(token: String)
   object TokenResponse {
     given JsonCodec[TokenResponse] = DeriveJsonCodec.gen[TokenResponse]
+  }
+
+  final case class LogoutResponse(status: Int, message: String)
+  object LogoutResponse {
+    given JsonCodec[LogoutResponse] = DeriveJsonCodec.gen[LogoutResponse]
   }
 
   trait WithPassword { def password: String }
