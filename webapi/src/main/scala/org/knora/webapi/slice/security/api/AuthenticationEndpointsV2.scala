@@ -22,6 +22,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.security.Authenticator
+import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.CheckResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
@@ -33,6 +34,10 @@ case class AuthenticationEndpointsV2(
 
   private val basePath: EndpointInput[Unit] = "v2" / "authentication"
   private val cookieName                    = authenticator.calculateCookieName()
+
+  val getV2Authentication = baseEndpoints.securedEndpoint.get
+    .in(basePath)
+    .out(jsonBody[CheckResponse])
 
   val postV2Authentication = baseEndpoints.publicEndpoint.post
     .in(basePath)
@@ -47,12 +52,17 @@ case class AuthenticationEndpointsV2(
     .out(setCookie(cookieName))
     .out(jsonBody[LogoutResponse])
 
-  val endpoints: Seq[AnyEndpoint] = Seq(postV2Authentication)
+  val endpoints: Seq[AnyEndpoint] = Seq(getV2Authentication.endpoint, postV2Authentication, deleteV2Authentication)
 }
 
 object AuthenticationEndpointsV2 {
 
   val layer = ZLayer.derive[AuthenticationEndpointsV2]
+
+  final case class CheckResponse(message: String)
+  object CheckResponse {
+    given JsonCodec[CheckResponse] = DeriveJsonCodec.gen[CheckResponse]
+  }
 
   final case class TokenResponse(token: String)
   object TokenResponse {

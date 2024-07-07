@@ -104,14 +104,6 @@ trait Authenticator {
   def authenticate(email: Email, password: String): IO[LoginFailed.type, Jwt]
 
   /**
-   * Checks if the credentials provided in [[RequestContext]] are valid.
-   *
-   * @param requestContext a [[RequestContext]] containing the http request
-   * @return a [[HttpResponse]]
-   */
-  def doAuthenticateV2(requestContext: RequestContext): Task[HttpResponse]
-
-  /**
    * Returns a simple login form for testing purposes
    *
    * @param requestContext    a [[RequestContext]] containing the http request
@@ -268,34 +260,6 @@ final case class AuthenticatorLive(
 
     ZIO.succeed(httpResponse)
   }
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // Authentication ENTRY POINT
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Checks if the credentials provided in [[RequestContext]] are valid.
-   *
-   * @param requestContext a [[RequestContext]] containing the http request
-   * @return a [[HttpResponse]]
-   */
-  override def doAuthenticateV2(requestContext: RequestContext): Task[HttpResponse] =
-    for {
-      credentials <- ZIO
-                       .fromOption(extractCredentialsV2(requestContext))
-                       .orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
-      response <- authenticateCredentialsV2(credentials).as {
-                    HttpResponse(
-                      status = StatusCodes.OK,
-                      entity = HttpEntity(
-                        ContentTypes.`application/json`,
-                        JsObject(
-                          "message" -> JsString("credentials are OK"),
-                        ).compactPrint,
-                      ),
-                    )
-                  }
-    } yield response
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // GET USER PROFILE / AUTHENTICATION ENTRY POINT

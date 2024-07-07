@@ -14,8 +14,10 @@ import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
+import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NOT_VALID
+import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.CheckResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload.EmailPassword
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload.IriPassword
@@ -29,6 +31,12 @@ case class AuthenticationEndpointsV2Handler(
   endpoints: AuthenticationEndpointsV2,
   mapper: HandlerMapper,
 ) {
+  val getV2Authentication =
+    SecuredEndpointHandler[Unit, CheckResponse](
+      endpoints.getV2Authentication,
+      _ => _ => ZIO.succeed(CheckResponse("credentials are OK")),
+    )
+
   val postV2Authentication =
     PublicEndpointHandler[LoginPayload, (CookieValueWithMeta, TokenResponse)](
       endpoints.postV2Authentication,
@@ -73,8 +81,11 @@ case class AuthenticationEndpointsV2Handler(
       },
     )
 
-  val allHandlers = List(postV2Authentication, deleteV2Authentication).map(mapper.mapPublicEndpointHandler(_))
+  private val secure = List(getV2Authentication).map(mapper.mapSecuredEndpointHandler(_))
+  private val public = List(postV2Authentication, deleteV2Authentication).map(mapper.mapPublicEndpointHandler(_))
+  val allHandlers    = secure ++ public
 }
+
 object AuthenticationEndpointsV2Handler {
   val layer = ZLayer.derive[AuthenticationEndpointsV2Handler]
 }
