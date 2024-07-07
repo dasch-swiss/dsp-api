@@ -16,6 +16,7 @@ import spray.json.*
 import zio.*
 
 import java.util.Base64
+
 import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
@@ -97,7 +98,7 @@ trait Authenticator {
    */
   def doLoginV2(credentials: KnoraPasswordCredentialsV2): Task[HttpResponse]
 
-  def invalidateToken(jwt: String): UIO[Unit]
+  def invalidateToken(jwt: String): Task[Unit]
   def authenticate(userIri: UserIri, password: String): IO[LoginFailed.type, Jwt]
   def authenticate(username: Username, password: String): IO[LoginFailed.type, Jwt]
   def authenticate(email: Email, password: String): IO[LoginFailed.type, Jwt]
@@ -523,8 +524,8 @@ final case class AuthenticatorLive(
     "KnoraAuthentication" + base32.encodeAsString(appConfig.knoraApi.externalKnoraApiHostPort.getBytes())
   }
 
-  override def invalidateToken(jwt: String): UIO[Unit] =
-    verifyJwt(jwt).as(cache.put(jwt)).ignore
+  override def invalidateToken(jwt: String): Task[Unit] =
+    verifyJwt(jwt).logError.unit
 }
 
 object AuthenticatorLive {

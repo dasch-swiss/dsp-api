@@ -9,7 +9,6 @@ import zio.ZIO
 import zio.ZLayer
 
 import java.time.Instant
-
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.common.api.HandlerMapper
@@ -66,11 +65,11 @@ case class AuthenticationEndpointsV2Handler(
       endpoints.deleteV2Authentication,
       (tokenFromBearer: Option[String], tokenFromCookie: Option[String]) => {
         for {
-          _ <- ZIO.foreachDiscard(Seq(tokenFromBearer, tokenFromCookie).flatten)(authenticator.invalidateToken)
+          _ <- ZIO.foreachDiscard(Set(tokenFromBearer, tokenFromCookie).flatten)(authenticator.invalidateToken)
         } yield (
           CookieValueWithMeta.unsafeApply(
             domain = Some(appConfig.cookieDomain),
-            expires = Some(Instant.MIN),
+            expires = Some(Instant.EPOCH),
             httpOnly = true,
             maxAge = Some(0),
             path = Some("/"),
@@ -110,7 +109,7 @@ case class AuthenticationEndpointsV2Handler(
            |
            |    <section class="about">
            |        <p class="about-author">
-           |            &copy; 2015&ndash;2022 <a href="https://dasch.swiss" target="_blank">dasch.swiss</a>
+           |            &copy; 2015&ndash;2024 <a href="https://dasch.swiss" target="_blank">dasch.swiss</a>
            |    </section>
            |</div>
            |</body>
