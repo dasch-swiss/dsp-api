@@ -44,6 +44,7 @@ import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.InvalidTokenCache
+import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.JwtServiceLive
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
@@ -55,6 +56,7 @@ object AuthenticatorLiveSpec extends ZIOSpecDefault {
 
   private val authenticator = ZIO.serviceWithZIO[Authenticator]
   private val userRepo      = ZIO.serviceWithZIO[KnoraUserRepo]
+  private val jwtService    = ZIO.serviceWithZIO[JwtService]
 
   private val password = "secret"
   private def createUser(status: UserStatus) =
@@ -128,7 +130,7 @@ object AuthenticatorLiveSpec extends ZIOSpecDefault {
     test("given the user exists and the jwt is valid authentication should succeed") {
       for {
         user  <- createUser(UserStatus.Active)
-        jwt   <- ZIO.serviceWithZIO[JwtServiceLive](_.createJwt(user.id, AuthScope.empty))
+        jwt   <- jwtService(_.createJwt(user.id, AuthScope.empty))
         user1 <- authenticator(_.authenticate(jwt.jwtString))
         user2 <- authenticator(_.authenticateCredentialsV2(KnoraJWTTokenCredentialsV2(jwt.jwtString)))
       } yield assertTrue(
@@ -139,7 +141,7 @@ object AuthenticatorLiveSpec extends ZIOSpecDefault {
     test("given the user exists and the jwt is valid when invalidating the token then authentication should fail") {
       for {
         user  <- createUser(UserStatus.Active)
-        jwt   <- ZIO.serviceWithZIO[JwtServiceLive](_.createJwt(user.id, AuthScope.empty))
+        jwt   <- jwtService(_.createJwt(user.id, AuthScope.empty))
         _     <- authenticator(_.invalidateToken(jwt.jwtString))
         exit1 <- authenticator(_.authenticate(jwt.jwtString)).exit
         exit2 <- authenticator(_.authenticateCredentialsV2(KnoraJWTTokenCredentialsV2(jwt.jwtString))).exit
@@ -151,7 +153,7 @@ object AuthenticatorLiveSpec extends ZIOSpecDefault {
     test("given the user exists but is inactive and the jwt is valid authentication should succeed") {
       for {
         user  <- createUser(UserStatus.Inactive)
-        jwt   <- ZIO.serviceWithZIO[JwtServiceLive](_.createJwt(user.id, AuthScope.empty))
+        jwt   <- jwtService(_.createJwt(user.id, AuthScope.empty))
         exit1 <- authenticator(_.authenticate(jwt.jwtString)).exit
         exit2 <- authenticator(_.authenticateCredentialsV2(KnoraJWTTokenCredentialsV2(jwt.jwtString))).exit
       } yield assertTrue(
