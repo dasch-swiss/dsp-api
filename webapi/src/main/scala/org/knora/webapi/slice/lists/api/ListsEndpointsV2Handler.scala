@@ -4,9 +4,11 @@
  */
 
 package org.knora.webapi.slice.lists.api
+import sttp.model.MediaType
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.HandlerMapper
@@ -24,13 +26,19 @@ final case class ListsEndpointsV2Handler(
   private val getV2Lists = SecuredEndpointHandler(
     endpoints.getV2Lists,
     (user: User) =>
-      (iri: ListIri, format: FormatOptions) => listsService.getList(iri, user).map(_.format(format, appConfig)),
+      (iri: ListIri, format: FormatOptions) => listsService.getList(iri, user).map(renderResponse(_, format)),
   )
+
+  private def renderResponse(resp: KnoraResponseV2, format: FormatOptions): (MediaType, String) = {
+    val str = resp.format(format, appConfig)
+    val mt  = format.rdfFormat.mediaType
+    (mt, str)
+  }
 
   private val getV2Node = SecuredEndpointHandler(
     endpoints.getV2Node,
     (user: User) =>
-      (iri: ListIri, format: FormatOptions) => listsService.getNode(iri, user).map(_.format(format, appConfig)),
+      (iri: ListIri, format: FormatOptions) => listsService.getNode(iri, user).map(renderResponse(_, format)),
   )
 
   val allHandlers = List(getV2Lists, getV2Node).map(mapper.mapSecuredEndpointHandler(_))

@@ -66,7 +66,7 @@ final case class ApiRoutes(
               .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS)),
           ) {
             DSPApiDirectives.handleErrors(appConfig) {
-              (adminApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes)
+              (adminApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes ++ listsApiV2Routes.routes)
                 .reduce(_ ~ _) ~
                 AuthenticationRouteV2().makeRoute ~
                 OntologiesRouteV2().makeRoute ~
