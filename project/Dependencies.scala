@@ -21,7 +21,7 @@ object Dependencies {
   val PekkoActorVersion = "1.0.3"
   val PekkoHttpVersion  = "1.0.1"
   val JenaVersion       = "5.0.0"
-  val Rdf4jVersion      = "4.3.12"
+  val Rdf4jVersion      = "5.0.0"
 
   val ZioConfigVersion            = "4.0.2"
   val ZioLoggingVersion           = "2.3.0"
@@ -36,7 +36,7 @@ object Dependencies {
   val zioConfig             = "dev.zio"                       %% "zio-config"                % ZioConfigVersion
   val zioConfigMagnolia     = "dev.zio"                       %% "zio-config-magnolia"       % ZioConfigVersion
   val zioConfigTypesafe     = "dev.zio"                       %% "zio-config-typesafe"       % ZioConfigVersion
-  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.0"
+  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.1"
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
@@ -47,7 +47,7 @@ object Dependencies {
   // refined
   val refined = Seq(
     "eu.timepit" %% "refined"                  % "0.11.2",
-    "dev.zio"    %% "zio-json-interop-refined" % "0.7.0",
+    "dev.zio"    %% "zio-json-interop-refined" % "0.7.1",
   )
 
   // zio-test and friends
@@ -110,7 +110,7 @@ object Dependencies {
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "1.19.8"
-  val wiremock       = "org.wiremock"       % "wiremock"       % "3.6.0"
+  val wiremock       = "org.wiremock"       % "wiremock"       % "3.8.0"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
