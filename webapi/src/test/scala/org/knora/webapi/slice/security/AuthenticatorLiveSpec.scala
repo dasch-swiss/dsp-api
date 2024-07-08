@@ -9,11 +9,10 @@ import zio.*
 import zio.Exit
 import zio.test.*
 import zio.test.ZIOSpecDefault
-import dsp.errors.BadCredentialsException
+
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.model.Email

@@ -22,7 +22,6 @@ import zio.nio.file.Files
 import zio.nio.file.Path
 
 import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
 import org.knora.webapi.slice.admin.api.AdminApiEndpoints
 import org.knora.webapi.slice.admin.api.FilesEndpoints
 import org.knora.webapi.slice.admin.api.GroupsEndpoints
