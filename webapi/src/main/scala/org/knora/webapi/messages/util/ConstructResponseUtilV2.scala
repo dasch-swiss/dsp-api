@@ -1354,7 +1354,9 @@ final case class ConstructResponseUtilV2Live(
               nodeIri <- ZIO
                            .fromEither(ListIri.from(listNodeIri))
                            .orElseFail(BadRequestException(s"Invalid list iri: $listNodeIri"))
-              nodeResponse <- listsService.getNode(nodeIri, requestingUser)
+              nodeResponse <- listsService.getNode(nodeIri, requestingUser).mapError { e =>
+                                e.fold(NotFoundException(s"List node $nodeIri not found"))(identity)
+                              }
               listNodeLabel =
                 nodeResponse.node.getLabelInPreferredLanguage(requestingUser.lang, appConfig.fallbackLanguage)
             } yield listNode.copy(listNodeLabel = listNodeLabel)

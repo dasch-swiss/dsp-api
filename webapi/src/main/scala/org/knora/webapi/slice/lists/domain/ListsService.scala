@@ -38,14 +38,17 @@ final case class ListsService(private val appConfig: AppConfig, private val list
    * @param requestingUser       the user making the request.
    * @return a  [[NodeGetResponseV2]].
    */
-  def getNode(nodeIri: ListIri, requestingUser: User): Task[NodeGetResponseV2] =
+  def getNode(nodeIri: ListIri, requestingUser: User): IO[Option[Throwable], NodeGetResponseV2] =
     listsResponder
       .listNodeInfoGetRequestADM(nodeIri.value)
+      .asSomeError
       .flatMap {
-        case ChildNodeInfoGetResponseADM(node) => ZIO.succeed(node)
-        case _                                 => ZIO.die(new IllegalStateException(s"No child node found $nodeIri"))
+        case ChildNodeInfoGetResponseADM(node) =>
+          ZIO.succeed(
+            NodeGetResponseV2(node, requestingUser.lang, appConfig.fallbackLanguage),
+          )
+        case _ => ZIO.fail(None)
       }
-      .map(NodeGetResponseV2(_, requestingUser.lang, appConfig.fallbackLanguage))
 }
 
 object ListsService {

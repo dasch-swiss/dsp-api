@@ -5,8 +5,9 @@
 
 package org.knora.webapi.slice.lists.api
 import sttp.model.MediaType
-import zio.ZLayer
+import zio.*
 
+import dsp.errors.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
@@ -38,7 +39,13 @@ final case class ListsEndpointsV2Handler(
   private val getV2Node = SecuredEndpointHandler(
     endpoints.getV2Node,
     (user: User) =>
-      (iri: ListIri, format: FormatOptions) => listsService.getNode(iri, user).map(renderResponse(_, format)),
+      (iri: ListIri, format: FormatOptions) =>
+        listsService
+          .getNode(iri, user)
+          .mapBoth(
+            _.fold(NotFoundException(s"Node with IRI ${iri.value} not found"))(identity),
+            response => renderResponse(response, format),
+          ),
   )
 
   val allHandlers = List(getV2Lists, getV2Node).map(mapper.mapSecuredEndpointHandler(_))
