@@ -30,9 +30,9 @@ final case class ListsEndpointsV2Handler(
   )
 
   private def renderResponse(resp: KnoraResponseV2, format: FormatOptions): (MediaType, String) = {
-    val str = resp.format(format, appConfig)
-    val mt  = format.rdfFormat.mediaType
-    (mt, str)
+    val mediaType      = format.rdfFormat.mediaType
+    val responseString = resp.format(format, appConfig)
+    (mediaType, responseString)
   }
 
   private val getV2Node = SecuredEndpointHandler(
