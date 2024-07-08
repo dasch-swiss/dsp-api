@@ -39,8 +39,6 @@ import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyFlatStatement
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyRdfPropertyValues
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyRdfResources
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetRequestV2
-import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
@@ -51,9 +49,11 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.lists.domain.ListsService
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
@@ -422,6 +422,7 @@ object ConstructResponseUtilV2 {
 final case class ConstructResponseUtilV2Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
+  listsService: ListsService,
   standoffTagUtilV2: StandoffTagUtilV2,
   projectService: ProjectService,
 )(implicit val stringFormatter: StringFormatter)
@@ -1350,12 +1351,15 @@ final case class ConstructResponseUtilV2Live(
         targetSchema match {
           case ApiV2Simple =>
             for {
-              nodeResponse <- messageRelay.ask[NodeGetResponseV2](NodeGetRequestV2(listNodeIri, requestingUser))
-            } yield listNode.copy(
-              listNodeLabel = nodeResponse.node
-                .getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = appConfig.fallbackLanguage),
-            )
-
+              nodeIri <- ZIO
+                           .fromEither(ListIri.from(listNodeIri))
+                           .orElseFail(BadRequestException(s"Invalid list iri: $listNodeIri"))
+              nodeResponse <- listsService.getNode(nodeIri, requestingUser).mapError { e =>
+                                e.fold(NotFoundException(s"List node $nodeIri not found"))(identity)
+                              }
+              listNodeLabel =
+                nodeResponse.node.getLabelInPreferredLanguage(requestingUser.lang, appConfig.fallbackLanguage)
+            } yield listNode.copy(listNodeLabel = listNodeLabel)
           case ApiV2Complex => ZIO.succeed(listNode)
         }
 

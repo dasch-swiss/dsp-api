@@ -75,8 +75,8 @@ case class TriplestoreServiceLive(
     Metric.timer(
       "fuseki_request_duration",
       ChronoUnit.MILLIS,
-      // 7 buckets for upper bounds: 2 ms, 4 ms, 8 ms, 16 ms, 32 ms, 64 ms, inf
-      Chunk.iterate(2.0, 6)(_ * 2),
+      // 7 buckets for upper bounds: 10 ms, 100 ms, 1s, 10s, 100s, 1000s
+      Chunk.iterate(10.0, 6)(_ * 10),
     )
 
   private def processError(sparql: String, response: String): IO[TriplestoreException, Nothing] =
@@ -403,8 +403,8 @@ case class TriplestoreServiceLive(
     for {
       result <- reqTask @@ requestTimer
                   .tagged("type", query.getClass.getSimpleName)
-                  .tagged("isGravsearch", s"${query == SparqlTimeout.Gravsearch}")
-                  .tagged("isMaintenance", s"${query == SparqlTimeout.Maintenance}")
+                  .tagged("isGravsearch", s"${query.timeout == SparqlTimeout.Gravsearch}")
+                  .tagged("isMaintenance", s"${query.timeout == SparqlTimeout.Maintenance}")
                   .trackDuration
       _ <- {
              val endTime  = java.lang.System.nanoTime()
