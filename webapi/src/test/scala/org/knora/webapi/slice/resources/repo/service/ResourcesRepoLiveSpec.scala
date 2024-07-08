@@ -19,8 +19,22 @@ import org.knora.webapi.messages.twirl.NewValueInfo
 import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.apache.jena.update.UpdateFactory
 
 object ResourcesRepoLiveSpec extends ZIOSpecDefault {
+
+  private def assertUpdateQueriesEqual(expected: Update, actual: Update) = {
+    val parsedExpected = UpdateFactory.create(expected.sparql)
+    val parsedActual   = UpdateFactory.create(actual.sparql)
+    if (parsedExpected.equalTo(parsedActual)) {
+      assertTrue(true)
+    } else {
+      val expectedStr = parsedExpected.toString()
+      val actualStr   = parsedActual.toString()
+      assertTrue(actualStr == expectedStr)
+    }
+  }
+
   def spec: Spec[Environment & (TestEnvironment & Scope), Any] = tests.provide(StringFormatter.test)
 
   val tests: Spec[StringFormatter, Nothing] =
@@ -63,11 +77,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                      |            knora-base:attachedToProject <$projectIri> ;
                      |            knora-base:hasPermissions "$permissions" ;
                      |            knora-base:creationDate "$creationDate"^^xsd:dateTime .
-                     |
-                     |        
-                     |
-                     |
-                     |        
                      |    }
                      |}
                      |""".stripMargin)
@@ -78,7 +87,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           creatorIri = userIri,
         )
 
-        assertTrue(expected.sparql == result.sparql)
+        assertUpdateQueriesEqual(expected, result)
       },
       test("Create new resource query with values") {
         val graphIri         = InternalIri("fooGraph")
@@ -139,35 +148,16 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                      |            knora-base:attachedToProject <fooProject> ;
                      |            knora-base:hasPermissions \"fooPermissions\" ;
                      |            knora-base:creationDate \"2024-01-01T10:00:00.673298Z\"^^xsd:dateTime .
-                     |
-                     |        
-                     |            # Value: fooValue
-                     |            # Property: fooProperty
-                     |
-                     |            
+                     |            <fooResource> <fooProperty> <fooValue> .
                      |            <fooValue> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
                      |                knora-base:isDeleted false  ;
                      |                knora-base:valueHasString \"\"\"42\"\"\" ;
-                     |                knora-base:valueHasUUID \"$uuidEncoded\" .
-                     |
-                     |            
-                     |                    <fooValue> knora-base:valueHasInteger 42 .
-                     |                
-                     |
-                     |            
-                     |            
-                     |
-                     |            <fooValue> knora-base:attachedToUser <fooCreator> ;
+                     |                knora-base:valueHasUUID \"$uuidEncoded\" ;
+                     |                knora-base:attachedToUser <fooCreator> ;
                      |                knora-base:hasPermissions \"fooValuePermissions\"^^xsd:string ;
                      |                knora-base:valueHasOrder 1 ;
-                     |                knora-base:valueCreationDate \"2024-01-01T10:00:00.673298Z\"^^xsd:dateTime .
-                     |
-                     |            
-                     |            <fooResource> <fooProperty> <fooValue> .
-                     |        
-                     |
-                     |
-                     |        
+                     |                knora-base:valueCreationDate \"2024-01-01T10:00:00.673298Z\"^^xsd:dateTime ;
+                     |                knora-base:valueHasInteger 42 .
                      |    }
                      |}
                      |""".stripMargin)
@@ -178,7 +168,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           creatorIri = userIri,
         )
 
-        assertTrue(expected.sparql == result.sparql)
+        assertUpdateQueriesEqual(expected, result)
       },
       test("Create new resource query with links") {
         val graphIri         = InternalIri("fooGraph")
@@ -233,15 +223,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                      |            knora-base:attachedToProject <fooProject> ;
                      |            knora-base:hasPermissions "fooPermissions" ;
                      |            knora-base:creationDate "2024-01-01T10:00:00.673298Z"^^xsd:dateTime .
-                     |
-                     |        
-                     |
-                     |
-                     |        
-                     |
                      |            <fooResource> <fooLinkProperty> <fooLinkTarget> .
-                     |
-                     |            
                      |            <fooLinkValue> rdf:type knora-base:LinkValue ;
                      |                rdf:subject <fooResource> ;
                      |                rdf:predicate <fooLinkProperty> ;
@@ -253,10 +235,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                      |                knora-base:attachedToUser <fooLinkCreator> ;
                      |                knora-base:hasPermissions "fooLinkPermissions" ;
                      |                knora-base:valueHasUUID "$valueUuid" .
-                     |
-                     |            
                      |            <fooResource> <fooLinkPropertyValue> <fooLinkValue> .
-                     |        
                      |    }
                      |}
                      |""".stripMargin)
@@ -267,7 +246,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           creatorIri = userIri,
         )
 
-        assertTrue(expected.sparql == result.sparql)
+        assertUpdateQueriesEqual(expected, result)
       },
     )
 
