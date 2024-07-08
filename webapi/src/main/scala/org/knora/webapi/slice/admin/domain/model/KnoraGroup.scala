@@ -103,9 +103,10 @@ object GroupIri extends StringValueCompanion[GroupIri] {
   private def isBuiltInGroupIri(iri: String): Boolean = BuiltInGroups.contains(iri)
 
   def from(value: String): Either[String, GroupIri] = value match {
-    case _ if value.isEmpty          => Left("Group IRI cannot be empty.")
-    case _ if isGroupIriValid(value) => Right(GroupIri(value))
-    case _                           => Left("Group IRI is invalid.")
+    case _ if value.isEmpty                    => Left("Group IRI cannot be empty.")
+    case _ if value.startsWith("knora-admin:") => from(value.replace("knora-admin:", KnoraAdminPrefixExpansion))
+    case _ if isGroupIriValid(value)           => Right(GroupIri(value))
+    case v                                     => Left(s"Group IRI is invalid: $v")
   }
 
   /**

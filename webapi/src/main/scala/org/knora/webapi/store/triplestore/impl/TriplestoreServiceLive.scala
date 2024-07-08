@@ -75,7 +75,7 @@ case class TriplestoreServiceLive(
     Metric.timer(
       "fuseki_request_duration",
       ChronoUnit.MILLIS,
-      // 7 buckets for upper bounds 10ms, 100ms, 1s, 10s, 1.6m, 16.6m, inf
+      // 7 buckets for upper bounds: 10 ms, 100 ms, 1s, 10s, 100s, 1000s
       Chunk.iterate(10.0, 6)(_ * 10),
     )
 
@@ -403,8 +403,8 @@ case class TriplestoreServiceLive(
     for {
       result <- reqTask @@ requestTimer
                   .tagged("type", query.getClass.getSimpleName)
-                  .tagged("isGravsearch", s"${query == SparqlTimeout.Gravsearch}")
-                  .tagged("isMaintenance", s"${query == SparqlTimeout.Maintenance}")
+                  .tagged("isGravsearch", s"${query.timeout == SparqlTimeout.Gravsearch}")
+                  .tagged("isMaintenance", s"${query.timeout == SparqlTimeout.Maintenance}")
                   .trackDuration
       _ <- {
              val endTime  = java.lang.System.nanoTime()

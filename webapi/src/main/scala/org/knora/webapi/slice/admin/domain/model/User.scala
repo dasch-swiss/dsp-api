@@ -161,7 +161,7 @@ object UserIri extends StringValueCompanion[UserIri] {
    *
    * `$`: Asserts the end of the string.
    */
-  private val userIriRegEx = """^http://rdfh\.ch/users/[a-zA-Z0-9_-]{4,36}$""".r
+  private val userIriRegEx = """^http://rdfh\.ch/users/[a-zA-Z0-9_-]{4,64}$""".r
 
   private val builtInIris = Seq("SystemUser", "AnonymousUser").map(KnoraAdminPrefixExpansion + _)
 
@@ -181,14 +181,14 @@ object Username extends StringValueCompanion[Username] {
 
   /**
    * A regex that matches a valid username
-   * - 4 - 50 characters long
+   * - 3 - 50 characters long
    * - Only contains alphanumeric characters, underscore, hyphen and dot.
    * - Underscore, hyphen and dot can't be at the end or start of a username
    * - Underscore, hyphen or dot can't be used multiple times in a row
    */
   private val UsernameRegex: Regex = (
-    "^(?=.{4,50}$)" +
-      // 4 - 50 characters long
+    "^(?=.{3,50}$)" +
+      // 3 - 50 characters long
       "(?![_.-])" +
       // Underscore, hyphen and dot can't be at the start of a username
       "(?!.*[_.-]{2})" +

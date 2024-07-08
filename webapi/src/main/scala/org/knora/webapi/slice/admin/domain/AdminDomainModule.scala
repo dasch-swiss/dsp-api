@@ -52,7 +52,7 @@ object AdminDomainModule
       UserService
       // format: on
     ] { self =>
-  inline def layer: URLayer[self.Dependencies, self.Provided] =
+  val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       AdministrativePermissionService.layer,
       DefaultObjectAccessPermissionService.layer,
