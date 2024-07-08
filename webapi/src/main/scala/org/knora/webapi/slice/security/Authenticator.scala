@@ -111,19 +111,19 @@ final case class AuthenticatorLive(
 
   override def authenticate(userIri: UserIri, password: String): IO[AuthenticatorError, (User, Jwt)] = for {
     user <- getUserByIri(userIri)
-    jwt  <- ensurePasswordMatch(user, password)
+    _    <- ensurePasswordMatch(user, password)
     jwt  <- createToken(user)
   } yield (user, jwt)
 
   override def authenticate(username: Username, password: String): IO[AuthenticatorError, (User, Jwt)] = for {
     user <- getUserByUsername(username)
-    jwt  <- ensurePasswordMatch(user, password)
+    _    <- ensurePasswordMatch(user, password)
     jwt  <- createToken(user)
   } yield (user, jwt)
 
   override def authenticate(email: Email, password: String): IO[AuthenticatorError, (User, Jwt)] = for {
     user <- getUserByEmail(email)
-    jwt  <- ensurePasswordMatch(user, password)
+    _    <- ensurePasswordMatch(user, password)
     jwt  <- createToken(user)
   } yield (user, jwt)
 
