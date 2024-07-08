@@ -72,7 +72,7 @@ final case class BaseEndpoints(authenticator: Authenticator)(implicit val r: zio
 
   private def authenticateJwt(jwtToken: String): Future[Either[RequestRejectedException, User]] =
     UnsafeZioRun.runToFuture(
-      authenticator.verifyJwt(jwtToken).orElseFail(BadCredentialsException("Invalid credentials.")).either,
+      authenticator.authenticate(jwtToken).orElseFail(BadCredentialsException("Invalid credentials.")).either,
     )
 
   private def authenticateBasic(basic: UsernamePassword): Future[Either[RequestRejectedException, User]] =

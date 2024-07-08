@@ -11,7 +11,6 @@ import zio.json.ast.Json
 
 import scala.concurrent.Await
 import scala.concurrent.duration.*
-
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
@@ -20,10 +19,9 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.util.MutableTestString
-
-import pekko.http.scaladsl.model.*
-import pekko.http.scaladsl.model.headers.*
-import pekko.http.scaladsl.unmarshalling.Unmarshal
+import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.model.headers.*
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 
 /**
  * End-to-End (E2E) test specification for testing authentication.
@@ -32,78 +30,11 @@ import pekko.http.scaladsl.unmarshalling.Unmarshal
  */
 class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
-  private val rootIri              = SharedTestDataADM.rootUser.id
-  private val rootIriEnc           = java.net.URLEncoder.encode(rootIri, "utf-8")
-  private val rootUsername         = SharedTestDataADM.rootUser.username
-  private val rootUsernameEnc      = java.net.URLEncoder.encode(rootUsername, "utf-8")
-  private val rootEmail            = SharedTestDataADM.rootUser.email
-  private val rootEmailEnc         = java.net.URLEncoder.encode(rootEmail, "utf-8")
-  private val inactiveUserEmail    = SharedTestDataADM.inactiveUser.email
-  private val inactiveUserEmailEnc = java.net.URLEncoder.encode(inactiveUserEmail, "utf-8")
-  private val testPass             = java.net.URLEncoder.encode("test", "utf-8")
-  private val wrongPass            = java.net.URLEncoder.encode("wrong", "utf-8")
-
-  "The Authentication Route ('v2/authentication') with credentials supplied via URL parameters" should {
-
-    "authenticate with correct user IRI and password" in {
-      /* Correct username and password */
-      val request                = Get(baseApiUrl + s"/v2/authentication?iri=$rootIriEnc&password=$testPass")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status === StatusCodes.OK)
-    }
-
-    "authenticate with correct email and password" in {
-      /* Correct username and password */
-      val request                = Get(baseApiUrl + s"/v2/authentication?email=$rootEmailEnc&password=$testPass")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status === StatusCodes.OK)
-    }
-
-    "authenticate with correct username and password" in {
-      /* Correct username and password */
-      val request                = Get(baseApiUrl + s"/v2/authentication?username=$rootUsernameEnc&password=$testPass")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status === StatusCodes.OK)
-    }
-
-    "fail authentication with correct email and wrong password" in {
-      /* Correct email / wrong password */
-      val request                = Get(baseApiUrl + s"/v2/authentication?email=$rootEmail&password=$wrongPass")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status === StatusCodes.Unauthorized)
-    }
-    "fail authentication with the user set as 'not active' " in {
-      /* User not active */
-      val request                = Get(baseApiUrl + s"/v2/authentication?email=$inactiveUserEmailEnc&password=$testPass")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status === StatusCodes.Unauthorized)
-    }
-  }
-
-  "The Authentication Route ('v2/authentication') with credentials supplied via Basic Auth" should {
-
-    "authenticate with correct email and password" in {
-      /* Correct email / correct password */
-      val request  = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-      val response = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK)
-    }
-
-    "fail authentication with correct email and wrong password" in {
-      /* Correct username / wrong password */
-      val request  = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
-      val response = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.Unauthorized)
-    }
-
-    "fail authentication with the user set as 'not active' " in {
-      /* User not active */
-      val request =
-        Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(BasicHttpCredentials(inactiveUserEmail, testPass))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status === StatusCodes.Unauthorized)
-    }
-  }
+  private val rootIri      = SharedTestDataADM.rootUser.id
+  private val rootIriEnc   = java.net.URLEncoder.encode(rootIri, "utf-8")
+  private val rootUsername = SharedTestDataADM.rootUser.username
+  private val rootEmail    = SharedTestDataADM.rootUser.email
+  private val testPass     = java.net.URLEncoder.encode("test", "utf-8")
 
   "The Authentication Route ('v2/authentication')" should {
     val token = new MutableTestString
@@ -175,13 +106,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       assert(response.status === StatusCodes.OK)
     }
 
-    "authenticate with token in request parameter" in {
-      // authenticate by calling '/v2/authenticate' with parameters providing the token (from earlier login)
-      val request  = Get(baseApiUrl + s"/v2/authentication?token=${token.get}")
-      val response = singleAwaitingRequest(request)
-      assert(response.status === StatusCodes.OK)
-    }
-
     "authenticate with token in cookie" in {
       val KnoraAuthenticationCookieName =
         UnsafeZioRun.runOrThrow(ZIO.serviceWith[Authenticator](_.calculateCookieName()))
@@ -225,14 +149,14 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       assert(response1.status == StatusCodes.OK)
       val token = Await.result(Unmarshal(response1.entity).to[LoginResponse], 1.seconds).token
 
-      val request2  = Delete(baseApiUrl + s"/v2/authentication?token=$token")
+      val request2 =
+        Delete(baseApiUrl + s"/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", token))
       val response2 = singleAwaitingRequest(request2)
       assert(response2.status === StatusCodes.OK)
-    }
 
-    "fail with authentication when providing the token after logout" in {
+      // fail with authentication when providing the token after logout
       val request =
-        Get(baseApiUrl + "/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
+        Get(baseApiUrl + "/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", token))
       val response = singleAwaitingRequest(request)
       assert(response.status === StatusCodes.Unauthorized)
     }

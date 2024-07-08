@@ -84,11 +84,11 @@ trait Authenticator {
    */
   def calculateCookieName(): String
 
-  def verifyJwt(jwtToken: String): IO[LoginFailed.type, User]
   def invalidateToken(jwt: String): IO[LoginFailed.type, Unit]
   def authenticate(userIri: UserIri, password: String): IO[LoginFailed.type, (User, Jwt)]
   def authenticate(username: Username, password: String): IO[LoginFailed.type, (User, Jwt)]
   def authenticate(email: Email, password: String): IO[LoginFailed.type, (User, Jwt)]
+  def authenticate(jwtToken: String): IO[LoginFailed.type, User]
 }
 
 object Authenticator {
@@ -101,7 +101,7 @@ final case class AuthenticatorLive(
   private val jwtService: JwtService,
   private val scopeResolver: ScopeResolver,
   private val passwordService: PasswordService,
-  private val cache: InvalidTokenCache,
+  private val invalidTokens: InvalidTokenCache,
 ) extends Authenticator {
 
   override def authenticate(userIri: UserIri, password: String): IO[LoginFailed.type, (User, Jwt)] = for {
@@ -336,11 +336,12 @@ final case class AuthenticatorLive(
           case KnoraJWTTokenCredentialsV2(token) => token
           case KnoraSessionCredentialsV2(token)  => token
         }
-        verifyJwt(jwtToken)
+        authenticate(jwtToken)
     }
   }.orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
-  override def verifyJwt(jwtToken: String): IO[LoginFailed.type, User] = (for {
+  override def authenticate(jwtToken: String): IO[LoginFailed.type, User] = (for {
+    _       <- ZIO.fail(LoginFailed).when(invalidTokens.contains(jwtToken))
     userIri <- jwtService.extractUserIriFromToken(jwtToken).some.map(UserIri.from).right
     user    <- getUserByIri(userIri)
   } yield user).orElseFail(LoginFailed)
@@ -374,7 +375,7 @@ final case class AuthenticatorLive(
   }
 
   override def invalidateToken(jwt: String): IO[LoginFailed.type, Unit] =
-    verifyJwt(jwt).as(cache.put(jwt))
+    authenticate(jwt).as(invalidTokens.put(jwt))
 }
 
 object AuthenticatorLive {

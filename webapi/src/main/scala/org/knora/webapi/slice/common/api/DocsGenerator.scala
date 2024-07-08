@@ -53,7 +53,7 @@ final case class DocsNoopAuthenticator() extends Authenticator {
   override def authenticate(username: Username, password: String): IO[LoginFailed.type, (User, Jwt)] = ???
   override def authenticate(email: Email, password: String): IO[LoginFailed.type, (User, Jwt)]       = ???
   override def invalidateToken(jwt: String): UIO[Unit]                                               = ???
-  override def verifyJwt(jwtToken: String): IO[LoginFailed.type, User]                               = ???
+  override def authenticate(jwtToken: String): IO[LoginFailed.type, User]                            = ???
 }
 object DocsNoopAuthenticator {
   val layer = ZLayer.succeed(DocsNoopAuthenticator())
