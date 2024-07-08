@@ -47,9 +47,8 @@ import org.knora.webapi.slice.security.AuthenticatorError.*
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2
 
 final case class DocsNoopAuthenticator() extends Authenticator {
-  override def getUserADM(requestContext: RequestContext): Task[User]                 = ???
-  override def calculateCookieName(): String                                          = "KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9"
-  override def authenticateCredentialsV2(credentials: KnoraCredentialsV2): Task[Unit] = ???
+  override def getUserADM(requestContext: RequestContext): Task[User] = ???
+  override def calculateCookieName(): String                          = "KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9"
 
   override def authenticate(userIri: UserIri, password: String): IO[AuthenticatorError, (User, Jwt)]   = ???
   override def authenticate(username: Username, password: String): IO[AuthenticatorError, (User, Jwt)] = ???

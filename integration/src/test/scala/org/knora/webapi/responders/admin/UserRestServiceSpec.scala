@@ -8,7 +8,6 @@ package org.knora.webapi.responders.admin
 import org.apache.pekko.testkit.ImplicitSender
 import zio.Chunk
 import zio.ZIO
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
@@ -286,12 +285,11 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         )
 
         // need to be able to authenticate credentials with new password
-        val cedId       = CredentialsIdentifier.UsernameIdentifier(Username.unsafeFrom(normalUser.username))
-        val credentials = KnoraCredentialsV2.KnoraPasswordCredentialsV2(cedId, newPassword.value)
-        val actual: Unit =
-          UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(credentials)))
+        val actual = UnsafeZioRun.runOrThrow(
+          ZIO.serviceWithZIO[Authenticator](_.authenticate(normalUser.getUsername, newPassword.value)),
+        )
 
-        assert(actual == ())
+        assert(actual._1.userIri == normalUser.userIri)
       }
 
       "UPDATE the user's password (by a system admin)" in {
@@ -309,12 +307,12 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         )
 
         // need to be able to authenticate credentials with new password
-        val cedId       = CredentialsIdentifier.UsernameIdentifier(Username.unsafeFrom(normalUser.username))
-        val credentials = KnoraCredentialsV2.KnoraPasswordCredentialsV2(cedId, "test654321")
-        val actual: Unit =
-          UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(credentials)))
+        val actual =
+          UnsafeZioRun.runOrThrow(
+            ZIO.serviceWithZIO[Authenticator](_.authenticate(normalUser.getUsername, newPassword.value)),
+          )
 
-        assert(actual == ())
+        assert(actual._1.userIri == normalUser.userIri)
       }
 
       "UPDATE the user's status, making them inactive " in {

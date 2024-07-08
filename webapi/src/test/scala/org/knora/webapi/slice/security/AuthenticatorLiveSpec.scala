@@ -9,7 +9,6 @@ import zio.*
 import zio.Exit
 import zio.test.*
 import zio.test.ZIOSpecDefault
-
 import dsp.errors.BadCredentialsException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.config.AppConfig
@@ -133,10 +132,8 @@ object AuthenticatorLiveSpec extends ZIOSpecDefault {
         user  <- createUser(UserStatus.Active)
         jwt   <- jwtService(_.createJwt(user.id, AuthScope.empty))
         user1 <- authenticator(_.authenticate(jwt.jwtString))
-        user2 <- authenticator(_.authenticateCredentialsV2(KnoraJWTTokenCredentialsV2(jwt.jwtString)))
       } yield assertTrue(
         user1.userIri == user.id,
-        user2 == (),
       )
     },
     test("given the user exists and the jwt is valid when invalidating the token then authentication should fail") {
@@ -145,10 +142,8 @@ object AuthenticatorLiveSpec extends ZIOSpecDefault {
         jwt   <- jwtService(_.createJwt(user.id, AuthScope.empty))
         _     <- authenticator(_.invalidateToken(jwt.jwtString))
         exit1 <- authenticator(_.authenticate(jwt.jwtString)).exit
-        exit2 <- authenticator(_.authenticateCredentialsV2(KnoraJWTTokenCredentialsV2(jwt.jwtString))).exit
       } yield assertTrue(
         exit1 == Exit.fail(AuthenticatorError.BadCredentials),
-        exit2 == Exit.fail(BadCredentialsException("bad credentials: not valid")),
       )
     },
     test("given the user exists but is inactive and the jwt is valid authentication should succeed") {
@@ -156,10 +151,8 @@ object AuthenticatorLiveSpec extends ZIOSpecDefault {
         user  <- createUser(UserStatus.Inactive)
         jwt   <- jwtService(_.createJwt(user.id, AuthScope.empty))
         exit1 <- authenticator(_.authenticate(jwt.jwtString)).exit
-        exit2 <- authenticator(_.authenticateCredentialsV2(KnoraJWTTokenCredentialsV2(jwt.jwtString))).exit
       } yield assertTrue(
         exit1 == Exit.fail(AuthenticatorError.UserNotActive),
-        exit2 == Exit.fail(BadCredentialsException("bad credentials: not valid")),
       )
     },
   ).provide(

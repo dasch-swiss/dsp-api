@@ -64,21 +64,6 @@ trait Authenticator {
   def getUserADM(requestContext: RequestContext): Task[User]
 
   /**
-   * Tries to authenticate the supplied credentials (email/password or token). In the case of email/password,
-   * authentication is performed checking if the supplied email/password combination is valid by retrieving the
-   * user's profile. In the case of the token, the token itself is validated. If both are supplied, then both need
-   * to be valid.
-   *
-   * @param credentials          the user supplied and extracted credentials.
-   * @return true if the credentials are valid. If the credentials are invalid, then the corresponding exception
-   *         will be returned.
-   *
-   *         [[BadCredentialsException]] when no credentials are supplied; when user is not active;
-   *         when the password does not match; when the supplied token is not valid.
-   */
-  def authenticateCredentialsV2(credentials: KnoraCredentialsV2): Task[Unit]
-
-  /**
    * Calculates the cookie name, where the external host and port are encoded as a base32 string
    * to make the name of the cookie unique between environments.
    *
@@ -144,25 +129,9 @@ final case class AuthenticatorLive(
   override def getUserADM(requestContext: RequestContext): Task[User] =
     ZIO
       .fromOption(extractCredentialsV2(requestContext))
-      .flatMap(getUserADMThroughCredentialsV2(_).asSomeError.map(_.ofType(UserInformationType.Full)))
+      .flatMap(authenticate(_).asSomeError.map(_.ofType(UserInformationType.Full)))
       .unsome
       .map(_.getOrElse(KnoraSystemInstances.Users.AnonymousUser))
-
-  /**
-   * Tries to authenticate the supplied credentials (email/password or token). In the case of email/password,
-   * authentication is performed checking if the supplied email/password combination is valid by retrieving the
-   * user's profile. In the case of the token, the token itself is validated. If both are supplied, then both need
-   * to be valid.
-   *
-   * @param credentials          the user supplied and extracted credentials.
-   * @return true if the credentials are valid. If the credentials are invalid, then the corresponding exception
-   *         will be returned.
-   *
-   *         [[BadCredentialsException]] when no credentials are supplied; when user is not active;
-   *         when the password does not match; when the supplied token is not valid.
-   */
-  override def authenticateCredentialsV2(credentials: KnoraCredentialsV2): Task[Unit] =
-    getUserADMThroughCredentialsV2(credentials).unit
 
   /**
    * Tries to extract the credentials from the requestContext (parameters, auth headers, token)
@@ -328,7 +297,7 @@ final case class AuthenticatorLive(
    *
    *         [[AuthenticationException]] when the IRI can not be found inside the token, which is probably a bug.
    */
-  private def getUserADMThroughCredentialsV2(credentials: KnoraCredentialsV2): Task[User] = {
+  private def authenticate(credentials: KnoraCredentialsV2): Task[User] = {
     credentials match {
       case credentials: KnoraPasswordCredentialsV2 =>
         (credentials.identifier match {
