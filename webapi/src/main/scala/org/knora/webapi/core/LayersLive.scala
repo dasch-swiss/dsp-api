@@ -43,6 +43,8 @@ import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
+import org.knora.webapi.slice.lists.api.ListsApiModule
+import org.knora.webapi.slice.lists.domain.ListsService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -90,8 +92,9 @@ object LayersLive {
     InfrastructureModule.Provided &
     InstrumentationServerConfig &
     IriConverter &
+    ListsApiModule.Provided &
     ListsResponder &
-    ListsResponderV2 &
+    ListsService &
     MessageRelay &
     OntologyCache &
     OntologyCacheHelpers &
@@ -147,8 +150,9 @@ object LayersLive {
       IriConverter.layer,
       IriService.layer,
       KnoraResponseRenderer.layer,
+      ListsApiModule.layer,
       ListsResponder.layer,
-      ListsResponderV2.layer,
+      ListsService.layer,
       ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,

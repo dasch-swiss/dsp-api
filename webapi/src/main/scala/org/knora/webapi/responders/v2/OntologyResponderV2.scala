@@ -6,12 +6,14 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
+import zio.IO
 import zio.Task
 import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
 import java.time.Instant
+import scala.collection.immutable
 
 import dsp.constants.SalsahGui
 import dsp.errors.*
@@ -39,10 +41,13 @@ import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
@@ -1287,7 +1292,7 @@ final case class OntologyResponderV2(
    * @param request the [[ReplaceClassCardinalitiesRequestV2]] defining the cardinalities.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  private def replaceClassCardinalities(request: ReplaceClassCardinalitiesRequestV2): Task[ReadOntologyV2] = {
+  def replaceClassCardinalities(request: ReplaceClassCardinalitiesRequestV2): Task[ReadOntologyV2] = {
     val task = for {
       newModel   <- makeUpdatedClassModel(request)
       validModel <- checkLastModificationDateAndCanCardinalitiesBeSet(request, newModel)
@@ -1392,26 +1397,31 @@ final case class OntologyResponderV2(
     val lastModificationDate = request.lastModificationDate
     for {
       _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(ontologyIri, lastModificationDate)
-      _ <- checkCanCardinalitiesBeSet(newModel.entityInfoContent).mapError(e => BadRequestException(e.getMessage))
+      _ <- checkCanCardinalitiesBeSet(newModel.entityInfoContent).mapError(f => BadRequestException(f.mkString(" ")))
     } yield newModel
   }
 
-  private def checkCanCardinalitiesBeSet(newModel: ClassInfoContentV2): Task[Either[String, Unit]] = {
-    val classIri             = newModel.classIri.toInternalIri
-    val cardinalitiesToCheck = newModel.directCardinalities.map { case (p, c) => (p.toInternalIri, c.cardinality) }
-
-    val iterableOfZioChecks = cardinalitiesToCheck.map { case (p, c) =>
-      cardinalityService.canSetCardinality(classIri, p, c).map(_.fold(a => a, b => List(b)))
-    }
-    val checkResults =
-      iterableOfZioChecks.reduceLeftOption((a, b) => a.zipWith(b)(_ ::: _)).getOrElse(ZIO.succeed(List.empty))
-
-    checkResults
-      .map(_.filter(_.isFailure))
-      .map {
-        case Nil    => Right(())
-        case errors => Left(errors.mkString(" "))
-      }
+  private def checkCanCardinalitiesBeSet(
+    newModel: ClassInfoContentV2,
+  ): IO[List[CanSetCardinalityCheckResult.Failure], Unit] = {
+    val classIri = newModel.classIri.toInternalIri
+    val cardinalitiesToCheck: List[(InternalIri, Cardinality)] =
+      newModel.directCardinalities.toList.map { case (p, c) => (p.toInternalIri, c.cardinality) }
+    for {
+      resultsForEachCardinalityChecked <-
+        ZIO.foreach(cardinalitiesToCheck) { case (p, c) => cardinalityService.canSetCardinality(classIri, p, c) }.orDie
+      errors =
+        resultsForEachCardinalityChecked.foldLeft(List.empty)(
+          (
+            fails: List[CanSetCardinalityCheckResult.Failure],
+            nextResult: Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type],
+          ) => nextResult.fold(fails ::: _, _ => fails),
+        )
+      aggregatedResultMsg <- errors match {
+                               case _ if errors.isEmpty => ZIO.unit
+                               case errors              => ZIO.fail(errors)
+                             }
+    } yield aggregatedResultMsg
   }
 
   private def replaceClassCardinalitiesInPersistence(

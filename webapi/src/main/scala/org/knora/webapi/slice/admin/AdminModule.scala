@@ -36,6 +36,6 @@ object AdminModule
       AdminDomainModule.Provided
       // format: on
     ] { self =>
-  inline def layer: URLayer[self.Dependencies, self.Provided] =
+  val layer: URLayer[self.Dependencies, self.Provided] =
     AdminRepoModule.layer >>> AdminDomainModule.layer
 }

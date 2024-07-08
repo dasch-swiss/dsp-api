@@ -8,6 +8,7 @@ package org.knora.webapi.e2e.v2
 import org.apache.pekko
 import spray.json.JsValue
 import spray.json.JsonParser
+import zio.*
 
 import java.net.URLEncoder
 import java.nio.file.Paths
@@ -16,11 +17,13 @@ import scala.concurrent.ExecutionContextExecutor
 import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
-import org.knora.webapi.routing.v2.ListsRouteV2
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.lists.api.ListsApiV2Routes
 import org.knora.webapi.util.FileUtil
 
 import pekko.http.javadsl.model.StatusCodes
 import pekko.http.scaladsl.model.headers.Accept
+import pekko.http.scaladsl.server.Directives.*
 
 /**
  * End-to-end test specification for the lists endpoint. This specification uses the Spray Testkit as documented
@@ -28,7 +31,11 @@ import pekko.http.scaladsl.model.headers.Accept
  */
 class ListsRouteV2R2RSpec extends R2RSpec {
 
-  private val listsPath = ListsRouteV2().makeRoute
+  private val listsPath = UnsafeZioRun.runOrThrow(
+    for {
+      r <- ZIO.serviceWith[ListsApiV2Routes](_.routes)
+    } yield r.reduce(_ ~ _),
+  )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
