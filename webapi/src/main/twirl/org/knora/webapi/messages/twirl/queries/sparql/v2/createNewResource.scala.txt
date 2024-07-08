@@ -113,7 +113,7 @@ INSERT DATA {
                                 Handle standoff class specific standoff properties
                                 *@
                                 @for(createProperty <- createStandoff.attributes) {
-                                    <@createProperty.propertyIri> """@createProperty.value""" ;
+                                    <@createProperty.propertyIri> @createProperty.value ;
                                 }
 
                                 knora-base:standoffTagHasStartIndex @createStandoff.startIndex ;

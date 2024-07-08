@@ -404,7 +404,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     } else {
       val expectedStr = parsedExpected.toString()
       val actualStr   = parsedActual.toString()
-      assertTrue(expectedStr == actualStr)
+      assertTrue(actualStr == expectedStr)
     }
   }
 
