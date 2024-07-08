@@ -127,10 +127,6 @@ final case class AuthenticatorLive(
 
   private def createToken(user: User) = scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _))
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // GET USER PROFILE / AUTHENTICATION ENTRY POINT
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
   /**
    * Returns a User that match the credentials found in the [[RequestContext]].
    * The credentials can be email/password as parameters or auth headers, or session token in a cookie header. If no
@@ -162,10 +158,6 @@ final case class AuthenticatorLive(
    */
   override def authenticateCredentialsV2(credentials: KnoraCredentialsV2): Task[Unit] =
     getUserADMThroughCredentialsV2(credentials).unit
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // HELPER METHODS
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /**
    * Tries to extract the credentials from the requestContext (parameters, auth headers, token)
@@ -335,10 +327,10 @@ final case class AuthenticatorLive(
     credentials match {
       case credentials: KnoraPasswordCredentialsV2 =>
         (credentials.identifier match {
-          case IriIdentifier(userIri)       => getUserByIri(userIri)
-          case EmailIdentifier(email)       => getUserByEmail(email)
-          case UsernameIdentifier(username) => getUserByUsername(username)
-        }).tap(ensurePasswordMatch(_, credentials.password))
+          case IriIdentifier(userIri)       => authenticate(userIri, credentials.password)
+          case EmailIdentifier(email)       => authenticate(email, credentials.password)
+          case UsernameIdentifier(username) => authenticate(username, credentials.password)
+        }).map(_._1)
       case t @ (_: KnoraSessionCredentialsV2 | _: KnoraJWTTokenCredentialsV2) =>
         val jwtToken = t match {
           case KnoraJWTTokenCredentialsV2(token) => token
