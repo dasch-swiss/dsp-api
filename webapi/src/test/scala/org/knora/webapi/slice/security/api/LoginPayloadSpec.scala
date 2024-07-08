@@ -13,7 +13,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 
-object AuthenticationEndpointsV2Spec extends ZIOSpecDefault {
+object LoginPayloadSpec extends ZIOSpecDefault {
 
   val spec = suiteAll("LoginPayload") {
 
