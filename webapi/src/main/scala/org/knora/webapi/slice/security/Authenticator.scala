@@ -37,8 +37,13 @@ import org.knora.webapi.slice.infrastructure.InvalidTokenCache
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NOT_VALID
+import org.knora.webapi.slice.security.AuthenticatorError.*
 
-case object LoginFailed
+enum AuthenticatorError extends Exception {
+  case BadCredentials extends AuthenticatorError
+  case UserNotFound   extends AuthenticatorError
+  case UserNotActive  extends AuthenticatorError
+}
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -84,11 +89,11 @@ trait Authenticator {
    */
   def calculateCookieName(): String
 
-  def invalidateToken(jwt: String): IO[LoginFailed.type, Unit]
-  def authenticate(userIri: UserIri, password: String): IO[LoginFailed.type, (User, Jwt)]
-  def authenticate(username: Username, password: String): IO[LoginFailed.type, (User, Jwt)]
-  def authenticate(email: Email, password: String): IO[LoginFailed.type, (User, Jwt)]
-  def authenticate(jwtToken: String): IO[LoginFailed.type, User]
+  def invalidateToken(jwt: String): IO[AuthenticatorError, Unit]
+  def authenticate(userIri: UserIri, password: String): IO[AuthenticatorError, (User, Jwt)]
+  def authenticate(username: Username, password: String): IO[AuthenticatorError, (User, Jwt)]
+  def authenticate(email: Email, password: String): IO[AuthenticatorError, (User, Jwt)]
+  def authenticate(jwtToken: String): IO[AuthenticatorError, User]
 }
 
 object Authenticator {
@@ -104,26 +109,26 @@ final case class AuthenticatorLive(
   private val invalidTokens: InvalidTokenCache,
 ) extends Authenticator {
 
-  override def authenticate(userIri: UserIri, password: String): IO[LoginFailed.type, (User, Jwt)] = for {
-    user <- getUserByIri(userIri).orElseFail(LoginFailed)
+  override def authenticate(userIri: UserIri, password: String): IO[AuthenticatorError, (User, Jwt)] = for {
+    user <- getUserByIri(userIri)
     jwt  <- ensurePasswordMatch(user, password)
     jwt  <- createToken(user)
   } yield (user, jwt)
 
-  override def authenticate(username: Username, password: String): IO[LoginFailed.type, (User, Jwt)] = for {
-    user <- getUserByUsername(username).orElseFail(LoginFailed)
+  override def authenticate(username: Username, password: String): IO[AuthenticatorError, (User, Jwt)] = for {
+    user <- getUserByUsername(username)
     jwt  <- ensurePasswordMatch(user, password)
     jwt  <- createToken(user)
   } yield (user, jwt)
 
-  override def authenticate(email: Email, password: String): IO[LoginFailed.type, (User, Jwt)] = for {
-    user <- getUserByEmail(email).orElseFail(LoginFailed)
+  override def authenticate(email: Email, password: String): IO[AuthenticatorError, (User, Jwt)] = for {
+    user <- getUserByEmail(email)
     jwt  <- ensurePasswordMatch(user, password)
     jwt  <- createToken(user)
   } yield (user, jwt)
 
-  private def ensurePasswordMatch(user: User, password: String): IO[LoginFailed.type, Unit] =
-    ZIO.fail(LoginFailed).when(!user.password.exists(passwordService.matchesStr(password, _))).unit
+  private def ensurePasswordMatch(user: User, password: String): IO[AuthenticatorError, Unit] =
+    ZIO.fail(BadCredentials).when(!user.password.exists(passwordService.matchesStr(password, _))).unit
 
   private def createToken(user: User) = scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _))
 
@@ -340,24 +345,25 @@ final case class AuthenticatorLive(
     }
   }.orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
-  override def authenticate(jwtToken: String): IO[LoginFailed.type, User] = (for {
-    _       <- ZIO.fail(LoginFailed).when(invalidTokens.contains(jwtToken))
-    userIri <- jwtService.extractUserIriFromToken(jwtToken).some.map(UserIri.from).right
-    user    <- getUserByIri(userIri)
-  } yield user).orElseFail(LoginFailed)
+  override def authenticate(jwtToken: String): IO[AuthenticatorError, User] = for {
+    _ <- ZIO.fail(BadCredentials).when(invalidTokens.contains(jwtToken))
+    userIri <-
+      jwtService.extractUserIriFromToken(jwtToken).some.map(UserIri.from).right.logError.orElseFail(BadCredentials)
+    user <- getUserByIri(userIri)
+  } yield user
 
-  private def getUserByIri(iri: UserIri): IO[LoginFailed.type, User] =
-    userService.findUserByIri(iri).some.tap(ensureActiveUser).orElseFail(LoginFailed)
+  private def getUserByIri(iri: UserIri): IO[AuthenticatorError, User] =
+    userService.findUserByIri(iri).some.orElseFail(UserNotFound).tap(ensureActiveUser).logError
 
-  private def getUserByEmail(email: Email): IO[LoginFailed.type, User] =
-    userService.findUserByEmail(email).some.tap(ensureActiveUser).orElseFail(LoginFailed)
+  private def getUserByEmail(email: Email): IO[AuthenticatorError, User] =
+    userService.findUserByEmail(email).some.orElseFail(UserNotFound).tap(ensureActiveUser)
 
-  private def getUserByUsername(username: Username): IO[LoginFailed.type, User] =
-    userService.findUserByUsername(username).some.tap(ensureActiveUser).orElseFail(LoginFailed)
+  private def getUserByUsername(username: Username): IO[AuthenticatorError, User] =
+    userService.findUserByUsername(username).some.orElseFail(UserNotFound).tap(ensureActiveUser)
 
-  private def ensureActiveUser(user: User): IO[LoginFailed.type, Unit] = for {
-    _ <- ZIO.fail(LoginFailed).when(!user.isActive)
-    _ <- ZIO.fail(LoginFailed).when(KnoraUserRepo.builtIn.findOneBy(_.id.value == user.id).isDefined)
+  private def ensureActiveUser(user: User): IO[AuthenticatorError, Unit] = for {
+    _ <- ZIO.fail(UserNotActive).when(!user.isActive)
+    _ <- ZIO.fail(UserNotFound).when(KnoraUserRepo.builtIn.findOneBy(_.id.value == user.id).isDefined)
   } yield ()
 
   /**
@@ -374,7 +380,7 @@ final case class AuthenticatorLive(
     "KnoraAuthentication" + base32.encodeAsString(appConfig.knoraApi.externalKnoraApiHostPort.getBytes())
   }
 
-  override def invalidateToken(jwt: String): IO[LoginFailed.type, Unit] =
+  override def invalidateToken(jwt: String): IO[AuthenticatorError, Unit] =
     authenticate(jwt).as(invalidTokens.put(jwt))
 }
 

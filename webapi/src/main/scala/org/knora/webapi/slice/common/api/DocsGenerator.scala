@@ -42,18 +42,20 @@ import org.knora.webapi.slice.lists.api.ListsEndpointsV2
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.slice.security.Authenticator
-import org.knora.webapi.slice.security.LoginFailed
+import org.knora.webapi.slice.security.AuthenticatorError
+import org.knora.webapi.slice.security.AuthenticatorError.*
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2
 
 final case class DocsNoopAuthenticator() extends Authenticator {
-  override def getUserADM(requestContext: RequestContext): Task[User]                                = ???
-  override def calculateCookieName(): String                                                         = "KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9"
-  override def authenticateCredentialsV2(credentials: KnoraCredentialsV2): Task[Unit]                = ???
-  override def authenticate(userIri: UserIri, password: String): IO[LoginFailed.type, (User, Jwt)]   = ???
-  override def authenticate(username: Username, password: String): IO[LoginFailed.type, (User, Jwt)] = ???
-  override def authenticate(email: Email, password: String): IO[LoginFailed.type, (User, Jwt)]       = ???
-  override def invalidateToken(jwt: String): UIO[Unit]                                               = ???
-  override def authenticate(jwtToken: String): IO[LoginFailed.type, User]                            = ???
+  override def getUserADM(requestContext: RequestContext): Task[User]                 = ???
+  override def calculateCookieName(): String                                          = "KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9"
+  override def authenticateCredentialsV2(credentials: KnoraCredentialsV2): Task[Unit] = ???
+
+  override def authenticate(userIri: UserIri, password: String): IO[AuthenticatorError, (User, Jwt)]   = ???
+  override def authenticate(username: Username, password: String): IO[AuthenticatorError, (User, Jwt)] = ???
+  override def authenticate(email: Email, password: String): IO[AuthenticatorError, (User, Jwt)]       = ???
+  override def invalidateToken(jwt: String): UIO[Unit]                                                 = ???
+  override def authenticate(jwtToken: String): IO[AuthenticatorError, User]                            = ???
 }
 object DocsNoopAuthenticator {
   val layer = ZLayer.succeed(DocsNoopAuthenticator())

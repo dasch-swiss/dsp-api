@@ -6,11 +6,15 @@
 package org.knora.webapi.e2e.v2
 
 import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.model.headers.*
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import zio.ZIO
 import zio.json.ast.Json
 
 import scala.concurrent.Await
 import scala.concurrent.duration.*
+
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
@@ -19,9 +23,6 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.util.MutableTestString
-import org.apache.pekko.http.scaladsl.model.*
-import org.apache.pekko.http.scaladsl.model.headers.*
-import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 
 /**
  * End-to-End (E2E) test specification for testing authentication.
