@@ -33,6 +33,7 @@ import org.knora.webapi.slice.admin.api.StoreEndpoints
 import org.knora.webapi.slice.admin.api.UsersEndpoints
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
+import org.knora.webapi.slice.lists.api.ListsEndpointsV2
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.slice.security.Authenticator
@@ -84,6 +85,7 @@ object DocsGenerator extends ZIOAppDefault {
     StoreEndpoints.layer,
     UsersEndpoints.layer,
     ManagementEndpoints.layer,
+    ListsEndpointsV2.layer,
   )
 
   private def writeToFile(endpoints: Seq[AnyEndpoint], path: Path, name: String) = {

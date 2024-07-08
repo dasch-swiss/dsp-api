@@ -9,7 +9,7 @@ import zio.ZLayer
 trait SliceModule[RIn, E, ROut] {
   type Dependencies = RIn
   type Provided     = ROut
-  inline def layer: ZLayer[RIn, E, ROut]
+  def layer: ZLayer[RIn, E, ROut]
 }
 
 type RModule[RIn, ROut]  = SliceModule[RIn, Throwable, ROut]

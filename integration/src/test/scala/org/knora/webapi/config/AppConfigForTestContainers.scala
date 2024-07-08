@@ -5,10 +5,7 @@
 
 package org.knora.webapi.config
 
-import com.typesafe.config.ConfigFactory
 import zio.*
-import zio.config.*
-import zio.config.typesafe.TypesafeConfigProvider
 
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.testcontainers.DspIngestTestContainer
@@ -65,25 +62,13 @@ object AppConfigForTestContainers {
   }
 
   /**
-   * Reads in the application configuration using ZIO-Config. ZIO-Config is capable of loading
-   * the Typesafe-Config format. Reads the 'app' configuration from 'application.conf'.
-   */
-  private val source: ConfigProvider =
-    TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
-
-  /**
-   * Instantiates our config class hierarchy using the data from the 'app' configuration from 'application.conf'.
-   */
-  private val config: UIO[AppConfig] = read(AppConfig.descriptor from source).orDie
-
-  /**
    * Altered AppConfig with ports from TestContainers for DSP-Ingest, Fuseki and Sipi.
    */
   val testcontainers
     : ZLayer[DspIngestTestContainer & FusekiTestContainer & SipiTestContainer, Nothing, AppConfigurations] = {
     val appConfigLayer = ZLayer {
       for {
-        appConfig          <- config
+        appConfig          <- AppConfig.parseConfig
         fusekiContainer    <- ZIO.service[FusekiTestContainer]
         sipiContainer      <- ZIO.service[SipiTestContainer]
         dspIngestContainer <- ZIO.service[DspIngestTestContainer]
@@ -101,7 +86,7 @@ object AppConfigForTestContainers {
   val fusekiOnlyTestcontainer: ZLayer[FusekiTestContainer, Nothing, AppConfigurations] = {
     val appConfigLayer = ZLayer {
       for {
-        appConfig       <- config
+        appConfig       <- AppConfig.parseConfig
         fusekiContainer <- ZIO.service[FusekiTestContainer]
         alteredConfig   <- alterFusekiPort(appConfig, fusekiContainer)
       } yield alteredConfig
