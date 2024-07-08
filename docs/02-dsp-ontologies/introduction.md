@@ -67,6 +67,3 @@ can be added. (It is not even safe to add an optional cardinality to an existing
 class, because this could cause subclasses to violate the rule that a class cannot
 have a cardinality on property P as well as a cardinality on a subproperty of P;
 see [Restrictions on Classes](knora-base.md#restrictions-on-classes).)
-
-For more details about shared ontologies, see
-[Shared Ontologies](../02-dsp-ontologies/introduction.md#shared-ontologies).

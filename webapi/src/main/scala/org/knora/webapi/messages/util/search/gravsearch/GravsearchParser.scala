@@ -772,10 +772,6 @@ object GravsearchParser {
     override def meet(load: algebra.Load): Unit =
       unsupported(load)
 
-    @deprecated("'org.eclipse.rdf4j.query.algebra.Like' is deprecated and marked for removal ")
-    override def meet(node: algebra.Like): Unit =
-      unsupported(node)
-
     override def meet(node: algebra.LeftJoin): Unit = {
       // Visit the nodes that aren't in the OPTIONAL.
       node.getLeftArg.visit(this)
