@@ -16,9 +16,10 @@ import scala.concurrent.Await
 import scala.concurrent.duration.*
 
 import org.knora.webapi.*
+import org.knora.webapi.e2e.v2.AuthenticationV2JsonProtocol
+import org.knora.webapi.e2e.v2.LoginResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.security.Authenticator

@@ -6,9 +6,11 @@
 package org.knora.webapi.e2e.v2
 
 import org.apache.pekko
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.*
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
+import spray.json.*
 import zio.ZIO
 import zio.json.ast.Json
 
@@ -17,8 +19,6 @@ import scala.concurrent.duration.*
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.security.Authenticator
@@ -321,4 +321,11 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       assert(response.filterKeys(_ == "password").isEmpty)
     }
   }
+}
+
+final case class LoginResponse(token: String)
+
+trait AuthenticationV2JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
+  implicit val SessionResponseFormat: RootJsonFormat[LoginResponse] =
+    jsonFormat1(LoginResponse.apply)
 }

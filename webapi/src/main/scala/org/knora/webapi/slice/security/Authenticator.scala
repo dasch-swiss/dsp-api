@@ -7,8 +7,6 @@ package org.knora.webapi.slice.security
 
 import org.apache.commons.codec.binary.Base32
 import org.apache.pekko.http.scaladsl.model.*
-import org.apache.pekko.http.scaladsl.model.headers
-import org.apache.pekko.http.scaladsl.model.headers.HttpCookiePair
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.util.ByteString
 import zio.*
@@ -16,16 +14,10 @@ import zio.*
 import java.util.Base64
 
 import dsp.errors.BadCredentialsException
+import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v2.routing.authenticationmessages.*
-import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier.EmailIdentifier
-import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier.IriIdentifier
-import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier.UsernameIdentifier
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -36,8 +28,11 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.infrastructure.InvalidTokenCache
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.security.*
 import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NOT_VALID
 import org.knora.webapi.slice.security.AuthenticatorError.*
+import org.knora.webapi.slice.security.CredentialsIdentifier.*
+import org.knora.webapi.slice.security.KnoraCredentialsV2.*
 
 enum AuthenticatorError extends Exception {
   case BadCredentials extends AuthenticatorError
@@ -123,79 +118,15 @@ final case class AuthenticatorLive(
    * credentials are found, then a default UserProfile is returned. If the credentials are not correct, then the
    * corresponding error is returned.
    *
-   * @param requestContext       a [[RequestContext]] containing the http request
+   * @param ctx a [[RequestContext]] containing the http request
    * @return a [[User]]
    */
-  override def getUserADM(requestContext: RequestContext): Task[User] =
+  override def getUserADM(ctx: RequestContext): Task[User] =
     ZIO
-      .fromOption(extractCredentialsV2(requestContext))
+      .fromOption(extractCredentials(ctx))
       .flatMap(authenticate(_).asSomeError.map(_.ofType(UserInformationType.Full)))
       .unsome
       .map(_.getOrElse(KnoraSystemInstances.Users.AnonymousUser))
-
-  /**
-   * Tries to extract the credentials from the requestContext (parameters, auth headers, token)
-   *
-   * @param requestContext a [[RequestContext]] containing the http request
-   * @return an optional [[KnoraCredentialsV2]].
-   */
-  private def extractCredentialsV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
-
-    val credentialsFromParameters: Option[KnoraCredentialsV2] = extractCredentialsFromParametersV2(requestContext)
-
-    val credentialsFromHeaders: Option[KnoraCredentialsV2] = extractCredentialsFromHeaderV2(requestContext)
-
-    // return found credentials based on precedence: 1. url parameters, 2. header (basic auth, token)
-    val credentials = if (credentialsFromParameters.nonEmpty) {
-      credentialsFromParameters
-    } else {
-      credentialsFromHeaders
-    }
-
-    credentials
-  }
-
-  /**
-   * Tries to extract credentials supplied as URL parameters.
-   *
-   * @param requestContext the HTTP request context.
-   * @return an optional [[KnoraCredentialsV2]].
-   */
-  private def extractCredentialsFromParametersV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
-    // extract email/password from parameters
-    val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
-
-    // check for iri, email, or username parameters
-    val maybeIriIdentifier: Option[String]      = params.get("iri").map(_.head)
-    val maybeEmailIdentifier: Option[String]    = params.get("email").map(_.head)
-    val maybeUsernameIdentifier: Option[String] = params.get("username").map(_.head)
-    val maybeIdentifier: Option[String] =
-      List(maybeIriIdentifier, maybeEmailIdentifier, maybeUsernameIdentifier).flatten.headOption
-
-    val maybePassword: Option[String] = params.get("password").map(_.head)
-
-    val maybePassCreds: Option[KnoraPasswordCredentialsV2] =
-      if (maybeIdentifier.nonEmpty && maybePassword.nonEmpty)
-        CredentialsIdentifier
-          .fromOptions(iri = maybeIriIdentifier, email = maybeEmailIdentifier, username = maybeUsernameIdentifier)
-          .map(KnoraPasswordCredentialsV2(_, maybePassword.get))
-      else None
-
-    val maybeToken: Option[String] = params get "token" map (_.head)
-
-    val maybeTokenCreds: Option[KnoraJWTTokenCredentialsV2] = if (maybeToken.nonEmpty) {
-      Some(KnoraJWTTokenCredentialsV2(maybeToken.get))
-    } else {
-      None
-    }
-
-    // prefer password credentials
-    if (maybePassCreds.nonEmpty) {
-      maybePassCreds
-    } else {
-      maybeTokenCreds
-    }
-  }
 
   /**
    * Tries to extract the credentials (email/password, token) from the authorization header and the session token
@@ -212,22 +143,15 @@ final case class AuthenticatorLive(
    * @param requestContext   the HTTP request context.
    * @return an optional [[KnoraCredentialsV2]].
    */
-  private def extractCredentialsFromHeaderV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
-
-    // Session token from cookie header
-    val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
-    val maybeSessionCreds: Option[KnoraSessionCredentialsV2] =
-      cookies.find(_.name == calculateCookieName()) match {
-        case Some(authCookie) =>
-          val value: String = authCookie.value
-          Some(KnoraSessionCredentialsV2(value))
-        case None =>
-          None
-      }
+  private def extractCredentials(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
+    val fromCookie: Option[KnoraJwtCredentialsV2] =
+      requestContext.request.cookies
+        .find(_.name == calculateCookieName())
+        .map(authCookie => KnoraJwtCredentialsV2(authCookie.value))
 
     // Authorization header
     val headers: Seq[HttpHeader] = requestContext.request.headers
-    val (maybePassCreds, maybeTokenCreds) = headers.find(_.name == "Authorization") match {
+    val (fromBasicAuth, fromBearerToken) = headers.find(_.name == "Authorization") match {
       case Some(authHeader: HttpHeader) =>
         // the authorization header can hold different schemes
         val credsArr: Array[String] = authHeader.value().split(",")
@@ -252,7 +176,7 @@ final case class AuthenticatorLive(
               Email
                 .from(email)
                 .toOption
-                .map(CredentialsIdentifier.EmailIdentifier.apply)
+                .map(EmailIdentifier.apply)
                 .map(KnoraPasswordCredentialsV2(_, password))
             case _ => None
           }
@@ -260,31 +184,16 @@ final case class AuthenticatorLive(
         // and the bearer scheme
         val maybeToken = credsArr.find(_.contains("Bearer")) match {
           case Some(value) =>
-            Some(value.substring(6).trim()) // remove 'Bearer '
+            Some(KnoraJwtCredentialsV2(value.substring(6).trim())) // remove 'Bearer '
           case None =>
             None
         }
 
-        val maybeTokenCreds: Option[KnoraJWTTokenCredentialsV2] = if (maybeToken.nonEmpty) {
-          Some(KnoraJWTTokenCredentialsV2(maybeToken.get))
-        } else {
-          None
-        }
+        (maybePassCreds, maybeToken)
 
-        (maybePassCreds, maybeTokenCreds)
-
-      case None =>
-        (None, None)
+      case None => (None, None)
     }
-
-    // prefer password over token over session
-    if (maybePassCreds.nonEmpty) {
-      maybePassCreds
-    } else if (maybeTokenCreds.nonEmpty) {
-      maybeTokenCreds
-    } else {
-      maybeSessionCreds
-    }
+    fromBasicAuth.orElse(fromBearerToken).orElse(fromCookie)
   }
 
   /**
@@ -305,12 +214,7 @@ final case class AuthenticatorLive(
           case EmailIdentifier(email)       => authenticate(email, credentials.password)
           case UsernameIdentifier(username) => authenticate(username, credentials.password)
         }).map(_._1)
-      case t @ (_: KnoraSessionCredentialsV2 | _: KnoraJWTTokenCredentialsV2) =>
-        val jwtToken = t match {
-          case KnoraJWTTokenCredentialsV2(token) => token
-          case KnoraSessionCredentialsV2(token)  => token
-        }
-        authenticate(jwtToken)
+      case KnoraJwtCredentialsV2(jwtToken) => authenticate(jwtToken)
     }
   }.orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
@@ -355,4 +259,26 @@ final case class AuthenticatorLive(
 
 object AuthenticatorLive {
   val layer = ZLayer.derive[AuthenticatorLive]
+}
+
+sealed trait CredentialsIdentifier
+object CredentialsIdentifier {
+  def fromOptions(iri: Option[IRI], email: Option[IRI], username: Option[IRI]): Option[CredentialsIdentifier] =
+    (iri, email, username) match {
+      case (Some(iri), _, _)      => UserIri.from(iri).toOption.map(IriIdentifier.apply)
+      case (_, Some(email), _)    => Email.from(email).toOption.map(EmailIdentifier.apply)
+      case (_, _, Some(username)) => Username.from(username).toOption.map(UsernameIdentifier.apply)
+      case _                      => None
+    }
+
+  final case class IriIdentifier(userIri: UserIri)        extends CredentialsIdentifier
+  final case class EmailIdentifier(email: Email)          extends CredentialsIdentifier
+  final case class UsernameIdentifier(username: Username) extends CredentialsIdentifier
+}
+
+sealed trait KnoraCredentialsV2
+private object KnoraCredentialsV2 {
+  final case class KnoraJwtCredentialsV2(jwtToken: String) extends KnoraCredentialsV2
+  final case class KnoraPasswordCredentialsV2(identifier: CredentialsIdentifier, password: String)
+      extends KnoraCredentialsV2
 }
