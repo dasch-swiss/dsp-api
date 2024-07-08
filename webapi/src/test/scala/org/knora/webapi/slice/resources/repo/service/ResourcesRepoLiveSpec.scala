@@ -51,17 +51,16 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           Update(s"""|
                      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                     |PREFIX owl: <http://www.w3.org/2002/07/owl#>
                      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                      |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                      |
                      |INSERT DATA {
                      |    GRAPH <${graphIri.value}> {
                      |        <$resourceIri> rdf:type <$resourceClassIri> ;
+                     |            rdfs:label $tripleQuotes$label$tripleQuotes ;
                      |            knora-base:isDeleted false ;
                      |            knora-base:attachedToUser <$userIri> ;
                      |            knora-base:attachedToProject <$projectIri> ;
-                     |            rdfs:label $tripleQuotes$label$tripleQuotes ;
                      |            knora-base:hasPermissions "$permissions" ;
                      |            knora-base:creationDate "$creationDate"^^xsd:dateTime .
                      |
@@ -128,17 +127,16 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           Update(s"""|
                      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                     |PREFIX owl: <http://www.w3.org/2002/07/owl#>
                      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                      |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                      |
                      |INSERT DATA {
                      |    GRAPH <fooGraph> {
                      |        <fooResource> rdf:type <fooClass> ;
+                     |            rdfs:label \"\"\"fooLabel\"\"\" ;
                      |            knora-base:isDeleted false ;
                      |            knora-base:attachedToUser <fooUser> ;
                      |            knora-base:attachedToProject <fooProject> ;
-                     |            rdfs:label \"\"\"fooLabel\"\"\" ;
                      |            knora-base:hasPermissions \"fooPermissions\" ;
                      |            knora-base:creationDate \"2024-01-01T10:00:00.673298Z\"^^xsd:dateTime .
                      |
@@ -223,17 +221,16 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           Update(s"""|
                      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                     |PREFIX owl: <http://www.w3.org/2002/07/owl#>
                      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                      |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                      |
                      |INSERT DATA {
                      |    GRAPH <fooGraph> {
                      |        <fooResource> rdf:type <fooClass> ;
+                     |            rdfs:label \"\"\"fooLabel\"\"\" ;
                      |            knora-base:isDeleted false ;
                      |            knora-base:attachedToUser <fooUser> ;
                      |            knora-base:attachedToProject <fooProject> ;
-                     |            rdfs:label \"\"\"fooLabel\"\"\" ;
                      |            knora-base:hasPermissions "fooPermissions" ;
                      |            knora-base:creationDate "2024-01-01T10:00:00.673298Z"^^xsd:dateTime .
                      |
