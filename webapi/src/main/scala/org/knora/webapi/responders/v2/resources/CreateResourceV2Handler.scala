@@ -21,7 +21,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
-import org.knora.webapi.messages.twirl.NewLinkValueInfo
+import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
 import org.knora.webapi.messages.twirl.NewValueInfo
 import org.knora.webapi.messages.twirl.StandoffAttribute
 import org.knora.webapi.messages.twirl.StandoffTagInfo
@@ -947,7 +947,7 @@ final case class CreateResourceV2Handler(
   private def generateInsertSparqlForStandoffLinksInMultipleValues(
     resourceIri: IRI,
     values: Iterable[GenerateSparqlForValueInNewResourceV2],
-  ): Task[Seq[NewLinkValueInfo]] = {
+  ): Task[Seq[StandoffLinkValueInfo]] = {
     // To create LinkValues for the standoff links in the values to be created, we need to compute
     // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
     // that have standoff links to a particular target resource.
@@ -983,11 +983,11 @@ final case class CreateResourceV2Handler(
 
       // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
       // and one LinkValue with its initial reference count.
-      val standoffLinkUpdatesFutures: Seq[Task[NewLinkValueInfo]] = initialReferenceCounts.toSeq.map {
+      val standoffLinkUpdatesFutures: Seq[Task[StandoffLinkValueInfo]] = initialReferenceCounts.toSeq.map {
         case (targetIri, initialReferenceCount) =>
           for {
             newValueIri <- makeUnusedValueIri(resourceIri)
-          } yield NewLinkValueInfo(
+          } yield StandoffLinkValueInfo(
             linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
             newLinkValueIri = newValueIri,
             linkTargetIri = targetIri,
@@ -999,7 +999,7 @@ final case class CreateResourceV2Handler(
       }
       ZIO.collectAll(standoffLinkUpdatesFutures)
     } else {
-      ZIO.succeed(Seq.empty[NewLinkValueInfo])
+      ZIO.succeed(Seq.empty[StandoffLinkValueInfo])
     }
   }
 

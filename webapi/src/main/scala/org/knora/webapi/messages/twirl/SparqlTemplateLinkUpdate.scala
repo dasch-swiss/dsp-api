@@ -52,7 +52,7 @@ case class SparqlTemplateLinkUpdate(
   newLinkValuePermissions: String,
 )
 
-final case class NewLinkValueInfo(
+final case class StandoffLinkValueInfo(
   linkPropertyIri: IRI,
   newLinkValueIri: IRI,
   linkTargetIri: IRI,
