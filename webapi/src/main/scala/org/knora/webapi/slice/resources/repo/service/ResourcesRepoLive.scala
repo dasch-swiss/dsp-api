@@ -294,6 +294,31 @@ object ResourcesRepoLive {
 
     }
 
+    for (standoffLink <- resourceToCreate.standoffLinks) {
+      resourcePattern.andHas(iri(standoffLink.linkPropertyIri), iri(standoffLink.linkTargetIri))
+      resourcePattern.andHas(iri(standoffLink.linkPropertyIri + "Value"), iri(standoffLink.newLinkValueIri))
+
+      val standoffLinkPattern =
+        Rdf
+          .iri(standoffLink.newLinkValueIri)
+          .isA(KnoraBaseVocab.linkValue)
+          .andHas(RDF.SUBJECT, Rdf.iri(resourceToCreate.resourceIri))
+          .andHas(RDF.PREDICATE, Rdf.iri(standoffLink.linkPropertyIri))
+          .andHas(RDF.OBJECT, Rdf.iri(standoffLink.linkTargetIri))
+          .andHas(KnoraBaseVocab.valueHasString, Rdf.literalOf(standoffLink.linkTargetIri))
+          .andHas(KnoraBaseVocab.valueHasRefCount, Rdf.literalOf(standoffLink.newReferenceCount))
+          .andHas(KnoraBaseVocab.isDeleted, Rdf.literalOf(false))
+          .andHas(
+            KnoraBaseVocab.valueCreationDate,
+            Rdf.literalOfType(resourceToCreate.creationDate.toString(), XSD.DATETIME),
+          )
+          .andHas(KnoraBaseVocab.attachedToUser, iri(standoffLink.newLinkValueCreator))
+          .andHas(KnoraBaseVocab.hasPermissions, Rdf.literalOf(standoffLink.newLinkValuePermissions))
+          .andHas(KnoraBaseVocab.valueHasUUID, Rdf.literalOf(standoffLink.valueUuid))
+
+      query.insertData(standoffLinkPattern)
+    }
+
     Update(query.getQueryString())
   }
 
@@ -303,6 +328,8 @@ object KnoraBaseVocab {
   private val kb = "http://www.knora.org/ontology/knora-base#"
 
   val NS: Namespace = new SimpleNamespace("knora-base", kb)
+
+  val linkValue = iri(kb + "LinkValue")
 
   val isDeleted         = iri(kb + "isDeleted")
   val attachedToUser    = iri(kb + "attachedToUser")

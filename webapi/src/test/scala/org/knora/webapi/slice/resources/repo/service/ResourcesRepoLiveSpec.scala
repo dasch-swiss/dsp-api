@@ -1407,7 +1407,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       createResourceWithValueAndStandoffLinkTest,
     )
   // TODO:
-  // - bring back the link stuff (and figure out what's the deal)
   // - remove all reference checks
   // - remove twirl implementation
 
