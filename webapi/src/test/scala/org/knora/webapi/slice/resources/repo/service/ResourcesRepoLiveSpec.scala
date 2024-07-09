@@ -17,13 +17,13 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.NewValueInfo
 import org.knora.webapi.messages.twirl.StandoffAttribute
+import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
 import org.knora.webapi.messages.twirl.StandoffTagInfo
 import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
 
 object TestData {
 

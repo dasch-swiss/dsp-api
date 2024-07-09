@@ -21,9 +21,9 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
-import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
 import org.knora.webapi.messages.twirl.NewValueInfo
 import org.knora.webapi.messages.twirl.StandoffAttribute
+import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
 import org.knora.webapi.messages.twirl.StandoffTagInfo
 import org.knora.webapi.messages.twirl.TypeSpecificValueInfo.*
 import org.knora.webapi.messages.util.*

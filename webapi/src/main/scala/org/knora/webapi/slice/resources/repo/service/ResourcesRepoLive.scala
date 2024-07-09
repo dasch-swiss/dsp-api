@@ -21,8 +21,8 @@ import java.time.Instant
 
 import dsp.constants.SalsahGui.IRI
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
 import org.knora.webapi.messages.twirl.NewValueInfo
+import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
 import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
