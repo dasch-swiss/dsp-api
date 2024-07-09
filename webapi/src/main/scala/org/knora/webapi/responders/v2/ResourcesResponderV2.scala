@@ -634,30 +634,20 @@ final case class ResourcesResponderV2(
            }
 
       // Check if resources are deleted, if so, replace them with DeletedResource
-      responseWithDeletedResourcesReplaced = apiResponse.resources match {
-                                               case resourceList =>
-                                                 if (resourceList.nonEmpty) {
-                                                   val resourceListWithDeletedResourcesReplaced = resourceList.map {
-                                                     resource =>
-                                                       resource.deletionInfo match {
-                                                         // Resource deleted -> return DeletedResource instead
-                                                         case Some(_) => resource.asDeletedResource()
-                                                         // Resource not deleted -> return resource
-                                                         case None =>
-                                                           // deleted values should be shown -> resource can be returned
-                                                           if (showDeletedValues) resource
-                                                           // deleted Values should not be shown -> replace them with generic DeletedValue
-                                                           else resource.withDeletedValues()
-                                                       }
-                                                   }
-                                                   apiResponse.copy(resources =
-                                                     resourceListWithDeletedResourcesReplaced,
-                                                   )
-                                                 } else {
-                                                   apiResponse
-                                                 }
-                                             }
-
+      deletedResourcesReplaced =
+        apiResponse.resources.map { case resource =>
+          resource.deletionInfo match {
+            // Resource deleted -> return DeletedResource instead
+            case Some(_) => resource.asDeletedResource()
+            // Resource not deleted -> return resource
+            case None =>
+              // deleted values should be shown -> resource can be returned
+              if (showDeletedValues) resource
+              // deleted Values should not be shown -> replace them with generic DeletedValue
+              else resource.withDeletedValues()
+          }
+        }
+      responseWithDeletedResourcesReplaced = apiResponse.copy(resources = deletedResourcesReplaced)
     } yield responseWithDeletedResourcesReplaced
 
   }
