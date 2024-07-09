@@ -23,6 +23,7 @@ import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
 
 object TestData {
 
@@ -45,7 +46,7 @@ object TestData {
     creationDate = creationDate,
     permissions = permissions,
     newValueInfos = Seq.empty,
-    linkUpdates = Seq.empty,
+    standoffLinks = Seq.empty,
   )
 
   val linkValueDefinition = NewValueInfo(
@@ -391,6 +392,16 @@ object TestData {
       comment = None,
     )
 
+  val standoffLinkValue =
+    StandoffLinkValueInfo(
+      linkPropertyIri = "foo:hasStandoffLinkTo",
+      newLinkValueIri = "foo:StandoffLinkValueIri",
+      linkTargetIri = "foo:StandoffLinkTargetIri",
+      newReferenceCount = 2,
+      newLinkValueCreator = valueCreator,
+      newLinkValuePermissions = valuePermissions,
+      valueUuid = UuidUtil.base64Encode(UUID.randomUUID()),
+    )
 }
 
 object ResourcesRepoLiveSpec extends ZIOSpecDefault {
@@ -410,7 +421,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
 
   def spec: Spec[Environment & (TestEnvironment & Scope), Any] = tests.provide(StringFormatter.test)
 
-  val createResourceWithoutValuesTest = test("Create a new resource query without values") {
+  private val createResourceWithoutValuesTest = test("Create a new resource query without values") {
     val expected =
       Update(s"""|
                  |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -440,7 +451,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
   }
 
-  val createResourceWithValueSuite = suite("Create new resource with any type of value")(
+  private val createResourceWithValueSuite = suite("Create new resource with any type of value")(
     test("Create a new resource with a link value") {
       val resource = resourceDefinition.copy(newValueInfos = List(linkValueDefinition))
 
@@ -1230,7 +1241,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
   )
 
-  val createResourceWithMultipleValuesTest = test("Create a resource with multiple values") {
+  private val createResourceWithMultipleValuesTest = test("Create a resource with multiple values") {
     val resource = resourceDefinition.copy(newValueInfos = List(intValueDefinition, boolValueDefinition))
     val expected = Update(
       s"""|
@@ -1283,105 +1294,121 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
   }
 
+  private val createResourceWithStzandoffLinkTest = test("Create a resource with a standoff link value") {
+    val resource = resourceDefinition.copy(standoffLinks = List(standoffLinkValue))
+
+    val expected = Update(
+      s"""|
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |INSERT DATA {
+          |    GRAPH <${graphIri.value}> {
+          |        <$resourceIri> rdf:type <$resourceClassIri> ;
+          |            rdfs:label "$label" ;
+          |            knora-base:isDeleted false ;
+          |            knora-base:attachedToUser <$userIri> ;
+          |            knora-base:attachedToProject <$projectIri> ;
+          |            knora-base:hasPermissions "$permissions" ;
+          |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+          |            <foo:hasStandoffLinkTo> <foo:StandoffLinkTargetIri> ;
+          |            <foo:hasStandoffLinkToValue> <foo:StandoffLinkValueIri> .
+          |        <foo:StandoffLinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
+          |            rdf:subject <$resourceIri> ;
+          |            rdf:predicate <foo:hasStandoffLinkTo> ;
+          |            rdf:object <foo:StandoffLinkTargetIri> ;
+          |            knora-base:valueHasString "foo:StandoffLinkTargetIri" ;
+          |            knora-base:valueHasRefCount 2;
+          |            knora-base:isDeleted false  ;
+          |            knora-base:valueCreationDate "$creationDate"^^xsd:dateTime ;
+          |            knora-base:attachedToUser <$valueCreator> ;
+          |            knora-base:hasPermissions "$valuePermissions" ;
+          |            knora-base:valueHasUUID "${standoffLinkValue.valueUuid}" .
+          |    }
+          |}
+          |""".stripMargin,
+    )
+    val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+    val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+      dataGraphIri = graphIri,
+      resourceToCreate = resource,
+      projectIri = projectIri,
+      creatorIri = userIri,
+    )
+    assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+  }
+
+  private val createResourceWithValueAndStandoffLinkTest =
+    test("Create a resource with a value and a standoff link value") {
+      val resource =
+        resourceDefinition.copy(standoffLinks = List(standoffLinkValue), newValueInfos = List(intValueDefinition))
+
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <$userIri> ;
+            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <foo:hasInt> <foo:IntValueIri> ;
+            |            <foo:hasStandoffLinkTo> <foo:StandoffLinkTargetIri> ;
+            |            <foo:hasStandoffLinkToValue> <foo:StandoffLinkValueIri> .
+            |        <foo:IntValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "42" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(intValueDefinition.valueUUID)}" ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:valueHasInteger 42 .
+            |        <foo:StandoffLinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
+            |            rdf:subject <$resourceIri> ;
+            |            rdf:predicate <foo:hasStandoffLinkTo> ;
+            |            rdf:object <foo:StandoffLinkTargetIri> ;
+            |            knora-base:valueHasString "foo:StandoffLinkTargetIri" ;
+            |            knora-base:valueHasRefCount 2;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueCreationDate "$creationDate"^^xsd:dateTime ;
+            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasUUID "${standoffLinkValue.valueUuid}" .
+            |    }
+            |}
+            |""".stripMargin,
+      )
+      val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
+    }
+
   val tests: Spec[StringFormatter, Nothing] =
     suite("ResourcesRepoLiveSpec")(
       createResourceWithoutValuesTest,
       createResourceWithValueSuite,
       createResourceWithMultipleValuesTest,
-      // test("Create new resource query with links") {
-      //   val graphIri         = InternalIri("fooGraph")
-      //   val projectIri       = "fooProject"
-      //   val userIri          = "fooUser"
-      //   val resourceIri      = "fooResource"
-      //   val resourceClassIri = "fooClass"
-      //   val label            = "fooLabel"
-      //   val creationDate     = Instant.parse("2024-01-01T10:00:00.673298Z")
-      //   val permissions      = "fooPermissions"
-
-      //   val linkPropertyIri = "fooLinkProperty"
-      //   val linkTargetIri   = "fooLinkTarget"
-      //   val linkValueIri    = "fooLinkValue"
-      //   val linkCreator     = "fooLinkCreator"
-      //   val linkPermissions = "fooLinkPermissions"
-      //   val valueUuid       = UuidUtil.makeRandomBase64EncodedUuid
-
-      //   val resourceDefinition = ResourceReadyToCreate(
-      //     resourceIri = resourceIri,
-      //     resourceClassIri = resourceClassIri,
-      //     resourceLabel = label,
-      //     creationDate = creationDate,
-      //     permissions = permissions,
-      //     newValueInfos = Seq.empty,
-      //     linkUpdates = Seq(
-      //       NewLinkValueInfo(
-      //         linkPropertyIri = linkPropertyIri,
-      //         newLinkValueIri = linkValueIri,
-      //         linkTargetIri = linkTargetIri,
-      //         newReferenceCount = 1,
-      //         newLinkValueCreator = linkCreator,
-      //         newLinkValuePermissions = linkPermissions,
-      //         valueUuid = valueUuid,
-      //       ),
-      //     ),
-      //   )
-
-      //   val expected =
-      //     Update(s"""|
-      //                |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-      //                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      //                |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-      //                |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-      //                |
-      //                |INSERT DATA {
-      //                |    GRAPH <fooGraph> {
-      //                |        <fooResource> rdf:type <fooClass> ;
-      //                |            rdfs:label \"\"\"fooLabel\"\"\" ;
-      //                |            knora-base:isDeleted false ;
-      //                |            knora-base:attachedToUser <fooUser> ;
-      //                |            knora-base:attachedToProject <fooProject> ;
-      //                |            knora-base:hasPermissions "fooPermissions" ;
-      //                |            knora-base:creationDate "2024-01-01T10:00:00.673298Z"^^xsd:dateTime .
-      //                |
-      //                |
-      //                |
-      //                |
-      //                |
-      //                |
-      //                |            <fooResource> <fooLinkProperty> <fooLinkTarget> .
-      //                |
-      //                |
-      //                |            <fooLinkValue> rdf:type knora-base:LinkValue ;
-      //                |                rdf:subject <fooResource> ;
-      //                |                rdf:predicate <fooLinkProperty> ;
-      //                |                rdf:object <fooLinkTarget> ;
-      //                |                knora-base:valueHasString "fooLinkTarget" ;
-      //                |                knora-base:valueHasRefCount 1 ;
-      //                |                knora-base:isDeleted false ;
-      //                |                knora-base:valueCreationDate "2024-01-01T10:00:00.673298Z"^^xsd:dateTime ;
-      //                |                knora-base:attachedToUser <fooLinkCreator> ;
-      //                |                knora-base:hasPermissions "fooLinkPermissions" ;
-      //                |                knora-base:valueHasUUID "$valueUuid" .
-      //                |
-      //                |
-      //                |            <fooResource> <fooLinkPropertyValue> <fooLinkValue> .
-      //                |
-      //                |    }
-      //                |}
-      //                |""".stripMargin)
-      //   val result = ResourcesRepoLive.createNewResourceQuery(
-      //     dataGraphIri = graphIri,
-      //     resourceToCreate = resourceDefinition,
-      //     projectIri = projectIri,
-      //     creatorIri = userIri,
-      //   )
-
-      //   assertTrue(expected.sparql == result.sparql)
-      // },
+      createResourceWithStzandoffLinkTest,
+      createResourceWithValueAndStandoffLinkTest,
     )
   // TODO:
-  // - add test for other value types
-  //   - text value (unformatted)
-  //   - text value (formatted)
   // - bring back the link stuff (and figure out what's the deal)
+  // - remove all reference checks
+  // - remove twirl implementation
 
 }
