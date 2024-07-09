@@ -36,7 +36,7 @@ case class ResourceReadyToCreate(
   creationDate: Instant,
   permissions: String,
   newValueInfos: Seq[NewValueInfo],
-  linkUpdates: Seq[StandoffLinkValueInfo],
+  standoffLinks: Seq[StandoffLinkValueInfo],
 )
 
 trait ResourcesRepo {
@@ -86,7 +86,7 @@ object ResourcesRepoLive {
         resourceClassIri = resourceToCreate.resourceClassIri,
         resourceLabel = resourceToCreate.resourceLabel,
         permissions = resourceToCreate.permissions,
-        linkUpdates = resourceToCreate.linkUpdates,
+        linkUpdates = resourceToCreate.standoffLinks,
         newValueInfos = resourceToCreate.newValueInfos,
       ),
     )

@@ -621,7 +621,7 @@ final case class CreateResourceV2Handler(
       creationDate = creationDate,
       permissions = resourcePermissions,
       newValueInfos = newValueInfos,
-      linkUpdates = linkUpdates,
+      standoffLinks = linkUpdates,
     )
   }
 

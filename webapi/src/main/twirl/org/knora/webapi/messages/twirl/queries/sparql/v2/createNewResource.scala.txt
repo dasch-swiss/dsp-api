@@ -20,7 +20,7 @@
   resourceClassIri: IRI,
   resourceLabel: String,
   permissions: String,
-  linkUpdates: Seq[NewLinkValueInfo],
+  linkUpdates: Seq[StandoffLinkValueInfo],
   newValueInfos: Seq[NewValueInfo]
 )
 
@@ -44,6 +44,12 @@ INSERT DATA {
             # Value: @newValueInfo.valueIri
             # Property: @newValueInfo.propertyIri
             <@newValueInfo.resourceIri> <@newValueInfo.propertyIri> <@newValueInfo.valueIri> .
+        }
+
+        @for(linkUpdate <- linkUpdates) {
+            @* Attach the new Standoff LinkValue to its containing resource. *@
+            <@resourceIri> <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+            <@resourceIri> <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
         }
 
         @for(newValueInfo <- newValueInfos) {
@@ -234,9 +240,6 @@ INSERT DATA {
 
 
         @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
-
-            <@resourceIri> <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
-
             @* Insert a LinkValue for the resource reference. *@
             <@linkUpdate.newLinkValueIri> rdf:type knora-base:LinkValue ;
                 rdf:subject <@resourceIri> ;
@@ -249,9 +252,6 @@ INSERT DATA {
                 knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
                 knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" ;
                 knora-base:valueHasUUID "@linkUpdate.valueUuid" .
-
-            @* Attach the new LinkValue to its containing resource. *@
-            <@resourceIri> <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
         }
     }
 }
