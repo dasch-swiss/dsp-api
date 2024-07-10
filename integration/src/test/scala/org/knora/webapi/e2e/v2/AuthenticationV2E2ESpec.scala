@@ -5,7 +5,6 @@
 
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.*
