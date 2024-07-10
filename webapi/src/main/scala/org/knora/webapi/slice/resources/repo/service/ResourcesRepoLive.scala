@@ -25,7 +25,6 @@ import org.knora.webapi.messages.twirl.NewValueInfo
 import org.knora.webapi.messages.twirl.StandoffAttributeValue
 import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
 import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -58,7 +57,7 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService) extends Reso
     projectIri: IRI,
   ): Task[Unit] =
     triplestore.query(
-      ResourcesRepoLive.createNewResourceQueryTwirl(
+      ResourcesRepoLive.createNewResourceQuery(
         dataGraphIri,
         resource,
         projectIri,
@@ -70,27 +69,6 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService) extends Reso
 
 object ResourcesRepoLive {
   val layer = ZLayer.derive[ResourcesRepoLive]
-
-  private[service] def createNewResourceQueryTwirl(
-    dataGraphIri: InternalIri,
-    resourceToCreate: ResourceReadyToCreate,
-    projectIri: IRI,
-    creatorIri: IRI,
-  ): Update =
-    Update(
-      sparql.v2.txt.createNewResource(
-        dataNamedGraph = dataGraphIri.value,
-        projectIri = projectIri,
-        creatorIri = creatorIri,
-        creationDate = resourceToCreate.creationDate,
-        resourceIri = resourceToCreate.resourceIri,
-        resourceClassIri = resourceToCreate.resourceClassIri,
-        resourceLabel = resourceToCreate.resourceLabel,
-        permissions = resourceToCreate.permissions,
-        linkUpdates = resourceToCreate.standoffLinks,
-        newValueInfos = resourceToCreate.newValueInfos,
-      ),
-    )
 
   private[service] def createNewResourceQuery(
     dataGraphIri: InternalIri,

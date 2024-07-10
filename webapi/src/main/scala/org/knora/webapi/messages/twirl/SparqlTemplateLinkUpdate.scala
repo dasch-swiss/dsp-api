@@ -86,18 +86,6 @@ enum StandoffAttributeValue { self =>
   case DecimalAttribute(value: BigDecimal)
   case BooleanAttribute(value: Boolean)
   case TimeAttribute(value: Instant)
-
-  final def toSparql: String =
-    self match {
-      case IriAttribute(value)               => s"<$value>"
-      case UriAttribute(value)               => s""""$value"^^xsd:anyURI"""
-      case InternalReferenceAttribute(value) => s"<$value>"
-      case StringAttribute(value)            => s"""\"\"\"$value\"\"\""""
-      case IntegerAttribute(value)           => value.toString
-      case DecimalAttribute(value)           => s""""${value.toString}"^^xsd:decimal"""
-      case BooleanAttribute(value)           => value.toString
-      case TimeAttribute(value)              => s""""${value.toString}"^^xsd:dateTime"""
-    }
 }
 
 final case class StandoffAttribute(
