@@ -5,9 +5,10 @@
 
 package org.knora.webapi.slice.resources.repo.model
 
-import org.knora.webapi.IRI
 import java.time.Instant
 import java.util.UUID
+
+import org.knora.webapi.IRI
 
 final case class ResourceReadyToCreate(
   resourceIri: IRI,
