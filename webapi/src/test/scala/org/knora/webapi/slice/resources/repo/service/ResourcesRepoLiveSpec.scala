@@ -208,9 +208,9 @@ object TestData {
       value = TypeSpecificValueInfo.DateValueInfo(
         0,
         0,
-        DatePrecisionDay,
-        DatePrecisionDay,
-        CalendarNameGregorian,
+        DatePrecisionDay.toString,
+        DatePrecisionDay.toString,
+        CalendarNameGregorian.toString,
       ),
       valuePermissions = valuePermissions,
       valueCreator = valueCreator,
