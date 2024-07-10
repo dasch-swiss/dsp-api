@@ -595,15 +595,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
-        dataGraphIri = graphIri,
-        resourceToCreate = resource,
-        projectIri = projectIri,
-        creatorIri = userIri,
-      )
       assertUpdateQueriesEqual(expected, result)
-      && assertUpdateQueriesEqual(reference, result)
-      && assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with an integer value") {
       val resource = resourceDefinition.copy(newValueInfos = List(intValueDefinition))
