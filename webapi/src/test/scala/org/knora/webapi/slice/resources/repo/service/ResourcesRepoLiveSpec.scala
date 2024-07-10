@@ -442,7 +442,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                  |}
                  |""".stripMargin)
     val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resourceDefinition, projectIri, userIri)
-    assertUpdateQueriesEqual(expected, result)
+    val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+      dataGraphIri = graphIri,
+      resourceToCreate = resourceDefinition,
+      projectIri = projectIri,
+      creatorIri = userIri,
+    )
+    assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
   }
 
   private val createResourceWithValueSuite = suite("Create new resource with any type of value")(
@@ -520,7 +526,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with an formatted text value") {
       val resource = resourceDefinition.copy(newValueInfos = List(formattedTextValueDefinition))
@@ -605,7 +617,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a boolean value") {
       val resource = resourceDefinition.copy(newValueInfos = List(boolValueDefinition))
@@ -641,7 +659,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a decimal value") {
       val resource = resourceDefinition.copy(newValueInfos = List(decimalValueDefinition))
@@ -677,7 +701,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a URI value") {
       val resource = resourceDefinition.copy(newValueInfos = List(uriValueDefinition))
@@ -713,7 +743,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a date value") {
       val resource = resourceDefinition.copy(newValueInfos = List(dateValueDefinition))
@@ -753,7 +789,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a color value") {
       val resource = resourceDefinition.copy(newValueInfos = List(colorValueDefinition))
@@ -790,7 +832,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       )
 
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a geometry value") {
       val resource = resourceDefinition.copy(newValueInfos = List(geometryValueDefinition))
@@ -826,7 +874,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a still image file value") {
       val resource = resourceDefinition.copy(newValueInfos = List(stillImageFileValueDefinition))
@@ -867,7 +921,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a still image external file value") {
       val resource    = resourceDefinition.copy(newValueInfos = List(stillImageExternalFileValueDefinition))
@@ -906,7 +966,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a document file value") {
       val resource = resourceDefinition.copy(newValueInfos = List(documentFileValueDefinition))
@@ -948,7 +1014,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with another file value") {
       val resource = resourceDefinition.copy(newValueInfos = List(otherFileValueDefinition))
@@ -987,7 +1059,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a list value") {
       val resource = resourceDefinition.copy(newValueInfos = List(hierarchicalListValueDefinition))
@@ -1023,7 +1101,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with an interval value") {
       val resource = resourceDefinition.copy(newValueInfos = List(intervalValueDefinition))
@@ -1061,7 +1145,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       )
 
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a time value") {
       val resource = resourceDefinition.copy(newValueInfos = List(timeValueDefinition))
@@ -1098,7 +1188,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       )
 
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
     test("Create a new resource with a geoname value") {
       val resource = resourceDefinition.copy(newValueInfos = List(geonameValueDefinition))
@@ -1135,7 +1231,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       )
 
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     },
   )
 
@@ -1183,7 +1285,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     )
 
     val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-    assertUpdateQueriesEqual(expected, result)
+    val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+      dataGraphIri = graphIri,
+      resourceToCreate = resource,
+      projectIri = projectIri,
+      creatorIri = userIri,
+    )
+    assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
   }
 
   private val createResourceWithStzandoffLinkTest = test("Create a resource with a standoff link value") {
@@ -1223,7 +1331,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           |""".stripMargin,
     )
     val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-    assertUpdateQueriesEqual(expected, result)
+    val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+      dataGraphIri = graphIri,
+      resourceToCreate = resource,
+      projectIri = projectIri,
+      creatorIri = userIri,
+    )
+    assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
   }
 
   private val createResourceWithValueAndStandoffLinkTest =
@@ -1275,7 +1389,13 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
-      assertUpdateQueriesEqual(expected, result)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
+      assertUpdateQueriesEqual(expected, result) && assertUpdateQueriesEqual(reference, result)
     }
 
   val tests: Spec[StringFormatter, Nothing] =
@@ -1287,6 +1407,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       createResourceWithValueAndStandoffLinkTest,
     )
   // TODO:
-  // - reuse vocabulary
+  // - remove all reference checks
+  // - remove twirl implementation
 
 }
