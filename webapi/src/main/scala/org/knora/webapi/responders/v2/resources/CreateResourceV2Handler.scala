@@ -476,9 +476,9 @@ final case class CreateResourceV2Handler(
                     DateValueInfo(
                       valueHasStartJDN = valueHasStartJDN,
                       valueHasEndJDN = valueHasEndJDN,
-                      valueHasStartPrecision = valueHasStartPrecision,
-                      valueHasEndPrecision = valueHasEndPrecision,
-                      valueHasCalendar = valueHasCalendar,
+                      valueHasStartPrecision = valueHasStartPrecision.toString(),
+                      valueHasEndPrecision = valueHasEndPrecision.toString(),
+                      valueHasCalendar = valueHasCalendar.toString(),
                     ),
                   )
                 case TextValueContentV2(_, _, valueHasLanguage, _, None, _, _, _) =>

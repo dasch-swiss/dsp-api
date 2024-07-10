@@ -8,10 +8,6 @@ package org.knora.webapi.slice.resources.repo.model
 import org.knora.webapi.IRI
 import java.time.Instant
 import java.util.UUID
-import org.knora.webapi.messages.util.DatePrecisionV2
-import org.knora.webapi.messages.util.CalendarNameV2
-
-// TODO: don't depend on V2 here
 
 final case class ResourceReadyToCreate(
   resourceIri: IRI,
@@ -54,9 +50,9 @@ enum TypeSpecificValueInfo {
   case DateValueInfo(
     valueHasStartJDN: Int,
     valueHasEndJDN: Int,
-    valueHasStartPrecision: DatePrecisionV2,
-    valueHasEndPrecision: DatePrecisionV2,
-    valueHasCalendar: CalendarNameV2,
+    valueHasStartPrecision: String,
+    valueHasEndPrecision: String,
+    valueHasCalendar: String,
   )
   case ColorValueInfo(valueHasColor: String)
   case GeomValueInfo(valueHasGeometry: String)
