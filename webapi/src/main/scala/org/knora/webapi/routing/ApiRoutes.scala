@@ -5,6 +5,7 @@
 
 package org.knora.webapi.routing
 
+import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.cors.scaladsl.CorsDirectives
 import org.apache.pekko.http.cors.scaladsl.settings.CorsSettings
@@ -35,7 +36,17 @@ import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.security.Authenticator as WebApiAuthenticator
+import org.knora.webapi.slice.security.api.AuthenticationApiRoutes
 import org.knora.webapi.store.iiif.api.SipiService
+
+/**
+ * Data that needs to be passed to each route.
+ *
+ * @param system    the actor system.
+ * @param appActor  the main application actor.
+ * @param appConfig the application's configuration.
+ */
+case class PekkoRoutesData(system: ActorSystem, appActor: ActorRef, appConfig: AppConfig)
 
 /**
  * All routes composed together and CORS activated based on the
@@ -45,13 +56,13 @@ import org.knora.webapi.store.iiif.api.SipiService
  * The FIRST matching route is used for handling a request.
  */
 final case class ApiRoutes(
-  routeData: KnoraRouteData,
+  routeData: PekkoRoutesData,
   adminApiRoutes: AdminApiRoutes,
+  authenticationApiRoutes: AuthenticationApiRoutes,
   listsApiV2Routes: ListsApiV2Routes,
   resourceInfoRoutes: ResourceInfoRoutes,
   searchApiRoutes: SearchApiRoutes,
   managementRoutes: ManagementRoutes,
-  appConfig: AppConfig,
 )(implicit val runtime: Runtime[ApiRoutes.ApiRoutesRuntime])
     extends AroundDirectives {
 
@@ -60,19 +71,18 @@ final case class ApiRoutes(
   val routes: Route =
     logDuration {
       ServerVersion.addServerHeader {
-        DSPApiDirectives.handleErrors(appConfig) {
+        DSPApiDirectives.handleErrors(routeData.appConfig) {
           CorsDirectives.cors(
             CorsSettings(routeData.system)
               .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS)),
           ) {
-            DSPApiDirectives.handleErrors(appConfig) {
-              (adminApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes ++ listsApiV2Routes.routes)
-                .reduce(_ ~ _) ~
-                AuthenticationRouteV2().makeRoute ~
-                OntologiesRouteV2().makeRoute ~
-                ResourcesRouteV2(appConfig).makeRoute ~
+            DSPApiDirectives.handleErrors(routeData.appConfig) {
+              OntologiesRouteV2().makeRoute ~
+                ResourcesRouteV2(routeData.appConfig).makeRoute ~
                 StandoffRouteV2().makeRoute ~
-                ValuesRouteV2().makeRoute
+                ValuesRouteV2().makeRoute ~
+                (adminApiRoutes.routes ++ authenticationApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes)
+                  .reduce(_ ~ _)
             }
           }
         }
@@ -83,9 +93,9 @@ final case class ApiRoutes(
 object ApiRoutes {
 
   private type ApiRoutesRuntime =
-    AppConfig & AuthorizationRestService & core.State & IriConverter & MessageRelay & ProjectService &
-      RestCardinalityService & WebApiAuthenticator & SearchApiRoutes & SearchResponderV2 & SipiService &
-      StringFormatter & UserService & ValuesResponderV2 & ListsApiV2Routes
+    AppConfig & AuthenticationApiRoutes & AuthorizationRestService & core.State & IriConverter & MessageRelay &
+      ProjectService & RestCardinalityService & WebApiAuthenticator & SearchApiRoutes & SearchResponderV2 &
+      SipiService & StringFormatter & UserService & ValuesResponderV2 & ListsApiV2Routes
 
   /**
    * All routes composed together.
@@ -96,26 +106,25 @@ object ApiRoutes {
   ] =
     ZLayer {
       for {
-        sys                <- ZIO.service[ActorSystem]
-        router             <- ZIO.service[AppRouter]
-        appConfig          <- ZIO.service[AppConfig]
-        adminApiRoutes     <- ZIO.service[AdminApiRoutes]
-        listsApiV2Routes   <- ZIO.service[ListsApiV2Routes]
-        resourceInfoRoutes <- ZIO.service[ResourceInfoRoutes]
-        searchApiRoutes    <- ZIO.service[SearchApiRoutes]
-        managementRoutes   <- ZIO.service[ManagementRoutes]
-        routeData          <- ZIO.succeed(KnoraRouteData(sys, router.ref, appConfig))
-        runtime            <- ZIO.runtime[ApiRoutesRuntime]
+        sys                     <- ZIO.service[ActorSystem]
+        router                  <- ZIO.service[AppRouter]
+        appConfig               <- ZIO.service[AppConfig]
+        adminApiRoutes          <- ZIO.service[AdminApiRoutes]
+        authenticationApiRoutes <- ZIO.service[AuthenticationApiRoutes]
+        listsApiV2Routes        <- ZIO.service[ListsApiV2Routes]
+        resourceInfoRoutes      <- ZIO.service[ResourceInfoRoutes]
+        searchApiRoutes         <- ZIO.service[SearchApiRoutes]
+        managementRoutes        <- ZIO.service[ManagementRoutes]
+        routeData               <- ZIO.succeed(PekkoRoutesData(sys, router.ref, appConfig))
+        runtime                 <- ZIO.runtime[ApiRoutesRuntime]
       } yield ApiRoutes(
         routeData,
         adminApiRoutes,
+        authenticationApiRoutes,
         listsApiV2Routes,
         resourceInfoRoutes,
         searchApiRoutes,
         managementRoutes,
-        appConfig,
-      )(
-        runtime,
-      )
+      )(runtime)
     }
 }

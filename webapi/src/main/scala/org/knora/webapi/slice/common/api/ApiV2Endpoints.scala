@@ -11,17 +11,20 @@ import zio.ZLayer
 import org.knora.webapi.slice.lists.api.ListsEndpointsV2
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
+import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2
 
 final case class ApiV2Endpoints(
   private val listsEndpointsV2: ListsEndpointsV2,
   private val resourceInfoEndpoints: ResourceInfoEndpoints,
   private val searchEndpoints: SearchEndpoints,
+  private val authenticationEndpoints: AuthenticationEndpointsV2,
 ) {
 
   val endpoints: Seq[AnyEndpoint] =
     listsEndpointsV2.endpoints ++
       resourceInfoEndpoints.endpoints ++
-      searchEndpoints.endpoints
+      searchEndpoints.endpoints ++
+      authenticationEndpoints.endpoints
 }
 
 object ApiV2Endpoints {

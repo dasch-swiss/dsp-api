@@ -5,14 +5,15 @@
 
 package org.knora.webapi.slice.common.api
 
-import org.apache.pekko.http.scaladsl.model.HttpResponse
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import sttp.apispec.openapi.Server
 import sttp.apispec.openapi.circe.yaml.RichOpenAPI
 import sttp.tapir.AnyEndpoint
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import zio.Chunk
+import zio.IO
 import zio.Task
+import zio.UIO
 import zio.ZIO
 import zio.ZIOAppArgs
 import zio.ZIOAppDefault
@@ -21,7 +22,6 @@ import zio.nio.file.Files
 import zio.nio.file.Path
 
 import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
 import org.knora.webapi.slice.admin.api.AdminApiEndpoints
 import org.knora.webapi.slice.admin.api.FilesEndpoints
 import org.knora.webapi.slice.admin.api.GroupsEndpoints
@@ -31,22 +31,29 @@ import org.knora.webapi.slice.admin.api.PermissionsEndpoints
 import org.knora.webapi.slice.admin.api.ProjectsEndpoints
 import org.knora.webapi.slice.admin.api.StoreEndpoints
 import org.knora.webapi.slice.admin.api.UsersEndpoints
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.lists.api.ListsEndpointsV2
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.slice.security.Authenticator
+import org.knora.webapi.slice.security.AuthenticatorError
+import org.knora.webapi.slice.security.AuthenticatorError.*
+import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2
 
 final case class DocsNoopAuthenticator() extends Authenticator {
-  override def getUserADM(requestContext: RequestContext): Task[User]                                    = ???
-  override def calculateCookieName(): String                                                             = "KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9"
-  override def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2]): Task[User]       = ???
-  override def doLogoutV2(requestContext: RequestContext): Task[HttpResponse]                            = ???
-  override def doLoginV2(credentials: KnoraCredentialsV2.KnoraPasswordCredentialsV2): Task[HttpResponse] = ???
-  override def doAuthenticateV2(requestContext: RequestContext): Task[HttpResponse]                      = ???
-  override def presentLoginFormV2(requestContext: RequestContext): Task[HttpResponse]                    = ???
-  override def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2]): Task[Boolean]         = ???
+  override def getUserADM(requestContext: RequestContext): Task[User] = ???
+  override def calculateCookieName(): String                          = "KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9"
+
+  override def authenticate(userIri: UserIri, password: String): IO[AuthenticatorError, (User, Jwt)]   = ???
+  override def authenticate(username: Username, password: String): IO[AuthenticatorError, (User, Jwt)] = ???
+  override def authenticate(email: Email, password: String): IO[AuthenticatorError, (User, Jwt)]       = ???
+  override def invalidateToken(jwt: String): UIO[Unit]                                                 = ???
+  override def authenticate(jwtToken: String): IO[AuthenticatorError, User]                            = ???
 }
 object DocsNoopAuthenticator {
   val layer = ZLayer.succeed(DocsNoopAuthenticator())
@@ -71,6 +78,7 @@ object DocsGenerator extends ZIOAppDefault {
     } yield 0
   }.provideSome[ZIOAppArgs](
     AdminApiEndpoints.layer,
+    AuthenticationEndpointsV2.layer,
     ApiV2Endpoints.layer,
     BaseEndpoints.layer,
     DocsNoopAuthenticator.layer,

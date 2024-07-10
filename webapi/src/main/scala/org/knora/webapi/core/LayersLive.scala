@@ -60,6 +60,7 @@ import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.slice.security.SecurityModule
+import org.knora.webapi.slice.security.api.AuthenticationApiModule
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -84,6 +85,7 @@ object LayersLive {
     AppRouter &
     AssetPermissionsResponder &
     AuthorizationRestService &
+    AuthenticationApiModule.Provided &
     CardinalityHandler &
     ConstructResponseUtilV2 &
     GroupRestService &
@@ -137,6 +139,7 @@ object LayersLive {
       AppConfig.layer,
       AppRouter.layer,
       AssetPermissionsResponder.layer,
+      AuthenticationApiModule.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
       CardinalityHandler.layer,

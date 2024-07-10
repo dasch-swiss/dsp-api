@@ -25,8 +25,6 @@ import scala.concurrent.Future
 
 import dsp.errors.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
-import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
@@ -34,16 +32,7 @@ import org.knora.webapi.slice.security.Authenticator
 
 final case class BaseEndpoints(authenticator: Authenticator)(implicit val r: zio.Runtime[Any]) {
 
-  private val defaultErrorOutputs: EndpointOutput.OneOf[RequestRejectedException, RequestRejectedException] =
-    oneOf[RequestRejectedException](
-      oneOfVariant[NotFoundException](statusCode(StatusCode.NotFound).and(jsonBody[NotFoundException])),
-      oneOfVariant[BadRequestException](statusCode(StatusCode.BadRequest).and(jsonBody[BadRequestException])),
-      oneOfVariant[ValidationException](statusCode(StatusCode.BadRequest).and(jsonBody[ValidationException])),
-      oneOfVariant[DuplicateValueException](statusCode(StatusCode.BadRequest).and(jsonBody[DuplicateValueException])),
-      oneOfVariant[GravsearchException](statusCode(StatusCode.BadRequest).and(jsonBody[GravsearchException])),
-    )
-
-  private val secureDefaultErrorOutputs: EndpointOutput.OneOf[RequestRejectedException, RequestRejectedException] =
+  private val errorOutputs: EndpointOutput.OneOf[RequestRejectedException, RequestRejectedException] =
     oneOf[RequestRejectedException](
       // default
       oneOfVariant[NotFoundException](statusCode(StatusCode.NotFound).and(jsonBody[NotFoundException])),
@@ -56,12 +45,12 @@ final case class BaseEndpoints(authenticator: Authenticator)(implicit val r: zio
       oneOfVariant[ForbiddenException](statusCode(StatusCode.Forbidden).and(jsonBody[ForbiddenException])),
     )
 
-  val publicEndpoint = endpoint.errorOut(defaultErrorOutputs)
+  val publicEndpoint = endpoint.errorOut(errorOutputs)
 
   private val endpointWithBearerCookieBasicAuthOptional
     : Endpoint[(Option[String], Option[String], Option[UsernamePassword]), Unit, RequestRejectedException, Unit, Any] =
     endpoint
-      .errorOut(secureDefaultErrorOutputs)
+      .errorOut(errorOutputs)
       .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
       .securityIn(cookie[Option[String]](authenticator.calculateCookieName()))
       .securityIn(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
@@ -83,17 +72,16 @@ final case class BaseEndpoints(authenticator: Authenticator)(implicit val r: zio
 
   private def authenticateJwt(jwtToken: String): Future[Either[RequestRejectedException, User]] =
     UnsafeZioRun.runToFuture(
-      authenticator.verifyJwt(jwtToken).refineOrDie { case e: RequestRejectedException => e }.either,
+      authenticator.authenticate(jwtToken).orElseFail(BadCredentialsException("Invalid credentials.")).either,
     )
 
   private def authenticateBasic(basic: UsernamePassword): Future[Either[RequestRejectedException, User]] =
     UnsafeZioRun.runToFuture(
-      for {
-        email <- ZIO.fromEither(Email.from(basic.username)).orElseFail(BadCredentialsException("Invalid credentials."))
-        id     = CredentialsIdentifier.EmailIdentifier(email)
-        creds  = KnoraPasswordCredentialsV2(id, basic.password.getOrElse(""))
-        user  <- authenticator.getUserADMThroughCredentialsV2(Some(creds)).asRight
-      } yield user,
+      (for {
+        email    <- ZIO.fromEither(Email.from(basic.username))
+        password <- ZIO.fromOption(basic.password)
+        user     <- authenticator.authenticate(email, password)
+      } yield user._1).orElseFail(BadCredentialsException("Invalid credentials.")).asRight,
     )
 }
 

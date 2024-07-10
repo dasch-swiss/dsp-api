@@ -68,6 +68,8 @@ import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.slice.security.SecurityModule
+import org.knora.webapi.slice.security.api.AuthenticationApiModule
+import org.knora.webapi.slice.security.api.AuthenticationApiRoutes
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -100,6 +102,7 @@ object LayersTest {
     AdminModule.Provided &
     ApiRoutes &
     AppRouter &
+    AuthenticationApiModule.Provided &
     AssetPermissionsResponder &
     AuthorizationRestService &
     CardinalityHandler &
@@ -164,6 +167,7 @@ object LayersTest {
       AppRouter.layer,
       AssetPermissionsResponder.layer,
       AuthorizationRestService.layer,
+      AuthenticationApiModule.layer,
       BaseEndpoints.layer,
       CardinalityHandler.layer,
       CardinalityService.layer,

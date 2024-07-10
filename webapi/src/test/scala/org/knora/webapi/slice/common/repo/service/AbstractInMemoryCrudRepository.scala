@@ -40,7 +40,7 @@ abstract class AbstractInMemoryCrudRepository[Entity, Id](entities: Ref[Chunk[En
    * @param id The identifier of type [[Id]].
    * @return the entity with the given id or [[None]] if none found.
    */
-  override def findById(id: Id): Task[Option[Entity]] = entities.get.map(_.find(getId(_) == id))
+  override def findById(id: Id): Task[Option[Entity]] = findOneBy(entity => getId(entity) == id)
 
   /**
    * Returns all instances of the type.
@@ -48,4 +48,7 @@ abstract class AbstractInMemoryCrudRepository[Entity, Id](entities: Ref[Chunk[En
    * @return all instances of the type.
    */
   override def findAll(): Task[Chunk[Entity]] = entities.get
+
+  def findOneBy(predicate: Entity => Boolean): Task[Option[Entity]] = entities.get.map(_.find(predicate))
+  def findBy(predicate: Entity => Boolean): Task[Chunk[Entity]]     = entities.get.map(_.filter(predicate))
 }
