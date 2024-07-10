@@ -21,12 +21,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
-import org.knora.webapi.messages.twirl.NewValueInfo
-import org.knora.webapi.messages.twirl.StandoffAttribute
-import org.knora.webapi.messages.twirl.StandoffAttributeValue
-import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
-import org.knora.webapi.messages.twirl.StandoffTagInfo
-import org.knora.webapi.messages.twirl.TypeSpecificValueInfo.*
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
@@ -60,7 +54,13 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
-import org.knora.webapi.slice.resources.repo.service.ResourceReadyToCreate
+import org.knora.webapi.slice.resources.repo.model.NewValueInfo
+import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
+import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
+import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
+import org.knora.webapi.slice.resources.repo.model.StandoffLinkValueInfo
+import org.knora.webapi.slice.resources.repo.model.StandoffTagInfo
+import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.util.ZioHelper
 

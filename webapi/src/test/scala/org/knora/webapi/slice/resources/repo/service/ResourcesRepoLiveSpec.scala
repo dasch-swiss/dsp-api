@@ -15,15 +15,16 @@ import java.util.UUID
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.twirl.NewValueInfo
-import org.knora.webapi.messages.twirl.StandoffAttribute
-import org.knora.webapi.messages.twirl.StandoffAttributeValue
-import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
-import org.knora.webapi.messages.twirl.StandoffTagInfo
-import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resources.repo.model.NewValueInfo
+import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
+import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
+import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
+import org.knora.webapi.slice.resources.repo.model.StandoffLinkValueInfo
+import org.knora.webapi.slice.resources.repo.model.StandoffTagInfo
+import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 object TestData {
@@ -467,7 +468,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
   private val createResourceWithValueSuite = suite("Create new resource with any type of value")(
     test("Create a new resource with a link value") {
       val resource = resourceDefinition.copy(newValueInfos = List(linkValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -507,7 +507,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with an unformatted text value") {
       val resource = resourceDefinition.copy(newValueInfos = List(unformattedTextValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -543,7 +542,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with an formatted text value") {
       val resource = resourceDefinition.copy(newValueInfos = List(formattedTextValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -599,7 +597,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with an integer value") {
       val resource = resourceDefinition.copy(newValueInfos = List(intValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -635,7 +632,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with a boolean value") {
       val resource = resourceDefinition.copy(newValueInfos = List(boolValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -671,7 +667,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with a decimal value") {
       val resource = resourceDefinition.copy(newValueInfos = List(decimalValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -707,7 +702,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with a URI value") {
       val resource = resourceDefinition.copy(newValueInfos = List(uriValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -743,7 +737,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with a date value") {
       val resource = resourceDefinition.copy(newValueInfos = List(dateValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -783,7 +776,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with a color value") {
       val resource = resourceDefinition.copy(newValueInfos = List(colorValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -820,7 +812,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with a geometry value") {
       val resource = resourceDefinition.copy(newValueInfos = List(geometryValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -856,7 +847,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with a still image file value") {
       val resource = resourceDefinition.copy(newValueInfos = List(stillImageFileValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -898,7 +888,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     test("Create a new resource with a still image external file value") {
       val resource    = resourceDefinition.copy(newValueInfos = List(stillImageExternalFileValueDefinition))
       val uuidEncoded = UuidUtil.base64Encode(stillImageExternalFileValueDefinition.valueUUID)
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -936,7 +925,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with a document file value") {
       val resource = resourceDefinition.copy(newValueInfos = List(documentFileValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -978,7 +966,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with another file value") {
       val resource = resourceDefinition.copy(newValueInfos = List(otherFileValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -1017,7 +1004,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with a list value") {
       val resource = resourceDefinition.copy(newValueInfos = List(hierarchicalListValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -1053,7 +1039,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with an interval value") {
       val resource = resourceDefinition.copy(newValueInfos = List(intervalValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -1091,7 +1076,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with a time value") {
       val resource = resourceDefinition.copy(newValueInfos = List(timeValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -1128,7 +1112,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     },
     test("Create a new resource with a geoname value") {
       val resource = resourceDefinition.copy(newValueInfos = List(geonameValueDefinition))
-
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -1214,7 +1197,6 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
 
   private val createResourceWithStzandoffLinkTest = test("Create a resource with a standoff link value") {
     val resource = resourceDefinition.copy(standoffLinks = List(standoffLinkValue))
-
     val expected = Update(
       s"""|
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -1254,9 +1236,10 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
 
   private val createResourceWithValueAndStandoffLinkTest =
     test("Create a resource with a value and a standoff link value") {
-      val resource =
-        resourceDefinition.copy(standoffLinks = List(standoffLinkValue), newValueInfos = List(intValueDefinition))
-
+      val resource = resourceDefinition.copy(
+        standoffLinks = List(standoffLinkValue),
+        newValueInfos = List(intValueDefinition),
+      )
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -1312,7 +1295,4 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       createResourceWithStzandoffLinkTest,
       createResourceWithValueAndStandoffLinkTest,
     )
-  // TODO:
-  // - reuse vocabulary
-
 }

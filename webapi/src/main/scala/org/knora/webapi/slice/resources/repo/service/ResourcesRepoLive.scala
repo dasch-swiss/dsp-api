@@ -17,27 +17,13 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
 import zio.*
 
-import java.time.Instant
-
 import dsp.constants.SalsahGui.IRI
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.messages.twirl.NewValueInfo
-import org.knora.webapi.messages.twirl.StandoffAttributeValue
-import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
-import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
+import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-
-case class ResourceReadyToCreate(
-  resourceIri: IRI,
-  resourceClassIri: IRI,
-  resourceLabel: String,
-  creationDate: Instant,
-  permissions: String,
-  newValueInfos: Seq[NewValueInfo],
-  standoffLinks: Seq[StandoffLinkValueInfo],
-)
 
 trait ResourcesRepo {
   def createNewResource(
@@ -76,7 +62,7 @@ object ResourcesRepoLive {
     projectIri: IRI,
     creatorIri: IRI,
   ) = {
-    import TypeSpecificValueInfo.*
+    import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 
     val graph = iri(dataGraphIri.value)
 
