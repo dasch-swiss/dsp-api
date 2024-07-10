@@ -631,7 +631,7 @@ final case class CreateResourceV2Handler(
             valuePermissions = valueToCreate.permissions,
             creationDate = valueCreationDate,
             valueHasOrder = valueHasOrder,
-            valueHasString = valueToCreate.valueContent.valueHasString,
+            valueHasString = valueToCreate.valueContent.unescape.valueHasString,
             comment = valueToCreate.valueContent.comment,
           )
         }
