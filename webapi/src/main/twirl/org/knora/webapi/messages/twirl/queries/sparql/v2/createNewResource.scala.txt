@@ -102,6 +102,7 @@ INSERT DATA {
                                 @*
                                 Check for optional standoff properties
                                 *@
+                                rdf:type <@createStandoff.standoffTagClassIri> ;
                                 @createStandoff.endIndex.map { index =>
                                     knora-base:standoffTagHasEndIndex @index ;
                                 }
@@ -119,14 +120,13 @@ INSERT DATA {
                                 Handle standoff class specific standoff properties
                                 *@
                                 @for(createProperty <- createStandoff.attributes) {
-                                    <@createProperty.propertyIri> @createProperty.value ;
+                                    <@createProperty.propertyIri> @createProperty.value.toSparql ;
                                 }
 
                                 knora-base:standoffTagHasStartIndex @createStandoff.startIndex ;
                                 knora-base:standoffTagHasUUID "@{UuidUtil.base64Encode(createStandoff.uuid)}" ;
                                 knora-base:standoffTagHasStart @createStandoff.startPosition ;
-                                knora-base:standoffTagHasEnd @createStandoff.endPosition ;
-                                rdf:type <@createStandoff.standoffTagClassIri> .
+                                knora-base:standoffTagHasEnd @createStandoff.endPosition .
                     }
                 }
 

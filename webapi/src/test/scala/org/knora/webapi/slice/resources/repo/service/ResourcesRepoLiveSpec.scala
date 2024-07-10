@@ -17,6 +17,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.NewValueInfo
 import org.knora.webapi.messages.twirl.StandoffAttribute
+import org.knora.webapi.messages.twirl.StandoffAttributeValue
 import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
 import org.knora.webapi.messages.twirl.StandoffTagInfo
 import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
@@ -102,7 +103,25 @@ object TestData {
           endIndex = Some(3),
           startPosition = 0,
           endPosition = 3,
-          attributes = List(StandoffAttribute("foo:attributePropertyIri", "attribute value")),
+          attributes = List(
+            StandoffAttribute(
+              "foo:attributePropertyIri",
+              StandoffAttributeValue.IriAttribute("foo:standoffAttributeIri"),
+            ),
+            StandoffAttribute("foo:attributePropertyIri", StandoffAttributeValue.UriAttribute("http://example.com")),
+            StandoffAttribute(
+              "foo:attributePropertyIri",
+              StandoffAttributeValue.InternalReferenceAttribute("foo:internalRef"),
+            ),
+            StandoffAttribute("foo:attributePropertyIri", StandoffAttributeValue.StringAttribute("attribute value")),
+            StandoffAttribute("foo:attributePropertyIri", StandoffAttributeValue.IntegerAttribute(42)),
+            StandoffAttribute("foo:attributePropertyIri", StandoffAttributeValue.DecimalAttribute(BigDecimal(42.42))),
+            StandoffAttribute("foo:attributePropertyIri", StandoffAttributeValue.BooleanAttribute(true)),
+            StandoffAttribute(
+              "foo:attributePropertyIri",
+              StandoffAttributeValue.TimeAttribute(Instant.parse("1024-01-01T10:00:00.673298Z")),
+            ),
+          ),
         ),
       ),
     ),
@@ -571,7 +590,14 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:standoffTagHasStartParent <foo:StartParentIri> ;
             |            knora-base:standoffTagHasEndParent <foo:EndParentIri> ;
             |            knora-base:standoffTagHasOriginalXMLID "xml-id" ;
+            |            <foo:attributePropertyIri> <foo:standoffAttributeIri> ;
+            |            <foo:attributePropertyIri> "http://example.com"^^xsd:anyURI ;
+            |            <foo:attributePropertyIri> <foo:internalRef> ;
             |            <foo:attributePropertyIri> "attribute value" ;
+            |            <foo:attributePropertyIri> 42 ;
+            |            <foo:attributePropertyIri> 42.42 ;
+            |            <foo:attributePropertyIri> true ;
+            |            <foo:attributePropertyIri> "1024-01-01T10:00:00.673298Z"^^xsd:dateTime ;
             |            knora-base:standoffTagHasStartIndex 0 ;
             |            knora-base:standoffTagHasUUID "${UuidUtil.base64Encode(standoffTagUuid)}" ;
             |            knora-base:standoffTagHasStart 0 ;
@@ -581,7 +607,15 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |""".stripMargin,
       )
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+      val reference = ResourcesRepoLive.createNewResourceQueryTwirl(
+        dataGraphIri = graphIri,
+        resourceToCreate = resource,
+        projectIri = projectIri,
+        creatorIri = userIri,
+      )
       assertUpdateQueriesEqual(expected, result)
+      && assertUpdateQueriesEqual(reference, result)
+      && assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with an integer value") {
       val resource = resourceDefinition.copy(newValueInfos = List(intValueDefinition))

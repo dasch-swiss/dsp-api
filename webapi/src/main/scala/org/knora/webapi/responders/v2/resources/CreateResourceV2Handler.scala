@@ -23,6 +23,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionT
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.twirl.NewValueInfo
 import org.knora.webapi.messages.twirl.StandoffAttribute
+import org.knora.webapi.messages.twirl.StandoffAttributeValue
 import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
 import org.knora.webapi.messages.twirl.StandoffTagInfo
 import org.knora.webapi.messages.twirl.TypeSpecificValueInfo.*
@@ -33,6 +34,14 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagBooleanAttributeV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagDecimalAttributeV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIntegerAttributeV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagInternalReferenceAttributeV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAttributeV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagStringAttributeV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagTimeAttributeV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagUriAttributeV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -478,6 +487,19 @@ final case class CreateResourceV2Handler(
                   val standoffInfo = tv
                     .prepareForSparqlInsert(newValueIri)
                     .map(standoffTag =>
+                      val attributes = standoffTag.standoffNode.attributes.map { attr =>
+                        val v = attr match
+                          case StandoffTagIriAttributeV2(_, value, _) => StandoffAttributeValue.IriAttribute(value)
+                          case StandoffTagUriAttributeV2(_, value)    => StandoffAttributeValue.UriAttribute(value)
+                          case StandoffTagInternalReferenceAttributeV2(_, value) =>
+                            StandoffAttributeValue.InternalReferenceAttribute(value)
+                          case StandoffTagStringAttributeV2(_, value)  => StandoffAttributeValue.StringAttribute(value)
+                          case StandoffTagIntegerAttributeV2(_, value) => StandoffAttributeValue.IntegerAttribute(value)
+                          case StandoffTagDecimalAttributeV2(_, value) => StandoffAttributeValue.DecimalAttribute(value)
+                          case StandoffTagBooleanAttributeV2(_, value) => StandoffAttributeValue.BooleanAttribute(value)
+                          case StandoffTagTimeAttributeV2(_, value)    => StandoffAttributeValue.TimeAttribute(value)
+                        StandoffAttribute(attr.standoffPropertyIri.toString(), v)
+                      }
                       StandoffTagInfo(
                         standoffTagClassIri = standoffTag.standoffNode.standoffTagClassIri.toString(),
                         standoffTagInstanceIri = standoffTag.standoffTagInstanceIri,
@@ -489,8 +511,7 @@ final case class CreateResourceV2Handler(
                         endIndex = standoffTag.standoffNode.endIndex,
                         startPosition = standoffTag.standoffNode.startPosition,
                         endPosition = standoffTag.standoffNode.endPosition,
-                        attributes = standoffTag.standoffNode.attributes
-                          .map(attr => StandoffAttribute(attr.standoffPropertyIri.toString(), attr.rdfValue)),
+                        attributes = attributes,
                       ),
                     )
                   ZIO

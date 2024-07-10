@@ -77,9 +77,32 @@ final case class NewValueInfo(
   comment: Option[String],
 )
 
+enum StandoffAttributeValue { self =>
+  case IriAttribute(value: IRI)
+  case UriAttribute(value: String)
+  case InternalReferenceAttribute(value: IRI)
+  case StringAttribute(value: String)
+  case IntegerAttribute(value: Int)
+  case DecimalAttribute(value: BigDecimal)
+  case BooleanAttribute(value: Boolean)
+  case TimeAttribute(value: Instant)
+
+  final def toSparql: String =
+    self match {
+      case IriAttribute(value)               => s"<$value>"
+      case UriAttribute(value)               => s""""$value"^^xsd:anyURI"""
+      case InternalReferenceAttribute(value) => s"<$value>"
+      case StringAttribute(value)            => s"""\"\"\"$value\"\"\""""
+      case IntegerAttribute(value)           => value.toString
+      case DecimalAttribute(value)           => s""""${value.toString}"^^xsd:decimal"""
+      case BooleanAttribute(value)           => value.toString
+      case TimeAttribute(value)              => s""""${value.toString}"^^xsd:dateTime"""
+    }
+}
+
 final case class StandoffAttribute(
   propertyIri: IRI,
-  value: String,
+  value: StandoffAttributeValue,
 )
 
 final case class StandoffTagInfo(

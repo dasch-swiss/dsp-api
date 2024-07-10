@@ -22,6 +22,7 @@ import java.time.Instant
 import dsp.constants.SalsahGui.IRI
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.twirl.NewValueInfo
+import org.knora.webapi.messages.twirl.StandoffAttributeValue
 import org.knora.webapi.messages.twirl.StandoffLinkValueInfo
 import org.knora.webapi.messages.twirl.TypeSpecificValueInfo
 import org.knora.webapi.messages.twirl.queries.sparql
@@ -183,7 +184,16 @@ object ResourcesRepoLive {
               standoffPattern.andHas(KnoraBaseVocab.standoffTagHasOriginalXMLID, Rdf.literalOf(originalXMLID)),
             )
             for (attribute <- standoffTagInfo.attributes) {
-              standoffPattern.andHas(Rdf.iri(attribute.propertyIri), Rdf.literalOf(attribute.value))
+              val v = attribute.value match
+                case StandoffAttributeValue.IriAttribute(value)               => Rdf.iri(value)
+                case StandoffAttributeValue.UriAttribute(value)               => Rdf.literalOfType(value, XSD.ANYURI)
+                case StandoffAttributeValue.InternalReferenceAttribute(value) => Rdf.iri(value)
+                case StandoffAttributeValue.StringAttribute(value)            => Rdf.literalOf(value)
+                case StandoffAttributeValue.IntegerAttribute(value)           => Rdf.literalOf(value)
+                case StandoffAttributeValue.DecimalAttribute(value)           => Rdf.literalOf(value)
+                case StandoffAttributeValue.BooleanAttribute(value)           => Rdf.literalOf(value)
+                case StandoffAttributeValue.TimeAttribute(value)              => Rdf.literalOfType(value.toString(), XSD.DATETIME)
+              standoffPattern.andHas(Rdf.iri(attribute.propertyIri), v)
             }
             standoffPattern
               .andHas(KnoraBaseVocab.standoffTagHasStartIndex, Rdf.literalOf(standoffTagInfo.startIndex))
