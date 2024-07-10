@@ -18,6 +18,8 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
+import org.knora.webapi.e2e.v2.AuthenticationV2JsonProtocol
+import org.knora.webapi.e2e.v2.LoginResponse
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
@@ -26,7 +28,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.messages.v2.routing.authenticationmessages.*
 import org.knora.webapi.models.filemodels.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM

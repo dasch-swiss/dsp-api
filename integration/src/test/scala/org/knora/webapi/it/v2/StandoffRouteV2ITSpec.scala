@@ -6,6 +6,10 @@
 package org.knora.webapi.it.v2
 
 import org.apache.pekko
+import org.apache.pekko.http.javadsl.model.StatusCodes
+import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -19,6 +23,8 @@ import scala.concurrent.duration.*
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
+import org.knora.webapi.e2e.v2.AuthenticationV2JsonProtocol
+import org.knora.webapi.e2e.v2.LoginResponse
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.sipimessages.*
@@ -26,8 +32,6 @@ import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtoc
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
-import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
@@ -35,11 +39,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
-
-import pekko.http.javadsl.model.StatusCodes
-import pekko.http.scaladsl.model.*
-import pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 /**
  * Integration test specification for the standoff endpoint.

@@ -36,7 +36,7 @@ import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.PekkoRoutesData
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
@@ -106,7 +106,7 @@ abstract class E2ESpec
 
   // needed by some tests
   val appConfig  = config
-  val routeData  = KnoraRouteData(system, appActor, appConfig)
+  val routeData  = PekkoRoutesData(system, appActor, appConfig)
   val baseApiUrl = appConfig.knoraApi.internalKnoraApiBaseUrl
 
   final override def beforeAll(): Unit =

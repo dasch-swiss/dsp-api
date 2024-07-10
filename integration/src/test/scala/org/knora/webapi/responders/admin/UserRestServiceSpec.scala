@@ -17,8 +17,6 @@ import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
@@ -286,12 +284,11 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         )
 
         // need to be able to authenticate credentials with new password
-        val cedId       = CredentialsIdentifier.UsernameIdentifier(Username.unsafeFrom(normalUser.username))
-        val credentials = KnoraCredentialsV2.KnoraPasswordCredentialsV2(cedId, newPassword.value)
-        val resF =
-          UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(credentials))))
+        val actual = UnsafeZioRun.runOrThrow(
+          ZIO.serviceWithZIO[Authenticator](_.authenticate(normalUser.getUsername, newPassword.value)),
+        )
 
-        resF map { res => assert(res) }
+        assert(actual._1.userIri == normalUser.userIri)
       }
 
       "UPDATE the user's password (by a system admin)" in {
@@ -309,12 +306,12 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         )
 
         // need to be able to authenticate credentials with new password
-        val cedId       = CredentialsIdentifier.UsernameIdentifier(Username.unsafeFrom(normalUser.username))
-        val credentials = KnoraCredentialsV2.KnoraPasswordCredentialsV2(cedId, "test654321")
-        val resF =
-          UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(credentials))))
+        val actual =
+          UnsafeZioRun.runOrThrow(
+            ZIO.serviceWithZIO[Authenticator](_.authenticate(normalUser.getUsername, newPassword.value)),
+          )
 
-        resF map { res => assert(res) }
+        assert(actual._1.userIri == normalUser.userIri)
       }
 
       "UPDATE the user's status, making them inactive " in {
