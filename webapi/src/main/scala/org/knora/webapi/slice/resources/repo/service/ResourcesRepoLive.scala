@@ -28,6 +28,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.slice.resources.repo.model.StandoffLinkValueInfo
 import java.time.Instant
 import org.knora.webapi.slice.resources.repo.model.NewValueInfo
+import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 
 trait ResourcesRepo {
   def createNewResource(
@@ -59,7 +60,6 @@ object ResourcesRepoLive {
     projectIri: IRI,
     creatorIri: IRI,
   ) = {
-    import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
     import CreateResourceQueryBuilder.*
 
     val query: InsertDataQuery =
@@ -75,13 +75,89 @@ object ResourcesRepoLive {
       resourcePattern.andHas(iri(valueInfo.propertyIri), iri(valueInfo.valueIri))
       val valuePattern = buildValuePattern(valueInfo)
       query.insertData(valuePattern)
+      addTypeSpecificValueTriples(
+        resourcePattern,
+        valuePattern,
+        query,
+        valueInfo.value,
+        resourceToCreate.resourceIri,
+        valueInfo.propertyIri,
+      )
+    }
 
-      valueInfo.value match
+    resourceToCreate.standoffLinks.foreach { standoffLink =>
+      resourcePattern.andHas(iri(standoffLink.linkPropertyIri), iri(standoffLink.linkTargetIri))
+      resourcePattern.andHas(iri(standoffLink.linkPropertyIri + "Value"), iri(standoffLink.newLinkValueIri))
+      val standoffLinkPattern = buildStandoffLinkPattern(
+        standoffLink,
+        resourceToCreate.resourceIri,
+        resourceToCreate.creationDate,
+      )
+      query.insertData(standoffLinkPattern)
+    }
+
+    Update(query.getQueryString())
+  }
+
+  private object CreateResourceQueryBuilder {
+    def buildResourcePattern(resource: ResourceReadyToCreate, projectIri: IRI, creatorIri: IRI): TriplePattern =
+      iri(resource.resourceIri)
+        .isA(iri(resource.resourceClassIri))
+        .andHas(RDFS.LABEL, literalOf(resource.resourceLabel))
+        .andHas(KB.isDeleted, literalOf(false))
+        .andHas(KB.attachedToUser, iri(creatorIri))
+        .andHas(KB.attachedToProject, iri(projectIri))
+        .andHas(KB.hasPermissions, literalOf(resource.permissions))
+        .andHas(KB.creationDate, literalOfType(resource.creationDate.toString(), XSD.DATETIME))
+
+    def buildValuePattern(valueInfo: NewValueInfo): TriplePattern = {
+      val valuePattern =
+        iri(valueInfo.valueIri)
+          .isA(iri(valueInfo.valueTypeIri))
+          .andHas(KB.isDeleted, literalOf(false))
+          .andHas(KB.valueHasString, literalOf(valueInfo.valueHasString))
+          .andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(valueInfo.valueUUID)))
+          .andHas(KB.attachedToUser, iri(valueInfo.valueCreator))
+          .andHas(KB.hasPermissions, literalOf(valueInfo.valuePermissions))
+          .andHas(KB.valueHasOrder, literalOf(valueInfo.valueHasOrder))
+          .andHas(KB.valueCreationDate, literalOfType(valueInfo.creationDate.toString(), XSD.DATETIME))
+      valueInfo.comment.foreach(comment => valuePattern.andHas(KB.valueHasComment, literalOf(comment)))
+      valuePattern
+    }
+
+    def buildStandoffLinkPattern(
+      standoffLink: StandoffLinkValueInfo,
+      resourceIri: String,
+      resourceCreationDate: Instant,
+    ): TriplePattern =
+      iri(standoffLink.newLinkValueIri)
+        .isA(KB.linkValue)
+        .andHas(RDF.SUBJECT, iri(resourceIri))
+        .andHas(RDF.PREDICATE, iri(standoffLink.linkPropertyIri))
+        .andHas(RDF.OBJECT, iri(standoffLink.linkTargetIri))
+        .andHas(KB.valueHasString, literalOf(standoffLink.linkTargetIri))
+        .andHas(KB.valueHasRefCount, literalOf(standoffLink.newReferenceCount))
+        .andHas(KB.isDeleted, literalOf(false))
+        .andHas(KB.valueCreationDate, literalOfType(resourceCreationDate.toString(), XSD.DATETIME))
+        .andHas(KB.attachedToUser, iri(standoffLink.newLinkValueCreator))
+        .andHas(KB.hasPermissions, literalOf(standoffLink.newLinkValuePermissions))
+        .andHas(KB.valueHasUUID, literalOf(standoffLink.valueUuid))
+
+    def addTypeSpecificValueTriples(
+      resourcePattern: TriplePattern,
+      valuePattern: TriplePattern,
+      query: InsertDataQuery,
+      valueInfo: TypeSpecificValueInfo,
+      resourceIri: String,
+      propertyIri: String,
+    ): Unit =
+      import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
+      valueInfo match
         case LinkValueInfo(referredResourceIri) =>
-          val directLinkPropertyIri = valueInfo.propertyIri.stripSuffix("Value")
+          val directLinkPropertyIri = propertyIri.stripSuffix("Value")
           resourcePattern.andHas(iri(directLinkPropertyIri), iri(referredResourceIri))
           valuePattern
-            .andHas(RDF.SUBJECT, iri(resourceToCreate.resourceIri))
+            .andHas(RDF.SUBJECT, iri(resourceIri))
             .andHas(RDF.PREDICATE, iri(directLinkPropertyIri))
             .andHas(RDF.OBJECT, iri(referredResourceIri))
             .andHas(KB.valueHasRefCount, literalOf(1))
@@ -209,66 +285,6 @@ object ResourcesRepoLive {
           valuePattern.andHas(KB.valueHasTimeStamp, literalOfType(valueHasTimeStamp.toString(), XSD.DATETIME))
         case GeonameValueInfo(valueHasGeonameCode) =>
           valuePattern.andHas(KB.valueHasGeonameCode, literalOf(valueHasGeonameCode))
-
-    }
-
-    resourceToCreate.standoffLinks.foreach { standoffLink =>
-      resourcePattern.andHas(iri(standoffLink.linkPropertyIri), iri(standoffLink.linkTargetIri))
-      resourcePattern.andHas(iri(standoffLink.linkPropertyIri + "Value"), iri(standoffLink.newLinkValueIri))
-      val standoffLinkPattern = buildStandoffLinkPattern(
-        standoffLink,
-        resourceToCreate.resourceIri,
-        resourceToCreate.creationDate,
-      )
-      query.insertData(standoffLinkPattern)
-    }
-
-    Update(query.getQueryString())
-  }
-
-  private object CreateResourceQueryBuilder {
-    def buildResourcePattern(resource: ResourceReadyToCreate, projectIri: IRI, creatorIri: IRI): TriplePattern =
-      iri(resource.resourceIri)
-        .isA(iri(resource.resourceClassIri))
-        .andHas(RDFS.LABEL, literalOf(resource.resourceLabel))
-        .andHas(KB.isDeleted, literalOf(false))
-        .andHas(KB.attachedToUser, iri(creatorIri))
-        .andHas(KB.attachedToProject, iri(projectIri))
-        .andHas(KB.hasPermissions, literalOf(resource.permissions))
-        .andHas(KB.creationDate, literalOfType(resource.creationDate.toString(), XSD.DATETIME))
-
-    def buildValuePattern(valueInfo: NewValueInfo): TriplePattern = {
-      val valuePattern =
-        iri(valueInfo.valueIri)
-          .isA(iri(valueInfo.valueTypeIri))
-          .andHas(KB.isDeleted, literalOf(false))
-          .andHas(KB.valueHasString, literalOf(valueInfo.valueHasString))
-          .andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(valueInfo.valueUUID)))
-          .andHas(KB.attachedToUser, iri(valueInfo.valueCreator))
-          .andHas(KB.hasPermissions, literalOf(valueInfo.valuePermissions))
-          .andHas(KB.valueHasOrder, literalOf(valueInfo.valueHasOrder))
-          .andHas(KB.valueCreationDate, literalOfType(valueInfo.creationDate.toString(), XSD.DATETIME))
-      valueInfo.comment.foreach(comment => valuePattern.andHas(KB.valueHasComment, literalOf(comment)))
-      valuePattern
-    }
-
-    def buildStandoffLinkPattern(
-      standoffLink: StandoffLinkValueInfo,
-      resourceIri: String,
-      resourceCreationDate: Instant,
-    ): TriplePattern =
-      iri(standoffLink.newLinkValueIri)
-        .isA(KB.linkValue)
-        .andHas(RDF.SUBJECT, iri(resourceIri))
-        .andHas(RDF.PREDICATE, iri(standoffLink.linkPropertyIri))
-        .andHas(RDF.OBJECT, iri(standoffLink.linkTargetIri))
-        .andHas(KB.valueHasString, literalOf(standoffLink.linkTargetIri))
-        .andHas(KB.valueHasRefCount, literalOf(standoffLink.newReferenceCount))
-        .andHas(KB.isDeleted, literalOf(false))
-        .andHas(KB.valueCreationDate, literalOfType(resourceCreationDate.toString(), XSD.DATETIME))
-        .andHas(KB.attachedToUser, iri(standoffLink.newLinkValueCreator))
-        .andHas(KB.hasPermissions, literalOf(standoffLink.newLinkValuePermissions))
-        .andHas(KB.valueHasUUID, literalOf(standoffLink.valueUuid))
   }
 }
 
