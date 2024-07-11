@@ -7,6 +7,7 @@ package org.knora.webapi.slice.lists.domain
 
 import zio.*
 
+import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
@@ -22,13 +23,20 @@ final case class ListsService(private val appConfig: AppConfig, private val list
    *
    * @param listIri        the Iri of the list's root node.
    * @param requestingUser the user making the request.
-   * @return a [[ListGetResponseV2]].
+   * @return a [[ListGetResponseV2]]. . A [[None]] if the list is not found.
    */
-  def getList(listIri: ListIri, requestingUser: User): Task[ListGetResponseV2] =
+  def getList(listIri: ListIri, requestingUser: User): IO[Option[Throwable], ListGetResponseV2] =
     listsResponder
       .listGetRequestADM(listIri.value)
-      .mapAttempt(_.asInstanceOf[ListGetResponseADM])
-      .map(resp => ListGetResponseV2(resp.list, requestingUser.lang, appConfig.fallbackLanguage))
+      .mapError {
+        case e: NotFoundException => None
+        case e                    => Some(e)
+      }
+      .flatMap {
+        case ListGetResponseADM(list) => ZIO.succeed(list)
+        case _                        => ZIO.fail(None)
+      }
+      .map(ListGetResponseV2(_, requestingUser.lang, appConfig.fallbackLanguage))
 
   /**
    * Gets a single list node from the triplestore.
@@ -36,19 +44,20 @@ final case class ListsService(private val appConfig: AppConfig, private val list
    * @param nodeIri              the Iri of the list node.
    *
    * @param requestingUser       the user making the request.
-   * @return a  [[NodeGetResponseV2]].
+   * @return a  [[NodeGetResponseV2]]. A [[None]] if the node is not found.
    */
   def getNode(nodeIri: ListIri, requestingUser: User): IO[Option[Throwable], NodeGetResponseV2] =
     listsResponder
       .listNodeInfoGetRequestADM(nodeIri.value)
-      .asSomeError
-      .flatMap {
-        case ChildNodeInfoGetResponseADM(node) =>
-          ZIO.succeed(
-            NodeGetResponseV2(node, requestingUser.lang, appConfig.fallbackLanguage),
-          )
-        case _ => ZIO.fail(None)
+      .mapError {
+        case e: NotFoundException => None
+        case e                    => Some(e)
       }
+      .flatMap {
+        case ChildNodeInfoGetResponseADM(node) => ZIO.succeed(node)
+        case _                                 => ZIO.fail(None)
+      }
+      .map(NodeGetResponseV2(_, requestingUser.lang, appConfig.fallbackLanguage))
 }
 
 object ListsService {

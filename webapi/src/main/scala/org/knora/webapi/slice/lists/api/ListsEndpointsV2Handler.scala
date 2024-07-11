@@ -7,7 +7,7 @@ package org.knora.webapi.slice.lists.api
 import sttp.model.MediaType
 import zio.*
 
-import dsp.errors.*
+import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
@@ -27,7 +27,16 @@ final case class ListsEndpointsV2Handler(
   private val getV2Lists = SecuredEndpointHandler(
     endpoints.getV2Lists,
     (user: User) =>
-      (iri: ListIri, format: FormatOptions) => listsService.getList(iri, user).map(renderResponse(_, format)),
+      (iri: ListIri, format: FormatOptions) =>
+        listsService
+          .getList(iri, user)
+          .mapBoth(
+            {
+              case Some(e) => e
+              case None    => NotFoundException(s"List ${iri.value} not found.")
+            },
+            renderResponse(_, format),
+          ),
   )
 
   private def renderResponse(resp: KnoraResponseV2, format: FormatOptions): (MediaType, String) = {
@@ -43,8 +52,11 @@ final case class ListsEndpointsV2Handler(
         listsService
           .getNode(iri, user)
           .mapBoth(
-            _.fold(NotFoundException(s"Node with IRI ${iri.value} not found"))(identity),
-            response => renderResponse(response, format),
+            {
+              case Some(e) => e
+              case None    => NotFoundException(s"Node ${iri.value} not found.")
+            },
+            renderResponse(_, format),
           ),
   )
 
