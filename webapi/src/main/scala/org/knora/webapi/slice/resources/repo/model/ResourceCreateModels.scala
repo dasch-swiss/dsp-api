@@ -103,7 +103,7 @@ final case class StandoffLinkValueInfo(
   valueUuid: String,
 )
 
-enum StandoffAttributeValue { self =>
+enum StandoffAttributeValue {
   case IriAttribute(value: IRI)
   case UriAttribute(value: String)
   case InternalReferenceAttribute(value: IRI)
