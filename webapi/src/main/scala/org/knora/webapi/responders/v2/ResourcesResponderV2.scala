@@ -192,13 +192,21 @@ final case class ResourcesResponderV2(
   def createResource(createResource: CreateResourceRequestV2): Task[ReadResourcesSequenceV2] =
     createHandler(createResource)
 
+  /**
+   * If resource has already been modified, make sure that its lastModificationDate is given in the request body.
+   * It is a conflict if the resource has been modified since the client last read it.
+   * It is also conflict if the resource has a LMD  but it was not provided by the client.
+   *
+   * @param resourceIri The resource to be updated.
+   * @param existingLastModificationDate The lastModificationDate of the existing resource.
+   * @param providedLastModificationDate The lastModificationDate provided by the client.
+   * @return
+   */
   private def checkForConflictingChanges(
     resourceIri: IRI,
     existingLastModificationDate: Option[Instant],
     providedLastModificationDate: Option[Instant],
   ) = {
-    // Is conflict if the resource has been modified since the client last read it.
-    // Is also conflict if the resource has a LMD  but it was not provided by the client.
     val isConflict = (
       for {
         existingDate <- existingLastModificationDate
@@ -243,7 +251,6 @@ final case class ResourcesResponderV2(
                ZIO.fail(BadRequestException(msg))
              }
 
-        // If resource has already been modified, make sure that its lastModificationDate is given in the request body.
         _ <- checkForConflictingChanges(
                resource.resourceIri,
                resource.lastModificationDate,
@@ -380,7 +387,6 @@ final case class ResourcesResponderV2(
                ZIO.fail(BadRequestException(msg))
              }
 
-        // Make sure that the resource hasn't been updated since the client got its last modification date.
         _ <- checkForConflictingChanges(
                resource.resourceIri,
                resource.lastModificationDate,
