@@ -208,7 +208,7 @@ final case class ResourcesResponderV2(
     ZIO
       .fail(
         EditConflictException(
-          s"Resource $resourceIri has been modified since you last read it.  Its lastModificationDate " +
+          s"Resource $resourceIri has been modified since you last read it. Its lastModificationDate " +
             s"${providedLastModificationDate.map(_.toString).getOrElse("")} must be included in the request body.",
         ),
       )
