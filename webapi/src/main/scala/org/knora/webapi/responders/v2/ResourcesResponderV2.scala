@@ -195,7 +195,7 @@ final case class ResourcesResponderV2(
   /**
    * If resource has already been modified, make sure that its lastModificationDate is given in the request body.
    * It is a conflict if the resource has been modified since the client last read it.
-   * It is also conflict if the resource has a LMD  but it was not provided by the client.
+   * It is also conflict if the resource has a lastModificationDate but it was not provided by the client.
    *
    * @param resource The resource to be updated.
    * @param providedLastModificationDate The lastModificationDate provided by the client.
