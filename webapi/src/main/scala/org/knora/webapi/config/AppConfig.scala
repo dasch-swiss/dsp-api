@@ -173,7 +173,10 @@ final case class InstrumentationServerConfig(
   interval: Duration,
 )
 
-final case class Features(allowEraseProjects: Boolean)
+final case class Features(
+  allowEraseProjects: Boolean,
+  disableLastModificationDateCheck: Boolean,
+)
 
 object AppConfig {
   type AppConfigurationsTest = AppConfig & DspIngestConfig & Triplestore & Features & Sipi
