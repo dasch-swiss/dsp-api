@@ -200,13 +200,13 @@ final case class ResourcesResponderV2(
    * @param resourceIri The resource to be updated.
    * @param existingLastModificationDate The lastModificationDate of the existing resource.
    * @param providedLastModificationDate The lastModificationDate provided by the client.
-   * @return
+   * @return Fails with an [[EditConflictException]] if there is a conflict.
    */
   private def checkForConflictingChanges(
     resourceIri: IRI,
     existingLastModificationDate: Option[Instant],
     providedLastModificationDate: Option[Instant],
-  ) = {
+  ): IO[EditConflictException, Unit] = {
     val isConflict = (
       for {
         existingDate <- existingLastModificationDate
@@ -221,6 +221,7 @@ final case class ResourcesResponderV2(
         ),
       )
       .when(isConflict && !appConfig.features.disableLastModificationDateCheck)
+      .unit
   }
 
   /**
