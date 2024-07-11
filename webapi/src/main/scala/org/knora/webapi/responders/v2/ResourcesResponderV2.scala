@@ -202,11 +202,12 @@ final case class ResourcesResponderV2(
    * @param providedLastModificationDate The lastModificationDate provided by the client.
    * @return Fails with an [[EditConflictException]] if there is a conflict.
    */
-  private def checkForConflictingChanges(
-    resourceIri: IRI,
-    existingLastModificationDate: Option[Instant],
+  private def ensureNoConflictingChange(
+    resource: ReadResourceV2,
     providedLastModificationDate: Option[Instant],
   ): IO[EditConflictException, Unit] = {
+    val existingLastModificationDate = resource.lastModificationDate
+    val resourceIri                  = resource.resourceIri
     val isConflict = (
       for {
         existingDate <- existingLastModificationDate
@@ -233,7 +234,7 @@ final case class ResourcesResponderV2(
   private def updateResourceMetadataV2(
     updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2,
   ): Task[UpdateResourceMetadataResponseV2] = {
-    def makeTaskFuture: Task[UpdateResourceMetadataResponseV2] = {
+    def makeTaskFuture: Task[UpdateResourceMetadataResponseV2] =
       for {
         // Get the metadata of the resource to be updated.
         resourcesSeq <- getResourcePreviewV2(
@@ -252,11 +253,7 @@ final case class ResourcesResponderV2(
                ZIO.fail(BadRequestException(msg))
              }
 
-        _ <- checkForConflictingChanges(
-               resource.resourceIri,
-               resource.lastModificationDate,
-               updateResourceMetadataRequestV2.maybeLastModificationDate,
-             )
+        _ <- ensureNoConflictingChange(resource, updateResourceMetadataRequestV2.maybeLastModificationDate)
 
         // Check that the user has permission to modify the resource.
         _ <- resourceUtilV2.checkResourcePermission(
@@ -336,7 +333,6 @@ final case class ResourcesResponderV2(
         maybePermissions = updateResourceMetadataRequestV2.maybePermissions,
         lastModificationDate = newModificationDate,
       )
-    }
 
     for {
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
@@ -388,11 +384,7 @@ final case class ResourcesResponderV2(
                ZIO.fail(BadRequestException(msg))
              }
 
-        _ <- checkForConflictingChanges(
-               resource.resourceIri,
-               resource.lastModificationDate,
-               deleteResourceV2.maybeLastModificationDate,
-             )
+        _ <- ensureNoConflictingChange(resource, deleteResourceV2.maybeLastModificationDate)
 
         // If a custom delete date was provided, make sure it's later than the resource's most recent timestamp.
         _ <- ZIO.when(
@@ -480,11 +472,7 @@ final case class ResourcesResponderV2(
                ZIO.fail(BadRequestException(msg))
              }
 
-        _ <- checkForConflictingChanges(
-               resource.resourceIri,
-               resource.lastModificationDate,
-               eraseResourceV2.maybeLastModificationDate,
-             )
+        _ <- ensureNoConflictingChange(resource, eraseResourceV2.maybeLastModificationDate)
 
         // Check that the resource is not referred to by any other resources. We ignore rdf:subject (so we
         // can erase the resource's own links) and rdf:object (in case there is a deleted link value that
