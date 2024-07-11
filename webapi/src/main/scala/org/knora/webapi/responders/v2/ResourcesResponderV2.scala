@@ -217,7 +217,7 @@ final case class ResourcesResponderV2(
       .fail(
         EditConflictException(
           s"Resource $resourceIri has been modified since you last read it. Its lastModificationDate " +
-            s"${providedLastModificationDate.map(_.toString).getOrElse("")} must be included in the request body.",
+            s"${existingLastModificationDate.map(_.toString).getOrElse("")} must be included in the request body.",
         ),
       )
       .when(isConflict && !appConfig.features.disableLastModificationDateCheck)
