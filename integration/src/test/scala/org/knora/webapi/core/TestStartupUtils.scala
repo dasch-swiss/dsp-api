@@ -28,7 +28,7 @@ trait TestStartupUtils extends LazyLogging {
     rdfDataObjects: List[RdfDataObject],
   ): ZIO[TriplestoreService with OntologyCache, Throwable, Unit] =
     for {
-      _   <- ZIO.logInfo("Loading test data started ...")
+      _   <- ZIO.logInfo(s"Loading test data: ${rdfDataObjects.map(_.name).mkString}")
       tss <- ZIO.service[TriplestoreService]
       _   <- tss.resetTripleStoreContent(rdfDataObjects).timeout(480.seconds)
       _   <- ZIO.logInfo("... loading test data done.")
