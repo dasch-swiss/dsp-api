@@ -206,7 +206,6 @@ final case class ResourcesResponderV2(
     providedLastModificationDate: Option[Instant],
   ): IO[EditConflictException, Unit] = {
     val existingLastModificationDate = resource.lastModificationDate
-    val resourceIri                  = resource.resourceIri
     val isConflict = (
       for {
         existingDate <- existingLastModificationDate
@@ -216,7 +215,7 @@ final case class ResourcesResponderV2(
     ZIO
       .fail(
         EditConflictException(
-          s"Resource $resourceIri has been modified since you last read it. Its lastModificationDate " +
+          s"Resource ${resource.resourceIri} has been modified since you last read it. Its lastModificationDate " +
             s"${existingLastModificationDate.map(_.toString).getOrElse("")} must be included in the request body.",
         ),
       )
