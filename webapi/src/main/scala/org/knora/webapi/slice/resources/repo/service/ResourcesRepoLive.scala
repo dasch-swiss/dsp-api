@@ -15,20 +15,25 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfType
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.predicateObjectList
+import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicateObjectList
 import zio.*
+
+import java.time.Instant
 
 import dsp.constants.SalsahGui.IRI
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resources.repo.model.NewValueInfo
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
+import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
 import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
+import org.knora.webapi.slice.resources.repo.model.StandoffLinkValueInfo
+import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
+import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.slice.resources.repo.model.StandoffLinkValueInfo
-import java.time.Instant
-import org.knora.webapi.slice.resources.repo.model.NewValueInfo
-import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 
 trait ResourcesRepo {
   def createNewResource(
@@ -60,7 +65,6 @@ object ResourcesRepoLive {
     projectIri: IRI,
     creatorIri: IRI,
   ) = {
-    import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
     import CreateResourceQueryBuilder.*
 
     val query: InsertDataQuery =
@@ -77,58 +81,17 @@ object ResourcesRepoLive {
       val valuePattern = buildValuePattern(valueInfo)
       query.insertData(valuePattern)
       valueInfo.value match
-        case LinkValueInfo(referredResourceIri) =>
-          val directLinkPropertyIri = valueInfo.propertyIri.stripSuffix("Value")
-          resourcePattern.andHas(iri(directLinkPropertyIri), iri(referredResourceIri))
-          valuePattern
-            .andHas(RDF.SUBJECT, iri(resourceToCreate.resourceIri))
-            .andHas(RDF.PREDICATE, iri(directLinkPropertyIri))
-            .andHas(RDF.OBJECT, iri(referredResourceIri))
-            .andHas(KB.valueHasRefCount, literalOf(1))
+        case v: LinkValueInfo =>
+          val triples: List[TriplePattern] =
+            buildLinkValuePatterns(v, valueInfo.valueIri, valueInfo.propertyIri, resourceToCreate.resourceIri)
+          query.insertData(triples: _*)
         case UnformattedTextValueInfo(valueHasLanguage) =>
-          valuePattern.andHas(KB.valueHasLanguage, valueHasLanguage.map(literalOf).toList: _*)
-        case FormattedTextValueInfo(valueHasLanguage, mappingIri, maxStandoffStartIndex, standoff) =>
-          valuePattern
-            .andHas(KB.valueHasLanguage, valueHasLanguage.map(literalOf).toList: _*)
-            .andHas(KB.valueHasMapping, iri(mappingIri))
-            .andHas(KB.valueHasMaxStandoffStartIndex, literalOf(maxStandoffStartIndex))
-          standoff.foreach { standoffTagInfo =>
-            valuePattern.andHas(KB.valueHasStandoff, iri(standoffTagInfo.standoffTagInstanceIri))
-            val standoffPattern =
-              iri(standoffTagInfo.standoffTagInstanceIri)
-                .isA(iri(standoffTagInfo.standoffTagClassIri))
-
-            standoffTagInfo.endIndex.foreach(endIndex =>
-              standoffPattern.andHas(KB.standoffTagHasEndIndex, literalOf(endIndex)),
-            )
-            standoffTagInfo.startParentIri.foreach(startParentIri =>
-              standoffPattern.andHas(KB.standoffTagHasStartParent, iri(startParentIri)),
-            )
-            standoffTagInfo.endParentIri.foreach(endParentIri =>
-              standoffPattern.andHas(KB.standoffTagHasEndParent, iri(endParentIri)),
-            )
-            standoffTagInfo.originalXMLID.foreach(originalXMLID =>
-              standoffPattern.andHas(KB.standoffTagHasOriginalXMLID, literalOf(originalXMLID)),
-            )
-            standoffTagInfo.attributes.foreach { attribute =>
-              val v = attribute.value match
-                case StandoffAttributeValue.IriAttribute(value)               => iri(value)
-                case StandoffAttributeValue.UriAttribute(value)               => literalOfType(value, XSD.ANYURI)
-                case StandoffAttributeValue.InternalReferenceAttribute(value) => iri(value)
-                case StandoffAttributeValue.StringAttribute(value)            => literalOf(value)
-                case StandoffAttributeValue.IntegerAttribute(value)           => literalOf(value)
-                case StandoffAttributeValue.DecimalAttribute(value)           => literalOf(value)
-                case StandoffAttributeValue.BooleanAttribute(value)           => literalOf(value)
-                case StandoffAttributeValue.TimeAttribute(value)              => literalOfType(value.toString(), XSD.DATETIME)
-              standoffPattern.andHas(iri(attribute.propertyIri), v)
-            }
-            standoffPattern
-              .andHas(KB.standoffTagHasStartIndex, literalOf(standoffTagInfo.startIndex))
-              .andHas(KB.standoffTagHasUUID, literalOf(UuidUtil.base64Encode(standoffTagInfo.uuid)))
-              .andHas(KB.standoffTagHasStart, literalOf(standoffTagInfo.startPosition))
-              .andHas(KB.standoffTagHasEnd, literalOf(standoffTagInfo.endPosition))
-            query.insertData(standoffPattern)
-          }
+          val triples: List[TriplePattern] =
+            List(iri(valueInfo.valueIri).has(KB.valueHasLanguage, valueHasLanguage.map(literalOf).toList: _*))
+          query.insertData(triples: _*)
+        case v: FormattedTextValueInfo =>
+          val triples: List[TriplePattern] = buildFormattedTextValuePatterns(v, valueInfo.valueIri)
+          query.insertData(triples: _*)
         case IntegerValueInfo(valueHasInteger) =>
           valuePattern.andHas(KB.valueHasInteger, literalOf(valueHasInteger))
         case DecimalValueInfo(valueHasDecimal) =>
@@ -265,6 +228,57 @@ object ResourcesRepoLive {
         .andHas(KB.attachedToUser, iri(standoffLink.newLinkValueCreator))
         .andHas(KB.hasPermissions, literalOf(standoffLink.newLinkValuePermissions))
         .andHas(KB.valueHasUUID, literalOf(standoffLink.valueUuid))
+
+    def standoffAttributeLiterals(attributes: Seq[StandoffAttribute]): List[RdfPredicateObjectList] =
+      attributes.map { attribute =>
+        val v = attribute.value match
+          case StandoffAttributeValue.IriAttribute(value)               => iri(value)
+          case StandoffAttributeValue.UriAttribute(value)               => literalOfType(value, XSD.ANYURI)
+          case StandoffAttributeValue.InternalReferenceAttribute(value) => iri(value)
+          case StandoffAttributeValue.StringAttribute(value)            => literalOf(value)
+          case StandoffAttributeValue.IntegerAttribute(value)           => literalOf(value)
+          case StandoffAttributeValue.DecimalAttribute(value)           => literalOf(value)
+          case StandoffAttributeValue.BooleanAttribute(value)           => literalOf(value)
+          case StandoffAttributeValue.TimeAttribute(value)              => literalOfType(value.toString(), XSD.DATETIME)
+        val p = iri(attribute.propertyIri)
+        predicateObjectList(p, v)
+      }.toList
+
+    def buildLinkValuePatterns(
+      v: LinkValueInfo,
+      valueIri: String,
+      propertyIri: String,
+      resourceIri: String,
+    ): List[TriplePattern] =
+      List(
+        iri(resourceIri).has(iri(propertyIri.stripSuffix("Value")), iri(v.referredResourceIri)),
+        iri(valueIri)
+          .has(RDF.SUBJECT, iri(resourceIri))
+          .andHas(RDF.PREDICATE, iri(propertyIri.stripSuffix("Value")))
+          .andHas(RDF.OBJECT, iri(v.referredResourceIri))
+          .andHas(KB.valueHasRefCount, literalOf(1)),
+      )
+
+    def buildFormattedTextValuePatterns(v: FormattedTextValueInfo, valueIri: String): List[TriplePattern] =
+      val valuePattern =
+        iri(valueIri)
+          .has(KB.valueHasLanguage, v.valueHasLanguage.map(literalOf).toList: _*)
+          .andHas(KB.valueHasMapping, iri(v.mappingIri))
+          .andHas(KB.valueHasMaxStandoffStartIndex, literalOf(v.maxStandoffStartIndex))
+      List(valuePattern) ::: v.standoff.map { standoffTagInfo =>
+        valuePattern.andHas(KB.valueHasStandoff, iri(standoffTagInfo.standoffTagInstanceIri))
+        iri(standoffTagInfo.standoffTagInstanceIri)
+          .isA(iri(standoffTagInfo.standoffTagClassIri))
+          .andHas(KB.standoffTagHasEndIndex, standoffTagInfo.endIndex.map(i => literalOf(i)).toList: _*)
+          .andHas(KB.standoffTagHasStartParent, standoffTagInfo.startParentIri.map(iri).toList: _*)
+          .andHas(KB.standoffTagHasEndParent, standoffTagInfo.endParentIri.map(iri).toList: _*)
+          .andHas(KB.standoffTagHasOriginalXMLID, standoffTagInfo.originalXMLID.map(literalOf).toList: _*)
+          .andHas(standoffAttributeLiterals(standoffTagInfo.attributes): _*)
+          .andHas(KB.standoffTagHasStartIndex, literalOf(standoffTagInfo.startIndex))
+          .andHas(KB.standoffTagHasUUID, literalOf(UuidUtil.base64Encode(standoffTagInfo.uuid)))
+          .andHas(KB.standoffTagHasStart, literalOf(standoffTagInfo.startPosition))
+          .andHas(KB.standoffTagHasEnd, literalOf(standoffTagInfo.endPosition))
+      }.toList
 
   }
 }
