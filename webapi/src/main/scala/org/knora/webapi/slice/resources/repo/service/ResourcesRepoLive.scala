@@ -64,54 +64,38 @@ object ResourcesRepoLive {
     creatorIri: IRI,
   ) = {
     import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
-
-    val graph = iri(dataGraphIri.value)
+    import CreateResourceQueryBuilder.*
 
     val query: InsertDataQuery =
       Queries
         .INSERT_DATA()
-        .into(graph)
+        .into(iri(dataGraphIri.value))
         .prefix(KB.NS, RDF.NS, RDFS.NS, XSD.NS)
 
-    val resourcePattern =
-      iri(resourceToCreate.resourceIri)
-        .isA(iri(resourceToCreate.resourceClassIri))
-        .andHas(RDFS.LABEL, literalOf(resourceToCreate.resourceLabel))
-        .andHas(KB.isDeleted, literalOf(false))
-        .andHas(KB.attachedToUser, iri(creatorIri))
-        .andHas(KB.attachedToProject, iri(projectIri))
-        .andHas(KB.hasPermissions, literalOf(resourceToCreate.permissions))
-        .andHas(KB.creationDate, literalOfType(resourceToCreate.creationDate.toString(), XSD.DATETIME))
-
+    val resourcePattern = buildResourcePattern(resourceToCreate, projectIri, creatorIri)
     query.insertData(resourcePattern)
 
-    for (newValueInfo <- resourceToCreate.newValueInfos) {
+    resourceToCreate.newValueInfos.foreach { valueInfo =>
 
-      resourcePattern.andHas(iri(newValueInfo.propertyIri), iri(newValueInfo.valueIri))
+      resourcePattern.andHas(iri(valueInfo.propertyIri), iri(valueInfo.valueIri))
 
-      val valuePattern =
-        iri(newValueInfo.valueIri)
-          .isA(iri(newValueInfo.valueTypeIri))
-
+      val valuePattern = iri(valueInfo.valueIri).isA(iri(valueInfo.valueTypeIri))
       query.insertData(valuePattern)
 
       valuePattern
         .andHas(KB.isDeleted, literalOf(false))
-        .andHas(KB.valueHasString, literalOf(newValueInfo.valueHasString))
-        .andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(newValueInfo.valueUUID)))
-        .andHas(KB.attachedToUser, iri(newValueInfo.valueCreator))
-        .andHas(KB.hasPermissions, literalOf(newValueInfo.valuePermissions))
-        .andHas(KB.valueHasOrder, literalOf(newValueInfo.valueHasOrder))
-        .andHas(
-          KB.valueCreationDate,
-          literalOfType(newValueInfo.creationDate.toString(), XSD.DATETIME),
-        )
+        .andHas(KB.valueHasString, literalOf(valueInfo.valueHasString))
+        .andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(valueInfo.valueUUID)))
+        .andHas(KB.attachedToUser, iri(valueInfo.valueCreator))
+        .andHas(KB.hasPermissions, literalOf(valueInfo.valuePermissions))
+        .andHas(KB.valueHasOrder, literalOf(valueInfo.valueHasOrder))
+        .andHas(KB.valueCreationDate, literalOfType(valueInfo.creationDate.toString(), XSD.DATETIME))
 
-      newValueInfo.comment.foreach(comment => valuePattern.andHas(KB.valueHasComment, literalOf(comment)))
+      valueInfo.comment.foreach(comment => valuePattern.andHas(KB.valueHasComment, literalOf(comment)))
 
-      newValueInfo.value match
+      valueInfo.value match
         case LinkValueInfo(referredResourceIri) =>
-          val directLinkPropertyIri = newValueInfo.propertyIri.stripSuffix("Value")
+          val directLinkPropertyIri = valueInfo.propertyIri.stripSuffix("Value")
           resourcePattern.andHas(iri(directLinkPropertyIri), iri(referredResourceIri))
           valuePattern
             .andHas(RDF.SUBJECT, iri(resourceToCreate.resourceIri))
@@ -126,8 +110,7 @@ object ResourcesRepoLive {
             .andHas(KB.valueHasMapping, iri(mappingIri))
             .andHas(KB.valueHasMaxStandoffStartIndex, literalOf(maxStandoffStartIndex))
           for (standoffTagInfo <- standoff) {
-            valuePattern
-              .andHas(KB.valueHasStandoff, iri(standoffTagInfo.standoffTagInstanceIri))
+            valuePattern.andHas(KB.valueHasStandoff, iri(standoffTagInfo.standoffTagInstanceIri))
             val standoffPattern =
               iri(standoffTagInfo.standoffTagInstanceIri)
                 .isA(iri(standoffTagInfo.standoffTagClassIri))
@@ -274,6 +257,19 @@ object ResourcesRepoLive {
     }
 
     Update(query.getQueryString())
+  }
+
+  private object CreateResourceQueryBuilder {
+    def buildResourcePattern(resource: ResourceReadyToCreate, projectIri: IRI, creatorIri: IRI): TriplePattern =
+      iri(resource.resourceIri)
+        .isA(iri(resource.resourceClassIri))
+        .andHas(RDFS.LABEL, literalOf(resource.resourceLabel))
+        .andHas(KB.isDeleted, literalOf(false))
+        .andHas(KB.attachedToUser, iri(creatorIri))
+        .andHas(KB.attachedToProject, iri(projectIri))
+        .andHas(KB.hasPermissions, literalOf(resource.permissions))
+        .andHas(KB.creationDate, literalOfType(resource.creationDate.toString(), XSD.DATETIME))
+
   }
 }
 
