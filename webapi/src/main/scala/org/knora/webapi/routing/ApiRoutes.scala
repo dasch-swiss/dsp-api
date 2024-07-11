@@ -81,7 +81,7 @@ final case class ApiRoutes(
                 ResourcesRouteV2(routeData.appConfig).makeRoute ~
                 StandoffRouteV2().makeRoute ~
                 ValuesRouteV2().makeRoute ~
-                (adminApiRoutes.routes ++ authenticationApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes)
+                (adminApiRoutes.routes ++ authenticationApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes ++ listsApiV2Routes.routes)
                   .reduce(_ ~ _)
             }
           }
