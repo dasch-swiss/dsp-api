@@ -9,9 +9,9 @@ import zio.*
 
 import java.time.Instant
 import scala.collection.immutable
-
 import dsp.errors.*
 import org.knora.webapi.*
+import org.knora.webapi.config.Features
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -87,6 +87,7 @@ trait OntologyTriplestoreHelpers {
 }
 
 final case class OntologyTriplestoreHelpersLive(
+  features: Features,
   triplestore: TriplestoreService,
   stringFormatter: StringFormatter,
 ) extends OntologyTriplestoreHelpers {
@@ -211,40 +212,41 @@ final case class OntologyTriplestoreHelpersLive(
   }
 
   /**
-   * Checks that the last modification date of an ontology is the same as the one we expect it to be.
+   * Checks that:
+   *  1. The metadata of an ontology is loaded and has a `lastModificationDate`.
+   *  2. The `lastModificationDate` of an ontology is the same as the one we expect it to be.
    *
-   * @param internalOntologyIri          the internal IRI of the ontology.
-   * @param expectedLastModificationDate the last modification date that the ontology is expected to have.
-   * @param errorFun                     a function that throws an exception. It will be called if the expected last modification date is not found.
-   * @return a failed Future if the expected last modification date is not found.
+   * @param ontologyIri                   The internal IRI of the ontology.
+   * @param expectedLastModificationDate  The last modification date that the ontology is expected to have.
+   * @param error                         It will be returned if the expected last modification date is not found.
+   * @return A failed Task if the checks fail:
+   *         The 1. check fails with an [[InconsistentRepositoryDataException]] and
+   *         The 2. check fails with the provided error.
    */
   private def checkOntologyLastModificationDate(
-    internalOntologyIri: SmartIri,
+    ontologyIri: SmartIri,
     expectedLastModificationDate: Instant,
-    errorFun: => Nothing,
+    disableLastModificationDateCheck: Boolean,
+    error: => Exception,
   ): Task[Unit] =
     for {
-      existingOntologyMetadata <- loadOntologyMetadata(internalOntologyIri)
-
-      _ = existingOntologyMetadata match {
-            case Some(metadata) =>
-              metadata.lastModificationDate match {
-                case Some(lastModificationDate) =>
-                  if (lastModificationDate != expectedLastModificationDate) {
-                    errorFun
-                  }
-
-                case None =>
-                  throw InconsistentRepositoryDataException(
-                    s"Ontology $internalOntologyIri has no ${OntologyConstants.KnoraBase.LastModificationDate}",
-                  )
-              }
-
-            case None =>
-              throw NotFoundException(
-                s"Ontology $internalOntologyIri (corresponding to ${internalOntologyIri.toOntologySchema(ApiV2Complex)}) not found",
-              )
+      metadataMaybe       <- loadOntologyMetadata(ontologyIri)
+      externalOntologyIri <- ZIO.attempt(ontologyIri.toOntologySchema(ApiV2Complex))
+      metadata <-
+        ZIO
+          .fromOption(metadataMaybe)
+          .orElseFail(NotFoundException(s"Ontology $externalOntologyIri not found."))
+      existingLastModificationDate <-
+        ZIO
+          .fromOption(metadata.lastModificationDate)
+          .orElseFail {
+            val msg = s"Ontology $externalOntologyIri has no ${OntologyConstants.KnoraBase.LastModificationDate}."
+            InconsistentRepositoryDataException(msg)
           }
+      _ <-
+        ZIO
+          .fail(error)
+          .when(!disableLastModificationDateCheck && existingLastModificationDate != expectedLastModificationDate)
     } yield ()
 
   override def checkOntologyLastModificationDateBeforeUpdate(
@@ -252,9 +254,10 @@ final case class OntologyTriplestoreHelpersLive(
     expectedLastModificationDate: Instant,
   ): Task[Unit] =
     checkOntologyLastModificationDate(
-      internalOntologyIri = internalOntologyIri,
-      expectedLastModificationDate = expectedLastModificationDate,
-      errorFun = throw EditConflictException(
+      internalOntologyIri,
+      expectedLastModificationDate,
+      features.disableLastModificationDateCheck,
+      EditConflictException(
         s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been modified by another user, please reload it and try again.",
       ),
     )
@@ -264,9 +267,10 @@ final case class OntologyTriplestoreHelpersLive(
     expectedLastModificationDate: Instant,
   ): Task[Unit] =
     checkOntologyLastModificationDate(
-      internalOntologyIri = internalOntologyIri,
-      expectedLastModificationDate = expectedLastModificationDate,
-      errorFun = throw UpdateNotPerformedException(
+      internalOntologyIri,
+      expectedLastModificationDate,
+      features.disableLastModificationDateCheck,
+      UpdateNotPerformedException(
         s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} was not updated. Please report this as a possible bug.",
       ),
     )

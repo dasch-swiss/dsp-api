@@ -11,7 +11,6 @@ import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -192,6 +191,29 @@ final case class ResourcesResponderV2(
   def createResource(createResource: CreateResourceRequestV2): Task[ReadResourcesSequenceV2] =
     createHandler(createResource)
 
+  private def checkForConflictingChanges(
+    resourceIri: IRI,
+    existingLastModificationDate: Option[Instant],
+    providedLastModificationDate: Option[Instant],
+  ) = {
+    // Is conflict if the resource has been modified since the client last read it.
+    // Is also conflict if the resource has a LMD  but it was not provided by the client.
+    val isConflict = (
+      for {
+        existingDate <- existingLastModificationDate
+        providedDate <- providedLastModificationDate
+      } yield existingDate != providedDate
+    ).getOrElse(existingLastModificationDate.nonEmpty)
+    ZIO
+      .fail(
+        EditConflictException(
+          s"Resource $resourceIri has been modified since you last read it.  Its lastModificationDate " +
+            s"${providedLastModificationDate.map(_.toString).getOrElse("")} must be included in the request body.",
+        ),
+      )
+      .when(isConflict && !appConfig.features.disableLastModificationDateCheck)
+  }
+
   /**
    * Updates a resources metadata.
    *
@@ -221,24 +243,11 @@ final case class ResourcesResponderV2(
              }
 
         // If resource has already been modified, make sure that its lastModificationDate is given in the request body.
-        _ <-
-          ZIO.when(
-            resource.lastModificationDate.nonEmpty && updateResourceMetadataRequestV2.maybeLastModificationDate.isEmpty,
-          ) {
-            val msg =
-              s"Resource <${resource.resourceIri}> has been modified in the past. Its lastModificationDate " +
-                s"${resource.lastModificationDate.get} must be included in the request body."
-            ZIO.fail(EditConflictException(msg))
-          }
-
-        // Make sure that the resource hasn't been updated since the client got its last modification date.
-        _ <- ZIO.when(
-               updateResourceMetadataRequestV2.maybeLastModificationDate.nonEmpty &&
-                 resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate,
-             ) {
-               val msg = s"Resource <${resource.resourceIri}> has been modified since you last read it"
-               ZIO.fail(EditConflictException(msg))
-             }
+        _ <- checkForConflictingChanges(
+               resource.resourceIri,
+               resource.lastModificationDate,
+               updateResourceMetadataRequestV2.maybeLastModificationDate,
+             )
 
         // Check that the user has permission to modify the resource.
         _ <- resourceUtilV2.checkResourcePermission(
@@ -371,10 +380,11 @@ final case class ResourcesResponderV2(
              }
 
         // Make sure that the resource hasn't been updated since the client got its last modification date.
-        _ <- ZIO.when(resource.lastModificationDate != deleteResourceV2.maybeLastModificationDate) {
-               val msg = s"Resource <${resource.resourceIri}> has been modified since you last read it"
-               ZIO.fail(EditConflictException(msg))
-             }
+        _ <- checkForConflictingChanges(
+               resource.resourceIri,
+               resource.lastModificationDate,
+               deleteResourceV2.maybeLastModificationDate,
+             )
 
         // If a custom delete date was provided, make sure it's later than the resource's most recent timestamp.
         _ <- ZIO.when(
@@ -462,11 +472,11 @@ final case class ResourcesResponderV2(
                ZIO.fail(BadRequestException(msg))
              }
 
-        // Make sure that the resource hasn't been updated since the client got its last modification date.
-        _ <- ZIO.when(resource.lastModificationDate != eraseResourceV2.maybeLastModificationDate) {
-               val msg = s"Resource <${resource.resourceIri}> has been modified since you last read it"
-               ZIO.fail(EditConflictException(msg))
-             }
+        _ <- checkForConflictingChanges(
+               resource.resourceIri,
+               resource.lastModificationDate,
+               eraseResourceV2.maybeLastModificationDate,
+             )
 
         // Check that the resource is not referred to by any other resources. We ignore rdf:subject (so we
         // can erase the resource's own links) and rdf:object (in case there is a deleted link value that
