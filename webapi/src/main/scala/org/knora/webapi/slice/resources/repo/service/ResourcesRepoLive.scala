@@ -295,8 +295,11 @@ object ResourcesRepoLive {
 
     Update(query.getQueryString())
   }
-
 }
+
+// TODO:
+// - deduplicate vocab
+// - clean up rdf building
 
 object KnoraBaseVocab {
   private val kb = "http://www.knora.org/ontology/knora-base#"
