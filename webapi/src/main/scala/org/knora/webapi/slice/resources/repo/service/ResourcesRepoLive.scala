@@ -110,20 +110,17 @@ object ResourcesRepoLive {
         .andHas(KB.hasPermissions, literalOf(resource.permissions))
         .andHas(KB.creationDate, literalOfType(resource.creationDate.toString(), XSD.DATETIME))
 
-    def buildValuePattern(valueInfo: NewValueInfo): TriplePattern = {
-      val valuePattern =
-        iri(valueInfo.valueIri)
-          .isA(iri(valueInfo.valueTypeIri))
-          .andHas(KB.isDeleted, literalOf(false))
-          .andHas(KB.valueHasString, literalOf(valueInfo.valueHasString))
-          .andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(valueInfo.valueUUID)))
-          .andHas(KB.attachedToUser, iri(valueInfo.valueCreator))
-          .andHas(KB.hasPermissions, literalOf(valueInfo.valuePermissions))
-          .andHas(KB.valueHasOrder, literalOf(valueInfo.valueHasOrder))
-          .andHas(KB.valueCreationDate, literalOfType(valueInfo.creationDate.toString(), XSD.DATETIME))
-      valueInfo.comment.foreach(comment => valuePattern.andHas(KB.valueHasComment, literalOf(comment)))
-      valuePattern
-    }
+    def buildValuePattern(valueInfo: NewValueInfo): TriplePattern =
+      iri(valueInfo.valueIri)
+        .isA(iri(valueInfo.valueTypeIri))
+        .andHas(KB.isDeleted, literalOf(false))
+        .andHas(KB.valueHasString, literalOf(valueInfo.valueHasString))
+        .andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(valueInfo.valueUUID)))
+        .andHas(KB.attachedToUser, iri(valueInfo.valueCreator))
+        .andHas(KB.hasPermissions, literalOf(valueInfo.valuePermissions))
+        .andHas(KB.valueHasOrder, literalOf(valueInfo.valueHasOrder))
+        .andHas(KB.valueCreationDate, literalOfType(valueInfo.creationDate.toString(), XSD.DATETIME))
+        .andHas(KB.valueHasComment, valueInfo.comment.map(literalOf).toList: _*)
 
     def buildStandoffLinkPattern(
       standoffLink: StandoffLinkValueInfo,
@@ -162,13 +159,13 @@ object ResourcesRepoLive {
             .andHas(RDF.OBJECT, iri(referredResourceIri))
             .andHas(KB.valueHasRefCount, literalOf(1))
         case UnformattedTextValueInfo(valueHasLanguage) =>
-          valueHasLanguage.foreach(lang => valuePattern.andHas(KB.valueHasLanguage, literalOf(lang)))
+          valuePattern.andHas(KB.valueHasLanguage, valueHasLanguage.map(literalOf).toList: _*)
         case FormattedTextValueInfo(valueHasLanguage, mappingIri, maxStandoffStartIndex, standoff) =>
-          valueHasLanguage.foreach(lang => valuePattern.andHas(KB.valueHasLanguage, literalOf(lang)))
           valuePattern
+            .andHas(KB.valueHasLanguage, valueHasLanguage.map(literalOf).toList: _*)
             .andHas(KB.valueHasMapping, iri(mappingIri))
             .andHas(KB.valueHasMaxStandoffStartIndex, literalOf(maxStandoffStartIndex))
-          for (standoffTagInfo <- standoff) {
+          standoff.foreach { standoffTagInfo =>
             valuePattern.andHas(KB.valueHasStandoff, iri(standoffTagInfo.standoffTagInstanceIri))
             val standoffPattern =
               iri(standoffTagInfo.standoffTagInstanceIri)
@@ -186,7 +183,7 @@ object ResourcesRepoLive {
             standoffTagInfo.originalXMLID.foreach(originalXMLID =>
               standoffPattern.andHas(KB.standoffTagHasOriginalXMLID, literalOf(originalXMLID)),
             )
-            for (attribute <- standoffTagInfo.attributes) {
+            standoffTagInfo.attributes.foreach { attribute =>
               val v = attribute.value match
                 case StandoffAttributeValue.IriAttribute(value)               => iri(value)
                 case StandoffAttributeValue.UriAttribute(value)               => literalOfType(value, XSD.ANYURI)
