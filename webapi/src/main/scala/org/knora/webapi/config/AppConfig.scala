@@ -173,7 +173,10 @@ final case class InstrumentationServerConfig(
   interval: Duration,
 )
 
-final case class Features(allowEraseProjects: Boolean)
+final case class Features(
+  allowEraseProjects: Boolean,
+  disableLastModificationDateCheck: Boolean,
+)
 
 object AppConfig {
   type AppConfigurationsTest = AppConfig & DspIngestConfig & Triplestore & Features & Sipi
@@ -182,14 +185,19 @@ object AppConfig {
   val parseConfig: UIO[AppConfig] = {
     val descriptor = deriveConfig[AppConfig].mapKey(toKebabCase)
     val source     = TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
-    read(descriptor from source).orDie
+    read(descriptor from source).tap(logFeaturesEnabled).orDie
   }
 
-  val layer: ULayer[AppConfigurations] = {
-    val appConfigLayer = ZLayer.fromZIO(
-      parseConfig.tap(c => ZIO.logInfo("Feature: ALLOW_ERASE_PROJECTS enabled").when(c.features.allowEraseProjects)),
-    )
-    projectAppConfigurations(appConfigLayer).tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))
+  val layer: ULayer[AppConfigurations] =
+    projectAppConfigurations(ZLayer.fromZIO(parseConfig))
+      .tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))
+
+  private def logFeaturesEnabled(c: AppConfig) = {
+    val features = List(
+      "ALLOW_ERASE_PROJECTS"                 -> c.features.allowEraseProjects,
+      "DISABLE_LAST_MODIFICATION_DATE_CHECK" -> c.features.disableLastModificationDateCheck,
+    ).collect { case (feature, enabled) if enabled => feature }
+    ZIO.logInfo(s"Features enabled: ${features.mkString(", ")}").when(features.nonEmpty)
   }
 
   def projectAppConfigurations[R](appConfigLayer: URLayer[R, AppConfig]): URLayer[R, AppConfigurations] =
