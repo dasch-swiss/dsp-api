@@ -259,12 +259,11 @@ object RdfFormatUtilSpec {
   def parseToJsonLDDocument(
     rdfStr: String,
     rdfFormat: RdfFormat,
-    flatJsonLD: Boolean = false,
   ): JsonLDDocument =
     rdfFormat match {
       case JsonLD =>
         // Use JsonLDUtil to parse JSON-LD.
-        JsonLDUtil.parseJsonLD(jsonLDString = rdfStr, flatten = flatJsonLD)
+        JsonLDUtil.parseJsonLD(rdfStr)
 
       case nonJsonLD: NonJsonLD =>
         val model: JenaModel = JenaModelFactory.makeEmptyModel
@@ -274,6 +273,6 @@ object RdfFormatUtilSpec {
           .lang(RdfFormatUtil.rdfFormatToJenaParsingLang(nonJsonLD))
           .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
           .parse(model.getDataset)
-        JsonLDUtil.fromRdfModel(model, flatJsonLD)
+        JsonLDUtil.fromRdfModel(model)
     }
 }

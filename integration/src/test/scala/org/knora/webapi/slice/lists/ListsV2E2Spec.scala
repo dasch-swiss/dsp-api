@@ -5,9 +5,9 @@
 
 package org.knora.webapi.slice.lists
 import zio.test.*
-
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 
 object ListsV2E2Spec extends E2EZSpec {
@@ -45,128 +45,129 @@ object ListsV2E2Spec extends E2EZSpec {
         } yield {
           assertTrue(
             response.status.code == 200,
-            bodyStr == """{
-                         |    "rdfs:label": "a list that is not used",
-                         |    "knora-api:attachedToProject": {
-                         |        "@id": "http://rdfh.ch/projects/0001"
-                         |    },
-                         |    "knora-api:hasSubListNode": [
-                         |        {
-                         |            "rdfs:label": "node 1",
-                         |            "knora-api:hasRootNode": {
-                         |                "@id": "http://rdfh.ch/lists/0001/notUsedList"
-                         |            },
-                         |            "knora-api:hasSubListNode": [
-                         |                {
-                         |                    "rdfs:label": "child of node 1",
-                         |                    "knora-api:hasRootNode": {
-                         |                        "@id": "http://rdfh.ch/lists/0001/notUsedList"
-                         |                    },
-                         |                    "knora-api:listNodePosition": 0,
-                         |                    "@type": "knora-api:ListNode",
-                         |                    "@id": "http://rdfh.ch/lists/0001/notUsedList011"
-                         |                },
-                         |                {
-                         |                    "rdfs:label": "List012",
-                         |                    "knora-api:hasRootNode": {
-                         |                        "@id": "http://rdfh.ch/lists/0001/notUsedList"
-                         |                    },
-                         |                    "knora-api:listNodePosition": 1,
-                         |                    "@type": "knora-api:ListNode",
-                         |                    "@id": "http://rdfh.ch/lists/0001/notUsedList012"
-                         |                },
-                         |                {
-                         |                    "rdfs:label": "List013",
-                         |                    "knora-api:hasRootNode": {
-                         |                        "@id": "http://rdfh.ch/lists/0001/notUsedList"
-                         |                    },
-                         |                    "knora-api:listNodePosition": 2,
-                         |                    "@type": "knora-api:ListNode",
-                         |                    "@id": "http://rdfh.ch/lists/0001/notUsedList013"
-                         |                },
-                         |                {
-                         |                    "rdfs:label": "List014",
-                         |                    "knora-api:hasRootNode": {
-                         |                        "@id": "http://rdfh.ch/lists/0001/notUsedList"
-                         |                    },
-                         |                    "knora-api:hasSubListNode": [
-                         |                        {
-                         |                            "rdfs:label": "first child of node 014",
-                         |                            "knora-api:hasRootNode": {
-                         |                                "@id": "http://rdfh.ch/lists/0001/notUsedList"
-                         |                            },
-                         |                            "knora-api:listNodePosition": 0,
-                         |                            "@type": "knora-api:ListNode",
-                         |                            "@id": "http://rdfh.ch/lists/0001/notUsedList0141"
-                         |                        },
-                         |                        {
-                         |                            "rdfs:label": "second child of node 014",
-                         |                            "knora-api:hasRootNode": {
-                         |                                "@id": "http://rdfh.ch/lists/0001/notUsedList"
-                         |                            },
-                         |                            "knora-api:listNodePosition": 0,
-                         |                            "@type": "knora-api:ListNode",
-                         |                            "@id": "http://rdfh.ch/lists/0001/notUsedList0142"
-                         |                        }
-                         |                    ],
-                         |                    "knora-api:listNodePosition": 3,
-                         |                    "@type": "knora-api:ListNode",
-                         |                    "@id": "http://rdfh.ch/lists/0001/notUsedList014"
-                         |                },
-                         |                {
-                         |                    "rdfs:label": "List015",
-                         |                    "knora-api:hasRootNode": {
-                         |                        "@id": "http://rdfh.ch/lists/0001/notUsedList"
-                         |                    },
-                         |                    "knora-api:listNodePosition": 4,
-                         |                    "@type": "knora-api:ListNode",
-                         |                    "@id": "http://rdfh.ch/lists/0001/notUsedList015"
-                         |                }
-                         |            ],
-                         |            "knora-api:listNodePosition": 0,
-                         |            "@type": "knora-api:ListNode",
-                         |            "@id": "http://rdfh.ch/lists/0001/notUsedList01"
-                         |        },
-                         |        {
-                         |            "rdfs:label": "node 2",
-                         |            "knora-api:hasRootNode": {
-                         |                "@id": "http://rdfh.ch/lists/0001/notUsedList"
-                         |            },
-                         |            "knora-api:listNodePosition": 1,
-                         |            "@type": "knora-api:ListNode",
-                         |            "@id": "http://rdfh.ch/lists/0001/notUsedList02"
-                         |        },
-                         |        {
-                         |            "rdfs:label": "node 3",
-                         |            "knora-api:hasRootNode": {
-                         |                "@id": "http://rdfh.ch/lists/0001/notUsedList"
-                         |            },
-                         |            "knora-api:hasSubListNode": {
-                         |                "rdfs:label": "child of node 3",
-                         |                "knora-api:hasRootNode": {
-                         |                    "@id": "http://rdfh.ch/lists/0001/notUsedList"
-                         |                },
-                         |                "knora-api:listNodePosition": 0,
-                         |                "@type": "knora-api:ListNode",
-                         |                "@id": "http://rdfh.ch/lists/0001/notUsedList031"
-                         |            },
-                         |            "knora-api:listNodePosition": 2,
-                         |            "@type": "knora-api:ListNode",
-                         |            "@id": "http://rdfh.ch/lists/0001/notUsedList03"
-                         |        }
-                         |    ],
-                         |    "knora-api:isRootNode": true,
-                         |    "rdfs:comment": "a list that is not in used in ontology or data",
-                         |    "@type": "knora-api:ListNode",
-                         |    "@id": "http://rdfh.ch/lists/0001/notUsedList",
-                         |    "@context": {
-                         |        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                         |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
-                         |        "owl": "http://www.w3.org/2002/07/owl#",
-                         |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-                         |        "xsd": "http://www.w3.org/2001/XMLSchema#"
-                         |    }
-                         |}""".stripMargin,
+            JsonLDUtil.parseJsonLD(bodyStr) == JsonLDUtil.parseJsonLD("""
+               {
+                 "rdfs:label": "a list that is not used",
+                 "knora-api:attachedToProject": {
+                   "@id": "http://rdfh.ch/projects/0001"
+                 },
+                 "knora-api:hasSubListNode": [
+                   {
+                     "rdfs:label": "node 1",
+                     "knora-api:hasRootNode": {
+                       "@id": "http://rdfh.ch/lists/0001/notUsedList"
+                     },
+                     "knora-api:hasSubListNode": [
+                       {
+                         "rdfs:label": "child of node 1",
+                         "knora-api:hasRootNode": {
+                           "@id": "http://rdfh.ch/lists/0001/notUsedList"
+                         },
+                         "knora-api:listNodePosition": 0,
+                         "@type": "knora-api:ListNode",
+                         "@id": "http://rdfh.ch/lists/0001/notUsedList011"
+                       },
+                       {
+                         "rdfs:label": "List012",
+                         "knora-api:hasRootNode": {
+                           "@id": "http://rdfh.ch/lists/0001/notUsedList"
+                         },
+                         "knora-api:listNodePosition": 1,
+                         "@type": "knora-api:ListNode",
+                         "@id": "http://rdfh.ch/lists/0001/notUsedList012"
+                       },
+                       {
+                         "rdfs:label": "List013",
+                         "knora-api:hasRootNode": {
+                           "@id": "http://rdfh.ch/lists/0001/notUsedList"
+                         },
+                         "knora-api:listNodePosition": 2,
+                         "@type": "knora-api:ListNode",
+                         "@id": "http://rdfh.ch/lists/0001/notUsedList013"
+                       },
+                       {
+                         "rdfs:label": "List014",
+                         "knora-api:hasRootNode": {
+                           "@id": "http://rdfh.ch/lists/0001/notUsedList"
+                         },
+                         "knora-api:hasSubListNode": [
+                           {
+                             "rdfs:label": "first child of node 014",
+                             "knora-api:hasRootNode": {
+                               "@id": "http://rdfh.ch/lists/0001/notUsedList"
+                             },
+                             "knora-api:listNodePosition": 0,
+                             "@type": "knora-api:ListNode",
+                             "@id": "http://rdfh.ch/lists/0001/notUsedList0141"
+                           },
+                           {
+                             "rdfs:label": "second child of node 014",
+                             "knora-api:hasRootNode": {
+                               "@id": "http://rdfh.ch/lists/0001/notUsedList"
+                             },
+                             "knora-api:listNodePosition": 0,
+                             "@type": "knora-api:ListNode",
+                             "@id": "http://rdfh.ch/lists/0001/notUsedList0142"
+                           }
+                         ],
+                         "knora-api:listNodePosition": 3,
+                         "@type": "knora-api:ListNode",
+                         "@id": "http://rdfh.ch/lists/0001/notUsedList014"
+                       },
+                       {
+                         "rdfs:label": "List015",
+                         "knora-api:hasRootNode": {
+                           "@id": "http://rdfh.ch/lists/0001/notUsedList"
+                         },
+                         "knora-api:listNodePosition": 4,
+                         "@type": "knora-api:ListNode",
+                         "@id": "http://rdfh.ch/lists/0001/notUsedList015"
+                       }
+                     ],
+                     "knora-api:listNodePosition": 0,
+                     "@type": "knora-api:ListNode",
+                     "@id": "http://rdfh.ch/lists/0001/notUsedList01"
+                   },
+                   {
+                     "rdfs:label": "node 2",
+                     "knora-api:hasRootNode": {
+                       "@id": "http://rdfh.ch/lists/0001/notUsedList"
+                     },
+                     "knora-api:listNodePosition": 1,
+                     "@type": "knora-api:ListNode",
+                     "@id": "http://rdfh.ch/lists/0001/notUsedList02"
+                   },
+                   {
+                     "rdfs:label": "node 3",
+                     "knora-api:hasRootNode": {
+                       "@id": "http://rdfh.ch/lists/0001/notUsedList"
+                     },
+                     "knora-api:hasSubListNode": {
+                       "rdfs:label": "child of node 3",
+                       "knora-api:hasRootNode": {
+                         "@id": "http://rdfh.ch/lists/0001/notUsedList"
+                       },
+                       "knora-api:listNodePosition": 0,
+                       "@type": "knora-api:ListNode",
+                       "@id": "http://rdfh.ch/lists/0001/notUsedList031"
+                     },
+                     "knora-api:listNodePosition": 2,
+                     "@type": "knora-api:ListNode",
+                     "@id": "http://rdfh.ch/lists/0001/notUsedList03"
+                   }
+                 ],
+                 "knora-api:isRootNode": true,
+                 "rdfs:comment": "a list that is not in used in ontology or data",
+                 "@type": "knora-api:ListNode",
+                 "@id": "http://rdfh.ch/lists/0001/notUsedList",
+                 "@context": {
+                   "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+                   "owl": "http://www.w3.org/2002/07/owl#",
+                   "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                   "xsd": "http://www.w3.org/2001/XMLSchema#"
+                 }
+               }"""),
           )
         }
       },
@@ -188,25 +189,25 @@ object ListsV2E2Spec extends E2EZSpec {
           bodyStr  <- response.body.asString
         } yield assertTrue(
           response.status.code == 200,
-          bodyStr == """{
-                       |    "rdfs:label": "node 1",
-                       |    "knora-api:hasRootNode": {
-                       |        "@id": "http://rdfh.ch/lists/0001/notUsedList"
-                       |    },
-                       |    "knora-api:listNodePosition": 0,
-                       |    "@type": "knora-api:ListNode",
-                       |    "@id": "http://rdfh.ch/lists/0001/notUsedList01",
-                       |    "@context": {
-                       |        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                       |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
-                       |        "owl": "http://www.w3.org/2002/07/owl#",
-                       |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-                       |        "xsd": "http://www.w3.org/2001/XMLSchema#"
-                       |    }
-                       |}""".stripMargin,
+          JsonLDUtil.parseJsonLD(bodyStr) == JsonLDUtil.parseJsonLD("""
+               {
+                 "rdfs:label": "node 1",
+                 "knora-api:hasRootNode": {
+                   "@id": "http://rdfh.ch/lists/0001/notUsedList"
+                 },
+                 "knora-api:listNodePosition": 0,
+                 "@type": "knora-api:ListNode",
+                 "@id": "http://rdfh.ch/lists/0001/notUsedList01",
+                 "@context": {
+                   "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+                   "owl": "http://www.w3.org/2002/07/owl#",
+                   "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                   "xsd": "http://www.w3.org/2001/XMLSchema#"
+                 }
+              }"""),
         )
       },
     ),
   )
-
 }
