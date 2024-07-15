@@ -1,5 +1,12 @@
 # Changelog
 
+## [30.18.1](https://github.com/dasch-swiss/dsp-api/compare/v30.18.0...v30.18.1) (2024-07-15)
+
+
+### Bug Fixes
+
+* Do not fail when updating class with external ontologies (DEV-3879) ([#3321](https://github.com/dasch-swiss/dsp-api/issues/3321)) ([752a7fe](https://github.com/dasch-swiss/dsp-api/commit/752a7fef337dd612907109b854fb84eb483229d9))
+
 ## [30.18.0](https://github.com/dasch-swiss/dsp-api/compare/v30.17.1...v30.18.0) (2024-07-15)
 
 
