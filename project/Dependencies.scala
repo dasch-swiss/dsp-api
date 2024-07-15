@@ -97,7 +97,7 @@ object Dependencies {
   val rdf4jClient = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
   val rdf4jShacl  = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
   val rdf4jSparql = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
-  val saxonHE     = "net.sf.saxon"      % "Saxon-HE"            % "12.4"
+  val saxonHE     = "net.sf.saxon"      % "Saxon-HE"            % "12.5"
   val scalaGraph =
     "org.scala-graph" %% "graph-core" % "2.0.1" cross CrossVersion.for3Use2_13
   val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.4.0"
