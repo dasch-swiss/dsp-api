@@ -9,7 +9,6 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import java.time.Instant
-
 import dsp.errors.*
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
@@ -924,8 +923,11 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
 
         val inheritableCardinalities: Map[SmartIri, KnoraCardinalityInfo] =
           directSubClass.entityInfoContent.subClassOf.flatMap { baseClassIri =>
-            cacheData.ontologies(baseClassIri.getOntologyFromEntity).classes(baseClassIri).allCardinalities
-          }.toMap
+            for {
+              ontology  <- cacheData.ontologies.get(baseClassIri.getOntologyFromEntity)
+              classInfo <- ontology.classes.get(baseClassIri)
+            } yield classInfo
+          }.flatMap(_.allCardinalities).toMap
 
         // Override inherited cardinalities with directly defined cardinalities.
         val newInheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = OntologyHelpers.overrideCardinalities(
