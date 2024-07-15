@@ -83,88 +83,13 @@ object ResourcesRepoLive {
       resourcePattern.andHas(iri(valueInfo.propertyIri), iri(valueInfo.valueIri))
       val valuePattern = buildValuePattern(valueInfo)
       query.insertData(valuePattern)
-      valueInfo.value match
-        case v: LinkValueInfo =>
-          val triples: List[TriplePattern] =
-            buildLinkValuePatterns(v, valueInfo.valueIri, valueInfo.propertyIri, resourceToCreate.resourceIri)
-          query.insertData(triples: _*)
-        case UnformattedTextValueInfo(valueHasLanguage) =>
-          val triples: List[TriplePattern] =
-            iri(valueInfo.valueIri).has(KB.valueHasLanguage, valueHasLanguage.map(literalOf)).toList
-          query.insertData(triples: _*)
-        case v: FormattedTextValueInfo =>
-          val triples: List[TriplePattern] = buildFormattedTextValuePatterns(v, valueInfo.valueIri)
-          query.insertData(triples: _*)
-        case IntegerValueInfo(valueHasInteger) =>
-          val triples = List(valuePattern.andHas(KB.valueHasInteger, literalOf(valueHasInteger)))
-          query.insertData(triples: _*)
-        case DecimalValueInfo(valueHasDecimal) =>
-          val triples = List(valuePattern.andHas(KB.valueHasDecimal, literalOf(valueHasDecimal)))
-          query.insertData(triples: _*)
-        case BooleanValueInfo(valueHasBoolean) =>
-          val triples = List(valuePattern.andHas(KB.valueHasBoolean, literalOf(valueHasBoolean)))
-          query.insertData(triples: _*)
-        case UriValueInfo(valueHasUri) =>
-          val triples = List(valuePattern.andHas(KB.valueHasUri, literalOfType(valueHasUri, XSD.ANYURI)))
-          query.insertData(triples: _*)
-        case v: DateValueInfo =>
-          val triples = buildDateValuePattern(v, valueInfo.valueIri)
-          query.insertData(triples: _*)
-        case ColorValueInfo(valueHasColor) =>
-          val triples = List(valuePattern.andHas(KB.valueHasColor, literalOf(valueHasColor)))
-          query.insertData(triples: _*)
-        case GeomValueInfo(valueHasGeometry) =>
-          val triples = List(valuePattern.andHas(KB.valueHasGeometry, literalOf(valueHasGeometry)))
-          query.insertData(triples: _*)
-        case v: StillImageFileValueInfo =>
-          val triples = buildStillImageFileValuePattern(v, valueInfo.valueIri)
-          query.insertData(triples: _*)
-        case StillImageExternalFileValueInfo(
-              internalFilename,
-              internalMimeType,
-              originalFilename,
-              originalMimeType,
-              externalUrl,
-            ) =>
-          valuePattern
-            .andHas(KB.internalFilename, literalOf(internalFilename))
-            .andHas(KB.internalMimeType, literalOf(internalMimeType))
-            .andHas(KB.externalUrl, literalOf(externalUrl))
-          originalFilename.foreach(filename => valuePattern.andHas(KB.originalFilename, literalOf(filename)))
-          originalMimeType.foreach(mimeType => valuePattern.andHas(KB.originalMimeType, literalOf(mimeType)))
-        case DocumentFileValueInfo(
-              internalFilename,
-              internalMimeType,
-              originalFilename,
-              originalMimeType,
-              dimX,
-              dimY,
-              pageCount,
-            ) =>
-          valuePattern
-            .andHas(KB.internalFilename, literalOf(internalFilename))
-            .andHas(KB.internalMimeType, literalOf(internalMimeType))
-          originalFilename.foreach(filename => valuePattern.andHas(KB.originalFilename, literalOf(filename)))
-          originalMimeType.foreach(mimeType => valuePattern.andHas(KB.originalMimeType, literalOf(mimeType)))
-          dimX.foreach(x => valuePattern.andHas(KB.dimX, literalOf(x)))
-          dimY.foreach(y => valuePattern.andHas(KB.dimY, literalOf(y)))
-          pageCount.foreach(count => valuePattern.andHas(KB.pageCount, literalOf(count)))
-        case OtherFileValueInfo(internalFilename, internalMimeType, originalFilename, originalMimeType) =>
-          valuePattern
-            .andHas(KB.internalFilename, literalOf(internalFilename))
-            .andHas(KB.internalMimeType, literalOf(internalMimeType))
-          originalFilename.foreach(filename => valuePattern.andHas(KB.originalFilename, literalOf(filename)))
-          originalMimeType.foreach(mimeType => valuePattern.andHas(KB.originalMimeType, literalOf(mimeType)))
-        case HierarchicalListValueInfo(valueHasListNode) =>
-          valuePattern.andHas(KB.valueHasListNode, iri(valueHasListNode))
-        case IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd) =>
-          valuePattern
-            .andHas(KB.valueHasIntervalStart, literalOf(valueHasIntervalStart))
-            .andHas(KB.valueHasIntervalEnd, literalOf(valueHasIntervalEnd))
-        case TimeValueInfo(valueHasTimeStamp) =>
-          valuePattern.andHas(KB.valueHasTimeStamp, literalOfType(valueHasTimeStamp.toString(), XSD.DATETIME))
-        case GeonameValueInfo(valueHasGeonameCode) =>
-          valuePattern.andHas(KB.valueHasGeonameCode, literalOf(valueHasGeonameCode))
+      val typeSpecificValuePattern = buildTypeSpecificValuePattern(
+        valueInfo.value,
+        valueInfo.valueIri,
+        valueInfo.propertyIri,
+        resourceToCreate.resourceIri,
+      )
+      query.insertData(typeSpecificValuePattern: _*)
     }
 
     resourceToCreate.standoffLinks.foreach { standoffLink =>
@@ -237,6 +162,54 @@ object ResourcesRepoLive {
         predicateObjectList(p, v)
       }.toList
 
+    def buildTypeSpecificValuePattern(
+      value: TypeSpecificValueInfo,
+      valueIri: String,
+      propertyIri: String,
+      resourceIri: String,
+    ): List[TriplePattern] =
+      value match
+        case v: LinkValueInfo =>
+          buildLinkValuePatterns(v, valueIri, propertyIri, resourceIri)
+        case UnformattedTextValueInfo(valueHasLanguage) =>
+          iri(valueIri).has(KB.valueHasLanguage, valueHasLanguage.map(literalOf)).toList
+        case v: FormattedTextValueInfo =>
+          buildFormattedTextValuePatterns(v, valueIri)
+        case IntegerValueInfo(valueHasInteger) =>
+          List(iri(valueIri).has(KB.valueHasInteger, literalOf(valueHasInteger)))
+        case DecimalValueInfo(valueHasDecimal) =>
+          List(iri(valueIri).has(KB.valueHasDecimal, literalOf(valueHasDecimal)))
+        case BooleanValueInfo(valueHasBoolean) =>
+          List(iri(valueIri).has(KB.valueHasBoolean, literalOf(valueHasBoolean)))
+        case UriValueInfo(valueHasUri) =>
+          List(iri(valueIri).has(KB.valueHasUri, literalOfType(valueHasUri, XSD.ANYURI)))
+        case v: DateValueInfo =>
+          buildDateValuePattern(v, valueIri)
+        case ColorValueInfo(valueHasColor) =>
+          List(iri(valueIri).has(KB.valueHasColor, literalOf(valueHasColor)))
+        case GeomValueInfo(valueHasGeometry) =>
+          List(iri(valueIri).has(KB.valueHasGeometry, literalOf(valueHasGeometry)))
+        case v: StillImageFileValueInfo =>
+          buildStillImageFileValuePattern(v, valueIri)
+        case v: StillImageExternalFileValueInfo =>
+          buildStillImageExternalFileValuePattern(v, valueIri)
+        case v: DocumentFileValueInfo =>
+          buildDocumentFileValuePattern(v, valueIri)
+        case v: OtherFileValueInfo =>
+          buildOtherFileValuePattern(v, valueIri)
+        case HierarchicalListValueInfo(valueHasListNode) =>
+          List(iri(valueIri).has(KB.valueHasListNode, iri(valueHasListNode)))
+        case IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd) =>
+          List(
+            iri(valueIri)
+              .has(KB.valueHasIntervalStart, literalOf(valueHasIntervalStart))
+              .andHas(KB.valueHasIntervalEnd, literalOf(valueHasIntervalEnd)),
+          )
+        case TimeValueInfo(valueHasTimeStamp) =>
+          List(iri(valueIri).has(KB.valueHasTimeStamp, literalOfType(valueHasTimeStamp.toString(), XSD.DATETIME)))
+        case GeonameValueInfo(valueHasGeonameCode) =>
+          List(iri(valueIri).has(KB.valueHasGeonameCode, literalOf(valueHasGeonameCode)))
+
     def buildLinkValuePatterns(
       v: LinkValueInfo,
       valueIri: String,
@@ -290,6 +263,40 @@ object ResourcesRepoLive {
           .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
           .andHas(KB.dimX, literalOf(v.dimX))
           .andHas(KB.dimY, literalOf(v.dimY))
+          .andHas(KB.originalFilename, v.originalFilename.map(literalOf))
+          .andHas(KB.originalMimeType, v.originalMimeType.map(literalOf)),
+      )
+
+    def buildStillImageExternalFileValuePattern(
+      v: StillImageExternalFileValueInfo,
+      valueIri: String,
+    ): List[TriplePattern] =
+      List(
+        iri(valueIri)
+          .has(KB.internalFilename, literalOf(v.internalFilename))
+          .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
+          .andHas(KB.externalUrl, literalOf(v.externalUrl))
+          .andHas(KB.originalFilename, v.originalFilename.map(literalOf))
+          .andHas(KB.originalMimeType, v.originalMimeType.map(literalOf)),
+      )
+
+    def buildDocumentFileValuePattern(v: DocumentFileValueInfo, valueIri: String): List[TriplePattern] =
+      List(
+        iri(valueIri)
+          .has(KB.internalFilename, literalOf(v.internalFilename))
+          .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
+          .andHas(KB.originalFilename, v.originalFilename.map(literalOf))
+          .andHas(KB.originalMimeType, v.originalMimeType.map(literalOf))
+          .andHas(KB.dimX, v.dimX.map(i => literalOf(i)))
+          .andHas(KB.dimY, v.dimY.map(i => literalOf(i)))
+          .andHas(KB.pageCount, v.pageCount.map(i => literalOf(i))),
+      )
+
+    def buildOtherFileValuePattern(v: OtherFileValueInfo, valueIri: String): List[TriplePattern] =
+      List(
+        iri(valueIri)
+          .has(KB.internalFilename, literalOf(v.internalFilename))
+          .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
           .andHas(KB.originalFilename, v.originalFilename.map(literalOf))
           .andHas(KB.originalMimeType, v.originalMimeType.map(literalOf)),
       )
