@@ -567,9 +567,9 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
-            |            knora-base:valueHasLanguage "en" ;
             |            knora-base:valueHasMapping <foo:MappingIri> ;
             |            knora-base:valueHasMaxStandoffStartIndex 0 ;
+            |            knora-base:valueHasLanguage "en" ;
             |            knora-base:valueHasStandoff <foo:StandoffTagInstanceIri> .
             |        <foo:StandoffTagInstanceIri> rdf:type <foo:StandoffTagClassIri> ;
             |            knora-base:standoffTagHasEndIndex 3 ;

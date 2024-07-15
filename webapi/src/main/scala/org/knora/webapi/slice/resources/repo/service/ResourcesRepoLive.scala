@@ -36,6 +36,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfObject
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicate
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 
 trait ResourcesRepo {
   def createNewResource(
@@ -89,7 +90,7 @@ object ResourcesRepoLive {
           query.insertData(triples: _*)
         case UnformattedTextValueInfo(valueHasLanguage) =>
           val triples: List[TriplePattern] =
-            List(iri(valueInfo.valueIri).has(KB.valueHasLanguage, valueHasLanguage.map(literalOf).toList: _*))
+            iri(valueInfo.valueIri).has(KB.valueHasLanguage, valueHasLanguage.map(literalOf)).toList
           query.insertData(triples: _*)
         case v: FormattedTextValueInfo =>
           val triples: List[TriplePattern] = buildFormattedTextValuePatterns(v, valueInfo.valueIri)
@@ -264,17 +265,17 @@ object ResourcesRepoLive {
     def buildFormattedTextValuePatterns(v: FormattedTextValueInfo, valueIri: String): List[TriplePattern] =
       val valuePattern =
         iri(valueIri)
-          .has(KB.valueHasLanguage, v.valueHasLanguage.map(literalOf).toList: _*)
-          .andHas(KB.valueHasMapping, iri(v.mappingIri))
+          .has(KB.valueHasMapping, iri(v.mappingIri))
           .andHas(KB.valueHasMaxStandoffStartIndex, literalOf(v.maxStandoffStartIndex))
+          .andHas(KB.valueHasLanguage, v.valueHasLanguage.map(literalOf))
       List(valuePattern) ::: v.standoff.map { standoffTagInfo =>
         valuePattern.andHas(KB.valueHasStandoff, iri(standoffTagInfo.standoffTagInstanceIri))
         iri(standoffTagInfo.standoffTagInstanceIri)
           .isA(iri(standoffTagInfo.standoffTagClassIri))
-          .andHas(KB.standoffTagHasEndIndex, standoffTagInfo.endIndex.map(i => literalOf(i)).toList: _*)
-          .andHas(KB.standoffTagHasStartParent, standoffTagInfo.startParentIri.map(iri).toList: _*)
-          .andHas(KB.standoffTagHasEndParent, standoffTagInfo.endParentIri.map(iri).toList: _*)
-          .andHas(KB.standoffTagHasOriginalXMLID, standoffTagInfo.originalXMLID.map(literalOf).toList: _*)
+          .andHas(KB.standoffTagHasEndIndex, standoffTagInfo.endIndex.map(i => literalOf(i)))
+          .andHas(KB.standoffTagHasStartParent, standoffTagInfo.startParentIri.map(iri))
+          .andHas(KB.standoffTagHasEndParent, standoffTagInfo.endParentIri.map(iri))
+          .andHas(KB.standoffTagHasOriginalXMLID, standoffTagInfo.originalXMLID.map(literalOf))
           .andHas(standoffAttributeLiterals(standoffTagInfo.attributes): _*)
           .andHas(KB.standoffTagHasStartIndex, literalOf(standoffTagInfo.startIndex))
           .andHas(KB.standoffTagHasUUID, literalOf(UuidUtil.base64Encode(standoffTagInfo.uuid)))
@@ -286,8 +287,12 @@ object ResourcesRepoLive {
 }
 
 extension (tp: TriplePattern)
-  def andHas(predicate: RdfPredicate, o: Option[RdfObject]): TriplePattern =
-    o.fold(tp)(o => tp.andHas(predicate, o))
+  def andHas(p: RdfPredicate, o: Option[RdfObject]): TriplePattern =
+    o.fold(tp)(o => tp.andHas(p, o))
+
+extension (iri: Iri)
+  def has(p: RdfPredicate, o: Option[RdfObject]): Option[TriplePattern] =
+    o.map(o => iri.has(p, o))
 
 // TODO:
 // - clean up rdf building
