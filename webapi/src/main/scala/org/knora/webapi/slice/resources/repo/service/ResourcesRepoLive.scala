@@ -68,30 +68,28 @@ object ResourcesRepoLive {
     projectIri: IRI,
     creatorIri: IRI,
   ) = {
-    import CreateResourceQueryBuilder.*
-
     val query: InsertDataQuery =
       Queries
         .INSERT_DATA()
         .into(iri(dataGraphIri.value))
         .prefix(KB.NS, RDF.NS, RDFS.NS, XSD.NS)
 
-    val resourcePattern = buildResourcePattern(resourceToCreate, projectIri, creatorIri)
+    val resourcePattern = CreateResourceQueryBuilder.buildResourcePattern(resourceToCreate, projectIri, creatorIri)
     query.insertData(resourcePattern)
 
-    val valuePatterns = resourceToCreate.newValueInfos.flatMap(buildValuePattern(_, resourceToCreate.resourceIri))
+    val valuePatterns = resourceToCreate.newValueInfos.flatMap(
+      CreateResourceQueryBuilder.buildValuePattern(_, resourceToCreate.resourceIri),
+    )
     query.insertData(valuePatterns: _*)
 
-    resourceToCreate.standoffLinks.foreach { standoffLink =>
-      resourcePattern.andHas(iri(standoffLink.linkPropertyIri), iri(standoffLink.linkTargetIri))
-      resourcePattern.andHas(iri(standoffLink.linkPropertyIri + "Value"), iri(standoffLink.newLinkValueIri))
-      val standoffLinkPattern = buildStandoffLinkPattern(
+    val standoffLinkPatterns = resourceToCreate.standoffLinks.flatMap { standoffLink =>
+      CreateResourceQueryBuilder.buildStandoffLinkPattern(
         standoffLink,
         resourceToCreate.resourceIri,
         resourceToCreate.creationDate,
       )
-      query.insertData(standoffLinkPattern)
     }
+    query.insertData(standoffLinkPatterns: _*)
 
     Update(query.getQueryString())
   }
@@ -108,6 +106,18 @@ object ResourcesRepoLive {
         .andHas(KB.creationDate, literalOfType(resource.creationDate.toString(), XSD.DATETIME))
 
     def buildStandoffLinkPattern(
+      standoffLink: StandoffLinkValueInfo,
+      resourceIri: String,
+      resourceCreationDate: Instant,
+    ): List[TriplePattern] =
+      List(
+        iri(resourceIri)
+          .has(iri(standoffLink.linkPropertyIri), iri(standoffLink.linkTargetIri))
+          .andHas(iri(standoffLink.linkPropertyIri + "Value"), iri(standoffLink.newLinkValueIri)),
+        buildStandoffLinkPatternContent(standoffLink, resourceIri, resourceCreationDate),
+      )
+
+    private def buildStandoffLinkPatternContent(
       standoffLink: StandoffLinkValueInfo,
       resourceIri: String,
       resourceCreationDate: Instant,
