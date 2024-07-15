@@ -21,7 +21,7 @@ object Dependencies {
   val PekkoActorVersion = "1.0.3"
   val PekkoHttpVersion  = "1.0.1"
   val JenaVersion       = "5.0.0"
-  val Rdf4jVersion      = "5.0.0"
+  val Rdf4jVersion      = "5.0.1"
 
   val ZioConfigVersion            = "4.0.2"
   val ZioLoggingVersion           = "2.3.0"
@@ -29,7 +29,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC27"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.1.5"
+  val ZioVersion                  = "2.1.6"
 
   // ZIO
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
@@ -115,7 +115,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.10.10"
+  val tapirVersion = "1.10.13"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
