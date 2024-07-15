@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.12.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.11.0...v0.12.0) (2024-07-15)
+
+
+### Enhancements
+
+* Add database (sqlite) persistence (DEV-3735) ([#237](https://github.com/dasch-swiss/dsp-ingest/issues/237)) ([437fbbf](https://github.com/dasch-swiss/dsp-ingest/commit/437fbbf3f6fc0f9ad9ccadd9d266ffd24a10191b))
+* Return 404 on start/finalize bulk-ingest if the import folder does not exist (DEV-3846) ([#242](https://github.com/dasch-swiss/dsp-ingest/issues/242)) ([71d2f07](https://github.com/dasch-swiss/dsp-ingest/commit/71d2f0772538802c94bf3e4da4a2a7dd2355d49f))
+
+
+### Bug Fixes
+
+* Forbid empty ingests (DEV-3835) ([#241](https://github.com/dasch-swiss/dsp-ingest/issues/241)) ([8abb2e0](https://github.com/dasch-swiss/dsp-ingest/commit/8abb2e0276115917a2183a16dd077373a2f9598a))
+
+
+### Maintenance
+
+* Major dependency updates ([#245](https://github.com/dasch-swiss/dsp-ingest/issues/245)) ([b91aac5](https://github.com/dasch-swiss/dsp-ingest/commit/b91aac508d2634ca7a485e27ba8d9f5f0b3a80ed))
+* Minor dependency updates ([#239](https://github.com/dasch-swiss/dsp-ingest/issues/239)) ([47cf977](https://github.com/dasch-swiss/dsp-ingest/commit/47cf977405520b01e307a94e9400955f0a19f9c9))
+* Minor dependency updates ([#244](https://github.com/dasch-swiss/dsp-ingest/issues/244)) ([410385a](https://github.com/dasch-swiss/dsp-ingest/commit/410385ac1eb3a66921e4d5175b10628985c323f1))
+* Patch dependency updates ([#238](https://github.com/dasch-swiss/dsp-ingest/issues/238)) ([7881f2e](https://github.com/dasch-swiss/dsp-ingest/commit/7881f2e41f2302d251c3f0ddb72f04167dbfdb04))
+* Patch dependency updates ([#243](https://github.com/dasch-swiss/dsp-ingest/issues/243)) ([b7c9ee8](https://github.com/dasch-swiss/dsp-ingest/commit/b7c9ee83ac5eec899dd29a67d7d4eb007590ebd3))
+
 ## [0.11.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.10.1...v0.11.0) (2024-06-24)
 
 
