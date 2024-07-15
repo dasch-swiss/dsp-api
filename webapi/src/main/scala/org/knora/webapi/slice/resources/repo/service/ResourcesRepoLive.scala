@@ -111,24 +111,14 @@ object ResourcesRepoLive {
           val triples = buildDateValuePattern(v, valueInfo.valueIri)
           query.insertData(triples: _*)
         case ColorValueInfo(valueHasColor) =>
-          valuePattern.andHas(KB.valueHasColor, literalOf(valueHasColor))
+          val triples = List(valuePattern.andHas(KB.valueHasColor, literalOf(valueHasColor)))
+          query.insertData(triples: _*)
         case GeomValueInfo(valueHasGeometry) =>
-          valuePattern.andHas(KB.valueHasGeometry, literalOf(valueHasGeometry))
-        case StillImageFileValueInfo(
-              internalFilename,
-              internalMimeType,
-              originalFilename,
-              originalMimeType,
-              dimX,
-              dimY,
-            ) =>
-          valuePattern
-            .andHas(KB.internalFilename, literalOf(internalFilename))
-            .andHas(KB.internalMimeType, literalOf(internalMimeType))
-            .andHas(KB.dimX, literalOf(dimX))
-            .andHas(KB.dimY, literalOf(dimY))
-          originalFilename.foreach(filename => valuePattern.andHas(KB.originalFilename, literalOf(filename)))
-          originalMimeType.foreach(mimeType => valuePattern.andHas(KB.originalMimeType, literalOf(mimeType)))
+          val triples = List(valuePattern.andHas(KB.valueHasGeometry, literalOf(valueHasGeometry)))
+          query.insertData(triples: _*)
+        case v: StillImageFileValueInfo =>
+          val triples = buildStillImageFileValuePattern(v, valueInfo.valueIri)
+          query.insertData(triples: _*)
         case StillImageExternalFileValueInfo(
               internalFilename,
               internalMimeType,
@@ -291,6 +281,17 @@ object ResourcesRepoLive {
           .andHas(KB.valueHasStartPrecision, literalOf(v.valueHasStartPrecision.toString()))
           .andHas(KB.valueHasEndPrecision, literalOf(v.valueHasEndPrecision.toString()))
           .andHas(KB.valueHasCalendar, literalOf(v.valueHasCalendar.toString())),
+      )
+
+    def buildStillImageFileValuePattern(v: StillImageFileValueInfo, valueIri: String): List[TriplePattern] =
+      List(
+        iri(valueIri)
+          .has(KB.internalFilename, literalOf(v.internalFilename))
+          .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
+          .andHas(KB.dimX, literalOf(v.dimX))
+          .andHas(KB.dimY, literalOf(v.dimY))
+          .andHas(KB.originalFilename, v.originalFilename.map(literalOf))
+          .andHas(KB.originalMimeType, v.originalMimeType.map(literalOf)),
       )
 
   }
