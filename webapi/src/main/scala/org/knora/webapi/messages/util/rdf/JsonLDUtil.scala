@@ -1222,7 +1222,7 @@ object JsonLDUtil {
    * @param flatten      `true` if a flat JSON-LD document should be returned.
    * @return a [[JsonLDDocument]].
    */
-  def parseJsonLD(jsonLDString: String, flatten: Boolean = false): JsonLDDocument = {
+  def parseJsonLD(jsonLDString: String): JsonLDDocument = {
     // Parse the string into a jakarta.json.JsonStructure.
     val stringReader                 = new StringReader(jsonLDString)
     val jsonReader: JsonReader       = Json.createReader(stringReader)
@@ -1236,16 +1236,7 @@ object JsonLDUtil {
     val compactedJsonObject: JsonObject = JsonLd.compact(titaniumDocument, emptyContext).get
 
     // Convert the resulting jakarta.json.JsonObject to a JsonLDDocument.
-    val jsonLDDocument: JsonLDDocument = javaxJsonObjectToJsonLDDocument(compactedJsonObject)
-
-    // Was flat JSON-LD requested?
-    if (flatten) {
-      // Yes. Flatten the document.
-      jsonLDDocument.flattened
-    } else {
-      // No. Leave it as is.
-      jsonLDDocument
-    }
+    javaxJsonObjectToJsonLDDocument(compactedJsonObject)
   }
 
   /**
