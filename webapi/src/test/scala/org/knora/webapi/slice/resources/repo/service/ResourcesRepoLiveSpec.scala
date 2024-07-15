@@ -1166,8 +1166,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           |            knora-base:attachedToProject <$projectIri> ;
           |            knora-base:hasPermissions "$permissions" ;
           |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-          |            <foo:hasInt> <foo:IntValueIri> ;
-          |            <foo:hasBoolean> <foo:BooleanValueIri> .
+          |            <foo:hasInt> <foo:IntValueIri> .
           |        <foo:IntValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
           |            knora-base:isDeleted false  ;
           |            knora-base:valueHasString "42" ;
@@ -1177,6 +1176,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           |            knora-base:valueHasOrder 1 ;
           |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
           |            knora-base:valueHasInteger 42 .
+          |        <$resourceIri> <foo:hasBoolean> <foo:BooleanValueIri> .
           |        <foo:BooleanValueIri> rdf:type <http://www.knora.org/ontology/knora-base#BooleanValue> ;
           |            knora-base:isDeleted false  ;
           |            knora-base:valueHasString "true" ;
@@ -1256,9 +1256,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <$projectIri> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasInt> <foo:IntValueIri> ;
-            |            <foo:hasStandoffLinkTo> <foo:StandoffLinkTargetIri> ;
-            |            <foo:hasStandoffLinkToValue> <foo:StandoffLinkValueIri> .
+            |            <foo:hasInt> <foo:IntValueIri> .
             |        <foo:IntValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "42" ;
@@ -1268,6 +1266,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
             |            knora-base:valueHasInteger 42 .
+            |        <$resourceIri> <foo:hasStandoffLinkTo> <foo:StandoffLinkTargetIri> ;
+            |            <foo:hasStandoffLinkToValue> <foo:StandoffLinkValueIri> .
             |        <foo:StandoffLinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
             |            rdf:subject <$resourceIri> ;
             |            rdf:predicate <foo:hasStandoffLinkTo> ;
