@@ -5,7 +5,7 @@
 
 package swiss.dasch.domain
 
-import com.github.tototoshi.csv.{CSVWriter, defaultCSVFormat}
+import com.github.tototoshi.csv.CSVWriter
 import swiss.dasch.domain.SizeInBytesPerType.{SizeInBytesMovingImages, SizeInBytesOther}
 import swiss.dasch.domain.SupportedFileType.{MovingImage, OtherFiles, StillImage}
 import zio.nio.file.Path

@@ -97,7 +97,7 @@ lazy val root = (project in file("."))
       "eu.timepit"           %% "refined"                           % "0.11.2",
 
       // csv for reports
-      "com.github.tototoshi" %% "scala-csv" % "1.4.1",
+      "com.github.tototoshi" %% "scala-csv" % "2.0.0",
 
       // logging
       "dev.zio" %% "zio-logging"               % zioLoggingVersion,
