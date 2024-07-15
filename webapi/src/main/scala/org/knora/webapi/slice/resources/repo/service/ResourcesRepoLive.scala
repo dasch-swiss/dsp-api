@@ -34,6 +34,8 @@ import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfObject
+import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicate
 
 trait ResourcesRepo {
   def createNewResource(
@@ -209,7 +211,7 @@ object ResourcesRepoLive {
         .andHas(KB.hasPermissions, literalOf(valueInfo.valuePermissions))
         .andHas(KB.valueHasOrder, literalOf(valueInfo.valueHasOrder))
         .andHas(KB.valueCreationDate, literalOfType(valueInfo.creationDate.toString(), XSD.DATETIME))
-        .andHas(KB.valueHasComment, valueInfo.comment.map(literalOf).toList: _*)
+        .andHas(KB.valueHasComment, valueInfo.comment.map(literalOf))
 
     def buildStandoffLinkPattern(
       standoffLink: StandoffLinkValueInfo,
@@ -282,6 +284,10 @@ object ResourcesRepoLive {
 
   }
 }
+
+extension (tp: TriplePattern)
+  def andHas(predicate: RdfPredicate, o: Option[RdfObject]): TriplePattern =
+    o.fold(tp)(o => tp.andHas(predicate, o))
 
 // TODO:
 // - clean up rdf building

@@ -484,8 +484,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToProject <$projectIri> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
-            |            <foo:hasLinkToValue> <foo:LinkValueIri> ;
-            |            <foo:hasLinkTo> <foo:LinkTargetIri> .
+            |            <foo:hasLinkToValue> <foo:LinkValueIri> .
             |        <foo:LinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo:LinkValueIri" ;
@@ -493,8 +492,9 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:attachedToUser <$valueCreator> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
-            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
-            |            rdf:subject <$resourceIri> ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime .
+            |        <$resourceIri> <foo:hasLinkTo> <foo:LinkTargetIri> .
+            |        <foo:LinkValueIri> rdf:subject <$resourceIri> ;
             |            rdf:predicate <foo:hasLinkTo> ;
             |            rdf:object <foo:LinkTargetIri> ;
             |            knora-base:valueHasRefCount 1 .
@@ -1195,7 +1195,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     assertUpdateQueriesEqual(expected, result)
   }
 
-  private val createResourceWithStzandoffLinkTest = test("Create a resource with a standoff link value") {
+  private val createResourceWithStandoffLinkTest = test("Create a resource with a standoff link value") {
     val resource = resourceDefinition.copy(standoffLinks = List(standoffLinkValue))
     val expected = Update(
       s"""|
@@ -1292,7 +1292,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       createResourceWithoutValuesTest,
       createResourceWithValueSuite,
       createResourceWithMultipleValuesTest,
-      createResourceWithStzandoffLinkTest,
+      createResourceWithStandoffLinkTest,
       createResourceWithValueAndStandoffLinkTest,
     )
 }
