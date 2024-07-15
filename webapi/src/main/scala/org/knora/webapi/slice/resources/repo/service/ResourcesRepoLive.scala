@@ -79,18 +79,8 @@ object ResourcesRepoLive {
     val resourcePattern = buildResourcePattern(resourceToCreate, projectIri, creatorIri)
     query.insertData(resourcePattern)
 
-    resourceToCreate.newValueInfos.foreach { valueInfo =>
-      resourcePattern.andHas(iri(valueInfo.propertyIri), iri(valueInfo.valueIri))
-      val valuePattern = buildValuePattern(valueInfo)
-      query.insertData(valuePattern)
-      val typeSpecificValuePattern = buildTypeSpecificValuePattern(
-        valueInfo.value,
-        valueInfo.valueIri,
-        valueInfo.propertyIri,
-        resourceToCreate.resourceIri,
-      )
-      query.insertData(typeSpecificValuePattern: _*)
-    }
+    val valuePatterns = resourceToCreate.newValueInfos.flatMap(buildValuePattern(_, resourceToCreate.resourceIri))
+    query.insertData(valuePatterns: _*)
 
     resourceToCreate.standoffLinks.foreach { standoffLink =>
       resourcePattern.andHas(iri(standoffLink.linkPropertyIri), iri(standoffLink.linkTargetIri))
@@ -117,18 +107,6 @@ object ResourcesRepoLive {
         .andHas(KB.hasPermissions, literalOf(resource.permissions))
         .andHas(KB.creationDate, literalOfType(resource.creationDate.toString(), XSD.DATETIME))
 
-    def buildValuePattern(valueInfo: NewValueInfo): TriplePattern =
-      iri(valueInfo.valueIri)
-        .isA(iri(valueInfo.valueTypeIri))
-        .andHas(KB.isDeleted, literalOf(false))
-        .andHas(KB.valueHasString, literalOf(valueInfo.valueHasString))
-        .andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(valueInfo.valueUUID)))
-        .andHas(KB.attachedToUser, iri(valueInfo.valueCreator))
-        .andHas(KB.hasPermissions, literalOf(valueInfo.valuePermissions))
-        .andHas(KB.valueHasOrder, literalOf(valueInfo.valueHasOrder))
-        .andHas(KB.valueCreationDate, literalOfType(valueInfo.creationDate.toString(), XSD.DATETIME))
-        .andHas(KB.valueHasComment, valueInfo.comment.map(literalOf))
-
     def buildStandoffLinkPattern(
       standoffLink: StandoffLinkValueInfo,
       resourceIri: String,
@@ -147,22 +125,26 @@ object ResourcesRepoLive {
         .andHas(KB.hasPermissions, literalOf(standoffLink.newLinkValuePermissions))
         .andHas(KB.valueHasUUID, literalOf(standoffLink.valueUuid))
 
-    def standoffAttributeLiterals(attributes: Seq[StandoffAttribute]): List[RdfPredicateObjectList] =
-      attributes.map { attribute =>
-        val v = attribute.value match
-          case StandoffAttributeValue.IriAttribute(value)               => iri(value)
-          case StandoffAttributeValue.UriAttribute(value)               => literalOfType(value, XSD.ANYURI)
-          case StandoffAttributeValue.InternalReferenceAttribute(value) => iri(value)
-          case StandoffAttributeValue.StringAttribute(value)            => literalOf(value)
-          case StandoffAttributeValue.IntegerAttribute(value)           => literalOf(value)
-          case StandoffAttributeValue.DecimalAttribute(value)           => literalOf(value)
-          case StandoffAttributeValue.BooleanAttribute(value)           => literalOf(value)
-          case StandoffAttributeValue.TimeAttribute(value)              => literalOfType(value.toString(), XSD.DATETIME)
-        val p = iri(attribute.propertyIri)
-        predicateObjectList(p, v)
-      }.toList
+    def buildValuePattern(valueInfo: NewValueInfo, resourceIri: String): List[TriplePattern] =
+      List(
+        iri(resourceIri).has(iri(valueInfo.propertyIri), iri(valueInfo.valueIri)),
+        buildGeneralValuePattern(valueInfo),
+      ) :::
+        buildTypeSpecificValuePattern(valueInfo.value, valueInfo.valueIri, valueInfo.propertyIri, resourceIri)
 
-    def buildTypeSpecificValuePattern(
+    private def buildGeneralValuePattern(valueInfo: NewValueInfo): TriplePattern =
+      iri(valueInfo.valueIri)
+        .isA(iri(valueInfo.valueTypeIri))
+        .andHas(KB.isDeleted, literalOf(false))
+        .andHas(KB.valueHasString, literalOf(valueInfo.valueHasString))
+        .andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(valueInfo.valueUUID)))
+        .andHas(KB.attachedToUser, iri(valueInfo.valueCreator))
+        .andHas(KB.hasPermissions, literalOf(valueInfo.valuePermissions))
+        .andHas(KB.valueHasOrder, literalOf(valueInfo.valueHasOrder))
+        .andHas(KB.valueCreationDate, literalOfType(valueInfo.creationDate.toString(), XSD.DATETIME))
+        .andHas(KB.valueHasComment, valueInfo.comment.map(literalOf))
+
+    private def buildTypeSpecificValuePattern(
       value: TypeSpecificValueInfo,
       valueIri: String,
       propertyIri: String,
@@ -210,7 +192,7 @@ object ResourcesRepoLive {
         case GeonameValueInfo(valueHasGeonameCode) =>
           List(iri(valueIri).has(KB.valueHasGeonameCode, literalOf(valueHasGeonameCode)))
 
-    def buildLinkValuePatterns(
+    private def buildLinkValuePatterns(
       v: LinkValueInfo,
       valueIri: String,
       propertyIri: String,
@@ -225,7 +207,7 @@ object ResourcesRepoLive {
           .andHas(KB.valueHasRefCount, literalOf(1)),
       )
 
-    def buildFormattedTextValuePatterns(v: FormattedTextValueInfo, valueIri: String): List[TriplePattern] =
+    private def buildFormattedTextValuePatterns(v: FormattedTextValueInfo, valueIri: String): List[TriplePattern] =
       val valuePattern =
         iri(valueIri)
           .has(KB.valueHasMapping, iri(v.mappingIri))
@@ -246,7 +228,22 @@ object ResourcesRepoLive {
           .andHas(KB.standoffTagHasEnd, literalOf(standoffTagInfo.endPosition))
       }.toList
 
-    def buildDateValuePattern(v: DateValueInfo, valueIri: String): List[TriplePattern] =
+    private def standoffAttributeLiterals(attributes: Seq[StandoffAttribute]): List[RdfPredicateObjectList] =
+      attributes.map { attribute =>
+        val v = attribute.value match
+          case StandoffAttributeValue.IriAttribute(value)               => iri(value)
+          case StandoffAttributeValue.UriAttribute(value)               => literalOfType(value, XSD.ANYURI)
+          case StandoffAttributeValue.InternalReferenceAttribute(value) => iri(value)
+          case StandoffAttributeValue.StringAttribute(value)            => literalOf(value)
+          case StandoffAttributeValue.IntegerAttribute(value)           => literalOf(value)
+          case StandoffAttributeValue.DecimalAttribute(value)           => literalOf(value)
+          case StandoffAttributeValue.BooleanAttribute(value)           => literalOf(value)
+          case StandoffAttributeValue.TimeAttribute(value)              => literalOfType(value.toString(), XSD.DATETIME)
+        val p = iri(attribute.propertyIri)
+        predicateObjectList(p, v)
+      }.toList
+
+    private def buildDateValuePattern(v: DateValueInfo, valueIri: String): List[TriplePattern] =
       List(
         iri(valueIri)
           .has(KB.valueHasStartJDN, literalOf(v.valueHasStartJDN))
@@ -256,7 +253,7 @@ object ResourcesRepoLive {
           .andHas(KB.valueHasCalendar, literalOf(v.valueHasCalendar.toString())),
       )
 
-    def buildStillImageFileValuePattern(v: StillImageFileValueInfo, valueIri: String): List[TriplePattern] =
+    private def buildStillImageFileValuePattern(v: StillImageFileValueInfo, valueIri: String): List[TriplePattern] =
       List(
         iri(valueIri)
           .has(KB.internalFilename, literalOf(v.internalFilename))
@@ -267,7 +264,7 @@ object ResourcesRepoLive {
           .andHas(KB.originalMimeType, v.originalMimeType.map(literalOf)),
       )
 
-    def buildStillImageExternalFileValuePattern(
+    private def buildStillImageExternalFileValuePattern(
       v: StillImageExternalFileValueInfo,
       valueIri: String,
     ): List[TriplePattern] =
@@ -280,7 +277,7 @@ object ResourcesRepoLive {
           .andHas(KB.originalMimeType, v.originalMimeType.map(literalOf)),
       )
 
-    def buildDocumentFileValuePattern(v: DocumentFileValueInfo, valueIri: String): List[TriplePattern] =
+    private def buildDocumentFileValuePattern(v: DocumentFileValueInfo, valueIri: String): List[TriplePattern] =
       List(
         iri(valueIri)
           .has(KB.internalFilename, literalOf(v.internalFilename))
@@ -292,7 +289,7 @@ object ResourcesRepoLive {
           .andHas(KB.pageCount, v.pageCount.map(i => literalOf(i))),
       )
 
-    def buildOtherFileValuePattern(v: OtherFileValueInfo, valueIri: String): List[TriplePattern] =
+    private def buildOtherFileValuePattern(v: OtherFileValueInfo, valueIri: String): List[TriplePattern] =
       List(
         iri(valueIri)
           .has(KB.internalFilename, literalOf(v.internalFilename))
@@ -311,6 +308,3 @@ extension (tp: TriplePattern)
 extension (iri: Iri)
   def has(p: RdfPredicate, o: Option[RdfObject]): Option[TriplePattern] =
     o.map(o => iri.has(p, o))
-
-// TODO:
-// - clean up rdf building
