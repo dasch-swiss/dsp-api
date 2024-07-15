@@ -1,5 +1,47 @@
 # Changelog
 
+## [30.18.1](https://github.com/dasch-swiss/dsp-api/compare/v30.18.0...v30.18.1) (2024-07-15)
+
+
+### Bug Fixes
+
+* Do not fail when updating class with external ontologies (DEV-3879) ([#3321](https://github.com/dasch-swiss/dsp-api/issues/3321)) ([752a7fe](https://github.com/dasch-swiss/dsp-api/commit/752a7fef337dd612907109b854fb84eb483229d9))
+
+## [30.18.0](https://github.com/dasch-swiss/dsp-api/compare/v30.17.1...v30.18.0) (2024-07-15)
+
+
+### Maintenance
+
+* Add e2e test for v2 lists endpoints ([#3315](https://github.com/dasch-swiss/dsp-api/issues/3315)) ([17d7441](https://github.com/dasch-swiss/dsp-api/commit/17d74416be7e58cfc488b18e57088a5dc7760243))
+* Add sqlite to localdev setup ([#3304](https://github.com/dasch-swiss/dsp-api/issues/3304)) ([e5650a7](https://github.com/dasch-swiss/dsp-api/commit/e5650a7fc4429dd05160b9c4f4b71d787b0a96c6))
+* Dependency updates ([#3319](https://github.com/dasch-swiss/dsp-api/issues/3319)) ([44eee9b](https://github.com/dasch-swiss/dsp-api/commit/44eee9b024f39e469fde08b2fedb177211a79bc4))
+* Determine the year automatically for copyright headers ([#3316](https://github.com/dasch-swiss/dsp-api/issues/3316)) ([e25456c](https://github.com/dasch-swiss/dsp-api/commit/e25456c7129c603284e5899d94cfbd0f1994d4c8))
+* Major dependency updates ([#3300](https://github.com/dasch-swiss/dsp-api/issues/3300)) ([63b202d](https://github.com/dasch-swiss/dsp-api/commit/63b202db319776e02caf16c7cd93372b632ea73f))
+* Migrate ListRouteV2 to tapir (DEV-3852) ([#3307](https://github.com/dasch-swiss/dsp-api/issues/3307)) ([9b3d6c7](https://github.com/dasch-swiss/dsp-api/commit/9b3d6c738a34f0b6f2753591acc629ac15133fd2))
+* Migrate to  `AuthenticationRouteV2` tapir ([#3310](https://github.com/dasch-swiss/dsp-api/issues/3310)) ([c62f460](https://github.com/dasch-swiss/dsp-api/commit/c62f46046eff01d90ed268d304bd7d5658a535d1))
+* Minor dependency updates ([#3299](https://github.com/dasch-swiss/dsp-api/issues/3299)) ([34afc96](https://github.com/dasch-swiss/dsp-api/commit/34afc96633fcc5e19d9ef4cc14c0f6c7eb909b5e))
+* Minor dependency updates ([#3318](https://github.com/dasch-swiss/dsp-api/issues/3318)) ([1d5fd19](https://github.com/dasch-swiss/dsp-api/commit/1d5fd1991ea675e8c36c190fc40054c94f25e4cc))
+* Patch dependency updates ([#3298](https://github.com/dasch-swiss/dsp-api/issues/3298)) ([ae22613](https://github.com/dasch-swiss/dsp-api/commit/ae226132bbc0a0e61fe67e09b31cbcad8348e8ee))
+* Patch dependency updates ([#3317](https://github.com/dasch-swiss/dsp-api/issues/3317)) ([26dba9a](https://github.com/dasch-swiss/dsp-api/commit/26dba9a3815696d5754b6e80846283651da11778))
+* Small refactoring ([#3311](https://github.com/dasch-swiss/dsp-api/issues/3311)) ([6822d16](https://github.com/dasch-swiss/dsp-api/commit/6822d16090fd6456f6ab68e1f6f1ac519f8c7f3a))
+
+
+### Documentation
+
+* Update documentation ([#3308](https://github.com/dasch-swiss/dsp-api/issues/3308)) ([d2f2120](https://github.com/dasch-swiss/dsp-api/commit/d2f2120394249789ee5e8144ba2ed9d69353eed3))
+
+
+### Enhancements
+
+* Add feature flag to disable lastModificationDate check (DEV-3870) ([#3313](https://github.com/dasch-swiss/dsp-api/issues/3313)) ([9c1a2c5](https://github.com/dasch-swiss/dsp-api/commit/9c1a2c5ee3e551e0e09220ddc2f152e832124834))
+
+
+### Bug Fixes
+
+* Add missing /v2/[lists|node]/:listIri to ApiRoutes ([#3314](https://github.com/dasch-swiss/dsp-api/issues/3314)) ([da1d61d](https://github.com/dasch-swiss/dsp-api/commit/da1d61d78ed87936d491424bbd9af69860aaad0e))
+* Do not ignore the cardinality check result when updating the cardinalties (DEV-3841) ([#3306](https://github.com/dasch-swiss/dsp-api/issues/3306)) ([1f0d221](https://github.com/dasch-swiss/dsp-api/commit/1f0d221d803597c634d2d9901ad0dd6aff37f413))
+* Fix query tracking tags (== is faulty), set previous bucket sizes (DEV-3776) ([#3305](https://github.com/dasch-swiss/dsp-api/issues/3305)) ([04b2a05](https://github.com/dasch-swiss/dsp-api/commit/04b2a055a6016023622cadbab378658263331f35))
+
 ## [30.17.1](https://github.com/dasch-swiss/dsp-api/compare/v30.17.0...v30.17.1) (2024-07-01)
 
 
