@@ -12,10 +12,13 @@ import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.core.query.InsertDataQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfType
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.predicateObjectList
+import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfObject
+import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicate
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicateObjectList
 import zio.*
 
@@ -34,9 +37,6 @@ import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfObject
-import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicate
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 
 trait ResourcesRepo {
   def createNewResource(
@@ -96,20 +96,20 @@ object ResourcesRepoLive {
           val triples: List[TriplePattern] = buildFormattedTextValuePatterns(v, valueInfo.valueIri)
           query.insertData(triples: _*)
         case IntegerValueInfo(valueHasInteger) =>
-          valuePattern.andHas(KB.valueHasInteger, literalOf(valueHasInteger))
+          val triples = List(valuePattern.andHas(KB.valueHasInteger, literalOf(valueHasInteger)))
+          query.insertData(triples: _*)
         case DecimalValueInfo(valueHasDecimal) =>
-          valuePattern.andHas(KB.valueHasDecimal, literalOf(valueHasDecimal))
+          val triples = List(valuePattern.andHas(KB.valueHasDecimal, literalOf(valueHasDecimal)))
+          query.insertData(triples: _*)
         case BooleanValueInfo(valueHasBoolean) =>
-          valuePattern.andHas(KB.valueHasBoolean, literalOf(valueHasBoolean))
+          val triples = List(valuePattern.andHas(KB.valueHasBoolean, literalOf(valueHasBoolean)))
+          query.insertData(triples: _*)
         case UriValueInfo(valueHasUri) =>
-          valuePattern.andHas(KB.valueHasUri, literalOfType(valueHasUri, XSD.ANYURI))
-        case DateValueInfo(startJDN, endJDN, startPrecision, endPrecision, calendar) =>
-          valuePattern
-            .andHas(KB.valueHasStartJDN, literalOf(startJDN))
-            .andHas(KB.valueHasEndJDN, literalOf(endJDN))
-            .andHas(KB.valueHasStartPrecision, literalOf(startPrecision.toString()))
-            .andHas(KB.valueHasEndPrecision, literalOf(endPrecision.toString()))
-            .andHas(KB.valueHasCalendar, literalOf(calendar.toString()))
+          val triples = List(valuePattern.andHas(KB.valueHasUri, literalOfType(valueHasUri, XSD.ANYURI)))
+          query.insertData(triples: _*)
+        case v: DateValueInfo =>
+          val triples = buildDateValuePattern(v, valueInfo.valueIri)
+          query.insertData(triples: _*)
         case ColorValueInfo(valueHasColor) =>
           valuePattern.andHas(KB.valueHasColor, literalOf(valueHasColor))
         case GeomValueInfo(valueHasGeometry) =>
@@ -282,6 +282,16 @@ object ResourcesRepoLive {
           .andHas(KB.standoffTagHasStart, literalOf(standoffTagInfo.startPosition))
           .andHas(KB.standoffTagHasEnd, literalOf(standoffTagInfo.endPosition))
       }.toList
+
+    def buildDateValuePattern(v: DateValueInfo, valueIri: String): List[TriplePattern] =
+      List(
+        iri(valueIri)
+          .has(KB.valueHasStartJDN, literalOf(v.valueHasStartJDN))
+          .andHas(KB.valueHasEndJDN, literalOf(v.valueHasEndJDN))
+          .andHas(KB.valueHasStartPrecision, literalOf(v.valueHasStartPrecision.toString()))
+          .andHas(KB.valueHasEndPrecision, literalOf(v.valueHasEndPrecision.toString()))
+          .andHas(KB.valueHasCalendar, literalOf(v.valueHasCalendar.toString())),
+      )
 
   }
 }
