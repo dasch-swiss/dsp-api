@@ -152,7 +152,7 @@ object ResourcesRepoLive {
         .andHas(KB.hasPermissions, literalOf(valueInfo.permissions))
         .andHas(KB.valueHasOrder, literalOf(valueInfo.valueHasOrder))
         .andHas(KB.valueCreationDate, literalOfType(valueInfo.creationDate.toString(), XSD.DATETIME))
-        .andHas(KB.valueHasComment, valueInfo.comment.map(literalOf))
+        .andHasOptional(KB.valueHasComment, valueInfo.comment.map(literalOf))
 
     private def buildTypeSpecificValuePattern(
       value: TypeSpecificValueInfo,
@@ -164,7 +164,7 @@ object ResourcesRepoLive {
         case v: LinkValueInfo =>
           buildLinkValuePatterns(v, valueIri, propertyIri, resourceIri)
         case UnformattedTextValueInfo(valueHasLanguage) =>
-          iri(valueIri).has(KB.valueHasLanguage, valueHasLanguage.map(literalOf)).toList
+          iri(valueIri).hasOptional(KB.valueHasLanguage, valueHasLanguage.map(literalOf)).toList
         case v: FormattedTextValueInfo =>
           buildFormattedTextValuePatterns(v, valueIri)
         case IntegerValueInfo(valueHasInteger) =>
@@ -222,15 +222,15 @@ object ResourcesRepoLive {
         iri(valueIri)
           .has(KB.valueHasMapping, iri(v.mappingIri))
           .andHas(KB.valueHasMaxStandoffStartIndex, literalOf(v.maxStandoffStartIndex))
-          .andHas(KB.valueHasLanguage, v.valueHasLanguage.map(literalOf))
+          .andHasOptional(KB.valueHasLanguage, v.valueHasLanguage.map(literalOf))
       List(valuePattern) ::: v.standoff.map { standoffTagInfo =>
         valuePattern.andHas(KB.valueHasStandoff, iri(standoffTagInfo.standoffTagInstanceIri))
         iri(standoffTagInfo.standoffTagInstanceIri)
           .isA(iri(standoffTagInfo.standoffTagClassIri))
-          .andHas(KB.standoffTagHasEndIndex, standoffTagInfo.endIndex.map(i => literalOf(i)))
-          .andHas(KB.standoffTagHasStartParent, standoffTagInfo.startParentIri.map(iri))
-          .andHas(KB.standoffTagHasEndParent, standoffTagInfo.endParentIri.map(iri))
-          .andHas(KB.standoffTagHasOriginalXMLID, standoffTagInfo.originalXMLID.map(literalOf))
+          .andHasOptional(KB.standoffTagHasEndIndex, standoffTagInfo.endIndex.map(i => literalOf(i)))
+          .andHasOptional(KB.standoffTagHasStartParent, standoffTagInfo.startParentIri.map(iri))
+          .andHasOptional(KB.standoffTagHasEndParent, standoffTagInfo.endParentIri.map(iri))
+          .andHasOptional(KB.standoffTagHasOriginalXMLID, standoffTagInfo.originalXMLID.map(literalOf))
           .andHas(standoffAttributeLiterals(standoffTagInfo.attributes): _*)
           .andHas(KB.standoffTagHasStartIndex, literalOf(standoffTagInfo.startIndex))
           .andHas(KB.standoffTagHasUUID, literalOf(UuidUtil.base64Encode(standoffTagInfo.uuid)))
@@ -270,8 +270,8 @@ object ResourcesRepoLive {
           .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
           .andHas(KB.dimX, literalOf(v.dimX))
           .andHas(KB.dimY, literalOf(v.dimY))
-          .andHas(KB.originalFilename, v.originalFilename.map(literalOf))
-          .andHas(KB.originalMimeType, v.originalMimeType.map(literalOf)),
+          .andHasOptional(KB.originalFilename, v.originalFilename.map(literalOf))
+          .andHasOptional(KB.originalMimeType, v.originalMimeType.map(literalOf)),
       )
 
     private def buildStillImageExternalFileValuePattern(
@@ -283,8 +283,8 @@ object ResourcesRepoLive {
           .has(KB.internalFilename, literalOf(v.internalFilename))
           .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
           .andHas(KB.externalUrl, literalOf(v.externalUrl))
-          .andHas(KB.originalFilename, v.originalFilename.map(literalOf))
-          .andHas(KB.originalMimeType, v.originalMimeType.map(literalOf)),
+          .andHasOptional(KB.originalFilename, v.originalFilename.map(literalOf))
+          .andHasOptional(KB.originalMimeType, v.originalMimeType.map(literalOf)),
       )
 
     private def buildDocumentFileValuePattern(v: DocumentFileValueInfo, valueIri: String): List[TriplePattern] =
@@ -292,11 +292,11 @@ object ResourcesRepoLive {
         iri(valueIri)
           .has(KB.internalFilename, literalOf(v.internalFilename))
           .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
-          .andHas(KB.originalFilename, v.originalFilename.map(literalOf))
-          .andHas(KB.originalMimeType, v.originalMimeType.map(literalOf))
-          .andHas(KB.dimX, v.dimX.map(i => literalOf(i)))
-          .andHas(KB.dimY, v.dimY.map(i => literalOf(i)))
-          .andHas(KB.pageCount, v.pageCount.map(i => literalOf(i))),
+          .andHasOptional(KB.originalFilename, v.originalFilename.map(literalOf))
+          .andHasOptional(KB.originalMimeType, v.originalMimeType.map(literalOf))
+          .andHasOptional(KB.dimX, v.dimX.map(i => literalOf(i)))
+          .andHasOptional(KB.dimY, v.dimY.map(i => literalOf(i)))
+          .andHasOptional(KB.pageCount, v.pageCount.map(i => literalOf(i))),
       )
 
     private def buildOtherFileValuePattern(v: OtherFileValueInfo, valueIri: String): List[TriplePattern] =
@@ -304,17 +304,35 @@ object ResourcesRepoLive {
         iri(valueIri)
           .has(KB.internalFilename, literalOf(v.internalFilename))
           .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
-          .andHas(KB.originalFilename, v.originalFilename.map(literalOf))
-          .andHas(KB.originalMimeType, v.originalMimeType.map(literalOf)),
+          .andHasOptional(KB.originalFilename, v.originalFilename.map(literalOf))
+          .andHasOptional(KB.originalMimeType, v.originalMimeType.map(literalOf)),
       )
 
   }
 }
 
+/**
+ * Extends the `TriplePattern` class to add the `andHasOptional` method.
+ *
+ * This method allows adding an optional triple pattern to the existing triple pattern.
+ *
+ * @param p The RDF predicate of the optional triple pattern.
+ * @param o The RDF object of the optional triple pattern.
+ * @return A new `TriplePattern` object that represents the combined triple pattern.
+ */
 extension (tp: TriplePattern)
-  def andHas(p: RdfPredicate, o: Option[RdfObject]): TriplePattern =
+  def andHasOptional(p: RdfPredicate, o: Option[RdfObject]): TriplePattern =
     o.fold(tp)(o => tp.andHas(p, o))
 
+/**
+ * Extends the `Iri` class to add the `hasOptional` method.
+ *
+ * This method allows optionally creating a triple if the object is defined.
+ *
+ * @param p The RDF predicate of the optional triple pattern.
+ * @param o The RDF object of the optional triple pattern.
+ * @return An optional `TriplePattern` object that represents the combined triple pattern.
+ */
 extension (iri: Iri)
-  def has(p: RdfPredicate, o: Option[RdfObject]): Option[TriplePattern] =
+  def hasOptional(p: RdfPredicate, o: Option[RdfObject]): Option[TriplePattern] =
     o.map(o => iri.has(p, o))
