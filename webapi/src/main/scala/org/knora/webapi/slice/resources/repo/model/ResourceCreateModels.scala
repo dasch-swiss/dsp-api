@@ -16,19 +16,19 @@ final case class ResourceReadyToCreate(
   resourceLabel: String,
   creationDate: Instant,
   permissions: String,
-  newValueInfos: Seq[NewValueInfo],
+  valueInfos: Seq[ValueInfo],
   standoffLinks: Seq[StandoffLinkValueInfo],
 )
 
-final case class NewValueInfo(
+final case class ValueInfo(
   resourceIri: IRI,
   propertyIri: IRI,
   valueIri: IRI,
   valueTypeIri: IRI,
   valueUUID: UUID,
   value: TypeSpecificValueInfo,
-  valuePermissions: String,
-  valueCreator: IRI,
+  permissions: String,
+  creator: IRI,
   creationDate: Instant,
   valueHasOrder: Int,
   valueHasString: String,

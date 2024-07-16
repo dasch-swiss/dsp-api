@@ -18,7 +18,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.slice.resources.repo.model.NewValueInfo
+import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
 import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
@@ -47,34 +47,34 @@ object TestData {
     resourceLabel = label,
     creationDate = creationDate,
     permissions = permissions,
-    newValueInfos = Seq.empty,
+    valueInfos = Seq.empty,
     standoffLinks = Seq.empty,
   )
 
-  val linkValueDefinition = NewValueInfo(
+  val linkValueDefinition = ValueInfo(
     resourceIri = resourceIri,
     propertyIri = "foo:hasLinkToValue",
     valueIri = "foo:LinkValueIri",
     valueTypeIri = OntologyConstants.KnoraBase.LinkValue,
     valueUUID = UUID.randomUUID(),
     value = TypeSpecificValueInfo.LinkValueInfo("foo:LinkTargetIri"),
-    valuePermissions = valuePermissions,
-    valueCreator = valueCreator,
+    permissions = valuePermissions,
+    creator = valueCreator,
     creationDate = valueCreationDate,
     valueHasOrder = 1,
     valueHasString = "foo:LinkValueIri",
     comment = None,
   )
 
-  val unformattedTextValueDefinition = NewValueInfo(
+  val unformattedTextValueDefinition = ValueInfo(
     resourceIri = resourceIri,
     propertyIri = "foo:hasUnformattedTextValue",
     valueIri = "foo:UnformattedTextValueIri",
     valueTypeIri = OntologyConstants.KnoraBase.TextValue,
     valueUUID = UUID.randomUUID(),
     value = TypeSpecificValueInfo.UnformattedTextValueInfo(Some("en")),
-    valuePermissions = valuePermissions,
-    valueCreator = valueCreator,
+    permissions = valuePermissions,
+    creator = valueCreator,
     creationDate = valueCreationDate,
     valueHasOrder = 1,
     valueHasString = "this is a text without formatting",
@@ -82,7 +82,7 @@ object TestData {
   )
 
   val standoffTagUuid = UUID.randomUUID()
-  val formattedTextValueDefinition = NewValueInfo(
+  val formattedTextValueDefinition = ValueInfo(
     resourceIri = resourceIri,
     propertyIri = "foo:hasFormattedTextValue",
     valueIri = "foo:FormattedTextValueIri",
@@ -126,8 +126,8 @@ object TestData {
         ),
       ),
     ),
-    valuePermissions = valuePermissions,
-    valueCreator = valueCreator,
+    permissions = valuePermissions,
+    creator = valueCreator,
     creationDate = valueCreationDate,
     valueHasOrder = 1,
     valueHasString = "this is a text with formatting",
@@ -135,15 +135,15 @@ object TestData {
   )
 
   val intValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasInt",
       valueIri = "foo:IntValueIri",
       valueTypeIri = OntologyConstants.KnoraBase.IntValue,
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.IntegerValueInfo(42),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "42",
@@ -151,15 +151,15 @@ object TestData {
     )
 
   val boolValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasBoolean",
       valueIri = "foo:BooleanValueIri",
       valueTypeIri = OntologyConstants.KnoraBase.BooleanValue,
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.BooleanValueInfo(true),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "true",
@@ -167,15 +167,15 @@ object TestData {
     )
 
   val decimalValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasDecimal",
       valueIri = "foo:DecimalValueIri",
       valueTypeIri = OntologyConstants.KnoraBase.DecimalValue,
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.DecimalValueInfo(BigDecimal(42.42)),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "42.42",
@@ -183,15 +183,15 @@ object TestData {
     )
 
   val uriValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasUri",
       valueIri = "foo:UriValueIri",
       valueTypeIri = OntologyConstants.KnoraBase.UriValue,
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.UriValueInfo("http://example.com"),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "http://example.com",
@@ -199,7 +199,7 @@ object TestData {
     )
 
   val dateValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasDate",
       valueIri = "foo:DateValueIri",
@@ -212,8 +212,8 @@ object TestData {
         DatePrecisionDay.toString,
         CalendarNameGregorian.toString,
       ),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "2024-01-01",
@@ -221,15 +221,15 @@ object TestData {
     )
 
   val colorValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasColor",
       valueIri = "foo:ColorValueIri",
       valueTypeIri = OntologyConstants.KnoraBase.ColorValue,
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.ColorValueInfo("#ff0000"),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "#ff0000",
@@ -237,7 +237,7 @@ object TestData {
     )
 
   val geometryValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasGeom",
       valueIri = "foo:GeomValueIri",
@@ -246,8 +246,8 @@ object TestData {
       value = TypeSpecificValueInfo.GeomValueInfo(
         """{"status":"active","lineColor":"#33ff33","lineWidth":2,"points":[{"x":0.20226843100189035,"y":0.3090909090909091},{"x":0.6389413988657845,"y":0.3594405594405594}],"type":"rectangle","original_index":0}""",
       ),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString =
@@ -256,7 +256,7 @@ object TestData {
     )
 
   val stillImageFileValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasStillImage",
       valueIri = "foo:StillImageFileValueIri",
@@ -270,8 +270,8 @@ object TestData {
         dimX = 100,
         dimY = 60,
       ),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "foo.jpg",
@@ -279,7 +279,7 @@ object TestData {
     )
 
   val stillImageExternalFileValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasStillImageExternal",
       valueIri = "foo:StillImageExternalFileValueIri",
@@ -292,8 +292,8 @@ object TestData {
         originalMimeType = None,
         externalUrl = "http://example.com/foo.jpg",
       ),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "foo.jpg",
@@ -301,7 +301,7 @@ object TestData {
     )
 
   val documentFileValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasDocument",
       valueIri = "foo:DocumentFileValueIri",
@@ -316,8 +316,8 @@ object TestData {
         dimY = Some(60),
         pageCount = Some(10),
       ),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "foo.pdf",
@@ -325,7 +325,7 @@ object TestData {
     )
 
   val otherFileValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasOtherFile",
       valueIri = "foo:OtherFileValueIri",
@@ -337,8 +337,8 @@ object TestData {
         originalFilename = Some("foo.zip"),
         originalMimeType = Some("application/zip"),
       ),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "foo.zip",
@@ -346,15 +346,15 @@ object TestData {
     )
 
   val hierarchicalListValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasList",
       valueIri = "foo:ListNodeIri",
       valueTypeIri = OntologyConstants.KnoraBase.ListValue,
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.HierarchicalListValueInfo("foo:ListNodeIri"),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "foo list",
@@ -362,7 +362,7 @@ object TestData {
     )
 
   val intervalValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasInterval",
       valueIri = "foo:IntervalValueIri",
@@ -372,8 +372,8 @@ object TestData {
         valueHasIntervalStart = BigDecimal(0.0),
         valueHasIntervalEnd = BigDecimal(100.0),
       ),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "0.0 - 100.0",
@@ -381,15 +381,15 @@ object TestData {
     )
 
   val timeValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasTime",
       valueIri = "foo:TimeValueIri",
       valueTypeIri = OntologyConstants.KnoraBase.TimeValue,
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.TimeValueInfo(Instant.parse("1024-01-01T10:00:00.673298Z")),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "1024-01-01T10:00:00.673298Z",
@@ -397,15 +397,15 @@ object TestData {
     )
 
   val geonameValueDefinition =
-    NewValueInfo(
+    ValueInfo(
       resourceIri = resourceIri,
       propertyIri = "foo:hasGeoname",
       valueIri = "foo:GeonameValueIri",
       valueTypeIri = OntologyConstants.KnoraBase.GeonameValue,
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.GeonameValueInfo("geoname_code"),
-      valuePermissions = valuePermissions,
-      valueCreator = valueCreator,
+      permissions = valuePermissions,
+      creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
       valueHasString = "geoname_code",
@@ -467,7 +467,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
 
   private val createResourceWithValueSuite = suite("Create new resource with any type of value")(
     test("Create a new resource with a link value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(linkValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(linkValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -506,7 +506,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with an unformatted text value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(unformattedTextValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(unformattedTextValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -541,7 +541,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with an formatted text value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(formattedTextValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(formattedTextValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -596,7 +596,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with an integer value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(intValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(intValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -631,7 +631,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with a boolean value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(boolValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(boolValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -666,7 +666,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with a decimal value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(decimalValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(decimalValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -701,7 +701,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with a URI value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(uriValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(uriValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -736,7 +736,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with a date value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(dateValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(dateValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -775,7 +775,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with a color value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(colorValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(colorValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -811,7 +811,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with a geometry value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(geometryValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(geometryValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -846,7 +846,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with a still image file value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(stillImageFileValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(stillImageFileValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -886,7 +886,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with a still image external file value") {
-      val resource    = resourceDefinition.copy(newValueInfos = List(stillImageExternalFileValueDefinition))
+      val resource    = resourceDefinition.copy(valueInfos = List(stillImageExternalFileValueDefinition))
       val uuidEncoded = UuidUtil.base64Encode(stillImageExternalFileValueDefinition.valueUUID)
       val expected = Update(
         s"""|
@@ -924,7 +924,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with a document file value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(documentFileValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(documentFileValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -965,7 +965,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with another file value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(otherFileValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(otherFileValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -1003,7 +1003,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with a list value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(hierarchicalListValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(hierarchicalListValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -1038,7 +1038,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with an interval value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(intervalValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(intervalValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -1075,7 +1075,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with a time value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(timeValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(timeValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -1111,7 +1111,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       assertUpdateQueriesEqual(expected, result)
     },
     test("Create a new resource with a geoname value") {
-      val resource = resourceDefinition.copy(newValueInfos = List(geonameValueDefinition))
+      val resource = resourceDefinition.copy(valueInfos = List(geonameValueDefinition))
       val expected = Update(
         s"""|
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -1149,7 +1149,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
   )
 
   private val createResourceWithMultipleValuesTest = test("Create a resource with multiple values") {
-    val resource = resourceDefinition.copy(newValueInfos = List(intValueDefinition, boolValueDefinition))
+    val resource = resourceDefinition.copy(valueInfos = List(intValueDefinition, boolValueDefinition))
     val expected = Update(
       s"""|
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -1238,7 +1238,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
     test("Create a resource with a value and a standoff link value") {
       val resource = resourceDefinition.copy(
         standoffLinks = List(standoffLinkValue),
-        newValueInfos = List(intValueDefinition),
+        valueInfos = List(intValueDefinition),
       )
       val expected = Update(
         s"""|

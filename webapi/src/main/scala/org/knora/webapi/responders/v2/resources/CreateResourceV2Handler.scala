@@ -28,14 +28,7 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagBooleanAttributeV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagDecimalAttributeV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIntegerAttributeV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagInternalReferenceAttributeV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAttributeV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagStringAttributeV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagTimeAttributeV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagUriAttributeV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -54,7 +47,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
-import org.knora.webapi.slice.resources.repo.model.NewValueInfo
+import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
 import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
@@ -620,15 +613,15 @@ final case class CreateResourceV2Handler(
                   ZIO.succeed(LinkValueInfo(referredResourceIri))
                 case _: DeletedValueContentV2 => ZIO.fail(BadRequestException("Deleted values cannot be created"))
 
-          } yield NewValueInfo(
+          } yield ValueInfo(
             resourceIri = resourceIri,
             propertyIri = propertyIri.toIri,
             value = valueInfo,
             valueIri = newValueIri,
             valueTypeIri = valueToCreate.valueContent.valueType.toString(),
             valueUUID = newValueUUID,
-            valueCreator = requestingUser.id,
-            valuePermissions = valueToCreate.permissions,
+            creator = requestingUser.id,
+            permissions = valueToCreate.permissions,
             creationDate = valueCreationDate,
             valueHasOrder = valueHasOrder,
             valueHasString = valueToCreate.valueContent.unescape.valueHasString,
@@ -641,7 +634,7 @@ final case class CreateResourceV2Handler(
       resourceLabel = internalCreateResource.label,
       creationDate = creationDate,
       permissions = resourcePermissions,
-      newValueInfos = newValueInfos,
+      valueInfos = newValueInfos,
       standoffLinks = linkUpdates,
     )
   }

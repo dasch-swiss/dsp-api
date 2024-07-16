@@ -28,7 +28,7 @@ import dsp.constants.SalsahGui.IRI
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.slice.resources.repo.model.NewValueInfo
+import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
 import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
@@ -77,7 +77,7 @@ object ResourcesRepoLive {
     val resourcePattern = CreateResourceQueryBuilder.buildResourcePattern(resourceToCreate, projectIri, creatorIri)
     query.insertData(resourcePattern)
 
-    val valuePatterns = resourceToCreate.newValueInfos.flatMap(
+    val valuePatterns = resourceToCreate.valueInfos.flatMap(
       CreateResourceQueryBuilder.buildValuePattern(_, resourceToCreate.resourceIri),
     )
     query.insertData(valuePatterns: _*)
@@ -135,21 +135,21 @@ object ResourcesRepoLive {
         .andHas(KB.hasPermissions, literalOf(standoffLink.newLinkValuePermissions))
         .andHas(KB.valueHasUUID, literalOf(standoffLink.valueUuid))
 
-    def buildValuePattern(valueInfo: NewValueInfo, resourceIri: String): List[TriplePattern] =
+    def buildValuePattern(valueInfo: ValueInfo, resourceIri: String): List[TriplePattern] =
       List(
         iri(resourceIri).has(iri(valueInfo.propertyIri), iri(valueInfo.valueIri)),
         buildGeneralValuePattern(valueInfo),
       ) :::
         buildTypeSpecificValuePattern(valueInfo.value, valueInfo.valueIri, valueInfo.propertyIri, resourceIri)
 
-    private def buildGeneralValuePattern(valueInfo: NewValueInfo): TriplePattern =
+    private def buildGeneralValuePattern(valueInfo: ValueInfo): TriplePattern =
       iri(valueInfo.valueIri)
         .isA(iri(valueInfo.valueTypeIri))
         .andHas(KB.isDeleted, literalOf(false))
         .andHas(KB.valueHasString, literalOf(valueInfo.valueHasString))
         .andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(valueInfo.valueUUID)))
-        .andHas(KB.attachedToUser, iri(valueInfo.valueCreator))
-        .andHas(KB.hasPermissions, literalOf(valueInfo.valuePermissions))
+        .andHas(KB.attachedToUser, iri(valueInfo.creator))
+        .andHas(KB.hasPermissions, literalOf(valueInfo.permissions))
         .andHas(KB.valueHasOrder, literalOf(valueInfo.valueHasOrder))
         .andHas(KB.valueCreationDate, literalOfType(valueInfo.creationDate.toString(), XSD.DATETIME))
         .andHas(KB.valueHasComment, valueInfo.comment.map(literalOf))
