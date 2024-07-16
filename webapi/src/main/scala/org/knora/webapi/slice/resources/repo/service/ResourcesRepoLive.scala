@@ -24,7 +24,6 @@ import zio.*
 
 import java.time.Instant
 
-import dsp.constants.SalsahGui.IRI
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -42,8 +41,8 @@ trait ResourcesRepo {
   def createNewResource(
     dataGraphIri: InternalIri,
     resource: ResourceReadyToCreate,
-    userIri: IRI,
-    projectIri: IRI,
+    userIri: InternalIri,
+    projectIri: InternalIri,
   ): Task[Unit]
 }
 
@@ -52,8 +51,8 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService) extends Reso
   def createNewResource(
     dataGraphIri: InternalIri,
     resource: ResourceReadyToCreate,
-    userIri: IRI,
-    projectIri: IRI,
+    userIri: InternalIri,
+    projectIri: InternalIri,
   ): Task[Unit] =
     triplestore.query(ResourcesRepoLive.createNewResourceQuery(dataGraphIri, resource, projectIri, userIri))
 
@@ -65,8 +64,8 @@ object ResourcesRepoLive {
   private[service] def createNewResourceQuery(
     dataGraphIri: InternalIri,
     resourceToCreate: ResourceReadyToCreate,
-    projectIri: IRI,
-    creatorIri: IRI,
+    projectIri: InternalIri,
+    creatorIri: InternalIri,
   ) = {
     val query: InsertDataQuery =
       Queries
@@ -95,60 +94,69 @@ object ResourcesRepoLive {
   }
 
   private object CreateResourceQueryBuilder {
-    def buildResourcePattern(resource: ResourceReadyToCreate, projectIri: IRI, creatorIri: IRI): TriplePattern =
-      iri(resource.resourceIri)
-        .isA(iri(resource.resourceClassIri))
+    def buildResourcePattern(
+      resource: ResourceReadyToCreate,
+      projectIri: InternalIri,
+      creatorIri: InternalIri,
+    ): TriplePattern =
+      iri(resource.resourceIri.value)
+        .isA(iri(resource.resourceClassIri.value))
         .andHas(RDFS.LABEL, literalOf(resource.resourceLabel))
         .andHas(KB.isDeleted, literalOf(false))
-        .andHas(KB.attachedToUser, iri(creatorIri))
-        .andHas(KB.attachedToProject, iri(projectIri))
+        .andHas(KB.attachedToUser, iri(creatorIri.value))
+        .andHas(KB.attachedToProject, iri(projectIri.value))
         .andHas(KB.hasPermissions, literalOf(resource.permissions))
         .andHas(KB.creationDate, literalOfType(resource.creationDate.toString(), XSD.DATETIME))
 
     def buildStandoffLinkPattern(
       standoffLink: StandoffLinkValueInfo,
-      resourceIri: String,
+      resourceIri: InternalIri,
       resourceCreationDate: Instant,
     ): List[TriplePattern] =
       List(
-        iri(resourceIri)
-          .has(iri(standoffLink.linkPropertyIri), iri(standoffLink.linkTargetIri))
-          .andHas(iri(standoffLink.linkPropertyIri + "Value"), iri(standoffLink.newLinkValueIri)),
+        iri(resourceIri.value)
+          .has(iri(standoffLink.linkPropertyIri.value), iri(standoffLink.linkTargetIri.value))
+          .andHas(iri(standoffLink.linkPropertyIri.value + "Value"), iri(standoffLink.newLinkValueIri.value)),
         buildStandoffLinkPatternContent(standoffLink, resourceIri, resourceCreationDate),
       )
 
     private def buildStandoffLinkPatternContent(
       standoffLink: StandoffLinkValueInfo,
-      resourceIri: String,
+      resourceIri: InternalIri,
       resourceCreationDate: Instant,
     ): TriplePattern =
-      iri(standoffLink.newLinkValueIri)
+      iri(standoffLink.newLinkValueIri.value)
         .isA(KB.linkValue)
-        .andHas(RDF.SUBJECT, iri(resourceIri))
-        .andHas(RDF.PREDICATE, iri(standoffLink.linkPropertyIri))
-        .andHas(RDF.OBJECT, iri(standoffLink.linkTargetIri))
-        .andHas(KB.valueHasString, literalOf(standoffLink.linkTargetIri))
+        .andHas(RDF.SUBJECT, iri(resourceIri.value))
+        .andHas(RDF.PREDICATE, iri(standoffLink.linkPropertyIri.value))
+        .andHas(RDF.OBJECT, iri(standoffLink.linkTargetIri.value))
+        .andHas(KB.valueHasString, literalOf(standoffLink.linkTargetIri.value))
         .andHas(KB.valueHasRefCount, literalOf(standoffLink.newReferenceCount))
         .andHas(KB.isDeleted, literalOf(false))
         .andHas(KB.valueCreationDate, literalOfType(resourceCreationDate.toString(), XSD.DATETIME))
-        .andHas(KB.attachedToUser, iri(standoffLink.newLinkValueCreator))
+        .andHas(KB.attachedToUser, iri(standoffLink.newLinkValueCreator.value))
         .andHas(KB.hasPermissions, literalOf(standoffLink.newLinkValuePermissions))
         .andHas(KB.valueHasUUID, literalOf(standoffLink.valueUuid))
 
-    def buildValuePattern(valueInfo: ValueInfo, resourceIri: String): List[TriplePattern] =
+    def buildValuePattern(valueInfo: ValueInfo, resourceIri: InternalIri): List[TriplePattern] =
       List(
-        iri(resourceIri).has(iri(valueInfo.propertyIri), iri(valueInfo.valueIri)),
+        iri(resourceIri.value).has(iri(valueInfo.propertyIri.value), iri(valueInfo.valueIri.value)),
         buildGeneralValuePattern(valueInfo),
       ) :::
-        buildTypeSpecificValuePattern(valueInfo.value, valueInfo.valueIri, valueInfo.propertyIri, resourceIri)
+        buildTypeSpecificValuePattern(
+          valueInfo.value,
+          valueInfo.valueIri.value,
+          valueInfo.propertyIri.value,
+          resourceIri.value,
+        )
 
     private def buildGeneralValuePattern(valueInfo: ValueInfo): TriplePattern =
-      iri(valueInfo.valueIri)
-        .isA(iri(valueInfo.valueTypeIri))
+      iri(valueInfo.valueIri.value)
+        .isA(iri(valueInfo.valueTypeIri.value))
         .andHas(KB.isDeleted, literalOf(false))
         .andHas(KB.valueHasString, literalOf(valueInfo.valueHasString))
         .andHas(KB.valueHasUUID, literalOf(UuidUtil.base64Encode(valueInfo.valueUUID)))
-        .andHas(KB.attachedToUser, iri(valueInfo.creator))
+        .andHas(KB.attachedToUser, iri(valueInfo.creator.value))
         .andHas(KB.hasPermissions, literalOf(valueInfo.permissions))
         .andHas(KB.valueHasOrder, literalOf(valueInfo.valueHasOrder))
         .andHas(KB.valueCreationDate, literalOfType(valueInfo.creationDate.toString(), XSD.DATETIME))
@@ -190,7 +198,7 @@ object ResourcesRepoLive {
         case v: OtherFileValueInfo =>
           buildOtherFileValuePattern(v, valueIri)
         case HierarchicalListValueInfo(valueHasListNode) =>
-          List(iri(valueIri).has(KB.valueHasListNode, iri(valueHasListNode)))
+          List(iri(valueIri).has(KB.valueHasListNode, iri(valueHasListNode.value)))
         case IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd) =>
           List(
             iri(valueIri)
@@ -209,27 +217,27 @@ object ResourcesRepoLive {
       resourceIri: String,
     ): List[TriplePattern] =
       List(
-        iri(resourceIri).has(iri(propertyIri.stripSuffix("Value")), iri(v.referredResourceIri)),
+        iri(resourceIri).has(iri(propertyIri.stripSuffix("Value")), iri(v.referredResourceIri.value)),
         iri(valueIri)
           .has(RDF.SUBJECT, iri(resourceIri))
           .andHas(RDF.PREDICATE, iri(propertyIri.stripSuffix("Value")))
-          .andHas(RDF.OBJECT, iri(v.referredResourceIri))
+          .andHas(RDF.OBJECT, iri(v.referredResourceIri.value))
           .andHas(KB.valueHasRefCount, literalOf(1)),
       )
 
     private def buildFormattedTextValuePatterns(v: FormattedTextValueInfo, valueIri: String): List[TriplePattern] =
       val valuePattern =
         iri(valueIri)
-          .has(KB.valueHasMapping, iri(v.mappingIri))
+          .has(KB.valueHasMapping, iri(v.mappingIri.value))
           .andHas(KB.valueHasMaxStandoffStartIndex, literalOf(v.maxStandoffStartIndex))
           .andHasOptional(KB.valueHasLanguage, v.valueHasLanguage.map(literalOf))
       List(valuePattern) ::: v.standoff.map { standoffTagInfo =>
-        valuePattern.andHas(KB.valueHasStandoff, iri(standoffTagInfo.standoffTagInstanceIri))
-        iri(standoffTagInfo.standoffTagInstanceIri)
-          .isA(iri(standoffTagInfo.standoffTagClassIri))
+        valuePattern.andHas(KB.valueHasStandoff, iri(standoffTagInfo.standoffTagInstanceIri.value))
+        iri(standoffTagInfo.standoffTagInstanceIri.value)
+          .isA(iri(standoffTagInfo.standoffTagClassIri.value))
           .andHasOptional(KB.standoffTagHasEndIndex, standoffTagInfo.endIndex.map(i => literalOf(i)))
-          .andHasOptional(KB.standoffTagHasStartParent, standoffTagInfo.startParentIri.map(iri))
-          .andHasOptional(KB.standoffTagHasEndParent, standoffTagInfo.endParentIri.map(iri))
+          .andHasOptional(KB.standoffTagHasStartParent, standoffTagInfo.startParentIri.map(v => iri(v.value)))
+          .andHasOptional(KB.standoffTagHasEndParent, standoffTagInfo.endParentIri.map(v => iri(v.value)))
           .andHasOptional(KB.standoffTagHasOriginalXMLID, standoffTagInfo.originalXMLID.map(literalOf))
           .andHas(standoffAttributeLiterals(standoffTagInfo.attributes): _*)
           .andHas(KB.standoffTagHasStartIndex, literalOf(standoffTagInfo.startIndex))
@@ -241,15 +249,15 @@ object ResourcesRepoLive {
     private def standoffAttributeLiterals(attributes: Seq[StandoffAttribute]): List[RdfPredicateObjectList] =
       attributes.map { attribute =>
         val v = attribute.value match
-          case StandoffAttributeValue.IriAttribute(value)               => iri(value)
+          case StandoffAttributeValue.IriAttribute(value)               => iri(value.value)
           case StandoffAttributeValue.UriAttribute(value)               => literalOfType(value, XSD.ANYURI)
-          case StandoffAttributeValue.InternalReferenceAttribute(value) => iri(value)
+          case StandoffAttributeValue.InternalReferenceAttribute(value) => iri(value.value)
           case StandoffAttributeValue.StringAttribute(value)            => literalOf(value)
           case StandoffAttributeValue.IntegerAttribute(value)           => literalOf(value)
           case StandoffAttributeValue.DecimalAttribute(value)           => literalOf(value)
           case StandoffAttributeValue.BooleanAttribute(value)           => literalOf(value)
           case StandoffAttributeValue.TimeAttribute(value)              => literalOfType(value.toString(), XSD.DATETIME)
-        val p = iri(attribute.propertyIri)
+        val p = iri(attribute.propertyIri.value)
         predicateObjectList(p, v)
       }.toList
 

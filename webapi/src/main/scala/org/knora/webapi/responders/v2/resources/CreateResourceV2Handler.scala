@@ -47,6 +47,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
 import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
@@ -262,13 +263,13 @@ final case class CreateResourceV2Handler(
       _ <- resourcesRepo.createNewResource(
              dataGraphIri = dataNamedGraph,
              resource = resourceReadyToCreate,
-             projectIri = createResourceRequestV2.createResource.projectADM.id,
-             userIri = createResourceRequestV2.requestingUser.id,
+             projectIri = InternalIri(createResourceRequestV2.createResource.projectADM.id),
+             userIri = InternalIri(createResourceRequestV2.requestingUser.id),
            )
 
       // Verify that the resource was created.
       previewOfCreatedResource <- verifyResource(
-                                    resourceIri = resourceReadyToCreate.resourceIri,
+                                    resourceIri = resourceReadyToCreate.resourceIri.value,
                                     requestingUser = createResourceRequestV2.requestingUser,
                                   )
     } yield previewOfCreatedResource
@@ -469,9 +470,9 @@ final case class CreateResourceV2Handler(
                     DateValueInfo(
                       valueHasStartJDN = valueHasStartJDN,
                       valueHasEndJDN = valueHasEndJDN,
-                      valueHasStartPrecision = valueHasStartPrecision.toString(),
-                      valueHasEndPrecision = valueHasEndPrecision.toString(),
-                      valueHasCalendar = valueHasCalendar.toString(),
+                      valueHasStartPrecision = valueHasStartPrecision,
+                      valueHasEndPrecision = valueHasEndPrecision,
+                      valueHasCalendar = valueHasCalendar,
                     ),
                   )
                 case TextValueContentV2(_, _, valueHasLanguage, _, None, _, _, _) =>
@@ -482,22 +483,23 @@ final case class CreateResourceV2Handler(
                     .map(standoffTag =>
                       val attributes = standoffTag.standoffNode.attributes.map { attr =>
                         val v = attr match
-                          case StandoffTagIriAttributeV2(_, value, _) => StandoffAttributeValue.IriAttribute(value)
-                          case StandoffTagUriAttributeV2(_, value)    => StandoffAttributeValue.UriAttribute(value)
+                          case StandoffTagIriAttributeV2(_, value, _) =>
+                            StandoffAttributeValue.IriAttribute(InternalIri(value))
+                          case StandoffTagUriAttributeV2(_, value) => StandoffAttributeValue.UriAttribute(value)
                           case StandoffTagInternalReferenceAttributeV2(_, value) =>
-                            StandoffAttributeValue.InternalReferenceAttribute(value)
+                            StandoffAttributeValue.InternalReferenceAttribute(InternalIri(value))
                           case StandoffTagStringAttributeV2(_, value)  => StandoffAttributeValue.StringAttribute(value)
                           case StandoffTagIntegerAttributeV2(_, value) => StandoffAttributeValue.IntegerAttribute(value)
                           case StandoffTagDecimalAttributeV2(_, value) => StandoffAttributeValue.DecimalAttribute(value)
                           case StandoffTagBooleanAttributeV2(_, value) => StandoffAttributeValue.BooleanAttribute(value)
                           case StandoffTagTimeAttributeV2(_, value)    => StandoffAttributeValue.TimeAttribute(value)
-                        StandoffAttribute(attr.standoffPropertyIri.toString(), v)
+                        StandoffAttribute(InternalIri(attr.standoffPropertyIri.toString()), v)
                       }
                       StandoffTagInfo(
-                        standoffTagClassIri = standoffTag.standoffNode.standoffTagClassIri.toString(),
-                        standoffTagInstanceIri = standoffTag.standoffTagInstanceIri,
-                        startParentIri = standoffTag.startParentIri,
-                        endParentIri = standoffTag.endParentIri,
+                        standoffTagClassIri = InternalIri(standoffTag.standoffNode.standoffTagClassIri.toString()),
+                        standoffTagInstanceIri = InternalIri(standoffTag.standoffTagInstanceIri),
+                        startParentIri = standoffTag.startParentIri.map(InternalIri.apply),
+                        endParentIri = standoffTag.endParentIri.map(InternalIri.apply),
                         uuid = standoffTag.standoffNode.uuid,
                         originalXMLID = standoffTag.standoffNode.originalXMLID,
                         startIndex = standoffTag.standoffNode.startIndex,
@@ -511,7 +513,12 @@ final case class CreateResourceV2Handler(
                     .fromOption(tv.computedMaxStandoffStartIndex)
                     .orElseFail(StandoffInternalException("Max standoff start index not computed"))
                     .map(standoffStartIndex =>
-                      FormattedTextValueInfo(valueHasLanguage, mappingIri, standoffStartIndex, standoffInfo),
+                      FormattedTextValueInfo(
+                        valueHasLanguage,
+                        InternalIri(mappingIri),
+                        standoffStartIndex,
+                        standoffInfo,
+                      ),
                     )
                 case IntegerValueContentV2(_, valueHasInteger, _) =>
                   ZIO.succeed(IntegerValueInfo(valueHasInteger))
@@ -526,7 +533,7 @@ final case class CreateResourceV2Handler(
                 case TimeValueContentV2(_, valueHasTimeStamp, _) =>
                   ZIO.succeed(TimeValueInfo(valueHasTimeStamp))
                 case HierarchicalListValueContentV2(_, valueHasListNode, listNodeLabel, _) =>
-                  ZIO.succeed(HierarchicalListValueInfo(valueHasListNode))
+                  ZIO.succeed(HierarchicalListValueInfo(InternalIri(valueHasListNode)))
                 case ColorValueContentV2(_, valueHasColor, _) =>
                   ZIO.succeed(ColorValueInfo(valueHasColor))
                 case UriValueContentV2(_, valueHasUri, _) =>
@@ -610,17 +617,17 @@ final case class CreateResourceV2Handler(
                       nestedResource,
                       _,
                     ) =>
-                  ZIO.succeed(LinkValueInfo(referredResourceIri))
+                  ZIO.succeed(LinkValueInfo(InternalIri(referredResourceIri)))
                 case _: DeletedValueContentV2 => ZIO.fail(BadRequestException("Deleted values cannot be created"))
 
           } yield ValueInfo(
-            resourceIri = resourceIri,
-            propertyIri = propertyIri.toIri,
+            resourceIri = InternalIri(resourceIri),
+            propertyIri = InternalIri(propertyIri.toIri),
             value = valueInfo,
-            valueIri = newValueIri,
-            valueTypeIri = valueToCreate.valueContent.valueType.toString(),
+            valueIri = InternalIri(newValueIri),
+            valueTypeIri = InternalIri(valueToCreate.valueContent.valueType.toString()),
             valueUUID = newValueUUID,
-            creator = requestingUser.id,
+            creator = InternalIri(requestingUser.id),
             permissions = valueToCreate.permissions,
             creationDate = valueCreationDate,
             valueHasOrder = valueHasOrder,
@@ -629,8 +636,8 @@ final case class CreateResourceV2Handler(
           )
         }
     } yield ResourceReadyToCreate(
-      resourceIri = resourceIri,
-      resourceClassIri = internalCreateResource.resourceClassIri.toString,
+      resourceIri = InternalIri(resourceIri),
+      resourceClassIri = InternalIri(internalCreateResource.resourceClassIri.toString),
       resourceLabel = internalCreateResource.label,
       creationDate = creationDate,
       permissions = resourcePermissions,
@@ -1002,11 +1009,11 @@ final case class CreateResourceV2Handler(
           for {
             newValueIri <- makeUnusedValueIri(resourceIri)
           } yield StandoffLinkValueInfo(
-            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-            newLinkValueIri = newValueIri,
-            linkTargetIri = targetIri,
+            linkPropertyIri = InternalIri(OntologyConstants.KnoraBase.HasStandoffLinkTo),
+            newLinkValueIri = InternalIri(newValueIri),
+            linkTargetIri = InternalIri(targetIri),
             newReferenceCount = initialReferenceCount,
-            newLinkValueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
+            newLinkValueCreator = InternalIri(KnoraUserRepo.builtIn.SystemUser.id.value),
             newLinkValuePermissions = standoffLinkValuePermissions,
             valueUuid = UuidUtil.makeRandomBase64EncodedUuid,
           )

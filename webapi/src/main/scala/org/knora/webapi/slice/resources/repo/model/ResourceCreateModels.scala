@@ -8,11 +8,13 @@ package org.knora.webapi.slice.resources.repo.model
 import java.time.Instant
 import java.util.UUID
 
-import org.knora.webapi.IRI
+import org.knora.webapi.messages.util.CalendarNameV2
+import org.knora.webapi.messages.util.DatePrecisionV2
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 final case class ResourceReadyToCreate(
-  resourceIri: IRI,
-  resourceClassIri: IRI,
+  resourceIri: InternalIri,
+  resourceClassIri: InternalIri,
   resourceLabel: String,
   creationDate: Instant,
   permissions: String,
@@ -21,14 +23,14 @@ final case class ResourceReadyToCreate(
 )
 
 final case class ValueInfo(
-  resourceIri: IRI,
-  propertyIri: IRI,
-  valueIri: IRI,
-  valueTypeIri: IRI,
+  resourceIri: InternalIri,
+  propertyIri: InternalIri,
+  valueIri: InternalIri,
+  valueTypeIri: InternalIri,
   valueUUID: UUID,
   value: TypeSpecificValueInfo,
   permissions: String,
-  creator: IRI,
+  creator: InternalIri,
   creationDate: Instant,
   valueHasOrder: Int,
   valueHasString: String,
@@ -36,11 +38,11 @@ final case class ValueInfo(
 )
 
 enum TypeSpecificValueInfo {
-  case LinkValueInfo(referredResourceIri: IRI)
+  case LinkValueInfo(referredResourceIri: InternalIri)
   case UnformattedTextValueInfo(valueHasLanguage: Option[String])
   case FormattedTextValueInfo(
     valueHasLanguage: Option[String],
-    mappingIri: IRI,
+    mappingIri: InternalIri,
     maxStandoffStartIndex: Int,
     standoff: Seq[StandoffTagInfo],
   )
@@ -51,9 +53,9 @@ enum TypeSpecificValueInfo {
   case DateValueInfo(
     valueHasStartJDN: Int,
     valueHasEndJDN: Int,
-    valueHasStartPrecision: String,
-    valueHasEndPrecision: String,
-    valueHasCalendar: String,
+    valueHasStartPrecision: DatePrecisionV2,
+    valueHasEndPrecision: DatePrecisionV2,
+    valueHasCalendar: CalendarNameV2,
   )
   case ColorValueInfo(valueHasColor: String)
   case GeomValueInfo(valueHasGeometry: String)
@@ -87,26 +89,26 @@ enum TypeSpecificValueInfo {
     originalFilename: Option[String],
     originalMimeType: Option[String],
   )
-  case HierarchicalListValueInfo(valueHasListNode: IRI)
+  case HierarchicalListValueInfo(valueHasListNode: InternalIri)
   case IntervalValueInfo(valueHasIntervalStart: BigDecimal, valueHasIntervalEnd: BigDecimal)
   case TimeValueInfo(valueHasTimeStamp: Instant)
   case GeonameValueInfo(valueHasGeonameCode: String)
 }
 
 final case class StandoffLinkValueInfo(
-  linkPropertyIri: IRI,
-  newLinkValueIri: IRI,
-  linkTargetIri: IRI,
+  linkPropertyIri: InternalIri,
+  newLinkValueIri: InternalIri,
+  linkTargetIri: InternalIri,
   newReferenceCount: Int,
-  newLinkValueCreator: IRI,
+  newLinkValueCreator: InternalIri,
   newLinkValuePermissions: String,
   valueUuid: String,
 )
 
 enum StandoffAttributeValue {
-  case IriAttribute(value: IRI)
+  case IriAttribute(value: InternalIri)
   case UriAttribute(value: String)
-  case InternalReferenceAttribute(value: IRI)
+  case InternalReferenceAttribute(value: InternalIri)
   case StringAttribute(value: String)
   case IntegerAttribute(value: Int)
   case DecimalAttribute(value: BigDecimal)
@@ -115,15 +117,15 @@ enum StandoffAttributeValue {
 }
 
 final case class StandoffAttribute(
-  propertyIri: IRI,
+  propertyIri: InternalIri,
   value: StandoffAttributeValue,
 )
 
 final case class StandoffTagInfo(
-  standoffTagClassIri: IRI,
-  standoffTagInstanceIri: IRI,
-  startParentIri: Option[IRI],
-  endParentIri: Option[IRI],
+  standoffTagClassIri: InternalIri,
+  standoffTagInstanceIri: InternalIri,
+  startParentIri: Option[InternalIri],
+  endParentIri: Option[InternalIri],
   uuid: UUID,
   originalXMLID: Option[String],
   startIndex: Int,
