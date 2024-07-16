@@ -454,11 +454,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                  |
                  |INSERT DATA {
                  |    GRAPH <${graphIri.value}> {
-                 |        <$resourceIri> rdf:type <$resourceClassIri> ;
+                 |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
                  |            rdfs:label "$label" ;
                  |            knora-base:isDeleted false ;
-                 |            knora-base:attachedToUser <$userIri> ;
-                 |            knora-base:attachedToProject <$projectIri> ;
+                 |            knora-base:attachedToUser <${userIri.value}> ;
+                 |            knora-base:attachedToProject <${projectIri.value}> ;
                  |            knora-base:hasPermissions "$permissions" ;
                  |            knora-base:creationDate "$creationDate"^^xsd:dateTime .
                  |    }
@@ -480,11 +480,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasLinkToValue> <foo:LinkValueIri> .
@@ -492,12 +492,12 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo:LinkValueIri" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(linkValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime .
-            |        <$resourceIri> <foo:hasLinkTo> <foo:LinkTargetIri> .
-            |        <foo:LinkValueIri> rdf:subject <$resourceIri> ;
+            |        <${resourceIri.value}> <foo:hasLinkTo> <foo:LinkTargetIri> .
+            |        <foo:LinkValueIri> rdf:subject <${resourceIri.value}> ;
             |            rdf:predicate <foo:hasLinkTo> ;
             |            rdf:object <foo:LinkTargetIri> ;
             |            knora-base:valueHasRefCount 1 .
@@ -519,11 +519,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasUnformattedTextValue> <foo:UnformattedTextValueIri> .
@@ -531,7 +531,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "this is a text without formatting" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(unformattedTextValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -554,11 +554,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasFormattedTextValue> <foo:FormattedTextValueIri> .
@@ -566,7 +566,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "this is a text with formatting" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(formattedTextValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -609,11 +609,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasInt> <foo:IntValueIri> .
@@ -621,7 +621,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "42" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(intValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -644,11 +644,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasBoolean> <foo:BooleanValueIri> .
@@ -656,7 +656,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "true" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(boolValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -679,11 +679,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasDecimal> <foo:DecimalValueIri> .
@@ -691,7 +691,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "42.42" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(decimalValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -714,11 +714,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasUri> <foo:UriValueIri> .
@@ -726,7 +726,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "http://example.com" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(uriValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -749,11 +749,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasDate> <foo:DateValueIri> .
@@ -761,7 +761,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "2024-01-01" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(dateValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -788,11 +788,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasColor> <foo:ColorValueIri> .
@@ -800,7 +800,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "#ff0000" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(colorValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -824,11 +824,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasGeom> <foo:GeomValueIri> .
@@ -836,7 +836,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "{\\"status\\":\\"active\\",\\"lineColor\\":\\"#33ff33\\",\\"lineWidth\\":2,\\"points\\":[{\\"x\\":0.20226843100189035,\\"y\\":0.3090909090909091},{\\"x\\":0.6389413988657845,\\"y\\":0.3594405594405594}],\\"type\\":\\"rectangle\\",\\"original_index\\":0}" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(geometryValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -859,11 +859,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasStillImage> <foo:StillImageFileValueIri> .
@@ -871,7 +871,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo.jpg" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(stillImageFileValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -900,11 +900,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasStillImageExternal> <foo:StillImageExternalFileValueIri> .
@@ -912,7 +912,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo.jpg" ;
             |            knora-base:valueHasUUID "$uuidEncoded" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -937,11 +937,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasDocument> <foo:DocumentFileValueIri> .
@@ -949,7 +949,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo.pdf" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(documentFileValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -978,11 +978,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasOtherFile> <foo:OtherFileValueIri> .
@@ -990,7 +990,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo.zip" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(otherFileValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -1016,11 +1016,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasList> <foo:ListNodeIri> .
@@ -1028,7 +1028,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "foo list" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(hierarchicalListValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -1051,11 +1051,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasInterval> <foo:IntervalValueIri> .
@@ -1063,7 +1063,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "0.0 - 100.0" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(intervalValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -1088,11 +1088,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasTime> <foo:TimeValueIri> .
@@ -1100,7 +1100,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "1024-01-01T10:00:00.673298Z" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(timeValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -1124,11 +1124,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasGeoname> <foo:GeonameValueIri> .
@@ -1136,7 +1136,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "geoname_code" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(geonameValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -1162,11 +1162,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           |
           |INSERT DATA {
           |    GRAPH <${graphIri.value}> {
-          |        <$resourceIri> rdf:type <$resourceClassIri> ;
+          |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
           |            rdfs:label "$label" ;
           |            knora-base:isDeleted false ;
-          |            knora-base:attachedToUser <$userIri> ;
-          |            knora-base:attachedToProject <$projectIri> ;
+          |            knora-base:attachedToUser <${userIri.value}> ;
+          |            knora-base:attachedToProject <${projectIri.value}> ;
           |            knora-base:hasPermissions "$permissions" ;
           |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
           |            <foo:hasInt> <foo:IntValueIri> .
@@ -1174,17 +1174,17 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           |            knora-base:isDeleted false  ;
           |            knora-base:valueHasString "42" ;
           |            knora-base:valueHasUUID "${UuidUtil.base64Encode(intValueDefinition.valueUUID)}" ;
-          |            knora-base:attachedToUser <$valueCreator> ;
+          |            knora-base:attachedToUser <${valueCreator.value}> ;
           |            knora-base:hasPermissions "$valuePermissions" ;
           |            knora-base:valueHasOrder 1 ;
           |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
           |            knora-base:valueHasInteger 42 .
-          |        <$resourceIri> <foo:hasBoolean> <foo:BooleanValueIri> .
+          |        <${resourceIri.value}> <foo:hasBoolean> <foo:BooleanValueIri> .
           |        <foo:BooleanValueIri> rdf:type <http://www.knora.org/ontology/knora-base#BooleanValue> ;
           |            knora-base:isDeleted false  ;
           |            knora-base:valueHasString "true" ;
           |            knora-base:valueHasUUID "${UuidUtil.base64Encode(boolValueDefinition.valueUUID)}" ;
-          |            knora-base:attachedToUser <$valueCreator> ;
+          |            knora-base:attachedToUser <${valueCreator.value}> ;
           |            knora-base:hasPermissions "$valuePermissions" ;
           |            knora-base:valueHasOrder 1 ;
           |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
@@ -1209,24 +1209,24 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           |
           |INSERT DATA {
           |    GRAPH <${graphIri.value}> {
-          |        <$resourceIri> rdf:type <$resourceClassIri> ;
+          |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
           |            rdfs:label "$label" ;
           |            knora-base:isDeleted false ;
-          |            knora-base:attachedToUser <$userIri> ;
-          |            knora-base:attachedToProject <$projectIri> ;
+          |            knora-base:attachedToUser <${userIri.value}> ;
+          |            knora-base:attachedToProject <${projectIri.value}> ;
           |            knora-base:hasPermissions "$permissions" ;
           |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
           |            <foo:hasStandoffLinkTo> <foo:StandoffLinkTargetIri> ;
           |            <foo:hasStandoffLinkToValue> <foo:StandoffLinkValueIri> .
           |        <foo:StandoffLinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
-          |            rdf:subject <$resourceIri> ;
+          |            rdf:subject <${resourceIri.value}> ;
           |            rdf:predicate <foo:hasStandoffLinkTo> ;
           |            rdf:object <foo:StandoffLinkTargetIri> ;
           |            knora-base:valueHasString "foo:StandoffLinkTargetIri" ;
           |            knora-base:valueHasRefCount 2;
           |            knora-base:isDeleted false  ;
           |            knora-base:valueCreationDate "$creationDate"^^xsd:dateTime ;
-          |            knora-base:attachedToUser <$valueCreator> ;
+          |            knora-base:attachedToUser <${valueCreator.value}> ;
           |            knora-base:hasPermissions "$valuePermissions" ;
           |            knora-base:valueHasUUID "${standoffLinkValue.valueUuid}" .
           |    }
@@ -1252,11 +1252,11 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |
             |INSERT DATA {
             |    GRAPH <${graphIri.value}> {
-            |        <$resourceIri> rdf:type <$resourceClassIri> ;
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
             |            rdfs:label "$label" ;
             |            knora-base:isDeleted false ;
-            |            knora-base:attachedToUser <$userIri> ;
-            |            knora-base:attachedToProject <$projectIri> ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
             |            knora-base:hasPermissions "$permissions" ;
             |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
             |            <foo:hasInt> <foo:IntValueIri> .
@@ -1264,22 +1264,22 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:isDeleted false  ;
             |            knora-base:valueHasString "42" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(intValueDefinition.valueUUID)}" ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
             |            knora-base:valueHasInteger 42 .
-            |        <$resourceIri> <foo:hasStandoffLinkTo> <foo:StandoffLinkTargetIri> ;
+            |        <${resourceIri.value}> <foo:hasStandoffLinkTo> <foo:StandoffLinkTargetIri> ;
             |            <foo:hasStandoffLinkToValue> <foo:StandoffLinkValueIri> .
             |        <foo:StandoffLinkValueIri> rdf:type <http://www.knora.org/ontology/knora-base#LinkValue> ;
-            |            rdf:subject <$resourceIri> ;
+            |            rdf:subject <${resourceIri.value}> ;
             |            rdf:predicate <foo:hasStandoffLinkTo> ;
             |            rdf:object <foo:StandoffLinkTargetIri> ;
             |            knora-base:valueHasString "foo:StandoffLinkTargetIri" ;
             |            knora-base:valueHasRefCount 2;
             |            knora-base:isDeleted false  ;
             |            knora-base:valueCreationDate "$creationDate"^^xsd:dateTime ;
-            |            knora-base:attachedToUser <$valueCreator> ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasUUID "${standoffLinkValue.valueUuid}" .
             |    }
