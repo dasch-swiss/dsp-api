@@ -114,21 +114,21 @@ object Vocabulary {
     val externalUrl: Iri      = iri(kb + "externalUrl")
     val pageCount: Iri        = iri(kb + "pageCount")
 
-    val standoffTagHasStartIndex    = iri(kb + "standoffTagHasStartIndex")
-    val standoffTagHasEndIndex      = iri(kb + "standoffTagHasEndIndex")
-    val standoffTagHasStartParent   = iri(kb + "standoffTagHasStartParent")
-    val standoffTagHasEndParent     = iri(kb + "standoffTagHasEndParent")
-    val standoffTagHasOriginalXMLID = iri(kb + "standoffTagHasOriginalXMLID")
-    val standoffTagHasUUID          = iri(kb + "standoffTagHasUUID")
-    val standoffTagHasStart         = iri(kb + "standoffTagHasStart")
-    val standoffTagHasEnd           = iri(kb + "standoffTagHasEnd")
+    val standoffTagHasStartIndex: Iri    = iri(kb + "standoffTagHasStartIndex")
+    val standoffTagHasEndIndex: Iri      = iri(kb + "standoffTagHasEndIndex")
+    val standoffTagHasStartParent: Iri   = iri(kb + "standoffTagHasStartParent")
+    val standoffTagHasEndParent: Iri     = iri(kb + "standoffTagHasEndParent")
+    val standoffTagHasOriginalXMLID: Iri = iri(kb + "standoffTagHasOriginalXMLID")
+    val standoffTagHasUUID: Iri          = iri(kb + "standoffTagHasUUID")
+    val standoffTagHasStart: Iri         = iri(kb + "standoffTagHasStart")
+    val standoffTagHasEnd: Iri           = iri(kb + "standoffTagHasEnd")
 
-    val hasTextValueType = iri(kb + "hasTextValueType")
+    val hasTextValueType: Iri = iri(kb + "hasTextValueType")
 
-    val UnformattedText     = iri(kb + "UnformattedText")
-    val FormattedText       = iri(kb + "FormattedText")
-    val CustomFormattedText = iri(kb + "CustomFormattedText")
-    val UndefinedTextType   = iri(kb + "UndefinedTextType")
+    val UnformattedText: Iri     = iri(kb + "UnformattedText")
+    val FormattedText: Iri       = iri(kb + "FormattedText")
+    val CustomFormattedText: Iri = iri(kb + "CustomFormattedText")
+    val UndefinedTextType: Iri   = iri(kb + "UndefinedTextType")
   }
 
   object NamedGraphs {
