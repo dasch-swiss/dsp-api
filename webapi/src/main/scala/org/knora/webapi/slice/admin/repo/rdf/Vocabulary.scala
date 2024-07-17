@@ -65,9 +65,6 @@ object Vocabulary {
   object KnoraBase {
     val NS: Namespace = new SimpleNamespace("knora-base", KnoraBasePrefixExpansion)
 
-    // property IRIs
-    val attachedToProject: Iri = Rdf.iri(KnoraBasePrefixExpansion, "attachedToProject")
-
     val hasPermissions: Iri = Rdf.iri(KnoraBasePrefixExpansion, "hasPermissions")
   }
 

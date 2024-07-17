@@ -358,7 +358,7 @@ object StandoffProperties {
 /**
  * A trait representing an attribute attached to a standoff tag.
  */
-trait StandoffTagAttributeV2 extends KnoraContentV2[StandoffTagAttributeV2] {
+sealed trait StandoffTagAttributeV2 extends KnoraContentV2[StandoffTagAttributeV2] {
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   def standoffPropertyIri: SmartIri

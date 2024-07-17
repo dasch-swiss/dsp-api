@@ -21,11 +21,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
-import org.knora.webapi.messages.twirl.NewLinkValueInfo
-import org.knora.webapi.messages.twirl.NewValueInfo
-import org.knora.webapi.messages.twirl.StandoffAttribute
-import org.knora.webapi.messages.twirl.StandoffTagInfo
-import org.knora.webapi.messages.twirl.TypeSpecificValueInfo.*
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
@@ -33,6 +28,7 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -51,7 +47,14 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
-import org.knora.webapi.slice.resources.repo.service.ResourceReadyToCreate
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
+import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
+import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
+import org.knora.webapi.slice.resources.repo.model.StandoffLinkValueInfo
+import org.knora.webapi.slice.resources.repo.model.StandoffTagInfo
+import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
+import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.util.ZioHelper
 
@@ -260,13 +263,13 @@ final case class CreateResourceV2Handler(
       _ <- resourcesRepo.createNewResource(
              dataGraphIri = dataNamedGraph,
              resource = resourceReadyToCreate,
-             projectIri = createResourceRequestV2.createResource.projectADM.id,
-             userIri = createResourceRequestV2.requestingUser.id,
+             projectIri = InternalIri(createResourceRequestV2.createResource.projectADM.id),
+             userIri = InternalIri(createResourceRequestV2.requestingUser.id),
            )
 
       // Verify that the resource was created.
       previewOfCreatedResource <- verifyResource(
-                                    resourceIri = resourceReadyToCreate.resourceIri,
+                                    resourceIri = resourceReadyToCreate.resourceIri.value,
                                     requestingUser = createResourceRequestV2.requestingUser,
                                   )
     } yield previewOfCreatedResource
@@ -478,26 +481,44 @@ final case class CreateResourceV2Handler(
                   val standoffInfo = tv
                     .prepareForSparqlInsert(newValueIri)
                     .map(standoffTag =>
+                      val attributes = standoffTag.standoffNode.attributes.map { attr =>
+                        val v = attr match
+                          case StandoffTagIriAttributeV2(_, value, _) =>
+                            StandoffAttributeValue.IriAttribute(InternalIri(value))
+                          case StandoffTagUriAttributeV2(_, value) => StandoffAttributeValue.UriAttribute(value)
+                          case StandoffTagInternalReferenceAttributeV2(_, value) =>
+                            StandoffAttributeValue.InternalReferenceAttribute(InternalIri(value))
+                          case StandoffTagStringAttributeV2(_, value)  => StandoffAttributeValue.StringAttribute(value)
+                          case StandoffTagIntegerAttributeV2(_, value) => StandoffAttributeValue.IntegerAttribute(value)
+                          case StandoffTagDecimalAttributeV2(_, value) => StandoffAttributeValue.DecimalAttribute(value)
+                          case StandoffTagBooleanAttributeV2(_, value) => StandoffAttributeValue.BooleanAttribute(value)
+                          case StandoffTagTimeAttributeV2(_, value)    => StandoffAttributeValue.TimeAttribute(value)
+                        StandoffAttribute(InternalIri(attr.standoffPropertyIri.toString()), v)
+                      }
                       StandoffTagInfo(
-                        standoffTagClassIri = standoffTag.standoffNode.standoffTagClassIri.toString(),
-                        standoffTagInstanceIri = standoffTag.standoffTagInstanceIri,
-                        startParentIri = standoffTag.startParentIri,
-                        endParentIri = standoffTag.endParentIri,
+                        standoffTagClassIri = InternalIri(standoffTag.standoffNode.standoffTagClassIri.toString()),
+                        standoffTagInstanceIri = InternalIri(standoffTag.standoffTagInstanceIri),
+                        startParentIri = standoffTag.startParentIri.map(InternalIri.apply),
+                        endParentIri = standoffTag.endParentIri.map(InternalIri.apply),
                         uuid = standoffTag.standoffNode.uuid,
                         originalXMLID = standoffTag.standoffNode.originalXMLID,
                         startIndex = standoffTag.standoffNode.startIndex,
                         endIndex = standoffTag.standoffNode.endIndex,
                         startPosition = standoffTag.standoffNode.startPosition,
                         endPosition = standoffTag.standoffNode.endPosition,
-                        attributes = standoffTag.standoffNode.attributes
-                          .map(attr => StandoffAttribute(attr.standoffPropertyIri.toString(), attr.rdfValue)),
+                        attributes = attributes,
                       ),
                     )
                   ZIO
                     .fromOption(tv.computedMaxStandoffStartIndex)
                     .orElseFail(StandoffInternalException("Max standoff start index not computed"))
                     .map(standoffStartIndex =>
-                      FormattedTextValueInfo(valueHasLanguage, mappingIri, standoffStartIndex, standoffInfo),
+                      FormattedTextValueInfo(
+                        valueHasLanguage,
+                        InternalIri(mappingIri),
+                        standoffStartIndex,
+                        standoffInfo,
+                      ),
                     )
                 case IntegerValueContentV2(_, valueHasInteger, _) =>
                   ZIO.succeed(IntegerValueInfo(valueHasInteger))
@@ -512,7 +533,7 @@ final case class CreateResourceV2Handler(
                 case TimeValueContentV2(_, valueHasTimeStamp, _) =>
                   ZIO.succeed(TimeValueInfo(valueHasTimeStamp))
                 case HierarchicalListValueContentV2(_, valueHasListNode, listNodeLabel, _) =>
-                  ZIO.succeed(HierarchicalListValueInfo(valueHasListNode))
+                  ZIO.succeed(HierarchicalListValueInfo(InternalIri(valueHasListNode)))
                 case ColorValueContentV2(_, valueHasColor, _) =>
                   ZIO.succeed(ColorValueInfo(valueHasColor))
                 case UriValueContentV2(_, valueHasUri, _) =>
@@ -596,32 +617,32 @@ final case class CreateResourceV2Handler(
                       nestedResource,
                       _,
                     ) =>
-                  ZIO.succeed(LinkValueInfo(referredResourceIri))
+                  ZIO.succeed(LinkValueInfo(InternalIri(referredResourceIri)))
                 case _: DeletedValueContentV2 => ZIO.fail(BadRequestException("Deleted values cannot be created"))
 
-          } yield NewValueInfo(
-            resourceIri = resourceIri,
-            propertyIri = propertyIri.toIri,
+          } yield ValueInfo(
+            resourceIri = InternalIri(resourceIri),
+            propertyIri = InternalIri(propertyIri.toIri),
             value = valueInfo,
-            valueIri = newValueIri,
-            valueTypeIri = valueToCreate.valueContent.valueType.toString(),
+            valueIri = InternalIri(newValueIri),
+            valueTypeIri = InternalIri(valueToCreate.valueContent.valueType.toString()),
             valueUUID = newValueUUID,
-            valueCreator = requestingUser.id,
-            valuePermissions = valueToCreate.permissions,
+            creator = InternalIri(requestingUser.id),
+            permissions = valueToCreate.permissions,
             creationDate = valueCreationDate,
             valueHasOrder = valueHasOrder,
-            valueHasString = valueToCreate.valueContent.valueHasString,
+            valueHasString = valueToCreate.valueContent.unescape.valueHasString,
             comment = valueToCreate.valueContent.comment,
           )
         }
     } yield ResourceReadyToCreate(
-      resourceIri = resourceIri,
-      resourceClassIri = internalCreateResource.resourceClassIri.toString,
+      resourceIri = InternalIri(resourceIri),
+      resourceClassIri = InternalIri(internalCreateResource.resourceClassIri.toString),
       resourceLabel = internalCreateResource.label,
       creationDate = creationDate,
       permissions = resourcePermissions,
-      newValueInfos = newValueInfos,
-      linkUpdates = linkUpdates,
+      valueInfos = newValueInfos,
+      standoffLinks = linkUpdates,
     )
   }
 
@@ -947,7 +968,7 @@ final case class CreateResourceV2Handler(
   private def generateInsertSparqlForStandoffLinksInMultipleValues(
     resourceIri: IRI,
     values: Iterable[GenerateSparqlForValueInNewResourceV2],
-  ): Task[Seq[NewLinkValueInfo]] = {
+  ): Task[Seq[StandoffLinkValueInfo]] = {
     // To create LinkValues for the standoff links in the values to be created, we need to compute
     // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
     // that have standoff links to a particular target resource.
@@ -983,23 +1004,23 @@ final case class CreateResourceV2Handler(
 
       // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
       // and one LinkValue with its initial reference count.
-      val standoffLinkUpdatesFutures: Seq[Task[NewLinkValueInfo]] = initialReferenceCounts.toSeq.map {
+      val standoffLinkUpdatesFutures: Seq[Task[StandoffLinkValueInfo]] = initialReferenceCounts.toSeq.map {
         case (targetIri, initialReferenceCount) =>
           for {
             newValueIri <- makeUnusedValueIri(resourceIri)
-          } yield NewLinkValueInfo(
-            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-            newLinkValueIri = newValueIri,
-            linkTargetIri = targetIri,
+          } yield StandoffLinkValueInfo(
+            linkPropertyIri = InternalIri(OntologyConstants.KnoraBase.HasStandoffLinkTo),
+            newLinkValueIri = InternalIri(newValueIri),
+            linkTargetIri = InternalIri(targetIri),
             newReferenceCount = initialReferenceCount,
-            newLinkValueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
+            newLinkValueCreator = InternalIri(KnoraUserRepo.builtIn.SystemUser.id.value),
             newLinkValuePermissions = standoffLinkValuePermissions,
             valueUuid = UuidUtil.makeRandomBase64EncodedUuid,
           )
       }
       ZIO.collectAll(standoffLinkUpdatesFutures)
     } else {
-      ZIO.succeed(Seq.empty[NewLinkValueInfo])
+      ZIO.succeed(Seq.empty[StandoffLinkValueInfo])
     }
   }
 
