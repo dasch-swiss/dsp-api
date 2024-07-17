@@ -7,6 +7,7 @@ default:
 alias dog := docs-openapi-generate
 alias ssl := stack-start-latest
 alias stop := stack-stop
+alias ssd := stack-start-dev
 
 # Start stack
 stack-start:
@@ -14,6 +15,12 @@ stack-start:
     docker compose up -d
     ./webapi/scripts/wait-for-db.sh
     @echo "Stack started"
+
+# Start Stack without API for development
+stack-start-dev: stack-start
+    @echo "Stopping API"
+    docker compose down api
+    @echo "Stack started without API"
 
 # Start stack and pull latest images before starting
 stack-start-latest: && stack-start
