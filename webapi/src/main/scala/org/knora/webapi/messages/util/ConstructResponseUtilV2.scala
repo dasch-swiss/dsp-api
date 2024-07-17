@@ -1056,7 +1056,7 @@ final case class ConstructResponseUtilV2Live(
           comment = valueCommentOption,
         ),
       )
-    } // TODO-BL: read information from triplestore, don't infer it
+    }
   }
 
   /**

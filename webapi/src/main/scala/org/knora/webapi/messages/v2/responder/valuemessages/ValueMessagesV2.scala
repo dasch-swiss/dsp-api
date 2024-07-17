@@ -1433,6 +1433,12 @@ case class TextValueContentV2(
           schemaOptions = schemaOptions,
         )
 
+        val textValueTypeIri = textValueType match
+          case TextValueType.UnformattedText        => UnformattedText
+          case TextValueType.FormattedText          => FormattedText
+          case TextValueType.CustomFormattedText(_) => CustomFormattedText
+          case TextValueType.UndefinedTextType      => UndefinedTextType
+
         // Should we render standoff as XML?
         val objectMap: Map[IRI, JsonLDValue] = if (renderStandoffAsXml) {
           val definedMappingIri =
@@ -1476,13 +1482,15 @@ case class TextValueContentV2(
           Map(ValueAsString -> JsonLDString(valueHasStringWithoutStandoff))
         }
 
+        val objectMapWithType = objectMap + (HasTextValueType -> JsonLDUtil.iriToJsonLDObject(textValueTypeIri))
+
         // In the complex schema, if this text value specifies a language, return it using the predicate
         // knora-api:textValueHasLanguage.
         val objectMapWithLanguage: Map[IRI, JsonLDValue] = valueHasLanguage match {
           case Some(lang) =>
-            objectMap + (TextValueHasLanguage -> JsonLDString(lang))
+            objectMapWithType + (TextValueHasLanguage -> JsonLDString(lang))
           case None =>
-            objectMap
+            objectMapWithType
         }
 
         JsonLDObject(objectMapWithLanguage)

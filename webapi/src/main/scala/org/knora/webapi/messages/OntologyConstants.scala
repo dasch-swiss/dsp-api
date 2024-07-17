@@ -695,6 +695,14 @@ object OntologyConstants {
     val DocumentFileValue: IRI           = KnoraApiV2PrefixExpansion + "DocumentFileValue"
     val ArchiveFileValue: IRI            = KnoraApiV2PrefixExpansion + "ArchiveFileValue"
 
+    val HasTextValueType: IRI         = KnoraApiV2PrefixExpansion + "hasTextValueType"
+    val HasTextValuePropertyType: IRI = KnoraApiV2PrefixExpansion + "hasTextValuePropertyType"
+    val TextValueType: IRI            = KnoraApiV2PrefixExpansion + "TextValueType"
+    val UnformattedText: IRI          = KnoraApiV2PrefixExpansion + "UnformattedText"
+    val FormattedText: IRI            = KnoraApiV2PrefixExpansion + "FormattedText"
+    val CustomFormattedText: IRI      = KnoraApiV2PrefixExpansion + "CustomFormattedText"
+    val UndefinedTextType: IRI        = KnoraApiV2PrefixExpansion + "UndefinedTextType"
+
     val FileValueClasses: Set[IRI] = Set(
       FileValue,
       StillImageFileValue,

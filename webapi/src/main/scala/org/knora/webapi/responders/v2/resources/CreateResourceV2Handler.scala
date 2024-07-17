@@ -481,7 +481,9 @@ final case class CreateResourceV2Handler(
                 case TextValueContentV2(_, _, _, valueHasLanguage, _, None, _, _, _) =>
                   ZIO.succeed(UnformattedTextValueInfo(valueHasLanguage))
                 case tv @ TextValueContentV2(_, _, textType, valueHasLanguage, _, Some(mappingIri), _, _, _) =>
-                  // TODO-BL: improve this logic now that we have the textType.
+                  // TODO-BL: extract/refactor
+                  // TODO-BL: add tests
+                  // TODO-BL: read information from triplestore, don't infer it
                   val standoffInfo = tv
                     .prepareForSparqlInsert(newValueIri)
                     .map(standoffTag =>
