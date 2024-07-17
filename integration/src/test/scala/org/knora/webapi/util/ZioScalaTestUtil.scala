@@ -7,6 +7,7 @@ package org.knora.webapi.util
 
 import org.scalatest.Assertions
 import org.scalatest.matchers.should.Matchers.*
+import zio.Cause
 import zio.Exit
 
 import scala.reflect.ClassTag

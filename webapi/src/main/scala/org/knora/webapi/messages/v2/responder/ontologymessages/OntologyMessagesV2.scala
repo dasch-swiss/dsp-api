@@ -421,20 +421,7 @@ object CreatePropertyRequestV2 {
     if (!(objectType.isKnoraApiV2EntityIri && objectType.getOntologySchema.contains(ApiV2Complex))) {
       throw BadRequestException(s"Invalid knora-api:objectType: $objectType")
     }
-
-    Validation
-      .validate(
-        PredicateInfoV2.checkRequiredStringLiteralWithLanguageTag(Rdfs.Label, propertyInfoContent.predicates.values),
-        PredicateInfoV2.checkOptionalStringLiteralWithLanguageTag(Rdfs.Comment, propertyInfoContent.predicates.values),
-      )
-      .getOrElseWith(err => throw BadRequestException(err.mkString(", ")))
-
-    CreatePropertyRequestV2(
-      propertyInfoContent = propertyInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
+    CreatePropertyRequestV2(propertyInfoContent, lastModificationDate, apiRequestID, requestingUser)
   }
 }
 
@@ -469,15 +456,7 @@ object CreateClassRequestV2 {
   def fromJsonLd(document: JsonLDDocument, apiRequestID: UUID, requestingUser: User): CreateClassRequestV2 = {
     val inputOntologiesV2 = InputOntologyV2.fromJsonLD(document)
     val updateInfo        = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent  = updateInfo.classInfoContent
-    val predicates        = classInfoContent.predicates.values
-    Validation
-      .validate(
-        PredicateInfoV2.checkRequiredStringLiteralWithLanguageTag(Rdfs.Label, predicates),
-        PredicateInfoV2.checkOptionalStringLiteralWithLanguageTag(Rdfs.Comment, predicates),
-      )
-      .getOrElseWith(err => throw BadRequestException(err.mkString(", ")))
-    CreateClassRequestV2(classInfoContent, updateInfo.lastModificationDate, apiRequestID, requestingUser)
+    CreateClassRequestV2(updateInfo.classInfoContent, updateInfo.lastModificationDate, apiRequestID, requestingUser)
   }
 }
 
