@@ -27,11 +27,11 @@ import org.knora.webapi.slice.admin.domain.model.KnoraGroup.Conversions.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.projectIriConverter
-import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
-import org.knora.webapi.slice.admin.repo.rdf.Vocabulary.KnoraAdmin.*
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class KnoraGroupRepoLive(
