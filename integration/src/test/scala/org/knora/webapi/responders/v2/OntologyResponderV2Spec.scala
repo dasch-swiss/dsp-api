@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import org.apache.pekko
 import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.pattern.ask
 import org.apache.pekko.testkit.ImplicitSender
