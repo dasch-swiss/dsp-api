@@ -1330,6 +1330,13 @@ case class CreateStandoffTagV2InTriplestore(
   endParentIri: Option[IRI] = None,
 )
 
+enum TextValueType {
+  case UnformattedText
+  case FormattedText
+  case CustomFormattedText
+  case UndefinedTextType
+}
+
 /**
  * Represents a Knora text value, or a page of standoff markup that will be included in a text value.
  *
@@ -1342,6 +1349,7 @@ case class CreateStandoffTagV2InTriplestore(
 case class TextValueContentV2(
   ontologySchema: OntologySchema,
   maybeValueHasString: Option[String],
+  textValueType: TextValueType,
   valueHasLanguage: Option[String] = None,
   standoff: Seq[StandoffTagV2] = Vector.empty,
   mappingIri: Option[IRI] = None,
@@ -1630,12 +1638,12 @@ object TextValueContentV2 {
             TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some(valueAsString),
+              textValueType = TextValueType.UnformattedText,
               comment = comment,
             ),
           )
 
       case (None, Some(textValueAsXml), Some(mappingResponse)) =>
-        // Text with standoff. TODO: support submitting text with standoff as JSON-LD rather than as XML.
         for {
           textWithStandoffTags <- ZIO.attempt(
                                     StandoffTagUtilV2.convertXMLtoStandoffTagV2(
@@ -1644,11 +1652,17 @@ object TextValueContentV2 {
                                       acceptStandoffLinksToClientIDs = false,
                                     ),
                                   )
+
+          textType =
+            if (mappingResponse.mappingIri == OntologyConstants.KnoraBase.StandardMapping) {
+              TextValueType.FormattedText
+            } else { TextValueType.CustomFormattedText }
           text    <- RouteUtilZ.toSparqlEncodedString(textWithStandoffTags.text, "Text value contains invalid characters")
           comment <- JsonLDUtil.getComment(jsonLdObject)
         } yield TextValueContentV2(
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(text),
+          textValueType = textType,
           valueHasLanguage = maybeValueHasLanguage,
           standoff = textWithStandoffTags.standoffTagV2,
           mappingIri = Some(mappingResponse.mappingIri),

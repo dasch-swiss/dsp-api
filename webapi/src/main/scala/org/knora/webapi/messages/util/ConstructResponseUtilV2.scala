@@ -1029,9 +1029,14 @@ final case class ConstructResponseUtilV2Live(
                       standoffAssertions = valueObject.standoff,
                       requestingUser = requestingUser,
                     )
+        textType = mappingIri match
+                     case None                                              => TextValueType.UnformattedText
+                     case Some(OntologyConstants.KnoraBase.StandardMapping) => TextValueType.FormattedText
+                     case _                                                 => TextValueType.CustomFormattedText
       } yield TextValueContentV2(
         ontologySchema = InternalSchema,
         maybeValueHasString = valueObjectValueHasString,
+        textValueType = textType,
         valueHasLanguage = valueLanguageOption,
         standoff = standoff,
         mappingIri = mappingIri,
@@ -1041,16 +1046,16 @@ final case class ConstructResponseUtilV2Live(
       )
     } else {
       // The query returned no standoff markup.
-
       ZIO.succeed(
         TextValueContentV2(
           ontologySchema = InternalSchema,
           maybeValueHasString = valueObjectValueHasString,
+          textValueType = TextValueType.UnformattedText,
           valueHasLanguage = valueLanguageOption,
           comment = valueCommentOption,
         ),
       )
-    }
+    } // TODO: read information from triplestore, don't infer it
   }
 
   /**
