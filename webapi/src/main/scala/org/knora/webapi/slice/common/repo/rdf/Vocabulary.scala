@@ -70,5 +70,12 @@ object Vocabulary {
     val standoffTagHasStart         = iri(kb + "standoffTagHasStart")
     val standoffTagHasEnd           = iri(kb + "standoffTagHasEnd")
 
+    val hasTextValueType = iri(kb + "hasTextValueType")
+
+    val UnformattedText     = iri(kb + "UnformattedText")
+    val FormattedText       = iri(kb + "FormattedText")
+    val CustomFormattedText = iri(kb + "CustomFormattedText")
+    val UndefinedTextType   = iri(kb + "UndefinedTextType")
+
   }
 }

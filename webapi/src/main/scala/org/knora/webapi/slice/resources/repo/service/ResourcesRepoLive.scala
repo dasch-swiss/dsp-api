@@ -36,6 +36,7 @@ import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 
 trait ResourcesRepo {
   def createNewResource(
@@ -172,7 +173,11 @@ object ResourcesRepoLive {
         case v: LinkValueInfo =>
           buildLinkValuePatterns(v, valueIri, propertyIri, resourceIri)
         case UnformattedTextValueInfo(valueHasLanguage) =>
-          iri(valueIri).hasOptional(KB.valueHasLanguage, valueHasLanguage.map(literalOf)).toList
+          List(
+            iri(valueIri)
+              .has(KB.hasTextValueType, KB.UnformattedText)
+              .andHasOptional(KB.valueHasLanguage, valueHasLanguage.map(literalOf)),
+          )
         case v: FormattedTextValueInfo =>
           buildFormattedTextValuePatterns(v, valueIri)
         case IntegerValueInfo(valueHasInteger) =>
@@ -226,9 +231,13 @@ object ResourcesRepoLive {
       )
 
     private def buildFormattedTextValuePatterns(v: FormattedTextValueInfo, valueIri: String): List[TriplePattern] =
+      val txtTypeIri = v.textValueType match
+        case FormattedTextValueType.StandardMapping  => KB.FormattedText
+        case FormattedTextValueType.CustomMapping(_) => KB.CustomFormattedText
       val valuePattern =
         iri(valueIri)
           .has(KB.valueHasMapping, iri(v.mappingIri.value))
+          .andHas(KB.hasTextValueType, txtTypeIri)
           .andHas(KB.valueHasMaxStandoffStartIndex, literalOf(v.maxStandoffStartIndex))
           .andHasOptional(KB.valueHasLanguage, v.valueHasLanguage.map(literalOf))
       List(valuePattern) ::: v.standoff.map { standoffTagInfo =>

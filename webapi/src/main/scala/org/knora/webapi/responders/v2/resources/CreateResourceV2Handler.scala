@@ -57,6 +57,7 @@ import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.util.ZioHelper
+import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 
 final case class CreateResourceV2Handler(
   appConfig: AppConfig,
@@ -511,17 +512,26 @@ final case class CreateResourceV2Handler(
                       ),
                     )
                   ZIO
-                    .fromOption(tv.computedMaxStandoffStartIndex)
-                    .orElseFail(StandoffInternalException("Max standoff start index not computed"))
-                    .map(standoffStartIndex =>
-                      FormattedTextValueInfo(
-                        valueHasLanguage,
-                        InternalIri(mappingIri),
-                        standoffStartIndex,
-                        standoffInfo,
-                        textType,
-                      ),
-                    )
+                    .whenCase(textType) {
+                      case TextValueType.FormattedText => ZIO.succeed(FormattedTextValueType.StandardMapping)
+                      case TextValueType.CustomFormattedText(mappingIri) =>
+                        ZIO.succeed(FormattedTextValueType.CustomMapping(mappingIri))
+                    }
+                    .someOrFail(StandoffInternalException("Text type does not match mapping information"))
+                    .flatMap { textType =>
+                      ZIO
+                        .fromOption(tv.computedMaxStandoffStartIndex)
+                        .orElseFail(StandoffInternalException("Max standoff start index not computed"))
+                        .map(standoffStartIndex =>
+                          FormattedTextValueInfo(
+                            valueHasLanguage,
+                            InternalIri(mappingIri),
+                            standoffStartIndex,
+                            standoffInfo,
+                            textType,
+                          ),
+                        )
+                    }
                 case IntegerValueContentV2(_, valueHasInteger, _) =>
                   ZIO.succeed(IntegerValueInfo(valueHasInteger))
                 case DecimalValueContentV2(_, valueHasDecimal, _) =>
