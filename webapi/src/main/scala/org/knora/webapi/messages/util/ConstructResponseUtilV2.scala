@@ -1040,6 +1040,7 @@ final case class ConstructResponseUtilV2Live(
         textValueType = textType,
         valueHasLanguage = valueLanguageOption,
         standoff = standoff,
+        mappingIri = mappingIri,
         mapping = mappingAndXsltTransformation.map(_.mapping),
         xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
         comment = valueCommentOption,
