@@ -50,6 +50,7 @@ import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.WithAsIs
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 /**
  * Represents a successful response to a create value Request.
@@ -1333,7 +1334,7 @@ case class CreateStandoffTagV2InTriplestore(
 enum TextValueType {
   case UnformattedText
   case FormattedText
-  case CustomFormattedText
+  case CustomFormattedText(mappingIri: InternalIri)
   case UndefinedTextType
 }
 
@@ -1656,7 +1657,9 @@ object TextValueContentV2 {
           textType =
             if (mappingResponse.mappingIri == OntologyConstants.KnoraBase.StandardMapping) {
               TextValueType.FormattedText
-            } else { TextValueType.CustomFormattedText }
+            } else {
+              TextValueType.CustomFormattedText(InternalIri(mappingResponse.mappingIri))
+            }
           text    <- RouteUtilZ.toSparqlEncodedString(textWithStandoffTags.text, "Text value contains invalid characters")
           comment <- JsonLDUtil.getComment(jsonLdObject)
         } yield TextValueContentV2(

@@ -57,6 +57,7 @@ import org.knora.webapi.slice.lists.domain.ListsService
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 trait ConstructResponseUtilV2 {
 
@@ -1032,14 +1033,13 @@ final case class ConstructResponseUtilV2Live(
         textType = mappingIri match
                      case None                                              => TextValueType.UnformattedText
                      case Some(OntologyConstants.KnoraBase.StandardMapping) => TextValueType.FormattedText
-                     case _                                                 => TextValueType.CustomFormattedText
+                     case Some(iri)                                         => TextValueType.CustomFormattedText(InternalIri(iri))
       } yield TextValueContentV2(
         ontologySchema = InternalSchema,
         maybeValueHasString = valueObjectValueHasString,
         textValueType = textType,
         valueHasLanguage = valueLanguageOption,
         standoff = standoff,
-        mappingIri = mappingIri,
         mapping = mappingAndXsltTransformation.map(_.mapping),
         xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
         comment = valueCommentOption,
