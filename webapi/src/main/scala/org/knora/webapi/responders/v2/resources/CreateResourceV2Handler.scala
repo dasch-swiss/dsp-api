@@ -519,6 +519,7 @@ final case class CreateResourceV2Handler(
                         InternalIri(mappingIri),
                         standoffStartIndex,
                         standoffInfo,
+                        textType,
                       ),
                     )
                 case IntegerValueContentV2(_, valueHasInteger, _) =>

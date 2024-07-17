@@ -11,6 +11,7 @@ import java.util.UUID
 import org.knora.webapi.messages.util.CalendarNameV2
 import org.knora.webapi.messages.util.DatePrecisionV2
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
 
 final case class ResourceReadyToCreate(
   resourceIri: InternalIri,
@@ -45,6 +46,7 @@ enum TypeSpecificValueInfo {
     mappingIri: InternalIri,
     maxStandoffStartIndex: Int,
     standoff: Seq[StandoffTagInfo],
+    textValueType: TextValueType,
   )
   case IntegerValueInfo(valueHasInteger: Int)
   case DecimalValueInfo(valueHasDecimal: BigDecimal)
