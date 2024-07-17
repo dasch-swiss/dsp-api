@@ -32,10 +32,10 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
-import org.knora.webapi.slice.admin.repo.rdf.Vocabulary.KnoraAdmin.*
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class KnoraUserRepoLive(

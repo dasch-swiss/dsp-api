@@ -12,7 +12,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.RestrictedView.Size
-import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
 
