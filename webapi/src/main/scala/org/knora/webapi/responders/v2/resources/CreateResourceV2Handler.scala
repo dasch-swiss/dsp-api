@@ -25,8 +25,10 @@ import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
@@ -48,6 +50,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
 import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
@@ -57,7 +60,6 @@ import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.util.ZioHelper
-import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 
 final case class CreateResourceV2Handler(
   appConfig: AppConfig,

@@ -54,10 +54,10 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.lists.domain.ListsService
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 trait ConstructResponseUtilV2 {
 

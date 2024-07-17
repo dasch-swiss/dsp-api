@@ -18,6 +18,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
 import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
@@ -26,7 +27,6 @@ import org.knora.webapi.slice.resources.repo.model.StandoffTagInfo
 import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 
 object TestData {
 
