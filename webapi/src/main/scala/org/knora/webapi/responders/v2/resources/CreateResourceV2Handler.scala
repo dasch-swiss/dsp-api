@@ -475,11 +475,10 @@ final case class CreateResourceV2Handler(
                       valueHasCalendar = valueHasCalendar,
                     ),
                   )
-                case TextValueContentV2(_, _, textType, valueHasLanguage, _, None, _, _, _) =>
-                  // TODO: improve this logic now that we have the textType.
+                case TextValueContentV2(_, _, _, valueHasLanguage, _, None, _, _, _) =>
                   ZIO.succeed(UnformattedTextValueInfo(valueHasLanguage))
                 case tv @ TextValueContentV2(_, _, textType, valueHasLanguage, _, Some(mappingIri), _, _, _) =>
-                  // TODO: improve this logic now that we have the textType.
+                  // TODO-BL: improve this logic now that we have the textType.
                   val standoffInfo = tv
                     .prepareForSparqlInsert(newValueIri)
                     .map(standoffTag =>
