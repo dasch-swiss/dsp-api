@@ -8,7 +8,10 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.apache.pekko
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.util.Timeout
 import zio.*
+import zio.prelude.Validation
 
 import java.time.Instant
 import java.util.UUID
@@ -41,9 +44,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Ow
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
-
-import pekko.actor.ActorRef
-import pekko.util.Timeout
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -421,19 +421,7 @@ object CreatePropertyRequestV2 {
     if (!(objectType.isKnoraApiV2EntityIri && objectType.getOntologySchema.contains(ApiV2Complex))) {
       throw BadRequestException(s"Invalid knora-api:objectType: $objectType")
     }
-
-    // The request must provide an rdfs:label
-
-    if (!propertyInfoContent.predicates.contains(Rdfs.Label.toSmartIri)) {
-      throw BadRequestException("Missing rdfs:label")
-    }
-
-    CreatePropertyRequestV2(
-      propertyInfoContent = propertyInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
+    CreatePropertyRequestV2(propertyInfoContent, lastModificationDate, apiRequestID, requestingUser)
   }
 }
 
@@ -460,37 +448,15 @@ object CreateClassRequestV2 {
   /**
    * Converts a JSON-LD request to a [[CreateClassRequestV2]].
    *
-   * @param jsonLDDocument the JSON-LD input.
+   * @param document the JSON-LD input.
    * @param apiRequestID   the UUID of the API request.
    * @param requestingUser the user making the request.
    * @return a [[CreateClassRequestV2]] representing the input.
    */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): CreateClassRequestV2 = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    // Get the class definition and the ontology's last modification date from the JSON-LD.
-
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    // The request must provide an rdfs:label
-
-    if (!classInfoContent.predicates.contains(Rdfs.Label.toSmartIri)) {
-      throw BadRequestException("Missing rdfs:label")
-    }
-
-    CreateClassRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
+  def fromJsonLd(document: JsonLDDocument, apiRequestID: UUID, requestingUser: User): CreateClassRequestV2 = {
+    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(document)
+    val updateInfo        = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+    CreateClassRequestV2(updateInfo.classInfoContent, updateInfo.lastModificationDate, apiRequestID, requestingUser)
   }
 }
 
@@ -1880,6 +1846,50 @@ case class PredicateInfoV2(predicateIri: SmartIri, objects: Seq[OntologyLiteralV
         objects.toSet == otherPred.objects.toSet
 
       case _ => false
+    }
+}
+
+object PredicateInfoV2 {
+
+  def checkRequiredStringLiteralWithLanguageTag(
+    predicateIri: IRI,
+    predicates: Iterable[PredicateInfoV2],
+  ): Validation[String, Seq[StringLiteralV2]] =
+    atMostOnePredicate(predicateIri, predicates).flatMap {
+      case Some(info: PredicateInfoV2) => requireStringLiteralsWithLanguageTag(predicateIri, info)
+      case None                        => Validation.fail(s"Missing $predicateIri")
+    }
+
+  def checkOptionalStringLiteralWithLanguageTag(
+    predicateIri: IRI,
+    predicates: Iterable[PredicateInfoV2],
+  ): Validation[String, Seq[StringLiteralV2]] =
+    atMostOnePredicate(predicateIri, predicates).flatMap {
+      case Some(info) => requireStringLiteralsWithLanguageTag(predicateIri, info)
+      case None       => Validation.succeed(Seq.empty[StringLiteralV2])
+    }
+
+  private def atMostOnePredicate(
+    predicateIri: IRI,
+    predicates: Iterable[PredicateInfoV2],
+  ): Validation[String, Option[PredicateInfoV2]] =
+    predicates.filter(_.predicateIri.toIri == predicateIri) match {
+      case list if list.size <= 1 => Validation.succeed(list.headOption)
+      case _                      => Validation.fail(s"$predicateIri may only be provided once")
+    }
+
+  private def requireStringLiteralsWithLanguageTag(
+    propertyIri: IRI,
+    predicateInfo: PredicateInfoV2,
+  ): Validation[String, Seq[StringLiteralV2]] =
+    predicateInfo.objects match {
+      case Nil => Validation.fail(s"At least one value must be provided for $propertyIri")
+      case literals if !literals.forall {
+            case StringLiteralV2(value, Some(_)) => true
+            case _                               => false
+          } =>
+        Validation.fail(s"All values of $propertyIri must be string literals with a language code")
+      case literals => Validation.succeed(literals.collect { case l: StringLiteralV2 => l })
     }
 }
 
