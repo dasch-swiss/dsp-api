@@ -1401,6 +1401,8 @@ HTTP POST to http://host/v2/ontologies/classes
 Values for `rdfs:label` must be submitted in at least
 one language, either as an object or as an array of objects.
 
+Values for `rdfs:comment` are optional, but if they are provided, they must include a language code.
+
 At least one base class must be provided, which can be
 `knora-api:Resource` or any of its subclasses.
 
@@ -1465,6 +1467,8 @@ unquoted integer.)
 
 Values for `rdfs:label` must be submitted in at least
 one language, either as an object or as an array of objects.
+
+Values for `rdfs:comment` are optional, but if they are provided, they must include a language code.
 
 At least one base class must be provided.
 
@@ -1625,6 +1629,8 @@ HTTP POST to http://host/v2/ontologies/properties
 
 Values for `rdfs:label` must be submitted in at least
 one language, either as an object or as an array of objects.
+
+Values for `rdfs:comment` are optional, but if they are provided, they must include a language code.
 
 At least one base property must be provided, which can be
 `knora-api:hasValue`, `knora-api:hasLinkTo`, or any of their

@@ -11,6 +11,7 @@ import zio.Task
 import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
+import zio.prelude.Validation
 
 import java.time.Instant
 import scala.collection.immutable
@@ -23,6 +24,7 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.twirl.queries.sparql
@@ -754,9 +756,17 @@ final case class OntologyResponderV2(
    * @param createClassRequest the request to create the class.
    * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new class.
    */
-  private def createClass(createClassRequest: CreateClassRequestV2): Task[ReadOntologyV2] = {
+  def createClass(createClassRequest: CreateClassRequestV2): Task[ReadOntologyV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] = {
+      val predicates = createClassRequest.classInfoContent.predicates.values
       for {
+        _ <- Validation
+               .validate(
+                 PredicateInfoV2.checkRequiredStringLiteralWithLanguageTag(Rdfs.Label, predicates),
+                 PredicateInfoV2.checkOptionalStringLiteralWithLanguageTag(Rdfs.Comment, predicates),
+               )
+               .mapError(BadRequestException.apply)
+               .toZIO
         cacheData                           <- ontologyCache.getCacheData
         internalClassDef: ClassInfoContentV2 = createClassRequest.classInfoContent.toOntologySchema(InternalSchema)
 
@@ -1915,9 +1925,17 @@ final case class OntologyResponderV2(
    * @param createPropertyRequest the request to create the property.
    * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new property.
    */
-  private def createProperty(createPropertyRequest: CreatePropertyRequestV2): Task[ReadOntologyV2] = {
+  def createProperty(createPropertyRequest: CreatePropertyRequestV2): Task[ReadOntologyV2] = {
     def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] = {
+      val predicates = createPropertyRequest.propertyInfoContent.predicates.values
       for {
+        _ <- Validation
+               .validate(
+                 PredicateInfoV2.checkRequiredStringLiteralWithLanguageTag(Rdfs.Label, predicates),
+                 PredicateInfoV2.checkOptionalStringLiteralWithLanguageTag(Rdfs.Comment, predicates),
+               )
+               .mapError(BadRequestException(_))
+               .toZIO
         cacheData          <- ontologyCache.getCacheData
         internalPropertyDef = createPropertyRequest.propertyInfoContent.toOntologySchema(InternalSchema)
 
