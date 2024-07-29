@@ -178,7 +178,7 @@ object ResourcesRepoLive {
         case IntegerValueInfo(valueHasInteger) =>
           List(iri(valueIri).has(KB.valueHasInteger, literalOf(valueHasInteger)))
         case DecimalValueInfo(valueHasDecimal) =>
-          List(iri(valueIri).has(KB.valueHasDecimal, literalOf(valueHasDecimal)))
+          List(iri(valueIri).has(KB.valueHasDecimal, literalOfType(valueHasDecimal.toString(), XSD.DECIMAL)))
         case BooleanValueInfo(valueHasBoolean) =>
           List(iri(valueIri).has(KB.valueHasBoolean, literalOf(valueHasBoolean)))
         case UriValueInfo(valueHasUri) =>
@@ -202,8 +202,8 @@ object ResourcesRepoLive {
         case IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd) =>
           List(
             iri(valueIri)
-              .has(KB.valueHasIntervalStart, literalOf(valueHasIntervalStart))
-              .andHas(KB.valueHasIntervalEnd, literalOf(valueHasIntervalEnd)),
+              .has(KB.valueHasIntervalStart, literalOfType(valueHasIntervalStart.toString(), XSD.DECIMAL))
+              .andHas(KB.valueHasIntervalEnd, literalOfType(valueHasIntervalEnd.toString(), XSD.DECIMAL)),
           )
         case TimeValueInfo(valueHasTimeStamp) =>
           List(iri(valueIri).has(KB.valueHasTimeStamp, literalOfType(valueHasTimeStamp.toString(), XSD.DATETIME)))
@@ -254,7 +254,7 @@ object ResourcesRepoLive {
           case StandoffAttributeValue.InternalReferenceAttribute(value) => iri(value.value)
           case StandoffAttributeValue.StringAttribute(value)            => literalOf(value)
           case StandoffAttributeValue.IntegerAttribute(value)           => literalOf(value)
-          case StandoffAttributeValue.DecimalAttribute(value)           => literalOf(value)
+          case StandoffAttributeValue.DecimalAttribute(value)           => literalOfType(value.toString(), XSD.DECIMAL)
           case StandoffAttributeValue.BooleanAttribute(value)           => literalOf(value)
           case StandoffAttributeValue.TimeAttribute(value)              => literalOfType(value.toString(), XSD.DATETIME)
         val p = iri(attribute.propertyIri.value)
