@@ -100,7 +100,7 @@ object Dependencies {
   val saxonHE     = "net.sf.saxon"      % "Saxon-HE"            % "12.5"
   val scalaGraph =
     "org.scala-graph" %% "graph-core" % "2.0.1" cross CrossVersion.for3Use2_13
-  val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.4.0"
+  val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.4.1"
   val xmlunitCore    = "org.xmlunit"    % "xmlunit-core"     % "2.10.0"
 
   // test
