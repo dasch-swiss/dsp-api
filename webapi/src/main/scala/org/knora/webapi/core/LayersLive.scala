@@ -102,7 +102,7 @@ object LayersLive {
     OntologyCacheHelpers &
     OntologyInferencer &
     OntologyResponderV2 &
-    OntologyTriplestoreHelpers & 
+    OntologyTriplestoreHelpers &
     PermissionRestService &
     PermissionUtilADM &
     PermissionsResponder &

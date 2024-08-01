@@ -18,9 +18,9 @@ import org.knora.webapi.slice.security.Authenticator
 object AuthenticationApiModule
     extends URModule[
     // format: off
-    AppConfig & 
-    Authenticator & 
-    BaseEndpoints & 
+    AppConfig &
+    Authenticator &
+    BaseEndpoints &
     HandlerMapper &
     TapirToPekkoInterpreter
     ,
