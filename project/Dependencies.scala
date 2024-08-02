@@ -100,7 +100,7 @@ object Dependencies {
   val saxonHE     = "net.sf.saxon"      % "Saxon-HE"            % "12.5"
   val scalaGraph =
     "org.scala-graph" %% "graph-core" % "2.0.1" cross CrossVersion.for3Use2_13
-  val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.4.0"
+  val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.4.1"
   val xmlunitCore    = "org.xmlunit"    % "xmlunit-core"     % "2.10.0"
 
   // test
@@ -115,7 +115,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.15.0"
 
-  val tapirVersion = "1.10.13"
+  val tapirVersion = "1.10.15"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
