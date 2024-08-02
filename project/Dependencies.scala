@@ -20,7 +20,7 @@ object Dependencies {
 
   val PekkoActorVersion = "1.0.3"
   val PekkoHttpVersion  = "1.0.1"
-  val JenaVersion       = "5.0.0"
+  val JenaVersion       = "5.1.0"
   val Rdf4jVersion      = "5.0.1"
 
   val ZioConfigVersion            = "4.0.2"
@@ -109,11 +109,11 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.19.8"
-  val wiremock       = "org.wiremock"       % "wiremock"       % "3.8.0"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.1"
+  val wiremock       = "org.wiremock"       % "wiremock"       % "3.9.1"
 
   // found/added by the plugin but deleted anyway
-  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.15.0"
 
   val tapirVersion = "1.10.15"
 
