@@ -97,18 +97,17 @@ final case class ProjectsEndpointsHandler(
 
   private val getProjectsAssetsInfoEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectsAssetsInfo
     .serverLogic(userSession =>
-      (shortcode, assetId) =>
-        {
-          val ref = AssetRef(assetId, shortcode)
-          authorizationHandler.ensureProjectReadable(userSession, shortcode) *>
-            assetInfoService
-              .findByAssetRef(ref)
-              .some
-              .mapBoth(
-                assetRefNotFoundOrServerError(_, ref),
-                AssetInfoResponse.from,
-              )
-        },
+      (shortcode, assetId) => {
+        val ref = AssetRef(assetId, shortcode)
+        authorizationHandler.ensureProjectReadable(userSession, shortcode) *>
+          assetInfoService
+            .findByAssetRef(ref)
+            .some
+            .mapBoth(
+              assetRefNotFoundOrServerError(_, ref),
+              AssetInfoResponse.from,
+            )
+      },
     )
 
   private val postProjectAssetEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postProjectAsset
