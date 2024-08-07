@@ -168,8 +168,7 @@ final case class ProjectsEndpointsHandler(
                 case None                           => failBulkIngestInProgress(code)
                 case Some(ioException: IOException) => InternalServerError(ioException)
               }
-              .some
-              .orElseFail(NotFound(code)),
+              .someOrFail(NotFound(code)),
       )
 
   private val postBulkIngestUploadEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postBulkIngestUpload
