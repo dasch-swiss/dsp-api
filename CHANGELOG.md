@@ -1,5 +1,14 @@
 # Changelog
 
+## [30.18.3](https://github.com/dasch-swiss/dsp-api/compare/v30.18.2...v30.18.3) (2024-08-08)
+
+
+### Maintenance
+
+* Bump Sipi to v3.13.0 ([#3334](https://github.com/dasch-swiss/dsp-api/issues/3334)) ([58a91ce](https://github.com/dasch-swiss/dsp-api/commit/58a91cecc32b0fba031530bb87cfd1a763bf21f3))
+* Minor dependency updates ([#3331](https://github.com/dasch-swiss/dsp-api/issues/3331)) ([6d3a53f](https://github.com/dasch-swiss/dsp-api/commit/6d3a53fdd3eaf78abaf87d2952b576be0fabd977))
+* Patch dependency updates ([#3330](https://github.com/dasch-swiss/dsp-api/issues/3330)) ([894af57](https://github.com/dasch-swiss/dsp-api/commit/894af57ae47c7da863b1bc9db20c72650895529c))
+
 ## [30.18.2](https://github.com/dasch-swiss/dsp-api/compare/v30.18.1...v30.18.2) (2024-07-29)
 
 
