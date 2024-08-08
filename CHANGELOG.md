@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.12.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.12.0...v0.12.1) (2024-08-07)
+
+
+### Bug Fixes
+
+* Requesting mapping CSV when ingest is ongoing gives 404 not 409 (DEV-3970) ([#250](https://github.com/dasch-swiss/dsp-ingest/issues/250)) ([4b72a80](https://github.com/dasch-swiss/dsp-ingest/commit/4b72a805883f86a0298092dd64b5d82dfbe5f91e))
+
+
+### Maintenance
+
+* Dependency updates ([#248](https://github.com/dasch-swiss/dsp-ingest/issues/248)) ([c363e8a](https://github.com/dasch-swiss/dsp-ingest/commit/c363e8af97389bdb9aa569e5ce7e8750efd2e5c0))
+* Minor dependency updates ([#247](https://github.com/dasch-swiss/dsp-ingest/issues/247)) ([c0c7b4a](https://github.com/dasch-swiss/dsp-ingest/commit/c0c7b4a591eeff12bce92d484cbc9c8726544112))
+* Patch dependency updates ([#246](https://github.com/dasch-swiss/dsp-ingest/issues/246)) ([a9c27c8](https://github.com/dasch-swiss/dsp-ingest/commit/a9c27c8f5fcf70eff514e0e095438df155beb8f6))
+
 ## [0.12.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.11.0...v0.12.0) (2024-07-15)
 
 
