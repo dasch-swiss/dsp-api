@@ -11,7 +11,7 @@ addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 val flywayVersion               = "10.17.0"
 val hikariVersion               = "5.1.0"
 val quillVersion                = "4.8.5"
-val sipiVersion                 = "v30.14.0"
+val sipiVersion                 = "v30.18.3"
 val sqliteVersion               = "3.46.0.1"
 val tapirVersion                = "1.10.15"
 val testContainersVersion       = "0.40.15"
