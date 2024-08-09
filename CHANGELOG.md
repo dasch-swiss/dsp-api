@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.12.1...v0.12.2) (2024-08-08)
+
+
+### Maintenance
+
+* Bump knora-sipi to v30.18.3 ([#251](https://github.com/dasch-swiss/dsp-ingest/issues/251)) ([1f1475f](https://github.com/dasch-swiss/dsp-ingest/commit/1f1475f8e33b304f39268c11a1f7339aef10f0fa))
+
 ## [0.12.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.12.0...v0.12.1) (2024-08-07)
 
 
