@@ -5,20 +5,34 @@
 
 package swiss.dasch.api
 
-import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
-import swiss.dasch.api.ProjectsEndpointsResponses.{AssetInfoResponse, ProjectResponse}
-import swiss.dasch.config.Configuration.{Features, StorageConfig}
-import swiss.dasch.domain.*
+import sttp.tapir.server.ziohttp.ZioHttpInterpreter
+import sttp.tapir.server.ziohttp.ZioHttpServerOptions
+import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
+import swiss.dasch.config.Configuration.Features
+import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
+import swiss.dasch.domain.*
 import swiss.dasch.infrastructure.CommandExecutorLive
-import swiss.dasch.test.SpecConstants.Projects.{emptyProject, existingProject, nonExistentProject}
-import swiss.dasch.test.{SpecConfigurations, SpecPaths}
+import swiss.dasch.test.SpecConfigurations
+import swiss.dasch.test.SpecConstants.Projects.emptyProject
+import swiss.dasch.test.SpecConstants.Projects.existingProject
+import swiss.dasch.test.SpecConstants.Projects.nonExistentProject
+import swiss.dasch.test.SpecPaths
 import swiss.dasch.util.TestUtils
-import zio.{Chunk, UIO, ZIO, ZLayer, http}
+import zio.Chunk
+import zio.UIO
+import zio.ZIO
+import zio.ZLayer
+import zio.http
 import zio.http.*
 import zio.json.*
 import zio.nio.file.Files
-import zio.test.{ZIOSpecDefault, assertTrue}
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+
+import java.net.URLDecoder
+import java.text.Normalizer
 
 object ProjectsEndpointSpec extends ZIOSpecDefault {
 
@@ -279,6 +293,20 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           .post(URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "sample.mp3"), Body.fromString("tegxd"))
           .addHeader("Authorization", "Bearer fakeToken")
         executeRequest(req).map(response => assertTrue(response.status == Status.Ok))
+      },
+      test("should handle ingest denormalized filenames") {
+        val encoded     = "a%CC%84.mp3"
+        val decoded     = URLDecoder.decode(encoded, "UTF-8")
+        val decodedNorm = Normalizer.normalize(decoded, Normalizer.Form.NFC)
+
+        val url = URL(Path.root / "projects" / "0666" / "assets" / "ingest" / encoded)
+        val req = Request
+          .post(url, Body.fromString("tegxd"))
+          .addHeader("Authorization", "Bearer fakeToken")
+
+        executeRequest(req).map { response =>
+          assertTrue(response.status == Status.Ok) && assertTrue(decodedNorm == "ā.mp3")
+        }
       },
       test("should refuse ingesting without content") {
         val req = Request

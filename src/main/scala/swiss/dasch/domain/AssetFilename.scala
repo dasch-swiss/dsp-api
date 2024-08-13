@@ -7,14 +7,18 @@ package swiss.dasch.domain
 
 import zio.nio.file.*
 
+import java.text.Normalizer
+
 final case class AssetFilename private (value: String) extends AnyVal
 
 object AssetFilename {
   // Allow letters, numbers, underscores, hyphens, spaces, full stops, comma, single quote, apostrophe and braces
   private val regex = """^[\p{L}\p{N}_\- .,'`()]+$""".r
 
-  def from(value: String): Either[String, AssetFilename] = {
+  def from(valueUnnormalized: String): Either[String, AssetFilename] = {
+    val value       = Normalizer.normalize(valueUnnormalized, Normalizer.Form.NFC)
     val valueAsPath = Path(value)
+
     for {
       _ <- if (valueAsPath.normalize.filename.toString != value) {
              Left("Filename must not contain any path information")
