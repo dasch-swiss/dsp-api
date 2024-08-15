@@ -42,7 +42,7 @@ object Dependencies {
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
   val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
-  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.7"
+  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.8"
 
   // refined
   val refined = Seq(
