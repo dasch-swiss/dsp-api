@@ -685,7 +685,7 @@ object CreateResourceRequestV2 {
 
         // Get the resource's rdfs:label.
         label <-
-          ZIO.attempt(jsonLDDocument.body.requireStringWithValidation(Rdfs.Label, validationFun))
+          ZIO.attempt(jsonLDDocument.body.requireStringWithValidation(Rdfs.Label, (s, _) => s))
 
         // Get information about the project that the resource should be created in.
         projectIri <- ZIO.attempt(
