@@ -21,7 +21,7 @@ object Dependencies {
   val PekkoActorVersion = "1.0.3"
   val PekkoHttpVersion  = "1.0.1"
   val JenaVersion       = "5.1.0"
-  val Rdf4jVersion      = "5.0.1"
+  val Rdf4jVersion      = "5.0.2"
 
   val ZioConfigVersion            = "4.0.2"
   val ZioLoggingVersion           = "2.3.0"
@@ -29,7 +29,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC27"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.1.6"
+  val ZioVersion                  = "2.1.7"
 
   // ZIO
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
@@ -42,7 +42,7 @@ object Dependencies {
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
   val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
-  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.7"
+  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.8"
 
   // refined
   val refined = Seq(
@@ -67,7 +67,7 @@ object Dependencies {
 
   // logging
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
-  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.13" // the logging interface
+  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.16" // the logging interface
 
   // Metrics
   val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.22.1"
