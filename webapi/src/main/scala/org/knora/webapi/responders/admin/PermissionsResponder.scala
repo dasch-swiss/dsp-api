@@ -1719,8 +1719,7 @@ final case class PermissionsResponder(
              UUID.randomUUID(),
            )
 
-      // Give the admins of the new project rights to change rights, modify, delete, view,
-      // and restricted view of all resources and values that belong to the project.
+      // Create default object access permissions for SystemAdmin of the new project
       _ <- createDefaultObjectAccessPermission(
              CreateDefaultObjectAccessPermissionAPIRequestADM(
                forProject = projectIri.value,
@@ -1734,8 +1733,7 @@ final case class PermissionsResponder(
              UUID.randomUUID(),
            )
 
-      // Give the members of the new project rights to modify, view, and restricted view of all resources and values
-      // that belong to the project.
+      // Create default object access permissions for ProjectAdmin of the new project
       _ <- createDefaultObjectAccessPermission(
              CreateDefaultObjectAccessPermissionAPIRequestADM(
                forProject = projectIri.value,
