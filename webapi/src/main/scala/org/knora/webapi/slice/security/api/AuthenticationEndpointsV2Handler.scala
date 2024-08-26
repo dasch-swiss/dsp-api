@@ -10,6 +10,7 @@ import zio.ZLayer
 
 import java.time.Instant
 
+import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.admin.domain.model.Username
@@ -27,7 +28,6 @@ import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayloa
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload.UsernamePassword
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
-import dsp.errors.AuthenticationException
 
 case class AuthenticationEndpointsV2Handler(
   appConfig: AppConfig,
