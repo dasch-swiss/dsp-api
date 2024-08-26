@@ -221,7 +221,7 @@ final case class AuthenticatorLive(
   override def authenticate(jwtToken: String): IO[AuthenticatorError, User] = for {
     _ <- ZIO.fail(BadCredentials).when(invalidTokens.contains(jwtToken))
     userIri <-
-      jwtService.extractUserIriFromToken(jwtToken).some.map(UserIri.from).right.logError.orElseFail(BadCredentials)
+      jwtService.extractUserIriFromToken(jwtToken).logError.some.map(UserIri.from).right.orElseFail(BadCredentials)
     user <- getUserByIri(userIri)
   } yield user
 
