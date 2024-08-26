@@ -27,6 +27,7 @@ import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayloa
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload.UsernamePassword
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
+import dsp.errors.AuthenticationException
 
 case class AuthenticationEndpointsV2Handler(
   appConfig: AppConfig,
@@ -51,6 +52,8 @@ case class AuthenticationEndpointsV2Handler(
         }).mapBoth(
           _ => BadCredentialsException(BAD_CRED_NOT_VALID),
           (_, token) => setCookieAndResponse(token),
+        ).catchAllDefect(e =>
+          ZIO.fail(AuthenticationException("An internal error happened during authentication", Some(e))),
         )
       },
     )
