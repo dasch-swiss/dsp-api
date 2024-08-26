@@ -1727,7 +1727,7 @@ final case class PermissionsResponder(
                forGroup = Some(builtIn.ProjectAdmin.id.value),
                hasPermissions = Set(
                  PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.ProjectAdmin.id.value),
-                 PermissionADM.from(Permission.ObjectAccess.Modify, builtIn.ProjectMember.id.value),
+                 PermissionADM.from(Permission.ObjectAccess.Delete, builtIn.ProjectMember.id.value),
                ),
              ),
              KnoraSystemInstances.Users.SystemUser,
@@ -1742,7 +1742,7 @@ final case class PermissionsResponder(
                forGroup = Some(builtIn.ProjectMember.id.value),
                hasPermissions = Set(
                  PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.ProjectAdmin.id.value),
-                 PermissionADM.from(Permission.ObjectAccess.Modify, builtIn.ProjectMember.id.value),
+                 PermissionADM.from(Permission.ObjectAccess.Delete, builtIn.ProjectMember.id.value),
                ),
              ),
              KnoraSystemInstances.Users.SystemUser,
