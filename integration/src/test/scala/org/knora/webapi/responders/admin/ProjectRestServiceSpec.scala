@@ -220,7 +220,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
             doap.hasPermissions.equals(
               Set(
                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
-                PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
+                PermissionADM.from(Permission.ObjectAccess.Delete, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
             )
         }
@@ -235,7 +235,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
             doap.hasPermissions.equals(
               Set(
                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
-                PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
+                PermissionADM.from(Permission.ObjectAccess.Delete, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
             )
         }

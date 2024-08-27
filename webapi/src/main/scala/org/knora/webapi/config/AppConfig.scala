@@ -157,6 +157,7 @@ final case class Triplestore(
   autoInit: Boolean,
   fuseki: Fuseki,
   profileQueries: Boolean,
+  isTestEnv: Boolean = false,
 )
 
 final case class Fuseki(

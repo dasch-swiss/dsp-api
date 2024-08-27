@@ -6,10 +6,12 @@
 package org.knora.webapi.e2e.v2
 
 import org.apache.pekko
+import spray.json.JsString
 
 import java.net.URLEncoder
 import java.time.Instant
 import scala.concurrent.ExecutionContextExecutor
+import scala.util.Random
 
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
@@ -2790,6 +2792,13 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     // Create a resource of #BlueTestClass using only #hasBlueTestIntProp
 
+    val resourceLabel: String = {
+      val fuzz1 = Random.nextString(1000)
+      val fuzz2 = List.fill(1000)(()).map(_ => Random.nextInt(128).toChar).mkString
+      val fuzz3 = List.fill(1000)(()).map(_ => Random.nextPrintableChar()).mkString
+      fuzz1 ++ fuzz2 ++ fuzz3
+    }
+
     val createResourceWithValues: String =
       s"""{
          |  "@type" : "freetest:BlueFreeTestClass",
@@ -2802,7 +2811,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |  "knora-api:attachedToProject" : {
          |    "@id" : "http://rdfh.ch/projects/0001"
          |  },
-         |  "rdfs:label" : "my blue test class thing instance",
+         |  "rdfs:label" : ${JsString(resourceLabel).toString},
          |  "@context" : {
          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -2818,10 +2827,15 @@ class OntologyV2R2RSpec extends R2RSpec {
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
+
       val responseJsonDoc                               = JsonLDUtil.parseJsonLD(responseStr)
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
+
+      val responseJsonDoc2 = JsonLDUtil.parseJsonLD(responseStr)
+      val label            = responseJsonDoc2.body.value.get(OntologyConstants.Rdfs.Label).get
+      assert(label == JsonLDString(resourceLabel))
     }
 
     // payload to test cardinality can't be deleted
