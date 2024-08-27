@@ -226,13 +226,13 @@ final case class AuthenticatorLive(
   } yield user
 
   private def getUserByIri(iri: UserIri): IO[AuthenticatorError, User] =
-    userService.findUserByIri(iri).some.orElseFail(UserNotFound).tap(ensureActiveUser).logError
+    userService.findUserByIri(iri).orDie.someOrFail(UserNotFound).tap(ensureActiveUser)
 
   private def getUserByEmail(email: Email): IO[AuthenticatorError, User] =
-    userService.findUserByEmail(email).some.orElseFail(UserNotFound).tap(ensureActiveUser)
+    userService.findUserByEmail(email).orDie.someOrFail(UserNotFound).tap(ensureActiveUser)
 
   private def getUserByUsername(username: Username): IO[AuthenticatorError, User] =
-    userService.findUserByUsername(username).some.orElseFail(UserNotFound).tap(ensureActiveUser)
+    userService.findUserByUsername(username).orDie.someOrFail(UserNotFound).tap(ensureActiveUser)
 
   private def ensureActiveUser(user: User): IO[AuthenticatorError, Unit] = for {
     _ <- ZIO.fail(UserNotActive).when(!user.isActive)
