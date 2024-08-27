@@ -473,7 +473,10 @@ final case class CreateResourceV2Handler(
                   ZIO.succeed(UnformattedTextValueInfo(valueHasLanguage))
                 case tv @ TextValueContentV2(_, _, textType, valueHasLanguage, _, Some(mappingIri), _, _, _) =>
                   // TODO-BL: add tests
-                  // TODO-BL: read information from triplestore, don't infer it
+                  // TODO-BL: verify this works for updating resources
+                  // TODO-BL: next step: deprecate changing text value types
+                  // TODO-BL: after that, disallow changing text value types when updating resources
+                  // TODO-BL: also: add text value types to all existing data, then require it to be present
                   val standoffTags = generateStandoffInfo(tv, newValueIri)
                   generateFormattedTextValueInfo(
                     standoffTags,

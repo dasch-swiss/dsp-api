@@ -1030,10 +1030,21 @@ final case class ConstructResponseUtilV2Live(
                       standoffAssertions = valueObject.standoff,
                       requestingUser = requestingUser,
                     )
-        textType = mappingIri match
-                     case None                                              => TextValueType.UnformattedText
-                     case Some(OntologyConstants.KnoraBase.StandardMapping) => TextValueType.FormattedText
-                     case Some(iri)                                         => TextValueType.CustomFormattedText(InternalIri(iri))
+        textTypeInferred = mappingIri match
+                             case None                                              => TextValueType.UnformattedText
+                             case Some(OntologyConstants.KnoraBase.StandardMapping) => TextValueType.FormattedText
+                             case Some(iri)                                         => TextValueType.CustomFormattedText(InternalIri(iri))
+        textType = valueObject
+                     .maybeIriObject(OntologyConstants.KnoraBase.HasTextValueType.toSmartIri)
+                     .flatMap {
+                       case OntologyConstants.KnoraBase.UnformattedText => Some(TextValueType.UnformattedText)
+                       case OntologyConstants.KnoraBase.FormattedText   => Some(TextValueType.FormattedText)
+                       case OntologyConstants.KnoraBase.CustomFormattedText =>
+                         mappingIri.map(iri => TextValueType.CustomFormattedText(InternalIri(iri)))
+                       case OntologyConstants.KnoraBase.UndefinedTextType => None
+                       case _                                             => None
+                     }
+                     .getOrElse(textTypeInferred)
       } yield TextValueContentV2(
         ontologySchema = InternalSchema,
         maybeValueHasString = valueObjectValueHasString,
