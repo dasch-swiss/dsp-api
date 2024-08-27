@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.12.3](https://github.com/dasch-swiss/dsp-ingest/compare/v0.12.2...v0.12.3) (2024-08-21)
+
+
+### Bug Fixes
+
+* Always create dirs, use db as primary info source (DEV-3974) ([367eeb4](https://github.com/dasch-swiss/dsp-ingest/commit/367eeb4b05c02aa518324da54fee37b0a2444418))
+* Handle denormalized filenames in asset upload (DEV-3974) ([#254](https://github.com/dasch-swiss/dsp-ingest/issues/254)) ([f5cfb90](https://github.com/dasch-swiss/dsp-ingest/commit/f5cfb9080846484f28cda1832e79f7f7f57fc194))
+* Handle denormalized filenames in asset upload (DEV-3974) ([#254](https://github.com/dasch-swiss/dsp-ingest/issues/254)) ([99b57db](https://github.com/dasch-swiss/dsp-ingest/commit/99b57dba31ff85d564cf7d4068a4c08855296041))
+* Revert 99b57dba3 "Handle denormalized filenames in asset upload (DEV-3974) ([#254](https://github.com/dasch-swiss/dsp-ingest/issues/254))" ([#256](https://github.com/dasch-swiss/dsp-ingest/issues/256)) ([7eaee99](https://github.com/dasch-swiss/dsp-ingest/commit/7eaee99eb7ab125aaaafa8225887f9a3ce222dbb))
+
+
+### Maintenance
+
+* Dependency updates ([#259](https://github.com/dasch-swiss/dsp-ingest/issues/259)) ([7f8aff0](https://github.com/dasch-swiss/dsp-ingest/commit/7f8aff0b22afaf8394dc92c37cdd897e4f776f27))
+* Minor dependency updates ([#258](https://github.com/dasch-swiss/dsp-ingest/issues/258)) ([957a6ad](https://github.com/dasch-swiss/dsp-ingest/commit/957a6ad20f49c86f47a64bb234174a8c74249238))
+* Patch dependency updates ([#257](https://github.com/dasch-swiss/dsp-ingest/issues/257)) ([8ce0c0b](https://github.com/dasch-swiss/dsp-ingest/commit/8ce0c0beeb3c151eeebf6cc845692203fd53ac85))
+
 ## [0.12.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.12.1...v0.12.2) (2024-08-08)
 
 
