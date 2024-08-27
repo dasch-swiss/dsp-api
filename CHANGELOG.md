@@ -1,5 +1,23 @@
 # Changelog
 
+## [30.18.4](https://github.com/dasch-swiss/dsp-api/compare/v30.18.3...v30.18.4) (2024-08-27)
+
+
+### Maintenance
+
+* Change default DOAPs according to the defined requirements (DEV-4042) ([#3341](https://github.com/dasch-swiss/dsp-api/issues/3341)) ([0adfeee](https://github.com/dasch-swiss/dsp-api/commit/0adfeee89f8b27bc341aa7b89235b4048870d93b))
+* Dependency updates ([#3337](https://github.com/dasch-swiss/dsp-api/issues/3337)) ([fe6dae1](https://github.com/dasch-swiss/dsp-api/commit/fe6dae16ce7b7197f2b100edb7d2e91872c818a4))
+* Minor dependency updates ([#3336](https://github.com/dasch-swiss/dsp-api/issues/3336)) ([396baa8](https://github.com/dasch-swiss/dsp-api/commit/396baa8066c40cbb4399e0c7d82a9c4eac7e82b6))
+* Patch dependency updates ([#3335](https://github.com/dasch-swiss/dsp-api/issues/3335)) ([b40c44d](https://github.com/dasch-swiss/dsp-api/commit/b40c44dc20eab0692833c0032b78bdd1848e96c9))
+* Update dsp-api docker base image to Ubuntu 24.04 LTS (DEV-3956) ([#3333](https://github.com/dasch-swiss/dsp-api/issues/3333)) ([8f7172d](https://github.com/dasch-swiss/dsp-api/commit/8f7172df73df16896a2df82ca13ad98f3b6a45f9))
+
+
+### Bug Fixes
+
+* Do not log on error level when invalid credentials are provided (DEV-3975) ([#3340](https://github.com/dasch-swiss/dsp-api/issues/3340)) ([c7e9451](https://github.com/dasch-swiss/dsp-api/commit/c7e9451e6d5c7b24ef0972e7f73c5bd6124f176a))
+* Fix escaping issues in labels, add fuzz testing to make sure (DEV-3976) ([#3339](https://github.com/dasch-swiss/dsp-api/issues/3339)) ([ae8f44a](https://github.com/dasch-swiss/dsp-api/commit/ae8f44afc34081550110f6fe8867a295c2bbe3d2))
+* Respond with internal error instead of bad credentials when triplestore is down during authentication (DEV-4019) ([#3342](https://github.com/dasch-swiss/dsp-api/issues/3342)) ([cb3f69a](https://github.com/dasch-swiss/dsp-api/commit/cb3f69adeb07ab26a352bec346cc4f8b7db291f5))
+
 ## [30.18.3](https://github.com/dasch-swiss/dsp-api/compare/v30.18.2...v30.18.3) (2024-08-08)
 
 
