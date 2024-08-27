@@ -60,6 +60,7 @@ import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.util.ZioHelper
+import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 
 final case class CreateResourceV2Handler(
   appConfig: AppConfig,
@@ -473,7 +474,14 @@ final case class CreateResourceV2Handler(
                 case tv @ TextValueContentV2(_, _, textType, valueHasLanguage, _, Some(mappingIri), _, _, _) =>
                   // TODO-BL: add tests
                   // TODO-BL: read information from triplestore, don't infer it
-                  generateFormattedTextValueInfo(tv, newValueIri, textType, valueHasLanguage, mappingIri)
+                  val standoffTags = generateStandoffInfo(tv, newValueIri)
+                  generateFormattedTextValueInfo(
+                    standoffTags,
+                    tv.computedMaxStandoffStartIndex,
+                    textType,
+                    valueHasLanguage,
+                    mappingIri,
+                  )
                 case IntegerValueContentV2(_, valueHasInteger, _) =>
                   ZIO.succeed(IntegerValueInfo(valueHasInteger))
                 case DecimalValueContentV2(_, valueHasDecimal, _) =>
@@ -600,14 +608,8 @@ final case class CreateResourceV2Handler(
     )
   }
 
-  private def generateFormattedTextValueInfo(
-    tv: TextValueContentV2,
-    newValueIri: IRI,
-    textType: TextValueType,
-    valueHasLanguage: Option[String],
-    mappingIri: String,
-  ) = {
-    val standoffInfo = tv
+  private def generateStandoffInfo(tv: TextValueContentV2, newValueIri: IRI): Seq[StandoffTagInfo] =
+    tv
       .prepareForSparqlInsert(newValueIri)
       .map(standoffTag =>
         val attributes = standoffTag.standoffNode.attributes.map { attr =>
@@ -638,6 +640,14 @@ final case class CreateResourceV2Handler(
           attributes = attributes,
         ),
       )
+
+  private def generateFormattedTextValueInfo(
+    standoffInfo: Seq[StandoffTagInfo],
+    maxStandoffStartIndex: Option[Int],
+    textType: TextValueType,
+    valueHasLanguage: Option[String],
+    mappingIri: String,
+  ): IO[StandoffInternalException, TypeSpecificValueInfo] =
     ZIO
       .whenCase(textType) {
         case TextValueType.FormattedText => ZIO.succeed(FormattedTextValueType.StandardMapping)
@@ -647,7 +657,7 @@ final case class CreateResourceV2Handler(
       .someOrFail(StandoffInternalException("Text type does not match mapping information"))
       .flatMap { textType =>
         ZIO
-          .fromOption(tv.computedMaxStandoffStartIndex)
+          .fromOption(maxStandoffStartIndex)
           .orElseFail(StandoffInternalException("Max standoff start index not computed"))
           .map(standoffStartIndex =>
             FormattedTextValueInfo(
@@ -659,7 +669,6 @@ final case class CreateResourceV2Handler(
             ),
           )
       }
-  }
 
   /**
    * Given a sequence of resources to be created, gets the class IRIs of all the resources that are the targets of
