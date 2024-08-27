@@ -167,7 +167,7 @@ final case class CreateResourceV2Handler(
   private def makeTask(
     createResourceRequestV2: CreateResourceRequestV2,
     resourceIri: IRI,
-  ): Task[ReadResourcesSequenceV2] = {
+  ): Task[ReadResourcesSequenceV2] =
     for {
       _ <- // check if resourceIri already exists holding a lock on the IRI
         ZIO
@@ -222,17 +222,13 @@ final case class CreateResourceV2Handler(
                       )
 
       // Get the default permissions of the resource class.
-
       defaultResourcePermissionsMap <- getResourceClassDefaultPermissions(
                                          projectIri = createResourceRequestV2.createResource.projectADM.id,
                                          resourceClassIris = Set(internalCreateResource.resourceClassIri),
                                          requestingUser = createResourceRequestV2.requestingUser,
                                        )
 
-      defaultResourcePermissions: String = defaultResourcePermissionsMap(internalCreateResource.resourceClassIri)
-
       // Get the default permissions of each property used.
-
       defaultPropertyPermissionsMap <- getDefaultPropertyPermissions(
                                          projectIri = createResourceRequestV2.createResource.projectADM.id,
                                          resourceClassProperties = Map(
@@ -240,26 +236,21 @@ final case class CreateResourceV2Handler(
                                          ),
                                          requestingUser = createResourceRequestV2.requestingUser,
                                        )
-      defaultPropertyPermissions: Map[SmartIri, String] = defaultPropertyPermissionsMap(
-                                                            internalCreateResource.resourceClassIri,
-                                                          )
-
-      // Make a versionDate for the resource and its values.
-      creationDate: Instant = internalCreateResource.creationDate.getOrElse(Instant.now)
 
       // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
       // for creating the resource.
-      resourceReadyToCreate <- generateResourceReadyToCreate(
-                                 resourceIri = resourceIri,
-                                 internalCreateResource = internalCreateResource,
-                                 linkTargetClasses = linkTargetClasses,
-                                 entityInfo = allEntityInfo,
-                                 clientResourceIDs = Map.empty[IRI, String],
-                                 defaultResourcePermissions = defaultResourcePermissions,
-                                 defaultPropertyPermissions = defaultPropertyPermissions,
-                                 creationDate = creationDate,
-                                 requestingUser = createResourceRequestV2.requestingUser,
-                               )
+      resourceReadyToCreate <-
+        generateResourceReadyToCreate(
+          resourceIri = resourceIri,
+          internalCreateResource = internalCreateResource,
+          linkTargetClasses = linkTargetClasses,
+          entityInfo = allEntityInfo,
+          clientResourceIDs = Map.empty[IRI, String],
+          defaultResourcePermissions = defaultResourcePermissionsMap(internalCreateResource.resourceClassIri),
+          defaultPropertyPermissions = defaultPropertyPermissionsMap(internalCreateResource.resourceClassIri),
+          creationDate = internalCreateResource.creationDate.getOrElse(Instant.now),
+          requestingUser = createResourceRequestV2.requestingUser,
+        )
 
       dataNamedGraph = ProjectService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM)
 
@@ -276,7 +267,6 @@ final case class CreateResourceV2Handler(
                                     requestingUser = createResourceRequestV2.requestingUser,
                                   )
     } yield previewOfCreatedResource
-  }
 
   /**
    * Generates a [[ResourceReadyToCreate]] describing SPARQL for creating a resource and its values.

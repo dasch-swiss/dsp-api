@@ -14,40 +14,40 @@ object Dependencies {
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
   val fusekiImage = "daschswiss/apache-jena-fuseki:5.0.0-3"
   // base image the knora-sipi image is created from
-  val sipiImage = "daschswiss/sipi:v3.12.3"
+  val sipiImage = "daschswiss/sipi:v3.13.0"
 
   val ScalaVersion = "3.3.3"
 
   val PekkoActorVersion = "1.0.3"
   val PekkoHttpVersion  = "1.0.1"
-  val JenaVersion       = "5.0.0"
-  val Rdf4jVersion      = "5.0.1"
+  val JenaVersion       = "5.1.0"
+  val Rdf4jVersion      = "5.0.2"
 
   val ZioConfigVersion            = "4.0.2"
   val ZioLoggingVersion           = "2.3.0"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC27"
+  val ZioPreludeVersion           = "1.0.0-RC29"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.1.6"
+  val ZioVersion                  = "2.1.7"
 
   // ZIO
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
   val zioConfig             = "dev.zio"                       %% "zio-config"                % ZioConfigVersion
   val zioConfigMagnolia     = "dev.zio"                       %% "zio-config-magnolia"       % ZioConfigVersion
   val zioConfigTypesafe     = "dev.zio"                       %% "zio-config-typesafe"       % ZioConfigVersion
-  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.1"
+  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.2"
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
   val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
-  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.7"
+  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.8"
 
   // refined
   val refined = Seq(
     "eu.timepit" %% "refined"                  % "0.11.2",
-    "dev.zio"    %% "zio-json-interop-refined" % "0.7.1",
+    "dev.zio"    %% "zio-json-interop-refined" % "0.7.2",
   )
 
   // zio-test and friends
@@ -67,7 +67,7 @@ object Dependencies {
 
   // logging
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
-  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.13" // the logging interface
+  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.16" // the logging interface
 
   // Metrics
   val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.22.1"
@@ -100,7 +100,7 @@ object Dependencies {
   val saxonHE     = "net.sf.saxon"      % "Saxon-HE"            % "12.5"
   val scalaGraph =
     "org.scala-graph" %% "graph-core" % "2.0.1" cross CrossVersion.for3Use2_13
-  val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.4.0"
+  val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.4.1"
   val xmlunitCore    = "org.xmlunit"    % "xmlunit-core"     % "2.10.0"
 
   // test
@@ -109,13 +109,13 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.19.8"
-  val wiremock       = "org.wiremock"       % "wiremock"       % "3.8.0"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.1"
+  val wiremock       = "org.wiremock"       % "wiremock"       % "3.9.1"
 
   // found/added by the plugin but deleted anyway
-  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.16.0"
 
-  val tapirVersion = "1.10.13"
+  val tapirVersion = "1.11.1"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,

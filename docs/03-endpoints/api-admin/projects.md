@@ -185,8 +185,8 @@ When a new project is created, following default permissions are added to its ad
   This administrative permission is retrievable through its IRI:
   `http://rdfh.ch/permissions/[projectShortcode]/defaultApForMember`
 
-- ProjectMember group also gets a default object access permission to modify 
-  (which includes view and restricted view permissions) of any entity that belongs to the project. 
+- ProjectMember group also gets a default object access permission to delete 
+  (which includes modify, view and restricted view permissions) of any entity that belongs to the project. 
   This default object access permission is retrievable through its IRI: 
   `http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForMember`
 

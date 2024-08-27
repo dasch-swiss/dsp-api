@@ -1,5 +1,31 @@
 # Changelog
 
+## [30.18.3](https://github.com/dasch-swiss/dsp-api/compare/v30.18.2...v30.18.3) (2024-08-08)
+
+
+### Maintenance
+
+* Bump Sipi to v3.13.0 ([#3334](https://github.com/dasch-swiss/dsp-api/issues/3334)) ([58a91ce](https://github.com/dasch-swiss/dsp-api/commit/58a91cecc32b0fba031530bb87cfd1a763bf21f3))
+* Minor dependency updates ([#3331](https://github.com/dasch-swiss/dsp-api/issues/3331)) ([6d3a53f](https://github.com/dasch-swiss/dsp-api/commit/6d3a53fdd3eaf78abaf87d2952b576be0fabd977))
+* Patch dependency updates ([#3330](https://github.com/dasch-swiss/dsp-api/issues/3330)) ([894af57](https://github.com/dasch-swiss/dsp-api/commit/894af57ae47c7da863b1bc9db20c72650895529c))
+
+## [30.18.2](https://github.com/dasch-swiss/dsp-api/compare/v30.18.1...v30.18.2) (2024-07-29)
+
+
+### Maintenance
+
+* Add just target for starting stack without API ([#3325](https://github.com/dasch-swiss/dsp-api/issues/3325)) ([4708dcc](https://github.com/dasch-swiss/dsp-api/commit/4708dccc1cf50e26f6e7e5c0e2f21612bb364e36))
+* Build queries with query builder ([#3276](https://github.com/dasch-swiss/dsp-api/issues/3276)) ([56846ff](https://github.com/dasch-swiss/dsp-api/commit/56846ff11803294ef8c488634b0a1d52e803ab0b))
+* Make json ld comparison robust to json formatting changes ([#3320](https://github.com/dasch-swiss/dsp-api/issues/3320)) ([e1280d5](https://github.com/dasch-swiss/dsp-api/commit/e1280d5ddafd8c4d201ce2dc493b85d729062b06))
+* Merge Vocabularies ([#3326](https://github.com/dasch-swiss/dsp-api/issues/3326)) ([7030ca1](https://github.com/dasch-swiss/dsp-api/commit/7030ca144492201bca65d9071a0c80a89272b077))
+* Update Sipi (DEV-3474) ([#3328](https://github.com/dasch-swiss/dsp-api/issues/3328)) ([106c8ea](https://github.com/dasch-swiss/dsp-api/commit/106c8ea588db274b9b585026f3fcca06866a621e))
+
+
+### Bug Fixes
+
+* Decimals without decimal point lead to inconsistent data (DEV-3927) ([#3329](https://github.com/dasch-swiss/dsp-api/issues/3329)) ([3eb5973](https://github.com/dasch-swiss/dsp-api/commit/3eb59735c79166e18c5b84a439dd6c698c43ed3a))
+* Prevent creating classes/properties without proper label/comment and language (DEV-3878) ([#3324](https://github.com/dasch-swiss/dsp-api/issues/3324)) ([e5fffb0](https://github.com/dasch-swiss/dsp-api/commit/e5fffb0cca6fdcef1d60fa144a7e25a8754b9805))
+
 ## [30.18.1](https://github.com/dasch-swiss/dsp-api/compare/v30.18.0...v30.18.1) (2024-07-15)
 
 

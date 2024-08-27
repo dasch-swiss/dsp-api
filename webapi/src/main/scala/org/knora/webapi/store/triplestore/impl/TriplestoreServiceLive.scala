@@ -409,7 +409,7 @@ case class TriplestoreServiceLive(
       _ <- {
              val endTime  = java.lang.System.nanoTime()
              val duration = Duration.fromNanos(endTime - startTime)
-             ZIO.when(duration >= trackingThreshold) {
+             ZIO.when(!triplestoreConfig.isTestEnv && duration >= trackingThreshold) {
                ZIO.logInfo(
                  s"Fuseki request took $duration, which is longer than $trackingThreshold, timeout=${query.timeout}\n ${query.sparql}",
                )

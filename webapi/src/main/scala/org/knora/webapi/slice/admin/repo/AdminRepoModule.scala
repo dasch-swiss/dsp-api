@@ -22,9 +22,9 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object AdminRepoModule {
 
-  type Dependencies = 
+  type Dependencies =
     // format: off
-    TriplestoreService & 
+    TriplestoreService &
     CacheManager
     // format: on
 
