@@ -56,11 +56,11 @@ import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
 import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
 import org.knora.webapi.slice.resources.repo.model.StandoffLinkValueInfo
 import org.knora.webapi.slice.resources.repo.model.StandoffTagInfo
+import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.util.ZioHelper
-import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 
 final case class CreateResourceV2Handler(
   appConfig: AppConfig,
