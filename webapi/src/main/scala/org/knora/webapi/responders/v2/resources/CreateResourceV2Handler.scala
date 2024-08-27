@@ -471,61 +471,9 @@ final case class CreateResourceV2Handler(
                 case TextValueContentV2(_, _, _, valueHasLanguage, _, None, _, _, _) =>
                   ZIO.succeed(UnformattedTextValueInfo(valueHasLanguage))
                 case tv @ TextValueContentV2(_, _, textType, valueHasLanguage, _, Some(mappingIri), _, _, _) =>
-                  // TODO-BL: extract/refactor
                   // TODO-BL: add tests
                   // TODO-BL: read information from triplestore, don't infer it
-                  val standoffInfo = tv
-                    .prepareForSparqlInsert(newValueIri)
-                    .map(standoffTag =>
-                      val attributes = standoffTag.standoffNode.attributes.map { attr =>
-                        val v = attr match
-                          case StandoffTagIriAttributeV2(_, value, _) =>
-                            StandoffAttributeValue.IriAttribute(InternalIri(value))
-                          case StandoffTagUriAttributeV2(_, value) => StandoffAttributeValue.UriAttribute(value)
-                          case StandoffTagInternalReferenceAttributeV2(_, value) =>
-                            StandoffAttributeValue.InternalReferenceAttribute(InternalIri(value))
-                          case StandoffTagStringAttributeV2(_, value)  => StandoffAttributeValue.StringAttribute(value)
-                          case StandoffTagIntegerAttributeV2(_, value) => StandoffAttributeValue.IntegerAttribute(value)
-                          case StandoffTagDecimalAttributeV2(_, value) => StandoffAttributeValue.DecimalAttribute(value)
-                          case StandoffTagBooleanAttributeV2(_, value) => StandoffAttributeValue.BooleanAttribute(value)
-                          case StandoffTagTimeAttributeV2(_, value)    => StandoffAttributeValue.TimeAttribute(value)
-                        StandoffAttribute(InternalIri(attr.standoffPropertyIri.toString()), v)
-                      }
-                      StandoffTagInfo(
-                        standoffTagClassIri = InternalIri(standoffTag.standoffNode.standoffTagClassIri.toString()),
-                        standoffTagInstanceIri = InternalIri(standoffTag.standoffTagInstanceIri),
-                        startParentIri = standoffTag.startParentIri.map(InternalIri.apply),
-                        endParentIri = standoffTag.endParentIri.map(InternalIri.apply),
-                        uuid = standoffTag.standoffNode.uuid,
-                        originalXMLID = standoffTag.standoffNode.originalXMLID,
-                        startIndex = standoffTag.standoffNode.startIndex,
-                        endIndex = standoffTag.standoffNode.endIndex,
-                        startPosition = standoffTag.standoffNode.startPosition,
-                        endPosition = standoffTag.standoffNode.endPosition,
-                        attributes = attributes,
-                      ),
-                    )
-                  ZIO
-                    .whenCase(textType) {
-                      case TextValueType.FormattedText => ZIO.succeed(FormattedTextValueType.StandardMapping)
-                      case TextValueType.CustomFormattedText(mappingIri) =>
-                        ZIO.succeed(FormattedTextValueType.CustomMapping(mappingIri))
-                    }
-                    .someOrFail(StandoffInternalException("Text type does not match mapping information"))
-                    .flatMap { textType =>
-                      ZIO
-                        .fromOption(tv.computedMaxStandoffStartIndex)
-                        .orElseFail(StandoffInternalException("Max standoff start index not computed"))
-                        .map(standoffStartIndex =>
-                          FormattedTextValueInfo(
-                            valueHasLanguage,
-                            InternalIri(mappingIri),
-                            standoffStartIndex,
-                            standoffInfo,
-                            textType,
-                          ),
-                        )
-                    }
+                  generateFormattedTextValueInfo(tv, newValueIri, textType, valueHasLanguage, mappingIri)
                 case IntegerValueContentV2(_, valueHasInteger, _) =>
                   ZIO.succeed(IntegerValueInfo(valueHasInteger))
                 case DecimalValueContentV2(_, valueHasDecimal, _) =>
@@ -650,6 +598,67 @@ final case class CreateResourceV2Handler(
       valueInfos = newValueInfos,
       standoffLinks = linkUpdates,
     )
+  }
+
+  private def generateFormattedTextValueInfo(
+    tv: TextValueContentV2,
+    newValueIri: IRI,
+    textType: TextValueType,
+    valueHasLanguage: Option[String],
+    mappingIri: String,
+  ) = {
+    val standoffInfo = tv
+      .prepareForSparqlInsert(newValueIri)
+      .map(standoffTag =>
+        val attributes = standoffTag.standoffNode.attributes.map { attr =>
+          val v = attr match
+            case StandoffTagIriAttributeV2(_, value, _) =>
+              StandoffAttributeValue.IriAttribute(InternalIri(value))
+            case StandoffTagUriAttributeV2(_, value) => StandoffAttributeValue.UriAttribute(value)
+            case StandoffTagInternalReferenceAttributeV2(_, value) =>
+              StandoffAttributeValue.InternalReferenceAttribute(InternalIri(value))
+            case StandoffTagStringAttributeV2(_, value)  => StandoffAttributeValue.StringAttribute(value)
+            case StandoffTagIntegerAttributeV2(_, value) => StandoffAttributeValue.IntegerAttribute(value)
+            case StandoffTagDecimalAttributeV2(_, value) => StandoffAttributeValue.DecimalAttribute(value)
+            case StandoffTagBooleanAttributeV2(_, value) => StandoffAttributeValue.BooleanAttribute(value)
+            case StandoffTagTimeAttributeV2(_, value)    => StandoffAttributeValue.TimeAttribute(value)
+          StandoffAttribute(InternalIri(attr.standoffPropertyIri.toString()), v)
+        }
+        StandoffTagInfo(
+          standoffTagClassIri = InternalIri(standoffTag.standoffNode.standoffTagClassIri.toString()),
+          standoffTagInstanceIri = InternalIri(standoffTag.standoffTagInstanceIri),
+          startParentIri = standoffTag.startParentIri.map(InternalIri.apply),
+          endParentIri = standoffTag.endParentIri.map(InternalIri.apply),
+          uuid = standoffTag.standoffNode.uuid,
+          originalXMLID = standoffTag.standoffNode.originalXMLID,
+          startIndex = standoffTag.standoffNode.startIndex,
+          endIndex = standoffTag.standoffNode.endIndex,
+          startPosition = standoffTag.standoffNode.startPosition,
+          endPosition = standoffTag.standoffNode.endPosition,
+          attributes = attributes,
+        ),
+      )
+    ZIO
+      .whenCase(textType) {
+        case TextValueType.FormattedText => ZIO.succeed(FormattedTextValueType.StandardMapping)
+        case TextValueType.CustomFormattedText(mappingIri) =>
+          ZIO.succeed(FormattedTextValueType.CustomMapping(mappingIri))
+      }
+      .someOrFail(StandoffInternalException("Text type does not match mapping information"))
+      .flatMap { textType =>
+        ZIO
+          .fromOption(tv.computedMaxStandoffStartIndex)
+          .orElseFail(StandoffInternalException("Max standoff start index not computed"))
+          .map(standoffStartIndex =>
+            FormattedTextValueInfo(
+              valueHasLanguage,
+              InternalIri(mappingIri),
+              standoffStartIndex,
+              standoffInfo,
+              textType,
+            ),
+          )
+      }
   }
 
   /**
