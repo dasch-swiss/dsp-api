@@ -15,7 +15,6 @@ import zio.prelude.Validation
 
 import java.time.Instant
 import scala.collection.immutable
-
 import dsp.constants.SalsahGui
 import dsp.errors.*
 import org.knora.webapi.*
@@ -1178,13 +1177,18 @@ final case class OntologyResponderV2(
                                           }
 
         allBaseClassIris = internalClassIri +: allBaseClassIrisWithoutInternal
+        existingLinkPropsToKeep: Set[SmartIri] =
+          existingReadClassInfo.entityInfoContent.directCardinalities.keySet
+            .flatMap(p => cacheData.ontologies(p.getOntologyFromEntity).properties.get(p))
+            .filter(_.isLinkProp)
+            .map(_.entityInfoContent.propertyIri)
 
         cardinalityCheckResult <- OntologyHelpers
                                     .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
                                       internalClassDef = newInternalClassDef,
                                       allBaseClassIris = allBaseClassIris.toSet,
                                       cacheData = cacheData,
-                                      existingLinkPropsToKeep = existingReadClassInfo.linkProperties,
+                                      existingLinkPropsToKeep = existingLinkPropsToKeep,
                                     )
                                     .toZIO
         (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = cardinalityCheckResult
