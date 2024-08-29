@@ -10,6 +10,7 @@ import zio.ZLayer
 
 import java.time.Instant
 
+import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.admin.domain.model.Username
@@ -51,6 +52,8 @@ case class AuthenticationEndpointsV2Handler(
         }).mapBoth(
           _ => BadCredentialsException(BAD_CRED_NOT_VALID),
           (_, token) => setCookieAndResponse(token),
+        ).catchAllDefect(e =>
+          ZIO.fail(AuthenticationException("An internal error happened during authentication", Some(e))),
         )
       },
     )
