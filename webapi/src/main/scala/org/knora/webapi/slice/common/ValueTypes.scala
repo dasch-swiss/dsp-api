@@ -9,9 +9,14 @@ import zio.prelude.Validation
 
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 trait Value[A] extends Any {
   def value: A
+}
+
+trait InternalIriValue extends StringValue { self =>
+  def asInternalIri: InternalIri = InternalIri(self.value)
 }
 
 object Value {

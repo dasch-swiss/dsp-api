@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.repo.service.EntityWithId
 import org.knora.webapi.slice.common.IntValueCompanion
+import org.knora.webapi.slice.common.InternalIriValue
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.IntValue
@@ -139,7 +140,7 @@ object User {
   implicit val userCodec: JsonCodec[User] = DeriveJsonCodec.gen[User]
 }
 
-final case class UserIri private (value: String) extends StringValue
+final case class UserIri private (value: String) extends InternalIriValue
 
 object UserIri extends StringValueCompanion[UserIri] {
 

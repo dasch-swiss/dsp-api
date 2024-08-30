@@ -17,6 +17,7 @@ import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.repo.service.EntityWithId
+import org.knora.webapi.slice.common.InternalIriValue
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue
@@ -38,7 +39,7 @@ case class KnoraProject(
 
 object KnoraProject {
 
-  final case class ProjectIri private (override val value: String) extends StringValue {
+  final case class ProjectIri private (override val value: String) extends InternalIriValue {
     def isBuiltInProjectIri: Boolean = ProjectIri.isBuiltInProjectIri(value)
     def isRegularProjectIri: Boolean = !isBuiltInProjectIri
   }

@@ -162,7 +162,7 @@ final case class CreateResourceV2Handler(
   } yield ()
 
   private def makeTask(
-    createResourceRequestV2: CreateResourceRequestV2,
+    createRequest: CreateResourceRequestV2,
     resourceIri: IRI,
   ): Task[ReadResourcesSequenceV2] =
     for {
@@ -170,99 +170,70 @@ final case class CreateResourceV2Handler(
         ZIO
           .fail(DuplicateValueException(s"Resource IRI: '$resourceIri' already exists."))
           .whenZIO(iriService.checkIriExists(resourceIri))
+      requestingUser = createRequest.requestingUser
 
-      // Convert the resource to the internal ontology schema.
-      internalCreateResource <- ZIO.attempt(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
+      resource        <- ZIO.attempt(createRequest.createResource.toOntologySchema(InternalSchema))
+      resourceClassIri = resource.resourceClassIri
+      project          = resource.projectADM
+      projectIri       = project.projectIri
 
       // Check link targets and list nodes that should exist.
-      _ <- checkStandoffLinkTargets(
-             values = internalCreateResource.flatValues,
-             requestingUser = createResourceRequestV2.requestingUser,
-           )
-
-      _ <- checkListNodes(internalCreateResource.flatValues)
+      _ <- checkStandoffLinkTargets(resource.flatValues, requestingUser)
+      _ <- checkListNodes(resource.flatValues)
 
       // Get the class IRIs of all the link targets in the request.
-      linkTargetClasses <- getLinkTargetClasses(
-                             resourceIri: IRI,
-                             internalCreateResources = Seq(internalCreateResource),
-                             requestingUser = createResourceRequestV2.requestingUser,
-                           )
+      linkTargetClasses <- getLinkTargetClasses(resourceIri, Seq(resource), requestingUser)
 
       // Get the definitions of the resource class and its properties, as well as of the classes of all
       // resources that are link targets.
-      resourceClassEntityInfoResponse <-
-        messageRelay
-          .ask[EntityInfoGetResponseV2](
-            EntityInfoGetRequestV2(
-              classIris = linkTargetClasses.values.toSet + internalCreateResource.resourceClassIri,
-              requestingUser = createResourceRequestV2.requestingUser,
-            ),
-          )
+      resourceClassEntityInfo <- messageRelay
+                                   .ask[EntityInfoGetResponseV2](
+                                     EntityInfoGetRequestV2(
+                                       classIris = linkTargetClasses.values.toSet + resourceClassIri,
+                                       requestingUser = requestingUser,
+                                     ),
+                                   )
+      propertyEntityInfo <- messageRelay
+                              .ask[EntityInfoGetResponseV2](
+                                EntityInfoGetRequestV2(
+                                  propertyIris =
+                                    resourceClassEntityInfo.classInfoMap(resourceClassIri).knoraResourceProperties,
+                                  requestingUser = requestingUser,
+                                ),
+                              )
 
-      resourceClassInfo: ReadClassInfoV2 = resourceClassEntityInfoResponse.classInfoMap(
-                                             internalCreateResource.resourceClassIri,
-                                           )
+      allEntityInfo = EntityInfoGetResponseV2(resourceClassEntityInfo.classInfoMap, propertyEntityInfo.propertyInfoMap)
 
-      propertyEntityInfoResponse <-
-        messageRelay
-          .ask[EntityInfoGetResponseV2](
-            EntityInfoGetRequestV2(
-              propertyIris = resourceClassInfo.knoraResourceProperties,
-              requestingUser = createResourceRequestV2.requestingUser,
-            ),
-          )
-
-      allEntityInfo = EntityInfoGetResponseV2(
-                        classInfoMap = resourceClassEntityInfoResponse.classInfoMap,
-                        propertyInfoMap = propertyEntityInfoResponse.propertyInfoMap,
-                      )
-
-      // Get the default permissions of the resource class.
-      defaultResourcePermissionsMap <- getResourceClassDefaultPermissions(
-                                         projectIri = createResourceRequestV2.createResource.projectADM.id,
-                                         resourceClassIris = Set(internalCreateResource.resourceClassIri),
-                                         requestingUser = createResourceRequestV2.requestingUser,
-                                       )
-
-      // Get the default permissions of each property used.
-      defaultPropertyPermissionsMap <- getDefaultPropertyPermissions(
-                                         projectIri = createResourceRequestV2.createResource.projectADM.id,
-                                         resourceClassProperties = Map(
-                                           internalCreateResource.resourceClassIri -> internalCreateResource.values.keySet,
-                                         ),
-                                         requestingUser = createResourceRequestV2.requestingUser,
-                                       )
+      // Get the default permissions of the resource class and each property used.
+      defaultResourcePermissions <-
+        getResourceClassDefaultPermissions(projectIri.value, Set(resourceClassIri), requestingUser)
+          .map(_(resourceClassIri))
+      defaultPropertyPermissions <-
+        getDefaultPropertyPermissions(projectIri.value, Map(resourceClassIri -> resource.values.keySet), requestingUser)
+          .map(_(resourceClassIri))
 
       // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
       // for creating the resource.
-      resourceReadyToCreate <-
-        generateResourceReadyToCreate(
-          resourceIri = resourceIri,
-          internalCreateResource = internalCreateResource,
-          linkTargetClasses = linkTargetClasses,
-          entityInfo = allEntityInfo,
-          clientResourceIDs = Map.empty[IRI, String],
-          defaultResourcePermissions = defaultResourcePermissionsMap(internalCreateResource.resourceClassIri),
-          defaultPropertyPermissions = defaultPropertyPermissionsMap(internalCreateResource.resourceClassIri),
-          creationDate = internalCreateResource.creationDate.getOrElse(Instant.now),
-          requestingUser = createResourceRequestV2.requestingUser,
-        )
-
-      dataNamedGraph = ProjectService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM)
+      resourceReadyToCreate <- generateResourceReadyToCreate(
+                                 resourceIri,
+                                 resource,
+                                 linkTargetClasses,
+                                 allEntityInfo,
+                                 Map.empty[IRI, String],
+                                 defaultResourcePermissions,
+                                 defaultPropertyPermissions,
+                                 requestingUser,
+                               )
 
       _ <- resourcesRepo.createNewResource(
-             dataGraphIri = dataNamedGraph,
-             resource = resourceReadyToCreate,
-             projectIri = InternalIri(createResourceRequestV2.createResource.projectADM.id),
-             userIri = InternalIri(createResourceRequestV2.requestingUser.id),
+             ProjectService.projectDataNamedGraphV2(project),
+             resourceReadyToCreate,
+             projectIri.asInternalIri,
+             requestingUser.userIri.asInternalIri,
            )
 
       // Verify that the resource was created.
-      previewOfCreatedResource <- verifyResource(
-                                    resourceIri = resourceReadyToCreate.resourceIri.value,
-                                    requestingUser = createResourceRequestV2.requestingUser,
-                                  )
+      previewOfCreatedResource <- verifyResource(resourceReadyToCreate.resourceIri.value, requestingUser)
     } yield previewOfCreatedResource
 
   /**
@@ -279,7 +250,6 @@ final case class CreateResourceV2Handler(
    * @param defaultResourcePermissions the default permissions to be given to the resource, if it does not have custom permissions.
    * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
    *                                   have custom permissions. This is a map of property IRIs to permission strings.
-   * @param creationDate               the versionDate to be attached to the resource and its values.
    *
    * @param requestingUser             the user making the request.
    * @return a [[ResourceReadyToCreate]].
@@ -289,14 +259,14 @@ final case class CreateResourceV2Handler(
     internalCreateResource: CreateResourceV2,
     linkTargetClasses: Map[IRI, SmartIri],
     entityInfo: EntityInfoGetResponseV2,
-    clientResourceIDs: Map[IRI, String],
-    defaultResourcePermissions: String,
-    defaultPropertyPermissions: Map[SmartIri, String],
-    creationDate: Instant,
+    clientResourceIDs: Map[IRI, IRI],
+    defaultResourcePermissions: IRI,
+    defaultPropertyPermissions: Map[SmartIri, IRI],
     requestingUser: User,
-  ): Task[ResourceReadyToCreate] = {
+  ) = {
     val resourceIDForErrorMsg: String =
       clientResourceIDs.get(resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
+    val creationDate = internalCreateResource.creationDate.getOrElse(Instant.now)
 
     for {
       // Check that the resource class has a suitable cardinality for each submitted value.
