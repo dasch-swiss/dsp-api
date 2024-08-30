@@ -312,11 +312,13 @@ final case class CreateResourceV2Handler(
                                        cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne
                                      }.keySet -- resourceClassInfo.linkProperties
 
-      internalPropertyIris: Set[SmartIri] = internalCreateResource.values.keySet
+      propertiesWithoutValues: Set[SmartIri] = internalCreateResource.values.filter { case (_, values) =>
+                                                 values.nonEmpty
+                                               }.keySet
 
-      _ <- ZIO.when(!requiredProps.subsetOf(internalPropertyIris)) {
+      _ <- ZIO.when(!requiredProps.subsetOf(propertiesWithoutValues)) {
              val missingProps =
-               (requiredProps -- internalPropertyIris)
+               (requiredProps -- propertiesWithoutValues)
                  .map(iri => s"<${iri.toOntologySchema(ApiV2Complex)}>")
                  .mkString(", ")
              ZIO.fail(
@@ -904,7 +906,6 @@ final case class CreateResourceV2Handler(
    * Checks that a resource was created.
    *
    * @param resourceIri    the IRI of the resource that should have been created.
-   * @param projectIri     the IRI of the project in which the resource should have been created.
    * @param requestingUser the user that attempted to create the resource.
    * @return a preview of the resource that was created.
    */
