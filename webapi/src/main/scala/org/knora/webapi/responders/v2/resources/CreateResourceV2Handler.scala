@@ -41,7 +41,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -337,25 +336,21 @@ final case class CreateResourceV2Handler(
            }
 
       // Check that no required values are missing.
-
-      requiredProps: Set[SmartIri] = knoraPropertyCardinalities.filter { case (_, cardinalityInfo) =>
-                                       cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne
-                                     }.keySet -- resourceClassInfo.linkProperties
-      propertiesWithoutValues: Set[SmartIri] = internalCreateResource.values.filter { case (_, values) =>
-                                                 values.nonEmpty
-                                               }.keySet
-      _ <- ZIO.when(!requiredProps.subsetOf(propertiesWithoutValues)) {
-             val missingProps =
-               (requiredProps -- propertiesWithoutValues)
-                 .map(iri => s"<${iri.toOntologySchema(ApiV2Complex)}>")
-                 .mkString(", ")
-             ZIO.fail(
-               OntologyConstraintException(
-                 s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri
-                     .toOntologySchema(ApiV2Complex)}>: $missingProps",
-               ),
-             )
-           }
+      requiredProps = knoraPropertyCardinalities.filter { case (_, cardinality) =>
+                        cardinality.isRequired
+                      }.keySet -- resourceClassInfo.linkProperties
+      propsWithoutValues =
+        internalCreateResource.values.collect { case (key, values) if values.nonEmpty => key }.toSet
+      missingProps = requiredProps -- propsWithoutValues
+      _ <- ZIO.fail {
+             val externalResourceClassIri =
+               s"<${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2Complex)}>"
+             val externalMissingPropIris =
+               missingProps.map(iri => s"<${iri.toOntologySchema(ApiV2Complex)}>").mkString(", ")
+             val msg =
+               s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class $externalResourceClassIri: $externalMissingPropIris"
+             OntologyConstraintException(msg)
+           }.when(missingProps.nonEmpty)
 
       // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
       // point to it.
