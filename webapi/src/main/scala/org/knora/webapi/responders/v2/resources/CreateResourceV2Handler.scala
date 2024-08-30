@@ -341,12 +341,12 @@ final case class CreateResourceV2Handler(
       requiredProps: Set[SmartIri] = knoraPropertyCardinalities.filter { case (_, cardinalityInfo) =>
                                        cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne
                                      }.keySet -- resourceClassInfo.linkProperties
-
-      internalPropertyIris: Set[SmartIri] = internalCreateResource.values.keySet
-
-      _ <- ZIO.when(!requiredProps.subsetOf(internalPropertyIris)) {
+      propertiesWithoutValues: Set[SmartIri] = internalCreateResource.values.filter { case (_, values) =>
+                                                 values.nonEmpty
+                                               }.keySet
+      _ <- ZIO.when(!requiredProps.subsetOf(propertiesWithoutValues)) {
              val missingProps =
-               (requiredProps -- internalPropertyIris)
+               (requiredProps -- propertiesWithoutValues)
                  .map(iri => s"<${iri.toOntologySchema(ApiV2Complex)}>")
                  .mkString(", ")
              ZIO.fail(
