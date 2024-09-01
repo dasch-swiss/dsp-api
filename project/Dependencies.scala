@@ -36,7 +36,7 @@ object Dependencies {
   val zioConfig             = "dev.zio"                       %% "zio-config"                % ZioConfigVersion
   val zioConfigMagnolia     = "dev.zio"                       %% "zio-config-magnolia"       % ZioConfigVersion
   val zioConfigTypesafe     = "dev.zio"                       %% "zio-config-typesafe"       % ZioConfigVersion
-  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.2"
+  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.3"
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
