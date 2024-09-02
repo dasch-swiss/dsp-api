@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  *@
 
-@import org.knora.webapi.messages.SmartIri
-
 @*
  * Checks whether an entity is used (i.e. is the object of any statements).
  *

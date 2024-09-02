@@ -4,7 +4,6 @@
  *@
 
 @import org.knora.webapi._
-@import org.knora.webapi.messages.SmartIri
 
 @*
  * Constructs a Gravsearch query that returns all the knora-api:StillImageRepresentation resources
