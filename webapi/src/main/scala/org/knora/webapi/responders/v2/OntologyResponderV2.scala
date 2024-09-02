@@ -1178,13 +1178,18 @@ final case class OntologyResponderV2(
                                           }
 
         allBaseClassIris = internalClassIri +: allBaseClassIrisWithoutInternal
+        existingLinkPropsToKeep: Set[SmartIri] =
+          existingReadClassInfo.entityInfoContent.directCardinalities.keySet
+            .flatMap(p => cacheData.ontologies(p.getOntologyFromEntity).properties.get(p))
+            .filter(_.isLinkProp)
+            .map(_.entityInfoContent.propertyIri)
 
         cardinalityCheckResult <- OntologyHelpers
                                     .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
                                       internalClassDef = newInternalClassDef,
                                       allBaseClassIris = allBaseClassIris.toSet,
                                       cacheData = cacheData,
-                                      existingLinkPropsToKeep = existingReadClassInfo.linkProperties,
+                                      existingLinkPropsToKeep = existingLinkPropsToKeep,
                                     )
                                     .toZIO
         (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = cardinalityCheckResult
