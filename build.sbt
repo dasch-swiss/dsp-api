@@ -8,7 +8,7 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck;")
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
-val flywayVersion               = "10.17.1"
+val flywayVersion               = "10.17.2"
 val hikariVersion               = "5.1.0"
 val quillVersion                = "4.8.5"
 val sipiVersion                 = "v30.18.3"
@@ -17,12 +17,12 @@ val tapirVersion                = "1.11.1"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "4.0.2"
 val zioJsonVersion              = "0.7.2"
-val zioLoggingVersion           = "2.3.0"
+val zioLoggingVersion           = "2.3.1"
 val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
 val zioPreludeVersion           = "1.0.0-RC29"
-val zioVersion                  = "2.1.7"
+val zioVersion                  = "2.1.9"
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
 val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
@@ -109,7 +109,7 @@ lazy val root = (project in file("."))
       "dev.zio"      %% "zio-test-junit"         % zioVersion     % Test,
       "dev.zio"      %% "zio-test-magnolia"      % zioVersion     % Test,
       "dev.zio"      %% "zio-test-sbt"           % zioVersion     % Test,
-      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.1.0"        % Test,
+      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.1.1"        % Test,
     ),
     testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     Docker / dockerRepository            := Some("daschswiss"),
