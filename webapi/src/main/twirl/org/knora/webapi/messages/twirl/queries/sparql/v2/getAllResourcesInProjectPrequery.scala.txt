@@ -4,7 +4,6 @@
  *@
 
 @import org.knora.webapi._
-@import org.knora.webapi.messages.SmartIri
 
 @*
  * Constructs a prequery that gets all resources from the specified project

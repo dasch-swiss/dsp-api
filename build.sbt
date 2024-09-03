@@ -149,6 +149,7 @@ val customScalacOptions = Seq(
   "-unchecked",
   "-deprecation",
   "-Yresolve-term-conflict:package",
+  "-Wconf:src=target/.*:s", // silence TWIRL templates unused imports warnings
   "-Wunused:imports",
   "-Wunused:privates",
   "-Wunused:locals",
