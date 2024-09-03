@@ -122,6 +122,13 @@ object Vocabulary {
     val standoffTagHasUUID: Iri          = iri(kb + "standoffTagHasUUID")
     val standoffTagHasStart: Iri         = iri(kb + "standoffTagHasStart")
     val standoffTagHasEnd: Iri           = iri(kb + "standoffTagHasEnd")
+
+    val hasTextValueType: Iri = iri(kb + "hasTextValueType")
+
+    val UnformattedText: Iri     = iri(kb + "UnformattedText")
+    val FormattedText: Iri       = iri(kb + "FormattedText")
+    val CustomFormattedText: Iri = iri(kb + "CustomFormattedText")
+    val UndefinedTextType: Iri   = iri(kb + "UndefinedTextType")
   }
 
   object NamedGraphs {

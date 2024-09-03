@@ -54,6 +54,7 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.lists.domain.ListsService
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
@@ -1029,9 +1030,25 @@ final case class ConstructResponseUtilV2Live(
                       standoffAssertions = valueObject.standoff,
                       requestingUser = requestingUser,
                     )
+        textTypeInferred = mappingIri match
+                             case None                                              => TextValueType.UnformattedText
+                             case Some(OntologyConstants.KnoraBase.StandardMapping) => TextValueType.FormattedText
+                             case Some(iri)                                         => TextValueType.CustomFormattedText(InternalIri(iri))
+        textType = valueObject
+                     .maybeIriObject(OntologyConstants.KnoraBase.HasTextValueType.toSmartIri)
+                     .flatMap {
+                       case OntologyConstants.KnoraBase.UnformattedText => Some(TextValueType.UnformattedText)
+                       case OntologyConstants.KnoraBase.FormattedText   => Some(TextValueType.FormattedText)
+                       case OntologyConstants.KnoraBase.CustomFormattedText =>
+                         mappingIri.map(iri => TextValueType.CustomFormattedText(InternalIri(iri)))
+                       case OntologyConstants.KnoraBase.UndefinedTextType => None
+                       case _                                             => None
+                     }
+                     .getOrElse(textTypeInferred)
       } yield TextValueContentV2(
         ontologySchema = InternalSchema,
         maybeValueHasString = valueObjectValueHasString,
+        textValueType = textType,
         valueHasLanguage = valueLanguageOption,
         standoff = standoff,
         mappingIri = mappingIri,
@@ -1041,11 +1058,11 @@ final case class ConstructResponseUtilV2Live(
       )
     } else {
       // The query returned no standoff markup.
-
       ZIO.succeed(
         TextValueContentV2(
           ontologySchema = InternalSchema,
           maybeValueHasString = valueObjectValueHasString,
+          textValueType = TextValueType.UnformattedText,
           valueHasLanguage = valueLanguageOption,
           comment = valueCommentOption,
         ),
