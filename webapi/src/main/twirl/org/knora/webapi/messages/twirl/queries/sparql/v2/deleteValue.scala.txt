@@ -4,8 +4,6 @@
  *@
 
 @import java.time.Instant
-@import java.util.UUID
-@import dsp.valueobjects.UuidUtil
 @import org.knora.webapi._
 @import dsp.errors.SparqlGenerationException
 @import org.knora.webapi.messages.SmartIri
