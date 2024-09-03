@@ -37,6 +37,9 @@
         "knora-api:valueHasUUID": "0000000000e6e02fe3980w",
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
         "@type": "knora-api:TextValue",
+        "knora-api:hasTextValueType": {
+            "@id": "knora-api:UnformattedText"
+        },
         "@id": "http://rdfh.ch/0803/9935159f67/values/e6e02fe39801"
     },
     "knora-api:attachedToUser": {

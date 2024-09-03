@@ -65,6 +65,9 @@
         "knora-api:valueHasUUID": "IN4R19yYR0ygi3K2VEHpUQ",
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         "@type": "knora-api:TextValue",
+        "knora-api:hasTextValueType": {
+            "@id": "knora-api:UnformattedText"
+        },
         "@id": "http://rdfh.ch/0001/book-instance-04/values/has-title-value-04"
     },
     "knora-api:attachedToUser": {
