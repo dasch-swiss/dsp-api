@@ -25,8 +25,10 @@ import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
@@ -48,11 +50,13 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
 import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
 import org.knora.webapi.slice.resources.repo.model.StandoffLinkValueInfo
 import org.knora.webapi.slice.resources.repo.model.StandoffTagInfo
+import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
@@ -465,51 +469,17 @@ final case class CreateResourceV2Handler(
                       valueHasCalendar = valueHasCalendar,
                     ),
                   )
-                case TextValueContentV2(_, _, valueHasLanguage, _, None, _, _, _) =>
+                case TextValueContentV2(_, _, _, valueHasLanguage, _, None, _, _, _) =>
                   ZIO.succeed(UnformattedTextValueInfo(valueHasLanguage))
-                case tv @ TextValueContentV2(_, _, valueHasLanguage, _, Some(mappingIri), _, _, _) =>
-                  val standoffInfo = tv
-                    .prepareForSparqlInsert(newValueIri)
-                    .map(standoffTag =>
-                      val attributes = standoffTag.standoffNode.attributes.map { attr =>
-                        val v = attr match
-                          case StandoffTagIriAttributeV2(_, value, _) =>
-                            StandoffAttributeValue.IriAttribute(InternalIri(value))
-                          case StandoffTagUriAttributeV2(_, value) => StandoffAttributeValue.UriAttribute(value)
-                          case StandoffTagInternalReferenceAttributeV2(_, value) =>
-                            StandoffAttributeValue.InternalReferenceAttribute(InternalIri(value))
-                          case StandoffTagStringAttributeV2(_, value)  => StandoffAttributeValue.StringAttribute(value)
-                          case StandoffTagIntegerAttributeV2(_, value) => StandoffAttributeValue.IntegerAttribute(value)
-                          case StandoffTagDecimalAttributeV2(_, value) => StandoffAttributeValue.DecimalAttribute(value)
-                          case StandoffTagBooleanAttributeV2(_, value) => StandoffAttributeValue.BooleanAttribute(value)
-                          case StandoffTagTimeAttributeV2(_, value)    => StandoffAttributeValue.TimeAttribute(value)
-                        StandoffAttribute(InternalIri(attr.standoffPropertyIri.toString()), v)
-                      }
-                      StandoffTagInfo(
-                        standoffTagClassIri = InternalIri(standoffTag.standoffNode.standoffTagClassIri.toString()),
-                        standoffTagInstanceIri = InternalIri(standoffTag.standoffTagInstanceIri),
-                        startParentIri = standoffTag.startParentIri.map(InternalIri.apply),
-                        endParentIri = standoffTag.endParentIri.map(InternalIri.apply),
-                        uuid = standoffTag.standoffNode.uuid,
-                        originalXMLID = standoffTag.standoffNode.originalXMLID,
-                        startIndex = standoffTag.standoffNode.startIndex,
-                        endIndex = standoffTag.standoffNode.endIndex,
-                        startPosition = standoffTag.standoffNode.startPosition,
-                        endPosition = standoffTag.standoffNode.endPosition,
-                        attributes = attributes,
-                      ),
-                    )
-                  ZIO
-                    .fromOption(tv.computedMaxStandoffStartIndex)
-                    .orElseFail(StandoffInternalException("Max standoff start index not computed"))
-                    .map(standoffStartIndex =>
-                      FormattedTextValueInfo(
-                        valueHasLanguage,
-                        InternalIri(mappingIri),
-                        standoffStartIndex,
-                        standoffInfo,
-                      ),
-                    )
+                case tv @ TextValueContentV2(_, _, textType, valueHasLanguage, _, Some(mappingIri), _, _, _) =>
+                  val standoffTags = generateStandoffInfo(tv, newValueIri)
+                  generateFormattedTextValueInfo(
+                    standoffTags,
+                    tv.computedMaxStandoffStartIndex,
+                    textType,
+                    valueHasLanguage,
+                    mappingIri,
+                  )
                 case IntegerValueContentV2(_, valueHasInteger, _) =>
                   ZIO.succeed(IntegerValueInfo(valueHasInteger))
                 case DecimalValueContentV2(_, valueHasDecimal, _) =>
@@ -635,6 +605,68 @@ final case class CreateResourceV2Handler(
       standoffLinks = linkUpdates,
     )
   }
+
+  private def generateStandoffInfo(tv: TextValueContentV2, newValueIri: IRI): Seq[StandoffTagInfo] =
+    tv
+      .prepareForSparqlInsert(newValueIri)
+      .map(standoffTag =>
+        val attributes = standoffTag.standoffNode.attributes.map { attr =>
+          val v = attr match
+            case StandoffTagIriAttributeV2(_, value, _) =>
+              StandoffAttributeValue.IriAttribute(InternalIri(value))
+            case StandoffTagUriAttributeV2(_, value) => StandoffAttributeValue.UriAttribute(value)
+            case StandoffTagInternalReferenceAttributeV2(_, value) =>
+              StandoffAttributeValue.InternalReferenceAttribute(InternalIri(value))
+            case StandoffTagStringAttributeV2(_, value)  => StandoffAttributeValue.StringAttribute(value)
+            case StandoffTagIntegerAttributeV2(_, value) => StandoffAttributeValue.IntegerAttribute(value)
+            case StandoffTagDecimalAttributeV2(_, value) => StandoffAttributeValue.DecimalAttribute(value)
+            case StandoffTagBooleanAttributeV2(_, value) => StandoffAttributeValue.BooleanAttribute(value)
+            case StandoffTagTimeAttributeV2(_, value)    => StandoffAttributeValue.TimeAttribute(value)
+          StandoffAttribute(InternalIri(attr.standoffPropertyIri.toString()), v)
+        }
+        StandoffTagInfo(
+          standoffTagClassIri = InternalIri(standoffTag.standoffNode.standoffTagClassIri.toString()),
+          standoffTagInstanceIri = InternalIri(standoffTag.standoffTagInstanceIri),
+          startParentIri = standoffTag.startParentIri.map(InternalIri.apply),
+          endParentIri = standoffTag.endParentIri.map(InternalIri.apply),
+          uuid = standoffTag.standoffNode.uuid,
+          originalXMLID = standoffTag.standoffNode.originalXMLID,
+          startIndex = standoffTag.standoffNode.startIndex,
+          endIndex = standoffTag.standoffNode.endIndex,
+          startPosition = standoffTag.standoffNode.startPosition,
+          endPosition = standoffTag.standoffNode.endPosition,
+          attributes = attributes,
+        ),
+      )
+
+  private def generateFormattedTextValueInfo(
+    standoffInfo: Seq[StandoffTagInfo],
+    maxStandoffStartIndex: Option[Int],
+    textType: TextValueType,
+    valueHasLanguage: Option[String],
+    mappingIri: String,
+  ): IO[StandoffInternalException, TypeSpecificValueInfo] =
+    ZIO
+      .whenCase(textType) {
+        case TextValueType.FormattedText => ZIO.succeed(FormattedTextValueType.StandardMapping)
+        case TextValueType.CustomFormattedText(mappingIri) =>
+          ZIO.succeed(FormattedTextValueType.CustomMapping(mappingIri))
+      }
+      .someOrFail(StandoffInternalException("Text type does not match mapping information"))
+      .flatMap { textType =>
+        ZIO
+          .fromOption(maxStandoffStartIndex)
+          .orElseFail(StandoffInternalException("Max standoff start index not computed"))
+          .map(standoffStartIndex =>
+            FormattedTextValueInfo(
+              valueHasLanguage,
+              InternalIri(mappingIri),
+              standoffStartIndex,
+              standoffInfo,
+              textType,
+            ),
+          )
+      }
 
   /**
    * Given a sequence of resources to be created, gets the class IRIs of all the resources that are the targets of

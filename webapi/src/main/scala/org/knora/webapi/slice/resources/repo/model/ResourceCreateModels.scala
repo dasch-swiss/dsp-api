@@ -37,6 +37,11 @@ final case class ValueInfo(
   comment: Option[String],
 )
 
+enum FormattedTextValueType {
+  case StandardMapping
+  case CustomMapping(mappingIri: InternalIri)
+}
+
 enum TypeSpecificValueInfo {
   case LinkValueInfo(referredResourceIri: InternalIri)
   case UnformattedTextValueInfo(valueHasLanguage: Option[String])
@@ -45,6 +50,7 @@ enum TypeSpecificValueInfo {
     mappingIri: InternalIri,
     maxStandoffStartIndex: Int,
     standoff: Seq[StandoffTagInfo],
+    textValueType: FormattedTextValueType,
   )
   case IntegerValueInfo(valueHasInteger: Int)
   case DecimalValueInfo(valueHasDecimal: BigDecimal)

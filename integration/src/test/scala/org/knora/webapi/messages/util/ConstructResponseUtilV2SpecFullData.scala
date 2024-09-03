@@ -17,6 +17,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAttributeV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
 
@@ -267,6 +268,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 comment = None,
                 xslt = None,
                 mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                textValueType = TextValueType.FormattedText,
               ),
               valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/1",
               permissions = "CR knora-admin:Creator",
@@ -321,6 +323,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 comment = None,
                 xslt = None,
                 mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                textValueType = TextValueType.FormattedText,
               ),
               valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
               permissions = "CR knora-admin:Creator",
@@ -419,6 +422,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                             ontologySchema = InternalSchema,
                             maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
                             comment = None,
+                            textValueType = TextValueType.UnformattedText,
                           ),
                           valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
                           permissions =
@@ -512,6 +516,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                             ontologySchema = InternalSchema,
                             maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
                             comment = None,
+                            textValueType = TextValueType.UnformattedText,
                           ),
                           valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
                           permissions =
@@ -592,6 +597,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 ontologySchema = InternalSchema,
                 maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
                 comment = None,
+                textValueType = TextValueType.UnformattedText,
               ),
               valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
               permissions =
@@ -707,6 +713,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 ontologySchema = InternalSchema,
                 maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
                 comment = None,
+                textValueType = TextValueType.UnformattedText,
               ),
               valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
               permissions =
