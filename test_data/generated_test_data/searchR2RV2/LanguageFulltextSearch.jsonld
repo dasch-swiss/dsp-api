@@ -42,6 +42,9 @@
         "knora-api:valueHasUUID": "000000000000000000000w",
         "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
         "@type": "knora-api:TextValue",
+        "knora-api:hasTextValueType": {
+            "@id": "knora-api:UnformattedText"
+        },
         "@id": "http://rdfh.ch/0001/a-thing-with-text-valueslanguage/values/1"
     },
     "@type": "anything:Thing",

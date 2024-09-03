@@ -18,6 +18,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
 import org.knora.webapi.slice.resources.repo.model.StandoffAttributeValue
@@ -134,6 +135,7 @@ object TestData {
           ),
         ),
       ),
+      textValueType = FormattedTextValueType.StandardMapping,
     ),
     permissions = valuePermissions,
     creator = valueCreator,
@@ -535,6 +537,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:hasTextValueType knora-base:UnformattedText ;
             |            knora-base:valueHasLanguage "en" .
             |    }
             |}
@@ -543,7 +546,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
       val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
       assertUpdateQueriesEqual(expected, result)
     },
-    test("Create a new resource with an formatted text value") {
+    test("Create a new resource with a formatted text value") {
       val resource = resourceDefinition.copy(valueInfos = List(formattedTextValueDefinition))
       val expected = Update(
         s"""|
@@ -571,6 +574,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
             |            knora-base:valueHasMapping <foo:MappingIri> ;
+            |            knora-base:hasTextValueType knora-base:FormattedText ;
             |            knora-base:valueHasMaxStandoffStartIndex 0 ;
             |            knora-base:valueHasLanguage "en" ;
             |            knora-base:valueHasStandoff <foo:StandoffTagInstanceIri> .

@@ -30,6 +30,9 @@
         },
         "knora-api:valueHasUUID": "rvB4eQ5MTF-Qxq0YgkwaDg",
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        "knora-api:hasTextValueType": {
+            "@id": "knora-api:FormattedText"
+        },
         "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/rvB4eQ5MTF-Qxq0YgkwaDg",
         "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>test with <strong>markup</strong></p></text>",
         "@type": "knora-api:TextValue"
@@ -63,6 +66,9 @@
         "knora-api:valueHasUUID": "SZyeLLmOTcCCuS3B0VksHQ",
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         "@type": "knora-api:TextValue",
+        "knora-api:hasTextValueType": {
+            "@id": "knora-api:UnformattedText"
+        },
         "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/SZyeLLmOTcCCuS3B0VksHQ"
     },
     "@type": "anything:Thing",
