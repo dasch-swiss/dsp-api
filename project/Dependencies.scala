@@ -24,12 +24,12 @@ object Dependencies {
   val Rdf4jVersion      = "5.0.2"
 
   val ZioConfigVersion            = "4.0.2"
-  val ZioLoggingVersion           = "2.3.0"
+  val ZioLoggingVersion           = "2.3.1"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC29"
+  val ZioPreludeVersion           = "1.0.0-RC30"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.1.7"
+  val ZioVersion                  = "2.1.9"
 
   // ZIO
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
@@ -80,7 +80,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.1"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.3.1" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.3.3" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
