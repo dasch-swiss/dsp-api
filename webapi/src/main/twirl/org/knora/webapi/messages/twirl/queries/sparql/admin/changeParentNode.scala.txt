@@ -4,7 +4,6 @@
  *@
 
 @import org.knora.webapi.IRI
-@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 @**
  * Changes the parent node of an existing node.

@@ -60,6 +60,9 @@
                 "knora-api:valueHasUUID": "00000000002d55be9d3d2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                 "@type": "knora-api:TextValue",
+                "knora-api:hasTextValueType": {
+                    "@id": "knora-api:UnformattedText"
+                },
                 "@id": "http://rdfh.ch/0803/6ad3e2c47501/values/2d55be9d3d25"
             },
             "knora-api:creationDate": {
@@ -108,6 +111,9 @@
                 "knora-api:valueHasUUID": "000000000016bfda32332w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                 "@type": "knora-api:TextValue",
+                "knora-api:hasTextValueType": {
+                    "@id": "knora-api:UnformattedText"
+                },
                 "@id": "http://rdfh.ch/0803/7e4cfc5417/values/16bfda323323"
             },
             "knora-api:creationDate": {
@@ -156,6 +162,9 @@
                 "knora-api:valueHasUUID": "00000000009becc538942w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                 "@type": "knora-api:TextValue",
+                "knora-api:hasTextValueType": {
+                    "@id": "knora-api:UnformattedText"
+                },
                 "@id": "http://rdfh.ch/0803/ad88963d2703/values/9becc5389426"
             },
             "knora-api:creationDate": {
@@ -204,6 +213,9 @@
                 "knora-api:valueHasUUID": "000000000056665e77ef2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                 "@type": "knora-api:TextValue",
+                "knora-api:hasTextValueType": {
+                    "@id": "knora-api:UnformattedText"
+                },
                 "@id": "http://rdfh.ch/0803/b603c6886d01/values/56665e77ef24"
             },
             "knora-api:creationDate": {

@@ -4,7 +4,6 @@
  *@
 
 @import org.knora.webapi.IRI
-@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 @**
  * Delete a node (root or child). If a child node is deleted, remove it from the list of its parent's sublist nodes.

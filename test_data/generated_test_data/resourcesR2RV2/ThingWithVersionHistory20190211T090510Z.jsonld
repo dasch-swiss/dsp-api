@@ -62,6 +62,9 @@
         "knora-api:valueHasUUID": "W5fm67e0QDWxRZumcXcs6g",
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
         "@type": "knora-api:TextValue",
+        "knora-api:hasTextValueType": {
+            "@id": "knora-api:UnformattedText"
+        },
         "@id": "http://rdfh.ch/0001/thing-with-history/values/2a"
     },
     "@type": "anything:Thing",

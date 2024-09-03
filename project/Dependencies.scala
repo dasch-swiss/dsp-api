@@ -24,19 +24,19 @@ object Dependencies {
   val Rdf4jVersion      = "5.0.2"
 
   val ZioConfigVersion            = "4.0.2"
-  val ZioLoggingVersion           = "2.3.0"
+  val ZioLoggingVersion           = "2.3.1"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC30"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.1.7"
+  val ZioVersion                  = "2.1.9"
 
   // ZIO
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
   val zioConfig             = "dev.zio"                       %% "zio-config"                % ZioConfigVersion
   val zioConfigMagnolia     = "dev.zio"                       %% "zio-config-magnolia"       % ZioConfigVersion
   val zioConfigTypesafe     = "dev.zio"                       %% "zio-config-typesafe"       % ZioConfigVersion
-  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.2"
+  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.3"
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
@@ -47,7 +47,7 @@ object Dependencies {
   // refined
   val refined = Seq(
     "eu.timepit" %% "refined"                  % "0.11.2",
-    "dev.zio"    %% "zio-json-interop-refined" % "0.7.2",
+    "dev.zio"    %% "zio-json-interop-refined" % "0.7.3",
   )
 
   // zio-test and friends
@@ -80,7 +80,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.1"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.3.1" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.3.3" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -113,7 +113,7 @@ object Dependencies {
   val wiremock       = "org.wiremock"       % "wiremock"       % "3.9.1"
 
   // found/added by the plugin but deleted anyway
-  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.16.0"
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
   val tapirVersion = "1.11.1"
 
