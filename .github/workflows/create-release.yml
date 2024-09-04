@@ -21,13 +21,13 @@ jobs:
           package-name: dsp-api
           pull-request-title-pattern: "chore${scope}: Release${component} ${version}"
           changelog-types: '[
-              {"type": "build", "section": "Maintenances",
-              {"type": "chore", "section": "Maintenances",
-              {"type": "docs", "section": "Documentation",
-              {"type": "feat", "section": "Enhancements",
-              {"type": "fix", "section": "Bug Fixes",
-              {"type": "perf", "section": "Performance Improvements",
-              {"type": "refactor", "section": "Maintenances",
-              {"type": "test", "section": "Tests",
-              {"type": "deprecated", "section": "Deprecated"
+              {"type": "build", "section": "Maintenances"},
+              {"type": "chore", "section": "Maintenances"},
+              {"type": "docs", "section": "Documentation"},
+              {"type": "feat", "section": "Enhancements"},
+              {"type": "fix", "section": "Bug Fixes"},
+              {"type": "perf", "section": "Performance Improvements"},
+              {"type": "refactor", "section": "Maintenances"},
+              {"type": "test", "section": "Tests"},
+              {"type": "deprecated", "section": "Deprecated"}
             ]'
