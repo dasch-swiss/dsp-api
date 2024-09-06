@@ -1938,6 +1938,7 @@ object OwlCardinality extends Enumeration {
     def equalsWithoutGuiOrder(that: KnoraCardinalityInfo): Boolean =
       that.cardinality == cardinality
 
+    def isRequired: Boolean = cardinality.isRequired
   }
 
   /**
