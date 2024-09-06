@@ -21,8 +21,18 @@ object AssetFilenameSpec extends ZIOSpecDefault {
         "Raemy_Gautschy_Elaboration d'un processus pour les images 3D reposant sur IIIF_Humanistica2023.pdf",
         "70. Oratorio di Giovanni  Frammento con Gesù dell'ingresso a Gerusalemme .jpg",
         "disegni e copie, Vat.lat.9849, f. 66r. (cf emerick nota 92)jpg.jpg",
-        "öäüß.jpg",
-        "éèêëàâæçîïôœùûüÿ.png",
+        "öäüßÖÄÜ.jpg",                          // German alphabet
+        "éèêëàâæçîïôœùûüÿÉÈÊËÀÂÆÇÎÏÔŒÙÛÜŸ.png", // Other Latin characters
+        "= `'+?!<>|.jpg",                       // Special characters
+        "漢字.jpg",                               // Kanji
+        "ひらがな.jpg",                             // Hiragana
+        "カタカナ.jpg",                             // Katakana
+        "한글.jpg",                               // Hangul
+        "አማርኛ.jpg",                             // Amharic
+        "العربية.jpg",                          // Arabic
+        "հայերեն.jpg",                          // Armenian
+        "български.jpg",                        // Bulgarian
+        "中文.jpg",                               // Chinese
       )
       check(Gen.fromIterable(validFilenames)) { str =>
         val actual: Either[String, String] = AssetFilename.from(str).map(_.value)
@@ -54,8 +64,9 @@ object AssetFilenameSpec extends ZIOSpecDefault {
     },
     test("should not allow invalid characters ") {
       val filenamesWithInvalidCharacters = Seq(
-        "Foo >.png",
-        "Foo <.png",
+        "Foo#.png",
+        "Foo$.png",
+        "\uD83D\uDC4D.png", // Thumbs up emoji
       )
       check(Gen.fromIterable(filenamesWithInvalidCharacters)) { str =>
         val actual: Either[String, String] = AssetFilename.from(str).map(_.value)

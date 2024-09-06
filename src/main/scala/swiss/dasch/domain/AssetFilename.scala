@@ -13,7 +13,7 @@ final case class AssetFilename private (value: String) extends AnyVal
 
 object AssetFilename {
   // Allow letters, numbers, underscores, hyphens, spaces, full stops, comma, single quote, apostrophe and braces
-  private val regex = """^[\p{L}\p{N}_\- .,'`()]+$""".r
+  private val regex = """^[\p{L}\p{N}_\- .,'`()+=!?<>|]+$""".r
 
   def from(valueUnnormalized: String): Either[String, AssetFilename] = {
     val value       = Normalizer.normalize(valueUnnormalized, Normalizer.Form.NFC)
