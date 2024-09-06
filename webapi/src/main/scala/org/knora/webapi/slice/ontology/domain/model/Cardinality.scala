@@ -37,13 +37,6 @@ sealed trait Cardinality {
   }
 
   /**
-   * Checks whether for this cardinality a value is required.
-   *
-   * @return `true` if the cardinality is required, `false` otherwise.
-   */
-  def isRequired: Boolean = min > 0
-
-  /**
    * Negated check for [[Cardinality.isIncludedIn(org.knora.webapi.slice.ontology.domain.model.Cardinality)]]
    *
    * @param other The cardinality to be compared against.

@@ -727,16 +727,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser,
+      val actual = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingNonAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
+      assertFailsWithA[ForbiddenException](actual)
     }
 
     "create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name" in {
@@ -793,24 +789,21 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        val property         = externalOntology.properties(propertyIri)
-        property.entityInfoContent should ===(propertyInfoContent)
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val externalOntology = msg.toOntologySchema(ApiV2Complex)
+      val property         = externalOntology.properties(propertyIri)
+      property.entityInfoContent should ===(propertyInfoContent)
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
 
       // Reload the ontology cache and see if we get the same result.
       UnsafeZioRun.runOrThrow(
@@ -882,26 +875,23 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        val property         = externalOntology.properties(propertyIri)
-        assert(property.isLinkProp)
-        assert(!property.isLinkValueProp)
-        externalOntology.properties(propertyIri).entityInfoContent should ===(propertyInfoContent)
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val externalOntology = msg.toOntologySchema(ApiV2Complex)
+      val property         = externalOntology.properties(propertyIri)
+      assert(property.isLinkProp)
+      assert(!property.isLinkValueProp)
+      externalOntology.properties(propertyIri).entityInfoContent should ===(propertyInfoContent)
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
 
       // Check that the link value property was created.
 
@@ -1096,28 +1086,25 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = comicAuthorPropertyInfoContent,
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(comicAuthorPropertyInfoContent, freetestLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        val property         = externalOntology.properties(comicAuthorPropertyIri)
-        assert(property.isLinkProp)
-        assert(!property.isLinkValueProp)
-        externalOntology.properties(comicAuthorPropertyIri).entityInfoContent should ===(
-          comicAuthorPropertyInfoContent,
-        )
-        val metadata = externalOntology.ontologyMetadata
-        val newFreetestLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
-        freetestLastModDate = newFreetestLastModDate
-      }
+      val externalOntology = msg.toOntologySchema(ApiV2Complex)
+      val property         = externalOntology.properties(comicAuthorPropertyIri)
+      assert(property.isLinkProp)
+      assert(!property.isLinkValueProp)
+      externalOntology.properties(comicAuthorPropertyIri).entityInfoContent should ===(
+        comicAuthorPropertyInfoContent,
+      )
+      val metadata = externalOntology.ontologyMetadata
+      val newFreetestLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+      freetestLastModDate = newFreetestLastModDate
 
       // Add new subproperty freetest:hasComicBookAuthor to class freetest:ComicBook
 
@@ -1207,16 +1194,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a property with the wrong rdf:type" in {
@@ -1255,16 +1238,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a property that already exists" in {
@@ -1303,16 +1282,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a property with a nonexistent Knora superproperty" in {
@@ -1351,16 +1326,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a property that is not a subproperty of knora-api:hasValue or knora-api:hasLinkTo" in {
@@ -1399,16 +1370,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a property that is a subproperty of both knora-api:hasValue and knora-api:hasLinkTo" in {
@@ -1450,16 +1417,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a property with a knora-base:subjectType that refers to a nonexistent class" in {
@@ -1498,16 +1461,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a property with a knora-base:objectType that refers to a nonexistent class" in {
@@ -1549,17 +1508,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a subproperty of anything:hasInteger with a knora-base:subjectType of knora-api:Representation" in {
@@ -1598,16 +1552,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a file value property" in {
@@ -1646,16 +1596,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not directly create a link value property" in {
@@ -1694,16 +1640,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not directly create a property with a knora-api:objectType of knora-api:LinkValue" in {
@@ -1742,16 +1684,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a property with a knora-api:objectType of xsd:string" in {
@@ -1790,16 +1728,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a property whose object type is knora-api:StillImageFileValue" in {
@@ -1838,16 +1772,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a property whose object type is a Knora resource class if the property isn't a subproperty of knora-api:hasLinkValue" in {
@@ -1886,16 +1816,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a link property whose object type is knora-api:TextValue" in {
@@ -1934,16 +1860,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a subproperty of anything:hasText with a knora-api:objectType of knora-api:IntegerValue" in {
@@ -1982,17 +1904,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a subproperty of anything:hasBlueThing with a knora-api:objectType of anything:Thing" in {
@@ -2031,17 +1948,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not allow a user to change the labels of a property if they are not a sysadmin or an admin in the ontology's project" in {
@@ -2748,28 +2660,25 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = partOfPropertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(partOfPropertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(partOfPropertyIri)
-        // check that partOf is a subproperty of knora-api:isPartOf
-        property.entityInfoContent.subPropertyOf.contains(
-          OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri,
-        ) should ===(true)
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val externalOntology = msg.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.properties.size == 1)
+      val property = externalOntology.properties(partOfPropertyIri)
+      // check that partOf is a subproperty of knora-api:isPartOf
+      property.entityInfoContent.subPropertyOf.contains(
+        OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri,
+      ) should ===(true)
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
 
       // Check that the corresponding partOfValue was created
       val partOfValuePropertyIri = AnythingOntologyIri.makeEntityIri("partOfValue")
@@ -3837,10 +3746,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not create a property if rdfs:label is missing" in {
-      val invalid   = validPropertyInfo.copy(predicates = validPropertyInfo.predicates - Rdfs.Label.toSmartIri)
-      val createReq = CreatePropertyRequestV2(invalid, anythingLastModDate, UUID.randomUUID, anythingAdminUser)
+      val invalid = validPropertyInfo.copy(predicates = validPropertyInfo.predicates - Rdfs.Label.toSmartIri)
       assertFailsWithA[BadRequestException](
-        UnsafeZioRun.run(ontologyResponder(_.createProperty(createReq))),
+        UnsafeZioRun.run(
+          ontologyResponder(_.createProperty(invalid, anythingLastModDate, UUID.randomUUID, anythingAdminUser)),
+        ),
         s"Missing ${Rdfs.Label}",
       )
     }
@@ -3853,9 +3763,10 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             PredicateInfoV2(Rdfs.Label.toSmartIri, List(StringLiteralV2.unsafeFrom("foo", None))),
           ),
         )
-      val createReq = CreatePropertyRequestV2(invalid, anythingLastModDate, UUID.randomUUID, anythingAdminUser)
       assertFailsWithA[BadRequestException](
-        UnsafeZioRun.run(ontologyResponder(_.createProperty(createReq))),
+        UnsafeZioRun.run(
+          ontologyResponder(_.createProperty(invalid, anythingLastModDate, UUID.randomUUID, anythingAdminUser)),
+        ),
         s"All values of ${Rdfs.Label} must be string literals with a language code",
       )
     }
@@ -3868,9 +3779,10 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             PredicateInfoV2(Rdfs.Comment.toSmartIri, List(StringLiteralV2.unsafeFrom("foo", None))),
           ),
         )
-      val createReq = CreatePropertyRequestV2(invalid, anythingLastModDate, UUID.randomUUID, anythingAdminUser)
       assertFailsWithA[BadRequestException](
-        UnsafeZioRun.run(ontologyResponder(_.createProperty(createReq))),
+        UnsafeZioRun.run(
+          ontologyResponder(_.createProperty(invalid, anythingLastModDate, UUID.randomUUID, anythingAdminUser)),
+        ),
         s"All values of ${Rdfs.Comment} must be string literals with a language code",
       )
     }
@@ -3916,26 +3828,23 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(propertyIri)
-        property.entityInfoContent should ===(propertyInfoContent)
+      val externalOntology = msg.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.properties.size == 1)
+      val property = externalOntology.properties(propertyIri)
+      property.entityInfoContent should ===(propertyInfoContent)
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "change the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
@@ -4088,16 +3997,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a class called anything:hasNothingness, because that IRI is already used for a property" in {
@@ -4344,22 +4249,18 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        val metadata         = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val externalOntology = msg.toOntologySchema(ApiV2Complex)
+      val metadata         = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
 
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
@@ -4620,26 +4521,22 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
+      val externalOntology = msg.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.properties.size == 1)
+      val property = externalOntology.properties(propertyIri)
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(propertyIri)
-
-        property.entityInfoContent should ===(propertyInfoContent)
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      property.entityInfoContent should ===(propertyInfoContent)
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "add a cardinality for the property anything:hasEmptiness to the class anything:Nothing" in {
@@ -5186,16 +5083,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create property with a subject type defined in a non-shared ontology in another project" in {
@@ -5234,16 +5127,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create property with an object type defined in a non-shared ontology in another project" in {
@@ -5278,16 +5167,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "create a class anything:AnyBox1 as a subclass of example-box:Box" in {
@@ -5450,26 +5335,22 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
+      val externalOntology = msg.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.properties.size == 1)
+      val property = externalOntology.properties(propertyIri)
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(propertyIri)
-
-        property.entityInfoContent should ===(propertyInfoContent)
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      property.entityInfoContent should ===(propertyInfoContent)
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "delete the property anything:hasAnyName" in {
@@ -5524,26 +5405,22 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
+      val externalOntology = msg.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.properties.size == 1)
+      val property = externalOntology.properties(propertyIri)
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(propertyIri)
-
-        property.entityInfoContent should ===(propertyInfoContent)
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      property.entityInfoContent should ===(propertyInfoContent)
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "delete the property anything:BoxHasBoolean" in {
@@ -5594,26 +5471,23 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(propertyIri)
+      val externalOntology = msg.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.properties.size == 1)
+      val property = externalOntology.properties(propertyIri)
 
-        property.entityInfoContent should ===(propertyInfoContent)
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      property.entityInfoContent should ===(propertyInfoContent)
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "delete the property anything:hasBox" in {
@@ -5684,161 +5558,166 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Create a text property.
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = (anythingOntology + "testTextProp").toSmartIri,
-          predicates = Map(
-            "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "test text property",
-                  language = Some("en"),
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(
+            propertyInfoContent = PropertyInfoContentV2(
+              propertyIri = (anythingOntology + "testTextProp").toSmartIri,
+              predicates = Map(
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                  objects = Vector(
+                    StringLiteralV2.from(
+                      value = "test text property",
+                      language = Some("en"),
+                    ),
+                  ),
+                ),
+                "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
+                  objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri)),
+                ),
+                "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+                  objects = Vector(
+                    StringLiteralV2.from(
+                      value = "A test text property",
+                      language = Some("en"),
+                    ),
+                  ),
+                ),
+                "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
+                  objects =
+                    Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri)),
+                ),
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                  objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
                 ),
               ),
+              subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
+              ontologySchema = ApiV2Complex,
             ),
-            "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri)),
-            ),
-            "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "A test text property",
-                  language = Some("en"),
-                ),
-              ),
-            ),
-            "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri)),
-            ),
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
-            ),
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
           ),
-          subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
-          ontologySchema = ApiV2Complex,
         ),
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
-          .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
+        .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
 
       // Create an integer property.
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = (anythingOntology + "testIntProp").toSmartIri,
-          predicates = Map(
-            "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "test int property",
-                  language = Some("en"),
+      val msg2 = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(
+            propertyInfoContent = PropertyInfoContentV2(
+              propertyIri = (anythingOntology + "testIntProp").toSmartIri,
+              predicates = Map(
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                  objects = Vector(
+                    StringLiteralV2.from(
+                      value = "test int property",
+                      language = Some("en"),
+                    ),
+                  ),
+                ),
+                "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
+                  objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri)),
+                ),
+                "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+                  objects = Vector(
+                    StringLiteralV2.from(
+                      value = "A test int property",
+                      language = Some("en"),
+                    ),
+                  ),
+                ),
+                "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
+                  objects =
+                    Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#IntValue".toSmartIri)),
+                ),
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                  objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
                 ),
               ),
+              subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
+              ontologySchema = ApiV2Complex,
             ),
-            "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri)),
-            ),
-            "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "A test int property",
-                  language = Some("en"),
-                ),
-              ),
-            ),
-            "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#IntValue".toSmartIri)),
-            ),
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
-            ),
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
           ),
-          subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
-          ontologySchema = ApiV2Complex,
         ),
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
-          .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val newAnythingLastModDate2 = msg2.ontologyMetadata.lastModificationDate
+        .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
+      assert(newAnythingLastModDate2.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate2
 
       // Create a link property.
-
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = (anythingOntology + "testLinkProp").toSmartIri,
-          predicates = Map(
-            "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "test link property",
-                  language = Some("en"),
+      val msg3 = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(
+            propertyInfoContent = PropertyInfoContentV2(
+              propertyIri = (anythingOntology + "testLinkProp").toSmartIri,
+              predicates = Map(
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                  objects = Vector(
+                    StringLiteralV2.from(
+                      value = "test link property",
+                      language = Some("en"),
+                    ),
+                  ),
+                ),
+                "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
+                  objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri)),
+                ),
+                "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+                  objects = Vector(
+                    StringLiteralV2.from(
+                      value = "A test link property",
+                      language = Some("en"),
+                    ),
+                  ),
+                ),
+                "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
+                  objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri)),
+                ),
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                  objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
                 ),
               ),
+              subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasLinkTo".toSmartIri),
+              ontologySchema = ApiV2Complex,
             ),
-            "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri)),
-            ),
-            "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "A test link property",
-                  language = Some("en"),
-                ),
-              ),
-            ),
-            "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri)),
-            ),
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
-            ),
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
           ),
-          subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasLinkTo".toSmartIri),
-          ontologySchema = ApiV2Complex,
         ),
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
-          .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val newAnythingLastModDate3 = msg3.ontologyMetadata.lastModificationDate
+        .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
+      assert(newAnythingLastModDate3.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate3
 
       // Add cardinalities to the class.
 
@@ -5983,114 +5862,120 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Create a text property.
-
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri,
-          predicates = Map(
-            "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "blue test text property",
-                  language = Some("en"),
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(
+            propertyInfoContent = PropertyInfoContentV2(
+              propertyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri,
+              predicates = Map(
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                  objects = Vector(
+                    StringLiteralV2.from(
+                      value = "blue test text property",
+                      language = Some("en"),
+                    ),
+                  ),
+                ),
+                "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
+                  objects = Vector(
+                    SmartIriLiteralV2(value =
+                      "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
+                    ),
+                  ),
+                ),
+                "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+                  objects = Vector(
+                    StringLiteralV2.from(
+                      value = "A blue test text property",
+                      language = Some("en"),
+                    ),
+                  ),
+                ),
+                "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
+                  objects =
+                    Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri)),
+                ),
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                  objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
                 ),
               ),
+              subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
+              ontologySchema = ApiV2Complex,
             ),
-            "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects = Vector(
-                SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri),
-              ),
-            ),
-            "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "A blue test text property",
-                  language = Some("en"),
-                ),
-              ),
-            ),
-            "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri)),
-            ),
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
-            ),
+            lastModificationDate = freetestLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
           ),
-          subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
-          ontologySchema = ApiV2Complex,
         ),
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val newFreetestLastModDate = msg.ontologyMetadata.lastModificationDate
-          .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
-        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
-        freetestLastModDate = newFreetestLastModDate
-      }
+      val newFreetestLastModDate = msg.ontologyMetadata.lastModificationDate
+        .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
+      assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+      freetestLastModDate = newFreetestLastModDate
 
       // Create an integer property.
-
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestIntProp".toSmartIri,
-          predicates = Map(
-            "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "blue test integer property",
-                  language = Some("en"),
+      val msg2 = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(
+            propertyInfoContent = PropertyInfoContentV2(
+              propertyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestIntProp".toSmartIri,
+              predicates = Map(
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                  objects = Vector(
+                    StringLiteralV2.from(
+                      value = "blue test integer property",
+                      language = Some("en"),
+                    ),
+                  ),
+                ),
+                "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
+                  objects = Vector(
+                    SmartIriLiteralV2(value =
+                      "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
+                    ),
+                  ),
+                ),
+                "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+                  objects = Vector(
+                    StringLiteralV2.from(
+                      value = "A blue test integer property",
+                      language = Some("en"),
+                    ),
+                  ),
+                ),
+                "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
+                  objects =
+                    Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#IntValue".toSmartIri)),
+                ),
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                  predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                  objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
                 ),
               ),
+              subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
+              ontologySchema = ApiV2Complex,
             ),
-            "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects = Vector(
-                SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri),
-              ),
-            ),
-            "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "A blue test integer property",
-                  language = Some("en"),
-                ),
-              ),
-            ),
-            "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#IntValue".toSmartIri)),
-            ),
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
-            ),
+            lastModificationDate = freetestLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
           ),
-          subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
-          ontologySchema = ApiV2Complex,
         ),
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val newFreetestLastModDate = msg.ontologyMetadata.lastModificationDate
-          .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
-        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
-        freetestLastModDate = newFreetestLastModDate
-      }
+      val newFreetestLastModDate2 = msg2.ontologyMetadata.lastModificationDate
+        .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
+      assert(newFreetestLastModDate2.isAfter(freetestLastModDate))
+      freetestLastModDate = newFreetestLastModDate2
 
       // Add cardinalities to the class.
 
@@ -6350,26 +6235,21 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.createProperty(propertyInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+        ),
       )
 
-      // check if property was created correctly
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
-        val property: ReadPropertyInfoV2     = externalOntology.properties(propertyIri)
-        property.entityInfoContent should ===(propertyInfoContent)
-        val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
-        val newAnythingLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-
-      }
+      val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
+      val property: ReadPropertyInfoV2     = externalOntology.properties(propertyIri)
+      property.entityInfoContent should ===(propertyInfoContent)
+      val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
+      val newAnythingLastModDate: Instant = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "add property anything:hasFoafName to the class anything:FoafPerson" in {

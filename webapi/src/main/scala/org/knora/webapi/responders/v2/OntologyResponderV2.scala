@@ -14,6 +14,7 @@ import zio.ZLayer
 import zio.prelude.Validation
 
 import java.time.Instant
+import java.util.UUID
 import scala.collection.immutable
 
 import dsp.constants.SalsahGui
@@ -1930,9 +1931,17 @@ final case class OntologyResponderV2(
    * @param createPropertyRequest the request to create the property.
    * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new property.
    */
-  def createProperty(createPropertyRequest: CreatePropertyRequestV2): Task[ReadOntologyV2] = {
+  def createProperty(req: CreatePropertyRequestV2): Task[ReadOntologyV2] =
+    createProperty(req.propertyInfoContent, req.lastModificationDate, req.apiRequestID, req.requestingUser)
+
+  def createProperty(
+    propertyInfoContent: PropertyInfoContentV2,
+    lastModificationDate: Instant,
+    apiRequestID: UUID,
+    requestingUser: User,
+  ): Task[ReadOntologyV2] = {
     def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] = {
-      val predicates = createPropertyRequest.propertyInfoContent.predicates.values
+      val predicates = propertyInfoContent.predicates.values
       for {
         _ <- Validation
                .validate(
@@ -1942,12 +1951,12 @@ final case class OntologyResponderV2(
                .mapError(BadRequestException(_))
                .toZIO
         cacheData          <- ontologyCache.getCacheData
-        internalPropertyDef = createPropertyRequest.propertyInfoContent.toOntologySchema(InternalSchema)
+        internalPropertyDef = propertyInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
         _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
                internalOntologyIri,
-               createPropertyRequest.lastModificationDate,
+               lastModificationDate,
              )
 
         // Check that the property's rdf:type is owl:ObjectProperty.
@@ -1961,7 +1970,7 @@ final case class OntologyResponderV2(
         // Check that the property doesn't exist yet.
         ontology = cacheData.ontologies(internalOntologyIri)
         _ <- ZIO.when(ontology.properties.contains(internalPropertyIri)) {
-               val msg = s"Property ${createPropertyRequest.propertyInfoContent.propertyIri} already exists"
+               val msg = s"Property ${propertyInfoContent.propertyIri} already exists"
                ZIO.fail(BadRequestException(msg))
              }
 
@@ -1970,7 +1979,7 @@ final case class OntologyResponderV2(
                ontology.classes.contains(internalPropertyIri) || ontology.individuals.contains(internalPropertyIri),
              ) {
                ZIO.fail(
-                 BadRequestException(s"IRI ${createPropertyRequest.propertyInfoContent.propertyIri} is already used"),
+                 BadRequestException(s"IRI ${propertyInfoContent.propertyIri} is already used"),
                )
              }
 
@@ -2000,7 +2009,7 @@ final case class OntologyResponderV2(
 
         _ <- ZIO.when(allKnoraSuperPropertyIrisWithoutSelf.contains(internalPropertyIri)) {
                val msg =
-                 s"Property ${createPropertyRequest.propertyInfoContent.propertyIri} would have a cyclical rdfs:subPropertyOf"
+                 s"Property ${propertyInfoContent.propertyIri} would have a cyclical rdfs:subPropertyOf"
                ZIO.fail(BadRequestException(msg))
              }
 
@@ -2015,13 +2024,13 @@ final case class OntologyResponderV2(
 
         _ <- ZIO.when(!isValueProp && !isLinkProp) {
                val msg =
-                 s"Property ${createPropertyRequest.propertyInfoContent.propertyIri} would not be a subproperty of knora-api:hasValue or knora-api:hasLinkTo"
+                 s"Property ${propertyInfoContent.propertyIri} would not be a subproperty of knora-api:hasValue or knora-api:hasLinkTo"
                ZIO.fail(BadRequestException(msg))
              }
 
         _ <- ZIO.when(isValueProp && isLinkProp) {
                val msg =
-                 s"Property ${createPropertyRequest.propertyInfoContent.propertyIri} would be a subproperty of both knora-api:hasValue and knora-api:hasLinkTo"
+                 s"Property ${propertyInfoContent.propertyIri} would be a subproperty of both knora-api:hasValue and knora-api:hasLinkTo"
                ZIO.fail(BadRequestException(msg))
              }
 
@@ -2127,7 +2136,7 @@ final case class OntologyResponderV2(
                          ontologyIri = internalOntologyIri,
                          propertyDef = internalPropertyDef,
                          maybeLinkValuePropertyDef = maybeLinkValuePropertyDef,
-                         lastModificationDate = createPropertyRequest.lastModificationDate,
+                         lastModificationDate = lastModificationDate,
                          currentTime = currentTime,
                        )
         _ <- triplestoreService.query(Update(updateSparql))
@@ -2203,15 +2212,15 @@ final case class OntologyResponderV2(
         response <- getPropertyDefinitionsFromOntologyV2(
                       propertyIris = Set(internalPropertyIri),
                       allLanguages = true,
-                      requestingUser = createPropertyRequest.requestingUser,
+                      requestingUser = requestingUser,
                     )
       } yield response
     }
 
     for {
-      requestingUser <- ZIO.succeed(createPropertyRequest.requestingUser)
+      requestingUser <- ZIO.succeed(requestingUser)
 
-      externalPropertyIri = createPropertyRequest.propertyInfoContent.propertyIri
+      externalPropertyIri = propertyInfoContent.propertyIri
       externalOntologyIri = externalPropertyIri.getOntologyFromEntity
 
       _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
@@ -2225,7 +2234,7 @@ final case class OntologyResponderV2(
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
       taskResult <- IriLocker.runWithIriLock(
-                      createPropertyRequest.apiRequestID,
+                      apiRequestID,
                       ONTOLOGY_CACHE_LOCK_IRI,
                       makeTaskFuture(internalPropertyIri, internalOntologyIri),
                     )
