@@ -16,10 +16,10 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import scala.concurrent.duration.*
-
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
+import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -46,6 +46,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.*
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
+import zio.ULayer
 
 object ResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
@@ -58,7 +59,7 @@ object ResourcesResponderV2Spec {
   private val defaultStillImageFileValuePermissions =
     "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
 
-  private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
+  private val zeitgloeckleinIri = "http://rdfh.ch/0803/c5058f3a"
 
   private val aThingIri                  = "http://rdfh.ch/0001/a-thing"
   private var aThingLastModificationDate = Instant.now
@@ -410,9 +411,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   /* we need to run our app with the mocked sipi implementation */
   override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
-  override lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers()
+  override lazy val effectLayers: ULayer[DefaultTestEnvironmentWithoutSipi] =
+    core.LayersTest.integrationTestsWithFusekiTestcontainers()
 
-  override lazy val rdfDataObjects = List(
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_data/incunabula-data.ttl",
       name = "http://www.knora.org/data/0803/incunabula",
@@ -1578,7 +1580,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           CreateValueInNewResourceV2(
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
-              referredResourceIri = zeitglöckleinIri,
+              referredResourceIri = zeitgloeckleinIri,
             ),
           ),
         ),
@@ -1876,8 +1878,8 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         response.resources.size should equal(1)
         val resource = response.resources.head
         resource.resourceClassIri should equal(OntologyConstants.KnoraBase.DeletedResource.toSmartIri)
-        resource.deletionInfo should not be (None)
-        resource.lastModificationDate should not be (None)
+        resource.deletionInfo should not be None
+        resource.lastModificationDate should not be None
         resource.creationDate should equal(aThingCreationDate)
       }
     }
@@ -2389,7 +2391,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
       val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
-      events.size shouldEqual (3)
+      events.size shouldEqual 3
       val createResourceEvents =
         events.filter(historyEvent => historyEvent.eventType == ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT)
       createResourceEvents.size should be(1)
@@ -2448,7 +2450,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(updatePermissionEvent.isDefined)
       val updatePermissionPayload = updatePermissionEvent.get.eventBody
         .asInstanceOf[ValueEventBody]
-      updatePermissionPayload.valueIri shouldEqual (updateValuePermissionResponse.valueIri)
+      updatePermissionPayload.valueIri shouldEqual updateValuePermissionResponse.valueIri
     }
 
     "create a new value to test create value history event" in {
