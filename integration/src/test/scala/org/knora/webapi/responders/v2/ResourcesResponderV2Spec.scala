@@ -10,12 +10,14 @@ import org.apache.pekko.testkit.ImplicitSender
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
+import zio.ULayer
 import zio.ZIO
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import scala.concurrent.duration.*
+
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
@@ -46,7 +48,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.*
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
-import zio.ULayer
 
 object ResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
@@ -914,6 +915,21 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         defaultValuePermissions = defaultAnythingValuePermissions,
         requestingUser = anythingUserProfile,
       )
+    }
+
+    "not create a resource when empty list for required property is provided" in {
+      val createThis = CreateResourceV2(
+        Some(stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode).toSmartIri),
+        "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+        "test book",
+        Map("http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Seq.empty),
+        SharedTestDataADM.incunabulaProject,
+      )
+
+      val req = CreateResourceRequestV2(createThis, incunabulaUserProfile, UUID.randomUUID)
+
+      val exit = UnsafeZioRun.run(resourcesResponderV2(_.createResource(req)))
+      assertFailsWithA[OntologyConstraintException](exit)
     }
 
     "create a resource with no values and custom permissions" in {
