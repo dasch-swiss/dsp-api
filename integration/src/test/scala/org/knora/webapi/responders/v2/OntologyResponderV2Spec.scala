@@ -13,7 +13,6 @@ import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.constants.SalsahGui
 import dsp.errors.*
 import dsp.valueobjects.Iri
@@ -26,6 +25,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
@@ -56,6 +56,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
   private val anythingProjectIri   = SharedTestDataADM.anythingProjectIri.toSmartIri
   private val ontologyResponder    = ZIO.serviceWithZIO[OntologyResponderV2]
+  private val triplestoreService   = ZIO.serviceWithZIO[TriplestoreService]
 
   override lazy val rdfDataObjects: List[RdfDataObject] =
     List(
@@ -1154,8 +1155,37 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
         assert(newFreetestLastModDate.isAfter(freetestLastModDate))
         freetestLastModDate = newFreetestLastModDate
-      }
 
+        // Verify the cardinality of the new property and its link value where created in the subclass
+        val queryResult: SparqlSelectResult =
+          UnsafeZioRun.runOrThrow(
+            triplestoreService(_.query(Select("""
+                                                |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                                                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                                                |PREFIX freetest: <http://www.knora.org/ontology/0001/freetest#>
+                                                |
+                                                |SELECT ?property ?maxCardinality
+                                                |WHERE {
+                                                |  freetest:ComicBook rdfs:subClassOf ?restriction .
+                                                |  ?restriction rdf:type owl:Restriction .
+                                                |  ?restriction owl:onProperty ?property .
+                                                |  ?restriction owl:maxCardinality ?maxCardinality .
+                                                |}""".stripMargin))),
+          )
+        assert(
+          queryResult.results.bindings.exists(row =>
+            row.rowMap.get("property").contains("http://www.knora.org/ontology/0001/freetest#hasComicAuthor")
+              && row.rowMap.get("maxCardinality").contains("1"),
+          ),
+        )
+        assert(
+          queryResult.results.bindings.exists(row =>
+            row.rowMap.get("property").contains("http://www.knora.org/ontology/0001/freetest#hasComicAuthorValue")
+              && row.rowMap.get("maxCardinality").contains("1"),
+          ),
+        )
+      }
     }
 
     "not create a property without an rdf:type" in {
