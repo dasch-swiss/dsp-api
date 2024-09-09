@@ -45,6 +45,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.*
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 object ResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
@@ -395,16 +396,13 @@ class GraphTestData {
   )
 }
 
-/**
- * Tests [[ResourcesResponderV2]].
- */
 class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   import ResourcesResponderV2Spec.*
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val resourcesResponderV2SpecFullData          = new ResourcesResponderV2SpecFullData
-  private val ResourcesResponderV2                      = ZIO.serviceWithZIO[ResourcesResponderV2]
+  private val resourcesResponderV2                      = ZIO.serviceWithZIO[ResourcesResponderV2]
 
   private var standardMapping: Option[MappingXMLtoStandoff] = None
 
@@ -887,35 +885,29 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val response = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
 
       // Check that the response contains the correct metadata.
-
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
-
-        checkCreateResource(
-          inputResourceIri = resourceIri,
-          inputResource = inputResource,
-          outputResource = outputResource,
-          defaultResourcePermissions = defaultAnythingResourcePermissions,
-          defaultValuePermissions = defaultAnythingValuePermissions,
-          requestingUser = anythingUserProfile,
-        )
-      }
-
-      // Get the resource from the triplestore and check it again.
-
-      val outputResource = getResource(resourceIri)
-
+      val actualFromResponse: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
       checkCreateResource(
         inputResourceIri = resourceIri,
         inputResource = inputResource,
-        outputResource = outputResource,
+        outputResource = actualFromResponse,
+        defaultResourcePermissions = defaultAnythingResourcePermissions,
+        defaultValuePermissions = defaultAnythingValuePermissions,
+        requestingUser = anythingUserProfile,
+      )
+
+      // Get the resource from the triplestore and check it again.
+      val actualFromDb = getResource(resourceIri)
+      checkCreateResource(
+        inputResourceIri = resourceIri,
+        inputResource = inputResource,
+        outputResource = actualFromDb,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
         requestingUser = anythingUserProfile,
@@ -936,18 +928,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"),
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
 
-      expectMsgType[ReadResourcesSequenceV2](timeout)
-
       // Get the resource from the triplestore and check it.
-
       val outputResource = getResource(resourceIri)
-
       checkCreateResource(
         inputResourceIri = resourceIri,
         inputResource = inputResource,
@@ -960,7 +948,6 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "create a resource with values" in {
       // Create the resource.
-
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
@@ -1095,18 +1082,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
 
-      expectMsgType[ReadResourcesSequenceV2](timeout)
-
       // Get the resource from the triplestore and check it.
-
       val outputResource = getResource(resourceIri)
-
       checkCreateResource(
         inputResourceIri = resourceIri,
         inputResource = inputResource,
@@ -1130,18 +1113,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         )
         .toMessage(resourceIri = Some(resourceIri))
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)).logError,
+        ),
       )
 
-      expectMsgType[ReadResourcesSequenceV2](timeout)
-
       // Get the resource from the triplestore and check it.
-
       val outputResource = getResource(resourceIri)
-
       checkCreateResource(
         inputResourceIri = resourceIri,
         inputResource = inputResource,
@@ -1165,8 +1144,8 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         )
         .toMessage(resourceIri = Some(resourceIri))
 
-      UnsafeZioRun.runOrThrow(
-        ResourcesResponderV2(
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
           _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)).logError,
         ),
       )
@@ -1195,18 +1174,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         )
         .toMessage(resourceIri = Some(resourceIri))
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)).logError,
+        ),
       )
 
-      expectMsgType[ReadResourcesSequenceV2](timeout)
-
       // Get the resource from the triplestore and check it.
-
       val outputResource = getResource(resourceIri)
-
       checkCreateResource(
         inputResourceIri = resourceIri,
         inputResource = inputResource,
@@ -1232,18 +1207,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           internalMimeType = Some("application/zip"),
         )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)).logError,
+        ),
       )
 
-      expectMsgType[ReadResourcesSequenceV2](timeout)
-
       // Get the resource from the triplestore and check it.
-
       val outputResource = getResource(resourceIri)
-
       checkCreateResource(
         inputResourceIri = resourceIri,
         inputResource = inputResource,
@@ -1258,22 +1229,19 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
       val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        label = "invalid book",
-        values = Map.empty,
-        projectADM = SharedTestDataADM.incunabulaProject,
+        Some(resourceIri.toSmartIri),
+        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+        "invalid book",
+        Map.empty,
+        SharedTestDataADM.incunabulaProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, incunabulaUserProfile, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
-      }
+      assertFailsWithA[OntologyConstraintException](exit)
     }
 
     "not create a resource with too many values for the cardinality of a property" in {
@@ -1308,22 +1276,19 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
+        Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         label = "invalid book",
         values = inputValues,
         projectADM = SharedTestDataADM.incunabulaProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, incunabulaUserProfile, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
-      }
+      assertFailsWithA[OntologyConstraintException](exit)
     }
 
     "not create a resource with a property for which there is no cardinality in the resource class" in {
@@ -1358,15 +1323,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.incunabulaProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, incunabulaUserProfile, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
-      }
+      assertFailsWithA[OntologyConstraintException](exit)
     }
 
     "not create a resource with duplicate values" in {
@@ -1406,15 +1368,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.incunabulaProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, incunabulaUserProfile, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
-      }
+      assertFailsWithA[DuplicateValueException](exit)
     }
 
     "not create a resource if the user doesn't have permission to create resources in the project" in {
@@ -1440,15 +1399,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.incunabulaProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
+      assertFailsWithA[ForbiddenException](exit)
     }
 
     "not create a resource with a link to a nonexistent other resource" in {
@@ -1473,15 +1429,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
+      assertFailsWithA[NotFoundException](exit)
     }
 
     "not create a resource with a standoff link to a nonexistent other resource" in {
@@ -1546,15 +1499,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
+      assertFailsWithA[NotFoundException](exit)
     }
 
     "not create a resource with a list value referring to a nonexistent list node" in {
@@ -1581,15 +1531,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
+      assertFailsWithA[NotFoundException](exit)
     }
 
     "not create a resource with a value that's the wrong type for the property" in {
@@ -1615,15 +1562,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
-      }
+      assertFailsWithA[OntologyConstraintException](exit)
     }
 
     "not create a resource with a link to a resource of the wrong class for the link property" in {
@@ -1648,15 +1592,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
-      }
+      assertFailsWithA[OntologyConstraintException](exit)
     }
 
     "not create a resource with invalid custom permissions" in {
@@ -1671,15 +1612,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser"),
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a resource with a value that has invalid custom permissions" in {
@@ -1706,15 +1644,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a resource that uses a class from another non-shared project" in {
@@ -1728,15 +1663,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.incunabulaProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, incunabulaUserProfile, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not update a resource's metadata if the user does not have permission to update the resource" in {
@@ -1996,15 +1928,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         permissions = Some("CR knora-admin:Creator"),
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = SharedTestDataADM.imagesReviewerUser,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(
+            CreateResourceRequestV2(inputResource, SharedTestDataADM.imagesReviewerUser, UUID.randomUUID),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
+      assertFailsWithA[ForbiddenException](exit)
     }
 
     "accept custom resource permissions that would give the requesting user a higher permission on a resource than the default if the user is a system admin" in {
@@ -2019,13 +1950,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         permissions = Some("CR knora-admin:Creator"),
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = SharedTestDataADM.rootUser,
-        apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, SharedTestDataADM.rootUser, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgClass(classOf[ReadResourcesSequenceV2])
     }
 
     "accept custom resource permissions that would give the requesting user a higher permission on a resource than the default if the user is a project admin" in {
@@ -2040,13 +1969,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         permissions = Some("CR knora-admin:Creator"),
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, SharedTestDataADM.imagesUser01, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgClass(classOf[ReadResourcesSequenceV2])
     }
 
     "not accept custom value permissions that would give the requesting user a higher permission on a value than the default" in {
@@ -2073,15 +2000,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.imagesProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = SharedTestDataADM.imagesReviewerUser,
-        apiRequestID = UUID.randomUUID,
+      val exit = UnsafeZioRun.run(
+        resourcesResponderV2(
+          _.createResource(
+            CreateResourceRequestV2(inputResource, SharedTestDataADM.imagesReviewerUser, UUID.randomUUID),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
+      assertFailsWithA[ForbiddenException](exit)
     }
 
     "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin" in {
@@ -2108,13 +2034,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.imagesProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = SharedTestDataADM.rootUser,
-        apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, SharedTestDataADM.rootUser, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgClass(timeout, (classOf[ReadResourcesSequenceV2]))
     }
 
     "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin" in {
@@ -2141,13 +2065,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.imagesProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, SharedTestDataADM.imagesUser01, UUID.randomUUID)),
+        ),
       )
-
-      expectMsgClass(classOf[ReadResourcesSequenceV2])
     }
 
     "create a resource with version history so we can test erasing it" in {
@@ -2182,13 +2104,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
 
-      expectMsgType[ReadResourcesSequenceV2](timeout)
       val outputResource: ReadResourceV2  = getResource(resourceIri)
       val firstTextValue: ReadTextValueV2 = outputResource.values(propertyIri).head.asInstanceOf[ReadTextValueV2]
       firstValueIriToErase.set(firstTextValue.valueIri)
@@ -2287,13 +2208,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
 
-      expectMsgType[ReadResourcesSequenceV2](timeout)
       val outputResource: ReadResourceV2 =
         getResource(resourceWithLinkIri)
       val linkValue: ReadLinkValueV2 = outputResource.values(linkValuePropertyIri).head.asInstanceOf[ReadLinkValueV2]
@@ -2383,35 +2303,29 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val response = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
 
       // Check that the response contains the correct metadata.
-
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
-
-        checkCreateResource(
-          inputResourceIri = resourceIri,
-          inputResource = inputResource,
-          outputResource = outputResource,
-          defaultResourcePermissions = defaultAnythingResourcePermissions,
-          defaultValuePermissions = defaultAnythingValuePermissions,
-          requestingUser = anythingUserProfile,
-        )
-      }
-
-      // Get the resource from the triplestore and check it again.
-
-      val outputResource = getResource(resourceIri)
-
+      val actualFromResponse: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
       checkCreateResource(
         inputResourceIri = resourceIri,
         inputResource = inputResource,
-        outputResource = outputResource,
+        outputResource = actualFromResponse,
+        defaultResourcePermissions = defaultAnythingResourcePermissions,
+        defaultValuePermissions = defaultAnythingValuePermissions,
+        requestingUser = anythingUserProfile,
+      )
+
+      // Get the resource from the triplestore and check it again.
+      val actualFromDb = getResource(resourceIri)
+      checkCreateResource(
+        inputResourceIri = resourceIri,
+        inputResource = inputResource,
+        outputResource = actualFromDb,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
         requestingUser = anythingUserProfile,
@@ -2445,18 +2359,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)),
+        ),
       )
 
-      expectMsgType[ReadResourcesSequenceV2](timeout)
-
       // Get the resource from the triplestore and check it.
-
       val outputResource = getResource(resourceIri)
-
       checkCreateResource(
         inputResourceIri = resourceIri,
         inputResource = inputResource,
@@ -2467,6 +2377,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
     }
   }
+
   "When asked for events" should {
     "return full history of a-thing-picture resource" in {
       val resourceIri = "http://rdfh.ch/0001/a-thing-picture"
