@@ -950,13 +950,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a subproperty of an existing custom link property and add it to a resource class, check if the correct link and link value properties were added to the class" in {
-
-      appActor ! OntologyMetadataGetByProjectRequestV2(
-        projectIris = Set(anythingProjectIri),
-        requestingUser = anythingAdminUser,
+      val metadataResponse = UnsafeZioRun.runOrThrow(
+        ontologyResponder(_.getOntologyMetadataForProjectsV2(Set(anythingProjectIri))),
       )
-
-      val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(metadataResponse.ontologies.size == 3)
       freetestLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
@@ -1008,7 +1004,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         freetestLastModDate = newFreetestLastModDate
       }
 
-      // Create class freetest:ComicAuthor which is a subclass of feetest:Author
+      // Create class freetest:ComicAuthor which is a subclass of freetest:Author
 
       val comicAuthorClassIri = FreeTestOntologyIri.makeEntityIri("ComicAuthor")
 
