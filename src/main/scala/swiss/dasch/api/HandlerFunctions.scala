@@ -9,7 +9,6 @@ import swiss.dasch.api.ApiProblem.{InternalServerError, NotFound}
 import swiss.dasch.domain.{AssetRef, ProjectShortcode}
 
 trait HandlerFunctions {
-
   def projectNotFoundOrServerError(mayBeError: Option[Throwable], shortcode: ProjectShortcode): ApiProblem =
     mayBeError.map(InternalServerError(_)).getOrElse(NotFound(shortcode))
 

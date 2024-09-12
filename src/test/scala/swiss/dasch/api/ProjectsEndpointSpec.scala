@@ -5,10 +5,16 @@
 
 package swiss.dasch.api
 
+import sttp.client3.Response
+import sttp.client3.impl.zio.RIOMonadAsyncError
+import sttp.client3.testing.SttpBackendStub
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
+import swiss.dasch.FetchAssetPermissionsLive
+import swiss.dasch.FetchAssetPermissionsMock
 import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
 import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
+import swiss.dasch.config.Configuration.DspApiConfig
 import swiss.dasch.config.Configuration.Features
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
@@ -25,9 +31,13 @@ import zio.UIO
 import zio.ZIO
 import zio.ZLayer
 import zio.http
+import zio.http.Header.ContentDisposition
+import zio.http.Header.ContentDisposition.Attachment
+import zio.http.Header.ContentType
 import zio.http.*
 import zio.json.*
 import zio.nio.file.Files
+import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
@@ -35,13 +45,20 @@ import java.net.URLDecoder
 import java.text.Normalizer
 
 object ProjectsEndpointSpec extends ZIOSpecDefault {
-
   private def executeRequest(request: Request) = for {
     app <- ZIO.serviceWith[ProjectsEndpointsHandler](handler =>
              ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints),
            )
     response <- app.runZIO(request).logError
   } yield response
+
+  val fakeSttp = {
+    val stub = SttpBackendStub(new RIOMonadAsyncError[Any]).whenRequestMatchesPartial {
+      case r if r.uri.path.mkString("/").contains("admin/files/0001") => Response.ok("""{"permissionCode": 1}""")
+      case _                                                          => ???
+    }
+    ZLayer.succeed(new FetchAssetPermissionsLive(stub, DspApiConfig("")))
+  }
 
   private val projectExportSuite = {
     def postExport(shortcode: String | ProjectShortcode) = {
@@ -166,6 +183,52 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
       },
     )
   }
+
+  private val assetOriginalSuite =
+    suite("/projects/<shortcode>/asset/<assetId>/original")(
+      test("given the info file does not exist, it should return Not Found") {
+        val req = Request
+          .get(URL(Path.root / "projects" / "0666" / "assets" / "7l5QJAtPnv5-lLmBPfO7U40" / "original"))
+          .addHeader("Authorization", "Bearer fakeToken")
+        executeRequest(req).map(response => assertTrue(response.status == Status.NotFound))
+      },
+      test("return the original contents") {
+        for {
+          contents   <- ZIO.succeed("123".toList.map(_.toByte))
+          contentType = Some(""""originalMimeType": "text/plain"""")
+          ref        <- AssetInfoFileTestHelper.createInfoFile("txt", "txt", contentType, Some(contents)).map(_.assetRef)
+          req = Request
+                  .get(URL(Path.root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value / "original"))
+                  .addHeader("Authorization", "Bearer fakeToken")
+          response <- executeRequest(req)
+          body     <- response.body.asString
+        } yield assertTrue(
+          response.status == Status.Ok,
+          body == "123",
+          response.header(ContentDisposition).get == Attachment(None),
+          response.header(ContentType).get.mediaType.fullType == "text/plain",
+        )
+      },
+    )
+
+  private val assetOriginalSuiteFakeSttp =
+    suite("/projects/<shortcode>/asset/<assetId>/original")(
+      test("fail by no permissions") {
+        for {
+          contents   <- ZIO.succeed("123".toList.map(_.toByte))
+          contentType = Some(""""originalMimeType": "text/plain"""")
+          ref        <- AssetInfoFileTestHelper.createInfoFile("txt", "txt", contentType, Some(contents)).map(_.assetRef)
+          req = Request
+                  .get(URL(Path.root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value / "original"))
+                  .addHeader("Authorization", "Bearer fakeToken")
+          response <- executeRequest(req)
+          body     <- response.body.asString
+        } yield assertTrue(
+          response.status == Status.Forbidden,
+          body == """{"reason":"permission denied"}""",
+        )
+      },
+    )
 
   private val assetInfoSuite =
     suite("/projects/<shortcode>/asset/<assetId>")(
@@ -356,6 +419,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     projectImportSuite,
     assetInfoSuite,
     assetIngestSuite,
+    assetOriginalSuite,
     projectsSuite,
     projectShouldListTest,
   ).provide(
@@ -364,18 +428,17 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     AuthorizationHandlerLive.layer,
     BaseEndpoints.layer,
     BulkIngestService.layer,
-    CsvService.layer,
     CommandExecutorLive.layer,
+    CsvService.layer,
+    FetchAssetPermissionsMock.layer(2),
     FileChecksumServiceLive.layer,
-    ZLayer.succeed(Features(allowEraseProjects = true)),
-    StillImageService.layer,
     ImportServiceLive.layer,
     IngestService.layer,
     MimeTypeGuesser.layer,
     MovingImageService.layer,
     OtherFilesService.layer,
-    ProjectService.layer,
     ProjectRepositoryLive.layer,
+    ProjectService.layer,
     ProjectsEndpoints.layer,
     ProjectsEndpointsHandler.layer,
     ReportService.layer,
@@ -384,7 +447,41 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     SpecConfigurations.jwtConfigDisableAuthLayer,
     SpecConfigurations.sipiConfigLayer,
     SpecConfigurations.storageConfigLayer,
+    StillImageService.layer,
     StorageServiceLive.layer,
     TestUtils.testDbLayerWithEmptyDb,
+    ZLayer.succeed(Features(allowEraseProjects = true)),
+  ) + suite("ProjectsEndpoint with SttpStub")(
+    // NOTE: only difference in the provide()s is the fakeSttp. Whoever can help me refactor this gets a beer.
+    assetOriginalSuiteFakeSttp,
+  ).provide(
+    AssetInfoServiceLive.layer,
+    AuthServiceLive.layer,
+    AuthorizationHandlerLive.layer,
+    BaseEndpoints.layer,
+    BulkIngestService.layer,
+    CommandExecutorLive.layer,
+    CsvService.layer,
+    FileChecksumServiceLive.layer,
+    ImportServiceLive.layer,
+    IngestService.layer,
+    MimeTypeGuesser.layer,
+    MovingImageService.layer,
+    OtherFilesService.layer,
+    ProjectRepositoryLive.layer,
+    ProjectService.layer,
+    ProjectsEndpoints.layer,
+    ProjectsEndpointsHandler.layer,
+    ReportService.layer,
+    SipiClientMock.layer,
+    SpecConfigurations.ingestConfigLayer,
+    SpecConfigurations.jwtConfigDisableAuthLayer,
+    SpecConfigurations.sipiConfigLayer,
+    SpecConfigurations.storageConfigLayer,
+    StillImageService.layer,
+    StorageServiceLive.layer,
+    TestUtils.testDbLayerWithEmptyDb,
+    ZLayer.succeed(Features(allowEraseProjects = true)),
+    fakeSttp,
   )
 }

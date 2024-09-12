@@ -1,5 +1,4 @@
 services:
-
   ingest:
     image: daschswiss/dsp-ingest:latest
     ports:
@@ -21,4 +20,4 @@ services:
       - INGEST_BULK_MAX_PARALLEL=10
       - SIPI_USE_LOCAL_DEV=false
       - DB_JDBC_URL=jdbc:sqlite:/opt/db/ingest.sqlite
-
+      - DSP_API_URL=http://localhost:3333

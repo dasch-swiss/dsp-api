@@ -10,4 +10,5 @@ import swiss.dasch.domain.AuthScope
 final case class Principal(
   subject: String,
   scope: AuthScope = AuthScope.Empty,
+  jwtRaw: String = "",
 )

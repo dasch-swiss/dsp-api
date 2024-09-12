@@ -6,8 +6,11 @@
 package swiss.dasch.domain
 
 import swiss.dasch.domain.AugmentedPath.AssetFolder
-import zio.ZIO
+import zio.*
 import zio.json.DecoderOps
+import zio.nio.file.Files
+
+import java.nio.file.StandardOpenOption.*
 
 object AssetInfoFileTestHelper {
   val testProject: ProjectShortcode =
@@ -21,6 +24,7 @@ object AssetInfoFileTestHelper {
     originalFileExt: String,
     derivativeFileExt: String,
     customJsonProps: Option[String] = None,
+    contentsOrig: Option[List[Byte]] = None,
   ): ZIO[StorageService, Throwable, AssetFolder] =
     for {
       assetRef <- AssetRef.makeNew(testProject)
@@ -38,5 +42,10 @@ object AssetInfoFileTestHelper {
                 .orElseFail(new IllegalArgumentException(s"Invalid AssetInfoFileContent:\n$json"))
       assetDir <- StorageService.getAssetFolder(assetRef).tap(StorageService.createDirectories(_))
       _        <- StorageService.saveJsonFile[AssetInfoFileContent](assetDir / s"${assetRef.id}.info", info)
-    } yield (assetDir)
+
+      _ <- ZIO.whenCase(contentsOrig) { case Some(bytes) =>
+             val filename = assetDir / s"${assetRef.id}.txt.orig"
+             Files.writeBytes(filename, Chunk.from(bytes), WRITE, CREATE, TRUNCATE_EXISTING)
+           }
+    } yield assetDir
 }

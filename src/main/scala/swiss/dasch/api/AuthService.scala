@@ -52,15 +52,18 @@ final case class AuthServiceLive(jwtConfig: JwtConfig) extends AuthService {
 
   def authenticate(jwtString: String): IO[NonEmptyChunk[AuthenticationError], Principal] =
     if (jwtConfig.disableAuth) {
-      ZIO.succeed(Principal("developer", AuthScope(Set(AuthScope.ScopeValue.Admin))))
+      ZIO.succeed(Principal("developer", AuthScope(Set(AuthScope.ScopeValue.Admin)), "fake jwt claim"))
     } else {
       ZIO
         .fromTry(JwtZIOJson.decode(jwtString, secret, alg))
         .mapError(e => NonEmptyChunk(AuthenticationError.jwtProblem(e)))
-        .flatMap(verifyClaim)
+        .flatMap(verifyClaim(_, jwtString))
     }
 
-  private def verifyClaim(claim: JwtClaim): IO[NonEmptyChunk[AuthenticationError], Principal] = {
+  private def verifyClaim(
+    claim: JwtClaim,
+    claimLiteral: String,
+  ): IO[NonEmptyChunk[AuthenticationError], Principal] = {
     val audVal = if (claim.audience.getOrElse(Set.empty).contains(audience)) { Validation.succeed(()) }
     else { Validation.fail(AuthenticationError.invalidAudience(jwtConfig)) }
 
@@ -81,7 +84,9 @@ final case class AuthServiceLive(jwtConfig: JwtConfig) extends AuthService {
         .mapError(AuthenticationError.invalidContents)
 
     Validation
-      .validateWith(authScope, issVal, audVal, subVal)((authScope, _, _, subject) => Principal(subject, authScope))
+      .validateWith(authScope, issVal, audVal, subVal)((authScope, _, _, subject) =>
+        Principal(subject, authScope, claimLiteral),
+      )
       .toZIOParallelErrors
   }
 }

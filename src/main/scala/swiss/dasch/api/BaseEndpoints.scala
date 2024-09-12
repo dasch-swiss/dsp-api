@@ -18,8 +18,8 @@ import sttp.tapir.statusCode
 import sttp.tapir.ztapir.*
 import swiss.dasch.api.ApiProblem.Unauthorized
 import swiss.dasch.api.BaseEndpoints.defaultErrorOutputs
-import zio.IO
 import zio.ZLayer
+import zio._
 
 case class BaseEndpoints(authService: AuthService) {
   val publicEndpoint: PublicEndpoint[Unit, ApiProblem, Unit, Any] = endpoint

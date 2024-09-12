@@ -38,6 +38,7 @@ object Main extends ZIOAppDefault {
         DbHealthIndicator.layer,
         DbMigrator.layer,
         Endpoints.layer,
+        FetchAssetPermissions.layer,
         FileChecksumServiceLive.layer,
         FileSystemHealthIndicatorLive.layer,
         HealthCheckServiceLive.layer,

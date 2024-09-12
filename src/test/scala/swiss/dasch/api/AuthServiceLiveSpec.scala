@@ -28,7 +28,7 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
         result <- AuthService.authenticate(token)
       } yield assertTrue(
         token.nonEmpty,
-        result == Principal("some-subject", AuthScope.from(Write(ProjectShortcode.unsafeFrom("2345")))),
+        result == Principal("some-subject", AuthScope.from(Write(ProjectShortcode.unsafeFrom("2345"))), token),
       )
     },
     test("Should validate contents") {
@@ -36,14 +36,14 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
         token  <- createToken(scope = Some("I once saw a duck"))
         result <- AuthService.authenticate(token)
       } yield assertTrue(
-        result == Principal("some-subject", AuthScope.Empty),
+        result == Principal("some-subject", AuthScope.Empty, token),
       )
     },
     test("A valid token should be verified") {
       for {
         token  <- validToken()
         result <- AuthService.authenticate(token)
-      } yield assertTrue(token.nonEmpty, result == Principal("some-subject"))
+      } yield assertTrue(token.nonEmpty, result == Principal("some-subject", jwtRaw = token))
     },
     test("An expired token should fail with a JwtProblem") {
       for {

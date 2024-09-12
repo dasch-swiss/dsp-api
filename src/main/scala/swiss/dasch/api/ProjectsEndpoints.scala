@@ -6,24 +6,28 @@
 package swiss.dasch.api
 
 import sttp.capabilities.zio.ZioStreams
-import sttp.model.{HeaderNames, StatusCode}
+import sttp.model.HeaderNames
+import sttp.model.StatusCode
+import sttp.tapir.Codec
+import sttp.tapir.CodecFormat
+import sttp.tapir.EndpointInput
 import sttp.tapir.codec.refined.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
-import sttp.tapir.{Codec, CodecFormat, EndpointInput}
-import swiss.dasch.api.ProjectsEndpoints.shortcodePathVar
-import swiss.dasch.api.ProjectsEndpointsResponses.{
-  AssetCheckResultResponse,
-  AssetInfoResponse,
-  ProjectResponse,
-  UploadResponse,
-}
-import swiss.dasch.domain.*
+import swiss.dasch.api.ProjectsEndpoints.{shortcodePathVar, assetIdPathVar}
+import swiss.dasch.api.ProjectsEndpointsResponses.AssetCheckResultResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.UploadResponse
 import swiss.dasch.domain.AugmentedPath.ProjectFolder
-import zio.json.{DeriveJsonCodec, JsonCodec}
-import zio.schema.{DeriveSchema, Schema}
-import zio.{Chunk, ZLayer}
+import swiss.dasch.domain.*
+import zio.Chunk
+import zio.ZLayer
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
+import zio.schema.DeriveSchema
+import zio.schema.Schema
 
 object ProjectsEndpointsResponses {
   final case class ProjectResponse(id: String)
@@ -177,10 +181,21 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     )
 
   val getProjectsAssetsInfo = base.secureEndpoint.get
-    .in(projects / shortcodePathVar / "assets" / path[AssetId]("assetId"))
+    .in(projects / shortcodePathVar / "assets" / assetIdPathVar)
     .out(jsonBody[AssetInfoResponse])
     .tag("assets")
     .description("Authorization: read:project:1234 scope required.")
+
+  val getProjectsAssetsOriginal = base.secureEndpoint.get
+    .in(projects / shortcodePathVar / "assets" / assetIdPathVar / "original")
+    .out(header[String]("Content-Disposition"))
+    .out(header[String]("Content-Type"))
+    .out(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
+    .tag("assets")
+    .description(
+      """|Offers the original file for upload, provided the API permisisons allow.
+         |Authorization: JWT bearer token.""".stripMargin,
+    )
 
   given filenameCodec: Codec[String, AssetFilename, CodecFormat.TextPlain] =
     Codec.string.mapEither(AssetFilename.from)(_.value)
@@ -261,6 +276,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       getProjectsChecksumReport,
       deleteProjectsErase,
       getProjectsAssetsInfo,
+      getProjectsAssetsOriginal,
       postProjectAsset,
       postBulkIngest,
       postBulkIngestFinalize,
@@ -272,11 +288,15 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
 }
 
 object ProjectsEndpoints {
-
   val shortcodePathVar: EndpointInput.PathCapture[ProjectShortcode] = path[ProjectShortcode]
     .name("shortcode")
     .description("The shortcode of the project must be an exactly 4 characters long hexadecimal string.")
     .example(ProjectShortcode.from("0001").getOrElse(throw Exception("Invalid shortcode.")))
+
+  val assetIdPathVar: EndpointInput.PathCapture[AssetId] = path[AssetId]
+    .name("assetId")
+    .description("The id of the asset")
+    .example(AssetId.from("5RMOnH7RmAY-qKzgr431bg7").getOrElse(throw Exception("Invalid AssetId.")))
 
   val layer = ZLayer.derive[ProjectsEndpoints]
 }

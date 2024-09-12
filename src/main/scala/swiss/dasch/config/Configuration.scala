@@ -22,6 +22,7 @@ object Configuration {
     ingest: IngestConfig,
     features: Features,
     db: DbConfig,
+    dspApi: DspApiConfig,
   )
 
   final case class JwtConfig(
@@ -50,6 +51,10 @@ object Configuration {
 
   final case class DbConfig(jdbcUrl: String)
 
+  final case class DspApiConfig(
+    url: String,
+  )
+
   private val configDescriptor = deriveConfig[ApplicationConf].mapKey(toKebabCase)
 
   private type AllConfigs = ServiceConfig
@@ -59,6 +64,7 @@ object Configuration {
     with IngestConfig
     with Features
     with DbConfig
+    with DspApiConfig
 
   val layer: ZLayer[Any, Config.Error, AllConfigs] = {
     val applicationConf = ZLayer.fromZIO(
@@ -71,6 +77,7 @@ object Configuration {
       applicationConf.project(_.jwt) ++
       applicationConf.project(_.sipi) ++
       applicationConf.project(_.ingest) ++
-      applicationConf.project(_.features)
+      applicationConf.project(_.features) ++
+      applicationConf.project(_.dspApi)
   }
 }
