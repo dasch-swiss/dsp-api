@@ -365,7 +365,7 @@ and the `knora-api:externalUrl` property is used to provide the URL of the image
   "@type": "anything:ThingPicture",
   "knora-api:hasStillImageFileValue": {
     "@type": "knora-api:StillImageExternalFileValue",
-    "knora-api:externalUrl": "https://example.com/iiif/3UIsXH9bP0j-BV0D4sN51Xz.jp2/full/max/0/default.jpg"
+    "knora-api:fileValueHasExternalUrl": "https://example.com/iiif/3UIsXH9bP0j-BV0D4sN51Xz.jp2/full/max/0/default.jpg"
   },
   "knora-api:attachedToProject": {
     "@id": "http://rdfh.ch/projects/0001"
