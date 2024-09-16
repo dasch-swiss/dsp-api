@@ -20,6 +20,7 @@ import java.net.URL
 import java.util
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
+import scala.util.Try
 import scala.util.control.Exception.*
 
 import dsp.errors.*
@@ -600,6 +601,18 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     getRequiredObject(key)
       .fold(e => throw BadRequestException(e), identity)
       .toIri(validationFun)
+
+  def getRequiredUri(key: String): Either[String, URI] =
+    getRequiredObject(key).flatMap { obj =>
+      obj.getRequiredString(JsonLDKeywords.TYPE).flatMap { _ =>
+        obj.getRequiredString(JsonLDKeywords.VALUE).flatMap { str =>
+          Try(URI.create(str)).toEither.left.map {
+            case e: IllegalArgumentException => s"Invalid URI: '$str'"
+            case e: Throwable                => e.getMessage
+          }
+        }
+      }
+    }
 
   /**
    * Gets an optional IRI value (contained in a JSON-LD object) value of a property of this JSON-LD object, throwing
