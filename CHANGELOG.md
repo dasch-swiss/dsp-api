@@ -1,5 +1,39 @@
 # Changelog
 
+## [30.19.0](https://github.com/dasch-swiss/dsp-api/compare/v30.18.4...v30.19.0) (2024-09-12)
+
+
+### Maintenances
+
+* Dependency updates ([#3350](https://github.com/dasch-swiss/dsp-api/issues/3350)) ([dfe2ed0](https://github.com/dasch-swiss/dsp-api/commit/dfe2ed08bfcfe2caa4fe5cd48e5d8d7c4f4a4192))
+* Improve Release Please prefixes and CHANGELOG sections ([#3353](https://github.com/dasch-swiss/dsp-api/issues/3353)) ([4db76aa](https://github.com/dasch-swiss/dsp-api/commit/4db76aa56ad0ebf62f2e24dabaadf255e4387893))
+* Minor dependency updates ([#3349](https://github.com/dasch-swiss/dsp-api/issues/3349)) ([7b25174](https://github.com/dasch-swiss/dsp-api/commit/7b25174b090024b6f656fde1caa991017b4be104))
+* Patch dependency updates ([#3348](https://github.com/dasch-swiss/dsp-api/issues/3348)) ([60c6959](https://github.com/dasch-swiss/dsp-api/commit/60c6959606831e8e8e97aa8dc83b1e969e404e61))
+* Remove unused imports from TWIRL templates and silence false positives ([#3351](https://github.com/dasch-swiss/dsp-api/issues/3351)) ([34f6ce8](https://github.com/dasch-swiss/dsp-api/commit/34f6ce851dac97ca5ef1f942d79d14a3e3f8aa68))
+* Replace `appActor ! CreateResourceRequestV2` with method call on responder ([#3356](https://github.com/dasch-swiss/dsp-api/issues/3356)) ([3ba1d84](https://github.com/dasch-swiss/dsp-api/commit/3ba1d8423b8a246c5e6c02fe2ab809907b6066db))
+* Update apache-jena-fuseki to 5.1.0 ([#3343](https://github.com/dasch-swiss/dsp-api/issues/3343)) ([12d5250](https://github.com/dasch-swiss/dsp-api/commit/12d525065ff5eeeaadccbe9226979969952f159d))
+* Update APP version in local dev setup ([#3352](https://github.com/dasch-swiss/dsp-api/issues/3352)) ([04427f5](https://github.com/dasch-swiss/dsp-api/commit/04427f56cc30c004bbb9b49956902b6381ec5fd1))
+
+
+### Enhancements
+
+* Add text value type when creating resources (DEV-3721) ([#3327](https://github.com/dasch-swiss/dsp-api/issues/3327)) ([008fa98](https://github.com/dasch-swiss/dsp-api/commit/008fa9822297eb1514c775afd7970cc2495e9497))
+* Provide DSP_API_URL to ingest in docker-compose.yml (DEV-3832) ([#3359](https://github.com/dasch-swiss/dsp-api/issues/3359)) ([e1d7fee](https://github.com/dasch-swiss/dsp-api/commit/e1d7fee6469902c5f862c7c0a4271702e0bb4ff9))
+
+
+### Bug Fixes
+
+* Create link *Value property if it is not present on current class (DEV-4025) ([#3345](https://github.com/dasch-swiss/dsp-api/issues/3345)) ([61e65b8](https://github.com/dasch-swiss/dsp-api/commit/61e65b8328f8586d4b8c9e633824b5dc986b64dc))
+* During resource creation verify required cardinalities based on the provided values (DEV-4017) ([#3347](https://github.com/dasch-swiss/dsp-api/issues/3347)) ([eacf14c](https://github.com/dasch-swiss/dsp-api/commit/eacf14cf7b35eed455dc21f8aa940f203468c2cd))
+* During resource creation verify required cardinalities based on the provided values (DEV-4017) ([#3347](https://github.com/dasch-swiss/dsp-api/issues/3347))" ([#3355](https://github.com/dasch-swiss/dsp-api/issues/3355)) ([04a6203](https://github.com/dasch-swiss/dsp-api/commit/04a620371395a5f2ece8b21d2dd999a35c84b754))
+
+
+### Tests
+
+* Add test checking (link) properties for subclasses are created correctly (DEV-4025) ([#3358](https://github.com/dasch-swiss/dsp-api/issues/3358)) ([270b99e](https://github.com/dasch-swiss/dsp-api/commit/270b99e528876547f2505436ef92b898495825a3))
+* Add test for providing an empty list as values for a required property (DEV-4017) ([#3357](https://github.com/dasch-swiss/dsp-api/issues/3357)) ([e95ffb2](https://github.com/dasch-swiss/dsp-api/commit/e95ffb22450a8e500f2db6a106582b3318e3f12c))
+* Remove CreatePropertyRequestV2 from OntologyResponderSpecV2 ([#3354](https://github.com/dasch-swiss/dsp-api/issues/3354)) ([2743cce](https://github.com/dasch-swiss/dsp-api/commit/2743ccedbcf02de3c103917f49c603de5ee8eaaf))
+
 ## [30.18.4](https://github.com/dasch-swiss/dsp-api/compare/v30.18.3...v30.18.4) (2024-08-27)
 
 
