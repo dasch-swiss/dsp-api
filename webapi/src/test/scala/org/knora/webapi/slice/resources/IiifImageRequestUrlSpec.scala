@@ -44,6 +44,7 @@ object IiifImageRequestUrlSpec extends ZIOSpecDefault {
           "http://www.example.org/prefix1/abcd1234/full/600,/0/grey.jpg",
           "http://www.example.org/prefix1/abcd1234/full/600,/0/bitonal.jpg",
           "http://www.example.org/prefix1/dasch.swiss/full/600,/0/bitonal.jpg",
+          "http://dasch.swiss.www.example.org/prefix1/abcd1234/full/600,/0/bitonal.jpg",
           // V2 https://iiif.io/api/image/2.0/#image-request-uri-syntax
           "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/full/full/0/default.jpg",
           "https://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/full/full/!90/gray.webp",

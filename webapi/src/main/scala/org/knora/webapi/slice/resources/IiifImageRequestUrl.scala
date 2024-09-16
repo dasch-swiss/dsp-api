@@ -18,7 +18,7 @@ object IiifImageRequestUrl extends WithFrom[String, IiifImageRequestUrl] { self 
 
   private val iiifImageUrlRegex1 = """^(https?://[^/]+/[^/]+/[^/]+/[^/]+/[^/]+/[^/]+(?:/.+)?)$""".r
 
-  private def isDaschSwissHost(url: URI): Boolean = url.getHost().contains("dasch.swiss")
+  private def isDaschSwissHost(url: URI): Boolean = url.getHost().endsWith("dasch.swiss")
 
   def from(value: String): Either[String, IiifImageRequestUrl] =
     Try(URI.create(value)).toEither.left.map(_ => s"Invalid URL: $value").flatMap { url =>
