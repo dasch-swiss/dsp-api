@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.13.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.12.3...v0.13.0) (2024-09-12)
+
+
+### Maintenances
+
+* Dependency updates ([#263](https://github.com/dasch-swiss/dsp-ingest/issues/263)) ([13d0dac](https://github.com/dasch-swiss/dsp-ingest/commit/13d0dacfea0a3b122c0de8be77af5306e296566b))
+* Improve Release Please prefixes and corresponding CHANGELOG sections ([#265](https://github.com/dasch-swiss/dsp-ingest/issues/265)) ([b0972c1](https://github.com/dasch-swiss/dsp-ingest/commit/b0972c173851a2554fdc373e1979801435dc07ca))
+* Minor dependency updates ([#262](https://github.com/dasch-swiss/dsp-ingest/issues/262)) ([2e28360](https://github.com/dasch-swiss/dsp-ingest/commit/2e2836076007f27f36c6eda65f9548fe5214ed18))
+* Patch dependency updates ([#261](https://github.com/dasch-swiss/dsp-ingest/issues/261)) ([8b5e920](https://github.com/dasch-swiss/dsp-ingest/commit/8b5e920b642cc9bb19c78fb82c801c0879337869))
+
+
+### Enhancements
+
+* Allow more characters for asset file names (DEV-4082) ([#266](https://github.com/dasch-swiss/dsp-ingest/issues/266)) ([332b519](https://github.com/dasch-swiss/dsp-ingest/commit/332b5196bc0463f083240d5a511b2a6db1353e2c))
+* Download original asset (DEV-3832) ([#267](https://github.com/dasch-swiss/dsp-ingest/issues/267)) ([2c0b3bf](https://github.com/dasch-swiss/dsp-ingest/commit/2c0b3bf8d9a0617304bc02c47fd5eafcd6b43ca5))
+
 ## [0.12.3](https://github.com/dasch-swiss/dsp-ingest/compare/v0.12.2...v0.12.3) (2024-08-21)
 
 
