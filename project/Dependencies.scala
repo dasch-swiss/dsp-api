@@ -18,7 +18,7 @@ object Dependencies {
 
   val ScalaVersion = "3.3.3"
 
-  val PekkoActorVersion = "1.0.3"
+  val PekkoActorVersion = "1.1.1"
   val PekkoHttpVersion  = "1.0.1"
   val JenaVersion       = "5.1.0"
   val Rdf4jVersion      = "5.0.2"
