@@ -365,7 +365,7 @@ and the `knora-api:externalUrl` property is used to provide the URL of the image
   "@type": "anything:ThingPicture",
   "knora-api:hasStillImageFileValue": {
     "@type": "knora-api:StillImageExternalFileValue",
-    "knora-api:fileValueHasExternalUrl": "https://example.com/iiif/3UIsXH9bP0j-BV0D4sN51Xz.jp2/full/max/0/default.jpg"
+    "knora-api:stillImageFileValueHasExternalUrl": "https://example.com/iiif/3UIsXH9bP0j-BV0D4sN51Xz.jp2/full/max/0/default.jpg"
   },
   "knora-api:attachedToProject": {
     "@id": "http://rdfh.ch/projects/0001"
@@ -381,7 +381,10 @@ and the `knora-api:externalUrl` property is used to provide the URL of the image
 }
 ```
 
-In the case of a `knora-api:StillImageExternalFileValue` DSP-API does not retrieve any metadata from external IIIF server.
+*Note:* For backwards compatibility, the `knora-api:fileValueHasExternalUrl` property may be used instead of
+`knora-api:stillImageFileValueHasExternalUrl`.
+The `knora-api:fileValueHasExternalUrl` property is deprecated and will be removed in the future.
+The `knora-api:stillImageFileValueHasExternalUrl` property is correct and must be used for reading and writing.
 
 
 #### PDF Documents

@@ -10,7 +10,6 @@ import zio.ZIO
 import java.net.URI
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -2805,13 +2804,16 @@ case class StillImageExternalFileValueContentV2(
  * Constructs [[StillImageFileValueContentV2]] objects based on JSON-LD input.
  */
 object StillImageExternalFileValueContentV2 {
+
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
   ): ZIO[StringFormatter, Throwable, StillImageExternalFileValueContentV2] =
     for {
-      comment          <- JsonLDUtil.getComment(jsonLDObject)
-      externalUrlEither = jsonLDObject.getRequiredString(FileValueHasExternalUrl).flatMap(IiifImageRequestUrl.from)
-      externalUrl      <- ZIO.fromEither(externalUrlEither).mapError(BadRequestException.apply)
+      comment <- JsonLDUtil.getComment(jsonLDObject)
+      externalUrlEither = jsonLDObject
+                            .getRequiredString(StillImageFileValueHasExternalUrl, FileValueHasExternalUrl)
+                            .flatMap(IiifImageRequestUrl.from)
+      externalUrl <- ZIO.fromEither(externalUrlEither).mapError(BadRequestException.apply)
     } yield StillImageExternalFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = FileValueV2(
