@@ -545,6 +545,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case None                    => Right(None)
       case Some(other)             => Left(s"Invalid $key: $other (string expected)")
     }
+
   def getRequiredString(key: String): Either[String, String] = getString(key).flatMap {
     case Some(value) => Right(value)
     case None        => Left(s"No $key provided")
@@ -604,13 +605,15 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
 
   def getRequiredUri(key: String): Either[String, URI] =
     getRequiredObject(key).flatMap { obj =>
-      obj.getRequiredString(JsonLDKeywords.TYPE).flatMap { _ =>
-        obj.getRequiredString(JsonLDKeywords.VALUE).flatMap { str =>
-          Try(URI.create(str)).toEither.left.map {
-            case e: IllegalArgumentException => s"Invalid URI: '$str'"
-            case e: Throwable                => e.getMessage
+      obj.getRequiredString(JsonLDKeywords.TYPE).flatMap {
+        case typ if typ == OntologyConstants.Xsd.Uri || typ == "xsd:anyURI" =>
+          obj.getRequiredString(JsonLDKeywords.VALUE).flatMap { str =>
+            Try(URI.create(str)).toEither.left.map {
+              case e: IllegalArgumentException => s"Invalid URI: '$str'"
+              case e: Throwable                => e.getMessage
+            }
           }
-        }
+        case _ => Left(s"Invalid object type for '$key', expected 'xsd:anyURI'")
       }
     }
 
