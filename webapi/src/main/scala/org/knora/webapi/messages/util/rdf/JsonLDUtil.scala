@@ -550,6 +550,24 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   }
 
   /**
+   * Gets a required String value by checking the provided property keys in order.
+   * @param keys The names of the properties to check in the JSON-LD object.
+   * @return the [[String]] value for the first key where it exists,
+   *         fails if the given key exists but is not a [[JsonLDString]],
+   *         fails if none of the keys exist.
+   */
+  def getRequiredString(keys: String*): Either[String, String] =
+    keys.collectFirst {
+      case key if getString(key).exists(_.nonEmpty) =>
+        getString(key) match
+          case Right(Some(str)) => str
+          case _                => "" // unreachable
+    } match {
+      case Some(str) => Right(str)
+      case None      => Left(s"Property not found for '${keys.mkString(" or ")}'")
+    }
+
+  /**
    * Gets an optional string value of a property of this JSON-LD object, throwing
    * [[BadRequestException]] if the property's value is not a string. Parses the value with the specified validation
    * function (see [[StringFormatter]] for examples of such functions), throwing
