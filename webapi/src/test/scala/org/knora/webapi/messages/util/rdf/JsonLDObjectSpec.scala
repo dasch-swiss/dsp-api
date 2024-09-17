@@ -158,6 +158,12 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     test("getRequiredString should fail with correct message") {
       assertTrue(emptyJsonLdObject.getRequiredString(someKey) == Left("No someKey provided"))
     },
+    test("getRequiredString(key*) should fail with correct message") {
+      assertTrue(
+        emptyJsonLdObject.getRequiredString(Array(someKey)*) == Left(s"Property not found for '$someKey'"),
+        emptyJsonLdObject.getRequiredString("unknown", someKey) == Left(s"Property not found for 'unknown or $someKey'"),
+      )
+    },
   )
 
   def stringValueWhenGivenValidString: Spec[Any, Serializable] = {
@@ -177,6 +183,12 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       },
       test("getRequiredString should return correct value") {
         assertTrue(jsonLdObject.getRequiredString(someKey) == Right(someString))
+      },
+      test("getRequiredString(key*) should return correct value") {
+        assertTrue(
+          jsonLdObject.getRequiredString("unknown", someKey) == Right(someString),
+          jsonLdObject.getRequiredString(someKey, "unknown") == Right(someString),
+        )
       },
     )
   }
