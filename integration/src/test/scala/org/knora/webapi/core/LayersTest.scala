@@ -240,8 +240,8 @@ object LayersTest {
 
   private val fusekiAndSipiTestcontainers =
     ZLayer.make[
-      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & SharedVolumes.Temp & SharedVolumes.Images &
-        SipiTestContainer & WhichSipiService,
+      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & SharedVolumes.Volumes & SipiTestContainer &
+        WhichSipiService,
     ](
       AppConfigForTestContainers.testcontainers,
       DspIngestTestContainer.layer,

@@ -18,9 +18,9 @@ final class DspIngestTestContainer extends GenericContainer[DspIngestTestContain
 object DspIngestTestContainer {
 
   private val assetDir = "/opt/images"
-  private val tmpDir   = "/opt/tmp"
+  private val tempDir  = "/opt/temp"
 
-  def make(imagesVolume: SharedVolumes.Images, tmpVolume: SharedVolumes.Temp): DspIngestTestContainer = {
+  def make(imagesVolume: SharedVolumes.Images, tempVolume: SharedVolumes.Temp): DspIngestTestContainer = {
     val port = 3340
     new DspIngestTestContainer()
       .withExposedPorts(port)
@@ -29,16 +29,16 @@ object DspIngestTestContainer {
       .withEnv("JWT_AUDIENCE", s"http://localhost:$port")
       .withEnv("JWT_ISSUER", "0.0.0.0:3333")
       .withEnv("STORAGE_ASSET_DIR", assetDir)
-      .withEnv("STORAGE_TEMP_DIR", tmpDir)
+      .withEnv("STORAGE_TEMP_DIR", tempDir)
       .withEnv("JWT_SECRET", "UP 4888, nice 4-8-4 steam engine")
       .withEnv("SIPI_USE_LOCAL_DEV", "false")
       .withEnv("JWT_DISABLE_AUTH", "true")
       .withEnv("DB_JDBC_URL", "jdbc:sqlite:/tmp/ingest.sqlite")
       .withFileSystemBind(imagesVolume.hostPath, assetDir, BindMode.READ_WRITE)
-      .withFileSystemBind(tmpVolume.hostPath, tmpDir, BindMode.READ_WRITE)
+      .withFileSystemBind(tempVolume.hostPath, tempDir, BindMode.READ_WRITE)
   }
 
-  val layer: URLayer[SharedVolumes.Images & SharedVolumes.Temp, DspIngestTestContainer] =
+  val layer: URLayer[SharedVolumes.Volumes, DspIngestTestContainer] =
     ZLayer.scoped(for {
       imagesVolume <- ZIO.service[SharedVolumes.Images]
       tmpVolume    <- ZIO.service[SharedVolumes.Temp]

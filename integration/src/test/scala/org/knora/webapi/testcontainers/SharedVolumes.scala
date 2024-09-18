@@ -20,6 +20,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 object SharedVolumes {
 
+  type Volumes = Images & Temp
+
   final case class Images private (hostPath: String) extends AnyVal
 
   object Images {
