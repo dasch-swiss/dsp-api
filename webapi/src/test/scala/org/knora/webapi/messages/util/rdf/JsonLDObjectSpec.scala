@@ -575,7 +575,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         } yield assertTrue(actual == URI.create("http://example.com"))
       }
     },
-    test("given a invalid URI getRequiredUri should fail") {
+    test("given an invalid URI getRequiredUri should fail") {
       for {
         actual <- ZIO
                     .fromEither(
