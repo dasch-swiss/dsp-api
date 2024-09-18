@@ -2810,11 +2810,13 @@ object StillImageExternalFileValueContentV2 {
     jsonLDObject: JsonLDObject,
   ): ZIO[StringFormatter, Throwable, StillImageExternalFileValueContentV2] =
     for {
-      comment <- JsonLDUtil.getComment(jsonLDObject)
-      externalUrlEither = jsonLDObject
-                            .getRequiredString(StillImageFileValueHasExternalUrl, FileValueHasExternalUrl)
-                            .flatMap(IiifImageRequestUrl.from)
-      externalUrl <- ZIO.fromEither(externalUrlEither).mapError(BadRequestException.apply)
+      comment    <- JsonLDUtil.getComment(jsonLDObject)
+      fromUrlType = jsonLDObject.getRequiredUri(StillImageFileValueHasExternalUrl).map(_.toString)
+      // from String is kept for backwars compatibility
+      fromString = jsonLDObject.getRequiredString(StillImageFileValueHasExternalUrl, FileValueHasExternalUrl)
+      externalUrl <- ZIO
+                       .fromEither(fromUrlType.orElse(fromString).flatMap(IiifImageRequestUrl.from))
+                       .mapError(BadRequestException.apply)
     } yield StillImageExternalFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = FileValueV2(
