@@ -384,7 +384,7 @@ and the `knora-api:externalUrl` property is used to provide the URL of the image
 
 _Note:_ For backwards compatibility, we support using `knora-api:fileValueHasExternalUrl` and
 `knora-api:stillImageFileValueExternalFileValue` properties if the value is submitted as a
-`String` literal, i.e. `"knora-api:;stillImageFileValueExternalFileValue" : "https://example.com/iiif/3UIsXH9bP0j-BV0D4sN51Xz.jp2/full/max/0/default.jpg"`.
+`String` literal, i.e. `"knora-api:stillImageFileValueExternalFileValue" : "https://example.com/iiif/3UIsXH9bP0j-BV0D4sN51Xz.jp2/full/max/0/default.jpg"`.
 _Support for `String` literals and the `knora-api:fileValueHasExternalUrl` property is
 deprecated and will be removed in the future._
 The `knora-api:stillImageFileValueHasExternalUrl` property with a `xsd:anyURI` type is
