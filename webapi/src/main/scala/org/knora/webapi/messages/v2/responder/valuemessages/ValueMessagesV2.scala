@@ -2812,7 +2812,7 @@ object StillImageExternalFileValueContentV2 {
     for {
       comment    <- JsonLDUtil.getComment(jsonLDObject)
       fromUrlType = jsonLDObject.getRequiredUri(StillImageFileValueHasExternalUrl).map(_.toString)
-      // from String is kept for backwars compatibility
+      // from String is kept for backwards compatibility
       fromString = jsonLDObject.getRequiredString(StillImageFileValueHasExternalUrl, FileValueHasExternalUrl)
       externalUrl <- ZIO
                        .fromEither(fromUrlType.orElse(fromString).flatMap(IiifImageRequestUrl.from))
