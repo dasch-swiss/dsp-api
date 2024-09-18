@@ -91,8 +91,7 @@ object LayersTest {
     LayersLive.DspEnvironmentLive & FusekiTestContainer & TestClientService
 
   type DefaultTestEnvironmentWithSipi =
-    DefaultTestEnvironmentWithoutSipi & SipiTestContainer & DspIngestTestContainer & SharedVolumes.Images &
-      SharedVolumes.Temp
+    DefaultTestEnvironmentWithoutSipi & SipiTestContainer & DspIngestTestContainer & SharedVolumes.Volumes
 
   type CommonR0 =
     pekko.actor.ActorSystem & AppConfigurationsTest & JwtConfig & WhichSipiService
