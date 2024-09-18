@@ -593,7 +593,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
                     .exit
       } yield assertTrue(actual == Exit.fail("Invalid URI: '-\\\\\not-a-uri-'"))
     },
-    test("given a invalid type getRequiredUri should fail") {
+    test("given an invalid type getRequiredUri should fail") {
       for {
         actual <- ZIO
                     .fromEither(
