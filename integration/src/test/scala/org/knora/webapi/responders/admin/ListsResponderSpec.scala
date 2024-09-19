@@ -5,11 +5,11 @@
 
 package org.knora.webapi.responders.admin
 
-import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 import org.apache.pekko.testkit.*
 import zio.ZIO
 
 import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
@@ -31,6 +31,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
  * Tests [[ListsResponder]].
