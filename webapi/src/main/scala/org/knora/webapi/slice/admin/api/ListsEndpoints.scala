@@ -12,7 +12,6 @@ import zio.ZLayer
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
-import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.slice.admin.api.Requests.ListChangeCommentsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeLabelsRequest
