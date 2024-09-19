@@ -12,6 +12,7 @@ import zio.ZIO
 import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
+import dsp.errors.NotFoundException
 import dsp.errors.UpdateNotPerformedException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -81,15 +82,15 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           UnsafeZioRun.run(
             listsResponder(_.getLists(Some(Left(ProjectIri.unsafeFrom("http://rdfh.ch/projects/unknown"))))),
           )
-        assertFailsWithA[BadRequestException](exit)
+        assertFailsWithA[NotFoundException](exit)
       }
 
       "getLists should fail if project by shortcode was not found" in {
         val exit =
           UnsafeZioRun.run(
-            listsResponder(_.getLists(Some(Right(Shortcode.unsafeFrom("FFFF"))))),
+            listsResponder(_.getLists(Some(Right(Shortcode.unsafeFrom("9999"))))),
           )
-        assertFailsWithA[BadRequestException](exit)
+        assertFailsWithA[NotFoundException](exit)
       }
 
       "return all lists belonging to the anything project" in {
