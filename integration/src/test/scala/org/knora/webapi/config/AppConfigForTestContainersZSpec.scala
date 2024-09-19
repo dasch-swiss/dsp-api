@@ -32,7 +32,7 @@ object AppConfigForTestContainersZSpec extends ZIOSpecDefault {
     AppConfigForTestContainers.testcontainers,
     DspIngestTestContainer.layer,
     FusekiTestContainer.layer,
-    SharedVolumes.Images.layer,
+    SharedVolumes.layer,
     SipiTestContainer.layer,
   )
 }

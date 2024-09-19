@@ -91,7 +91,7 @@ object LayersTest {
     LayersLive.DspEnvironmentLive & FusekiTestContainer & TestClientService
 
   type DefaultTestEnvironmentWithSipi =
-    DefaultTestEnvironmentWithoutSipi & SipiTestContainer & DspIngestTestContainer & SharedVolumes.Images
+    DefaultTestEnvironmentWithoutSipi & SipiTestContainer & DspIngestTestContainer & SharedVolumes.Volumes
 
   type CommonR0 =
     pekko.actor.ActorSystem & AppConfigurationsTest & JwtConfig & WhichSipiService
@@ -239,14 +239,14 @@ object LayersTest {
 
   private val fusekiAndSipiTestcontainers =
     ZLayer.make[
-      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & SharedVolumes.Images & SipiTestContainer &
+      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & SharedVolumes.Volumes & SipiTestContainer &
         WhichSipiService,
     ](
       AppConfigForTestContainers.testcontainers,
       DspIngestTestContainer.layer,
       FusekiTestContainer.layer,
       SipiTestContainer.layer,
-      SharedVolumes.Images.layer,
+      SharedVolumes.layer,
       WhichSipiService.live,
     )
 
