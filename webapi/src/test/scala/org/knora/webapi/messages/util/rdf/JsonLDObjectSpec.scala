@@ -546,8 +546,8 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     typeIriSuite + propertyIriSuite
   }
 
-  private def uriValueSuite = suite("getting uri values")(
-    test("given no uri getRequiredUri should fail") {
+  private def uriValueSuite = suite("getting URI values")(
+    test("given no URI getRequiredUri should fail") {
       for {
         actual <- ZIO.fromEither(emptyJsonLdObject.getRequiredUri(someKey)).exit
       } yield assertTrue(actual == Exit.fail("No someKey provided"))
