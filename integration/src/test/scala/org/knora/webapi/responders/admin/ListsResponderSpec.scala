@@ -5,11 +5,11 @@
 
 package org.knora.webapi.responders.admin
 
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 import org.apache.pekko.testkit.*
 import zio.ZIO
 
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.UpdateNotPerformedException
@@ -27,9 +27,9 @@ import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
 import org.knora.webapi.slice.admin.api.Requests.ListCreateChildNodeRequest
 import org.knora.webapi.slice.admin.api.Requests.ListCreateRootNodeRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
  * Tests [[ListsResponder]].
@@ -74,6 +74,22 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val actual =
           UnsafeZioRun.runOrThrow(listsResponder(_.getLists(Some(Right(imagesProjectShortcode)))))
         actual.lists.size should be(4)
+      }
+
+      "getLists should fail if project by iri was not found" in {
+        val exit =
+          UnsafeZioRun.run(
+            listsResponder(_.getLists(Some(Left(ProjectIri.unsafeFrom("http://rdfh.ch/projects/unknown"))))),
+          )
+        assertFailsWithA[BadRequestException](exit)
+      }
+
+      "getLists should fail if project by shortcode was not found" in {
+        val exit =
+          UnsafeZioRun.run(
+            listsResponder(_.getLists(Some(Right(Shortcode.unsafeFrom("FFFF"))))),
+          )
+        assertFailsWithA[BadRequestException](exit)
       }
 
       "return all lists belonging to the anything project" in {
