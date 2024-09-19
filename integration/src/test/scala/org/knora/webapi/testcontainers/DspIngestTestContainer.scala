@@ -20,7 +20,7 @@ object DspIngestTestContainer {
   private val assetDir = "/opt/images"
   private val tempDir  = "/opt/temp"
 
-  def make(imagesVolume: SharedVolumes.Images): DspIngestTestContainer = {
+  def make(imagesVolume: SharedVolumes.Images, tempVolume: SharedVolumes.Temp): DspIngestTestContainer = {
     val port = 3340
     new DspIngestTestContainer()
       .withExposedPorts(port)
@@ -35,14 +35,13 @@ object DspIngestTestContainer {
       .withEnv("JWT_DISABLE_AUTH", "true")
       .withEnv("DB_JDBC_URL", "jdbc:sqlite:/tmp/ingest.sqlite")
       .withFileSystemBind(imagesVolume.hostPath, assetDir, BindMode.READ_WRITE)
+      .withFileSystemBind(tempVolume.hostPath, tempDir, BindMode.READ_WRITE)
   }
 
-  private val initDspIngest = ZLayer.fromZIO(
-    ZIO.serviceWithZIO[DspIngestTestContainer] { it =>
-      ZIO.attemptBlocking(it.execInContainer("mkdir", s"$tempDir")).orDie
-    },
-  )
-
-  val layer: URLayer[SharedVolumes.Images, DspIngestTestContainer] =
-    ZLayer.scoped(ZIO.serviceWithZIO[SharedVolumes.Images](make(_).toZio)) >+> initDspIngest
+  val layer: URLayer[SharedVolumes.Volumes, DspIngestTestContainer] =
+    ZLayer.scoped(for {
+      imagesVolume <- ZIO.service[SharedVolumes.Images]
+      tmpVolume    <- ZIO.service[SharedVolumes.Temp]
+      container    <- make(imagesVolume, tmpVolume).toZio
+    } yield container)
 }

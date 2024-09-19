@@ -20,6 +20,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 object SharedVolumes {
 
+  type Volumes = Images & Temp
+
   final case class Images private (hostPath: String) extends AnyVal
 
   object Images {
@@ -60,4 +62,11 @@ object SharedVolumes {
           Files.copy(source, targetDir / filename, StandardCopyOption.REPLACE_EXISTING)
       }
   }
+
+  final case class Temp private (hostPath: String) extends AnyVal
+  object Temp {
+    val layer: ULayer[Temp] = ZLayer.succeed(Temp(System.getProperty("java.io.tmpdir")))
+  }
+
+  val layer: ULayer[Images & Temp] = Images.layer ++ Temp.layer
 }
