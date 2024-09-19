@@ -6,11 +6,13 @@
 package org.knora.webapi.responders.admin
 
 import org.apache.pekko.testkit.*
+import zio.ZIO
 
 import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
+import dsp.errors.NotFoundException
 import dsp.errors.UpdateNotPerformedException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -26,6 +28,7 @@ import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
 import org.knora.webapi.slice.admin.api.Requests.ListCreateChildNodeRequest
 import org.knora.webapi.slice.admin.api.Requests.ListCreateRootNodeRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
@@ -54,20 +57,46 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
   private val treeListChildNodes: Seq[ListNodeADM] = SharedListsTestDataADM.treeListChildNodes
 
+  private val listsResponder = ZIO.serviceWithZIO[ListsResponder]
+
   "The Lists Responder" when {
     "used to query information about lists" should {
       "return all lists" in {
-        val actual = UnsafeZioRun.runOrThrow(ListsResponder.getLists(None))
+        val actual = UnsafeZioRun.runOrThrow(listsResponder(_.getLists(None)))
         actual.lists.size should be(9)
       }
 
-      "return all lists belonging to the images project" in {
-        val actual = UnsafeZioRun.runOrThrow(ListsResponder.getLists(Some(ProjectIri.unsafeFrom(imagesProjectIri))))
+      "return all lists belonging to the images project by iri" in {
+        val actual =
+          UnsafeZioRun.runOrThrow(listsResponder(_.getLists(Some(Left(ProjectIri.unsafeFrom(imagesProjectIri))))))
         actual.lists.size should be(4)
       }
 
+      "return all lists belonging to the images project by shortcode" in {
+        val actual =
+          UnsafeZioRun.runOrThrow(listsResponder(_.getLists(Some(Right(imagesProjectShortcode)))))
+        actual.lists.size should be(4)
+      }
+
+      "getLists should fail if project by iri was not found" in {
+        val exit =
+          UnsafeZioRun.run(
+            listsResponder(_.getLists(Some(Left(ProjectIri.unsafeFrom("http://rdfh.ch/projects/unknown"))))),
+          )
+        assertFailsWithA[NotFoundException](exit)
+      }
+
+      "getLists should fail if project by shortcode was not found" in {
+        val exit =
+          UnsafeZioRun.run(
+            listsResponder(_.getLists(Some(Right(Shortcode.unsafeFrom("9999"))))),
+          )
+        assertFailsWithA[NotFoundException](exit)
+      }
+
       "return all lists belonging to the anything project" in {
-        val actual = UnsafeZioRun.runOrThrow(ListsResponder.getLists(Some(ProjectIri.unsafeFrom(anythingProjectIri))))
+        val actual =
+          UnsafeZioRun.runOrThrow(listsResponder(_.getLists(Some(Left(ProjectIri.unsafeFrom(anythingProjectIri))))))
         actual.lists.size should be(4)
       }
 

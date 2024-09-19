@@ -10,6 +10,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionA
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.sharedtestdata
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 
@@ -88,7 +89,8 @@ object SharedTestDataADM2 {
   /**
    * **********************************
    */
-  val imagesProjectIri = "http://rdfh.ch/projects/00FF"
+  val imagesProjectIri       = "http://rdfh.ch/projects/00FF"
+  val imagesProjectShortcode = Shortcode.unsafeFrom("00FF")
 
   /* represents 'user01' as found in admin-data.ttl  */
   def imagesUser01 = sharedtestdata.UserProfile(

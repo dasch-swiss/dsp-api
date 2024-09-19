@@ -22,6 +22,7 @@ import org.knora.webapi.slice.admin.api.Requests.ListCreateChildNodeRequest
 import org.knora.webapi.slice.admin.api.Requests.ListCreateRootNodeRequest
 import org.knora.webapi.slice.admin.api.model.AdminQueryVariables
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
@@ -32,9 +33,12 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) {
 
   val getListsQueryByProjectIriOption = baseEndpoints.publicEndpoint.get
     .in(base)
-    .in(AdminQueryVariables.projectIriOption)
+    .in(AdminQueryVariables.projectIriOrShortcodeQueryOption)
     .out(jsonBody[ListsGetResponseADM].description("Contains the list of all root nodes of each found list."))
-    .description("Get all lists or all lists belonging to a project.")
+    .description(
+      "Get all lists or all lists belonging to a project. " +
+        "Note that you can provide either a project IRI or a project shortcode.",
+    )
 
   private val listIriPathVar = path[ListIri].description("The IRI of the list.")
   val getListsByIri = baseEndpoints.publicEndpoint.get

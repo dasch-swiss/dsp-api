@@ -29,6 +29,7 @@ import org.knora.webapi.responders.admin.ListsResponder.Queries
 import org.knora.webapi.slice.admin.api.Requests.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.User
@@ -63,10 +64,23 @@ final case class ListsResponder(
    *                   [[None]] if all lists are to be queried.
    * @return a [[ListsGetResponseADM]].
    */
-  def getLists(projectIri: Option[ProjectIri]): Task[ListsGetResponseADM] =
+  def getLists(iriShortcode: Option[Either[ProjectIri, Shortcode]]): Task[ListsGetResponseADM] =
     for {
+      project <- iriShortcode match {
+                   case Some(Left(iri)) =>
+                     knoraProjectService
+                       .findById(iri)
+                       .someOrFail(NotFoundException(s"Project with IRI '$iri' not found"))
+                       .asSome
+                   case Some(Right(code)) =>
+                     knoraProjectService
+                       .findByShortcode(code)
+                       .someOrFail(NotFoundException(s"Project with shortcode '$code' not found"))
+                       .asSome
+                   case None => ZIO.none
+                 }
       statements <-
-        triplestore.query(Construct(Queries.getListsQuery(projectIri))).flatMap(_.asExtended).map(_.statements)
+        triplestore.query(Construct(Queries.getListsQuery(project.map(_.id)))).flatMap(_.asExtended).map(_.statements)
       lists <-
         ZIO.foreach(statements.toList) { case (listIri: SubjectV2, objs: ConstructPredicateObjects) =>
           for {
@@ -1530,9 +1544,6 @@ object ListsResponder {
          |    ?s ?p ?o .
          |}""".stripMargin
   }
-
-  def getLists(projectIri: Option[ProjectIri]): ZIO[ListsResponder, Throwable, ListsGetResponseADM] =
-    ZIO.serviceWithZIO[ListsResponder](_.getLists(projectIri))
 
   def listGetRequestADM(nodeIri: IRI): ZIO[ListsResponder, Throwable, ListItemGetResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.listGetRequestADM(nodeIri))
