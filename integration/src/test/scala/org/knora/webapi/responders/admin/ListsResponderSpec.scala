@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.admin
 
 import org.apache.pekko.testkit.*
+import zio.ZIO
 
 import java.util.UUID
 
@@ -54,20 +55,24 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
   private val treeListChildNodes: Seq[ListNodeADM] = SharedListsTestDataADM.treeListChildNodes
 
+  private val listsResponder = ZIO.serviceWithZIO[ListsResponder]
+
   "The Lists Responder" when {
     "used to query information about lists" should {
       "return all lists" in {
-        val actual = UnsafeZioRun.runOrThrow(ListsResponder.getLists(None))
+        val actual = UnsafeZioRun.runOrThrow(listsResponder(_.getLists(None)))
         actual.lists.size should be(9)
       }
 
       "return all lists belonging to the images project" in {
-        val actual = UnsafeZioRun.runOrThrow(ListsResponder.getLists(Some(ProjectIri.unsafeFrom(imagesProjectIri))))
+        val actual =
+          UnsafeZioRun.runOrThrow(listsResponder(_.getLists(Some(Left(ProjectIri.unsafeFrom(imagesProjectIri))))))
         actual.lists.size should be(4)
       }
 
       "return all lists belonging to the anything project" in {
-        val actual = UnsafeZioRun.runOrThrow(ListsResponder.getLists(Some(ProjectIri.unsafeFrom(anythingProjectIri))))
+        val actual =
+          UnsafeZioRun.runOrThrow(listsResponder(_.getLists(Some(Left(ProjectIri.unsafeFrom(anythingProjectIri))))))
         actual.lists.size should be(4)
       }
 

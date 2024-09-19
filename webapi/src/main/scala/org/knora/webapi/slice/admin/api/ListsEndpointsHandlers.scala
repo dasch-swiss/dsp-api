@@ -18,7 +18,9 @@ import org.knora.webapi.messages.admin.responder.listsmessages.NodeInfoGetRespon
 import org.knora.webapi.messages.admin.responder.listsmessages.NodePositionChangeResponseADM
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.api.Requests.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.HandlerMapper
@@ -34,7 +36,7 @@ final case class ListsEndpointsHandlers(
 
   private val getListsQueryByProjectIriHandler = PublicEndpointHandler(
     listsEndpoints.getListsQueryByProjectIriOption,
-    (iri: Option[ProjectIri]) => listsResponder.getLists(iri),
+    (iriShortcode: Option[Either[ProjectIri, Shortcode]]) => listsResponder.getLists(iriShortcode),
   )
 
   private val getListsByIriHandler = PublicEndpointHandler(
