@@ -9,7 +9,6 @@ import org.apache.pekko.testkit.*
 import zio.ZIO
 
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.UpdateNotPerformedException
@@ -64,9 +63,15 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         actual.lists.size should be(9)
       }
 
-      "return all lists belonging to the images project" in {
+      "return all lists belonging to the images project by iri" in {
         val actual =
           UnsafeZioRun.runOrThrow(listsResponder(_.getLists(Some(Left(ProjectIri.unsafeFrom(imagesProjectIri))))))
+        actual.lists.size should be(4)
+      }
+
+      "return all lists belonging to the images project by shortcode" in {
+        val actual =
+          UnsafeZioRun.runOrThrow(listsResponder(_.getLists(Some(Right(imagesProjectShortcode)))))
         actual.lists.size should be(4)
       }
 
