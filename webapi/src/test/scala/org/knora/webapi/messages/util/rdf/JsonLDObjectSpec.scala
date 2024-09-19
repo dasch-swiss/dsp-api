@@ -7,11 +7,14 @@ package org.knora.webapi.messages.util.rdf
 
 import zio.*
 import zio.test.*
+import zio.test.check
 
+import java.net.URI
 import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
@@ -27,7 +30,8 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         booleanValueSuite +
         idValueSuite +
         uuidValueSuite +
-        smartIriValueSuite,
+        smartIriValueSuite +
+        uriValueSuite,
     ).provide(IriConverter.layer, StringFormatter.test)
 
   private val emptyJsonLdObject                            = JsonLDObject(Map.empty)
@@ -541,4 +545,73 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     }
     typeIriSuite + propertyIriSuite
   }
+
+  private def uriValueSuite = suite("getting URI values")(
+    test("given no URI getRequiredUri should fail") {
+      for {
+        actual <- ZIO.fromEither(emptyJsonLdObject.getRequiredUri(someKey)).exit
+      } yield assertTrue(actual == Exit.fail("No someKey provided"))
+    },
+    test("given a String getRequiredUri should fail") {
+      for {
+        actual <- ZIO.fromEither(JsonLDObject(Map(someKey -> JsonLDString("String"))).getRequiredUri(someKey)).exit
+      } yield assertTrue(actual == Exit.fail("Invalid someKey: JsonLDString(String) (object expected)"))
+    },
+    test("given a valid URI getRequiredUri should return") {
+      check(Gen.fromIterable(List("xsd:anyURI", OntologyConstants.Xsd.Uri))) { typ =>
+        for {
+          actual <- ZIO.fromEither(
+                      JsonLDObject(
+                        Map(
+                          someKey -> JsonLDObject(
+                            Map(
+                              JsonLDKeywords.TYPE  -> JsonLDString(typ),
+                              JsonLDKeywords.VALUE -> JsonLDString("http://example.com"),
+                            ),
+                          ),
+                        ),
+                      ).getRequiredUri(someKey),
+                    )
+        } yield assertTrue(actual == URI.create("http://example.com"))
+      }
+    },
+    test("given an invalid URI getRequiredUri should fail") {
+      for {
+        actual <- ZIO
+                    .fromEither(
+                      JsonLDObject(
+                        Map(
+                          someKey -> JsonLDObject(
+                            Map(
+                              JsonLDKeywords.TYPE  -> JsonLDString("xsd:anyURI"),
+                              JsonLDKeywords.VALUE -> JsonLDString("-\\\\\not-a-uri-"),
+                            ),
+                          ),
+                        ),
+                      ).getRequiredUri(someKey),
+                    )
+                    .exit
+      } yield assertTrue(actual == Exit.fail("Invalid URI: '-\\\\\not-a-uri-'"))
+    },
+    test("given an invalid type getRequiredUri should fail") {
+      for {
+        actual <- ZIO
+                    .fromEither(
+                      JsonLDObject(
+                        Map(
+                          someKey -> JsonLDObject(
+                            Map(
+                              JsonLDKeywords.TYPE  -> JsonLDString("xsd:timestamp"),
+                              JsonLDKeywords.VALUE -> JsonLDString("http://example.com"),
+                            ),
+                          ),
+                        ),
+                      ).getRequiredUri(someKey),
+                    )
+                    .exit
+      } yield assertTrue(
+        actual == Exit.fail("Invalid object type for 'someKey', expected 'xsd:anyURI'"),
+      )
+    },
+  )
 }
