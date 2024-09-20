@@ -121,7 +121,7 @@ final case class DspIngestClientLive(
                       Header.ContentType(MediaType.application.zip),
                     ),
                   )
-      response     <- Client.request(request).provideSomeLayer[Scope](Client.default)
+      response     <- Client.batched(request).provideSomeLayer[Scope](Client.default)
       bodyAsString <- response.body.asString
       _            <- ZIO.logInfo(s"Response code: ${response.status} body $bodyAsString")
     } yield fileToImport

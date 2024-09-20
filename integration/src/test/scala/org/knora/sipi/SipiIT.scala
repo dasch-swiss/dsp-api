@@ -41,7 +41,7 @@ object SipiIT extends ZIOSpecDefault {
     SipiTestContainer
       .resolveUrl(path)
       .map(url => Request.get(url).addHeaders(Headers(headers)))
-      .flatMap(Client.request(_))
+      .flatMap(Client.batched)
 
   private def createJwt(scope: AuthScope): UIO[String] = for {
     now  <- Clock.instant
