@@ -70,6 +70,8 @@ import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.security.api.AuthenticationApiModule
 import org.knora.webapi.slice.security.api.AuthenticationApiRoutes
+import org.knora.webapi.slice.shacl.ShaclModule
+import org.knora.webapi.slice.shacl.api.ShaclApiModule
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -139,6 +141,8 @@ object LayersTest {
     SearchApiRoutes &
     SearchEndpoints &
     SearchResponderV2Module.Provided &
+    ShaclApiModule.Provided &
+    ShaclModule.Provided &
     SipiService &
     StandoffTagUtilV2 &
     State &
@@ -205,6 +209,8 @@ object LayersTest {
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,
+      ShaclApiModule.layer,
+      ShaclModule.layer,
       SipiServiceTestDelegator.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,

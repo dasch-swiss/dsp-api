@@ -1,4 +1,5 @@
-package org.knora.webapi.slice.shacl
+package org.knora.webapi.slice.shacl.domain
+
 import org.apache.jena.rdf.model.Resource
 import org.topbraid.jenax.util.JenaDatatypes
 import org.topbraid.shacl.vocabulary.SH

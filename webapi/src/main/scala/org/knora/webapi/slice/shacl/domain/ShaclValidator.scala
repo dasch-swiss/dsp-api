@@ -1,4 +1,4 @@
-package org.knora.webapi.slice.shacl
+package org.knora.webapi.slice.shacl.domain
 
 import org.apache.jena.ontology.OntModelSpec
 import org.apache.jena.rdf.model.Model
@@ -46,5 +46,5 @@ final case class ShaclValidator() { self =>
 }
 
 object ShaclValidator {
-  val layer: ULayer[ShaclValidator] = ZLayer.derive[ShaclValidator]
+  val layer = ZLayer.derive[ShaclValidator]
 }
