@@ -5,11 +5,15 @@
 
 package org.knora.webapi.slice.shacl.api
 
+import dsp.errors.RequestRejectedException
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.util.ByteString
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import zio.ZLayer
-
+import sttp.capabilities.pekko.PekkoStreams
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import sttp.model.MediaType
 
 case class ValidationFormData(
   `data.ttl`: String,
@@ -21,11 +25,13 @@ case class ValidationFormData(
 
 case class ShaclEndpoints(baseEndpoints: BaseEndpoints) {
 
-  val validate = baseEndpoints.publicEndpoint.post
-    .in("shacl" / "validate")
-    .in(multipartBody[ValidationFormData])
-    .out(stringBody)
-    .out(header("Content-Type", "text/turtle"))
+  val validate: Endpoint[Unit, ValidationFormData, RequestRejectedException, Source[ByteString, Any], PekkoStreams] =
+    baseEndpoints.publicEndpoint.post
+      .in("shacl" / "validate")
+      .in(multipartBody[ValidationFormData])
+      .out(streamTextBody(PekkoStreams)(new CodecFormat {
+        override val mediaType: MediaType = MediaType("text", "turtle")
+      }))
 
   val endpoints: Seq[AnyEndpoint] =
     Seq(validate).map(_.tag("Shacl"))

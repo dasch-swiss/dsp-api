@@ -14,18 +14,18 @@ import zio.ZIO
 import zio.ZLayer
 
 import scala.concurrent.Future
-
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.InputType.SecurityIn
+import sttp.capabilities.pekko.PekkoStreams
 
 object InputType {
   type SecurityIn = (Option[String], Option[String], Option[UsernamePassword])
 }
 
 case class PublicEndpointHandler[INPUT, OUTPUT](
-  endpoint: Endpoint[Unit, INPUT, RequestRejectedException, OUTPUT, Any],
+  endpoint: Endpoint[Unit, INPUT, RequestRejectedException, OUTPUT, PekkoStreams],
   handler: INPUT => Task[OUTPUT],
 )
 
@@ -51,7 +51,7 @@ final case class HandlerMapper()(implicit val r: zio.Runtime[Any]) {
 
   def mapPublicEndpointHandler[INPUT, OUTPUT](
     handlerAndEndpoint: PublicEndpointHandler[INPUT, OUTPUT],
-  ): Full[Unit, Unit, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
+  ): Full[Unit, Unit, INPUT, RequestRejectedException, OUTPUT, PekkoStreams, Future] =
     handlerAndEndpoint.endpoint.serverLogic[Future](in => runToFuture(handlerAndEndpoint.handler(in)))
 
   def runToFuture[OUTPUT](zio: Task[OUTPUT]): Future[Either[RequestRejectedException, OUTPUT]] =
