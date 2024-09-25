@@ -3,6 +3,7 @@ package org.knora.webapi.slice.shacl.api
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import zio.ZLayer
+
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 case class ValidationFormData(

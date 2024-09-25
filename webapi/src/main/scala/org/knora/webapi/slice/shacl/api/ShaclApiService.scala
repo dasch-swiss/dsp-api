@@ -6,6 +6,7 @@ import zio.*
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 import org.knora.webapi.slice.shacl.domain.ValidationOptions
 
