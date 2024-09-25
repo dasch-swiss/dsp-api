@@ -1,14 +1,14 @@
 package org.knora.webapi.slice.shacl
 
-import zio.*
-import org.apache.jena.rdf.model.Model
-import org.topbraid.shacl.validation.ValidationUtil
-import org.apache.jena.rdf.model.Resource
-import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.ontology.OntModelSpec
+import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.ModelFactory
+import org.apache.jena.rdf.model.Resource
 import org.apache.jena.util.FileUtils
 import org.topbraid.shacl.tools.BlankNodeFinder
 import org.topbraid.shacl.validation.ValidationEngineConfiguration
+import org.topbraid.shacl.validation.ValidationUtil
+import zio.*
 
 import java.io.InputStream
 
