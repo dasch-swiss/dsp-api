@@ -111,7 +111,7 @@ object KnoraUserRepoLive {
         passwordHash,
         preferredLanguage,
         status,
-        isInProjectIris.sortBy(_.value),
+        isInProjectIris,
         isInGroupIris,
         isInSystemAdminGroup,
         isInProjectAdminGroupIris,

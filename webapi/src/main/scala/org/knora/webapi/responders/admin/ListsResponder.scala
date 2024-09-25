@@ -251,8 +251,8 @@ final case class ListsResponder(
                   name = propsMap
                     .get(KnoraBase.ListNodeName.toSmartIri)
                     .map(_.head.asInstanceOf[StringLiteralV2].value),
-                  labels = StringLiteralSequenceV2(labels.toVector.sorted),
-                  comments = StringLiteralSequenceV2(comments.toVector.sorted),
+                  labels = StringLiteralSequenceV2(labels.toVector),
+                  comments = StringLiteralSequenceV2(comments.toVector),
                 ).unescape
               } else {
                 ListChildNodeInfoADM(

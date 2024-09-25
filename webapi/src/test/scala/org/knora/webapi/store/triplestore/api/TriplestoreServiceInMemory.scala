@@ -10,7 +10,7 @@ import org.apache.jena.rdf.model
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.RDFDataMgr
-import org.apache.jena.tdb1.TDB1
+import org.apache.jena.tdb.TDB
 import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
@@ -265,7 +265,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
 
   override def printDataset(prefix: String = ""): UIO[Unit] =
     for {
-//      _  <- Console.printLine(s"TDB Context:\n${TDB1.getContext}\n").orDie
+//      _  <- Console.printLine(s"TDB Context:\n${TDB.getContext}\n").orDie
       ds <- getDataset
       _  <- Console.printLine(s"${prefix}TriplestoreServiceInMemory.printDataset:").orDie
       _   = printDatasetContents(ds)
@@ -317,14 +317,14 @@ object TriplestoreServiceInMemory {
     .flatMap(TriplestoreServiceInMemory.setDataset)
 
   /**
-   * Creates an empty TDB2 [[Dataset]].
+   * Creates an empty TBD2 [[Dataset]].
    *
    * Currently does not (yet) support create a [[Dataset]] which supports Lucene indexing.
    * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
    */
   val createEmptyDataset: UIO[Dataset] =
     ZIO
-      .succeed(TDB1.getContext.set(TDB1.symUnionDefaultGraph, true))
+      .succeed(TDB.getContext.set(TDB.symUnionDefaultGraph, true))
       .as(TDB2Factory.createDataset())
 
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
