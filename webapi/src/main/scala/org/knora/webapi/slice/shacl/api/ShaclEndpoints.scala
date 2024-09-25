@@ -3,12 +3,14 @@ package org.knora.webapi.slice.shacl.api
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import zio.ZLayer
-
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 case class ValidationFormData(
   `data.ttl`: String,
   `shacl.ttl`: String,
+  validateShapes: Option[Boolean],
+  reportDetails: Option[Boolean],
+  addBlankNodes: Option[Boolean],
 )
 
 case class ShaclEndpoints(baseEndpoints: BaseEndpoints) {

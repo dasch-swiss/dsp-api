@@ -6,7 +6,6 @@ import zio.*
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 import org.knora.webapi.slice.shacl.domain.ValidationOptions
 
@@ -18,7 +17,11 @@ final case class ShaclApiService(validator: ShaclValidator) {
       .validate(
         ByteArrayInputStream(formData.`data.ttl`.getBytes),
         ByteArrayInputStream(formData.`shacl.ttl`.getBytes),
-        ValidationOptions.default,
+        ValidationOptions(
+          formData.validateShapes.getOrElse(ValidationOptions.default.validateShapes),
+          formData.reportDetails.getOrElse(ValidationOptions.default.reportDetails),
+          formData.addBlankNodes.getOrElse(ValidationOptions.default.addBlankNodes),
+        ),
       )
       .map(resource => RDFDataMgr.write(out, resource.getModel, RDFFormat.TURTLE))
       .as(out.toString)
