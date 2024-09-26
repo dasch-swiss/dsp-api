@@ -20,7 +20,6 @@ import zio.ZIOAppDefault
 import zio.ZLayer
 import zio.nio.file.Files
 import zio.nio.file.Path
-
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.slice.admin.api.AdminApiEndpoints
 import org.knora.webapi.slice.admin.api.FilesEndpoints
@@ -44,6 +43,7 @@ import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.AuthenticatorError
 import org.knora.webapi.slice.security.AuthenticatorError.*
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2
+import org.knora.webapi.slice.shacl.api.ShaclEndpoints
 
 final case class DocsNoopAuthenticator() extends Authenticator {
   override def getUserADM(requestContext: RequestContext): Task[User] = ???
@@ -69,31 +69,34 @@ object DocsGenerator extends ZIOAppDefault {
       adminEndpoints      <- ZIO.serviceWith[AdminApiEndpoints](_.endpoints)
       managementEndpoints <- ZIO.serviceWith[ManagementEndpoints](_.endpoints)
       v2Endpoints         <- ZIO.serviceWith[ApiV2Endpoints](_.endpoints)
+      shaclEndpoints      <- ZIO.serviceWith[ShaclEndpoints](_.endpoints)
       path                 = Path(args.headOption.getOrElse("/tmp"))
       filesWritten <-
         writeToFile(adminEndpoints, path, "admin-api") <*>
           writeToFile(v2Endpoints, path, "v2") <*>
-          writeToFile(managementEndpoints, path, "management")
+          writeToFile(managementEndpoints, path, "management") <*>
+          writeToFile(shaclEndpoints, path, "shacl")
       _ <- ZIO.logInfo(s"Wrote $filesWritten")
     } yield 0
   }.provideSome[ZIOAppArgs](
     AdminApiEndpoints.layer,
-    AuthenticationEndpointsV2.layer,
     ApiV2Endpoints.layer,
+    AuthenticationEndpointsV2.layer,
     BaseEndpoints.layer,
     DocsNoopAuthenticator.layer,
-    GroupsEndpoints.layer,
     FilesEndpoints.layer,
+    GroupsEndpoints.layer,
     ListsEndpoints.layer,
+    ListsEndpointsV2.layer,
     MaintenanceEndpoints.layer,
+    ManagementEndpoints.layer,
     PermissionsEndpoints.layer,
     ProjectsEndpoints.layer,
     ResourceInfoEndpoints.layer,
     SearchEndpoints.layer,
+    ShaclEndpoints.layer,
     StoreEndpoints.layer,
     UsersEndpoints.layer,
-    ManagementEndpoints.layer,
-    ListsEndpointsV2.layer,
   )
 
   private def writeToFile(endpoints: Seq[AnyEndpoint], path: Path, name: String) = {

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.common.api
 
+import sttp.capabilities.pekko.PekkoStreams
 import sttp.tapir.Endpoint
 import sttp.tapir.model.UsernamePassword
 import sttp.tapir.server.PartialServerEndpoint
@@ -14,11 +15,11 @@ import zio.ZIO
 import zio.ZLayer
 
 import scala.concurrent.Future
+
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.InputType.SecurityIn
-import sttp.capabilities.pekko.PekkoStreams
 
 object InputType {
   type SecurityIn = (Option[String], Option[String], Option[UsernamePassword])

@@ -13,36 +13,32 @@ import org.apache.pekko.util.ByteString
 import zio.*
 
 import java.io.ByteArrayInputStream
-import org.knora.webapi.slice.shacl.domain.ShaclValidator
-import org.knora.webapi.slice.shacl.domain.ValidationOptions
-
 import java.io.OutputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
+
+import org.knora.webapi.slice.shacl.domain.ShaclValidator
+import org.knora.webapi.slice.shacl.domain.ValidationOptions
 
 final case class ShaclApiService(validator: ShaclValidator) {
 
   def validate(formData: ValidationFormData): Task[Source[ByteString, Any]] = {
     val dataStream  = ByteArrayInputStream(formData.`data.ttl`.getBytes)
-    val shaclSthream = ByteArrayInputStream(formData.`shacl.ttl`.getBytes)
-    validator
-      .validate(
-        dataStream,
-        shaclStream,
-        ValidationOptions(
-          formData.validateShapes.getOrElse(ValidationOptions.default.validateShapes),
-          formData.reportDetails.getOrElse(ValidationOptions.default.reportDetails),
-          formData.addBlankNodes.getOrElse(ValidationOptions.default.addBlankNodes),
-        ),
-      )
-      .flatMap(report =>
-        ZIO.attemptBlockingIO {
-          val (out, src) = makeOutputStreamAndSource()
-          RDFDataMgr.write(out, report.getModel, RDFFormat.TURTLE)
-          out.close()
-          src
-        },
-      )
+    val shaclStream = ByteArrayInputStream(formData.`shacl.ttl`.getBytes)
+    val options = ValidationOptions(
+      formData.validateShapes.getOrElse(ValidationOptions.default.validateShapes),
+      formData.reportDetails.getOrElse(ValidationOptions.default.reportDetails),
+      formData.addBlankNodes.getOrElse(ValidationOptions.default.addBlankNodes),
+    )
+    for {
+      report <- validator.validate(dataStream, shaclStream, options)
+      src <- ZIO.attemptBlockingIO {
+               val (out, src) = makeOutputStreamAndSource()
+               try { RDFDataMgr.write(out, report.getModel, RDFFormat.TURTLE) }
+               finally { out.close() }
+               src
+             }
+    } yield src
   }
 
   private def makeOutputStreamAndSource(): (OutputStream, Source[ByteString, _]) = {
