@@ -16,6 +16,7 @@ import zio.http.*
 import zio.metrics.connectors.MetricsConfig
 import zio.metrics.connectors.prometheus
 import zio.metrics.jvm.DefaultJvmMetrics
+
 import org.knora.webapi.config.InstrumentationServerConfig
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.core.State

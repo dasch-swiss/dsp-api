@@ -10,11 +10,12 @@ import org.apache.pekko.util.ByteString
 import sttp.capabilities.pekko.PekkoStreams
 import sttp.model.MediaType
 import sttp.tapir.*
+import sttp.tapir.Schema.annotations.description
 import sttp.tapir.generic.auto.*
 import zio.ZLayer
+
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import sttp.tapir.Schema.annotations.description
 
 case class ValidationFormData(
   @description("The data to be validated.")
