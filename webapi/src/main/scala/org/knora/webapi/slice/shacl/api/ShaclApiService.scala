@@ -16,7 +16,6 @@ import java.io.ByteArrayInputStream
 import java.io.OutputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
-
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 import org.knora.webapi.slice.shacl.domain.ValidationOptions
 
@@ -31,13 +30,12 @@ final case class ShaclApiService(validator: ShaclValidator) {
       formData.addBlankNodes.getOrElse(ValidationOptions.default.addBlankNodes),
     )
     for {
-      report <- validator.validate(dataStream, shaclStream, options)
-      src <- ZIO.attemptBlockingIO {
-               val (out, src) = makeOutputStreamAndSource()
-               try { RDFDataMgr.write(out, report.getModel, RDFFormat.TURTLE) }
-               finally { out.close() }
-               src
-             }
+      report    <- validator.validate(dataStream, shaclStream, options)
+      (out, src) = makeOutputStreamAndSource()
+      _ <- ZIO.attempt {
+             try { RDFDataMgr.write(out, report.getModel, RDFFormat.TURTLE) }
+             finally { out.close() }
+           }.forkDaemon
     } yield src
   }
 
