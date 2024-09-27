@@ -33,7 +33,7 @@ final case class ShaclApiService(validator: ShaclValidator) {
     for {
       report    <- validator.validate(dataStream, shaclStream, options)
       (out, src) = makeOutputStreamAndSource()
-      _ <- ZIO.attempt {
+      _ <- ZIO.attemptBlockingIO {
              try { RDFDataMgr.write(out, report.getModel, RDFFormat.TURTLE) }
              finally { out.close() }
            }.forkDaemon

@@ -15,8 +15,6 @@ import zio.test.*
 
 import scala.concurrent.Await
 import scala.concurrent.Future
-import scala.concurrent.duration.Duration
-
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 
 object ShaclApiServiceSpec extends ZIOSpecDefault {
