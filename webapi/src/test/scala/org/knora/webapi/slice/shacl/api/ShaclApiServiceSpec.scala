@@ -1,18 +1,23 @@
+/*
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.shacl.api
 
-import org.apache.pekko.stream.scaladsl.Source
-
-import scala.concurrent.duration.Duration
 import org.apache.pekko.actor.*
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.Sink
+import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
-import org.knora.webapi.slice.shacl.domain.ShaclValidator
-import zio.test.*
 import zio.*
+import zio.test.*
 
 import scala.concurrent.Await
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+
+import org.knora.webapi.slice.shacl.domain.ShaclValidator
 
 object ShaclApiServiceSpec extends ZIOSpecDefault {
 
@@ -35,7 +40,7 @@ object ShaclApiServiceSpec extends ZIOSpecDefault {
     val str: Future[String] = result
       .runWith(Sink.fold(ByteString.empty)(_ ++ _)) // Accumulate ByteString
       .map(_.utf8String)
-    val foo = Await.result(str, Duration.fromNanos(5_000_000))
-    foo.contains("sh:conforms  true")
+    val reportStr = Await.result(str, 5.seconds.asScala)
+    reportStr.contains("sh:conforms  true")
   }
 }
