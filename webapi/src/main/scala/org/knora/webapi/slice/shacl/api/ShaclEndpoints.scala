@@ -14,14 +14,16 @@ import sttp.tapir.Schema.annotations.description
 import sttp.tapir.generic.auto.*
 import zio.ZLayer
 
+import java.io.File
+
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 case class ValidationFormData(
   @description("The data to be validated.")
-  `data.ttl`: String,
+  `data.ttl`: File,
   @description("The shapes for validation.")
-  `shacl.ttl`: String,
+  `shacl.ttl`: File,
   @description(s"Should shapes also be validated.")
   validateShapes: Option[Boolean],
   @description("Add `sh:details` to the validation report.")

@@ -11,29 +11,35 @@ import org.apache.pekko.stream.scaladsl.Sink
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
 import zio.*
+import zio.Scope
+import zio.nio.file.Files
 import zio.test.*
 
 import scala.concurrent.Await
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.Future
+
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 
 object ShaclApiServiceSpec extends ZIOSpecDefault {
 
   private val shaclApiService = ZIO.serviceWithZIO[ShaclApiService]
 
-  val spec = suite("ShaclApiService")(
+  val spec: Spec[TestEnvironment & Scope, Any] = suite("ShaclApiService")(
     test("validate") {
-      val formData = ValidationFormData("", "", None, None, None)
       for {
-        result <- shaclApiService(_.validate(formData))
+        data    <- Files.createTempFile("data.ttl", None, Seq.empty)
+        shacl   <- Files.createTempFile("shacl.ttl", None, Seq.empty)
+        formData = ValidationFormData(data.toFile, shacl.toFile, None, None, None)
+        result  <- shaclApiService(_.validate(formData))
       } yield assertTrue(reportConforms(result))
     },
   ).provide(ShaclApiService.layer, ShaclValidator.layer)
 
   private def reportConforms(result: Source[ByteString, Any]): Boolean = {
-    implicit val system = ActorSystem.create()
-    implicit val ec     = system.dispatcher
-    implicit val mat    = Materializer(system)
+    implicit val system: ActorSystem          = ActorSystem.create()
+    implicit val ec: ExecutionContextExecutor = system.dispatcher
+    implicit val mat: Materializer            = Materializer(system)
 
     val str: Future[String] = result
       .runWith(Sink.fold(ByteString.empty)(_ ++ _)) // Accumulate ByteString

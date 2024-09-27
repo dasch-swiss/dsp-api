@@ -12,34 +12,34 @@ import org.apache.pekko.stream.scaladsl.StreamConverters
 import org.apache.pekko.util.ByteString
 import zio.*
 
-import java.io.ByteArrayInputStream
+import java.io.FileInputStream
 import java.io.OutputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
+
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 import org.knora.webapi.slice.shacl.domain.ValidationOptions
-
-import java.nio.charset.StandardCharsets
-import java.nio.charset.StandardCharsets.UTF_8
 
 final case class ShaclApiService(validator: ShaclValidator) {
 
   def validate(formData: ValidationFormData): Task[Source[ByteString, Any]] = {
-    val dataStream  = ByteArrayInputStream(formData.`data.ttl`.getBytes(UTF_8))
-    val shaclStream = ByteArrayInputStream(formData.`shacl.ttl`.getBytes(UTF_8))
     val options = ValidationOptions(
       formData.validateShapes.getOrElse(ValidationOptions.default.validateShapes),
       formData.reportDetails.getOrElse(ValidationOptions.default.reportDetails),
       formData.addBlankNodes.getOrElse(ValidationOptions.default.addBlankNodes),
     )
-    for {
-      report    <- validator.validate(dataStream, shaclStream, options)
-      (out, src) = makeOutputStreamAndSource()
-      _ <- ZIO.attemptBlockingIO {
-             try { RDFDataMgr.write(out, report.getModel, RDFFormat.TURTLE) }
-             finally { out.close() }
-           }.forkDaemon
-    } yield src
+    val (out, src) = makeOutputStreamAndSource()
+    ZIO.scoped {
+      for {
+        dataStream  <- ZIO.fromAutoCloseable(ZIO.succeed(new FileInputStream(formData.`data.ttl`)))
+        shaclStream <- ZIO.fromAutoCloseable(ZIO.succeed(new FileInputStream(formData.`shacl.ttl`)))
+        report      <- validator.validate(dataStream, shaclStream, options)
+        _ <- ZIO.attemptBlockingIO {
+               try { RDFDataMgr.write(out, report.getModel, RDFFormat.TURTLE) }
+               finally { out.close() }
+             }.forkDaemon
+      } yield ()
+    }.as(src)
   }
 
   private def makeOutputStreamAndSource(): (OutputStream, Source[ByteString, _]) = {
