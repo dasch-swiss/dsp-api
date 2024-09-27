@@ -37,6 +37,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.security.Authenticator as WebApiAuthenticator
 import org.knora.webapi.slice.security.api.AuthenticationApiRoutes
+import org.knora.webapi.slice.shacl.api.ShaclApiRoutes
 import org.knora.webapi.store.iiif.api.SipiService
 
 /**
@@ -62,6 +63,7 @@ final case class ApiRoutes(
   listsApiV2Routes: ListsApiV2Routes,
   resourceInfoRoutes: ResourceInfoRoutes,
   searchApiRoutes: SearchApiRoutes,
+  shaclApiRoutes: ShaclApiRoutes,
   managementRoutes: ManagementRoutes,
 )(implicit val runtime: Runtime[ApiRoutes.ApiRoutesRuntime])
     extends AroundDirectives {
@@ -81,7 +83,7 @@ final case class ApiRoutes(
                 ResourcesRouteV2(routeData.appConfig).makeRoute ~
                 StandoffRouteV2().makeRoute ~
                 ValuesRouteV2().makeRoute ~
-                (adminApiRoutes.routes ++ authenticationApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes ++ listsApiV2Routes.routes)
+                (adminApiRoutes.routes ++ authenticationApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes ++ listsApiV2Routes.routes ++ shaclApiRoutes.routes)
                   .reduce(_ ~ _)
             }
           }
@@ -101,7 +103,8 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    ApiRoutesRuntime & ActorSystem & AdminApiRoutes & AppRouter & ManagementRoutes & ResourceInfoRoutes,
+    ApiRoutesRuntime & ActorSystem & AdminApiRoutes & AppRouter & ManagementRoutes & ResourceInfoRoutes &
+      ShaclApiRoutes,
     ApiRoutes,
   ] =
     ZLayer {
@@ -114,6 +117,7 @@ object ApiRoutes {
         listsApiV2Routes        <- ZIO.service[ListsApiV2Routes]
         resourceInfoRoutes      <- ZIO.service[ResourceInfoRoutes]
         searchApiRoutes         <- ZIO.service[SearchApiRoutes]
+        shaclApiRoutes          <- ZIO.service[ShaclApiRoutes]
         managementRoutes        <- ZIO.service[ManagementRoutes]
         routeData               <- ZIO.succeed(PekkoRoutesData(sys, router.ref, appConfig))
         runtime                 <- ZIO.runtime[ApiRoutesRuntime]
@@ -124,6 +128,7 @@ object ApiRoutes {
         listsApiV2Routes,
         resourceInfoRoutes,
         searchApiRoutes,
+        shaclApiRoutes,
         managementRoutes,
       )(runtime)
     }

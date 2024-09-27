@@ -5,9 +5,7 @@
 
 package org.knora
 
-import sbt.*
-
-import scala.collection.immutable.Seq
+import sbt._
 
 object Dependencies {
   // should be the same version as in docker-compose.yml,
@@ -20,8 +18,13 @@ object Dependencies {
 
   val PekkoActorVersion = "1.1.1"
   val PekkoHttpVersion  = "1.0.1"
-  val JenaVersion       = "5.1.0"
-  val Rdf4jVersion      = "5.0.2"
+
+  // rdf and graph libraries
+  // topbraid/shacl is not yet compatible with jena 5 so we need to use jena 4 for now
+  // see: https://github.com/TopQuadrant/shacl/pull/177
+  val JenaVersion          = "4.10.0"
+  val Rdf4jVersion         = "5.0.2"
+  val TopbraidShaclVersion = "1.4.3"
 
   val ZioConfigVersion            = "4.0.2"
   val ZioLoggingVersion           = "2.3.1"
@@ -62,8 +65,12 @@ object Dependencies {
   val pekkoSlf4j         = "org.apache.pekko" %% "pekko-slf4j"           % PekkoActorVersion
   val pekkoStream        = "org.apache.pekko" %% "pekko-stream"          % PekkoActorVersion
 
-  // jena
-  val jenaText = "org.apache.jena" % "jena-text" % JenaVersion
+  // rdf and graph libraries
+  val jenaText      = "org.apache.jena"   % "jena-text"           % JenaVersion
+  val rdf4jClient   = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
+  val rdf4jShacl    = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
+  val rdf4jSparql   = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
+  val topbraidShacl = "org.topbraid"      % "shacl"               % TopbraidShaclVersion
 
   // logging
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
@@ -90,14 +97,11 @@ object Dependencies {
   val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
 
   // other
-  val diff        = "com.sksamuel.diff" % "diff"                % "1.1.11"
-  val gwtServlet  = "com.google.gwt"    % "gwt-servlet"         % "2.10.0"
-  val icu4j       = "com.ibm.icu"       % "icu4j"               % "75.1"
-  val jakartaJSON = "org.glassfish"     % "jakarta.json"        % "2.0.1"
-  val rdf4jClient = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
-  val rdf4jShacl  = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
-  val rdf4jSparql = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
-  val saxonHE     = "net.sf.saxon"      % "Saxon-HE"            % "12.5"
+  val diff        = "com.sksamuel.diff" % "diff"         % "1.1.11"
+  val gwtServlet  = "com.google.gwt"    % "gwt-servlet"  % "2.10.0"
+  val icu4j       = "com.ibm.icu"       % "icu4j"        % "75.1"
+  val jakartaJSON = "org.glassfish"     % "jakarta.json" % "2.0.1"
+  val saxonHE     = "net.sf.saxon"      % "Saxon-HE"     % "12.5"
   val scalaGraph =
     "org.scala-graph" %% "graph-core" % "2.0.1" cross CrossVersion.for3Use2_13
   val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.4.1"
@@ -171,6 +175,7 @@ object Dependencies {
     slf4jApi,
     springSecurityCore,
     titaniumJSONLD,
+    topbraidShacl,
     zio,
     zioConfig,
     zioConfigMagnolia,

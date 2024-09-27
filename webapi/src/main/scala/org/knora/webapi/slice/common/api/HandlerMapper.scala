@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.common.api
 
+import sttp.capabilities.pekko.PekkoStreams
 import sttp.tapir.Endpoint
 import sttp.tapir.model.UsernamePassword
 import sttp.tapir.server.PartialServerEndpoint
@@ -25,7 +26,7 @@ object InputType {
 }
 
 case class PublicEndpointHandler[INPUT, OUTPUT](
-  endpoint: Endpoint[Unit, INPUT, RequestRejectedException, OUTPUT, Any],
+  endpoint: Endpoint[Unit, INPUT, RequestRejectedException, OUTPUT, PekkoStreams],
   handler: INPUT => Task[OUTPUT],
 )
 
@@ -51,7 +52,7 @@ final case class HandlerMapper()(implicit val r: zio.Runtime[Any]) {
 
   def mapPublicEndpointHandler[INPUT, OUTPUT](
     handlerAndEndpoint: PublicEndpointHandler[INPUT, OUTPUT],
-  ): Full[Unit, Unit, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
+  ): Full[Unit, Unit, INPUT, RequestRejectedException, OUTPUT, PekkoStreams, Future] =
     handlerAndEndpoint.endpoint.serverLogic[Future](in => runToFuture(handlerAndEndpoint.handler(in)))
 
   def runToFuture[OUTPUT](zio: Task[OUTPUT]): Future[Either[RequestRejectedException, OUTPUT]] =
