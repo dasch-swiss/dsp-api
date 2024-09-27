@@ -16,15 +16,17 @@ import java.io.ByteArrayInputStream
 import java.io.OutputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
-
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 import org.knora.webapi.slice.shacl.domain.ValidationOptions
+
+import java.nio.charset.StandardCharsets
+import java.nio.charset.StandardCharsets.UTF_8
 
 final case class ShaclApiService(validator: ShaclValidator) {
 
   def validate(formData: ValidationFormData): Task[Source[ByteString, Any]] = {
-    val dataStream  = ByteArrayInputStream(formData.`data.ttl`.getBytes)
-    val shaclStream = ByteArrayInputStream(formData.`shacl.ttl`.getBytes)
+    val dataStream  = ByteArrayInputStream(formData.`data.ttl`.getBytes(UTF_8))
+    val shaclStream = ByteArrayInputStream(formData.`shacl.ttl`.getBytes(UTF_8))
     val options = ValidationOptions(
       formData.validateShapes.getOrElse(ValidationOptions.default.validateShapes),
       formData.reportDetails.getOrElse(ValidationOptions.default.reportDetails),
