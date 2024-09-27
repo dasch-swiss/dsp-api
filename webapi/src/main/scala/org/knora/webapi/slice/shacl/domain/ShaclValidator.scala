@@ -15,6 +15,7 @@ import org.topbraid.shacl.validation.ValidationEngineConfiguration
 import org.topbraid.shacl.validation.ValidationUtil
 import zio.*
 
+import java.io.ByteArrayInputStream
 import java.io.InputStream
 
 final case class ValidationOptions(validateShapes: Boolean, reportDetails: Boolean, addBlankNodes: Boolean)
@@ -23,6 +24,9 @@ object ValidationOptions {
 }
 
 final case class ShaclValidator() { self =>
+
+  def validate(data: String, shapes: String, opts: ValidationOptions): Task[Resource] =
+    validate(new ByteArrayInputStream(data.getBytes), new ByteArrayInputStream(shapes.getBytes), opts)
 
   def validate(data: InputStream, shapes: InputStream, opts: ValidationOptions): Task[Resource] = for {
     dataModel   <- readModel(data)
