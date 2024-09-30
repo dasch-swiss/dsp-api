@@ -12,7 +12,7 @@ import org.apache.pekko.stream.scaladsl.StreamConverters
 import org.apache.pekko.util.ByteString
 import zio.*
 
-import java.io.ByteArrayInputStream
+import java.io.FileInputStream
 import java.io.OutputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
@@ -23,22 +23,23 @@ import org.knora.webapi.slice.shacl.domain.ValidationOptions
 final case class ShaclApiService(validator: ShaclValidator) {
 
   def validate(formData: ValidationFormData): Task[Source[ByteString, Any]] = {
-    val dataStream  = ByteArrayInputStream(formData.`data.ttl`.getBytes)
-    val shaclStream = ByteArrayInputStream(formData.`shacl.ttl`.getBytes)
     val options = ValidationOptions(
       formData.validateShapes.getOrElse(ValidationOptions.default.validateShapes),
       formData.reportDetails.getOrElse(ValidationOptions.default.reportDetails),
       formData.addBlankNodes.getOrElse(ValidationOptions.default.addBlankNodes),
     )
-    for {
-      report <- validator.validate(dataStream, shaclStream, options)
-      src <- ZIO.attemptBlockingIO {
-               val (out, src) = makeOutputStreamAndSource()
+    val (out, src) = makeOutputStreamAndSource()
+    ZIO.scoped {
+      for {
+        dataStream  <- ZIO.fromAutoCloseable(ZIO.succeed(new FileInputStream(formData.`data.ttl`)))
+        shaclStream <- ZIO.fromAutoCloseable(ZIO.succeed(new FileInputStream(formData.`shacl.ttl`)))
+        report      <- validator.validate(dataStream, shaclStream, options)
+        _ <- ZIO.attemptBlockingIO {
                try { RDFDataMgr.write(out, report.getModel, RDFFormat.TURTLE) }
                finally { out.close() }
-               src
-             }
-    } yield src
+             }.forkDaemon
+      } yield ()
+    }.as(src)
   }
 
   private def makeOutputStreamAndSource(): (OutputStream, Source[ByteString, _]) = {
