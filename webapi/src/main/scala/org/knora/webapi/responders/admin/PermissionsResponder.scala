@@ -10,7 +10,6 @@ import zio.*
 
 import java.util.UUID
 import scala.collection.mutable.ListBuffer
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -59,7 +58,7 @@ final case class PermissionsResponder(
   administrativePermissionService: AdministrativePermissionService,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
-    with LazyLogging {
+    with LazyLogging { self =>
 
   private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
   /* Entity types used to more clearly distinguish what kind of entity is meant */
@@ -1749,12 +1748,33 @@ final case class PermissionsResponder(
     } yield ()
 
   /**
+   * Gets the default permissions for properties in a resource class in a project.
+   *
+   * @param projectIri              the IRI of the project.
+   * @param resourceClassProperties a map of internal resource class IRIs to sets of internal property IRIs.
+   * @param user                    the user for which the permission should be calculated for.
+   * @return a map of internal resource class IRIs to maps of property IRIs to default permission strings.
+   */
+  type PropertyIri      = SmartIri
+  type ResourceClassIri = SmartIri
+  def getDefaultPropertyPermissions(
+    projectIri: ProjectIri,
+    resourceClassIri: ResourceClassIri,
+    propertyIris: Seq[PropertyIri],
+    user: User,
+  ): Task[Map[PropertyIri, String]] = ZIO
+    .foreach(propertyIris) { propertyIri =>
+      getDefaultValuePermissions(projectIri.value, resourceClassIri, propertyIri, user).map((propertyIri, _))
+    }
+    .map(_.toMap)
+
+  /**
    * Gets the default permissions for a new value.
    *
    * @param projectIri       the IRI of the project of the containing resource.
    * @param resourceClassIri the internal IRI of the resource class.
    * @param propertyIri      the internal IRI of the property that points to the value.
-   * @param requestingUser   the user that is creating the value.
+   * @param targetUser   the user that is creating the value.
    * @return a permission string.
    */
   def getDefaultValuePermissions(
