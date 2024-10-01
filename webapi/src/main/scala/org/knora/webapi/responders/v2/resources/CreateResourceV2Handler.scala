@@ -920,14 +920,14 @@ final case class CreateResourceV2Handler(
                        _ <- ZIO
                               .fail(BadRequestException(s"Invalid resource class IRI: $resourceClassIri"))
                               .when(!resourceClassIri.isKnoraEntityIri)
-                       oap <- permissionsResponder.defaultObjectAccessPermissionsStringForEntityGetADM(
-                                projectIri.value,
-                                resourceClassIri.toString,
-                                None,
-                                PermissionsResponder.EntityType.Resource,
-                                requestingUser,
-                              )
-                     } yield (resourceClassIri, oap.permissionLiteral)
+                       permissionLiteral <- permissionsResponder
+                                              .getDefaultResourcePermissions(
+                                                projectIri,
+                                                resourceClassIri,
+                                                requestingUser,
+                                              )
+                                              .map(_.permissionLiteral)
+                     } yield (resourceClassIri, permissionLiteral)
                    }
                    .map(_.toMap)
     } yield mapping

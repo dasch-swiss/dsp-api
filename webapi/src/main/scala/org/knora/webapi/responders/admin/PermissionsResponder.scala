@@ -662,6 +662,21 @@ final case class PermissionsResponder(
                                                }
     } yield defaultPermissions
 
+  def getDefaultResourcePermissions(
+    projectIri: ProjectIri,
+    resourceClassIri: ResourceClassIri,
+    requestingUser: User,
+  ): Task[DefaultObjectAccessPermissionsStringResponseADM] =
+    ZIO.attempt(resourceClassIri.toInternalIri).flatMap { resourceClassIri =>
+      defaultObjectAccessPermissionsStringForEntityGetADM(
+        projectIri.value,
+        resourceClassIri.value,
+        None,
+        EntityType.Resource,
+        requestingUser,
+      )
+    }
+
   /**
    * Returns a string containing default object permissions statements ready for usage during creation of a new resource.
    * The permissions include any default object access permissions defined for the resource class and on any groups the
@@ -673,7 +688,7 @@ final case class PermissionsResponder(
    * @param targetUser       the user for which the permissions need to be calculated.
    * @return an optional string with object access permission statements
    */
-  def defaultObjectAccessPermissionsStringForEntityGetADM(
+  private def defaultObjectAccessPermissionsStringForEntityGetADM(
     projectIri: IRI,
     resourceClassIri: IRI,
     propertyIri: Option[IRI],
@@ -1805,8 +1820,9 @@ final case class PermissionsResponder(
 }
 
 object PermissionsResponder {
+
   /* Entity types used to more clearly distinguish what kind of entity is meant */
-  enum EntityType {
+  private[PermissionsResponder] enum EntityType {
     case Resource
     case Property
   }
