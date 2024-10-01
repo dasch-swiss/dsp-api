@@ -6,7 +6,7 @@
 package swiss.dasch.domain
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.ProjectFolder
-import zio.nio.file.Files.{isDirectory, newDirectoryStream}
+import zio.nio.file.Files.newDirectoryStream
 import zio.nio.file.{Files, Path}
 import zio.prelude.ForEachOps
 import zio.stream.ZStream

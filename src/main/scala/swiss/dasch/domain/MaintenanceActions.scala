@@ -4,6 +4,7 @@
  */
 
 package swiss.dasch.domain
+
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FilenameUtils
 import swiss.dasch.api.ActionName
@@ -12,13 +13,12 @@ import swiss.dasch.domain.AugmentedPath.*
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.FileFilters.isJpeg2000
 import swiss.dasch.domain.SipiImageFormat.Tif
-import swiss.dasch.domain.SupportedFileType.MovingImage
+import zio.*
 import zio.json.interop.refined.*
 import zio.json.{DeriveJsonCodec, EncoderOps, JsonCodec, JsonEncoder}
 import zio.nio.file
 import zio.nio.file.{Files, Path}
 import zio.stream.{ZSink, ZStream}
-import zio.*
 
 import java.io.IOException
 

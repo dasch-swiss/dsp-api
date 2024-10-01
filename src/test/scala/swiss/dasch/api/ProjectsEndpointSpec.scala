@@ -8,38 +8,23 @@ package swiss.dasch.api
 import sttp.client3.Response
 import sttp.client3.impl.zio.RIOMonadAsyncError
 import sttp.client3.testing.SttpBackendStub
-import sttp.tapir.server.ziohttp.ZioHttpInterpreter
-import sttp.tapir.server.ziohttp.ZioHttpServerOptions
-import swiss.dasch.FetchAssetPermissionsLive
-import swiss.dasch.FetchAssetPermissionsMock
-import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
-import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
-import swiss.dasch.config.Configuration.DspApiConfig
-import swiss.dasch.config.Configuration.Features
-import swiss.dasch.config.Configuration.StorageConfig
-import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
+import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
+import swiss.dasch.api.ProjectsEndpointsResponses.{AssetInfoResponse, ProjectResponse}
+import swiss.dasch.config.Configuration.{DspApiConfig, Features, StorageConfig}
 import swiss.dasch.domain.*
+import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.infrastructure.CommandExecutorLive
-import swiss.dasch.test.SpecConfigurations
-import swiss.dasch.test.SpecConstants.Projects.emptyProject
-import swiss.dasch.test.SpecConstants.Projects.existingProject
-import swiss.dasch.test.SpecConstants.Projects.nonExistentProject
-import swiss.dasch.test.SpecPaths
+import swiss.dasch.test.SpecConstants.Projects.{emptyProject, existingProject, nonExistentProject}
+import swiss.dasch.test.{SpecConfigurations, SpecPaths}
 import swiss.dasch.util.TestUtils
-import zio.Chunk
-import zio.UIO
-import zio.ZIO
-import zio.ZLayer
-import zio.http
-import zio.http.Header.ContentDisposition
-import zio.http.Header.ContentDisposition.Attachment
-import zio.http.Header.ContentType
+import swiss.dasch.{FetchAssetPermissionsLive, FetchAssetPermissionsMock}
 import zio.http.*
+import zio.http.Header.ContentDisposition.Attachment
+import zio.http.Header.{ContentDisposition, ContentType}
 import zio.json.*
 import zio.nio.file.Files
-import zio.test.Spec
-import zio.test.ZIOSpecDefault
-import zio.test.assertTrue
+import zio.test.{Spec, ZIOSpecDefault, assertTrue}
+import zio.{Chunk, UIO, ZIO, ZLayer, http}
 
 import java.net.URLDecoder
 import java.text.Normalizer

@@ -13,7 +13,7 @@ val hikariVersion               = "6.0.0"
 val quillVersion                = "4.8.5"
 val sipiVersion                 = "v30.18.3"
 val sqliteVersion               = "3.46.1.3"
-val tapirVersion                = "1.11.3"
+val tapirVersion                = "1.11.5"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "4.0.2"
 val zioJsonVersion              = "0.7.3"
@@ -29,7 +29,7 @@ val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
 
 ThisBuild / organization      := "dasch.swiss"
 ThisBuild / version           := gitVersion
-ThisBuild / scalaVersion      := "3.3.3"
+ThisBuild / scalaVersion      := "3.3.4"
 ThisBuild / fork              := true
 ThisBuild / semanticdbEnabled := true
 
@@ -110,7 +110,7 @@ lazy val root = (project in file("."))
       "dev.zio"      %% "zio-test-junit"         % zioVersion     % Test,
       "dev.zio"      %% "zio-test-magnolia"      % zioVersion     % Test,
       "dev.zio"      %% "zio-test-sbt"           % zioVersion     % Test,
-      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.2.0"        % Test,
+      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.2.1"        % Test,
     ),
     testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     Docker / dockerRepository            := Some("daschswiss"),

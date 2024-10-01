@@ -8,7 +8,6 @@ package swiss.dasch.api
 import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import swiss.dasch.domain.*
 import swiss.dasch.domain.Exif.Image.OrientationValue
-import swiss.dasch.domain.SipiImageFormat.Jpg
 import swiss.dasch.infrastructure.CommandExecutorMock
 import swiss.dasch.test.SpecConstants.*
 import swiss.dasch.test.SpecConstants.Projects.{existingProject, nonExistentProject}

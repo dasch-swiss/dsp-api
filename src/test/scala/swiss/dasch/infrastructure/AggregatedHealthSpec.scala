@@ -6,7 +6,6 @@
 package swiss.dasch.infrastructure
 
 import swiss.dasch.infrastructure.Health.Status
-import swiss.dasch.infrastructure.Health.Status.DOWN
 import zio.Chunk
 import zio.test.{ZIOSpecDefault, assertTrue}
 

@@ -6,13 +6,12 @@
 package swiss.dasch.api
 
 import pdi.jwt.*
+import swiss.dasch.api.AuthService.*
 import swiss.dasch.config.Configuration.JwtConfig
 import zio.*
 import zio.json.*
 
 import java.time.Instant
-
-import AuthService.*
 
 object SpecJwtTokens {
   def validToken(): URIO[JwtConfig, String]                      = createToken()

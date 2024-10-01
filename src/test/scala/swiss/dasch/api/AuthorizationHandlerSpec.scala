@@ -5,12 +5,11 @@
 
 package swiss.dasch.api
 
+import swiss.dasch.domain.AuthScope.ScopeValue.*
+import swiss.dasch.domain.{AuthScope, ProjectShortcode}
+import swiss.dasch.test.SpecConfigurations
 import zio.*
 import zio.test.*
-import swiss.dasch.domain.AuthScope
-import swiss.dasch.domain.AuthScope.ScopeValue._
-import swiss.dasch.test.SpecConfigurations
-import swiss.dasch.domain.ProjectShortcode
 
 object AuthorizationHandlerSpec extends ZIOSpecDefault {
   val sessionWith       = Principal("blank subject", _)

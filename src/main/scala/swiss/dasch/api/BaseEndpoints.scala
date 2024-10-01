@@ -7,19 +7,13 @@ package swiss.dasch.api
 
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
-import sttp.tapir.Codec
-import sttp.tapir.EndpointOutput
-import sttp.tapir.PublicEndpoint
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.oneOf
-import sttp.tapir.oneOfVariant
-import sttp.tapir.statusCode
 import sttp.tapir.ztapir.*
+import sttp.tapir.{Codec, EndpointOutput, PublicEndpoint, oneOf, oneOfVariant, statusCode}
 import swiss.dasch.api.ApiProblem.Unauthorized
 import swiss.dasch.api.BaseEndpoints.defaultErrorOutputs
-import zio.ZLayer
-import zio._
+import zio.*
 
 case class BaseEndpoints(authService: AuthService) {
   val publicEndpoint: PublicEndpoint[Unit, ApiProblem, Unit, Any] = endpoint

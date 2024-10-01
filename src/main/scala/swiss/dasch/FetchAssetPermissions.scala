@@ -5,21 +5,17 @@
 
 package swiss.dasch
 
-import cats.implicits._
+import cats.implicits.*
 import sttp.capabilities.zio.ZioStreams
-import sttp.client3.SttpBackend
 import sttp.client3.*
 import sttp.client3.httpclient.zio.HttpClientZioBackend
+import swiss.dasch.FetchAssetPermissions.PermissionResponse
 import swiss.dasch.config.Configuration
 import swiss.dasch.domain.AssetInfo
 import zio.*
-import zio.json.DecoderOps
-import zio.json.DeriveJsonDecoder
-import zio.json.JsonDecoder
+import zio.json.{DecoderOps, DeriveJsonDecoder, JsonDecoder}
 
-import scala.concurrent.duration._
-
-import FetchAssetPermissions.PermissionResponse
+import scala.concurrent.duration.*
 
 trait FetchAssetPermissions {
   def getPermissionCode(

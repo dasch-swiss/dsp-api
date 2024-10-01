@@ -7,8 +7,8 @@ package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.domain.PathOps.fileExtension
-import zio.nio.file.Path
 import zio.ZLayer
+import zio.nio.file.Path
 
 final case class MimeType private (value: NonEmptyString) extends AnyVal {
   def stringValue: String = value.value

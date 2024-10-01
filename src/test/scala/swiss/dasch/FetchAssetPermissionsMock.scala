@@ -5,8 +5,8 @@
 
 package swiss.dasch
 
-import zio.*
 import swiss.dasch.domain.AssetInfo
+import zio.*
 
 class FetchAssetPermissionsMock(permissionCode: Int) extends FetchAssetPermissions {
   def getPermissionCode(

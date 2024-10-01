@@ -5,13 +5,13 @@
 
 package swiss.dasch.api
 
-import swiss.dasch.domain.AuthScope
 import pdi.jwt.*
+import swiss.dasch.api.AuthService.JwtContents
 import swiss.dasch.config.Configuration.JwtConfig
+import swiss.dasch.domain.AuthScope
 import zio.*
 import zio.json.*
 import zio.prelude.Validation
-import swiss.dasch.api.AuthService.JwtContents
 
 trait AuthService {
   def authenticate(jwtToken: String): ZIO[Any, NonEmptyChunk[AuthenticationError], Principal]

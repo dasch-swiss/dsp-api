@@ -5,9 +5,8 @@
 
 package swiss.dasch.domain
 
-import cats.implicits._
-
-import AuthScope.ScopeValue.*
+import cats.implicits.*
+import swiss.dasch.domain.AuthScope.ScopeValue.*
 
 final case class AuthScope(values: Set[AuthScope.ScopeValue] = Set()) extends AnyVal {
   def hasAdmin: Boolean =

@@ -6,28 +6,24 @@
 package swiss.dasch.api
 
 import sttp.capabilities.zio.ZioStreams
-import sttp.model.HeaderNames
-import sttp.model.StatusCode
-import sttp.tapir.Codec
-import sttp.tapir.CodecFormat
-import sttp.tapir.EndpointInput
+import sttp.model.{HeaderNames, StatusCode}
 import sttp.tapir.codec.refined.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
-import swiss.dasch.api.ProjectsEndpoints.{shortcodePathVar, assetIdPathVar}
-import swiss.dasch.api.ProjectsEndpointsResponses.AssetCheckResultResponse
-import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
-import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
-import swiss.dasch.api.ProjectsEndpointsResponses.UploadResponse
-import swiss.dasch.domain.AugmentedPath.ProjectFolder
+import sttp.tapir.{Codec, CodecFormat, EndpointInput}
+import swiss.dasch.api.ProjectsEndpoints.{assetIdPathVar, shortcodePathVar}
+import swiss.dasch.api.ProjectsEndpointsResponses.{
+  AssetCheckResultResponse,
+  AssetInfoResponse,
+  ProjectResponse,
+  UploadResponse,
+}
 import swiss.dasch.domain.*
-import zio.Chunk
-import zio.ZLayer
-import zio.json.DeriveJsonCodec
-import zio.json.JsonCodec
-import zio.schema.DeriveSchema
-import zio.schema.Schema
+import swiss.dasch.domain.AugmentedPath.ProjectFolder
+import zio.json.{DeriveJsonCodec, JsonCodec}
+import zio.schema.{DeriveSchema, Schema}
+import zio.{Chunk, ZLayer}
 
 object ProjectsEndpointsResponses {
   final case class ProjectResponse(id: String)
