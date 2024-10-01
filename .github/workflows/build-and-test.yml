@@ -35,12 +35,12 @@ jobs:
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: ./target/scala-3.3.3/coverage-report/cobertura.xml
+          coverage-reports: ./target/scala-3.3.4/coverage-report/cobertura.xml
       - name: Upload coverage data to codecov
         if: ${{ env.IS_NOOP == 'false' }}
         uses: codecov/codecov-action@v3
         with:
-          files: ./target/scala-3.3.3/coverage-report/cobertura.xml
+          files: ./target/scala-3.3.4/coverage-report/cobertura.xml
       - name: No-op step
         if: ${{ env.IS_NOOP == 'true' }}
         run: echo "No checks on main or release branches, skipping this job."
@@ -79,12 +79,12 @@ jobs:
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: ./target/scala-3.3.3/coverage-report/cobertura.xml
+          coverage-reports: ./target/scala-3.3.4/coverage-report/cobertura.xml
       - name: Upload coverage data to codecov
         if: ${{ env.IS_NOOP == 'false' }}
         uses: codecov/codecov-action@v3
         with:
-          files: ./target/scala-3.3.3/coverage-report/cobertura.xml
+          files: ./target/scala-3.3.4/coverage-report/cobertura.xml
       - name: No-op step
         if: ${{ env.IS_NOOP == 'true' }}
         run: echo "No checks on main or release branches, skipping this job."
