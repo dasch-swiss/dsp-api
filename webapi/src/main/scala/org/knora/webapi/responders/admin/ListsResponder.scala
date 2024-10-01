@@ -969,10 +969,11 @@ final case class ListsResponder(
         currPosition   = node.position
 
         // if givenPosition is -1, append the child to the end of the list of children
-        newPosition =
-          if (givenPosition == -1) {
-            parentChildren.size - 1
-          } else givenPosition
+        newPosition = if (givenPosition == -1) {
+                        parentChildren.size - 1
+                      } else {
+                        givenPosition
+                      }
 
         // update the position of the node itself
         _ <- updatePositionOfNode(
@@ -1021,34 +1022,23 @@ final case class ListsResponder(
         _                  <- isNewPositionValid(newParent, isNewParent = true)
         newSiblings         = newParent.children
 
-        currentNodePosition = node.position
-
         // if givenPosition is -1, append the child to the end of the list of children
         newPosition = if (givenPosition == -1) { newSiblings.size }
-                      else givenPosition
+                      else { givenPosition }
         // update the position of the node itself
-        _ <- updatePositionOfNode(
-               nodeIri = node.id,
-               newPosition = newPosition,
-               dataNamedGraph = dataNamedGraph,
-             )
+        _ <- updatePositionOfNode(node.id, newPosition, dataNamedGraph)
 
         // shift current siblings with a higher position to left as if the node is deleted
-        _ <-
-          shiftNodes(currentNodePosition + 1, currentSiblings.last.position, currentSiblings, dataNamedGraph, ShiftLeft)
+        startPos = node.position + 1
+        _       <- shiftNodes(startPos, currentSiblings.last.position, currentSiblings, dataNamedGraph, ShiftLeft)
 
         // Is node supposed to be added to the end of new parent's children list?
-        _ <-
-          if (givenPosition == -1 || givenPosition == newSiblings.size) {
-            // Yes. New siblings should not be shifted
-            ZIO.succeed(newSiblings)
-          } else {
-            // No. Shift new siblings with the same and higher position
-            // to right, as if the node is inserted in the given position
-            shiftNodes(newPosition, newSiblings.last.position, newSiblings, dataNamedGraph, ShiftRight)
-          }
+        // No. Shift new siblings with the same and higher position
+        // to right, as if the node is inserted in the given position
+        _ <- shiftNodes(newPosition, newSiblings.last.position, newSiblings, dataNamedGraph, ShiftRight)
+               .unless(givenPosition == -1 || givenPosition == newSiblings.size)
 
-        /* update the sublists of parent nodes */
+        // update the sublists of parent nodes
         _ <- changeParentNode(node.id, currParentIri, newParentIri, dataNamedGraph)
       } yield newPosition
 
