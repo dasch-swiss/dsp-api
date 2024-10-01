@@ -908,23 +908,20 @@ final case class CreateResourceV2Handler(
     projectIri: IRI,
     resourceClassIris: Set[SmartIri],
     requestingUser: User,
-  ): Task[Map[SmartIri, String]] = {
-    val permissionsFutures: Map[SmartIri, Task[String]] = resourceClassIris.toSeq.map { resourceClassIri =>
-      val requestMessage = DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-        projectIri = projectIri,
-        resourceClassIri = resourceClassIri.toString,
-        targetUser = requestingUser,
-        requestingUser = KnoraSystemInstances.Users.SystemUser,
-      )
-
-      resourceClassIri ->
-        messageRelay
-          .ask[DefaultObjectAccessPermissionsStringResponseADM](requestMessage)
-          .map(_.permissionLiteral)
-    }.toMap
-
-    ZioHelper.sequence(permissionsFutures)
-  }
+  ): Task[Map[SmartIri, String]] = ZIO
+    .foreach(resourceClassIris.toSeq) { iri =>
+      messageRelay
+        .ask[DefaultObjectAccessPermissionsStringResponseADM](
+          DefaultObjectAccessPermissionsStringForResourceClassGetADM(
+            projectIri,
+            iri.toString,
+            requestingUser,
+            KnoraSystemInstances.Users.SystemUser,
+          ),
+        )
+        .map(p => (iri, p.permissionLiteral))
+    }
+    .map(_.toMap)
 
   /**
    * Gets the default permissions for properties in a resource class in a project.
