@@ -143,23 +143,6 @@ object ChangePermissionPropertyApiRequestADM {
  */
 sealed trait PermissionsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
-// Object Access Permissions
-
-/**
- * A message that requests the object access permissions attached to a value via the 'knora-base:hasPermissions' property.
- *
- * @param valueIri the IRI of the value.
- */
-case class ObjectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: User)
-    extends PermissionsResponderRequestADM {
-
-  implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-
-  if (!stringFormatter.toSmartIri(valueIri).isKnoraValueIri) {
-    throw BadRequestException(s"Invalid value IRI: $valueIri")
-  }
-}
-
 // Default Object Access Permissions
 
 /**

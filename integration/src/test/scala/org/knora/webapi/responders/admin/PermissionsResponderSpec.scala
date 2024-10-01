@@ -167,27 +167,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       }
     }
 
-    "ask to query about object access permissions " should {
-      "return object access permissions for a value" in {
-        appActor ! ObjectAccessPermissionsForValueGetADM(
-          valueIri = perm003_o2.iri,
-          requestingUser = rootUser,
-        )
-        expectMsg(Some(perm003_o2.p))
-      }
-
-      "return 'ForbiddenException' if the user requesting ObjectAccessPermissionsForValueGetADM is not ProjectAdmin" in {
-
-        appActor ! ObjectAccessPermissionsForValueGetADM(
-          valueIri = perm003_o2.iri,
-          requestingUser = SharedTestDataADM.incunabulaMemberUser,
-        )
-        expectMsg(
-          Failure(ForbiddenException("Object access permissions can only be queried by system and project admin.")),
-        )
-      }
-    }
-
     "ask to query about default object access permissions " should {
 
       "return all DefaultObjectAccessPermissions for project" in {
