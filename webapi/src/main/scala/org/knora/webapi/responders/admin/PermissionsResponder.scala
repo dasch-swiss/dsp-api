@@ -10,6 +10,7 @@ import zio.*
 
 import java.util.UUID
 import scala.collection.mutable.ListBuffer
+
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -86,7 +87,12 @@ final case class PermissionsResponder(
           propertyIri,
           _,
         ) =>
-      defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri)
+      defaultObjectAccessPermissionGetRequestADM(
+        ProjectIri.unsafeFrom(projectIri),
+        groupIri,
+        resourceClassIri,
+        propertyIri,
+      )
     case PermissionByIriGetRequestADM(permissionIri, requestingUser) =>
       permissionByIriGetRequestADM(permissionIri, requestingUser)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
@@ -532,32 +538,38 @@ final case class PermissionsResponder(
    * @return a [[DefaultObjectAccessPermissionGetResponseADM]]
    */
   private def defaultObjectAccessPermissionGetRequestADM(
-    projectIri: IRI,
+    projectIri: ProjectIri,
     groupIri: Option[IRI],
     resourceClassIri: Option[IRI],
     propertyIri: Option[IRI],
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] = {
-    val projectIriInternal = stringFormatter.toSmartIri(projectIri).toOntologySchema(InternalSchema).toString
-    defaultObjectAccessPermissionGetADM(projectIriInternal, groupIri, resourceClassIri, propertyIri).flatMap {
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] =
+    defaultObjectAccessPermissionGetADM(projectIri.value, groupIri, resourceClassIri, propertyIri).flatMap {
       case Some(doap) => ZIO.attempt(DefaultObjectAccessPermissionGetResponseADM(doap))
       case None       =>
         /* if the query was for a property, then we need to additionally check if it is a system property */
         if (propertyIri.isDefined) {
-          val systemProject = KnoraProjectRepo.builtIn.SystemProject.id.value
-          defaultObjectAccessPermissionGetADM(systemProject, groupIri, resourceClassIri, propertyIri).map {
-            case Some(systemDoap) => DefaultObjectAccessPermissionGetResponseADM(systemDoap)
+          defaultObjectAccessPermissionGetADM(
+            KnoraProjectRepo.builtIn.SystemProject.id.value,
+            groupIri,
+            resourceClassIri,
+            propertyIri,
+          ).flatMap {
+            case Some(systemDoap) => ZIO.succeed(DefaultObjectAccessPermissionGetResponseADM(systemDoap))
             case None =>
-              throw NotFoundException(
-                s"No Default Object Access Permission found for project: $projectIriInternal, group: $groupIri, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination",
+              ZIO.fail(
+                NotFoundException(
+                  s"No Default Object Access Permission found for project: ${projectIri.value}, group: $groupIri, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination",
+                ),
               )
           }
         } else {
-          throw NotFoundException(
-            s"No Default Object Access Permission found for project: $projectIriInternal, group: $groupIri, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination",
+          ZIO.fail(
+            NotFoundException(
+              s"No Default Object Access Permission found for project: ${projectIri.value}, group: $groupIri, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination",
+            ),
           )
         }
     }
-  }
 
   /**
    * Convenience method returning a set with combined max default object access permissions.
