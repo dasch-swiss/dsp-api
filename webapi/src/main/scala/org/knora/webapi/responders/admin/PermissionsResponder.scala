@@ -1160,7 +1160,7 @@ final case class PermissionsResponder(
    * Gets all permissions defined inside a project.
    *
    * @param projectIri           the IRI of the project.
-   * @return a list of of [[PermissionInfoADM]] objects.
+   * @return a list of [[PermissionInfoADM]] objects.
    */
   def getPermissionsByProjectIri(projectIri: ProjectIri): Task[PermissionsForProjectGetResponseADM] =
     for {
