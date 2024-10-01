@@ -14,7 +14,7 @@ object Dependencies {
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.13.0"
 
-  val ScalaVersion = "3.3.3"
+  val ScalaVersion = "3.3.4"
 
   val PekkoActorVersion = "1.1.1"
   val PekkoHttpVersion  = "1.0.1"
@@ -113,13 +113,13 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.1"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.2"
   val wiremock       = "org.wiremock"       % "wiremock"       % "3.9.1"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.3"
+  val tapirVersion = "1.11.5"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
