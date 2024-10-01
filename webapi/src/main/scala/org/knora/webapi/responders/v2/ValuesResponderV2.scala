@@ -98,7 +98,7 @@ final case class ValuesResponderV2Live(
     def taskZio: Task[CreateValueResponseV2] = {
       for {
         // Convert the submitted value to the internal schema.
-        submittedInternalPropertyIri <-
+        propertyIriInternal <-
           ZIO.attempt(valueToCreate.propertyIri.toOntologySchema(InternalSchema))
 
         submittedInternalValueContent: ValueContentV2 =
@@ -108,7 +108,7 @@ final case class ValuesResponderV2Live(
         // Get ontology information about the submitted property.
         propertyInfoRequestForSubmittedProperty =
           PropertiesGetRequestV2(
-            propertyIris = Set(submittedInternalPropertyIri),
+            propertyIris = Set(propertyIriInternal),
             allLanguages = false,
             requestingUser = requestingUser,
           )
@@ -117,9 +117,7 @@ final case class ValuesResponderV2Live(
           messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
 
         propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
-          propertyInfoResponseForSubmittedProperty.properties(
-            submittedInternalPropertyIri,
-          )
+          propertyInfoResponseForSubmittedProperty.properties(propertyIriInternal)
 
         // Don't accept link properties.
         _ <- ZIO.when(propertyInfoForSubmittedProperty.isLinkProp)(
@@ -193,7 +191,7 @@ final case class ValuesResponderV2Live(
             .fromOption(
               for {
                 classInfo       <- classInfoResponse.classes.get(resourceInfo.resourceClassIri)
-                cardinalityInfo <- classInfo.allCardinalities.get(submittedInternalPropertyIri)
+                cardinalityInfo <- classInfo.allCardinalities.get(propertyIriInternal)
               } yield cardinalityInfo,
             )
             .orElseFail(
@@ -216,7 +214,7 @@ final case class ValuesResponderV2Live(
         // Check that the resource class's cardinality for the submitted property allows another value to be added
         // for that property.
         currentValuesForProp: Seq[ReadValueV2] =
-          resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
+          resourceInfo.values.getOrElse(propertyIriInternal, Seq.empty[ReadValueV2])
 
         _ <-
           ZIO.when(
@@ -263,50 +261,7 @@ final case class ValuesResponderV2Live(
                case _ => ZIO.unit
              }
 
-        // Get the default permissions for the new value.
-        defaultValuePermissions <-
-          permissionsResponder.getDefaultValuePermissions(
-            projectIri = resourceInfo.projectADM.id,
-            resourceClassIri = resourceInfo.resourceClassIri,
-            propertyIri = submittedInternalPropertyIri,
-            targetUser = requestingUser,
-          )
-
-        // Did the user submit permissions for the new value?
-        newValuePermissionLiteral <-
-          valueToCreate.permissions match {
-            case Some(permissions: String) =>
-              // Yes. Validate them.
-              for {
-                validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissions)
-
-                // Is the requesting user a system admin, or an admin of this project?
-                userPermissions = requestingUser.permissions
-                _ <- ZIO.when(!(userPermissions.isProjectAdmin(requestingUser.id) || userPermissions.isSystemAdmin)) {
-
-                       // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
-                       val permissionComparisonResult: PermissionComparisonResult =
-                         PermissionUtilADM.comparePermissionsADM(
-                           entityProject = resourceInfo.projectADM.id,
-                           permissionLiteralA = validatedCustomPermissions,
-                           permissionLiteralB = defaultValuePermissions,
-                           requestingUser = requestingUser,
-                         )
-
-                       ZIO.when(permissionComparisonResult == AGreaterThanB)(
-                         ZIO.fail(
-                           ForbiddenException(
-                             s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
-                           ),
-                         ),
-                       )
-                     }
-              } yield validatedCustomPermissions
-
-            case None =>
-              // No. Use the default permissions.
-              ZIO.succeed(defaultValuePermissions)
-          }
+        newValuePermissionLiteral <- calculateValuePermissions(valueToCreate, resourceInfo, requestingUser)
 
         dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
 
@@ -351,6 +306,57 @@ final case class ValuesResponderV2Live(
       requestingUser,
     )
   }
+
+  private def calculateValuePermissions(
+    valueToCreate: CreateValueV2,
+    resourceInfo: ReadResourceV2,
+    requestingUser: User,
+  ): Task[String] =
+    for {
+      propertyIri <- ZIO.attempt(valueToCreate.propertyIri.toOntologySchema(InternalSchema))
+      defaultValuePermissions <- permissionsResponder.getDefaultValuePermissions(
+                                   resourceInfo.projectADM.id,
+                                   resourceInfo.resourceClassIri,
+                                   propertyIri,
+                                   requestingUser,
+                                 )
+      permissionLiteral <- valueToCreate.permissions match {
+                             case Some(permissions: String) =>
+                               // Yes. Validate them.
+                               for {
+                                 validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissions)
+
+                                 // Is the requesting user a system admin, or an admin of this project?
+                                 userPermissions = requestingUser.permissions
+                                 _ <- ZIO.when(
+                                        !(userPermissions.isProjectAdmin(requestingUser.id) ||
+                                          userPermissions.isSystemAdmin),
+                                      ) {
+
+                                        // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                                        val permissionComparisonResult: PermissionComparisonResult =
+                                          PermissionUtilADM.comparePermissionsADM(
+                                            entityProject = resourceInfo.projectADM.id,
+                                            permissionLiteralA = validatedCustomPermissions,
+                                            permissionLiteralB = defaultValuePermissions,
+                                            requestingUser = requestingUser,
+                                          )
+
+                                        ZIO.when(permissionComparisonResult == AGreaterThanB)(
+                                          ZIO.fail(
+                                            ForbiddenException(
+                                              s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
+                                            ),
+                                          ),
+                                        )
+                                      }
+                               } yield validatedCustomPermissions
+
+                             case None =>
+                               // No. Use the default permissions.
+                               ZIO.succeed(defaultValuePermissions)
+                           }
+    } yield permissionLiteral
 
   private def ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(valueContent: ValueContentV2) =
     valueContent match {
