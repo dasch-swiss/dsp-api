@@ -262,22 +262,6 @@ case class DefaultObjectAccessPermissionGetRequestADM(
 }
 
 /**
- * A message that requests a default object access permission object identified through his IRI.
- * A successful response will be an [[DefaultObjectAccessPermissionGetResponseADM]] object.
- *
- * @param defaultObjectAccessPermissionIri the iri of the default object access permission object.
- * @param requestingUser                   the user initiation the request.
- * @param apiRequestID                     the API request ID.
- */
-case class DefaultObjectAccessPermissionForIriGetRequestADM(
-  defaultObjectAccessPermissionIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID,
-) extends PermissionsResponderRequestADM {
-  PermissionIri.from(defaultObjectAccessPermissionIri).fold(e => throw BadRequestException(e), _.value)
-}
-
-/**
  * A message that requests a permission (doap or ap) by its IRI.
  * A successful response will be an [[PermissionGetResponseADM]] object.
  *

@@ -257,18 +257,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         caught.getMessage === s"Default object access permissions can only be queried by system and project admin.",
       )
     }
-
-    "return 'BadRequest' if the supplied permission IRI for DefaultObjectAccessPermissionForIriGetRequestADM is not valid" in {
-      val permissionIri = "invalid-permission-IRI"
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionForIriGetRequestADM(
-          defaultObjectAccessPermissionIri = permissionIri,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID(),
-        ),
-      )
-      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
-    }
   }
 
   "Default Object Access Permission Create Requests" should {
