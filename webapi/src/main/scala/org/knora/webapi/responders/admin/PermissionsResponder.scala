@@ -662,7 +662,7 @@ final case class PermissionsResponder(
                                                }
     } yield defaultPermissions
 
-  def getDefaultResourcePermissions(
+  def getDefaultPermissionsForResource(
     projectIri: ProjectIri,
     resourceClassIri: ResourceClassIri,
     requestingUser: User,
@@ -1769,14 +1769,14 @@ final case class PermissionsResponder(
    */
   type PropertyIri      = SmartIri
   type ResourceClassIri = SmartIri
-  def getDefaultPropertyPermissions(
+  def getDefaultPermissionForProperties(
     projectIri: ProjectIri,
     resourceClassIri: ResourceClassIri,
     propertyIris: Seq[PropertyIri],
     user: User,
   ): Task[Map[PropertyIri, String]] = ZIO
     .foreach(propertyIris) { propertyIri =>
-      getDefaultValuePermissions(projectIri.value, resourceClassIri, propertyIri, user).map((propertyIri, _))
+      getDefaultPermissionForProperty(projectIri, resourceClassIri, propertyIri, user).map((propertyIri, _))
     }
     .map(_.toMap)
 
@@ -1786,19 +1786,16 @@ final case class PermissionsResponder(
    * @param projectIri       the IRI of the project of the containing resource.
    * @param resourceClassIri the internal IRI of the resource class.
    * @param propertyIri      the internal IRI of the property that points to the value.
-   * @param targetUser   the user that is creating the value.
+   * @param targetUser       the user that is creating the value.
    * @return a permission string.
    */
-  def getDefaultValuePermissions(
-    projectIri: IRI,
-    resourceClassIri: SmartIri,
-    propertyIri: SmartIri,
+  def getDefaultPermissionForProperty(
+    projectIri: ProjectIri,
+    resourceClassIri: ResourceClassIri,
+    propertyIri: PropertyIri,
     targetUser: User,
   ): Task[String] =
     for {
-      _ <- ZIO
-             .fromEither(ProjectIri.from(projectIri))
-             .orElseFail(BadRequestException(s"Invalid project IRI $projectIri"))
       _ <- ZIO
              .fail(BadRequestException(s"Invalid resource class IRI: $resourceClassIri"))
              .unless(resourceClassIri.isKnoraEntityIri)
@@ -1810,7 +1807,7 @@ final case class PermissionsResponder(
              .when(targetUser.isAnonymousUser)
 
       permissionLiteral <- defaultObjectAccessPermissionsStringForEntityGetADM(
-                             projectIri = projectIri,
+                             projectIri = projectIri.value,
                              resourceClassIri = resourceClassIri.toString,
                              propertyIri = Some(propertyIri.toString),
                              entityType = EntityType.Property,

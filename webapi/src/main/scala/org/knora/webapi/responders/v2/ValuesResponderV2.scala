@@ -314,10 +314,10 @@ final case class ValuesResponderV2Live(
   ): Task[String] =
     for {
       propertyIri <- ZIO.attempt(valueToCreate.propertyIri.toOntologySchema(InternalSchema))
-      defaultValuePermissions <- permissionsResponder.getDefaultValuePermissions(
-                                   resourceInfo.projectADM.id,
+      defaultValuePermissions <- permissionsResponder.getDefaultPermissionForProperty(
+                                   resourceInfo.projectADM.projectIri,
                                    resourceInfo.resourceClassIri,
-                                   propertyIri,
+                                   valueToCreate.propertyIri,
                                    requestingUser,
                                  )
       permissionLiteral <- valueToCreate.permissions match {

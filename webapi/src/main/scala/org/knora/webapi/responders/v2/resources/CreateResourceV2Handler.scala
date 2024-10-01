@@ -231,7 +231,7 @@ final case class CreateResourceV2Handler(
 
       // Get the default permissions of each property used.
       defaultPropertyPermissions <- permissionsResponder
-                                      .getDefaultPropertyPermissions(
+                                      .getDefaultPermissionForProperties(
                                         createResourceRequestV2.createResource.projectADM.projectIri,
                                         internalCreateResource.resourceClassIri,
                                         internalCreateResource.values.keySet.toSeq,
@@ -921,7 +921,7 @@ final case class CreateResourceV2Handler(
                               .fail(BadRequestException(s"Invalid resource class IRI: $resourceClassIri"))
                               .when(!resourceClassIri.isKnoraEntityIri)
                        permissionLiteral <- permissionsResponder
-                                              .getDefaultResourcePermissions(
+                                              .getDefaultPermissionsForResource(
                                                 projectIri,
                                                 resourceClassIri,
                                                 requestingUser,

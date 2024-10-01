@@ -666,7 +666,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class (system resource class)" in {
         val actual = UnsafeZioRun.runOrThrow(
           permissionsResponder(
-            _.getDefaultResourcePermissions(
+            _.getDefaultPermissionsForResource(
               ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri),
               OntologyConstants.KnoraBase.LinkObj.toSmartIri,
               SharedTestDataADM.incunabulaProjectAdminUser,
@@ -685,8 +685,8 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
-                projectIri = SharedTestDataADM.incunabulaProjectIri,
+              _.getDefaultPermissionForProperty(
+                projectIri = ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri),
                 resourceClassIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.StillImageRepresentation),
                 propertyIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasStillImageFileValue),
                 targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -701,7 +701,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       "return the default object access permissions 'string' for the 'incunabula:book' resource class (project resource class)" in {
         val actual = UnsafeZioRun.runOrThrow(
           permissionsResponder(
-            _.getDefaultResourcePermissions(
+            _.getDefaultPermissionsForResource(
               ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri),
               SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS.toSmartIri,
               SharedTestDataADM.incunabulaProjectAdminUser,
@@ -718,7 +718,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       "return the default object access permissions 'string' for the 'incunabula:page' resource class (project resource class)" in {
         val actual = UnsafeZioRun.runOrThrow(
           permissionsResponder(
-            _.getDefaultResourcePermissions(
+            _.getDefaultPermissionsForResource(
               ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri),
               SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS.toSmartIri,
               SharedTestDataADM.incunabulaProjectAdminUser,
@@ -736,8 +736,8 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
-                projectIri = SharedTestDataADM.anythingProjectIri,
+              _.getDefaultPermissionForProperty(
+                projectIri = ProjectIri.unsafeFrom(SharedTestDataADM.anythingProjectIri),
                 resourceClassIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/anything#Thing"),
                 propertyIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/anything#hasInterval"),
                 targetUser = SharedTestDataADM.anythingUser2,
@@ -752,7 +752,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       "return the default object access permissions 'string' for the 'anything:Thing' class" in {
         val actual = UnsafeZioRun.runOrThrow(
           permissionsResponder(
-            _.getDefaultResourcePermissions(
+            _.getDefaultPermissionsForResource(
               ProjectIri.unsafeFrom(SharedTestDataADM.anythingProjectIri),
               "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
               SharedTestDataADM.anythingUser2,
@@ -770,8 +770,8 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
-                projectIri = SharedTestDataADM.anythingProjectIri,
+              _.getDefaultPermissionForProperty(
+                projectIri = ProjectIri.unsafeFrom(SharedTestDataADM.anythingProjectIri),
                 resourceClassIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/anything#Thing"),
                 propertyIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/anything#hasText"),
                 targetUser = SharedTestDataADM.anythingUser1,
@@ -785,8 +785,8 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
-                projectIri = SharedTestDataADM.anythingProjectIri,
+              _.getDefaultPermissionForProperty(
+                projectIri = ProjectIri.unsafeFrom(SharedTestDataADM.anythingProjectIri),
                 resourceClassIri = stringFormatter.toSmartIri(s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild"),
                 propertyIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/anything#hasText"),
                 targetUser = SharedTestDataADM.anythingUser2,
@@ -798,28 +798,12 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
           )
       }
 
-      "return 'BadRequest' if the supplied project IRI DefaultObjectAccessPermissionsStringForPropertyGetADM is not valid" in {
-        val projectIri = ""
-        UnsafeZioRun
-          .runOrThrow(
-            permissionsResponder(
-              _.getDefaultValuePermissions(
-                projectIri = projectIri,
-                resourceClassIri = stringFormatter.toSmartIri(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
-                propertyIri = stringFormatter.toSmartIri(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
-                targetUser = SharedTestDataADM.imagesUser02,
-              ),
-            ).flip.map(_.getMessage),
-          )
-          .shouldEqual(s"Invalid project IRI $projectIri")
-      }
-
       "return 'BadRequest' if the supplied resourceClass IRI for DefaultObjectAccessPermissionsStringForPropertyGetADM is not valid" in {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
-                projectIri = SharedTestDataADM.imagesProjectIri,
+              _.getDefaultPermissionForProperty(
+                projectIri = ProjectIri.unsafeFrom(SharedTestDataADM.imagesProjectIri),
                 resourceClassIri = stringFormatter.toSmartIri(SharedTestDataADM.customResourceIRI),
                 propertyIri = stringFormatter.toSmartIri(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
                 targetUser = SharedTestDataADM.imagesReviewerUser,
@@ -833,8 +817,8 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
-                projectIri = SharedTestDataADM.imagesProjectIri,
+              _.getDefaultPermissionForProperty(
+                projectIri = ProjectIri.unsafeFrom(SharedTestDataADM.imagesProjectIri),
                 resourceClassIri = stringFormatter.toSmartIri(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
                 propertyIri = stringFormatter.toSmartIri(SharedTestDataADM.customValueIRI),
                 targetUser = SharedTestDataADM.imagesReviewerUser,
@@ -848,8 +832,8 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
-                projectIri = SharedTestDataADM.imagesProjectIri,
+              _.getDefaultPermissionForProperty(
+                projectIri = ProjectIri.unsafeFrom(SharedTestDataADM.imagesProjectIri),
                 resourceClassIri = stringFormatter.toSmartIri(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
                 propertyIri = stringFormatter.toSmartIri(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
                 targetUser = SharedTestDataADM.anonymousUser,
@@ -862,7 +846,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       "return the default object access permissions 'string' for the 'anything:Thing' resource class for the root user (system admin and not member of project)" in {
         val actual = UnsafeZioRun.runOrThrow(
           permissionsResponder(
-            _.getDefaultResourcePermissions(
+            _.getDefaultPermissionsForResource(
               ProjectIri.unsafeFrom(SharedTestDataADM.anythingProjectIri),
               "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
               SharedTestDataADM.rootUser,
