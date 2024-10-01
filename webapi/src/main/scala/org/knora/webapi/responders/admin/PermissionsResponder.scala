@@ -10,7 +10,6 @@ import zio.*
 
 import java.util.UUID
 import scala.collection.mutable.ListBuffer
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -1770,21 +1769,18 @@ final case class PermissionsResponder(
     targetUser: User,
   ): Task[String] =
     for {
-      _ <- ZIO.getOrFailWith(BadRequestException(s"Invalid project IRI $projectIri"))(
-             ProjectIri.from(projectIri).toOption,
-           )
-
-      _ <- ZIO.unless(resourceClassIri.isKnoraEntityIri) {
-             ZIO.fail(BadRequestException(s"Invalid resource class IRI: $resourceClassIri"))
-           }
-
-      _ <- ZIO.unless(propertyIri.isKnoraEntityIri) {
-             ZIO.fail(BadRequestException(s"Invalid property IRI: $propertyIri"))
-           }
-
-      _ <- ZIO.when(targetUser.isAnonymousUser) {
-             ZIO.fail(BadRequestException("Anonymous Users are not allowed."))
-           }
+      _ <- ZIO
+             .fromEither(ProjectIri.from(projectIri))
+             .orElseFail(BadRequestException(s"Invalid project IRI $projectIri"))
+      _ <- ZIO
+             .fail(BadRequestException(s"Invalid resource class IRI: $resourceClassIri"))
+             .unless(resourceClassIri.isKnoraEntityIri)
+      _ <- ZIO
+             .fail(BadRequestException(s"Invalid property IRI: $propertyIri"))
+             .unless(propertyIri.isKnoraEntityIri)
+      _ <- ZIO
+             .fail(BadRequestException("Anonymous Users are not allowed."))
+             .when(targetUser.isAnonymousUser)
 
       permissionLiteral <- defaultObjectAccessPermissionsStringForEntityGetADM(
                              projectIri = projectIri,
@@ -1792,9 +1788,7 @@ final case class PermissionsResponder(
                              propertyIri = Some(propertyIri.toString),
                              entityType = EntityType.Property,
                              targetUser = targetUser,
-                           ).map {
-                             _.permissionLiteral
-                           }
+                           ).map(_.permissionLiteral)
     } yield permissionLiteral
 }
 
