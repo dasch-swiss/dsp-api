@@ -11,8 +11,6 @@ import zio.json.JsonCodec
 import zio.json.jsonDiscriminator
 import zio.json.jsonField
 
-import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri
@@ -144,24 +142,6 @@ object ChangePermissionPropertyApiRequestADM {
  * An abstract trait representing message that can be sent to `PermissionsResponderV1`.
  */
 sealed trait PermissionsResponderRequestADM extends KnoraRequestADM with RelayedMessage
-
-// Administrative Permissions
-
-/**
- * A message that requests an administrative permission object identified through his IRI.
- * A successful response will be a [[AdministrativePermissionGetResponseADM]] object.
- *
- * @param administrativePermissionIri the iri of the administrative permission object.
- * @param requestingUser              the user initiating the request.
- * @param apiRequestID                the API request ID.
- */
-case class AdministrativePermissionForIriGetRequestADM(
-  administrativePermissionIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID,
-) extends PermissionsResponderRequestADM {
-  PermissionIri.from(administrativePermissionIri).fold(msg => throw BadRequestException(msg), _ => ())
-}
 
 // Object Access Permissions
 

@@ -68,8 +68,6 @@ final case class PermissionsResponder(
     message.isInstanceOf[PermissionsResponderRequestADM]
 
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, _) =>
-      administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser)
     case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) =>
       objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
     case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) =>
