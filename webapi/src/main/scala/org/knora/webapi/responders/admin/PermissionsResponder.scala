@@ -68,8 +68,6 @@ final case class PermissionsResponder(
     message.isInstanceOf[PermissionsResponderRequestADM]
 
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) =>
-      objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
     case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) =>
       objectAccessPermissionsForValueGetADM(valueIri, requestingUser)
     case DefaultObjectAccessPermissionGetRequestADM(
@@ -266,55 +264,6 @@ final case class PermissionsResponder(
   ///////////////////////////////////////////////////////////////////////////
   // OBJECT ACCESS PERMISSIONS
   ///////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Gets all permissions attached to the resource.
-   *
-   * @param resourceIri    the IRI of the resource.
-   * @param requestingUser the requesting user.
-   * @return a sequence of [[PermissionADM]]
-   */
-  private def objectAccessPermissionsForResourceGetADM(
-    resourceIri: IRI,
-    requestingUser: User,
-  ): Task[Option[ObjectAccessPermissionADM]] =
-    for {
-      projectIri <- getProjectOfEntity(resourceIri)
-      // Check user's permission for the operation
-      _ = if (
-            !requestingUser.isSystemAdmin
-            && !requestingUser.permissions.isProjectAdmin(projectIri)
-            && !requestingUser.isSystemUser
-          ) {
-            throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
-          }
-      permissionQueryResponse <-
-        triplestore.query(Select(sparql.admin.txt.getObjectAccessPermission(Some(resourceIri), None)))
-
-      permissionQueryResponseRows = permissionQueryResponse.results.bindings
-
-      permission =
-        if (permissionQueryResponseRows.nonEmpty) {
-
-          val groupedPermissionsQueryResponse: Map[String, Seq[String]] =
-            permissionQueryResponseRows.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
-              predicate -> rows.map(_.rowMap("o"))
-            }
-          val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(
-            groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
-            PermissionType.OAP,
-          )
-          Some(
-            ObjectAccessPermissionADM(
-              forResource = Some(resourceIri),
-              forValue = None,
-              hasPermissions = hasPermissions,
-            ),
-          )
-        } else {
-          None
-        }
-    } yield permission
 
   /**
    * Gets all permissions attached to the value.
