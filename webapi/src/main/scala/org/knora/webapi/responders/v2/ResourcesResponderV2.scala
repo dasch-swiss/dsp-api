@@ -47,6 +47,7 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
@@ -93,6 +94,7 @@ final case class ResourcesResponderV2(
   permissionsResponder: PermissionsResponder,
   ontologyService: OntologyService,
   resourcesRepo: ResourcesRepo,
+  auth: AuthorizationRestService,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
     with LazyLogging
@@ -112,6 +114,7 @@ final case class ResourcesResponderV2(
     ontologyRepo,
     permissionsResponder: PermissionsResponder,
     ontologyService,
+    auth,
   )
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
@@ -2000,22 +2003,24 @@ final case class ResourcesResponderV2(
 object ResourcesResponderV2 {
   val layer = ZLayer.fromZIO {
     for {
-      config  <- ZIO.service[AppConfig]
-      iriS    <- ZIO.service[IriService]
-      mr      <- ZIO.service[MessageRelay]
-      ts      <- ZIO.service[TriplestoreService]
-      cu      <- ZIO.service[ConstructResponseUtilV2]
-      su      <- ZIO.service[StandoffTagUtilV2]
-      ru      <- ZIO.service[ResourceUtilV2]
-      pu      <- ZIO.service[PermissionUtilADM]
-      kps     <- ZIO.service[KnoraProjectService]
-      sr      <- ZIO.service[SearchResponderV2]
-      or      <- ZIO.service[OntologyRepo]
-      sf      <- ZIO.service[StringFormatter]
-      pr      <- ZIO.service[PermissionsResponder]
-      os      <- ZIO.service[OntologyService]
-      rr      <- ZIO.service[ResourcesRepo]
-      handler <- mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, kps, sr, or, pr, os, rr)(sf))
+      config <- ZIO.service[AppConfig]
+      iriS   <- ZIO.service[IriService]
+      mr     <- ZIO.service[MessageRelay]
+      ts     <- ZIO.service[TriplestoreService]
+      cu     <- ZIO.service[ConstructResponseUtilV2]
+      su     <- ZIO.service[StandoffTagUtilV2]
+      ru     <- ZIO.service[ResourceUtilV2]
+      pu     <- ZIO.service[PermissionUtilADM]
+      kps    <- ZIO.service[KnoraProjectService]
+      sr     <- ZIO.service[SearchResponderV2]
+      or     <- ZIO.service[OntologyRepo]
+      sf     <- ZIO.service[StringFormatter]
+      pr     <- ZIO.service[PermissionsResponder]
+      os     <- ZIO.service[OntologyService]
+      rr     <- ZIO.service[ResourcesRepo]
+      auth   <- ZIO.service[AuthorizationRestService]
+      handler <-
+        mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, kps, sr, or, pr, os, rr, auth)(sf))
     } yield handler
   }
 }

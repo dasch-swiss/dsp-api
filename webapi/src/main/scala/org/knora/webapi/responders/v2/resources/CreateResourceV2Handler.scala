@@ -9,14 +9,13 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import java.time.Instant
+
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
@@ -36,12 +35,14 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.slice.admin.api.model.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -74,6 +75,7 @@ final case class CreateResourceV2Handler(
   ontologyRepo: OntologyRepo,
   permissionsResponder: PermissionsResponder,
   ontologyService: OntologyService,
+  auth: AuthorizationRestService,
 )(implicit val stringFormatter: StringFormatter)
     extends LazyLogging {
 
@@ -907,23 +909,28 @@ final case class CreateResourceV2Handler(
     projectIri: IRI,
     resourceClassIris: Set[SmartIri],
     requestingUser: User,
-  ): Task[Map[SmartIri, String]] = {
-    val permissionsFutures: Map[SmartIri, Task[String]] = resourceClassIris.toSeq.map { resourceClassIri =>
-      val requestMessage = DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-        projectIri = projectIri,
-        resourceClassIri = resourceClassIri.toString,
-        targetUser = requestingUser,
-        requestingUser = KnoraSystemInstances.Users.SystemUser,
-      )
-
-      resourceClassIri ->
-        messageRelay
-          .ask[DefaultObjectAccessPermissionsStringResponseADM](requestMessage)
-          .map(_.permissionLiteral)
-    }.toMap
-
-    ZioHelper.sequence(permissionsFutures)
-  }
+  ): Task[Map[SmartIri, String]] =
+    for {
+      projectIri <- ZIO.fromEither(ProjectIri.from(projectIri)).mapError(BadRequestException.apply)
+      _          <- ensureNotAnonymousUser(requestingUser)
+      _          <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
+      mapping <- ZIO
+                   .foreach(resourceClassIris) { resourceClassIri =>
+                     for {
+                       _ <- ZIO
+                              .fail(BadRequestException(s"Invalid resource class IRI: $resourceClassIri"))
+                              .when(!resourceClassIri.isKnoraEntityIri)
+                       oap <- permissionsResponder.defaultObjectAccessPermissionsStringForEntityGetADM(
+                                projectIri.value,
+                                resourceClassIri.toString,
+                                None,
+                                PermissionsResponder.EntityType.Resource,
+                                requestingUser,
+                              )
+                     } yield (resourceClassIri, oap.permissionLiteral)
+                   }
+                   .map(_.toMap)
+    } yield mapping
 
   /**
    * Checks that a resource was created.

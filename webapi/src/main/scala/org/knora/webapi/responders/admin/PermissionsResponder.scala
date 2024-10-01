@@ -10,6 +10,7 @@ import zio.*
 
 import java.util.UUID
 import scala.collection.mutable.ListBuffer
+
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -29,6 +30,7 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.admin.PermissionsResponder.EntityType
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -61,9 +63,6 @@ final case class PermissionsResponder(
     with LazyLogging { self =>
 
   private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
-  /* Entity types used to more clearly distinguish what kind of entity is meant */
-  private val ResourceEntityType = "resource"
-  private val PropertyEntityType = "property"
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[PermissionsResponderRequestADM]
@@ -89,19 +88,6 @@ final case class PermissionsResponder(
           _,
         ) =>
       defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri)
-    case DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri,
-          resourceClassIri,
-          targetUser,
-          _,
-        ) =>
-      defaultObjectAccessPermissionsStringForEntityGetADM(
-        projectIri,
-        resourceClassIri,
-        None,
-        ResourceEntityType,
-        targetUser,
-      )
     case PermissionByIriGetRequestADM(permissionIri, requestingUser) =>
       permissionByIriGetRequestADM(permissionIri, requestingUser)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
@@ -676,11 +662,11 @@ final case class PermissionsResponder(
    * @param targetUser       the user for which the permissions need to be calculated.
    * @return an optional string with object access permission statements
    */
-  private def defaultObjectAccessPermissionsStringForEntityGetADM(
+  def defaultObjectAccessPermissionsStringForEntityGetADM(
     projectIri: IRI,
     resourceClassIri: IRI,
     propertyIri: Option[IRI],
-    entityType: IRI,
+    entityType: PermissionsResponder.EntityType,
     targetUser: User,
   ): Task[DefaultObjectAccessPermissionsStringResponseADM] =
     for {
@@ -725,7 +711,7 @@ final case class PermissionsResponder(
       ///////////////////////////////
       /* project resource class / property combination */
       defaultPermissionsOnProjectResourceClassProperty <- {
-        if (entityType == PropertyEntityType && permissionsListBuffer.isEmpty) {
+        if (entityType == EntityType.Property && permissionsListBuffer.isEmpty) {
           defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
             projectIri = projectIri,
             resourceClassIri = resourceClassIri,
@@ -746,7 +732,7 @@ final case class PermissionsResponder(
 
       /* system resource class / property combination */
       defaultPermissionsOnSystemResourceClassProperty <- {
-        if (entityType == PropertyEntityType && permissionsListBuffer.isEmpty) {
+        if (entityType == EntityType.Property && permissionsListBuffer.isEmpty) {
           val systemProject = KnoraProjectRepo.builtIn.SystemProject.id.value
           defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
             projectIri = systemProject,
@@ -766,7 +752,7 @@ final case class PermissionsResponder(
       ///////////////////////
       /* Get the default object access permissions defined on the resource class for the current project */
       defaultPermissionsOnProjectResourceClass <- {
-        if (entityType == ResourceEntityType && permissionsListBuffer.isEmpty) {
+        if (entityType == EntityType.Resource && permissionsListBuffer.isEmpty) {
           defaultObjectAccessPermissionsForResourceClassGetADM(
             projectIri = projectIri,
             resourceClassIri = resourceClassIri,
@@ -781,7 +767,7 @@ final case class PermissionsResponder(
 
       /* Get the default object access permissions defined on the resource class inside the SystemProject */
       defaultPermissionsOnSystemResourceClass <- {
-        if (entityType == ResourceEntityType && permissionsListBuffer.isEmpty) {
+        if (entityType == EntityType.Resource && permissionsListBuffer.isEmpty) {
           val systemProject = KnoraProjectRepo.builtIn.SystemProject.id.value
           defaultObjectAccessPermissionsForResourceClassGetADM(
             projectIri = systemProject,
@@ -800,7 +786,7 @@ final case class PermissionsResponder(
       ///////////////////////
       /* project property */
       defaultPermissionsOnProjectProperty <- {
-        if (entityType == PropertyEntityType && permissionsListBuffer.isEmpty) {
+        if (entityType == EntityType.Property && permissionsListBuffer.isEmpty) {
           defaultObjectAccessPermissionsForPropertyGetADM(
             projectIri = projectIri,
             propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
@@ -815,7 +801,7 @@ final case class PermissionsResponder(
 
       /* system property */
       defaultPermissionsOnSystemProperty <- {
-        if (entityType == PropertyEntityType && permissionsListBuffer.isEmpty) {
+        if (entityType == EntityType.Property && permissionsListBuffer.isEmpty) {
           val systemProject = KnoraProjectRepo.builtIn.SystemProject.id.value
           defaultObjectAccessPermissionsForPropertyGetADM(
             projectIri = systemProject,
@@ -1804,7 +1790,7 @@ final case class PermissionsResponder(
                              projectIri = projectIri,
                              resourceClassIri = resourceClassIri.toString,
                              propertyIri = Some(propertyIri.toString),
-                             entityType = PropertyEntityType,
+                             entityType = EntityType.Property,
                              targetUser = targetUser,
                            ).map {
                              _.permissionLiteral
@@ -1813,6 +1799,12 @@ final case class PermissionsResponder(
 }
 
 object PermissionsResponder {
+  /* Entity types used to more clearly distinguish what kind of entity is meant */
+  enum EntityType {
+    case Resource
+    case Property
+  }
+
   val layer = ZLayer.fromZIO {
     for {
       ac      <- ZIO.service[AppConfig]

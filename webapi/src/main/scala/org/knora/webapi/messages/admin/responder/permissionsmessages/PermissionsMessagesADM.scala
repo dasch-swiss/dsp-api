@@ -278,42 +278,6 @@ case class DefaultObjectAccessPermissionForIriGetRequestADM(
 }
 
 /**
- * A message that requests the default object access permissions string for a resource class inside a specific project.
- * A successful response will be a [[DefaultObjectAccessPermissionsStringResponseADM]].
- *
- * @param projectIri       the project for which the default object permissions need to be retrieved.
- * @param resourceClassIri the resource class which can also carry default object access permissions.
- * @param targetUser       the user for whom we calculate the permission
- * @param requestingUser   the requesting user.
- */
-case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-  projectIri: IRI,
-  resourceClassIri: IRI,
-  targetUser: User,
-  requestingUser: User,
-) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  ProjectIri.from(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
-
-  // Check user's permission for the operation
-  if (
-    !requestingUser.isSystemAdmin
-    && !requestingUser.permissions.isProjectAdmin(projectIri)
-    && !requestingUser.isSystemUser
-  ) {
-    // not a system admin
-    throw ForbiddenException("Default object access permissions can only be queried by system and project admin.")
-  }
-
-  if (!stringFormatter.toSmartIri(resourceClassIri).isKnoraEntityIri) {
-    throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
-  }
-
-  if (targetUser.isAnonymousUser) throw BadRequestException("Anonymous Users are not allowed.")
-}
-
-/**
  * A message that requests a permission (doap or ap) by its IRI.
  * A successful response will be an [[PermissionGetResponseADM]] object.
  *

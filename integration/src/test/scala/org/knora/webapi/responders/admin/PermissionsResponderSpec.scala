@@ -21,11 +21,10 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.responders.admin.PermissionsResponder.EntityType.Resource
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.*
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesProjectIri
@@ -665,14 +664,20 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
     "ask for default object access permissions 'string'" should {
 
       "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class (system resource class)" in {
-        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          resourceClassIri = OntologyConstants.KnoraBase.LinkObj,
-          targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
+        val actual = UnsafeZioRun.runOrThrow(
+          permissionsResponder(
+            _.defaultObjectAccessPermissionsStringForEntityGetADM(
+              SharedTestDataADM.incunabulaProjectIri,
+              OntologyConstants.KnoraBase.LinkObj,
+              None,
+              Resource,
+              SharedTestDataADM.incunabulaProjectAdminUser,
+            ),
+          ),
         )
-        expectMsg(
-          DefaultObjectAccessPermissionsStringResponseADM(
+
+        assert(
+          actual == DefaultObjectAccessPermissionsStringResponseADM(
             "M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           ),
         )
@@ -696,28 +701,38 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "return the default object access permissions 'string' for the 'incunabula:book' resource class (project resource class)" in {
-        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS,
-          targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
+        val actual = UnsafeZioRun.runOrThrow(
+          permissionsResponder(
+            _.defaultObjectAccessPermissionsStringForEntityGetADM(
+              SharedTestDataADM.incunabulaProjectIri,
+              SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS,
+              None,
+              Resource,
+              SharedTestDataADM.incunabulaProjectAdminUser,
+            ),
+          ),
         )
-        expectMsg(
-          DefaultObjectAccessPermissionsStringResponseADM(
+        assert(
+          actual == DefaultObjectAccessPermissionsStringResponseADM(
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           ),
         )
       }
 
       "return the default object access permissions 'string' for the 'incunabula:page' resource class (project resource class)" in {
-        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS,
-          targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
+        val actual = UnsafeZioRun.runOrThrow(
+          permissionsResponder(
+            _.defaultObjectAccessPermissionsStringForEntityGetADM(
+              SharedTestDataADM.incunabulaProjectIri,
+              SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS,
+              None,
+              Resource,
+              SharedTestDataADM.incunabulaProjectAdminUser,
+            ),
+          ),
         )
-        expectMsg(
-          DefaultObjectAccessPermissionsStringResponseADM(
+        assert(
+          actual == DefaultObjectAccessPermissionsStringResponseADM(
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           ),
         )
@@ -741,14 +756,19 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "return the default object access permissions 'string' for the 'anything:Thing' class" in {
-        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.anythingProjectIri,
-          resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
-          targetUser = SharedTestDataADM.anythingUser2,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
+        val actual = UnsafeZioRun.runOrThrow(
+          permissionsResponder(
+            _.defaultObjectAccessPermissionsStringForEntityGetADM(
+              SharedTestDataADM.anythingProjectIri,
+              "http://www.knora.org/ontology/0001/anything#Thing",
+              None,
+              Resource,
+              SharedTestDataADM.anythingUser2,
+            ),
+          ),
         )
-        expectMsg(
-          DefaultObjectAccessPermissionsStringResponseADM(
+        assert(
+          actual == DefaultObjectAccessPermissionsStringResponseADM(
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           ),
         )
@@ -848,14 +868,19 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "return the default object access permissions 'string' for the 'anything:Thing' resource class for the root user (system admin and not member of project)" in {
-        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.anythingProjectIri,
-          resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
-          targetUser = SharedTestDataADM.rootUser,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
+        val actual = UnsafeZioRun.runOrThrow(
+          permissionsResponder(
+            _.defaultObjectAccessPermissionsStringForEntityGetADM(
+              SharedTestDataADM.anythingProjectIri,
+              "http://www.knora.org/ontology/0001/anything#Thing",
+              None,
+              Resource,
+              SharedTestDataADM.rootUser,
+            ),
+          ),
         )
-        expectMsg(
-          DefaultObjectAccessPermissionsStringResponseADM(
+        assert(
+          actual == DefaultObjectAccessPermissionsStringResponseADM(
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           ),
         )
