@@ -70,8 +70,6 @@ final case class PermissionsResponder(
     message.isInstanceOf[PermissionsResponderRequestADM]
 
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) =>
-      objectAccessPermissionsForValueGetADM(valueIri, requestingUser)
     case DefaultObjectAccessPermissionForIriGetRequestADM(
           defaultObjectAccessPermissionIri,
           requestingUser,
@@ -277,61 +275,6 @@ final case class PermissionsResponder(
                     ZIO.fail(BadRequestException(s"$administrativePermissionIri is not an administrative permission."))
                 }
     } yield result
-
-  ///////////////////////////////////////////////////////////////////////////
-  // OBJECT ACCESS PERMISSIONS
-  ///////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Gets all permissions attached to the value.
-   *
-   * @param valueIri       the IRI of the value.
-   * @param requestingUser the requesting user.
-   * @return a sequence of [[PermissionADM]]
-   */
-  private def objectAccessPermissionsForValueGetADM(
-    valueIri: IRI,
-    requestingUser: User,
-  ): Task[Option[ObjectAccessPermissionADM]] =
-    for {
-      projectIri <- getProjectOfEntity(valueIri)
-      // Check user's permission for the operation
-      _ <- ZIO.when(
-             !requestingUser.isSystemAdmin
-               && !requestingUser.permissions.isProjectAdmin(projectIri)
-               && !requestingUser.isSystemUser,
-           ) {
-             ZIO.fail(ForbiddenException("Object access permissions can only be queried by system and project admin."))
-           }
-      permissionQueryResponse <-
-        triplestore.query(
-          Select(sparql.admin.txt.getObjectAccessPermission(resourceIri = None, valueIri = Some(valueIri))),
-        )
-
-      permissionQueryResponseRows = permissionQueryResponse.results.bindings
-
-      permission =
-        if (permissionQueryResponseRows.nonEmpty) {
-
-          val groupedPermissionsQueryResponse: Map[String, Seq[String]] =
-            permissionQueryResponseRows.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
-              predicate -> rows.map(_.rowMap("o"))
-            }
-          val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(
-            groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
-            PermissionType.OAP,
-          )
-          Some(
-            ObjectAccessPermissionADM(
-              forResource = None,
-              forValue = Some(valueIri),
-              hasPermissions = hasPermissions,
-            ),
-          )
-        } else {
-          None
-        }
-    } yield permission
 
   ///////////////////////////////////////////////////////////////////////////
   // DEFAULT OBJECT ACCESS PERMISSIONS
@@ -1623,22 +1566,6 @@ final case class PermissionsResponder(
             )
           }
     } yield ()
-
-  private def getProjectOfEntity(entityIri: IRI): Task[IRI] =
-    for {
-      response <- triplestore.query(Select(sparql.admin.txt.getProjectOfEntity(entityIri)))
-      rows      = response.results.bindings
-      projectIri =
-        if (rows.isEmpty) {
-          throw BadRequestException(
-            s"<$entityIri> is not attached to a project, please verify that IRI is of a knora entity.",
-          )
-        } else {
-          val projectOption = rows.head.rowMap.get("projectIri")
-          projectOption.getOrElse(throw BadRequestException(s"No Project found for the given <$entityIri>"))
-        }
-
-    } yield projectIri
 
   def createPermissionsForAdminsAndMembersOfNewProject(projectIri: ProjectIri): Task[Unit] =
     for {

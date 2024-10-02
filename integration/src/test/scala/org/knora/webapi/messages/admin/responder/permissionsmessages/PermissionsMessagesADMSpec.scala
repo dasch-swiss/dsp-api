@@ -132,19 +132,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
   }
 
-  "Object Access Permission Get Requests" should {
-    "return 'BadRequest' if the supplied resource IRI for ObjectAccessPermissionsForValueGetADM is not a valid KnoraValueIri" in {
-      val caught = intercept[BadRequestException](
-        ObjectAccessPermissionsForValueGetADM(
-          valueIri = SharedTestDataADM.customResourceIRI,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-        ),
-      )
-      // a resource IRI is given instead of a value IRI, exception should be thrown.
-      assert(caught.getMessage === s"Invalid value IRI: ${SharedTestDataADM.customResourceIRI}")
-    }
-  }
-
   "Default Object Access Permission Get Requests" should {
 
     "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionGetADM is not valid" in {
