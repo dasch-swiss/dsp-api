@@ -305,20 +305,22 @@ final case class PermissionsResponder(
    * @return an optional [[DefaultObjectAccessPermissionADM]]
    */
   private def defaultObjectAccessPermissionGetADM(
-    projectIri: IRI,
+    projectIri: ProjectIri,
     groupIri: Option[IRI],
     resourceClassIri: Option[IRI],
     propertyIri: Option[IRI],
   ): Task[Option[DefaultObjectAccessPermissionADM]] =
     triplestore
       .query(
-        Select(sparql.admin.txt.getDefaultObjectAccessPermission(projectIri, groupIri, resourceClassIri, propertyIri)),
+        Select(
+          sparql.admin.txt.getDefaultObjectAccessPermission(projectIri.value, groupIri, resourceClassIri, propertyIri),
+        ),
       )
       .flatMap(toDefaultObjectAccessPermission(_, projectIri, groupIri, resourceClassIri, propertyIri))
 
   private def toDefaultObjectAccessPermission(
     result: SparqlSelectResult,
-    projectIri: IRI,
+    projectIri: ProjectIri,
     groupIri: Option[IRI],
     resourceClassIri: Option[IRI],
     propertyIri: Option[IRI],
@@ -332,7 +334,7 @@ final case class PermissionsResponder(
         val doapCount: Int = rows.groupBy(_.rowMap("s")).size
         if (doapCount > 1)
           throw InconsistentRepositoryDataException(
-            s"Only one default object permission instance allowed for project: $projectIri and combination of group: $groupIri, resourceClass: $resourceClassIri, property: $propertyIri combination, but found: $doapCount.",
+            s"Only one default object permission instance allowed for project: ${projectIri.value} and combination of group: $groupIri, resourceClass: $resourceClassIri, property: $propertyIri combination, but found: $doapCount.",
           )
 
         /* get the iri of the retrieved permission */
@@ -371,7 +373,7 @@ final case class PermissionsResponder(
    * @param groups     the list of groups for which default object access permissions are retrieved and combined.
    * @return a set of [[PermissionADM]].
    */
-  private def getDefaultObjectAccessPermissions(projectIri: IRI, groups: Seq[IRI]): Task[Set[PermissionADM]] =
+  private def getDefaultObjectAccessPermissions(projectIri: ProjectIri, groups: Seq[IRI]): Task[Set[PermissionADM]] =
     ZIO
       .foreach(groups) { groupIri =>
         defaultObjectAccessPermissionGetADM(projectIri, Some(groupIri), None, None).map {
@@ -389,21 +391,13 @@ final case class PermissionsResponder(
    * @return a set of [[PermissionADM]].
    */
   private def defaultObjectAccessPermissionsForResourceClassGetADM(
-    projectIri: IRI,
+    projectIri: ProjectIri,
     resourceClassIri: IRI,
   ): Task[Set[PermissionADM]] =
-    for {
-      defaultPermissionsOption <- defaultObjectAccessPermissionGetADM(
-                                    projectIri = projectIri,
-                                    groupIri = None,
-                                    resourceClassIri = Some(resourceClassIri),
-                                    propertyIri = None,
-                                  )
-      defaultPermissions: Set[PermissionADM] = defaultPermissionsOption match {
-                                                 case Some(doap) => doap.hasPermissions
-                                                 case None       => Set.empty[PermissionADM]
-                                               }
-    } yield defaultPermissions
+    defaultObjectAccessPermissionGetADM(projectIri, None, Some(resourceClassIri), None).map {
+      case Some(doap) => doap.hasPermissions
+      case None       => Set.empty
+    }
 
   /**
    * Convenience method returning a set with default object access permissions defined on a resource class / property combination.
@@ -414,22 +408,14 @@ final case class PermissionsResponder(
    * @return a set of [[PermissionADM]].
    */
   private def defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
-    projectIri: IRI,
+    projectIri: ProjectIri,
     resourceClassIri: IRI,
     propertyIri: IRI,
   ): Task[Set[PermissionADM]] =
-    for {
-      defaultPermissionsOption <- defaultObjectAccessPermissionGetADM(
-                                    projectIri = projectIri,
-                                    groupIri = None,
-                                    resourceClassIri = Some(resourceClassIri),
-                                    propertyIri = Some(propertyIri),
-                                  )
-      defaultPermissions: Set[PermissionADM] = defaultPermissionsOption match {
-                                                 case Some(doap) => doap.hasPermissions
-                                                 case None       => Set.empty[PermissionADM]
-                                               }
-    } yield defaultPermissions
+    defaultObjectAccessPermissionGetADM(projectIri, None, Some(resourceClassIri), Some(propertyIri)).map {
+      case Some(doap) => doap.hasPermissions
+      case None       => Set.empty[PermissionADM]
+    }
 
   /**
    * Convenience method returning a set with default object access permissions defined on a property.
@@ -439,21 +425,13 @@ final case class PermissionsResponder(
    * @return a set of [[PermissionADM]].
    */
   private def defaultObjectAccessPermissionsForPropertyGetADM(
-    projectIri: IRI,
+    projectIri: ProjectIri,
     propertyIri: IRI,
   ): Task[Set[PermissionADM]] =
-    for {
-      defaultPermissionsOption <- defaultObjectAccessPermissionGetADM(
-                                    projectIri = projectIri,
-                                    groupIri = None,
-                                    resourceClassIri = None,
-                                    propertyIri = Some(propertyIri),
-                                  )
-      defaultPermissions: Set[PermissionADM] = defaultPermissionsOption match {
-                                                 case Some(doap) => doap.hasPermissions
-                                                 case None       => Set.empty[PermissionADM]
-                                               }
-    } yield defaultPermissions
+    defaultObjectAccessPermissionGetADM(projectIri, None, None, Some(propertyIri)).map {
+      case Some(doap) => doap.hasPermissions
+      case None       => Set.empty[PermissionADM]
+    }
 
   /**
    * Returns a string containing default object permissions statements ready for usage during creation of a new resource.
@@ -467,7 +445,7 @@ final case class PermissionsResponder(
    * @return an optional string with object access permission statements
    */
   private def defaultObjectAccessPermissionsStringForEntityGetADM(
-    projectIri: IRI,
+    projectIri: ProjectIri,
     resourceClassIri: IRI,
     propertyIri: Option[IRI],
     entityType: IRI,
@@ -476,7 +454,9 @@ final case class PermissionsResponder(
     for {
       /* Get the groups the user is member of. */
       userGroups <-
-        ZIO.attempt(targetUser.permissions.groupsPerProject.get(projectIri).map(_.toSet).getOrElse(Set.empty[IRI]))
+        ZIO.attempt(
+          targetUser.permissions.groupsPerProject.get(projectIri.value).map(_.toSet).getOrElse(Set.empty[IRI]),
+        )
 
       /* Explicitly add 'SystemAdmin' and 'KnownUser' groups. */
       extendedUserGroups: List[IRI] =
@@ -537,9 +517,8 @@ final case class PermissionsResponder(
       /* system resource class / property combination */
       defaultPermissionsOnSystemResourceClassProperty <- {
         if (entityType == PropertyEntityType && permissionsListBuffer.isEmpty) {
-          val systemProject = KnoraProjectRepo.builtIn.SystemProject.id.value
           defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
-            projectIri = systemProject,
+            projectIri = KnoraProjectRepo.builtIn.SystemProject.id,
             resourceClassIri = resourceClassIri,
             propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
           )
@@ -572,10 +551,9 @@ final case class PermissionsResponder(
       /* Get the default object access permissions defined on the resource class inside the SystemProject */
       defaultPermissionsOnSystemResourceClass <- {
         if (entityType == ResourceEntityType && permissionsListBuffer.isEmpty) {
-          val systemProject = KnoraProjectRepo.builtIn.SystemProject.id.value
           defaultObjectAccessPermissionsForResourceClassGetADM(
-            projectIri = systemProject,
-            resourceClassIri = resourceClassIri,
+            KnoraProjectRepo.builtIn.SystemProject.id,
+            resourceClassIri,
           )
         } else {
           ZIO.attempt(Set.empty[PermissionADM])
@@ -606,10 +584,9 @@ final case class PermissionsResponder(
       /* system property */
       defaultPermissionsOnSystemProperty <- {
         if (entityType == PropertyEntityType && permissionsListBuffer.isEmpty) {
-          val systemProject = KnoraProjectRepo.builtIn.SystemProject.id.value
           defaultObjectAccessPermissionsForPropertyGetADM(
-            projectIri = systemProject,
-            propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
+            KnoraProjectRepo.builtIn.SystemProject.id,
+            propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
           )
         } else {
           ZIO.attempt(Set.empty[PermissionADM])
@@ -757,16 +734,14 @@ final case class PermissionsResponder(
      */
     val createPermissionTask =
       for {
-        _ <- validate(createRequest)
-        projectIri <- ZIO
-                        .fromEither(ProjectIri.from(createRequest.forProject))
-                        .mapError(BadRequestException.apply)
+        _          <- validate(createRequest)
+        projectIri <- ZIO.fromEither(ProjectIri.from(createRequest.forProject)).mapError(BadRequestException.apply)
         project <- knoraProjectService
                      .findById(projectIri)
                      .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
         _ <- auth.ensureSystemAdminOrProjectAdmin(user, project)
         checkResult <- defaultObjectAccessPermissionGetADM(
-                         createRequest.forProject,
+                         projectIri,
                          createRequest.forGroup,
                          createRequest.forResourceClass,
                          createRequest.forProperty,
@@ -842,7 +817,7 @@ final case class PermissionsResponder(
 
         // try to retrieve the newly created permission
         maybePermission <- defaultObjectAccessPermissionGetADM(
-                             createRequest.forProject,
+                             projectIri,
                              createRequest.forGroup,
                              createRequest.forResourceClass,
                              createRequest.forProperty,
@@ -1536,27 +1511,22 @@ final case class PermissionsResponder(
       _ <- ZIO.unless(resourceClassIri.isKnoraEntityIri) {
              ZIO.fail(BadRequestException(s"Invalid resource class IRI: $resourceClassIri"))
            }
-
       _ <- ZIO.unless(propertyIri.isKnoraEntityIri) {
              ZIO.fail(BadRequestException(s"Invalid property IRI: $propertyIri"))
            }
-
       _ <- ZIO.when(targetUser.isAnonymousUser) {
              ZIO.fail(BadRequestException("Anonymous Users are not allowed."))
            }
+      permission <- defaultObjectAccessPermissionsStringForEntityGetADM(
+                      projectIri,
+                      resourceClassIri.toString,
+                      Some(propertyIri.toString),
+                      PropertyEntityType,
+                      targetUser,
+                    )
+    } yield permission.permissionLiteral
 
-      permissionLiteral <- defaultObjectAccessPermissionsStringForEntityGetADM(
-                             projectIri = projectIri.value,
-                             resourceClassIri = resourceClassIri.toString,
-                             propertyIri = Some(propertyIri.toString),
-                             entityType = PropertyEntityType,
-                             targetUser = targetUser,
-                           ).map {
-                             _.permissionLiteral
-                           }
-    } yield permissionLiteral
-
-  def getDefaultResourcePermissions(
+  def getResourceDefaultPermissions(
     projectIri: ProjectIri,
     resourceClassIri: SmartIri,
     targetUser: User,
@@ -1565,7 +1535,7 @@ final case class PermissionsResponder(
       .fail(BadRequestException(s"Invalid resource class IRI: $resourceClassIri"))
       .when(!resourceClassIri.isKnoraEntityIri) *>
       defaultObjectAccessPermissionsStringForEntityGetADM(
-        projectIri.value,
+        projectIri,
         resourceClassIri.toString,
         None,
         ResourceEntityType,

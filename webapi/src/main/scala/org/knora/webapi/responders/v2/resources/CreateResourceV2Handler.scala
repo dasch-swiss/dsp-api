@@ -35,7 +35,6 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.slice.admin.api.model.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
@@ -221,11 +220,11 @@ final case class CreateResourceV2Handler(
                       )
 
       // Get the default permissions of the resource class.
-      defaultResourcePermissionsMap <- getResourceClassDefaultPermissions(
-                                         createResourceRequestV2.createResource.projectADM.id,
-                                         Set(internalCreateResource.resourceClassIri),
-                                         createResourceRequestV2.requestingUser,
-                                       )
+      defaultResourcePermissions <- permissionsResponder.getResourceDefaultPermissions(
+                                      createResourceRequestV2.createResource.projectADM.projectIri,
+                                      internalCreateResource.resourceClassIri,
+                                      createResourceRequestV2.requestingUser,
+                                    )
 
       // Get the default permissions of each property used.
       defaultPropertyPermissionsMap <- permissionsResponder.getPropertiesDefaultPermissions(
@@ -244,7 +243,7 @@ final case class CreateResourceV2Handler(
           linkTargetClasses = linkTargetClasses,
           entityInfo = allEntityInfo,
           clientResourceIDs = Map.empty[IRI, String],
-          defaultResourcePermissions = defaultResourcePermissionsMap(internalCreateResource.resourceClassIri),
+          defaultResourcePermissions = defaultResourcePermissions.permissionLiteral,
           defaultPropertyPermissions = defaultPropertyPermissionsMap,
           creationDate = internalCreateResource.creationDate.getOrElse(Instant.now),
           requestingUser = createResourceRequestV2.requestingUser,
@@ -893,32 +892,6 @@ final case class CreateResourceV2Handler(
 
     ZioHelper.sequence(propertyValuesWithValidatedPermissionsFutures.map { case (k, v) => k -> ZIO.collectAll(v) })
   }
-
-  /**
-   * Gets the default permissions for resource classs in a project.
-   *
-   * @param projectIri        the IRI of the project.
-   * @param resourceClassIris the internal IRIs of the resource classes.
-   * @param requestingUser    the user making the request.
-   * @return a map of resource class IRIs to default permission strings.
-   */
-  private def getResourceClassDefaultPermissions(
-    projectIri: IRI,
-    resourceClassIris: Set[SmartIri],
-    targetUser: User,
-  ): Task[Map[SmartIri, String]] =
-    for {
-      projectIri <-
-        ZIO.fromEither(ProjectIri.from(projectIri)).orElseFail(BadRequestException(s"Invalid project IRI $projectIri"))
-      _ <- ZIO.fail(BadRequestException("Anonymous Users are not allowed.")).when(targetUser.isAnonymousUser)
-      result <- ZIO
-                  .foreach(resourceClassIris.toSeq) { resourceClassIri =>
-                    permissionsResponder
-                      .getDefaultResourcePermissions(projectIri, resourceClassIri, targetUser)
-                      .map(p => (resourceClassIri, p.permissionLiteral))
-                  }
-                  .map(_.toMap)
-    } yield result
 
   /**
    * Checks that a resource was created.
