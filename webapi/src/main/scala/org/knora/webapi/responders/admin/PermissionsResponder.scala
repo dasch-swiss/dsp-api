@@ -1480,15 +1480,16 @@ final case class PermissionsResponder(
    * @param targetUser       the user that is creating the value.
    * @return a permission string.
    */
-  def getPropertiesDefaultPermissions(
+  def newValueDefaultObjectAccessPermissions(
     projectIri: ProjectIri,
     resourceClassIri: SmartIri,
     propertyIris: Set[SmartIri],
     targetUser: User,
-  ): Task[Map[SmartIri, String]] =
+  ): Task[Map[SmartIri, DefaultObjectAccessPermissionsStringResponseADM]] =
     ZIO
       .foreach(propertyIris) { propertyIri =>
-        getPropertyDefaultPermissions(projectIri, resourceClassIri, propertyIri, targetUser).map(propertyIri -> _)
+        newValueDefaultObjectAccessPermissions(projectIri, resourceClassIri, propertyIri, targetUser)
+          .map(propertyIri -> _)
       }
       .map(_.toMap)
 
@@ -1498,15 +1499,15 @@ final case class PermissionsResponder(
    * @param projectIri       the IRI of the project of the containing resource.
    * @param resourceClassIri the internal IRI of the resource class.
    * @param propertyIri      the internal IRI of the property that points to the value.
-   * @param targetUser the user that is creating the value.
+   * @param targetUser       the user that is creating the value.
    * @return a permission string.
    */
-  def getPropertyDefaultPermissions(
+  def newValueDefaultObjectAccessPermissions(
     projectIri: ProjectIri,
     resourceClassIri: SmartIri,
     propertyIri: SmartIri,
     targetUser: User,
-  ): Task[String] =
+  ): Task[DefaultObjectAccessPermissionsStringResponseADM] =
     for {
       _ <- ZIO.unless(resourceClassIri.isKnoraEntityIri) {
              ZIO.fail(BadRequestException(s"Invalid resource class IRI: $resourceClassIri"))
@@ -1524,9 +1525,9 @@ final case class PermissionsResponder(
                       EntityType.Property,
                       targetUser,
                     )
-    } yield permission.permissionLiteral
+    } yield permission
 
-  def getResourceDefaultPermissions(
+  def newResourceDefaultObjectAccessPermissions(
     projectIri: ProjectIri,
     resourceClassIri: SmartIri,
     targetUser: User,

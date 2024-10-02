@@ -220,14 +220,14 @@ final case class CreateResourceV2Handler(
                       )
 
       // Get the default permissions of the resource class.
-      defaultResourcePermissions <- permissionsResponder.getResourceDefaultPermissions(
+      defaultResourcePermissions <- permissionsResponder.newResourceDefaultObjectAccessPermissions(
                                       createResourceRequestV2.createResource.projectADM.projectIri,
                                       internalCreateResource.resourceClassIri,
                                       createResourceRequestV2.requestingUser,
                                     )
 
       // Get the default permissions of each property used.
-      defaultPropertyPermissionsMap <- permissionsResponder.getPropertiesDefaultPermissions(
+      defaultPropertyPermissionsMap <- permissionsResponder.newValueDefaultObjectAccessPermissions(
                                          createResourceRequestV2.createResource.projectADM.projectIri,
                                          internalCreateResource.resourceClassIri,
                                          internalCreateResource.values.keySet,
@@ -244,7 +244,7 @@ final case class CreateResourceV2Handler(
           entityInfo = allEntityInfo,
           clientResourceIDs = Map.empty[IRI, String],
           defaultResourcePermissions = defaultResourcePermissions.permissionLiteral,
-          defaultPropertyPermissions = defaultPropertyPermissionsMap,
+          defaultPropertyPermissions = defaultPropertyPermissionsMap.map((k, v) => (k, v.permissionLiteral)),
           creationDate = internalCreateResource.creationDate.getOrElse(Instant.now),
           requestingUser = createResourceRequestV2.requestingUser,
         )
