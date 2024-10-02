@@ -10,7 +10,6 @@ import zio.*
 
 import java.util.UUID
 import scala.collection.mutable.ListBuffer
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -1513,7 +1512,7 @@ final case class PermissionsResponder(
   ): Task[Map[SmartIri, String]] =
     ZIO
       .foreach(propertyIris) { propertyIri =>
-        getDefaultValuePermissions(projectIri.value, resourceClassIri, propertyIri, targetUser).map(propertyIri -> _)
+        getPropertyDefaultPermissions(projectIri.value, resourceClassIri, propertyIri, targetUser).map(propertyIri -> _)
       }
       .map(_.toMap)
 
@@ -1526,7 +1525,7 @@ final case class PermissionsResponder(
    * @param targetUser the user that is creating the value.
    * @return a permission string.
    */
-  def getDefaultValuePermissions(
+  def getPropertyDefaultPermissions(
     projectIri: IRI,
     resourceClassIri: SmartIri,
     propertyIri: SmartIri,

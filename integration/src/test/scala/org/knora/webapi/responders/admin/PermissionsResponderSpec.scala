@@ -544,7 +544,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
+              _.getPropertyDefaultPermissions(
                 projectIri = SharedTestDataADM.incunabulaProjectIri,
                 resourceClassIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.StillImageRepresentation),
                 propertyIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasStillImageFileValue),
@@ -595,7 +595,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
+              _.getPropertyDefaultPermissions(
                 projectIri = SharedTestDataADM.anythingProjectIri,
                 resourceClassIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/anything#Thing"),
                 propertyIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/anything#hasInterval"),
@@ -629,7 +629,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
+              _.getPropertyDefaultPermissions(
                 projectIri = SharedTestDataADM.anythingProjectIri,
                 resourceClassIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/anything#Thing"),
                 propertyIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/anything#hasText"),
@@ -644,7 +644,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
+              _.getPropertyDefaultPermissions(
                 projectIri = SharedTestDataADM.anythingProjectIri,
                 resourceClassIri = stringFormatter.toSmartIri(s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild"),
                 propertyIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/anything#hasText"),
@@ -662,7 +662,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
+              _.getPropertyDefaultPermissions(
                 projectIri = projectIri,
                 resourceClassIri = stringFormatter.toSmartIri(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
                 propertyIri = stringFormatter.toSmartIri(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
@@ -677,7 +677,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
+              _.getPropertyDefaultPermissions(
                 projectIri = SharedTestDataADM.imagesProjectIri,
                 resourceClassIri = stringFormatter.toSmartIri(SharedTestDataADM.customResourceIRI),
                 propertyIri = stringFormatter.toSmartIri(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
@@ -692,7 +692,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
+              _.getPropertyDefaultPermissions(
                 projectIri = SharedTestDataADM.imagesProjectIri,
                 resourceClassIri = stringFormatter.toSmartIri(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
                 propertyIri = stringFormatter.toSmartIri(SharedTestDataADM.customValueIRI),
@@ -707,7 +707,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         UnsafeZioRun
           .runOrThrow(
             permissionsResponder(
-              _.getDefaultValuePermissions(
+              _.getPropertyDefaultPermissions(
                 projectIri = SharedTestDataADM.imagesProjectIri,
                 resourceClassIri = stringFormatter.toSmartIri(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
                 propertyIri = stringFormatter.toSmartIri(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),

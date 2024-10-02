@@ -265,7 +265,7 @@ final case class ValuesResponderV2Live(
 
         // Get the default permissions for the new value.
         defaultValuePermissions <-
-          permissionsResponder.getDefaultValuePermissions(
+          permissionsResponder.getPropertyDefaultPermissions(
             projectIri = resourceInfo.projectADM.id,
             resourceClassIri = resourceInfo.resourceClassIri,
             propertyIri = submittedInternalPropertyIri,
