@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.testkit.ImplicitSender
 import zio.NonEmptyChunk
 import zio.ZIO
@@ -17,15 +16,14 @@ import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi.*
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.*
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesProjectIri
@@ -89,30 +87,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
           ),
         )
         result shouldEqual AdministrativePermissionGetResponseADM(perm002_a1.p)
-      }
-
-      "return Permission.Administrative for IRI" in {
-        appActor ! AdministrativePermissionForIriGetRequestADM(
-          administrativePermissionIri = perm002_a1.iri,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID(),
-        )
-        expectMsg(AdministrativePermissionGetResponseADM(perm002_a1.p))
-      }
-      "throw ForbiddenException for AdministrativePermissionForIriGetRequestADM if requesting user is not system or project admin" in {
-        val permissionIri = perm002_a1.iri
-        appActor ! AdministrativePermissionForIriGetRequestADM(
-          administrativePermissionIri = permissionIri,
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID(),
-        )
-        expectMsg(
-          Failure(
-            ForbiddenException(
-              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.",
-            ),
-          ),
-        )
       }
     }
 
@@ -192,46 +166,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       }
     }
 
-    "ask to query about object access permissions " should {
-      "return object access permissions for a resource" in {
-        appActor ! ObjectAccessPermissionsForResourceGetADM(
-          resourceIri = perm003_o1.iri,
-          requestingUser = rootUser,
-        )
-        expectMsg(Some(perm003_o1.p))
-      }
-
-      "return 'ForbiddenException' if the user requesting ObjectAccessPermissionsForResourceGetADM is not ProjectAdmin" in {
-
-        appActor ! ObjectAccessPermissionsForResourceGetADM(
-          resourceIri = perm003_o1.iri,
-          requestingUser = SharedTestDataADM.incunabulaMemberUser,
-        )
-        expectMsg(
-          Failure(ForbiddenException("Object access permissions can only be queried by system and project admin.")),
-        )
-      }
-
-      "return object access permissions for a value" in {
-        appActor ! ObjectAccessPermissionsForValueGetADM(
-          valueIri = perm003_o2.iri,
-          requestingUser = rootUser,
-        )
-        expectMsg(Some(perm003_o2.p))
-      }
-
-      "return 'ForbiddenException' if the user requesting ObjectAccessPermissionsForValueGetADM is not ProjectAdmin" in {
-
-        appActor ! ObjectAccessPermissionsForValueGetADM(
-          valueIri = perm003_o2.iri,
-          requestingUser = SharedTestDataADM.incunabulaMemberUser,
-        )
-        expectMsg(
-          Failure(ForbiddenException("Object access permissions can only be queried by system and project admin.")),
-        )
-      }
-    }
-
     "ask to query about default object access permissions " should {
 
       "return all DefaultObjectAccessPermissions for project" in {
@@ -244,81 +178,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
         actual shouldEqual DefaultObjectAccessPermissionsForProjectGetResponseADM(
           Seq(perm002_d2.p, perm0003_a4.p, perm002_d1.p),
-        )
-      }
-
-      "return DefaultObjectAccessPermission for IRI" in {
-        appActor ! DefaultObjectAccessPermissionForIriGetRequestADM(
-          defaultObjectAccessPermissionIri = perm002_d1.iri,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID(),
-        )
-        expectMsg(
-          DefaultObjectAccessPermissionGetResponseADM(
-            defaultObjectAccessPermission = perm002_d1.p,
-          ),
-        )
-      }
-
-      "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionForIriGetRequestADM is not System or project Admin" in {
-        val permissionIri = perm002_d1.iri
-        appActor ! DefaultObjectAccessPermissionForIriGetRequestADM(
-          defaultObjectAccessPermissionIri = permissionIri,
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID(),
-        )
-
-        expectMsg(
-          Failure(
-            ForbiddenException(
-              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.",
-            ),
-          ),
-        )
-      }
-
-      "return DefaultObjectAccessPermission for project and group" in {
-        appActor ! DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          groupIri = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
-          resourceClassIri = None,
-          propertyIri = None,
-          requestingUser = rootUser,
-        )
-        expectMsg(
-          DefaultObjectAccessPermissionGetResponseADM(
-            defaultObjectAccessPermission = perm003_d1.p,
-          ),
-        )
-      }
-
-      "return DefaultObjectAccessPermission for project and resource class ('incunabula:Page')" in {
-        appActor ! DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          groupIri = None,
-          resourceClassIri = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
-          propertyIri = None,
-          requestingUser = rootUser,
-        )
-        expectMsg(
-          DefaultObjectAccessPermissionGetResponseADM(
-            defaultObjectAccessPermission = perm003_d2.p,
-          ),
-        )
-      }
-
-      "return DefaultObjectAccessPermission for project and property ('knora-base:hasStillImageFileValue') (system property)" in {
-        appActor ! DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          groupIri = None,
-          resourceClassIri = None,
-          propertyIri = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
-          requestingUser = rootUser,
-        )
-        expectMsg(
-          DefaultObjectAccessPermissionGetResponseADM(
-            defaultObjectAccessPermission = perm001_d3.p,
-          ),
         )
       }
     }
@@ -665,14 +524,17 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
     "ask for default object access permissions 'string'" should {
 
       "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class (system resource class)" in {
-        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          resourceClassIri = OntologyConstants.KnoraBase.LinkObj,
-          targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
+        val actual = UnsafeZioRun.runOrThrow(
+          permissionsResponder(
+            _.getDefaultResourcePermissions(
+              ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri),
+              OntologyConstants.KnoraBase.LinkObj.toSmartIri,
+              SharedTestDataADM.incunabulaProjectAdminUser,
+            ),
+          ),
         )
-        expectMsg(
-          DefaultObjectAccessPermissionsStringResponseADM(
+        assert(
+          actual == DefaultObjectAccessPermissionsStringResponseADM(
             "M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           ),
         )
@@ -696,28 +558,34 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "return the default object access permissions 'string' for the 'incunabula:book' resource class (project resource class)" in {
-        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS,
-          targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
+        val actual = UnsafeZioRun.runOrThrow(
+          permissionsResponder(
+            _.getDefaultResourcePermissions(
+              ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri),
+              SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS.toSmartIri,
+              SharedTestDataADM.incunabulaProjectAdminUser,
+            ),
+          ),
         )
-        expectMsg(
-          DefaultObjectAccessPermissionsStringResponseADM(
+        assert(
+          actual == DefaultObjectAccessPermissionsStringResponseADM(
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           ),
         )
       }
 
       "return the default object access permissions 'string' for the 'incunabula:page' resource class (project resource class)" in {
-        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS,
-          targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
+        val actual = UnsafeZioRun.runOrThrow(
+          permissionsResponder(
+            _.getDefaultResourcePermissions(
+              ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri),
+              SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS.toSmartIri,
+              SharedTestDataADM.incunabulaProjectAdminUser,
+            ),
+          ),
         )
-        expectMsg(
-          DefaultObjectAccessPermissionsStringResponseADM(
+        assert(
+          actual == DefaultObjectAccessPermissionsStringResponseADM(
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           ),
         )
@@ -741,14 +609,17 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "return the default object access permissions 'string' for the 'anything:Thing' class" in {
-        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.anythingProjectIri,
-          resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
-          targetUser = SharedTestDataADM.anythingUser2,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
+        val actual = UnsafeZioRun.runOrThrow(
+          permissionsResponder(
+            _.getDefaultResourcePermissions(
+              ProjectIri.unsafeFrom(SharedTestDataADM.anythingProjectIri),
+              "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+              SharedTestDataADM.anythingUser2,
+            ),
+          ),
         )
-        expectMsg(
-          DefaultObjectAccessPermissionsStringResponseADM(
+        assert(
+          actual == DefaultObjectAccessPermissionsStringResponseADM(
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           ),
         )
@@ -848,50 +719,20 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "return the default object access permissions 'string' for the 'anything:Thing' resource class for the root user (system admin and not member of project)" in {
-        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.anythingProjectIri,
-          resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
-          targetUser = SharedTestDataADM.rootUser,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
-        )
-        expectMsg(
-          DefaultObjectAccessPermissionsStringResponseADM(
-            "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-          ),
-        )
-      }
-    }
-
-    "ask to get the permission by IRI" should {
-      "not return the permission if requesting user does not have permission to see it" in {
-        val permissionIri = perm002_a1.iri
-        appActor ! PermissionByIriGetRequestADM(
-          permissionIri = perm002_a1.iri,
-          requestingUser = SharedTestDataADM.imagesUser02,
-        )
-        expectMsg(
-          Failure(
-            ForbiddenException(
-              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.",
+        val actual = UnsafeZioRun.runOrThrow(
+          permissionsResponder(
+            _.getDefaultResourcePermissions(
+              ProjectIri.unsafeFrom(SharedTestDataADM.anythingProjectIri),
+              "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+              SharedTestDataADM.rootUser,
             ),
           ),
         )
-      }
-
-      "return an administrative permission" in {
-        appActor ! PermissionByIriGetRequestADM(
-          permissionIri = perm002_a1.iri,
-          requestingUser = rootUser,
+        assert(
+          actual == DefaultObjectAccessPermissionsStringResponseADM(
+            "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+          ),
         )
-        expectMsg(AdministrativePermissionGetResponseADM(perm002_a1.p))
-      }
-
-      "return a default object access permission" in {
-        appActor ! PermissionByIriGetRequestADM(
-          permissionIri = perm002_d1.iri,
-          requestingUser = rootUser,
-        )
-        expectMsg(DefaultObjectAccessPermissionGetResponseADM(perm002_d1.p))
       }
     }
 

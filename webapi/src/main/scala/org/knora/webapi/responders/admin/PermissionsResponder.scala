@@ -14,10 +14,7 @@ import scala.collection.mutable.ListBuffer
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages
@@ -29,7 +26,6 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -53,60 +49,16 @@ final case class PermissionsResponder(
   groupService: GroupService,
   iriService: IriService,
   knoraProjectService: KnoraProjectService,
-  messageRelay: MessageRelay,
   triplestore: TriplestoreService,
   auth: AuthorizationRestService,
   administrativePermissionService: AdministrativePermissionService,
 )(implicit val stringFormatter: StringFormatter)
-    extends MessageHandler
-    with LazyLogging {
+    extends LazyLogging {
 
   private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
   /* Entity types used to more clearly distinguish what kind of entity is meant */
   private val ResourceEntityType = "resource"
   private val PropertyEntityType = "property"
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean =
-    message.isInstanceOf[PermissionsResponderRequestADM]
-
-  override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, _) =>
-      administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser)
-    case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) =>
-      objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
-    case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) =>
-      objectAccessPermissionsForValueGetADM(valueIri, requestingUser)
-    case DefaultObjectAccessPermissionForIriGetRequestADM(
-          defaultObjectAccessPermissionIri,
-          requestingUser,
-          _,
-        ) =>
-      defaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri, requestingUser)
-    case DefaultObjectAccessPermissionGetRequestADM(
-          projectIri,
-          groupIri,
-          resourceClassIri,
-          propertyIri,
-          _,
-        ) =>
-      defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri)
-    case DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri,
-          resourceClassIri,
-          targetUser,
-          _,
-        ) =>
-      defaultObjectAccessPermissionsStringForEntityGetADM(
-        projectIri,
-        resourceClassIri,
-        None,
-        ResourceEntityType,
-        targetUser,
-      )
-    case PermissionByIriGetRequestADM(permissionIri, requestingUser) =>
-      permissionByIriGetRequestADM(permissionIri, requestingUser)
-    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
-  }
 
   def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
@@ -154,23 +106,6 @@ final case class PermissionsResponder(
       response = permissionsmessages.AdministrativePermissionsForProjectGetResponseADM(administrativePermissions)
 
     } yield response
-
-  /**
-   * Gets a single administrative permission identified by it's IRI.
-   *
-   * @param administrativePermissionIri the IRI of the administrative permission.
-   * @param requestingUser              the requesting user.
-   * @return a single [[AdministrativePermissionADM]] object.
-   */
-  private def administrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: User) =
-    for {
-      administrativePermission <- permissionGetADM(administrativePermissionIri, requestingUser)
-      result = administrativePermission match {
-                 case ap: AdministrativePermissionADM => AdministrativePermissionGetResponseADM(ap)
-                 case _ =>
-                   throw BadRequestException(s"$administrativePermissionIri is not an administrative permission.")
-               }
-    } yield result
 
   private def validate(req: CreateAdministrativePermissionAPIRequestADM): Task[Unit] = ZIO.attempt {
     req.id.foreach(iri => PermissionIri.from(iri).fold(msg => throw BadRequestException(msg), _ => ()))
@@ -281,109 +216,23 @@ final case class PermissionsResponder(
     IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI, createAdministrativePermissionTask)
   }
 
-  ///////////////////////////////////////////////////////////////////////////
-  // OBJECT ACCESS PERMISSIONS
-  ///////////////////////////////////////////////////////////////////////////
-
   /**
-   * Gets all permissions attached to the resource.
+   * Gets a single administrative permission identified by it's IRI.
    *
-   * @param resourceIri    the IRI of the resource.
-   * @param requestingUser the requesting user.
-   * @return a sequence of [[PermissionADM]]
+   * @param administrativePermissionIri the IRI of the administrative permission.
+   * @param requestingUser              the requesting user.
+   * @return a single [[AdministrativePermissionADM]] object.
    */
-  private def objectAccessPermissionsForResourceGetADM(
-    resourceIri: IRI,
-    requestingUser: User,
-  ): Task[Option[ObjectAccessPermissionADM]] =
+  private def administrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: User) =
     for {
-      projectIri <- getProjectOfEntity(resourceIri)
-      // Check user's permission for the operation
-      _ = if (
-            !requestingUser.isSystemAdmin
-            && !requestingUser.permissions.isProjectAdmin(projectIri)
-            && !requestingUser.isSystemUser
-          ) {
-            throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
-          }
-      permissionQueryResponse <-
-        triplestore.query(Select(sparql.admin.txt.getObjectAccessPermission(Some(resourceIri), None)))
-
-      permissionQueryResponseRows = permissionQueryResponse.results.bindings
-
-      permission =
-        if (permissionQueryResponseRows.nonEmpty) {
-
-          val groupedPermissionsQueryResponse: Map[String, Seq[String]] =
-            permissionQueryResponseRows.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
-              predicate -> rows.map(_.rowMap("o"))
-            }
-          val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(
-            groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
-            PermissionType.OAP,
-          )
-          Some(
-            ObjectAccessPermissionADM(
-              forResource = Some(resourceIri),
-              forValue = None,
-              hasPermissions = hasPermissions,
-            ),
-          )
-        } else {
-          None
-        }
-    } yield permission
-
-  /**
-   * Gets all permissions attached to the value.
-   *
-   * @param valueIri       the IRI of the value.
-   * @param requestingUser the requesting user.
-   * @return a sequence of [[PermissionADM]]
-   */
-  private def objectAccessPermissionsForValueGetADM(
-    valueIri: IRI,
-    requestingUser: User,
-  ): Task[Option[ObjectAccessPermissionADM]] =
-    for {
-      projectIri <- getProjectOfEntity(valueIri)
-      // Check user's permission for the operation
-      _ <- ZIO.when(
-             !requestingUser.isSystemAdmin
-               && !requestingUser.permissions.isProjectAdmin(projectIri)
-               && !requestingUser.isSystemUser,
-           ) {
-             ZIO.fail(ForbiddenException("Object access permissions can only be queried by system and project admin."))
-           }
-      permissionQueryResponse <-
-        triplestore.query(
-          Select(sparql.admin.txt.getObjectAccessPermission(resourceIri = None, valueIri = Some(valueIri))),
-        )
-
-      permissionQueryResponseRows = permissionQueryResponse.results.bindings
-
-      permission =
-        if (permissionQueryResponseRows.nonEmpty) {
-
-          val groupedPermissionsQueryResponse: Map[String, Seq[String]] =
-            permissionQueryResponseRows.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
-              predicate -> rows.map(_.rowMap("o"))
-            }
-          val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(
-            groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
-            PermissionType.OAP,
-          )
-          Some(
-            ObjectAccessPermissionADM(
-              forResource = None,
-              forValue = Some(valueIri),
-              hasPermissions = hasPermissions,
-            ),
-          )
-        } else {
-          None
-        }
-    } yield permission
+      administrativePermission <- permissionGetADM(administrativePermissionIri, requestingUser)
+      result <- administrativePermission match {
+                  case ap: AdministrativePermissionADM =>
+                    ZIO.succeed(AdministrativePermissionGetResponseADM(ap))
+                  case _ =>
+                    ZIO.fail(BadRequestException(s"$administrativePermissionIri is not an administrative permission."))
+                }
+    } yield result
 
   ///////////////////////////////////////////////////////////////////////////
   // DEFAULT OBJECT ACCESS PERMISSIONS
@@ -441,26 +290,6 @@ final case class PermissionsResponder(
       response = DefaultObjectAccessPermissionsForProjectGetResponseADM(permissions)
 
     } yield response
-
-  /**
-   * Gets a single default object access permission identified by its IRI.
-   *
-   * @param permissionIri  the IRI of the default object access permission.
-   * @param requestingUser the [[User]] of the requesting user.
-   * @return a single [[DefaultObjectAccessPermissionADM]] object.
-   */
-  private def defaultObjectAccessPermissionForIriGetRequestADM(
-    permissionIri: IRI,
-    requestingUser: User,
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] =
-    for {
-      defaultObjectAccessPermission <- permissionGetADM(permissionIri, requestingUser)
-      result = defaultObjectAccessPermission match {
-                 case doap: DefaultObjectAccessPermissionADM =>
-                   DefaultObjectAccessPermissionGetResponseADM(doap)
-                 case _ => throw BadRequestException(s"$permissionIri is not a default object access permission.")
-               }
-    } yield result
 
   /**
    * Gets a single default object access permission identified by project and either:
@@ -534,46 +363,6 @@ final case class PermissionsResponder(
         Some(doap)
       }
     }
-
-  /**
-   * Gets a single default object access permission identified by project and either group / resource class / property.
-   * In the case of properties, an additional check is performed against the 'SystemProject', as some 'knora-base'
-   * properties can carry default object access permissions. Note that default access permissions defined for a system
-   * property inside the 'SystemProject' can be overridden by defining them for its own project.
-   *
-   * @param projectIri        The project's IRI in which the default object access permission is defined.
-   * @param groupIri          The group's IRI for which the default object access permission is defined.
-   * @param resourceClassIri  The resource's class IRI for which the default object access permission is defined.
-   * @param propertyIri       The property's IRI for which the default object access permission is defined.
-   * @return a [[DefaultObjectAccessPermissionGetResponseADM]]
-   */
-  private def defaultObjectAccessPermissionGetRequestADM(
-    projectIri: IRI,
-    groupIri: Option[IRI],
-    resourceClassIri: Option[IRI],
-    propertyIri: Option[IRI],
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] = {
-    val projectIriInternal = stringFormatter.toSmartIri(projectIri).toOntologySchema(InternalSchema).toString
-    defaultObjectAccessPermissionGetADM(projectIriInternal, groupIri, resourceClassIri, propertyIri).flatMap {
-      case Some(doap) => ZIO.attempt(DefaultObjectAccessPermissionGetResponseADM(doap))
-      case None       =>
-        /* if the query was for a property, then we need to additionally check if it is a system property */
-        if (propertyIri.isDefined) {
-          val systemProject = KnoraProjectRepo.builtIn.SystemProject.id.value
-          defaultObjectAccessPermissionGetADM(systemProject, groupIri, resourceClassIri, propertyIri).map {
-            case Some(systemDoap) => DefaultObjectAccessPermissionGetResponseADM(systemDoap)
-            case None =>
-              throw NotFoundException(
-                s"No Default Object Access Permission found for project: $projectIriInternal, group: $groupIri, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination",
-              )
-          }
-        } else {
-          throw NotFoundException(
-            s"No Default Object Access Permission found for project: $projectIriInternal, group: $groupIri, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination",
-          )
-        }
-    }
-  }
 
   /**
    * Convenience method returning a set with combined max default object access permissions.
@@ -921,31 +710,6 @@ final case class PermissionsResponder(
           s"defaultObjectAccessPermissionsStringForEntityGetADM (result) - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, defaultObjectAccessPermissions: $result",
         )
     } yield permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM(result)
-
-  /**
-   * Gets a single permission identified by its IRI.
-   *
-   * @param permissionIri  the IRI of the permission.
-   * @param requestingUser the [[User]] of the requesting user.
-   * @return a single [[DefaultObjectAccessPermissionADM]] object.
-   */
-  private def permissionByIriGetRequestADM(
-    permissionIri: IRI,
-    requestingUser: User,
-  ): Task[PermissionGetResponseADM] =
-    for {
-      permission <- permissionGetADM(permissionIri, requestingUser)
-      result = permission match {
-                 case doap: DefaultObjectAccessPermissionADM =>
-                   DefaultObjectAccessPermissionGetResponseADM(doap)
-                 case ap: AdministrativePermissionADM =>
-                   AdministrativePermissionGetResponseADM(ap)
-                 case _ =>
-                   throw BadRequestException(
-                     s"$permissionIri is not a default object access or an administrative permission.",
-                   )
-               }
-    } yield result
 
   private def validate(req: CreateDefaultObjectAccessPermissionAPIRequestADM) = ZIO.attempt {
     val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
@@ -1676,22 +1440,6 @@ final case class PermissionsResponder(
           }
     } yield ()
 
-  private def getProjectOfEntity(entityIri: IRI): Task[IRI] =
-    for {
-      response <- triplestore.query(Select(sparql.admin.txt.getProjectOfEntity(entityIri)))
-      rows      = response.results.bindings
-      projectIri =
-        if (rows.isEmpty) {
-          throw BadRequestException(
-            s"<$entityIri> is not attached to a project, please verify that IRI is of a knora entity.",
-          )
-        } else {
-          val projectOption = rows.head.rowMap.get("projectIri")
-          projectOption.getOrElse(throw BadRequestException(s"No Project found for the given <$entityIri>"))
-        }
-
-    } yield projectIri
-
   def createPermissionsForAdminsAndMembersOfNewProject(projectIri: ProjectIri): Task[Unit] =
     for {
       // Give the admins of the new project rights for any operation in project level, and rights to create resources.
@@ -1754,7 +1502,7 @@ final case class PermissionsResponder(
    * @param projectIri       the IRI of the project of the containing resource.
    * @param resourceClassIri the internal IRI of the resource class.
    * @param propertyIri      the internal IRI of the property that points to the value.
-   * @param requestingUser   the user that is creating the value.
+   * @param targetUser the user that is creating the value.
    * @return a permission string.
    */
   def getDefaultValuePermissions(
@@ -1790,21 +1538,24 @@ final case class PermissionsResponder(
                              _.permissionLiteral
                            }
     } yield permissionLiteral
+
+  def getDefaultResourcePermissions(
+    projectIri: ProjectIri,
+    resourceClassIri: SmartIri,
+    targetUser: User,
+  ): Task[DefaultObjectAccessPermissionsStringResponseADM] =
+    ZIO
+      .fail(BadRequestException(s"Invalid resource class IRI: $resourceClassIri"))
+      .when(!resourceClassIri.isKnoraEntityIri) *>
+      defaultObjectAccessPermissionsStringForEntityGetADM(
+        projectIri.value,
+        resourceClassIri.toString,
+        None,
+        ResourceEntityType,
+        targetUser,
+      )
 }
 
 object PermissionsResponder {
-  val layer = ZLayer.fromZIO {
-    for {
-      ac      <- ZIO.service[AppConfig]
-      au      <- ZIO.service[AuthorizationRestService]
-      gs      <- ZIO.service[GroupService]
-      is      <- ZIO.service[IriService]
-      kpr     <- ZIO.service[KnoraProjectService]
-      mr      <- ZIO.service[MessageRelay]
-      ts      <- ZIO.service[TriplestoreService]
-      sf      <- ZIO.service[StringFormatter]
-      aps     <- ZIO.service[AdministrativePermissionService]
-      handler <- mr.subscribe(PermissionsResponder(ac, gs, is, kpr, mr, ts, au, aps)(sf))
-    } yield handler
-  }
+  val layer = ZLayer.derive[PermissionsResponder]
 }

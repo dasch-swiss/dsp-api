@@ -28,7 +28,6 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.infrastructure.InvalidTokenCache
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.security.*
 import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NOT_VALID
 import org.knora.webapi.slice.security.AuthenticatorError.*
 import org.knora.webapi.slice.security.CredentialsIdentifier.*
