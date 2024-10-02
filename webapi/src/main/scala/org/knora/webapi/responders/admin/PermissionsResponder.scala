@@ -1497,6 +1497,27 @@ final case class PermissionsResponder(
     } yield ()
 
   /**
+   * Gets the default permissions for new values.
+   *
+   * @param projectIri       the IRI of the project of the containing resource.
+   * @param resourceClassIri the internal IRI of the resource class.
+   * @param propertyIris     the internal IRIs of the properties that points to the values.
+   * @param targetUser       the user that is creating the value.
+   * @return a permission string.
+   */
+  def getPropertiesDefaultPermissions(
+    projectIri: ProjectIri,
+    resourceClassIri: SmartIri,
+    propertyIris: Set[SmartIri],
+    targetUser: User,
+  ): Task[Map[SmartIri, String]] =
+    ZIO
+      .foreach(propertyIris) { propertyIri =>
+        getDefaultValuePermissions(projectIri.value, resourceClassIri, propertyIri, targetUser).map(propertyIri -> _)
+      }
+      .map(_.toMap)
+
+  /**
    * Gets the default permissions for a new value.
    *
    * @param projectIri       the IRI of the project of the containing resource.

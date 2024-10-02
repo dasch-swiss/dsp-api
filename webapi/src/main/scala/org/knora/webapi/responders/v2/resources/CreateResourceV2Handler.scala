@@ -228,12 +228,11 @@ final case class CreateResourceV2Handler(
                                        )
 
       // Get the default permissions of each property used.
-      defaultPropertyPermissionsMap <- getDefaultPropertyPermissions(
-                                         projectIri = createResourceRequestV2.createResource.projectADM.id,
-                                         resourceClassProperties = Map(
-                                           internalCreateResource.resourceClassIri -> internalCreateResource.values.keySet,
-                                         ),
-                                         requestingUser = createResourceRequestV2.requestingUser,
+      defaultPropertyPermissionsMap <- permissionsResponder.getPropertiesDefaultPermissions(
+                                         createResourceRequestV2.createResource.projectADM.projectIri,
+                                         internalCreateResource.resourceClassIri,
+                                         internalCreateResource.values.keySet,
+                                         createResourceRequestV2.requestingUser,
                                        )
 
       // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
@@ -246,7 +245,7 @@ final case class CreateResourceV2Handler(
           entityInfo = allEntityInfo,
           clientResourceIDs = Map.empty[IRI, String],
           defaultResourcePermissions = defaultResourcePermissionsMap(internalCreateResource.resourceClassIri),
-          defaultPropertyPermissions = defaultPropertyPermissionsMap(internalCreateResource.resourceClassIri),
+          defaultPropertyPermissions = defaultPropertyPermissionsMap,
           creationDate = internalCreateResource.creationDate.getOrElse(Instant.now),
           requestingUser = createResourceRequestV2.requestingUser,
         )
@@ -922,41 +921,9 @@ final case class CreateResourceV2Handler(
     } yield result
 
   /**
-   * Gets the default permissions for properties in a resource class in a project.
-   *
-   * @param projectIri              the IRI of the project.
-   * @param resourceClassProperties a map of internal resource class IRIs to sets of internal property IRIs.
-   * @param requestingUser          the user making the request.
-   * @return a map of internal resource class IRIs to maps of property IRIs to default permission strings.
-   */
-  private def getDefaultPropertyPermissions(
-    projectIri: IRI,
-    resourceClassProperties: Map[SmartIri, Set[SmartIri]],
-    requestingUser: User,
-  ): Task[Map[SmartIri, Map[SmartIri, String]]] = {
-    val permissionsFutures: Map[SmartIri, Task[Map[SmartIri, String]]] = resourceClassProperties.map {
-      case (resourceClassIri, propertyIris) =>
-        val propertyPermissionsFutures: Map[SmartIri, Task[String]] = propertyIris.toSeq.map { propertyIri =>
-          propertyIri ->
-            permissionsResponder.getDefaultValuePermissions(
-              projectIri = projectIri,
-              resourceClassIri = resourceClassIri,
-              propertyIri = propertyIri,
-              targetUser = requestingUser,
-            )
-        }.toMap
-
-        resourceClassIri -> ZioHelper.sequence(propertyPermissionsFutures)
-    }
-
-    ZioHelper.sequence(permissionsFutures)
-  }
-
-  /**
    * Checks that a resource was created.
    *
    * @param resourceIri    the IRI of the resource that should have been created.
-   * @param projectIri     the IRI of the project in which the resource should have been created.
    * @param requestingUser the user that attempted to create the resource.
    * @return a preview of the resource that was created.
    */
