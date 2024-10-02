@@ -56,9 +56,12 @@ final case class PermissionsResponder(
     extends LazyLogging {
 
   private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
-  /* Entity types used to more clearly distinguish what kind of entity is meant */
-  private val ResourceEntityType = "resource"
-  private val PropertyEntityType = "property"
+
+  private enum EntityType {
+    case Resource
+    case Property
+  }
+  
 
   def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
@@ -448,7 +451,7 @@ final case class PermissionsResponder(
     projectIri: ProjectIri,
     resourceClassIri: IRI,
     propertyIri: Option[IRI],
-    entityType: IRI,
+    entityType: EntityType,
     targetUser: User,
   ): Task[DefaultObjectAccessPermissionsStringResponseADM] =
     for {
@@ -495,7 +498,7 @@ final case class PermissionsResponder(
       ///////////////////////////////
       /* project resource class / property combination */
       defaultPermissionsOnProjectResourceClassProperty <- {
-        if (entityType == PropertyEntityType && permissionsListBuffer.isEmpty) {
+        if (entityType == EntityType.Property && permissionsListBuffer.isEmpty) {
           defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
             projectIri = projectIri,
             resourceClassIri = resourceClassIri,
@@ -516,7 +519,7 @@ final case class PermissionsResponder(
 
       /* system resource class / property combination */
       defaultPermissionsOnSystemResourceClassProperty <- {
-        if (entityType == PropertyEntityType && permissionsListBuffer.isEmpty) {
+        if (entityType == EntityType.Property && permissionsListBuffer.isEmpty) {
           defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
             projectIri = KnoraProjectRepo.builtIn.SystemProject.id,
             resourceClassIri = resourceClassIri,
@@ -535,7 +538,7 @@ final case class PermissionsResponder(
       ///////////////////////
       /* Get the default object access permissions defined on the resource class for the current project */
       defaultPermissionsOnProjectResourceClass <- {
-        if (entityType == ResourceEntityType && permissionsListBuffer.isEmpty) {
+        if (entityType == EntityType.Resource && permissionsListBuffer.isEmpty) {
           defaultObjectAccessPermissionsForResourceClassGetADM(
             projectIri = projectIri,
             resourceClassIri = resourceClassIri,
@@ -550,7 +553,7 @@ final case class PermissionsResponder(
 
       /* Get the default object access permissions defined on the resource class inside the SystemProject */
       defaultPermissionsOnSystemResourceClass <- {
-        if (entityType == ResourceEntityType && permissionsListBuffer.isEmpty) {
+        if (entityType == EntityType.Resource && permissionsListBuffer.isEmpty) {
           defaultObjectAccessPermissionsForResourceClassGetADM(
             KnoraProjectRepo.builtIn.SystemProject.id,
             resourceClassIri,
@@ -568,7 +571,7 @@ final case class PermissionsResponder(
       ///////////////////////
       /* project property */
       defaultPermissionsOnProjectProperty <- {
-        if (entityType == PropertyEntityType && permissionsListBuffer.isEmpty) {
+        if (entityType == EntityType.Property && permissionsListBuffer.isEmpty) {
           defaultObjectAccessPermissionsForPropertyGetADM(
             projectIri = projectIri,
             propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
@@ -583,7 +586,7 @@ final case class PermissionsResponder(
 
       /* system property */
       defaultPermissionsOnSystemProperty <- {
-        if (entityType == PropertyEntityType && permissionsListBuffer.isEmpty) {
+        if (entityType == EntityType.Property && permissionsListBuffer.isEmpty) {
           defaultObjectAccessPermissionsForPropertyGetADM(
             KnoraProjectRepo.builtIn.SystemProject.id,
             propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
@@ -1521,7 +1524,7 @@ final case class PermissionsResponder(
                       projectIri,
                       resourceClassIri.toString,
                       Some(propertyIri.toString),
-                      PropertyEntityType,
+                      EntityType.Property,
                       targetUser,
                     )
     } yield permission.permissionLiteral
@@ -1538,7 +1541,7 @@ final case class PermissionsResponder(
         projectIri,
         resourceClassIri.toString,
         None,
-        ResourceEntityType,
+        EntityType.Resource,
         targetUser,
       )
 }
