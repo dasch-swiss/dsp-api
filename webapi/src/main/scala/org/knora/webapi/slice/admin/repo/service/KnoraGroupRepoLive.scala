@@ -18,7 +18,6 @@ import zio.ZIO
 import zio.ZLayer
 
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.BelongsToProject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.GroupIri
