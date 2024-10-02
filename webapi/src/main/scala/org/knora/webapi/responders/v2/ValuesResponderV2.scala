@@ -9,7 +9,6 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
@@ -264,13 +263,12 @@ final case class ValuesResponderV2Live(
              }
 
         // Get the default permissions for the new value.
-        defaultValuePermissions <-
-          permissionsResponder.getPropertyDefaultPermissions(
-            projectIri = resourceInfo.projectADM.id,
-            resourceClassIri = resourceInfo.resourceClassIri,
-            propertyIri = submittedInternalPropertyIri,
-            targetUser = requestingUser,
-          )
+        defaultValuePermissions <- permissionsResponder.getPropertyDefaultPermissions(
+                                     resourceInfo.projectADM.projectIri,
+                                     resourceInfo.resourceClassIri,
+                                     submittedInternalPropertyIri,
+                                     requestingUser,
+                                   )
 
         // Did the user submit permissions for the new value?
         newValuePermissionLiteral <-

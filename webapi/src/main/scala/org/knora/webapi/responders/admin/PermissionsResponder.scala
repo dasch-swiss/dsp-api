@@ -10,6 +10,7 @@ import zio.*
 
 import java.util.UUID
 import scala.collection.mutable.ListBuffer
+
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -1512,7 +1513,7 @@ final case class PermissionsResponder(
   ): Task[Map[SmartIri, String]] =
     ZIO
       .foreach(propertyIris) { propertyIri =>
-        getPropertyDefaultPermissions(projectIri.value, resourceClassIri, propertyIri, targetUser).map(propertyIri -> _)
+        getPropertyDefaultPermissions(projectIri, resourceClassIri, propertyIri, targetUser).map(propertyIri -> _)
       }
       .map(_.toMap)
 
@@ -1526,16 +1527,12 @@ final case class PermissionsResponder(
    * @return a permission string.
    */
   def getPropertyDefaultPermissions(
-    projectIri: IRI,
+    projectIri: ProjectIri,
     resourceClassIri: SmartIri,
     propertyIri: SmartIri,
     targetUser: User,
   ): Task[String] =
     for {
-      _ <- ZIO.getOrFailWith(BadRequestException(s"Invalid project IRI $projectIri"))(
-             ProjectIri.from(projectIri).toOption,
-           )
-
       _ <- ZIO.unless(resourceClassIri.isKnoraEntityIri) {
              ZIO.fail(BadRequestException(s"Invalid resource class IRI: $resourceClassIri"))
            }
@@ -1549,7 +1546,7 @@ final case class PermissionsResponder(
            }
 
       permissionLiteral <- defaultObjectAccessPermissionsStringForEntityGetADM(
-                             projectIri = projectIri,
+                             projectIri = projectIri.value,
                              resourceClassIri = resourceClassIri.toString,
                              propertyIri = Some(propertyIri.toString),
                              entityType = PropertyEntityType,
