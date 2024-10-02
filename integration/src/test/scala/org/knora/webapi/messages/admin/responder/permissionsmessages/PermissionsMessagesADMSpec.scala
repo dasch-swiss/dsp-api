@@ -130,59 +130,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
   }
 
-  "Default Object Access Permission Get Requests" should {
-
-    "return 'BadRequest' if the supplied resourceClass IRI for DefaultObjectAccessPermissionsStringForResourceClassGetADM is not valid" in {
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          resourceClassIri = SharedTestDataADM.customResourceIRI,
-          targetUser = SharedTestDataADM.imagesReviewerUser,
-          requestingUser = SharedTestDataADM.imagesUser01,
-        ),
-      )
-      // a resource IRI is given instead of a resource class IRI, exception should be thrown.
-      assert(caught.getMessage === s"Invalid resource class IRI: ${SharedTestDataADM.customResourceIRI}")
-    }
-
-    "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsStringForResourceClassGetADM is not system or project admin" in {
-      val caught = intercept[ForbiddenException](
-        DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
-          targetUser = SharedTestDataADM.imagesReviewerUser,
-          requestingUser = SharedTestDataADM.imagesUser02,
-        ),
-      )
-      assert(caught.getMessage === "Default object access permissions can only be queried by system and project admin.")
-    }
-
-    "return 'BadRequest' if the supplied project IRI DefaultObjectAccessPermissionsStringForResourceClassGetADM is not valid" in {
-      val projectIri = "invalid-project-IRI"
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = projectIri,
-          resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
-          targetUser = SharedTestDataADM.imagesUser02,
-          requestingUser = SharedTestDataADM.imagesUser01,
-        ),
-      )
-      assert(caught.getMessage === s"Invalid project IRI $projectIri")
-    }
-
-    "return 'BadRequest' if the target user of DefaultObjectAccessPermissionsStringForResourceClassGetADM is an Anonymous user" in {
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
-          targetUser = SharedTestDataADM.anonymousUser,
-          requestingUser = SharedTestDataADM.imagesUser01,
-        ),
-      )
-      assert(caught.getMessage === s"Anonymous Users are not allowed.")
-    }
-  }
-
   "Default Object Access Permission Create Requests" should {
     "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
       val forProject = "invalid-project-IRI"

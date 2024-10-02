@@ -14,10 +14,7 @@ import scala.collection.mutable.ListBuffer
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages
@@ -29,7 +26,6 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -53,38 +49,16 @@ final case class PermissionsResponder(
   groupService: GroupService,
   iriService: IriService,
   knoraProjectService: KnoraProjectService,
-  messageRelay: MessageRelay,
   triplestore: TriplestoreService,
   auth: AuthorizationRestService,
   administrativePermissionService: AdministrativePermissionService,
 )(implicit val stringFormatter: StringFormatter)
-    extends MessageHandler
-    with LazyLogging {
+    extends LazyLogging {
 
   private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
   /* Entity types used to more clearly distinguish what kind of entity is meant */
   private val ResourceEntityType = "resource"
   private val PropertyEntityType = "property"
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean =
-    message.isInstanceOf[PermissionsResponderRequestADM]
-
-  override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri,
-          resourceClassIri,
-          targetUser,
-          _,
-        ) =>
-      defaultObjectAccessPermissionsStringForEntityGetADM(
-        projectIri,
-        resourceClassIri,
-        None,
-        ResourceEntityType,
-        targetUser,
-      )
-    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
-  }
 
   def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
@@ -1564,21 +1538,24 @@ final case class PermissionsResponder(
                              _.permissionLiteral
                            }
     } yield permissionLiteral
+
+  def getDefaultResourcePermissions(
+    projectIri: ProjectIri,
+    resourceClassIri: SmartIri,
+    targetUser: User,
+  ): Task[DefaultObjectAccessPermissionsStringResponseADM] =
+    ZIO
+      .fail(BadRequestException(s"Invalid resource class IRI: $resourceClassIri"))
+      .when(!resourceClassIri.isKnoraEntityIri) *>
+      defaultObjectAccessPermissionsStringForEntityGetADM(
+        projectIri.value,
+        resourceClassIri.toString,
+        None,
+        ResourceEntityType,
+        targetUser,
+      )
 }
 
 object PermissionsResponder {
-  val layer = ZLayer.fromZIO {
-    for {
-      ac      <- ZIO.service[AppConfig]
-      au      <- ZIO.service[AuthorizationRestService]
-      gs      <- ZIO.service[GroupService]
-      is      <- ZIO.service[IriService]
-      kpr     <- ZIO.service[KnoraProjectService]
-      mr      <- ZIO.service[MessageRelay]
-      ts      <- ZIO.service[TriplestoreService]
-      sf      <- ZIO.service[StringFormatter]
-      aps     <- ZIO.service[AdministrativePermissionService]
-      handler <- mr.subscribe(PermissionsResponder(ac, gs, is, kpr, mr, ts, au, aps)(sf))
-    } yield handler
-  }
+  val layer = ZLayer.derive[PermissionsResponder]
 }

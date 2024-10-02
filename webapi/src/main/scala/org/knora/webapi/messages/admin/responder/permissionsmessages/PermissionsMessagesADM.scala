@@ -12,18 +12,12 @@ import zio.json.jsonDiscriminator
 import zio.json.jsonField
 
 import dsp.errors.BadRequestException
-import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
-import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 
@@ -135,49 +129,6 @@ case class ChangePermissionPropertyApiRequestADM(forProperty: IRI) {
 object ChangePermissionPropertyApiRequestADM {
   implicit val codec: JsonCodec[ChangePermissionPropertyApiRequestADM] =
     DeriveJsonCodec.gen[ChangePermissionPropertyApiRequestADM]
-}
-
-/**
- * An abstract trait representing message that can be sent to `PermissionsResponderV1`.
- */
-sealed trait PermissionsResponderRequestADM extends KnoraRequestADM with RelayedMessage
-
-// Default Object Access Permissions
-
-/**
- * A message that requests the default object access permissions string for a resource class inside a specific project.
- * A successful response will be a [[DefaultObjectAccessPermissionsStringResponseADM]].
- *
- * @param projectIri       the project for which the default object permissions need to be retrieved.
- * @param resourceClassIri the resource class which can also carry default object access permissions.
- * @param targetUser       the user for whom we calculate the permission
- * @param requestingUser   the requesting user.
- */
-case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-  projectIri: IRI,
-  resourceClassIri: IRI,
-  targetUser: User,
-  requestingUser: User,
-) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  ProjectIri.from(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
-
-  // Check user's permission for the operation
-  if (
-    !requestingUser.isSystemAdmin
-    && !requestingUser.permissions.isProjectAdmin(projectIri)
-    && !requestingUser.isSystemUser
-  ) {
-    // not a system admin
-    throw ForbiddenException("Default object access permissions can only be queried by system and project admin.")
-  }
-
-  if (!stringFormatter.toSmartIri(resourceClassIri).isKnoraEntityIri) {
-    throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
-  }
-
-  if (targetUser.isAnonymousUser) throw BadRequestException("Anonymous Users are not allowed.")
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
