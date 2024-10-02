@@ -70,8 +70,6 @@ final case class PermissionsResponder(
     message.isInstanceOf[PermissionsResponderRequestADM]
 
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, _) =>
-      administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser)
     case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) =>
       objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
     case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) =>
@@ -154,23 +152,6 @@ final case class PermissionsResponder(
       response = permissionsmessages.AdministrativePermissionsForProjectGetResponseADM(administrativePermissions)
 
     } yield response
-
-  /**
-   * Gets a single administrative permission identified by it's IRI.
-   *
-   * @param administrativePermissionIri the IRI of the administrative permission.
-   * @param requestingUser              the requesting user.
-   * @return a single [[AdministrativePermissionADM]] object.
-   */
-  private def administrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: User) =
-    for {
-      administrativePermission <- permissionGetADM(administrativePermissionIri, requestingUser)
-      result = administrativePermission match {
-                 case ap: AdministrativePermissionADM => AdministrativePermissionGetResponseADM(ap)
-                 case _ =>
-                   throw BadRequestException(s"$administrativePermissionIri is not an administrative permission.")
-               }
-    } yield result
 
   private def validate(req: CreateAdministrativePermissionAPIRequestADM): Task[Unit] = ZIO.attempt {
     req.id.foreach(iri => PermissionIri.from(iri).fold(msg => throw BadRequestException(msg), _ => ()))
@@ -280,6 +261,24 @@ final case class PermissionsResponder(
 
     IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI, createAdministrativePermissionTask)
   }
+
+  /**
+   * Gets a single administrative permission identified by it's IRI.
+   *
+   * @param administrativePermissionIri the IRI of the administrative permission.
+   * @param requestingUser              the requesting user.
+   * @return a single [[AdministrativePermissionADM]] object.
+   */
+  private def administrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: User) =
+    for {
+      administrativePermission <- permissionGetADM(administrativePermissionIri, requestingUser)
+      result <- administrativePermission match {
+                  case ap: AdministrativePermissionADM =>
+                    ZIO.succeed(AdministrativePermissionGetResponseADM(ap))
+                  case _ =>
+                    ZIO.fail(BadRequestException(s"$administrativePermissionIri is not an administrative permission."))
+                }
+    } yield result
 
   ///////////////////////////////////////////////////////////////////////////
   // OBJECT ACCESS PERMISSIONS
@@ -1754,7 +1753,7 @@ final case class PermissionsResponder(
    * @param projectIri       the IRI of the project of the containing resource.
    * @param resourceClassIri the internal IRI of the resource class.
    * @param propertyIri      the internal IRI of the property that points to the value.
-   * @param requestingUser   the user that is creating the value.
+   * @param targetUser the user that is creating the value.
    * @return a permission string.
    */
   def getDefaultValuePermissions(

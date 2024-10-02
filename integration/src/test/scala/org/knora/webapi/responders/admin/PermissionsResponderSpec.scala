@@ -90,30 +90,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
         result shouldEqual AdministrativePermissionGetResponseADM(perm002_a1.p)
       }
-
-      "return Permission.Administrative for IRI" in {
-        appActor ! AdministrativePermissionForIriGetRequestADM(
-          administrativePermissionIri = perm002_a1.iri,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID(),
-        )
-        expectMsg(AdministrativePermissionGetResponseADM(perm002_a1.p))
-      }
-      "throw ForbiddenException for AdministrativePermissionForIriGetRequestADM if requesting user is not system or project admin" in {
-        val permissionIri = perm002_a1.iri
-        appActor ! AdministrativePermissionForIriGetRequestADM(
-          administrativePermissionIri = permissionIri,
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID(),
-        )
-        expectMsg(
-          Failure(
-            ForbiddenException(
-              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.",
-            ),
-          ),
-        )
-      }
     }
 
     "asked to create an administrative permission" should {

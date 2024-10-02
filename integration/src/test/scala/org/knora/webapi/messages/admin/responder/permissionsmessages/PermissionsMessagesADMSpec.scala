@@ -27,21 +27,6 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
  */
 class PermissionsMessagesADMSpec extends CoreSpec {
 
-  "Administrative Permission Get Requests" should {
-
-    "return 'BadRequest' if the supplied permission IRI for AdministrativePermissionForIriGetRequestADM is not valid" in {
-      val permissionIri = "invalid-permission-IRI"
-      val caught = intercept[BadRequestException](
-        AdministrativePermissionForIriGetRequestADM(
-          administrativePermissionIri = permissionIri,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID(),
-        ),
-      )
-      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
-    }
-  }
-
   "Administrative Permission Create Requests" should {
     "return 'BadRequest' if the supplied project IRI for AdministrativePermissionCreateRequestADM is not valid" in {
       val exit = UnsafeZioRun.run(
