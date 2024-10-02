@@ -16,8 +16,6 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
@@ -37,6 +35,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.slice.admin.api.model.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
@@ -223,9 +222,9 @@ final case class CreateResourceV2Handler(
 
       // Get the default permissions of the resource class.
       defaultResourcePermissionsMap <- getResourceClassDefaultPermissions(
-                                         projectIri = createResourceRequestV2.createResource.projectADM.id,
-                                         resourceClassIris = Set(internalCreateResource.resourceClassIri),
-                                         requestingUser = createResourceRequestV2.requestingUser,
+                                         createResourceRequestV2.createResource.projectADM.id,
+                                         Set(internalCreateResource.resourceClassIri),
+                                         createResourceRequestV2.requestingUser,
                                        )
 
       // Get the default permissions of each property used.
@@ -907,24 +906,20 @@ final case class CreateResourceV2Handler(
   private def getResourceClassDefaultPermissions(
     projectIri: IRI,
     resourceClassIris: Set[SmartIri],
-    requestingUser: User,
-  ): Task[Map[SmartIri, String]] = {
-    val permissionsFutures: Map[SmartIri, Task[String]] = resourceClassIris.toSeq.map { resourceClassIri =>
-      val requestMessage = DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-        projectIri = projectIri,
-        resourceClassIri = resourceClassIri.toString,
-        targetUser = requestingUser,
-        requestingUser = KnoraSystemInstances.Users.SystemUser,
-      )
-
-      resourceClassIri ->
-        messageRelay
-          .ask[DefaultObjectAccessPermissionsStringResponseADM](requestMessage)
-          .map(_.permissionLiteral)
-    }.toMap
-
-    ZioHelper.sequence(permissionsFutures)
-  }
+    targetUser: User,
+  ): Task[Map[SmartIri, String]] =
+    for {
+      projectIri <-
+        ZIO.fromEither(ProjectIri.from(projectIri)).orElseFail(BadRequestException(s"Invalid project IRI $projectIri"))
+      _ <- ZIO.fail(BadRequestException("Anonymous Users are not allowed.")).when(targetUser.isAnonymousUser)
+      result <- ZIO
+                  .foreach(resourceClassIris.toSeq) { resourceClassIri =>
+                    permissionsResponder
+                      .getDefaultResourcePermissions(projectIri, resourceClassIri, targetUser)
+                      .map(p => (resourceClassIri, p.permissionLiteral))
+                  }
+                  .map(_.toMap)
+    } yield result
 
   /**
    * Gets the default permissions for properties in a resource class in a project.
