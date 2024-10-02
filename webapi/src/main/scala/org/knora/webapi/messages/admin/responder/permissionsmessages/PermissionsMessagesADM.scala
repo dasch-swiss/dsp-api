@@ -146,69 +146,6 @@ sealed trait PermissionsResponderRequestADM extends KnoraRequestADM with Relayed
 // Default Object Access Permissions
 
 /**
- * A message that requests an object access permission identified by project and either group / resource class / property.
- * A successful response will be a [[DefaultObjectAccessPermissionGetResponseADM]].
- *
- * @param projectIri       the project.
- * @param groupIri         the group.
- * @param resourceClassIri the resource class.
- * @param propertyIri      the property.
- * @param requestingUser   the user initiating this request.
- */
-case class DefaultObjectAccessPermissionGetRequestADM(
-  projectIri: IRI,
-  groupIri: Option[IRI] = None,
-  resourceClassIri: Option[IRI] = None,
-  propertyIri: Option[IRI] = None,
-  requestingUser: User,
-) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  ProjectIri.from(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
-
-  // Check user's permission for the operation
-  if (
-    !requestingUser.isSystemAdmin
-    && !requestingUser.permissions.isProjectAdmin(projectIri)
-    && !requestingUser.isSystemUser
-  ) {
-    // not a system admin
-    throw ForbiddenException("Default object access permissions can only be queried by system and project admin.")
-  }
-
-  groupIri match {
-    case Some(iri: IRI) =>
-      if (resourceClassIri.isDefined)
-        throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
-      else if (propertyIri.isDefined)
-        throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
-      else Some(iri)
-    case None =>
-      if (resourceClassIri.isEmpty && propertyIri.isEmpty) {
-        throw BadRequestException(
-          "Either a group, a resource class, a property, or a combination of resource class and property must be given.",
-        )
-      } else None
-  }
-
-  resourceClassIri match {
-    case Some(iri) =>
-      if (!stringFormatter.toSmartIri(iri).isKnoraEntityIri) {
-        throw BadRequestException(s"Invalid resource class IRI: $iri")
-      }
-    case None => None
-  }
-
-  propertyIri match {
-    case Some(iri) =>
-      if (!stringFormatter.toSmartIri(iri).isKnoraEntityIri) {
-        throw BadRequestException(s"Invalid property IRI: $iri")
-      }
-    case None => None
-  }
-}
-
-/**
  * A message that requests the default object access permissions string for a resource class inside a specific project.
  * A successful response will be a [[DefaultObjectAccessPermissionsStringResponseADM]].
  *

@@ -70,14 +70,6 @@ final case class PermissionsResponder(
     message.isInstanceOf[PermissionsResponderRequestADM]
 
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case DefaultObjectAccessPermissionGetRequestADM(
-          projectIri,
-          groupIri,
-          resourceClassIri,
-          propertyIri,
-          _,
-        ) =>
-      defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri)
     case DefaultObjectAccessPermissionsStringForResourceClassGetADM(
           projectIri,
           resourceClassIri,
@@ -399,46 +391,6 @@ final case class PermissionsResponder(
         Some(doap)
       }
     }
-
-  /**
-   * Gets a single default object access permission identified by project and either group / resource class / property.
-   * In the case of properties, an additional check is performed against the 'SystemProject', as some 'knora-base'
-   * properties can carry default object access permissions. Note that default access permissions defined for a system
-   * property inside the 'SystemProject' can be overridden by defining them for its own project.
-   *
-   * @param projectIri        The project's IRI in which the default object access permission is defined.
-   * @param groupIri          The group's IRI for which the default object access permission is defined.
-   * @param resourceClassIri  The resource's class IRI for which the default object access permission is defined.
-   * @param propertyIri       The property's IRI for which the default object access permission is defined.
-   * @return a [[DefaultObjectAccessPermissionGetResponseADM]]
-   */
-  private def defaultObjectAccessPermissionGetRequestADM(
-    projectIri: IRI,
-    groupIri: Option[IRI],
-    resourceClassIri: Option[IRI],
-    propertyIri: Option[IRI],
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] = {
-    val projectIriInternal = stringFormatter.toSmartIri(projectIri).toOntologySchema(InternalSchema).toString
-    defaultObjectAccessPermissionGetADM(projectIriInternal, groupIri, resourceClassIri, propertyIri).flatMap {
-      case Some(doap) => ZIO.attempt(DefaultObjectAccessPermissionGetResponseADM(doap))
-      case None       =>
-        /* if the query was for a property, then we need to additionally check if it is a system property */
-        if (propertyIri.isDefined) {
-          val systemProject = KnoraProjectRepo.builtIn.SystemProject.id.value
-          defaultObjectAccessPermissionGetADM(systemProject, groupIri, resourceClassIri, propertyIri).map {
-            case Some(systemDoap) => DefaultObjectAccessPermissionGetResponseADM(systemDoap)
-            case None =>
-              throw NotFoundException(
-                s"No Default Object Access Permission found for project: $projectIriInternal, group: $groupIri, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination",
-              )
-          }
-        } else {
-          throw NotFoundException(
-            s"No Default Object Access Permission found for project: $projectIriInternal, group: $groupIri, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination",
-          )
-        }
-    }
-  }
 
   /**
    * Convenience method returning a set with combined max default object access permissions.

@@ -181,51 +181,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
           Seq(perm002_d2.p, perm0003_a4.p, perm002_d1.p),
         )
       }
-
-      "return DefaultObjectAccessPermission for project and group" in {
-        appActor ! DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          groupIri = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
-          resourceClassIri = None,
-          propertyIri = None,
-          requestingUser = rootUser,
-        )
-        expectMsg(
-          DefaultObjectAccessPermissionGetResponseADM(
-            defaultObjectAccessPermission = perm003_d1.p,
-          ),
-        )
-      }
-
-      "return DefaultObjectAccessPermission for project and resource class ('incunabula:Page')" in {
-        appActor ! DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          groupIri = None,
-          resourceClassIri = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
-          propertyIri = None,
-          requestingUser = rootUser,
-        )
-        expectMsg(
-          DefaultObjectAccessPermissionGetResponseADM(
-            defaultObjectAccessPermission = perm003_d2.p,
-          ),
-        )
-      }
-
-      "return DefaultObjectAccessPermission for project and property ('knora-base:hasStillImageFileValue') (system property)" in {
-        appActor ! DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          groupIri = None,
-          resourceClassIri = None,
-          propertyIri = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
-          requestingUser = rootUser,
-        )
-        expectMsg(
-          DefaultObjectAccessPermissionGetResponseADM(
-            defaultObjectAccessPermission = perm001_d3.p,
-          ),
-        )
-      }
     }
 
     "ask to create a default object access permission" should {
