@@ -182,36 +182,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
       }
 
-      "return DefaultObjectAccessPermission for IRI" in {
-        appActor ! DefaultObjectAccessPermissionForIriGetRequestADM(
-          defaultObjectAccessPermissionIri = perm002_d1.iri,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID(),
-        )
-        expectMsg(
-          DefaultObjectAccessPermissionGetResponseADM(
-            defaultObjectAccessPermission = perm002_d1.p,
-          ),
-        )
-      }
-
-      "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionForIriGetRequestADM is not System or project Admin" in {
-        val permissionIri = perm002_d1.iri
-        appActor ! DefaultObjectAccessPermissionForIriGetRequestADM(
-          defaultObjectAccessPermissionIri = permissionIri,
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID(),
-        )
-
-        expectMsg(
-          Failure(
-            ForbiddenException(
-              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.",
-            ),
-          ),
-        )
-      }
-
       "return DefaultObjectAccessPermission for project and group" in {
         appActor ! DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.incunabulaProjectIri,

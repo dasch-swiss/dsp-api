@@ -70,12 +70,6 @@ final case class PermissionsResponder(
     message.isInstanceOf[PermissionsResponderRequestADM]
 
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case DefaultObjectAccessPermissionForIriGetRequestADM(
-          defaultObjectAccessPermissionIri,
-          requestingUser,
-          _,
-        ) =>
-      defaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri, requestingUser)
     case DefaultObjectAccessPermissionGetRequestADM(
           projectIri,
           groupIri,
@@ -332,26 +326,6 @@ final case class PermissionsResponder(
       response = DefaultObjectAccessPermissionsForProjectGetResponseADM(permissions)
 
     } yield response
-
-  /**
-   * Gets a single default object access permission identified by its IRI.
-   *
-   * @param permissionIri  the IRI of the default object access permission.
-   * @param requestingUser the [[User]] of the requesting user.
-   * @return a single [[DefaultObjectAccessPermissionADM]] object.
-   */
-  private def defaultObjectAccessPermissionForIriGetRequestADM(
-    permissionIri: IRI,
-    requestingUser: User,
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] =
-    for {
-      defaultObjectAccessPermission <- permissionGetADM(permissionIri, requestingUser)
-      result = defaultObjectAccessPermission match {
-                 case doap: DefaultObjectAccessPermissionADM =>
-                   DefaultObjectAccessPermissionGetResponseADM(doap)
-                 case _ => throw BadRequestException(s"$permissionIri is not a default object access permission.")
-               }
-    } yield result
 
   /**
    * Gets a single default object access permission identified by project and either:

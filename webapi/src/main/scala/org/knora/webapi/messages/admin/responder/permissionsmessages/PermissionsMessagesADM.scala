@@ -11,8 +11,6 @@ import zio.json.JsonCodec
 import zio.json.jsonDiscriminator
 import zio.json.jsonField
 
-import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri
@@ -208,22 +206,6 @@ case class DefaultObjectAccessPermissionGetRequestADM(
       }
     case None => None
   }
-}
-
-/**
- * A message that requests a default object access permission object identified through his IRI.
- * A successful response will be an [[DefaultObjectAccessPermissionGetResponseADM]] object.
- *
- * @param defaultObjectAccessPermissionIri the iri of the default object access permission object.
- * @param requestingUser                   the user initiation the request.
- * @param apiRequestID                     the API request ID.
- */
-case class DefaultObjectAccessPermissionForIriGetRequestADM(
-  defaultObjectAccessPermissionIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID,
-) extends PermissionsResponderRequestADM {
-  PermissionIri.from(defaultObjectAccessPermissionIri).fold(e => throw BadRequestException(e), _.value)
 }
 
 /**
