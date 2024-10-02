@@ -10,10 +10,8 @@ import zio.*
 
 import java.util.UUID
 import scala.collection.mutable.ListBuffer
-
 import dsp.errors.*
 import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -45,13 +43,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class PermissionsResponder(
-  appConfig: AppConfig,
-  groupService: GroupService,
-  iriService: IriService,
-  knoraProjectService: KnoraProjectService,
-  triplestore: TriplestoreService,
-  auth: AuthorizationRestService,
-  administrativePermissionService: AdministrativePermissionService,
+  private val groupService: GroupService,
+  private val iriService: IriService,
+  private val knoraProjectService: KnoraProjectService,
+  private val triplestore: TriplestoreService,
+  private val auth: AuthorizationRestService,
+  private val administrativePermissionService: AdministrativePermissionService,
 )(implicit val stringFormatter: StringFormatter)
     extends LazyLogging {
 
@@ -61,7 +58,6 @@ final case class PermissionsResponder(
     case Resource
     case Property
   }
-  
 
   def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
