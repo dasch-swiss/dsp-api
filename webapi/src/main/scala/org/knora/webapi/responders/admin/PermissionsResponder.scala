@@ -83,8 +83,6 @@ final case class PermissionsResponder(
         ResourceEntityType,
         targetUser,
       )
-    case PermissionByIriGetRequestADM(permissionIri, requestingUser) =>
-      permissionByIriGetRequestADM(permissionIri, requestingUser)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
@@ -738,31 +736,6 @@ final case class PermissionsResponder(
           s"defaultObjectAccessPermissionsStringForEntityGetADM (result) - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, defaultObjectAccessPermissions: $result",
         )
     } yield permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM(result)
-
-  /**
-   * Gets a single permission identified by its IRI.
-   *
-   * @param permissionIri  the IRI of the permission.
-   * @param requestingUser the [[User]] of the requesting user.
-   * @return a single [[DefaultObjectAccessPermissionADM]] object.
-   */
-  private def permissionByIriGetRequestADM(
-    permissionIri: IRI,
-    requestingUser: User,
-  ): Task[PermissionGetResponseADM] =
-    for {
-      permission <- permissionGetADM(permissionIri, requestingUser)
-      result = permission match {
-                 case doap: DefaultObjectAccessPermissionADM =>
-                   DefaultObjectAccessPermissionGetResponseADM(doap)
-                 case ap: AdministrativePermissionADM =>
-                   AdministrativePermissionGetResponseADM(ap)
-                 case _ =>
-                   throw BadRequestException(
-                     s"$permissionIri is not a default object access or an administrative permission.",
-                   )
-               }
-    } yield result
 
   private def validate(req: CreateDefaultObjectAccessPermissionAPIRequestADM) = ZIO.attempt {
     val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies

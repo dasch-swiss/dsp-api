@@ -528,17 +528,4 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       result should be(false)
     }
   }
-
-  "given the permission IRI" should {
-    "not get permission if invalid IRI given" in {
-      val permissionIri = "invalid-iri"
-      val caught = intercept[BadRequestException](
-        PermissionByIriGetRequestADM(
-          permissionIri = permissionIri,
-          requestingUser = SharedTestDataADM.imagesUser02,
-        ),
-      )
-      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
-    }
-  }
 }

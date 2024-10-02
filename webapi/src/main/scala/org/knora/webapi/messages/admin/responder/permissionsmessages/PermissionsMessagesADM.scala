@@ -23,7 +23,6 @@ import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
-import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
@@ -179,18 +178,6 @@ case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(
   }
 
   if (targetUser.isAnonymousUser) throw BadRequestException("Anonymous Users are not allowed.")
-}
-
-/**
- * A message that requests a permission (doap or ap) by its IRI.
- * A successful response will be an [[PermissionGetResponseADM]] object.
- *
- * @param permissionIri  the iri of the default object access permission object.
- * @param requestingUser the user initiation the request.
- */
-case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User)
-    extends PermissionsResponderRequestADM {
-  PermissionIri.from(permissionIri).fold(e => throw BadRequestException(e), _.value)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

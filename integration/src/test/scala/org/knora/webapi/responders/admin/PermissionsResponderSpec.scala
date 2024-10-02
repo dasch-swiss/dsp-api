@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.testkit.ImplicitSender
 import zio.NonEmptyChunk
 import zio.ZIO
@@ -719,39 +718,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           ),
         )
-      }
-    }
-
-    "ask to get the permission by IRI" should {
-      "not return the permission if requesting user does not have permission to see it" in {
-        val permissionIri = perm002_a1.iri
-        appActor ! PermissionByIriGetRequestADM(
-          permissionIri = perm002_a1.iri,
-          requestingUser = SharedTestDataADM.imagesUser02,
-        )
-        expectMsg(
-          Failure(
-            ForbiddenException(
-              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.",
-            ),
-          ),
-        )
-      }
-
-      "return an administrative permission" in {
-        appActor ! PermissionByIriGetRequestADM(
-          permissionIri = perm002_a1.iri,
-          requestingUser = rootUser,
-        )
-        expectMsg(AdministrativePermissionGetResponseADM(perm002_a1.p))
-      }
-
-      "return a default object access permission" in {
-        appActor ! PermissionByIriGetRequestADM(
-          permissionIri = perm002_d1.iri,
-          requestingUser = rootUser,
-        )
-        expectMsg(DefaultObjectAccessPermissionGetResponseADM(perm002_d1.p))
       }
     }
 
