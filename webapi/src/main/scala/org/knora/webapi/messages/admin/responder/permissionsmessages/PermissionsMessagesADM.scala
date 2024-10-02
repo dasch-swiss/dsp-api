@@ -148,22 +148,6 @@ sealed trait PermissionsResponderRequestADM extends KnoraRequestADM with Relayed
 // Object Access Permissions
 
 /**
- * A message that requests the object access permissions attached to a resource via the 'knora-base:hasPermissions' property.
- *
- * @param resourceIri the IRI of the resource.
- */
-case class ObjectAccessPermissionsForResourceGetADM(resourceIri: IRI, requestingUser: User)
-    extends PermissionsResponderRequestADM {
-
-  implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-
-  if (!stringFormatter.toSmartIri(resourceIri).isKnoraResourceIri) {
-    throw BadRequestException(s"Invalid resource IRI: $resourceIri")
-  }
-
-}
-
-/**
  * A message that requests the object access permissions attached to a value via the 'knora-base:hasPermissions' property.
  *
  * @param valueIri the IRI of the value.
