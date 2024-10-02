@@ -264,13 +264,12 @@ final case class ValuesResponderV2Live(
              }
 
         // Get the default permissions for the new value.
-        defaultValuePermissions <-
-          permissionsResponder.getDefaultValuePermissions(
-            projectIri = resourceInfo.projectADM.id,
-            resourceClassIri = resourceInfo.resourceClassIri,
-            propertyIri = submittedInternalPropertyIri,
-            targetUser = requestingUser,
-          )
+        defaultValuePermissions <- permissionsResponder.newValueDefaultObjectAccessPermissions(
+                                     resourceInfo.projectADM.projectIri,
+                                     resourceInfo.resourceClassIri,
+                                     submittedInternalPropertyIri,
+                                     requestingUser,
+                                   )
 
         // Did the user submit permissions for the new value?
         newValuePermissionLiteral <-
@@ -289,7 +288,7 @@ final case class ValuesResponderV2Live(
                          PermissionUtilADM.comparePermissionsADM(
                            entityProject = resourceInfo.projectADM.id,
                            permissionLiteralA = validatedCustomPermissions,
-                           permissionLiteralB = defaultValuePermissions,
+                           permissionLiteralB = defaultValuePermissions.permissionLiteral,
                            requestingUser = requestingUser,
                          )
 
@@ -305,7 +304,7 @@ final case class ValuesResponderV2Live(
 
             case None =>
               // No. Use the default permissions.
-              ZIO.succeed(defaultValuePermissions)
+              ZIO.succeed(defaultValuePermissions.permissionLiteral)
           }
 
         dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
