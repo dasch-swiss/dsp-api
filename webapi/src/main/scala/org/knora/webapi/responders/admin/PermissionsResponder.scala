@@ -438,6 +438,14 @@ final case class PermissionsResponder(
    * Returns a string containing default object permissions statements ready for usage during creation of a new resource.
    * The permissions include any default object access permissions defined for the resource class and on any groups the
    * user is member of.
+   * The default object access permissions are determines with the following precedence:
+   *
+   *  1. ProjectAdmin
+   *  2. ProjectEntity
+   *  3. SystemEntity
+   *  4. CustomGroups
+   *  5. ProjectMember
+   *  6. KnownUser
    *
    * @param projectIri       the IRI of the project.
    * @param resourceClassIri the IRI of the resource class for which the default object access permissions are requested.
