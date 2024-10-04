@@ -124,6 +124,11 @@ final case class User(
       .getOrElse(KnoraProjectRepo.builtIn.SystemProject.id.value, List.empty[String])
       .contains(KnoraGroupRepo.builtIn.SystemAdmin.id.value)
 
+  def isProjectMember(projectIri: ProjectIri): Boolean =
+    permissions.groupsPerProject
+      .getOrElse(projectIri.value, List.empty)
+      .contains(KnoraGroupRepo.builtIn.ProjectMember.id.value)
+
   def isSystemUser: Boolean = id.equalsIgnoreCase(KnoraUserRepo.builtIn.SystemUser.id.value)
 
   def isActive: Boolean = status

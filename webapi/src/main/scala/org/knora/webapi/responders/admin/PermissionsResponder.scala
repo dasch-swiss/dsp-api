@@ -10,6 +10,7 @@ import zio.*
 import zio.Ref
 
 import java.util.UUID
+
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
@@ -459,10 +460,12 @@ final case class PermissionsResponder(
     entityType: EntityType,
     targetUser: User,
   ): Task[DefaultObjectAccessPermissionsStringResponseADM] = {
-    def getPermissions(permissionsTasks: List[Task[Set[PermissionADM]]]): Task[Option[Set[PermissionADM]]] =
+    def calculatePermissionWithPrecedence(
+      permissionsTasksInOrderOfPrecedence: List[Task[Set[PermissionADM]]],
+    ): Task[Option[Set[PermissionADM]]] =
       for {
         ref: Ref[Option[NonEmptyChunk[PermissionADM]]] <- Ref.make(None)
-        _ <- ZIO.foreachDiscard(permissionsTasks) { task =>
+        _ <- ZIO.foreachDiscard(permissionsTasksInOrderOfPrecedence) { task =>
                ZIO.whenZIO(ref.get.map(_.isEmpty))(
                  task.flatMap(p =>
                    ref.getAndUpdate {
@@ -475,21 +478,9 @@ final case class PermissionsResponder(
         result <- ref.get.map(_.map(_.toSet))
       } yield result
 
-    val extendedUserGroups = {
-      val userGroups = builtIn.KnownUser.id.value :: targetUser.permissions.groupsPerProject
-        .getOrElse(projectIri.value, Seq.empty)
-        .distinct
-        .toList
-      if (targetUser.permissions.isSystemAdmin) { builtIn.SystemAdmin.id.value :: userGroups }
-      else { userGroups }
-    }
-
     val projectAdmin: Task[Set[PermissionADM]] =
       getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectAdmin.id.value))
-        .when(
-          extendedUserGroups.contains(builtIn.ProjectAdmin.id.value) ||
-            extendedUserGroups.contains(builtIn.SystemAdmin.id.value),
-        )
+        .when(targetUser.isProjectMember(projectIri) || targetUser.isSystemAdmin)
         .map(_.getOrElse(Set.empty))
 
     val resourceClassProperty: Task[Set[PermissionADM]] = ZIO
@@ -551,33 +542,34 @@ final case class PermissionsResponder(
       .map(_.getOrElse(Set.empty))
 
     val customGroups = {
+      val extendedUserGroups = {
+        val userGroups = builtIn.KnownUser.id.value :: targetUser.permissions.groupsPerProject
+          .getOrElse(projectIri.value, Seq.empty)
+          .distinct
+          .toList
+        if (targetUser.isSystemAdmin) { builtIn.SystemAdmin.id.value :: userGroups }
+        else { userGroups }
+      }
       val groups = List(builtIn.KnownUser.id, builtIn.ProjectMember.id, builtIn.ProjectAdmin.id, builtIn.SystemAdmin.id)
         .map(_.value)
       ZIO
-        .when((extendedUserGroups diff groups).nonEmpty)(
-          getDefaultObjectAccessPermissions(projectIri, groups),
-        )
+        .when((extendedUserGroups diff groups).nonEmpty)(getDefaultObjectAccessPermissions(projectIri, groups))
         .map(_.getOrElse(Set.empty))
     }
 
     val projectMembers = ZIO
-      .when(
-        extendedUserGroups.contains(builtIn.ProjectMember.id.value) ||
-          extendedUserGroups.contains(builtIn.SystemAdmin.id.value),
-      )(getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectMember.id.value)))
-      .map(_.getOrElse(Set.empty))
-
-    val knownUser = ZIO
-      .when(extendedUserGroups.contains(builtIn.KnownUser.id.value))(
-        getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value)),
+      .when(targetUser.isProjectMember(projectIri) || targetUser.isSystemAdmin)(
+        getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectMember.id.value)),
       )
       .map(_.getOrElse(Set.empty))
+
+    val knownUser = getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value))
 
     val permissionTasks: List[Task[Set[PermissionADM]]] =
       List(projectAdmin, resourceClassProperty, resourceClass, property, customGroups, projectMembers, knownUser)
 
     for {
-      permissions <- getPermissions(permissionTasks)
+      permissions <- calculatePermissionWithPrecedence(permissionTasks)
       result = permissions
                  .getOrElse(Set(PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.Creator.id.value)))
       resultStr = PermissionUtilADM.formatPermissionADMs(result, OAP)
