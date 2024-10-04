@@ -36,6 +36,7 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class ProjectRestService(
   format: KnoraResponseRenderer,
@@ -48,6 +49,7 @@ final case class ProjectRestService(
   userService: UserService,
   auth: AuthorizationRestService,
   features: Features,
+  triplestore: TriplestoreService,
 ) {
 
   /**
@@ -144,6 +146,7 @@ final case class ProjectRestService(
       _        <- ZIO.logInfo(s"${user.userIri} erases project $shortcode")
       _        <- projectEraseService.eraseProject(project, keepAssets)
       external <- format.toExternal(ProjectOperationResponseADM(internal))
+      _        <- ZIO.when(features.triggerCompactionAfterProjectErasure)(triplestore.compact())
     } yield external
 
   /**
