@@ -10,7 +10,6 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import scala.util.matching.Regex
-
 import dsp.valueobjects.Iri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.UuidUtil
@@ -128,6 +127,11 @@ final case class User(
     permissions.groupsPerProject
       .getOrElse(projectIri.value, List.empty)
       .contains(KnoraGroupRepo.builtIn.ProjectMember.id.value)
+
+  def isProjectAdmin(projectIri: ProjectIri): Boolean =
+    permissions.groupsPerProject
+      .getOrElse(projectIri.value, List.empty)
+      .contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
 
   def isSystemUser: Boolean = id.equalsIgnoreCase(KnoraUserRepo.builtIn.SystemUser.id.value)
 

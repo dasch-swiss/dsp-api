@@ -7,7 +7,6 @@ package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
-import zio.Ref
 
 import java.util.UUID
 import dsp.errors.*
@@ -463,26 +462,17 @@ final case class PermissionsResponder(
     def calculatePermissionWithPrecedence(
       permissionsTasksInOrderOfPrecedence: List[Task[Option[Set[PermissionADM]]]],
     ): Task[Option[Set[PermissionADM]]] =
-      for {
-        ref: Ref[Option[NonEmptyChunk[PermissionADM]]] <- Ref.make(None)
-        _ <- ZIO.foreachDiscard(permissionsTasksInOrderOfPrecedence) { task =>
-               ZIO.whenZIO(ref.get.map(_.isEmpty))(
-                 task.flatMap(pOpt =>
-                   ref.getAndUpdate { result =>
-                     (result, pOpt) match {
-                       case (None, Some(p)) if p.nonEmpty => Some(NonEmptyChunk.fromIterable(p.head, p.tail))
-                       case (keepPrevious, _)             => keepPrevious
-                     }
-                   },
-                 ),
-               )
-             }
-        result <- ref.get.map(_.map(_.toSet))
-      } yield result
+      ZIO.foldLeft(permissionsTasksInOrderOfPrecedence)(None: Option[Set[PermissionADM]]) { (acc, task) =>
+        task.flatMap { p =>
+          (acc, p) match
+            case (None, Some(permissions)) if permissions.nonEmpty => ZIO.some(permissions)
+            case _                                                 => ZIO.succeed(acc)
+        }
+      }
 
     val projectAdmin =
       getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectAdmin.id.value))
-        .when(targetUser.isProjectMember(projectIri) || targetUser.isSystemAdmin)
+        .when(targetUser.isProjectAdmin(projectIri) || targetUser.isSystemAdmin)
 
     val resourceClassProperty = ZIO
       .when(entityType == EntityType.Property)(
@@ -540,17 +530,10 @@ final case class PermissionsResponder(
       }
 
     val customGroups = {
-      val extendedUserGroups = {
-        val userGroups = builtIn.KnownUser.id.value :: targetUser.permissions.groupsPerProject
-          .getOrElse(projectIri.value, Seq.empty)
-          .distinct
-          .toList
-        if (targetUser.isSystemAdmin) { builtIn.SystemAdmin.id.value :: userGroups }
-        else { userGroups }
-      }
-      val groups = List(builtIn.KnownUser.id, builtIn.ProjectMember.id, builtIn.ProjectAdmin.id, builtIn.SystemAdmin.id)
-        .map(_.value)
-      ZIO.when((extendedUserGroups diff groups).nonEmpty)(getDefaultObjectAccessPermissions(projectIri, groups))
+      val otherGroups = targetUser.permissions.groupsPerProject.getOrElse(projectIri.value, Seq.empty) diff
+        List(builtIn.KnownUser.id, builtIn.ProjectMember.id, builtIn.ProjectAdmin.id, builtIn.SystemAdmin.id)
+          .map(_.value)
+      ZIO.when(otherGroups.distinct.nonEmpty)(getDefaultObjectAccessPermissions(projectIri, otherGroups))
     }
 
     val projectMembers = ZIO
@@ -558,7 +541,9 @@ final case class PermissionsResponder(
         getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectMember.id.value)),
       )
 
-    val knownUser = getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value)).map(Some(_))
+    val knownUser = ZIO.when(!targetUser.isAnonymousUser)(
+      getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value)),
+    )
 
     val permissionTasks: List[Task[Option[Set[PermissionADM]]]] =
       List(projectAdmin, resourceClassProperty, resourceClass, property, customGroups, projectMembers, knownUser)
