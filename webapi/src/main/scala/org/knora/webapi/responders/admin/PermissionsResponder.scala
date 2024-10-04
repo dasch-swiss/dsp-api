@@ -7,8 +7,10 @@ package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
+import zio.Ref
 
 import java.util.UUID
+
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
@@ -41,7 +43,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import zio.Ref
 
 final case class PermissionsResponder(
   private val groupService: GroupService,
