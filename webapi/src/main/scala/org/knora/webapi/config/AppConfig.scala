@@ -177,6 +177,7 @@ final case class InstrumentationServerConfig(
 final case class Features(
   allowEraseProjects: Boolean,
   disableLastModificationDateCheck: Boolean,
+  triggerCompactionAfterProjectErasure: Boolean,
 )
 
 object AppConfig {
@@ -195,8 +196,9 @@ object AppConfig {
 
   private def logFeaturesEnabled(c: AppConfig) = {
     val features = List(
-      "ALLOW_ERASE_PROJECTS"                 -> c.features.allowEraseProjects,
-      "DISABLE_LAST_MODIFICATION_DATE_CHECK" -> c.features.disableLastModificationDateCheck,
+      "ALLOW_ERASE_PROJECTS"                     -> c.features.allowEraseProjects,
+      "DISABLE_LAST_MODIFICATION_DATE_CHECK"     -> c.features.disableLastModificationDateCheck,
+      "TRIGGER_COMPACTION_AFTER_PROJECT_ERASURE" -> c.features.triggerCompactionAfterProjectErasure,
     ).collect { case (feature, enabled) if enabled => feature }
     ZIO.logInfo(s"Features enabled: ${features.mkString(", ")}").when(features.nonEmpty)
   }
