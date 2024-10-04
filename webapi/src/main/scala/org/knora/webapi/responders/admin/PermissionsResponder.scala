@@ -16,6 +16,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.DOAP
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.OAP
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -552,7 +553,7 @@ final case class PermissionsResponder(
       permissions <- calculatePermissionWithPrecedence(permissionTasks)
       result = permissions
                  .getOrElse(Set(PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.Creator.id.value)))
-      resultStr = PermissionUtilADM.formatPermissionADMs(result, OAP)
+      resultStr = PermissionUtilADM.formatPermissionADMs(result, DOAP)
     } yield DefaultObjectAccessPermissionsStringResponseADM(resultStr)
   }
 

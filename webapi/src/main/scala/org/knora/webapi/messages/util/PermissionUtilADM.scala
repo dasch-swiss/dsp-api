@@ -9,7 +9,6 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
@@ -468,7 +467,7 @@ object PermissionUtilADM extends LazyLogging {
    */
   def formatPermissionADMs(permissions: Set[PermissionADM], permissionType: PermissionType): String =
     permissionType match {
-      case PermissionType.OAP =>
+      case PermissionType.OAP | PermissionType.DOAP =>
         if (permissions.nonEmpty) {
 
           /* a levelsByToken with permission names, shortened groups, and full group names. */
@@ -524,7 +523,6 @@ object PermissionUtilADM extends LazyLogging {
         } else {
           throw InconsistentRepositoryDataException("Permissions cannot be empty")
         }
-      case PermissionType.DOAP => ???
     }
 }
 
