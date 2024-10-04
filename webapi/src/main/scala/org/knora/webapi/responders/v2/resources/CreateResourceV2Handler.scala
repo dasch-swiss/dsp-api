@@ -35,7 +35,6 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.slice.admin.api.model.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
@@ -221,19 +220,18 @@ final case class CreateResourceV2Handler(
                       )
 
       // Get the default permissions of the resource class.
-      defaultResourcePermissionsMap <- getResourceClassDefaultPermissions(
-                                         createResourceRequestV2.createResource.projectADM.id,
-                                         Set(internalCreateResource.resourceClassIri),
-                                         createResourceRequestV2.requestingUser,
-                                       )
+      defaultResourcePermissions <- permissionsResponder.newResourceDefaultObjectAccessPermissions(
+                                      createResourceRequestV2.createResource.projectADM.projectIri,
+                                      internalCreateResource.resourceClassIri,
+                                      createResourceRequestV2.requestingUser,
+                                    )
 
       // Get the default permissions of each property used.
-      defaultPropertyPermissionsMap <- getDefaultPropertyPermissions(
-                                         projectIri = createResourceRequestV2.createResource.projectADM.id,
-                                         resourceClassProperties = Map(
-                                           internalCreateResource.resourceClassIri -> internalCreateResource.values.keySet,
-                                         ),
-                                         requestingUser = createResourceRequestV2.requestingUser,
+      defaultPropertyPermissionsMap <- permissionsResponder.newValueDefaultObjectAccessPermissions(
+                                         createResourceRequestV2.createResource.projectADM.projectIri,
+                                         internalCreateResource.resourceClassIri,
+                                         internalCreateResource.values.keySet,
+                                         createResourceRequestV2.requestingUser,
                                        )
 
       // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
@@ -245,8 +243,8 @@ final case class CreateResourceV2Handler(
           linkTargetClasses = linkTargetClasses,
           entityInfo = allEntityInfo,
           clientResourceIDs = Map.empty[IRI, String],
-          defaultResourcePermissions = defaultResourcePermissionsMap(internalCreateResource.resourceClassIri),
-          defaultPropertyPermissions = defaultPropertyPermissionsMap(internalCreateResource.resourceClassIri),
+          defaultResourcePermissions = defaultResourcePermissions.permissionLiteral,
+          defaultPropertyPermissions = defaultPropertyPermissionsMap.map((k, v) => (k, v.permissionLiteral)),
           creationDate = internalCreateResource.creationDate.getOrElse(Instant.now),
           requestingUser = createResourceRequestV2.requestingUser,
         )
@@ -896,67 +894,9 @@ final case class CreateResourceV2Handler(
   }
 
   /**
-   * Gets the default permissions for resource classs in a project.
-   *
-   * @param projectIri        the IRI of the project.
-   * @param resourceClassIris the internal IRIs of the resource classes.
-   * @param requestingUser    the user making the request.
-   * @return a map of resource class IRIs to default permission strings.
-   */
-  private def getResourceClassDefaultPermissions(
-    projectIri: IRI,
-    resourceClassIris: Set[SmartIri],
-    targetUser: User,
-  ): Task[Map[SmartIri, String]] =
-    for {
-      projectIri <-
-        ZIO.fromEither(ProjectIri.from(projectIri)).orElseFail(BadRequestException(s"Invalid project IRI $projectIri"))
-      _ <- ZIO.fail(BadRequestException("Anonymous Users are not allowed.")).when(targetUser.isAnonymousUser)
-      result <- ZIO
-                  .foreach(resourceClassIris.toSeq) { resourceClassIri =>
-                    permissionsResponder
-                      .getDefaultResourcePermissions(projectIri, resourceClassIri, targetUser)
-                      .map(p => (resourceClassIri, p.permissionLiteral))
-                  }
-                  .map(_.toMap)
-    } yield result
-
-  /**
-   * Gets the default permissions for properties in a resource class in a project.
-   *
-   * @param projectIri              the IRI of the project.
-   * @param resourceClassProperties a map of internal resource class IRIs to sets of internal property IRIs.
-   * @param requestingUser          the user making the request.
-   * @return a map of internal resource class IRIs to maps of property IRIs to default permission strings.
-   */
-  private def getDefaultPropertyPermissions(
-    projectIri: IRI,
-    resourceClassProperties: Map[SmartIri, Set[SmartIri]],
-    requestingUser: User,
-  ): Task[Map[SmartIri, Map[SmartIri, String]]] = {
-    val permissionsFutures: Map[SmartIri, Task[Map[SmartIri, String]]] = resourceClassProperties.map {
-      case (resourceClassIri, propertyIris) =>
-        val propertyPermissionsFutures: Map[SmartIri, Task[String]] = propertyIris.toSeq.map { propertyIri =>
-          propertyIri ->
-            permissionsResponder.getDefaultValuePermissions(
-              projectIri = projectIri,
-              resourceClassIri = resourceClassIri,
-              propertyIri = propertyIri,
-              targetUser = requestingUser,
-            )
-        }.toMap
-
-        resourceClassIri -> ZioHelper.sequence(propertyPermissionsFutures)
-    }
-
-    ZioHelper.sequence(permissionsFutures)
-  }
-
-  /**
    * Checks that a resource was created.
    *
    * @param resourceIri    the IRI of the resource that should have been created.
-   * @param projectIri     the IRI of the project in which the resource should have been created.
    * @param requestingUser the user that attempted to create the resource.
    * @return a preview of the resource that was created.
    */
