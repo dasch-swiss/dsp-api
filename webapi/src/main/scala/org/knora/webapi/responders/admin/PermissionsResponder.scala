@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import java.util.UUID
+
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
@@ -460,13 +461,13 @@ final case class PermissionsResponder(
   ): Task[DefaultObjectAccessPermissionsStringResponseADM] = {
 
     def calculatePermissionWithPrecedence(
-      permissionsTasksInOrderOfPrecedence: List[(Int, Task[Option[Set[PermissionADM]]])],
+      permissionsTasksInOrderOfPrecedence: List[Task[Option[Set[PermissionADM]]]],
     ): Task[Option[Set[PermissionADM]]] =
       ZIO.foldLeft(permissionsTasksInOrderOfPrecedence)(None: Option[Set[PermissionADM]]) { (acc, task) =>
         if (acc.isDefined) {
           ZIO.succeed(acc)
         } else {
-          task._2.flatMap {
+          task.flatMap {
             (acc, _) match
               case (None, Some(permissions)) if permissions.nonEmpty => ZIO.some(permissions)
               case _                                                 => ZIO.succeed(acc)
@@ -549,15 +550,15 @@ final case class PermissionsResponder(
       getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value)),
     )
 
-    val permissionTasks: List[(Int, Task[Option[Set[PermissionADM]]])] =
+    val permissionTasks: List[Task[Option[Set[PermissionADM]]]] =
       List(
-        (1, projectAdmin),
-        (2, resourceClassProperty),
-        (3, resourceClass),
-        (4, property),
-        (5, customGroups),
-        (6, projectMembers),
-        (7, knownUser),
+        projectAdmin,
+        resourceClassProperty,
+        resourceClass,
+        property,
+        customGroups,
+        projectMembers,
+        knownUser,
       )
 
     for {
