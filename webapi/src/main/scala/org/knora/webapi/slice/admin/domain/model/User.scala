@@ -10,6 +10,7 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import scala.util.matching.Regex
+
 import dsp.valueobjects.Iri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.UuidUtil
