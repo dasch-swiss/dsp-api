@@ -10,7 +10,6 @@ import zio.*
 import zio.Ref
 
 import java.util.UUID
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
@@ -462,12 +461,10 @@ final case class PermissionsResponder(
   ): Task[DefaultObjectAccessPermissionsStringResponseADM] = {
     type ResultRef = Ref[Option[NonEmptyChunk[PermissionADM]]]
     def updateResult(p: Set[PermissionADM], ref: ResultRef) =
-      ZIO.when(p.nonEmpty)(
-        ref.getAndUpdate {
-          case None => Some(NonEmptyChunk.fromIterable(p.head, p.tail))
-          case some => some
-        },
-      )
+      ref.getAndUpdate {
+        case None if p.nonEmpty => Some(NonEmptyChunk.fromIterable(p.head, p.tail))
+        case keepPrevious       => keepPrevious
+      }
     for {
       result: ResultRef <- Ref.make(None)
       extendedUserGroups = {
