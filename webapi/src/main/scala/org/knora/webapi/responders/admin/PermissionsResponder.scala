@@ -9,7 +9,6 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import java.util.UUID
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
@@ -18,7 +17,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.DOAP
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.OAP
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
@@ -465,10 +463,14 @@ final case class PermissionsResponder(
       permissionsTasksInOrderOfPrecedence: List[Task[Option[Set[PermissionADM]]]],
     ): Task[Option[Set[PermissionADM]]] =
       ZIO.foldLeft(permissionsTasksInOrderOfPrecedence)(None: Option[Set[PermissionADM]]) { (acc, task) =>
-        task.flatMap { p =>
-          (acc, p) match
-            case (None, Some(permissions)) if permissions.nonEmpty => ZIO.some(permissions)
-            case _                                                 => ZIO.succeed(acc)
+        if (acc.isDefined) {
+          ZIO.succeed(acc)
+        } else {
+          task.flatMap {
+            (acc, _) match
+              case (None, Some(permissions)) if permissions.nonEmpty => ZIO.some(permissions)
+              case _                                                 => ZIO.succeed(acc)
+          }
         }
       }
 
