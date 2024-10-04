@@ -453,9 +453,13 @@ final case class PermissionsResponder(
     targetUser: User,
   ): Task[DefaultObjectAccessPermissionsStringResponseADM] = {
     type ResultRef = Ref[Option[NonEmptyChunk[PermissionADM]]]
-    def setHighestPermissions(p: Set[PermissionADM], ref: ResultRef) =
-      ZIO.when(p.nonEmpty)(ref.set(Some(NonEmptyChunk.fromIterable(p.head, p.tail))))
-    def isResultMissing(ref: ResultRef): UIO[Boolean] = ref.get.map(_.isEmpty)
+    def updateResult(p: Set[PermissionADM], ref: ResultRef) =
+      ZIO.when(p.nonEmpty)(
+        ref.getAndUpdate {
+          case None => Some(NonEmptyChunk.fromIterable(p.head, p.tail))
+          case some => some
+        },
+      )
     for {
       result: ResultRef <- Ref.make(None)
       extendedUserGroups = {
@@ -469,7 +473,7 @@ final case class PermissionsResponder(
 
       // PROJECT ADMIN
       _ <- getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectAdmin.id.value)).tap(
-             setHighestPermissions(_, result).when(
+             updateResult(_, result).when(
                extendedUserGroups.contains(builtIn.ProjectAdmin.id.value) ||
                  extendedUserGroups.contains(builtIn.SystemAdmin.id.value),
              ),
@@ -477,80 +481,67 @@ final case class PermissionsResponder(
 
       // RESOURCE CLASS / PROPERTY
       _ <- ZIO.when(entityType == EntityType.Property)(
-             ZIO.whenZIO(isResultMissing(result))(
-               defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
-                 projectIri,
-                 resourceClassIri,
-                 propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
-               ).tap(setHighestPermissions(_, result)),
-             ) *>
-               ZIO.whenZIO(isResultMissing(result))(
-                 defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
-                   KnoraProjectRepo.builtIn.SystemProject.id,
-                   resourceClassIri,
-                   propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
-                 ).tap(setHighestPermissions(_, result)),
+             ZIO
+               .fromOption(propertyIri)
+               .orElseFail(BadRequestException("PropertyIri needs to be supplied."))
+               .flatMap(property =>
+                 defaultObjectAccessPermissionsForResourceClassPropertyGetADM(projectIri, resourceClassIri, property)
+                   .tap(updateResult(_, result)) *>
+                   defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
+                     KnoraProjectRepo.builtIn.SystemProject.id,
+                     resourceClassIri,
+                     property,
+                   ).tap(updateResult(_, result)),
                ),
            )
 
       // RESOURCE CLASS
       _ <- ZIO.when(entityType == EntityType.Resource)(
-             ZIO.whenZIO(isResultMissing(result))(
-               defaultObjectAccessPermissionsForResourceClassGetADM(projectIri, resourceClassIri).tap(
-                 setHighestPermissions(_, result),
-               ),
-             ) *>
-               ZIO.whenZIO(isResultMissing(result))(
-                 defaultObjectAccessPermissionsForResourceClassGetADM(
-                   KnoraProjectRepo.builtIn.SystemProject.id,
-                   resourceClassIri,
-                 ).tap(setHighestPermissions(_, result)),
-               ),
+             defaultObjectAccessPermissionsForResourceClassGetADM(projectIri, resourceClassIri)
+               .tap(updateResult(_, result)) *>
+               defaultObjectAccessPermissionsForResourceClassGetADM(
+                 KnoraProjectRepo.builtIn.SystemProject.id,
+                 resourceClassIri,
+               ).tap(updateResult(_, result)),
            )
 
       // PROPERTY
-      _ <-
-        ZIO.when(entityType == EntityType.Property) {
-          ZIO.whenZIO(isResultMissing(result))(
-            defaultObjectAccessPermissionsForPropertyGetADM(
-              projectIri,
-              propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
-            ).tap(setHighestPermissions(_, result)),
-          ) *>
-            ZIO.whenZIO(isResultMissing(result))(
-              defaultObjectAccessPermissionsForPropertyGetADM(
-                KnoraProjectRepo.builtIn.SystemProject.id,
-                propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
-              ).tap(setHighestPermissions(_, result)),
-            )
-        }
+      _ <- ZIO.when(entityType == EntityType.Property) {
+             ZIO
+               .fromOption(propertyIri)
+               .orElseFail(BadRequestException("PropertyIri needs to be supplied."))
+               .flatMap(property =>
+                 defaultObjectAccessPermissionsForPropertyGetADM(projectIri, property)
+                   .tap(updateResult(_, result)) *>
+                   defaultObjectAccessPermissionsForPropertyGetADM(KnoraProjectRepo.builtIn.SystemProject.id, property)
+                     .tap(updateResult(_, result)),
+               )
+           }
 
       // CUSTOM GROUPS
       _ <- {
         val customGroups =
           List(builtIn.KnownUser.id, builtIn.ProjectMember.id, builtIn.ProjectAdmin.id, builtIn.SystemAdmin.id)
             .map(_.value)
-        ZIO.whenZIO(isResultMissing(result) && ZIO.succeed((extendedUserGroups diff customGroups).nonEmpty))(
-          getDefaultObjectAccessPermissions(projectIri, customGroups).tap(setHighestPermissions(_, result)),
+        ZIO.when((extendedUserGroups diff customGroups).nonEmpty)(
+          getDefaultObjectAccessPermissions(projectIri, customGroups).tap(updateResult(_, result)),
         )
       }
 
       // PROJECT MEMBER
-      _ <- ZIO.whenZIO(
-             isResultMissing(result) && ZIO.succeed(
-               extendedUserGroups.contains(builtIn.ProjectMember.id.value) ||
-                 extendedUserGroups.contains(builtIn.SystemAdmin.id.value),
-             ),
+      _ <- ZIO.when(
+             extendedUserGroups.contains(builtIn.ProjectMember.id.value) ||
+               extendedUserGroups.contains(builtIn.SystemAdmin.id.value),
            )(
              getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectMember.id.value))
-               .tap(setHighestPermissions(_, result)),
+               .tap(updateResult(_, result)),
            )
 
       // KNOWN USER
-      _ <- ZIO.whenZIO(isResultMissing(result) && ZIO.succeed(extendedUserGroups.contains(builtIn.KnownUser.id.value)))(
-             getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value))
-               .tap(setHighestPermissions(_, result)),
-           )
+      _ <-
+        ZIO.when(extendedUserGroups.contains(builtIn.KnownUser.id.value))(
+          getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value)).tap(updateResult(_, result)),
+        )
 
       resultStr <-
         result.get.map {
