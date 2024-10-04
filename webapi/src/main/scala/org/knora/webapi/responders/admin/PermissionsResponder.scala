@@ -460,13 +460,13 @@ final case class PermissionsResponder(
   ): Task[DefaultObjectAccessPermissionsStringResponseADM] = {
 
     def calculatePermissionWithPrecedence(
-      permissionsTasksInOrderOfPrecedence: List[Task[Option[Set[PermissionADM]]]],
+      permissionsTasksInOrderOfPrecedence: List[(Int, Task[Option[Set[PermissionADM]]])],
     ): Task[Option[Set[PermissionADM]]] =
       ZIO.foldLeft(permissionsTasksInOrderOfPrecedence)(None: Option[Set[PermissionADM]]) { (acc, task) =>
         if (acc.isDefined) {
           ZIO.succeed(acc)
         } else {
-          task.flatMap {
+          task._2.flatMap {
             (acc, _) match
               case (None, Some(permissions)) if permissions.nonEmpty => ZIO.some(permissions)
               case _                                                 => ZIO.succeed(acc)
@@ -487,15 +487,15 @@ final case class PermissionsResponder(
             for {
               nonSystem <-
                 defaultObjectAccessPermissionsForResourceClassPropertyGetADM(projectIri, resourceClassIri, property)
-              result <- ZIO
-                          .when(nonSystem.isEmpty)(
-                            defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
-                              KnoraProjectRepo.builtIn.SystemProject.id,
-                              resourceClassIri,
-                              property,
-                            ),
+              result <- if (nonSystem.isEmpty) {
+                          defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
+                            KnoraProjectRepo.builtIn.SystemProject.id,
+                            resourceClassIri,
+                            property,
                           )
-                          .map(_.getOrElse(Set.empty))
+                        } else {
+                          ZIO.succeed(nonSystem)
+                        }
             } yield result,
           ),
       )
@@ -504,14 +504,14 @@ final case class PermissionsResponder(
       .when(entityType == EntityType.Resource)(
         for {
           nonSystem <- defaultObjectAccessPermissionsForResourceClassGetADM(projectIri, resourceClassIri)
-          result <- ZIO
-                      .when(nonSystem.isEmpty)(
-                        defaultObjectAccessPermissionsForResourceClassGetADM(
-                          KnoraProjectRepo.builtIn.SystemProject.id,
-                          resourceClassIri,
-                        ),
+          result <- if (nonSystem.isEmpty) {
+                      defaultObjectAccessPermissionsForResourceClassGetADM(
+                        KnoraProjectRepo.builtIn.SystemProject.id,
+                        resourceClassIri,
                       )
-                      .map(_.getOrElse(Set.empty))
+                    } else {
+                      ZIO.succeed(nonSystem)
+                    }
         } yield result,
       )
 
@@ -524,11 +524,11 @@ final case class PermissionsResponder(
             for {
               nonSystem <- defaultObjectAccessPermissionsForPropertyGetADM(projectIri, property)
               result <-
-                ZIO
-                  .when(nonSystem.isEmpty)(
-                    defaultObjectAccessPermissionsForPropertyGetADM(KnoraProjectRepo.builtIn.SystemProject.id, property),
-                  )
-                  .map(_.getOrElse(Set.empty))
+                if (nonSystem.isEmpty) {
+                  defaultObjectAccessPermissionsForPropertyGetADM(KnoraProjectRepo.builtIn.SystemProject.id, property)
+                } else {
+                  ZIO.succeed(nonSystem)
+                }
             } yield result,
           )
       }
@@ -549,8 +549,16 @@ final case class PermissionsResponder(
       getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value)),
     )
 
-    val permissionTasks: List[Task[Option[Set[PermissionADM]]]] =
-      List(projectAdmin, resourceClassProperty, resourceClass, property, customGroups, projectMembers, knownUser)
+    val permissionTasks: List[(Int, Task[Option[Set[PermissionADM]]])] =
+      List(
+        (1, projectAdmin),
+        (2, resourceClassProperty),
+        (3, resourceClass),
+        (4, property),
+        (5, customGroups),
+        (6, projectMembers),
+        (7, knownUser),
+      )
 
     for {
       permissions <- calculatePermissionWithPrecedence(permissionTasks)
