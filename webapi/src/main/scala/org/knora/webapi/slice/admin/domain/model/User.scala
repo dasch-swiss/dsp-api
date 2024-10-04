@@ -10,7 +10,6 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import scala.util.matching.Regex
-
 import dsp.valueobjects.Iri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.UuidUtil
@@ -120,19 +119,16 @@ final case class User(
    * Is the user a member of the SystemAdmin group
    */
   def isSystemAdmin: Boolean =
-    permissions.groupsPerProject
-      .getOrElse(KnoraProjectRepo.builtIn.SystemProject.id.value, List.empty[String])
-      .contains(KnoraGroupRepo.builtIn.SystemAdmin.id.value)
+    hasGroupInProject(KnoraGroupRepo.builtIn.SystemAdmin.id, KnoraProjectRepo.builtIn.SystemProject.id)
 
   def isProjectMember(projectIri: ProjectIri): Boolean =
-    permissions.groupsPerProject
-      .getOrElse(projectIri.value, List.empty)
-      .contains(KnoraGroupRepo.builtIn.ProjectMember.id.value)
+    hasGroupInProject(KnoraGroupRepo.builtIn.ProjectMember.id, projectIri)
 
   def isProjectAdmin(projectIri: ProjectIri): Boolean =
-    permissions.groupsPerProject
-      .getOrElse(projectIri.value, List.empty)
-      .contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
+    hasGroupInProject(KnoraGroupRepo.builtIn.ProjectAdmin.id, projectIri)
+
+  private def hasGroupInProject(groupIri: GroupIri, projectIri: ProjectIri) =
+    permissions.groupsPerProject.getOrElse(projectIri.value, List.empty).contains(groupIri.value)
 
   def isSystemUser: Boolean = id.equalsIgnoreCase(KnoraUserRepo.builtIn.SystemUser.id.value)
 
