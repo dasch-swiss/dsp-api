@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
