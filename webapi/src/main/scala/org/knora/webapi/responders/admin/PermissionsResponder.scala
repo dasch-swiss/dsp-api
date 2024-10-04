@@ -10,7 +10,6 @@ import zio.*
 import zio.Ref
 
 import java.util.UUID
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
@@ -460,116 +459,128 @@ final case class PermissionsResponder(
     entityType: EntityType,
     targetUser: User,
   ): Task[DefaultObjectAccessPermissionsStringResponseADM] = {
-    type ResultRef = Ref[Option[NonEmptyChunk[PermissionADM]]]
-    def updateResult(permissionsTask: Task[Set[PermissionADM]], ref: ResultRef) =
-      ZIO.whenZIO(ref.get.map(_.isEmpty))(
-        permissionsTask.flatMap(p =>
-          ref.getAndUpdate {
-            case None if p.nonEmpty => Some(NonEmptyChunk.fromIterable(p.head, p.tail))
-            case keepPrevious       => keepPrevious
-          },
-        ),
+    def getPermissions(permissionsTasks: List[Task[Set[PermissionADM]]]): Task[Option[Set[PermissionADM]]] =
+      for {
+        ref: Ref[Option[NonEmptyChunk[PermissionADM]]] <- Ref.make(None)
+        _ <- ZIO.foreachDiscard(permissionsTasks) { task =>
+               ZIO.whenZIO(ref.get.map(_.isEmpty))(
+                 task.flatMap(p =>
+                   ref.getAndUpdate {
+                     case None if p.nonEmpty => Some(NonEmptyChunk.fromIterable(p.head, p.tail))
+                     case keepPrevious       => keepPrevious
+                   },
+                 ),
+               )
+             }
+        result <- ref.get.map(_.map(_.toSet))
+      } yield result
+
+    val extendedUserGroups = {
+      val userGroups = builtIn.KnownUser.id.value :: targetUser.permissions.groupsPerProject
+        .getOrElse(projectIri.value, Seq.empty)
+        .distinct
+        .toList
+      if (targetUser.permissions.isSystemAdmin) { builtIn.SystemAdmin.id.value :: userGroups }
+      else { userGroups }
+    }
+
+    val projectAdmin: Task[Set[PermissionADM]] =
+      getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectAdmin.id.value))
+        .when(
+          extendedUserGroups.contains(builtIn.ProjectAdmin.id.value) ||
+            extendedUserGroups.contains(builtIn.SystemAdmin.id.value),
+        )
+        .map(_.getOrElse(Set.empty))
+
+    val resourceClassProperty: Task[Set[PermissionADM]] = ZIO
+      .when(entityType == EntityType.Property)(
+        ZIO
+          .fromOption(propertyIri)
+          .orElseFail(BadRequestException("PropertyIri needs to be supplied."))
+          .flatMap(property =>
+            for {
+              nonSystem <-
+                defaultObjectAccessPermissionsForResourceClassPropertyGetADM(projectIri, resourceClassIri, property)
+              result <- ZIO
+                          .when(nonSystem.isEmpty)(
+                            defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
+                              KnoraProjectRepo.builtIn.SystemProject.id,
+                              resourceClassIri,
+                              property,
+                            ),
+                          )
+                          .map(_.getOrElse(Set.empty))
+            } yield result,
+          ),
       )
+      .map(_.getOrElse(Set.empty))
+
+    val resourceClass = ZIO
+      .when(entityType == EntityType.Resource)(
+        for {
+          nonSystem <- defaultObjectAccessPermissionsForResourceClassGetADM(projectIri, resourceClassIri)
+          result <- ZIO
+                      .when(nonSystem.isEmpty)(
+                        defaultObjectAccessPermissionsForResourceClassGetADM(
+                          KnoraProjectRepo.builtIn.SystemProject.id,
+                          resourceClassIri,
+                        ),
+                      )
+                      .map(_.getOrElse(Set.empty))
+        } yield result,
+      )
+      .map(_.getOrElse(Set.empty))
+
+    val property = ZIO
+      .when(entityType == EntityType.Property) {
+        ZIO
+          .fromOption(propertyIri)
+          .orElseFail(BadRequestException("PropertyIri needs to be supplied."))
+          .flatMap(property =>
+            for {
+              nonSystem <- defaultObjectAccessPermissionsForPropertyGetADM(projectIri, property)
+              result <-
+                ZIO
+                  .when(nonSystem.isEmpty)(
+                    defaultObjectAccessPermissionsForPropertyGetADM(KnoraProjectRepo.builtIn.SystemProject.id, property),
+                  )
+                  .map(_.getOrElse(Set.empty))
+            } yield result,
+          )
+      }
+      .map(_.getOrElse(Set.empty))
+
+    val customGroups = {
+      val groups = List(builtIn.KnownUser.id, builtIn.ProjectMember.id, builtIn.ProjectAdmin.id, builtIn.SystemAdmin.id)
+        .map(_.value)
+      ZIO
+        .when((extendedUserGroups diff groups).nonEmpty)(
+          getDefaultObjectAccessPermissions(projectIri, groups),
+        )
+        .map(_.getOrElse(Set.empty))
+    }
+
+    val projectMembers = ZIO
+      .when(
+        extendedUserGroups.contains(builtIn.ProjectMember.id.value) ||
+          extendedUserGroups.contains(builtIn.SystemAdmin.id.value),
+      )(getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectMember.id.value)))
+      .map(_.getOrElse(Set.empty))
+
+    val knownUser = ZIO
+      .when(extendedUserGroups.contains(builtIn.KnownUser.id.value))(
+        getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value)),
+      )
+      .map(_.getOrElse(Set.empty))
+
+    val permissionTasks: List[Task[Set[PermissionADM]]] =
+      List(projectAdmin, resourceClassProperty, resourceClass, property, customGroups, projectMembers, knownUser)
 
     for {
-      result: ResultRef <- Ref.make(None)
-      extendedUserGroups = {
-        val userGroups = builtIn.KnownUser.id.value :: targetUser.permissions.groupsPerProject
-          .getOrElse(projectIri.value, Seq.empty)
-          .distinct
-          .toList
-        if (targetUser.permissions.isSystemAdmin) { builtIn.SystemAdmin.id.value :: userGroups }
-        else { userGroups }
-      }
-
-      _ <- // PROJECT ADMIN
-        updateResult(
-          getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectAdmin.id.value))
-            .when(
-              extendedUserGroups.contains(builtIn.ProjectAdmin.id.value) ||
-                extendedUserGroups.contains(builtIn.SystemAdmin.id.value),
-            )
-            .map(_.getOrElse(Set.empty)),
-          result,
-        )
-
-      _ <- // RESOURCE CLASS / PROPERTY
-        ZIO.when(entityType == EntityType.Property)(
-          ZIO
-            .fromOption(propertyIri)
-            .orElseFail(BadRequestException("PropertyIri needs to be supplied."))
-            .flatMap(property =>
-              updateResult(
-                defaultObjectAccessPermissionsForResourceClassPropertyGetADM(projectIri, resourceClassIri, property),
-                result,
-              ) *>
-                updateResult(
-                  defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
-                    KnoraProjectRepo.builtIn.SystemProject.id,
-                    resourceClassIri,
-                    property,
-                  ),
-                  result,
-                ),
-            ),
-        )
-
-      _ <- // RESOURCE CLASS
-        ZIO.when(entityType == EntityType.Resource)(
-          updateResult(defaultObjectAccessPermissionsForResourceClassGetADM(projectIri, resourceClassIri), result) *>
-            updateResult(
-              defaultObjectAccessPermissionsForResourceClassGetADM(
-                KnoraProjectRepo.builtIn.SystemProject.id,
-                resourceClassIri,
-              ),
-              result,
-            ),
-        )
-
-      _ <- // PROPERTY
-        ZIO.when(entityType == EntityType.Property) {
-          ZIO
-            .fromOption(propertyIri)
-            .orElseFail(BadRequestException("PropertyIri needs to be supplied."))
-            .flatMap(property =>
-              updateResult(defaultObjectAccessPermissionsForPropertyGetADM(projectIri, property), result) *>
-                updateResult(
-                  defaultObjectAccessPermissionsForPropertyGetADM(
-                    KnoraProjectRepo.builtIn.SystemProject.id,
-                    property,
-                  ),
-                  result,
-                ),
-            )
-        }
-
-      _ <- // CUSTOM GROUPS
-        {
-          val customGroups =
-            List(builtIn.KnownUser.id, builtIn.ProjectMember.id, builtIn.ProjectAdmin.id, builtIn.SystemAdmin.id)
-              .map(_.value)
-          ZIO.when((extendedUserGroups diff customGroups).nonEmpty)(
-            updateResult(getDefaultObjectAccessPermissions(projectIri, customGroups), result),
-          )
-        }
-
-      _ <- // PROJECT MEMBER
-        ZIO.when(
-          extendedUserGroups.contains(builtIn.ProjectMember.id.value) ||
-            extendedUserGroups.contains(builtIn.SystemAdmin.id.value),
-        )(updateResult(getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectMember.id.value)), result))
-
-      _ <- // KNOWN USER
-        ZIO.when(extendedUserGroups.contains(builtIn.KnownUser.id.value))(
-          updateResult(getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value)), result),
-        )
-
-      resultStr <-
-        result.get.map {
-          case Some(permissions) => permissions.toSet
-          /* Set 'CR knora-base:Creator' as the fallback permission */
-          case None => Set(PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.Creator.id.value))
-        }.map(PermissionUtilADM.formatPermissionADMs(_, OAP))
+      permissions <- getPermissions(permissionTasks)
+      result = permissions
+                 .getOrElse(Set(PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.Creator.id.value)))
+      resultStr = PermissionUtilADM.formatPermissionADMs(result, OAP)
     } yield DefaultObjectAccessPermissionsStringResponseADM(resultStr)
   }
 
