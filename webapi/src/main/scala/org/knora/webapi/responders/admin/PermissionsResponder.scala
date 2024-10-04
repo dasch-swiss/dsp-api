@@ -9,8 +9,6 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import java.util.UUID
-import scala.collection.mutable.ListBuffer
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
@@ -18,6 +16,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.OAP
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
@@ -42,6 +41,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import zio.Ref
 
 final case class PermissionsResponder(
   private val groupService: GroupService,
@@ -450,8 +450,18 @@ final case class PermissionsResponder(
     propertyIri: Option[IRI],
     entityType: EntityType,
     targetUser: User,
-  ): Task[DefaultObjectAccessPermissionsStringResponseADM] =
+  ): Task[DefaultObjectAccessPermissionsStringResponseADM] = {
+    type ResultRef = Ref[Option[NonEmptyChunk[PermissionADM]]]
+
+    def setHighestPermissions(p: Set[PermissionADM], ref: ResultRef) =
+      ZIO.when(p.nonEmpty)(
+        ref.set(Some(NonEmptyChunk.fromIterable(p.head, p.tail))),
+      )
+
+    def isResultMissing(ref: ResultRef): UIO[Boolean] = ref.get.map(_.isEmpty)
+
     for {
+      result: ResultRef <- Ref.make(None)
       /* Get the groups the user is member of. */
       userGroups <-
         ZIO.attempt(
@@ -466,227 +476,105 @@ final case class PermissionsResponder(
           builtIn.KnownUser.id.value :: userGroups.toList
         }
 
-      /* List buffer holding default object access permissions tagged with the precedence level:
-         0. ProjectAdmin > 1. ProjectEntity > 2. SystemEntity > 3. CustomGroups > 4. ProjectMember > 5. KnownUser
-         Permissions are added following the precedence level from the highest to the lowest. As soon as one set
-         of permissions is written into the buffer, any additionally found permissions are ignored. */
-      permissionsListBuffer = ListBuffer.empty[(String, Set[PermissionADM])]
-
-      ///////////////////////
       // PROJECT ADMIN
-      ///////////////////////
-      /* Get the default object access permissions for the knora-base:ProjectAdmin group */
-      defaultPermissionsOnProjectAdminGroup <- getDefaultObjectAccessPermissions(
-                                                 projectIri,
-                                                 List(builtIn.ProjectAdmin.id.value),
-                                               )
-      _ = if (defaultPermissionsOnProjectAdminGroup.nonEmpty) {
-            if (
-              extendedUserGroups.contains(builtIn.ProjectAdmin.id.value) || extendedUserGroups.contains(
-                builtIn.SystemAdmin.id.value,
-              )
-            ) {
-              permissionsListBuffer += (("ProjectAdmin", defaultPermissionsOnProjectAdminGroup))
-            }
-          }
+      // Get the default object access permissions for the knora-base:ProjectAdmin group
+      _ <- getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectAdmin.id.value)).tap(
+             setHighestPermissions(_, result).when(
+               extendedUserGroups.contains(builtIn.ProjectAdmin.id.value) ||
+                 extendedUserGroups.contains(builtIn.SystemAdmin.id.value),
+             ),
+           )
 
-      ///////////////////////////////
       // RESOURCE CLASS / PROPERTY
-      ///////////////////////////////
-      /* project resource class / property combination */
-      defaultPermissionsOnProjectResourceClassProperty <- {
-        if (entityType == EntityType.Property && permissionsListBuffer.isEmpty) {
-          defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
-            projectIri = projectIri,
-            resourceClassIri = resourceClassIri,
-            propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
-          )
-        } else {
-          ZIO.attempt(Set.empty[PermissionADM])
-        }
-      }
-      _ = if (defaultPermissionsOnProjectResourceClassProperty.nonEmpty) {
-            permissionsListBuffer += (
-              (
-                "ProjectResourceClassProperty",
-                defaultPermissionsOnProjectResourceClassProperty,
-              )
-            )
-          }
+      // project resource class / property combination
+      _ <- ZIO.whenZIO(isResultMissing(result) && ZIO.succeed(entityType == EntityType.Property))(
+             defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
+               projectIri,
+               resourceClassIri,
+               propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
+             ).tap(setHighestPermissions(_, result)),
+           )
 
-      /* system resource class / property combination */
-      defaultPermissionsOnSystemResourceClassProperty <- {
-        if (entityType == EntityType.Property && permissionsListBuffer.isEmpty) {
-          defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
-            projectIri = KnoraProjectRepo.builtIn.SystemProject.id,
-            resourceClassIri = resourceClassIri,
-            propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
-          )
-        } else {
-          ZIO.attempt(Set.empty[PermissionADM])
-        }
-      }
-      _ = if (defaultPermissionsOnSystemResourceClassProperty.nonEmpty) {
-            permissionsListBuffer += (("SystemResourceClassProperty", defaultPermissionsOnSystemResourceClassProperty))
-          }
+      // system resource class / property combination
+      _ <- ZIO.whenZIO(isResultMissing(result) && ZIO.succeed(entityType == EntityType.Property))(
+             defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
+               KnoraProjectRepo.builtIn.SystemProject.id,
+               resourceClassIri,
+               propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
+             ).tap(setHighestPermissions(_, result)),
+           )
 
-      ///////////////////////
       // RESOURCE CLASS
-      ///////////////////////
-      /* Get the default object access permissions defined on the resource class for the current project */
-      defaultPermissionsOnProjectResourceClass <- {
-        if (entityType == EntityType.Resource && permissionsListBuffer.isEmpty) {
-          defaultObjectAccessPermissionsForResourceClassGetADM(
-            projectIri = projectIri,
-            resourceClassIri = resourceClassIri,
-          )
-        } else {
-          ZIO.attempt(Set.empty[PermissionADM])
-        }
-      }
-      _ = if (defaultPermissionsOnProjectResourceClass.nonEmpty) {
-            permissionsListBuffer += (("ProjectResourceClass", defaultPermissionsOnProjectResourceClass))
-          }
+      // Get the default object access permissions defined on the resource class for the current project
+      _ <- ZIO.whenZIO(isResultMissing(result) && ZIO.succeed(entityType == EntityType.Resource))(
+             defaultObjectAccessPermissionsForResourceClassGetADM(projectIri, resourceClassIri).tap(
+               setHighestPermissions(_, result),
+             ),
+           )
 
       /* Get the default object access permissions defined on the resource class inside the SystemProject */
-      defaultPermissionsOnSystemResourceClass <- {
-        if (entityType == EntityType.Resource && permissionsListBuffer.isEmpty) {
-          defaultObjectAccessPermissionsForResourceClassGetADM(
-            KnoraProjectRepo.builtIn.SystemProject.id,
-            resourceClassIri,
-          )
-        } else {
-          ZIO.attempt(Set.empty[PermissionADM])
-        }
-      }
-      _ = if (defaultPermissionsOnSystemResourceClass.nonEmpty) {
-            permissionsListBuffer += (("SystemResourceClass", defaultPermissionsOnSystemResourceClass))
-          }
+      _ <- ZIO.whenZIO(isResultMissing(result) && ZIO.succeed(entityType == EntityType.Resource))(
+             defaultObjectAccessPermissionsForResourceClassGetADM(
+               KnoraProjectRepo.builtIn.SystemProject.id,
+               resourceClassIri,
+             ).tap(setHighestPermissions(_, result)),
+           )
 
-      ///////////////////////
       // PROPERTY
-      ///////////////////////
-      /* project property */
-      defaultPermissionsOnProjectProperty <- {
-        if (entityType == EntityType.Property && permissionsListBuffer.isEmpty) {
-          defaultObjectAccessPermissionsForPropertyGetADM(
-            projectIri = projectIri,
-            propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
-          )
-        } else {
-          ZIO.attempt(Set.empty[PermissionADM])
-        }
-      }
-      _ = if (defaultPermissionsOnProjectProperty.nonEmpty) {
-            permissionsListBuffer += (("ProjectProperty", defaultPermissionsOnProjectProperty))
-          }
+      // project property
+      _ <- ZIO.whenZIO(isResultMissing(result) && ZIO.succeed(entityType == EntityType.Property))(
+             defaultObjectAccessPermissionsForPropertyGetADM(
+               projectIri,
+               propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
+             ).tap(setHighestPermissions(_, result)),
+           )
 
-      /* system property */
-      defaultPermissionsOnSystemProperty <- {
-        if (entityType == EntityType.Property && permissionsListBuffer.isEmpty) {
-          defaultObjectAccessPermissionsForPropertyGetADM(
-            KnoraProjectRepo.builtIn.SystemProject.id,
-            propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
-          )
-        } else {
-          ZIO.attempt(Set.empty[PermissionADM])
-        }
-      }
-      _ = if (defaultPermissionsOnSystemProperty.nonEmpty) {
-            permissionsListBuffer += (("SystemProperty", defaultPermissionsOnSystemProperty))
-          }
+      // system property
+      _ <- ZIO.whenZIO(isResultMissing(result) && ZIO.succeed(entityType == EntityType.Property))(
+             defaultObjectAccessPermissionsForPropertyGetADM(
+               KnoraProjectRepo.builtIn.SystemProject.id,
+               propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
+             ).tap(setHighestPermissions(_, result)),
+           )
 
-      ///////////////////////
       // CUSTOM GROUPS
-      ///////////////////////
-      /* Get the default object access permissions for custom groups (all groups other than the built-in groups) */
-      defaultPermissionsOnCustomGroups <- {
-        if (extendedUserGroups.nonEmpty && permissionsListBuffer.isEmpty) {
-          val customGroups: List[IRI] = extendedUserGroups diff List(
-            builtIn.KnownUser.id.value,
-            builtIn.ProjectMember.id.value,
-            builtIn.ProjectAdmin.id.value,
-            builtIn.SystemAdmin.id.value,
-          )
-          if (customGroups.nonEmpty) {
-            getDefaultObjectAccessPermissions(projectIri, customGroups)
-          } else {
-            ZIO.attempt(Set.empty[PermissionADM])
-          }
-        } else {
-          // case where non SystemAdmin from outside of project
-          ZIO.attempt(Set.empty[PermissionADM])
-        }
-      }
-      _ = if (defaultPermissionsOnCustomGroups.nonEmpty) {
-            permissionsListBuffer += (("CustomGroups", defaultPermissionsOnCustomGroups))
-          }
-
-      ///////////////////////
-      // PROJECT MEMBER
-      ///////////////////////
-      /* Get the default object access permissions for the knora-base:ProjectMember group */
-      defaultPermissionsOnProjectMemberGroup <- {
-        if (permissionsListBuffer.isEmpty) {
-          getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectMember.id.value))
-        } else {
-          ZIO.attempt(Set.empty[PermissionADM])
-        }
-      }
-      _ = if (defaultPermissionsOnProjectMemberGroup.nonEmpty) {
-            if (
-              extendedUserGroups.contains(builtIn.ProjectMember.id.value) || extendedUserGroups.contains(
-                builtIn.SystemAdmin.id.value,
-              )
-            ) {
-              permissionsListBuffer += (("ProjectMember", defaultPermissionsOnProjectMemberGroup))
-            }
-          }
-
-      ///////////////////////
-      // KNOWN USER
-      ///////////////////////
-      /* Get the default object access permissions for the knora-base:KnownUser group */
-      defaultPermissionsOnKnownUserGroup <- {
-        if (permissionsListBuffer.isEmpty) {
-          getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value))
-        } else {
-          ZIO.attempt(Set.empty[PermissionADM])
-        }
-      }
-      _ = if (defaultPermissionsOnKnownUserGroup.nonEmpty) {
-            if (extendedUserGroups.contains(builtIn.KnownUser.id.value)) {
-              permissionsListBuffer += (("KnownUser", defaultPermissionsOnKnownUserGroup))
-            }
-          }
-
-      ///////////////////////
-      // FALLBACK PERMISSION IF NONE COULD BE FOUND
-      ///////////////////////
-      /* Set 'CR knora-base:Creator' as the fallback permission */
-      _ =
-        if (permissionsListBuffer.isEmpty) {
-          val defaultFallbackPermission = Set(
-            PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.Creator.id.value),
-          )
-          permissionsListBuffer += (("Fallback", defaultFallbackPermission))
-        } else {
-          ZIO.succeed(Set.empty[PermissionADM])
-        }
-
-      /* Create permissions string */
-      result = permissionsListBuffer.length match {
-                 case 1 => PermissionUtilADM.formatPermissionADMs(permissionsListBuffer.head._2, PermissionType.OAP)
-                 case _ =>
-                   throw AssertionException(
-                     "The permissions list buffer holding default object permissions should never be larger then 1.",
-                   )
-               }
-      _ =
-        logger.debug(
-          s"defaultObjectAccessPermissionsStringForEntityGetADM (result) - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, defaultObjectAccessPermissions: $result",
+      // Get the default object access permissions for custom groups (all groups other than the built-in groups)
+      _ <- {
+        val customGroups =
+          List(builtIn.KnownUser.id, builtIn.ProjectMember.id, builtIn.ProjectAdmin.id, builtIn.SystemAdmin.id)
+            .map(_.value)
+        ZIO.whenZIO(isResultMissing(result) && ZIO.succeed((extendedUserGroups diff customGroups).nonEmpty))(
+          getDefaultObjectAccessPermissions(projectIri, customGroups).tap(setHighestPermissions(_, result)),
         )
-    } yield permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM(result)
+      }
+
+      // PROJECT MEMBER
+      // Get the default object access permissions for the knora-base:ProjectMember group
+      _ <- ZIO.whenZIO(
+             isResultMissing(result) && ZIO.succeed(
+               extendedUserGroups.contains(builtIn.ProjectMember.id.value) ||
+                 extendedUserGroups.contains(builtIn.SystemAdmin.id.value),
+             ),
+           )(
+             getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectMember.id.value))
+               .tap(setHighestPermissions(_, result)),
+           )
+
+      // KNOWN USER
+      // Get the default object access permissions for the knora-base:KnownUser group
+      _ <- ZIO.whenZIO(isResultMissing(result) && ZIO.succeed(extendedUserGroups.contains(builtIn.KnownUser.id.value)))(
+             getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value))
+               .tap(setHighestPermissions(_, result)),
+           )
+
+      resultStr <-
+        result.get.map {
+          case Some(permissions) => permissions.toSet
+          /* Set 'CR knora-base:Creator' as the fallback permission */
+          case None => Set(PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.Creator.id.value))
+        }.map(PermissionUtilADM.formatPermissionADMs(_, OAP))
+    } yield DefaultObjectAccessPermissionsStringResponseADM(resultStr)
+  }
 
   private def validate(req: CreateDefaultObjectAccessPermissionAPIRequestADM) = ZIO.attempt {
     val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
