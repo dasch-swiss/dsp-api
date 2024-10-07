@@ -12,7 +12,7 @@ object Dependencies {
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
   val fusekiImage = "daschswiss/apache-jena-fuseki:5.1.0"
   // base image the knora-sipi image is created from
-  val sipiImage = "daschswiss/sipi:v3.13.0"
+  val sipiImage = "daschswiss/sipi:v3.14.0"
 
   val ScalaVersion = "3.3.4"
 
