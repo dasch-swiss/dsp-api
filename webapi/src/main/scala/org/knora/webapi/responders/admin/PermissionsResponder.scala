@@ -9,7 +9,6 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import java.util.UUID
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
@@ -34,7 +33,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.*
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -463,11 +461,11 @@ final case class PermissionsResponder(
     def calculatePermissionWithPrecedence(
       permissionsTasksInOrderOfPrecedence: List[Task[Option[Set[PermissionADM]]]],
     ): Task[Option[Set[PermissionADM]]] =
-      ZIO.foldLeft(permissionsTasksInOrderOfPrecedence)(None: Option[Set[PermissionADM]]) { (acc, task) =>
+      ZIO.foldLeft(permissionsTasksInOrderOfPrecedence.zipWithIndex)(None: Option[Set[PermissionADM]]) { (acc, task) =>
         if (acc.isDefined) {
           ZIO.succeed(acc)
         } else {
-          task.flatMap {
+          task._1.flatMap {
             (acc, _) match
               case (None, Some(permissions)) if permissions.nonEmpty => ZIO.some(permissions)
               case _                                                 => ZIO.succeed(acc)
@@ -484,36 +482,12 @@ final case class PermissionsResponder(
         ZIO
           .fromOption(propertyIri)
           .orElseFail(BadRequestException("Property IRI needs to be supplied."))
-          .flatMap(property =>
-            for {
-              nonSystem <-
-                defaultObjectAccessPermissionsForResourceClassPropertyGetADM(projectIri, resourceClassIri, property)
-              result <- if (nonSystem.isEmpty) {
-                          defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
-                            KnoraProjectRepo.builtIn.SystemProject.id,
-                            resourceClassIri,
-                            property,
-                          )
-                        } else {
-                          ZIO.succeed(nonSystem)
-                        }
-            } yield result,
-          ),
+          .flatMap(defaultObjectAccessPermissionsForResourceClassPropertyGetADM(projectIri, resourceClassIri, _)),
       )
 
     val resourceClass = ZIO
       .when(entityType == EntityType.Resource)(
-        for {
-          nonSystem <- defaultObjectAccessPermissionsForResourceClassGetADM(projectIri, resourceClassIri)
-          result <- if (nonSystem.isEmpty) {
-                      defaultObjectAccessPermissionsForResourceClassGetADM(
-                        KnoraProjectRepo.builtIn.SystemProject.id,
-                        resourceClassIri,
-                      )
-                    } else {
-                      ZIO.succeed(nonSystem)
-                    }
-        } yield result,
+        defaultObjectAccessPermissionsForResourceClassGetADM(projectIri, resourceClassIri),
       )
 
     val property = ZIO
@@ -521,17 +495,7 @@ final case class PermissionsResponder(
         ZIO
           .fromOption(propertyIri)
           .orElseFail(BadRequestException("Property IRI needs to be supplied."))
-          .flatMap(property =>
-            for {
-              nonSystem <- defaultObjectAccessPermissionsForPropertyGetADM(projectIri, property)
-              result <-
-                if (nonSystem.isEmpty) {
-                  defaultObjectAccessPermissionsForPropertyGetADM(KnoraProjectRepo.builtIn.SystemProject.id, property)
-                } else {
-                  ZIO.succeed(nonSystem)
-                }
-            } yield result,
-          )
+          .flatMap(defaultObjectAccessPermissionsForPropertyGetADM(projectIri, _))
       }
 
     val customGroups = {

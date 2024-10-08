@@ -523,43 +523,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
 
     "ask for default object access permissions 'string'" should {
 
-      "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class (system resource class)" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          permissionsResponder(
-            _.newResourceDefaultObjectAccessPermissions(
-              ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri),
-              OntologyConstants.KnoraBase.LinkObj.toSmartIri,
-              SharedTestDataADM.incunabulaProjectAdminUser,
-            ),
-          ),
-        )
-        assert(
-          actual == DefaultObjectAccessPermissionsStringResponseADM(
-            "M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          ),
-        )
-      }
-
-      "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property (system property)" in {
-        val actual = UnsafeZioRun
-          .runOrThrow(
-            permissionsResponder(
-              _.newValueDefaultObjectAccessPermissions(
-                ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri),
-                stringFormatter.toSmartIri(OntologyConstants.KnoraBase.StillImageRepresentation),
-                stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasStillImageFileValue),
-                SharedTestDataADM.incunabulaProjectAdminUser,
-              ),
-            ),
-          )
-
-        assert(
-          actual == DefaultObjectAccessPermissionsStringResponseADM(
-            "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          ),
-        )
-      }
-
       "return the default object access permissions 'string' for the 'incunabula:book' resource class (project resource class)" in {
         val actual = UnsafeZioRun.runOrThrow(
           permissionsResponder(

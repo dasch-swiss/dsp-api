@@ -56,9 +56,8 @@ object ResourcesResponderV2Spec {
 
   private val defaultAnythingResourcePermissions =
     "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
-  private val defaultAnythingValuePermissions = defaultAnythingResourcePermissions
-  private val defaultStillImageFileValuePermissions =
-    "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
+  private val defaultAnythingValuePermissions       = defaultAnythingResourcePermissions
+  private val defaultStillImageFileValuePermissions = defaultAnythingResourcePermissions
 
   private val zeitgloeckleinIri = "http://rdfh.ch/0803/c5058f3a"
 
