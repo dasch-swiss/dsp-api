@@ -9,8 +9,10 @@ import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
+
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
 
@@ -28,8 +30,8 @@ class UpgradePluginPR4138 extends AbstractSparqlUpdatePlugin {
     val p = variable("p")
     val o = variable("o")
     val deletePattern: TriplePattern = s
-      .isA(Vocabulary.KnoraAdmin.DefaultObjectAccessPermission)
-      .andHas(Vocabulary.KnoraAdmin.forProject, Vocabulary.KnoraAdmin.SystemProject)
+      .isA(KA.DefaultObjectAccessPermission)
+      .andHas(KA.forProject, KA.SystemProject)
       .andHas(p, o)
     Queries
       .MODIFY()
