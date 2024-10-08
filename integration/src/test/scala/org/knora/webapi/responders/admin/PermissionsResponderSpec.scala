@@ -748,7 +748,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "update group of a default object access permission, property must be deleted" in {
-        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw")
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/T12XnPXxQ42jBMIf6RK1pg")
         val newGroupIri   = GroupIri.unsafeFrom(KnoraGroupRepo.builtIn.ProjectMember.id.value)
         val actual = UnsafeZioRun.runOrThrow(
           permissionsResponder(
@@ -1129,7 +1129,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
       }
       "throw ForbiddenException for PermissionChangePropertyRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/T12XnPXxQ42jBMIf6RK1pg"
         val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
         val exit = UnsafeZioRun.run(
@@ -1148,7 +1148,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
       }
       "update property of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/T12XnPXxQ42jBMIf6RK1pg"
         val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
         val actual = UnsafeZioRun.runOrThrow(
