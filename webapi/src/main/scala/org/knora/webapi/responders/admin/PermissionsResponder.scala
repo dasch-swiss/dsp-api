@@ -461,11 +461,11 @@ final case class PermissionsResponder(
     def calculatePermissionWithPrecedence(
       permissionsTasksInOrderOfPrecedence: List[Task[Option[Set[PermissionADM]]]],
     ): Task[Option[Set[PermissionADM]]] =
-      ZIO.foldLeft(permissionsTasksInOrderOfPrecedence.zipWithIndex)(None: Option[Set[PermissionADM]]) { (acc, task) =>
+      ZIO.foldLeft(permissionsTasksInOrderOfPrecedence)(None: Option[Set[PermissionADM]]) { (acc, task) =>
         if (acc.isDefined) {
           ZIO.succeed(acc)
         } else {
-          task._1.flatMap {
+          task.flatMap {
             (acc, _) match
               case (None, Some(permissions)) if permissions.nonEmpty => ZIO.some(permissions)
               case _                                                 => ZIO.succeed(acc)
