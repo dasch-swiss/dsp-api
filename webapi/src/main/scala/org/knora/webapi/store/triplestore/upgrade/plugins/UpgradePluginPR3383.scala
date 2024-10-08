@@ -20,7 +20,7 @@ import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
  * Configuring default object access permissions on the SystemProject is not supported anymore.
  * This plugin removes all default object access permissions for the SystemProject.
  */
-class UpgradePluginPR4138 extends AbstractSparqlUpdatePlugin {
+class UpgradePluginPR3383 extends AbstractSparqlUpdatePlugin {
 
   override def graphsForMigration: GraphsForMigration =
     MigrateSpecificGraphs.from(AdminConstants.permissionsDataNamedGraph)
