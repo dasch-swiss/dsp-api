@@ -520,7 +520,7 @@ final case class PermissionsResponder(
       .when(entityType == EntityType.Property) {
         ZIO
           .fromOption(propertyIri)
-          .orElseFail(BadRequestException("PropertyIri needs to be supplied."))
+          .orElseFail(BadRequestException("Property IRI needs to be supplied."))
           .flatMap(property =>
             for {
               nonSystem <- defaultObjectAccessPermissionsForPropertyGetADM(projectIri, property)
