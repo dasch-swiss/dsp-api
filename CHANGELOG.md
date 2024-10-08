@@ -1,5 +1,39 @@
 # Changelog
 
+## [30.20.0](https://github.com/dasch-swiss/dsp-api/compare/v30.19.0...v30.20.0) (2024-10-04)
+
+
+### Maintenances
+
+* Dependency updates ([#3362](https://github.com/dasch-swiss/dsp-api/issues/3362)) ([2544029](https://github.com/dasch-swiss/dsp-api/commit/2544029bc69502ec0775190704b0860c00bf9355))
+* Minor dependency updates ([#3361](https://github.com/dasch-swiss/dsp-api/issues/3361)) ([dc42704](https://github.com/dasch-swiss/dsp-api/commit/dc4270499f599f95be265aafde787ed1397a6850))
+* Patch dependency updates ([#3360](https://github.com/dasch-swiss/dsp-api/issues/3360)) ([19c7533](https://github.com/dasch-swiss/dsp-api/commit/19c7533ece2aeb51f67f1f1338fed65796d15939))
+* Patch dependency updates ([#3373](https://github.com/dasch-swiss/dsp-api/issues/3373)) ([1d1c395](https://github.com/dasch-swiss/dsp-api/commit/1d1c39546610f87e753ea9b6fdd94a12d3bf3264))
+* Remove unused PermissionsMessages and related unused code ([#3377](https://github.com/dasch-swiss/dsp-api/issues/3377)) ([49b8259](https://github.com/dasch-swiss/dsp-api/commit/49b8259322932240b3cd00a1bb6032b80ec86cb2))
+* Replace deprecated Client.request with equivalent Client.batched ([#3370](https://github.com/dasch-swiss/dsp-api/issues/3370)) ([07ca968](https://github.com/dasch-swiss/dsp-api/commit/07ca9684134db73f401e82419e930b2969f86f27))
+* Replace ZioHelper.sequence with ZIO.foreach ([#3375](https://github.com/dasch-swiss/dsp-api/issues/3375)) ([da7db7f](https://github.com/dasch-swiss/dsp-api/commit/da7db7f7ac7af1e884843add16b921104207dfec))
+* Simplify Value create code and use ProjectIri instead of String ([#3378](https://github.com/dasch-swiss/dsp-api/issues/3378)) ([382826f](https://github.com/dasch-swiss/dsp-api/commit/382826ff576ca92870500d659ad0c766b0bffb0b))
+
+
+### Enhancements
+
+* Add /shacl/validate endpoint (DEV-4149) ([#3371](https://github.com/dasch-swiss/dsp-api/issues/3371)) ([e9f592e](https://github.com/dasch-swiss/dsp-api/commit/e9f592ebaac55b31f77b38eb350fbcd6070babeb))
+* Add shortcode query param for `GET /admin/lists` ([#3369](https://github.com/dasch-swiss/dsp-api/issues/3369)) ([56733d2](https://github.com/dasch-swiss/dsp-api/commit/56733d2e2f483eb2c88825a039c2a8db4e937942))
+* Allow anyURI for fileValueHasExternalUrl (DEV-4108) ([#3367](https://github.com/dasch-swiss/dsp-api/issues/3367)) ([87c4381](https://github.com/dasch-swiss/dsp-api/commit/87c43812c87f6cd012b60f26a71d0523622d3765))
+* Enable compaction after project erasure, with feature flag (DEV-4162) ([#3379](https://github.com/dasch-swiss/dsp-api/issues/3379)) ([4718cc8](https://github.com/dasch-swiss/dsp-api/commit/4718cc8e783a2b7d457aca54b6ce9c5a58a0483e))
+* Refuse to accept IIIF urls from dasch.swiss host (DEV-4106) ([#3363](https://github.com/dasch-swiss/dsp-api/issues/3363)) ([814b7ca](https://github.com/dasch-swiss/dsp-api/commit/814b7ca791fe06f4f75ff1d75e9799e4fc134e58))
+* Support `stillImageFileValueHasExternalUrl` for create and update, deprecate `fileValueHasExternalUrl` (DEV-4073) ([#3366](https://github.com/dasch-swiss/dsp-api/issues/3366)) ([ebc3eb8](https://github.com/dasch-swiss/dsp-api/commit/ebc3eb8fbd50d84a8bca7afb7db384710273b8b9))
+
+
+### Bug Fixes
+
+* Fix deadlock when streaming out the shacl validation report ([#3372](https://github.com/dasch-swiss/dsp-api/issues/3372)) ([88b278e](https://github.com/dasch-swiss/dsp-api/commit/88b278ebf96a98ddeec5e084745cf31216244368))
+
+
+### Tests
+
+* Fix testcontainer startup ([#3368](https://github.com/dasch-swiss/dsp-api/issues/3368)) ([1925752](https://github.com/dasch-swiss/dsp-api/commit/1925752b4a142d9ad0b6a5e6ca977a8fb3933f29))
+
 ## [30.19.0](https://github.com/dasch-swiss/dsp-api/compare/v30.18.4...v30.19.0) (2024-09-12)
 
 
