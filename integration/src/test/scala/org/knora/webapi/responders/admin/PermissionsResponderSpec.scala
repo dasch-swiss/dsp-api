@@ -523,43 +523,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
 
     "ask for default object access permissions 'string'" should {
 
-      "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class (system resource class)" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          permissionsResponder(
-            _.newResourceDefaultObjectAccessPermissions(
-              ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri),
-              OntologyConstants.KnoraBase.LinkObj.toSmartIri,
-              SharedTestDataADM.incunabulaProjectAdminUser,
-            ),
-          ),
-        )
-        assert(
-          actual == DefaultObjectAccessPermissionsStringResponseADM(
-            "M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          ),
-        )
-      }
-
-      "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property (system property)" in {
-        val actual = UnsafeZioRun
-          .runOrThrow(
-            permissionsResponder(
-              _.newValueDefaultObjectAccessPermissions(
-                ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri),
-                stringFormatter.toSmartIri(OntologyConstants.KnoraBase.StillImageRepresentation),
-                stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasStillImageFileValue),
-                SharedTestDataADM.incunabulaProjectAdminUser,
-              ),
-            ),
-          )
-
-        assert(
-          actual == DefaultObjectAccessPermissionsStringResponseADM(
-            "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          ),
-        )
-      }
-
       "return the default object access permissions 'string' for the 'incunabula:book' resource class (project resource class)" in {
         val actual = UnsafeZioRun.runOrThrow(
           permissionsResponder(
@@ -785,7 +748,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "update group of a default object access permission, property must be deleted" in {
-        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw")
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/T12XnPXxQ42jBMIf6RK1pg")
         val newGroupIri   = GroupIri.unsafeFrom(KnoraGroupRepo.builtIn.ProjectMember.id.value)
         val actual = UnsafeZioRun.runOrThrow(
           permissionsResponder(
@@ -1166,7 +1129,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
       }
       "throw ForbiddenException for PermissionChangePropertyRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/T12XnPXxQ42jBMIf6RK1pg"
         val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
         val exit = UnsafeZioRun.run(
@@ -1185,7 +1148,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
       }
       "update property of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/T12XnPXxQ42jBMIf6RK1pg"
         val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
         val actual = UnsafeZioRun.runOrThrow(
