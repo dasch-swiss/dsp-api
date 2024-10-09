@@ -6,10 +6,11 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import org.eclipse.rdf4j.model.IRI as Rdf4jIRI
-import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.knora.webapi.LanguageCode.*
+import org.eclipse.rdf4j.model.vocabulary.RDFS
+
 import org.knora.webapi.*
+import org.knora.webapi.LanguageCode.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
