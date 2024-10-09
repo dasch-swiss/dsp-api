@@ -13,7 +13,6 @@ import zio.*
 import zio.prelude.Validation
 
 import java.time.Instant
-
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
@@ -578,20 +577,13 @@ final case class OntologiesRouteV2()(
                   case superProps => Validation.succeed(superProps)
                 }
 
-              _ <-
-                Validation
-                  .validate(
-                    lastModificationDate,
-                    label,
-                    comment,
-                    superProperties,
-                    guiObject,
-                  )
-                  .flatMap(v =>
-                    CreatePropertyCommand
-                      .make(ontologyIri, v._1, propertyIri, subjectType, objectType, v._2, v._3, v._4, v._5),
-                  )
-                  .toZIO
+              _ <- Validation
+                     .validate(lastModificationDate, label, comment, superProperties, guiObject)
+                     .flatMap(v =>
+                       CreatePropertyCommand
+                         .make(ontologyIri, v._1, propertyIri, subjectType, objectType, v._2, v._3, v._4, v._5),
+                     )
+                     .toZIO
             } yield requestMessage
 
             RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
