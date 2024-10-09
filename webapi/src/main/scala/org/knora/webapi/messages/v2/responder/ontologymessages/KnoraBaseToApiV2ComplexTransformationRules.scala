@@ -44,22 +44,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     propertyIri = KA.Result,
     propertyType = OntologyConstants.Owl.DatatypeProperty,
     predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
+      PredicateInfoV2Builder.makeRdfsLabel(
+        Map(
           DE -> "Ergebnis",
           EN -> "result",
           FR -> "résultat",
           IT -> "risultato",
         ),
       ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          EN -> "Provides a message indicating that an operation was successful",
-        ),
-      ),
-    ),
+      PredicateInfoV2Builder.makeRdfsComment(EN, "Provides a message indicating that an operation was successful"),
+    ).map(_.build()),
     objectType = Some(OntologyConstants.Xsd.String),
   )
 
@@ -67,19 +61,9 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     propertyIri = KA.Error,
     propertyType = OntologyConstants.Owl.DatatypeProperty,
     predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          EN -> "error",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          EN -> "Provides an error message",
-        ),
-      ),
-    ),
+      PredicateInfoV2Builder.makeRdfsLabel(EN, "error"),
+      PredicateInfoV2Builder.makeRdfsComment(EN, "Provides an error message"),
+    ).map(_.build()),
     objectType = Some(OntologyConstants.Xsd.String),
   )
 
@@ -147,19 +131,9 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     propertyIri = KA.ArkUrl,
     propertyType = OntologyConstants.Owl.DatatypeProperty,
     predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          EN -> "ARK URL",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          EN -> "Provides the ARK URL of a resource or value.",
-        ),
-      ),
-    ),
+      PredicateInfoV2Builder.makeRdfsLabel(EN, "ARK URL"),
+      PredicateInfoV2Builder.makeRdfsComment(EN, "Provides the ARK URL of a resource or value."),
+    ).map(_.build()),
     objectType = Some(OntologyConstants.Xsd.Uri),
   )
 
@@ -1705,20 +1679,31 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       copy(objects = self.objects :+ obj)
     def withObjects(objs: Seq[OntologyLiteralV2]): PredicateInfoV2Builder =
       copy(objects = self.objects ++ objs)
-    def withStringLiteral(str: String, lang: String): PredicateInfoV2Builder =
-      withObject(StringLiteralV2.from(str, Some(lang)))
-    def withStringLiteral(str: String): PredicateInfoV2Builder =
-      withObject(StringLiteralV2.from(str, None))
+    def withStringLiteral(lang: String, value: String): PredicateInfoV2Builder =
+      withObject(StringLiteralV2.from(value, Some(lang)))
+    def withStringLiteral(value: String): PredicateInfoV2Builder =
+      withObject(StringLiteralV2.from(value, None))
     def withStringLiterals(literals: Map[String, String]): PredicateInfoV2Builder =
-      withObjects(literals.map { case (lang, str) => StringLiteralV2.from(str, Some(lang)) }.toSeq)
+      withObjects(literals.map { case (lang, value) => StringLiteralV2.from(value, Some(lang)) }.toSeq)
     def build(): PredicateInfoV2 = PredicateInfoV2(self.predicateIri, self.objects)
   }
   object PredicateInfoV2Builder {
-    def makeRdfType(): PredicateInfoV2Builder                = make(RDF.TYPE)
-    def makeRdfsLabel(): PredicateInfoV2Builder              = make(RDFS.LABEL)
-    def makeRdfsComment(): PredicateInfoV2Builder            = make(RDFS.COMMENT)
-    def make(predicateIri: IRI): PredicateInfoV2Builder      = PredicateInfoV2Builder(predicateIri.toSmartIri)
-    def make(predicateIri: Rdf4jIRI): PredicateInfoV2Builder = PredicateInfoV2Builder(predicateIri.toString.toSmartIri)
+    def make(predicateIri: IRI): PredicateInfoV2Builder =
+      PredicateInfoV2Builder(predicateIri.toSmartIri)
+    def make(predicateIri: Rdf4jIRI): PredicateInfoV2Builder =
+      make(predicateIri.toString)
+
+    def makeRdfType(): PredicateInfoV2Builder = make(RDF.TYPE)
+
+    def makeRdfsLabel(): PredicateInfoV2Builder = make(RDFS.LABEL)
+    def makeRdfsLabel(lang: String, value: String): PredicateInfoV2Builder =
+      makeRdfsLabel().withStringLiteral(lang, value)
+    def makeRdfsLabel(literals: Map[String, String]): PredicateInfoV2Builder =
+      makeRdfsLabel().withStringLiterals(literals)
+
+    def makeRdfsComment(): PredicateInfoV2Builder = make(RDFS.COMMENT)
+    def makeRdfsComment(lang: String, value: String): PredicateInfoV2Builder =
+      makeRdfsComment().withStringLiteral(lang, value)
   }
 
   /**
