@@ -17,7 +17,7 @@ enum LanguageCode(val code: String) {
 }
 
 object LanguageCode {
-  def from(value: String)           = values.find(_.code == value)
-  def isSupported(value: String)    = from(value).isDefined
-  def isNotSupported(value: String) = from(value).isEmpty
+  def from(value: String): Option[LanguageCode] = values.find(_.code == value)
+  def isSupported(value: String): Boolean       = from(value).isDefined
+  def isNotSupported(value: String): Boolean    = !isSupported(value)
 }
