@@ -72,19 +72,9 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     propertyIri = KA.CanDo,
     propertyType = OntologyConstants.Owl.DatatypeProperty,
     predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          EN -> "can do",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          EN -> "Indicates whether an operation can be performed",
-        ),
-      ),
-    ),
+      PredicateInfoV2Builder.makeRdfsLabel(EN, "can do"),
+      PredicateInfoV2Builder.makeRdfsComment(EN, "Indicates whether an operation can be performed"),
+    ).map(_.build()),
     objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
@@ -92,19 +82,9 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     propertyIri = KA.MayHaveMoreResults,
     propertyType = OntologyConstants.Owl.DatatypeProperty,
     predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          EN -> "May have more results",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          EN -> "Indicates whether more results may be available for a search query",
-        ),
-      ),
-    ),
+      PredicateInfoV2Builder.makeRdfsLabel(EN, "May have more results"),
+      PredicateInfoV2Builder.makeRdfsComment(EN, "Indicates whether more results may be available for a search query"),
+    ).map(_.build()),
     objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
