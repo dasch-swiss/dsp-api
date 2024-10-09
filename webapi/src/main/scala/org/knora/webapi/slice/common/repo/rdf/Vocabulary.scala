@@ -26,6 +26,10 @@ object Vocabulary {
     val UserGroup: Iri    = Rdf.iri(ka, "UserGroup")
     val KnoraProject: Iri = Rdf.iri(ka, "knoraProject")
 
+    // known instances
+    val SystemProject: Iri = Rdf.iri(ka, "SystemProject")
+    val KnownUser: Iri     = Rdf.iri(ka, "KnownUser")
+
     // property IRIs
     val username: Iri              = Rdf.iri(ka, "username")
     val email: Iri                 = Rdf.iri(ka, "email")
