@@ -5,6 +5,8 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
+import org.eclipse.rdf4j.model.IRI as Rdf4jIRI
+import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -1703,13 +1705,34 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     predicateIri: IRI,
     objects: Seq[OntologyLiteralV2] = Seq.empty[OntologyLiteralV2],
     objectsWithLang: Map[String, String] = Map.empty[String, String],
-  ): PredicateInfoV2 =
-    PredicateInfoV2(
-      predicateIri = predicateIri.toSmartIri,
-      objects = objects ++ objectsWithLang.map { case (lang, str) =>
-        StringLiteralV2.from(str, Some(lang))
-      },
-    )
+  ): PredicateInfoV2 = {
+    val objs = objects ++ objectsWithLang.map { case (lang, str) => StringLiteralV2.from(str, Some(lang)) }
+    PredicateInfoV2Builder.make(predicateIri).withObjects(objs).build()
+  }
+
+  final case class PredicateInfoV2Builder private (
+    predicateIri: SmartIri,
+    objects: Seq[OntologyLiteralV2] = Seq.empty,
+  ) {
+    self =>
+    def withObject(obj: OntologyLiteralV2): PredicateInfoV2Builder =
+      copy(objects = self.objects :+ obj)
+    def withObjects(objs: Seq[OntologyLiteralV2]): PredicateInfoV2Builder =
+      copy(objects = self.objects ++ objs)
+    def withStringLiteral(str: String, lang: String): PredicateInfoV2Builder =
+      withObject(StringLiteralV2.from(str, Some(lang)))
+    def withStringLiteral(str: String): PredicateInfoV2Builder =
+      withObject(StringLiteralV2.from(str, None))
+    def withStringLiterals(literals: Map[String, String]) =
+      withObjects(literals.map { case (lang, str) => StringLiteralV2.from(str, Some(lang)) }.toSeq)
+    def build(): PredicateInfoV2 = PredicateInfoV2(self.predicateIri, self.objects)
+  }
+  object PredicateInfoV2Builder {
+    def makeRdfsLabel(): PredicateInfoV2Builder              = make(RDFS.LABEL)
+    def makeRdfsComment(): PredicateInfoV2Builder            = make(RDFS.COMMENT)
+    def make(predicateIri: IRI): PredicateInfoV2Builder      = PredicateInfoV2Builder(predicateIri.toSmartIri)
+    def make(predicateIri: Rdf4jIRI): PredicateInfoV2Builder = PredicateInfoV2Builder(predicateIri.toString.toSmartIri)
+  }
 
   /**
    * Makes a [[ReadPropertyInfoV2]].
