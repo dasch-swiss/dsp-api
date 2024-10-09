@@ -40,7 +40,23 @@ class UpgradePluginPR3383 extends AbstractSparqlUpdatePlugin {
       .where(deletePattern)
   }
 
+  private val removeKnownUserDefaultObjectAccessPermissions: ModifyQuery = {
+    val s = variable("permissionIri")
+    val p = variable("p")
+    val o = variable("o")
+    val deletePattern: TriplePattern = s
+      .isA(KA.DefaultObjectAccessPermission)
+      .andHas(KA.forGroup, KA.KnownUser)
+      .andHas(p, o)
+    Queries
+      .MODIFY()
+      .`with`(Vocabulary.NamedGraphs.dataPermissions)
+      .delete(deletePattern)
+      .where(deletePattern)
+  }
+
   override def getQueries: List[ModifyQuery] = List(
     removeSystemProjectDefaultObjectAccessPermissions,
+    removeKnownUserDefaultObjectAccessPermissions,
   )
 }
