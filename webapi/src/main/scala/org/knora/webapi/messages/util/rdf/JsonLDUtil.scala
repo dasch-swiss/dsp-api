@@ -933,7 +933,7 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
           (s, errFun) => Iri.toSparqlEncodedString(s).getOrElse(errFun)
         val lang = obj.requireStringWithValidation(JsonLDKeywords.LANGUAGE, validationFun)
 
-        if (!LanguageCodes.SupportedLanguageCodes(lang)) {
+        if (LanguageCode.isNotSupported(lang)) {
           throw BadRequestException(s"Unsupported language code: $lang")
         }
 

@@ -8,7 +8,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 import org.eclipse.rdf4j.model.IRI as Rdf4jIRI
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.knora.webapi.LanguageCodes.*
+import org.knora.webapi.LanguageCode.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -1667,7 +1667,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     propertyInfo.entityInfoContent.propertyIri -> propertyInfo
   }.toMap
 
-  private def makePredicate(predicateIri: IRI, objectsWithLang: Map[String, String]): PredicateInfoV2 =
+  private def makePredicate(predicateIri: IRI, objectsWithLang: Map[LanguageCode, String]): PredicateInfoV2 =
     PredicateInfoV2Builder.make(predicateIri).withStringLiterals(objectsWithLang).build()
 
   final case class PredicateInfoV2Builder private (
@@ -1679,12 +1679,12 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       copy(objects = self.objects :+ obj)
     def withObjects(objs: Seq[OntologyLiteralV2]): PredicateInfoV2Builder =
       copy(objects = self.objects ++ objs)
-    def withStringLiteral(lang: String, value: String): PredicateInfoV2Builder =
-      withObject(StringLiteralV2.from(value, Some(lang)))
+    def withStringLiteral(lang: LanguageCode, value: String): PredicateInfoV2Builder =
+      withObject(StringLiteralV2.from(value, Some(lang.code)))
     def withStringLiteral(value: String): PredicateInfoV2Builder =
       withObject(StringLiteralV2.from(value, None))
-    def withStringLiterals(literals: Map[String, String]): PredicateInfoV2Builder =
-      withObjects(literals.map { case (lang, value) => StringLiteralV2.from(value, Some(lang)) }.toSeq)
+    def withStringLiterals(literals: Map[LanguageCode, String]): PredicateInfoV2Builder =
+      withObjects(literals.map { case (lang, value) => StringLiteralV2.from(value, lang) }.toSeq)
     def build(): PredicateInfoV2 = PredicateInfoV2(self.predicateIri, self.objects)
   }
   object PredicateInfoV2Builder {
@@ -1695,14 +1695,14 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
     def makeRdfType(): PredicateInfoV2Builder = make(RDF.TYPE)
 
-    def makeRdfsLabel(): PredicateInfoV2Builder = make(RDFS.LABEL)
-    def makeRdfsLabel(lang: String, value: String): PredicateInfoV2Builder =
+    private def makeRdfsLabel(): PredicateInfoV2Builder = make(RDFS.LABEL)
+    def makeRdfsLabel(lang: LanguageCode, value: String): PredicateInfoV2Builder =
       makeRdfsLabel().withStringLiteral(lang, value)
-    def makeRdfsLabel(literals: Map[String, String]): PredicateInfoV2Builder =
+    def makeRdfsLabel(literals: Map[LanguageCode, String]): PredicateInfoV2Builder =
       makeRdfsLabel().withStringLiterals(literals)
 
-    def makeRdfsComment(): PredicateInfoV2Builder = make(RDFS.COMMENT)
-    def makeRdfsComment(lang: String, value: String): PredicateInfoV2Builder =
+    private def makeRdfsComment(): PredicateInfoV2Builder = make(RDFS.COMMENT)
+    def makeRdfsComment(lang: LanguageCode, value: String): PredicateInfoV2Builder =
       makeRdfsComment().withStringLiteral(lang, value)
   }
 

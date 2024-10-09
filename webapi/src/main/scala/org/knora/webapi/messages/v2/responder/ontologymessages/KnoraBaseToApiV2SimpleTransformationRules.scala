@@ -43,16 +43,16 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.DE -> "Ergebnis",
-          LanguageCodes.EN -> "result",
-          LanguageCodes.FR -> "résultat",
-          LanguageCodes.IT -> "risultato",
+          LanguageCode.DE -> "Ergebnis",
+          LanguageCode.EN -> "result",
+          LanguageCode.FR -> "résultat",
+          LanguageCode.IT -> "risultato",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Provides a message indicating that an operation was successful",
+          LanguageCode.EN -> "Provides a message indicating that an operation was successful",
         ),
       ),
     ),
@@ -66,13 +66,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "May have more results",
+          LanguageCode.EN -> "May have more results",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates whether more results may be available for a search query",
+          LanguageCode.EN -> "Indicates whether more results may be available for a search query",
         ),
       ),
     ),
@@ -86,16 +86,16 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.DE -> "Fehler",
-          LanguageCodes.EN -> "error",
-          LanguageCodes.FR -> "erreur",
-          LanguageCodes.IT -> "errore",
+          LanguageCode.DE -> "Fehler",
+          LanguageCode.EN -> "error",
+          LanguageCode.FR -> "erreur",
+          LanguageCode.IT -> "errore",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Provides a message indicating that an operation was unsuccessful",
+          LanguageCode.EN -> "Provides a message indicating that an operation was unsuccessful",
         ),
       ),
     ),
@@ -109,13 +109,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "ARK URL",
+          LanguageCode.EN -> "ARK URL",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Provides the ARK URL of a resource.",
+          LanguageCode.EN -> "Provides the ARK URL of a resource.",
         ),
       ),
     ),
@@ -129,13 +129,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "version ARK URL",
+          LanguageCode.EN -> "version ARK URL",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Provides the ARK URL of a particular version of a resource.",
+          LanguageCode.EN -> "Provides the ARK URL of a particular version of a resource.",
         ),
       ),
     ),
@@ -151,13 +151,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Resource property",
+          LanguageCode.EN -> "Resource property",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "The base property of properties that point from Knora resources to Knora resources or values. These properties are required to have cardinalities in the resource classes in which they are used.",
+          LanguageCode.EN -> "The base property of properties that point from Knora resources to Knora resources or values. These properties are required to have cardinalities in the resource classes in which they are used.",
         ),
       ),
     ),
@@ -172,13 +172,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "has value",
+          LanguageCode.EN -> "has value",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "The base property of properties that point from Knora resources to Knora values.",
+          LanguageCode.EN -> "The base property of properties that point from Knora resources to Knora values.",
         ),
       ),
     ),
@@ -191,13 +191,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Subject type",
+          LanguageCode.EN -> "Subject type",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Specifies the required type of the subjects of a property",
+          LanguageCode.EN -> "Specifies the required type of the subjects of a property",
         ),
       ),
     ),
@@ -210,13 +210,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Object type",
+          LanguageCode.EN -> "Object type",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Specifies the required type of the objects of a property",
+          LanguageCode.EN -> "Specifies the required type of the objects of a property",
         ),
       ),
     ),
@@ -234,13 +234,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Date literal",
+          LanguageCode.EN -> "Date literal",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents a date as a period with different possible precisions.",
+          LanguageCode.EN -> "Represents a date as a period with different possible precisions.",
         ),
       ),
     ),
@@ -256,13 +256,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Color literal",
+          LanguageCode.EN -> "Color literal",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents a color.",
+          LanguageCode.EN -> "Represents a color.",
         ),
       ),
     ),
@@ -278,13 +278,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Interval literal",
+          LanguageCode.EN -> "Interval literal",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents an interval.",
+          LanguageCode.EN -> "Represents an interval.",
         ),
       ),
     ),
@@ -300,13 +300,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Geoname code",
+          LanguageCode.EN -> "Geoname code",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents a Geoname code.",
+          LanguageCode.EN -> "Represents a Geoname code.",
         ),
       ),
     ),
@@ -321,13 +321,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Geometry specification",
+          LanguageCode.EN -> "Geometry specification",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents a geometry specification in JSON.",
+          LanguageCode.EN -> "Represents a geometry specification in JSON.",
         ),
       ),
     ),
@@ -342,13 +342,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "File URI",
+          LanguageCode.EN -> "File URI",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents a file URI.",
+          LanguageCode.EN -> "Represents a file URI.",
         ),
       ),
     ),
@@ -363,13 +363,13 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "List Node",
+          LanguageCode.EN -> "List Node",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents a list node.",
+          LanguageCode.EN -> "Represents a list node.",
         ),
       ),
     ),
@@ -385,14 +385,14 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.DE -> "hat eingehenden Verweis",
-          LanguageCodes.EN -> "has incoming link",
+          LanguageCode.DE -> "hat eingehenden Verweis",
+          LanguageCode.EN -> "has incoming link",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates that this resource referred to by another resource",
+          LanguageCode.EN -> "Indicates that this resource referred to by another resource",
         ),
       ),
     ),
@@ -598,12 +598,12 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
   private def makePredicate(
     predicateIri: IRI,
     objects: Seq[OntologyLiteralV2] = Seq.empty[OntologyLiteralV2],
-    objectsWithLang: Map[String, String] = Map.empty[String, String],
+    objectsWithLang: Map[LanguageCode, String] = Map.empty,
   ): PredicateInfoV2 =
     PredicateInfoV2(
       predicateIri = predicateIri.toSmartIri,
       objects = objects ++ objectsWithLang.map { case (lang, str) =>
-        StringLiteralV2.from(str, Some(lang))
+        StringLiteralV2.from(str, lang)
       },
     )
 
