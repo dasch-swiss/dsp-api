@@ -8695,7 +8695,7 @@
             },
             "@id": "knora-api:isEditable",
             "knora-api:subjectType": {
-                "@id": "rdf:Property"
+                "@id": "owl:ObjectProperty"
             },
             "rdfs:comment": "Indicates whether a property's values can be updated via the Knora API."
         },
@@ -9092,7 +9092,7 @@
         },
         {
             "@id": "knora-api:objectType",
-            "@type": "rdf:Property",
+            "@type": "owl:ObjectProperty",
             "rdfs:label": "Object type",
             "rdfs:comment": "Specifies the required type of the objects of a property"
         },
@@ -9406,7 +9406,7 @@
         },
         {
             "@id": "knora-api:subjectType",
-            "@type": "rdf:Property",
+            "@type": "owl:ObjectProperty",
             "rdfs:label": "Subject type",
             "rdfs:comment": "Specifies the required type of the subjects of a property"
         },
