@@ -1,5 +1,18 @@
 # Changelog
 
+## [30.21.0](https://github.com/dasch-swiss/dsp-api/compare/v30.20.0...v30.21.0) (2024-10-10)
+
+
+### Maintenances
+
+* Make precedence of daop for creating new Value/Resources obvious  ([#3380](https://github.com/dasch-swiss/dsp-api/issues/3380)) ([0b879af](https://github.com/dasch-swiss/dsp-api/commit/0b879afbf18b4cbed71ea8d6e2fb8ae0b8cd788d))
+
+
+### Enhancements
+
+* Remove DOAP configuration on SystemProject and KnownUser group (DEV-4138) ([#3383](https://github.com/dasch-swiss/dsp-api/issues/3383)) ([a9b45ad](https://github.com/dasch-swiss/dsp-api/commit/a9b45ad670873cb6f62c28f0647fbf0777bb076c))
+* Watermark with alpha with the new Sipi release (DEV-3299) ([#3382](https://github.com/dasch-swiss/dsp-api/issues/3382)) ([c8f5a71](https://github.com/dasch-swiss/dsp-api/commit/c8f5a713f308dbd98d42ec389120d76a78f960b3))
+
 ## [30.20.0](https://github.com/dasch-swiss/dsp-api/compare/v30.19.0...v30.20.0) (2024-10-04)
 
 
