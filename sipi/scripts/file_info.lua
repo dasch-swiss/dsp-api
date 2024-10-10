@@ -106,7 +106,8 @@ local text_extensions = {
     "txt",
     "xml",
     "xsd",
-    "xsl"
+    "xsl",
+    "json"
 }
 
 local document_extensions = {
