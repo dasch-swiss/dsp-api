@@ -267,12 +267,10 @@ descending order:
 
 - permissions on `knora-admin:ProjectAdmin` (highest level)
 - permissions on resource classes and property combination (own project)
-- permissions on resource classes and property combination (`knora-admin:SystemProject`)
-- permissions on resource classes / properties (own project)
-- permissions on resource classes / properties (`knora-admin:SystemProject`)
+- permissions on properties (own project, when creating a Value)
+- permissions on resource classes (own project, when creating a Resource)
 - permissions on custom groups
 - permissions on `knora-admin:ProjectMember`
-- permissions on `knora-admin:KnownUser` (lowest level)
 
 The permissions on resource classes / properties are only relevant for
 default object access permissions.
@@ -293,7 +291,7 @@ permissions are summed up and the most permissive are applied.
 In the case of the user belonging to the **SystemAdmin** group, but which
 is not member of a project and thus not member of any group belonging
 to the project, the *default object access permissions* from the
-**ProjectAdmin**, **ProjectMember**, or **KnownUser** group will be
+**ProjectAdmin**, or **ProjectMember** group will be
 applied in the order of precedence. If no permissions are defined on
 either of these groups, then the resulting permission will be `CR knora-admin:Creator`.
 
@@ -306,7 +304,7 @@ permissions:
 - receives implicitly *ProjectResourceCreateAllPermission* for all projects.
 - receives implicitly *CR* on all objects from all projects.
 
-Theses permissions are baked into the system, and cannot be changed.
+These permissions are baked into the system, and cannot be changed.
 
 ## Default Permissions Matrix for new Projects
 
@@ -533,18 +531,7 @@ either *knora-admin:forGroup*, *knora-admin:forResourceClass*, or
                                  V knora-admin:KnownUser,knora-admin:UnknownUser"^^xsd:string .
 ```
 
-**Default object access permission on a knora-admin property:**
-
-```
-<http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:DefaultObjectAccessPermission ;
-     knora-admin:forProject knora-admin:SystemProject ;
-     knora-admin:forProperty <http://www.knora.org/ontology/knora-admin#hasStillImageFileValue> ;
-     knora-base:hasPermissions "RV knora-admin:UnknownUser|
-                                 V knora-admin:KnownUser|
-                                 M knora-admin:ProjectMember,knora-admin:Creator"^^xsd:string .
-```
-
-A the time the user's `UserProfile` is queried, all permissions for all
+When the user's `UserProfile` is queried, all permissions for all
 projects and groups the user is a member of are also queried. This
 information is then stored as an easy accessible object inside the
 `UserProfile`, being readily available wherever needed. As this is a
