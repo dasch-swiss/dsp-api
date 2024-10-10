@@ -41,9 +41,10 @@ private val text =
   Map(
     // odd and rng are TEI formats, see
     // https://tei-c.org/guidelines/customization/getting-started-with-p5-odds/#section-2
-    "odd" -> MimeType.unsafeFrom("application/odd+xml"),
-    "rng" -> MimeType.unsafeFrom("application/rng+xml"),
-    "txt" -> MimeType.unsafeFrom("text/plain"),
+    "odd"  -> MimeType.unsafeFrom("application/odd+xml"),
+    "rng"  -> MimeType.unsafeFrom("application/rng+xml"),
+    "txt"  -> MimeType.unsafeFrom("text/plain"),
+    "json" -> MimeType.unsafeFrom("application/json"),
     // xml, xsd, xsl are XML files, schema and stylesheets
     "xml" -> MimeType.unsafeFrom("application/xml"),
     "xsd" -> MimeType.unsafeFrom("application/xsd+xml"),

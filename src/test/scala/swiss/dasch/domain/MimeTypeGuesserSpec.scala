@@ -36,12 +36,13 @@ object MimeTypeGuesserSpec extends ZIOSpecDefault {
     "xls"  -> MimeType.unsafeFrom("application/vnd.ms-excel"),
     "xlsx" -> MimeType.unsafeFrom("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
     // text
-    "odd" -> MimeType.unsafeFrom("application/odd+xml"),
-    "rng" -> MimeType.unsafeFrom("application/rng+xml"),
-    "txt" -> MimeType.unsafeFrom("text/plain"),
-    "xml" -> MimeType.unsafeFrom("application/xml"),
-    "xsd" -> MimeType.unsafeFrom("application/xsd+xml"),
-    "xsl" -> MimeType.unsafeFrom("application/xslt+xml"),
+    "odd"  -> MimeType.unsafeFrom("application/odd+xml"),
+    "rng"  -> MimeType.unsafeFrom("application/rng+xml"),
+    "txt"  -> MimeType.unsafeFrom("text/plain"),
+    "xml"  -> MimeType.unsafeFrom("application/xml"),
+    "xsd"  -> MimeType.unsafeFrom("application/xsd+xml"),
+    "xsl"  -> MimeType.unsafeFrom("application/xslt+xml"),
+    "json" -> MimeType.unsafeFrom("application/json"),
   )
 
   private def guess(file: Path): URIO[MimeTypeGuesser, Option[MimeType]] =

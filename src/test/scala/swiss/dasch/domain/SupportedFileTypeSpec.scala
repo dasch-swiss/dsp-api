@@ -18,7 +18,7 @@ object SupportedFileTypeSpec extends ZIOSpecDefault {
       val audio   = Seq("mp3", "mpeg", "wav")
       val office  = Seq("doc", "docx", "pdf", "ppt", "pptx")
       val tables  = Seq("csv", "xls", "xlsx")
-      val text    = Seq("odd", "rng", "txt", "xml", "xsd", "xsl")
+      val text    = Seq("odd", "rng", "txt", "json", "xml", "xsd", "xsl")
 
       val otherFileTypeExtensions = text ++ tables ++ audio ++ office ++ archive
       check(Gen.fromIterable(withUpperCase(otherFileTypeExtensions))) { ext =>
