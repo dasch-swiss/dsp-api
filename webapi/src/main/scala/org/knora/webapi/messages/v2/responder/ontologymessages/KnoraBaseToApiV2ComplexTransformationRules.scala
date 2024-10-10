@@ -8,7 +8,8 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 import org.eclipse.rdf4j.model.IRI as Rdf4jIRI
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
-
+import org.eclipse.rdf4j.model.vocabulary.OWL
+import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.knora.webapi.*
 import org.knora.webapi.LanguageCode.*
 import org.knora.webapi.messages.IriConversions.*
@@ -22,6 +23,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules.PredicateInfoV2Builder.makeRdfsCommentEn
 import org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules.PredicateInfoV2Builder.makeRdfsLabel
 import org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules.PredicateInfoV2Builder.makeRdfsLabelEn
+import org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules.ReadPropertyInfoV2Builder.makeOwlDataTypeProperty
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
@@ -39,27 +41,20 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     label = Some("The knora-api ontology in the complex schema"),
   )
 
-  private val Label: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.Rdfs.Label,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-  )
+  private val Label: ReadPropertyInfoV2 = makeOwlDataTypeProperty(RDFS.LABEL).build()
 
-  private val Result: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.Result,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makeRdfsLabel(
-        Map(
-          DE -> "Ergebnis",
-          EN -> "result",
-          FR -> "résultat",
-          IT -> "risultato",
-        ),
+  private val Result: ReadPropertyInfoV2 = makeOwlDataTypeProperty(KA.Result)
+    .withRdfLabel(
+      Map(
+        DE -> "Ergebnis",
+        EN -> "result",
+        FR -> "résultat",
+        IT -> "risultato",
       ),
-      makeRdfsCommentEn("Provides a message indicating that an operation was successful"),
-    ).map(_.build()),
-    objectType = Some(OntologyConstants.Xsd.String),
-  )
+    )
+    .withRdfCommentEn("Provides a message indicating that an operation was successful")
+    .withObjectType(XSD.STRING)
+    .build()
 
   private val Error: ReadPropertyInfoV2 = makeProperty(
     propertyIri = KA.Error,
@@ -1093,7 +1088,8 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     def make(predicateIri: Rdf4jIRI): PredicateInfoV2Builder =
       make(predicateIri.toString)
 
-    def makeRdfType(): PredicateInfoV2Builder = make(RDF.TYPE)
+    def makeRdfType(typeIri: SmartIri): PredicateInfoV2Builder = makeRdfType().withObject(SmartIriLiteralV2(typeIri))
+    private def makeRdfType(): PredicateInfoV2Builder          = make(RDF.TYPE)
 
     def makeRdfsLabel(literals: Map[LanguageCode, String]): PredicateInfoV2Builder =
       makeRdfsLabel().withStringLiterals(literals)
@@ -1106,6 +1102,69 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     private def makeRdfsComment(lang: LanguageCode, value: String): PredicateInfoV2Builder =
       makeRdfsComment().withStringLiteral(lang, value)
     private def makeRdfsComment(): PredicateInfoV2Builder = make(RDFS.COMMENT)
+  }
+
+  final case class ReadPropertyInfoV2Builder private (
+    // PropertyInfoContentV2 fields
+    propertyIri: SmartIri,
+    predicates: Map[SmartIri, PredicateInfoV2] = Map.empty,
+    subPropertyOf: Set[SmartIri] = Set.empty,
+    ontologySchema: OntologySchema = ApiV2Complex,
+    // ReadPropertyInfoV2 other fields
+    isResourceProp: Boolean = false,
+    isEditable: Boolean = false,
+    isLinkProp: Boolean = false,
+    isLinkValueProp: Boolean = false,
+    isFileValueProp: Boolean = false,
+    isStandoffInternalReferenceProperty: Boolean = false,
+  ) { self =>
+    def withPredicate(v: PredicateInfoV2) = copy(predicates = self.predicates + (v.predicateIri -> v))
+
+    def withRdfType(propertyType: SmartIri): ReadPropertyInfoV2Builder =
+      withPredicate(PredicateInfoV2Builder.makeRdfType(propertyType).build())
+
+    def withSubjectType(subjectType: SmartIri): ReadPropertyInfoV2Builder =
+      withPredicate(PredicateInfoV2Builder.make(KA.SubjectType).withObject(SmartIriLiteralV2(subjectType)).build())
+
+    def withObjectType(valueType: Rdf4jIRI)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+      withObjectType(sf.toSmartIri(valueType.toString))
+    def withObjectType(valueType: SmartIri): ReadPropertyInfoV2Builder =
+      withPredicate(PredicateInfoV2Builder.make(KA.ObjectType).withObject(SmartIriLiteralV2(valueType)).build())
+
+    def withRdfLabelEn(label: String): ReadPropertyInfoV2Builder =
+      withPredicate(PredicateInfoV2Builder.makeRdfsLabelEn(label).build())
+    def withRdfLabel(label: Map[LanguageCode, String]): ReadPropertyInfoV2Builder =
+      withPredicate(PredicateInfoV2Builder.makeRdfsLabel(label).build())
+
+    def withRdfCommentEn(comment: String): ReadPropertyInfoV2Builder =
+      withPredicate(PredicateInfoV2Builder.makeRdfsCommentEn(comment).build())
+
+    def build(): ReadPropertyInfoV2 = ReadPropertyInfoV2(
+      PropertyInfoContentV2(propertyIri, predicates, subPropertyOf, ontologySchema),
+      isResourceProp,
+      isEditable,
+      isLinkProp,
+      isLinkValueProp,
+      isFileValueProp,
+      isStandoffInternalReferenceProperty,
+    )
+
+  }
+  object ReadPropertyInfoV2Builder {
+    def makeOwlDataTypeProperty(iri: String)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+      make(sf.toSmartIri(iri), OWL.DATATYPEPROPERTY)
+    def makeOwlDataTypeProperty(iri: Rdf4jIRI)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+      make(iri, OWL.DATATYPEPROPERTY)
+    def makeOwlDataTypeProperty(iri: SmartIri): ReadPropertyInfoV2Builder = make(iri, OWL.DATATYPEPROPERTY)
+
+    def make(iri: SmartIri, rdfType: SmartIri): ReadPropertyInfoV2Builder =
+      ReadPropertyInfoV2Builder(iri).withRdfType(rdfType)
+
+    def make(iri: SmartIri, rdfType: Rdf4jIRI)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+      make(iri, sf.toSmartIri(rdfType.toString))
+
+    def make(iri: Rdf4jIRI, rdfType: Rdf4jIRI)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+      make(sf.toSmartIri(iri.toString), sf.toSmartIri(rdfType.toString))
   }
 
   /**
@@ -1134,8 +1193,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     subjectType: Option[IRI] = None,
     objectType: Option[IRI] = None,
   ): ReadPropertyInfoV2 = {
-    val propTypePred =
-      PredicateInfoV2Builder.makeRdfType().withObject(SmartIriLiteralV2(propertyType.toSmartIri)).build()
+    val propTypePred = PredicateInfoV2Builder.makeRdfType(propertyType.toSmartIri).build()
 
     val maybeSubjectTypePred = subjectType.map { subjType =>
       PredicateInfoV2Builder
