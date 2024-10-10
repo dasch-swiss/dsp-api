@@ -275,7 +275,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         ),
       ),
     ),
-    subjectType = Some(OntologyConstants.Rdf.Property),
+    subjectType = Some(OntologyConstants.Owl.ObjectProperty),
     objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
@@ -506,7 +506,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
   private val SubjectType: ReadPropertyInfoV2 = makeProperty(
     propertyIri = OntologyConstants.KnoraApiV2Complex.SubjectType,
-    propertyType = OntologyConstants.Rdf.Property,
+    propertyType = OntologyConstants.Owl.ObjectProperty,
     predicates = Seq(
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
@@ -525,7 +525,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
   private val ObjectType: ReadPropertyInfoV2 = makeProperty(
     propertyIri = OntologyConstants.KnoraApiV2Complex.ObjectType,
-    propertyType = OntologyConstants.Rdf.Property,
+    propertyType = OntologyConstants.Owl.ObjectProperty,
     predicates = Seq(
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,

@@ -43,7 +43,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     private def makeFile(fileEnding: String = "jsonld"): Path =
       Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$fileEnding")
 
-    def storeAsTtl: Unit = {
+    private def storeAsTtl(): Unit = {
       val jsonStr = readFile()
       val model   = parseJsonLd(jsonStr)
       val ttlStr  = RdfFormatUtil.format(model, Turtle)
@@ -68,7 +68,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       val newOutputFile = makeFile()
       Files.createDirectories(newOutputFile.getParent)
       FileUtil.writeTextFile(newOutputFile, responseStr)
-      if (persistTtl) storeAsTtl
+      if (persistTtl) storeAsTtl()
       else ()
     }
   }

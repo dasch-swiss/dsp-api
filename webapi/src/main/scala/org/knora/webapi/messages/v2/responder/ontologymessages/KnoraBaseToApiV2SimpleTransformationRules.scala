@@ -144,7 +144,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
   private val ResourceProperty: ReadPropertyInfoV2 = makeProperty(
     propertyIri = OntologyConstants.KnoraApiV2Simple.ResourceProperty,
-    propertyType = OntologyConstants.Rdf.Property,
+    propertyType = OntologyConstants.Owl.ObjectProperty,
     subjectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
     subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.ResourceProperty),
     predicates = Seq(
@@ -186,7 +186,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
   private val SubjectType: ReadPropertyInfoV2 = makeProperty(
     propertyIri = OntologyConstants.KnoraApiV2Simple.SubjectType,
-    propertyType = OntologyConstants.Rdf.Property,
+    propertyType = OntologyConstants.Owl.ObjectProperty,
     predicates = Seq(
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
@@ -205,7 +205,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
   private val ObjectType: ReadPropertyInfoV2 = makeProperty(
     propertyIri = OntologyConstants.KnoraApiV2Simple.ObjectType,
-    propertyType = OntologyConstants.Rdf.Property,
+    propertyType = OntologyConstants.Owl.ObjectProperty,
     predicates = Seq(
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
