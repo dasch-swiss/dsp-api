@@ -6,10 +6,11 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import org.eclipse.rdf4j.model.IRI as Rdf4jIRI
+import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.model.vocabulary.XSD
+
 import org.knora.webapi.*
 import org.knora.webapi.LanguageCode.*
 import org.knora.webapi.messages.IriConversions.*
@@ -20,10 +21,9 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules.PredicateInfoV2Builder.makeRdfsCommentEn
-import org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules.PredicateInfoV2Builder.makeRdfsLabel
-import org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules.PredicateInfoV2Builder.makeRdfsLabelEn
+import org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules.ReadPropertyInfoV2Builder.makeOwlAnnotationProperty
 import org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules.ReadPropertyInfoV2Builder.makeOwlDataTypeProperty
+import org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules.ReadPropertyInfoV2Builder.makeOwlObjectProperty
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
@@ -33,7 +33,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
  * See also [[OntologyConstants.CorrespondingIris]].
  */
 object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformationRules {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+  private implicit val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
   override val ontologyMetadata: OntologyMetadataV2 = OntologyMetadataV2(
     ontologyIri = KA.KnoraApiOntologyIri.toSmartIri,
@@ -41,9 +41,9 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     label = Some("The knora-api ontology in the complex schema"),
   )
 
-  private val Label: ReadPropertyInfoV2 = makeOwlDataTypeProperty(RDFS.LABEL).build()
+  private val Label = ReadPropertyInfoV2Builder.make(RDFS.LABEL, OWL.DATATYPEPROPERTY)
 
-  private val Result: ReadPropertyInfoV2 = makeOwlDataTypeProperty(KA.Result)
+  private val Result = makeOwlDataTypeProperty(KA.Result, XSD.STRING)
     .withRdfLabel(
       Map(
         DE -> "Ergebnis",
@@ -53,720 +53,352 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       ),
     )
     .withRdfCommentEn("Provides a message indicating that an operation was successful")
-    .withObjectType(XSD.STRING)
-    .build()
 
-  private val Error: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.Error,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(makeRdfsLabelEn("error"), makeRdfsCommentEn("Provides an error message")).map(_.build()),
-    objectType = Some(OntologyConstants.Xsd.String),
-  )
+  private val Error = makeOwlDataTypeProperty(KA.Error, XSD.STRING)
+    .withRdfLabelEn("error")
+    .withRdfCommentEn("Provides an error message")
 
-  private val CanDo: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.CanDo,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(makeRdfsLabelEn("can do"), makeRdfsCommentEn("Indicates whether an operation can be performed"))
-      .map(_.build()),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-  )
+  private val CanDo = makeOwlDataTypeProperty(KA.CanDo, XSD.BOOLEAN)
+    .withRdfLabelEn("can do")
+    .withRdfCommentEn("Indicates whether an operation can be performed")
 
-  private val MayHaveMoreResults: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.MayHaveMoreResults,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("May have more results"),
-      makeRdfsCommentEn("Indicates whether more results may be available for a search query"),
-    ).map(_.build()),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-  )
+  private val MayHaveMoreResults = makeOwlDataTypeProperty(KA.MayHaveMoreResults, XSD.BOOLEAN)
+    .withRdfLabelEn("May have more results")
+    .withRdfCommentEn("Indicates whether more results may be available for a search query")
 
-  private val UserHasPermission: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.UserHasPermission,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("user has permission"),
-      makeRdfsCommentEn("Provides the requesting user's maximum permission on a resource or value."),
-    ).map(_.build()),
-    objectType = Some(OntologyConstants.Xsd.String),
-  )
+  private val UserHasPermission = makeOwlDataTypeProperty(KA.UserHasPermission, XSD.STRING)
+    .withRdfLabelEn("user has permission")
+    .withRdfCommentEn("Provides the requesting user's maximum permission on a resource or value.")
 
-  private val ArkUrl: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.ArkUrl,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(makeRdfsLabelEn("ARK URL"), makeRdfsCommentEn("Provides the ARK URL of a resource or value."))
-      .map(_.build()),
-    objectType = Some(OntologyConstants.Xsd.Uri),
-  )
+  private val ArkUrl = makeOwlDataTypeProperty(KA.ArkUrl, XSD.ANYURI)
+    .withRdfLabelEn("ARK URL")
+    .withRdfCommentEn("Provides the ARK URL of a resource or value.")
 
-  private val VersionArkUrl: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.VersionArkUrl,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("version ARK URL"),
-      makeRdfsCommentEn("Provides the ARK URL of a particular version of a resource or value."),
-    ).map(_.build()),
-    objectType = Some(OntologyConstants.Xsd.Uri),
-  )
+  private val VersionArkUrl = makeOwlDataTypeProperty(KA.VersionArkUrl, XSD.ANYURI)
+    .withRdfLabelEn("version ARK URL")
+    .withRdfCommentEn("Provides the ARK URL of a particular version of a resource or value.")
 
-  private val VersionDate: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.VersionDate,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("version date"),
-      makeRdfsCommentEn("Provides the date of a particular version of a resource."),
-    ).map(_.build()),
-    objectType = Some(OntologyConstants.Xsd.Uri),
-  )
+  private val VersionDate = makeOwlDataTypeProperty(KA.VersionDate, XSD.ANYURI)
+    .withRdfLabelEn("version date")
+    .withRdfCommentEn("Provides the date of a particular version of a resource.")
 
-  private val Author: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.Author,
-    propertyType = OntologyConstants.Owl.ObjectProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("author"),
-      makeRdfsCommentEn("Specifies the author of a particular version of a resource."),
-    ).map(_.build()),
-    objectType = Some(KA.User),
-  )
+  private val Author = makeOwlObjectProperty(KA.Author, KA.User)
+    .withRdfLabelEn("author")
+    .withRdfCommentEn("Specifies the author of a particular version of a resource.")
 
-  private val IsShared: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.IsShared,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("is shared"),
-      makeRdfsCommentEn("Indicates whether an ontology can be shared by multiple projects"),
-    ).map(_.build()),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-  )
+  private val IsShared = makeOwlDataTypeProperty(KA.IsShared, XSD.BOOLEAN)
+    .withRdfLabelEn("is shared")
+    .withRdfCommentEn("Indicates whether an ontology can be shared by multiple projects")
 
-  private val IsBuiltIn: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.IsBuiltIn,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("is shared"),
-      makeRdfsCommentEn("Indicates whether an ontology is built into Knora"),
-    ).map(_.build()),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-  )
+  private val IsBuiltIn = makeOwlDataTypeProperty(KA.IsBuiltIn, XSD.BOOLEAN)
+    .withRdfLabelEn("is shared")
+    .withRdfCommentEn("Indicates whether an ontology is built into Knora")
 
-  private val IsEditable: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.IsEditable,
-    propertyType = OntologyConstants.Owl.AnnotationProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("is editable"),
-      makeRdfsCommentEn("Indicates whether a property's values can be updated via the Knora API."),
-    ).map(_.build()),
-    subjectType = Some(OntologyConstants.Owl.ObjectProperty),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-  )
+  private val IsEditable = makeOwlAnnotationProperty(KA.IsEditable, XSD.BOOLEAN)
+    .withSubjectType(OWL.OBJECTPROPERTY)
+    .withRdfLabelEn("is editable")
+    .withRdfCommentEn("Indicates whether a property's values can be updated via the Knora API.")
 
-  private val IsResourceClass: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.IsResourceClass,
-    propertyType = OntologyConstants.Owl.AnnotationProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("is resource class"),
-      makeRdfsCommentEn("Indicates whether class is a subclass of Resource."),
-    ).map(_.build()),
-    subjectType = Some(OntologyConstants.Owl.Class),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-  )
+  private val IsResourceClass = makeOwlAnnotationProperty(KA.IsResourceClass, XSD.BOOLEAN)
+    .withSubjectType(OWL.CLASS)
+    .withRdfLabelEn("is resource class")
+    .withRdfCommentEn("Indicates whether class is a subclass of Resource.")
 
-  private val IsValueClass: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.IsValueClass,
-    propertyType = OntologyConstants.Owl.AnnotationProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("is value class"),
-      makeRdfsCommentEn("Indicates whether class is a subclass of Value."),
-    ).map(_.build()),
-    subjectType = Some(OntologyConstants.Owl.Class),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-  )
+  private val IsValueClass = makeOwlAnnotationProperty(KA.IsValueClass, XSD.BOOLEAN)
+    .withSubjectType(OWL.CLASS)
+    .withRdfLabelEn("is value class")
+    .withRdfCommentEn("Indicates whether class is a subclass of Value.")
 
-  private val IsStandoffClass: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.IsStandoffClass,
-    propertyType = OntologyConstants.Owl.AnnotationProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("is standoff class"),
-      makeRdfsCommentEn("Indicates whether class is a subclass of StandoffTag."),
-    ).map(_.build()),
-    subjectType = Some(OntologyConstants.Owl.Class),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-  )
+  private val IsStandoffClass = makeOwlAnnotationProperty(KA.IsStandoffClass, XSD.BOOLEAN)
+    .withSubjectType(OWL.CLASS)
+    .withRdfLabelEn("is standoff class")
+    .withRdfCommentEn("Indicates whether class is a subclass of StandoffTag.")
 
-  private val IsLinkProperty: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.IsLinkProperty,
-    propertyType = OntologyConstants.Owl.AnnotationProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("is link property"),
-      makeRdfsCommentEn("Indicates whether a property points to a resource"),
-    ).map(_.build()),
-    subjectType = Some(OntologyConstants.Owl.ObjectProperty),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-  )
+  private val IsLinkProperty = makeOwlAnnotationProperty(KA.IsLinkProperty, XSD.BOOLEAN)
+    .withSubjectType(OWL.OBJECTPROPERTY)
+    .withRdfLabelEn("is link property")
+    .withRdfCommentEn("Indicates whether a property points to a resource")
 
-  private val IsLinkValueProperty: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.IsLinkValueProperty,
-    propertyType = OntologyConstants.Owl.AnnotationProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("is link value property"),
-      makeRdfsCommentEn("Indicates whether a property points to a link value (reification)"),
-    ).map(_.build()),
-    subjectType = Some(OntologyConstants.Owl.ObjectProperty),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-  )
+  private val IsLinkValueProperty = makeOwlAnnotationProperty(KA.IsLinkValueProperty, XSD.BOOLEAN)
+    .withSubjectType(OWL.OBJECTPROPERTY)
+    .withRdfLabelEn("is link value property")
+    .withRdfCommentEn("Indicates whether a property points to a link value (reification)")
 
-  private val IsInherited: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.IsInherited,
-    propertyType = OntologyConstants.Owl.AnnotationProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("is inherited"),
-      makeRdfsCommentEn("Indicates whether a cardinality has been inherited from a base class"),
-    ).map(_.build()),
-    subjectType = Some(OntologyConstants.Owl.Restriction),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-  )
+  private val IsInherited = makeOwlAnnotationProperty(KA.IsInherited, XSD.BOOLEAN)
+    .withSubjectType(OWL.RESTRICTION)
+    .withRdfLabelEn("is inherited")
+    .withRdfCommentEn("Indicates whether a cardinality has been inherited from a base class")
 
-  private val NewModificationDate: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.NewModificationDate,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("new modification date"),
-      makeRdfsCommentEn("Specifies the new modification date of a resource"),
-    ).map(_.build()),
-    objectType = Some(OntologyConstants.Xsd.DateTimeStamp),
-  )
+  private val NewModificationDate = makeOwlDataTypeProperty(KA.NewModificationDate, XSD.DATETIMESTAMP)
+    .withRdfLabelEn("new modification date")
+    .withRdfCommentEn("Specifies the new modification date of a resource")
 
-  private val OntologyName: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.OntologyName,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("ontology name"),
-      makeRdfsCommentEn("Represents the short name of an ontology"),
-    ).map(_.build()),
-    objectType = Some(OntologyConstants.Xsd.String),
-  )
+  private val OntologyName = makeOwlDataTypeProperty(KA.OntologyName, XSD.STRING)
+    .withRdfLabelEn("ontology name")
+    .withRdfCommentEn("Represents the short name of an ontology")
 
-  private val MappingHasName: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.MappingHasName,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("Name of a mapping (will be part of the mapping's Iri)"),
-      makeRdfsCommentEn("Represents the name of a mapping"),
-    ).map(_.build()),
-    objectType = Some(OntologyConstants.Xsd.String),
-  )
+  private val MappingHasName = makeOwlDataTypeProperty(KA.MappingHasName, XSD.STRING)
+    .withRdfLabelEn("Name of a mapping (will be part of the mapping's Iri)")
+    .withRdfCommentEn("Represents the name of a mapping")
 
-  private val HasIncomingLinkValue: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.HasIncomingLinkValue,
-    isResourceProp = true,
-    propertyType = OntologyConstants.Owl.ObjectProperty,
-    subjectType = Some(KA.Resource),
-    objectType = Some(KA.LinkValue),
-    subPropertyOf = Set(KA.HasLinkToValue),
-    isLinkValueProp = true,
-    predicates = Seq(
-      makeRdfsLabel(
-        Map(
-          DE -> "hat eingehenden Verweis",
-          EN -> "has incoming link",
-          FR -> "liens entrants",
-        ),
+  private val HasIncomingLinkValue = makeOwlObjectProperty(KA.HasIncomingLinkValue, KA.LinkValue)
+    .withRdfCommentEn("Indicates that this resource referred to by another resource")
+    .withRdfLabel(
+      Map(
+        DE -> "hat eingehenden Verweis",
+        EN -> "has incoming link",
+        FR -> "liens entrants",
       ),
-      makeRdfsCommentEn("Indicates that this resource referred to by another resource"),
-    ).map(_.build()),
-  )
+    )
+    .withSubjectType(KA.Resource)
+    .withSubPropertyOf(KA.HasLinkToValue)
+    .withIsResourceProp()
+    .withIsLinkValueProp()
 
-  private val ValueAsString: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.ValueAsString,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(makeRdfsCommentEn("A plain string representation of a value").build()),
-    subjectType = Some(KA.Value),
-    objectType = Some(OntologyConstants.Xsd.String),
-  )
+  private val ValueAsString = makeOwlDataTypeProperty(KA.ValueAsString, XSD.STRING)
+    .withSubjectType(KA.Value)
+    .withRdfCommentEn("A plain string representation of a value")
 
-  private val SubjectType: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.SubjectType,
-    propertyType = OntologyConstants.Owl.ObjectProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("Subject type"),
-      makeRdfsCommentEn("Specifies the required type of the subjects of a property"),
-    ).map(_.build()),
-  )
+  private val SubjectType = makeOwlObjectProperty(KA.SubjectType)
+    .withRdfLabelEn("Subject type")
+    .withRdfCommentEn("Specifies the required type of the subjects of a property")
 
-  private val ObjectType: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.ObjectType,
-    propertyType = OntologyConstants.Owl.ObjectProperty,
-    predicates = Seq(
-      makeRdfsLabelEn("Object type"),
-      makeRdfsCommentEn("Specifies the required type of the objects of a property"),
-    ).map(_.build()),
-  )
+  private val ObjectType = makeOwlObjectProperty(KA.ObjectType)
+    .withRdfLabelEn("Object type")
+    .withRdfCommentEn("Specifies the required type of the objects of a property")
 
-  private val TextValueHasMarkup: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.TextValueHasMarkup,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.TextValue),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-    predicates = Seq(
-      makeRdfsLabelEn("text value has markup"),
-      makeRdfsCommentEn("True if a text value has markup."),
-    ).map(_.build()),
-  )
+  private val TextValueHasMarkup = makeOwlDataTypeProperty(KA.TextValueHasMarkup, XSD.BOOLEAN)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.TextValue)
+    .withRdfLabelEn("text value has markup")
+    .withRdfCommentEn("True if a text value has markup.")
 
-  private val TextValueHasStandoff: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.TextValueHasStandoff,
-    propertyType = OntologyConstants.Owl.ObjectProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.TextValue),
-    objectType = Some(KA.StandoffTag),
-    predicates = Seq(
-      makeRdfsLabelEn("text value has standoff"),
-      makeRdfsCommentEn("Standoff markup attached to a text value."),
-    ).map(_.build()),
-  )
+  private val TextValueHasStandoff = makeOwlObjectProperty(KA.TextValueHasStandoff, KA.StandoffTag)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.TextValue)
+    .withRdfLabelEn("text value has standoff")
+    .withRdfCommentEn("Standoff markup attached to a text value.")
 
-  private val TextValueHasMaxStandoffStartIndex: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.TextValueHasMaxStandoffStartIndex,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.TextValue),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makeRdfsLabelEn("text value has max standoff start index"),
-      makeRdfsCommentEn("The maximum knora-api:standoffTagHasStartIndex in a text value."),
-    ).map(_.build()),
-  )
+  private val TextValueHasMaxStandoffStartIndex =
+    makeOwlDataTypeProperty(KA.TextValueHasMaxStandoffStartIndex, XSD.INTEGER)
+      .withSubPropertyOf(KA.ValueHas)
+      .withSubjectType(KA.TextValue)
+      .withRdfLabelEn("text value has max standoff start index")
+      .withRdfCommentEn("The maximum knora-api:standoffTagHasStartIndex in a text value.")
 
-  private val NextStandoffStartIndex: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.NextStandoffStartIndex,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makeRdfsLabelEn("next standoff start index"),
-      makeRdfsCommentEn("The next available knora-api:standoffTagHasStartIndex in a sequence of pages of standoff."),
-    ).map(_.build()),
-  )
+  private val NextStandoffStartIndex = makeOwlDataTypeProperty(KA.NextStandoffStartIndex, XSD.INTEGER)
+    .withRdfLabelEn("next standoff start index")
+    .withRdfCommentEn("The next available knora-api:standoffTagHasStartIndex in a sequence of pages of standoff.")
 
-  private val StandoffTagHasStartParentIndex: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.StandoffTagHasStartParentIndex,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subjectType = Some(KA.StandoffTag),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makeRdfsLabelEn("standoff tag has start parent index"),
-      makeRdfsCommentEn("The next knora-api:standoffTagHasStartIndex of the start parent tag of a standoff tag."),
-    ).map(_.build()),
-  )
+  private val StandoffTagHasStartParentIndex = makeOwlDataTypeProperty(KA.StandoffTagHasStartParentIndex, XSD.INTEGER)
+    .withSubjectType(KA.StandoffTag)
+    .withRdfLabelEn("standoff tag has start parent index")
+    .withRdfCommentEn("The next knora-api:standoffTagHasStartIndex of the start parent tag of a standoff tag.")
 
-  private val StandoffTagHasEndParentIndex: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.StandoffTagHasEndParentIndex,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subjectType = Some(KA.StandoffTag),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makeRdfsLabelEn("standoff tag has end parent index"),
-      makeRdfsCommentEn("The next knora-api:standoffTagHasStartIndex of the end parent tag of a standoff tag."),
-    ).map(_.build()),
-  )
+  private val StandoffTagHasEndParentIndex = makeOwlDataTypeProperty(KA.StandoffTagHasEndParentIndex, XSD.INTEGER)
+    .withSubjectType(KA.StandoffTag)
+    .withRdfLabelEn("standoff tag has end parent index")
+    .withRdfCommentEn("The next knora-api:standoffTagHasStartIndex of the end parent tag of a standoff tag.")
 
-  private val TextValueHasLanguage: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.TextValueHasLanguage,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.TextValue),
-    objectType = Some(OntologyConstants.Xsd.String),
-    predicates = Seq(
-      makeRdfsLabelEn("text value has language"),
-      makeRdfsCommentEn("Language code attached to a text value."),
-    ).map(_.build()),
-  )
+  private val TextValueHasLanguage = makeOwlDataTypeProperty(KA.TextValueHasLanguage, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.TextValue)
+    .withRdfLabelEn("text value has language")
+    .withRdfCommentEn("Language code attached to a text value.")
 
-  private val TextValueAsXml: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.TextValueAsXml,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.TextValue),
-    objectType = Some(OntologyConstants.Xsd.String),
-    predicates = Seq(
-      makeRdfsLabelEn("Text value as XML"),
-      makeRdfsCommentEn("A Text value represented in XML."),
-    ).map(_.build()),
-  )
+  private val TextValueAsXml = makeOwlDataTypeProperty(KA.TextValueAsXml, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.TextValue)
+    .withRdfLabelEn("Text value as XML")
+    .withRdfCommentEn("A Text value represented in XML.")
 
-  private val TextValueAsHtml: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.TextValueAsHtml,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.TextValue),
-    objectType = Some(OntologyConstants.Xsd.String),
-    predicates = Seq(
-      makeRdfsLabelEn("Text value as HTML"),
-      makeRdfsCommentEn("A text value represented in HTML."),
-    ).map(_.build()),
-  )
+  private val TextValueAsHtml = makeOwlDataTypeProperty(KA.TextValueAsHtml, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.TextValue)
+    .withRdfLabelEn("Text value as HTML")
+    .withRdfCommentEn("A text value represented in HTML.")
 
-  private val TextValueHasMapping: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.TextValueHasMapping,
-    propertyType = OntologyConstants.Owl.ObjectProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.TextValue),
-    objectType = Some(KA.XMLToStandoffMapping),
-    predicates = Seq(
-      makeRdfsLabelEn("Text value has mapping"),
-      makeRdfsCommentEn(
-        "Indicates the mapping that is used to convert a text value's markup from from XML to standoff.",
-      ),
-    ).map(_.build()),
-  )
+  private val TextValueHasMapping = makeOwlObjectProperty(KA.TextValueHasMapping, KA.XMLToStandoffMapping)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.TextValue)
+    .withRdfLabelEn("Text value has mapping")
+    .withRdfCommentEn("Indicates the mapping that is used to convert a text value's markup from from XML to standoff.")
 
-  private val DateValueHasStartYear: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.DateValueHasStartYear,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.DateBase),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makeRdfsLabelEn("Date value has start year"),
-      makeRdfsCommentEn("Represents the start year of a date value."),
-    ).map(_.build()),
-  )
+  private val DateValueHasStartYear = makeOwlDataTypeProperty(KA.DateValueHasStartYear, XSD.INTEGER)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.DateBase)
+    .withRdfLabelEn("Date value has start year")
+    .withRdfCommentEn("Represents the start year of a date value.")
 
-  private val DateValueHasEndYear: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.DateValueHasEndYear,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.DateBase),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makeRdfsLabelEn("Date value has end year"),
-      makeRdfsCommentEn("Represents the end year of a date value."),
-    ).map(_.build()),
-  )
+  private val DateValueHasEndYear = makeOwlDataTypeProperty(KA.DateValueHasEndYear, XSD.INTEGER)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.DateBase)
+    .withRdfLabelEn("Date value has end year")
+    .withRdfCommentEn("Represents the end year of a date value.")
 
-  private val DateValueHasStartMonth: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.DateValueHasStartMonth,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.DateBase),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makeRdfsLabelEn("Date value has start month"),
-      makeRdfsCommentEn("Represents the start month of a date value."),
-    ).map(_.build()),
-  )
+  private val DateValueHasStartMonth = makeOwlDataTypeProperty(KA.DateValueHasStartMonth, XSD.INTEGER)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.DateBase)
+    .withRdfLabelEn("Date value has start month")
+    .withRdfCommentEn("Represents the start month of a date value.")
 
-  private val DateValueHasEndMonth: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.DateValueHasEndMonth,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.DateBase),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makeRdfsLabelEn("Date value has end month"),
-      makeRdfsCommentEn("Represents the end month of a date value."),
-    ).map(_.build()),
-  )
+  private val DateValueHasEndMonth = makeOwlDataTypeProperty(KA.DateValueHasEndMonth, XSD.INTEGER)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.DateBase)
+    .withRdfLabelEn("Date value has end month")
+    .withRdfCommentEn("Represents the end month of a date value.")
 
-  private val DateValueHasStartDay: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.DateValueHasStartDay,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.DateBase),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makeRdfsLabelEn("Date value has start day"),
-      makeRdfsCommentEn("Represents the start day of a date value."),
-    ).map(_.build()),
-  )
+  private val DateValueHasStartDay = makeOwlDataTypeProperty(KA.DateValueHasStartDay, XSD.INTEGER)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.DateBase)
+    .withRdfLabelEn("Date value has start day")
+    .withRdfCommentEn("Represents the start day of a date value.")
 
-  private val DateValueHasEndDay: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.DateValueHasEndDay,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.DateBase),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makeRdfsLabelEn("Date value has end day"),
-      makeRdfsCommentEn("Represents the end day of a date value."),
-    ).map(_.build()),
-  )
+  private val DateValueHasEndDay = makeOwlDataTypeProperty(KA.DateValueHasEndDay, XSD.INTEGER)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.DateBase)
+    .withRdfLabelEn("Date value has end day")
+    .withRdfCommentEn("Represents the end day of a date value.")
 
-  private val DateValueHasStartEra: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.DateValueHasStartEra,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.DateBase),
-    objectType = Some(OntologyConstants.Xsd.String),
-    predicates = Seq(
-      makeRdfsLabelEn("Date value has start era"),
-      makeRdfsCommentEn("Represents the start era of a date value."),
-    ).map(_.build()),
-  )
+  private val DateValueHasStartEra = makeOwlDataTypeProperty(KA.DateValueHasStartEra, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.DateBase)
+    .withRdfLabelEn("Date value has start era")
+    .withRdfCommentEn("Represents the start era of a date value.")
 
-  private val DateValueHasEndEra: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.DateValueHasEndEra,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.DateBase),
-    objectType = Some(OntologyConstants.Xsd.String),
-    predicates = Seq(
-      makeRdfsLabelEn("Date value has end era"),
-      makeRdfsCommentEn("Represents the end era of a date value."),
-    ).map(_.build()),
-  )
+  private val DateValueHasEndEra = makeOwlDataTypeProperty(KA.DateValueHasEndEra, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.DateBase)
+    .withRdfLabelEn("Date value has end era")
+    .withRdfCommentEn("Represents the end era of a date value.")
 
-  private val DateValueHasCalendar: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.DateValueHasCalendar,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.DateBase),
-    objectType = Some(OntologyConstants.Xsd.String),
-    predicates = Seq(
-      makeRdfsLabelEn("Date value has calendar"),
-      makeRdfsCommentEn("Represents the calendar of a date value."),
-    ).map(_.build()),
-  )
+  private val DateValueHasCalendar = makeOwlDataTypeProperty(KA.DateValueHasCalendar, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.DateBase)
+    .withRdfLabelEn("Date value has calendar")
+    .withRdfCommentEn("Represents the calendar of a date value.")
 
-  private val LinkValueHasSource: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.LinkValueHasSource,
-    propertyType = OntologyConstants.Owl.ObjectProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.LinkValue),
-    objectType = Some(KA.Resource),
-    predicates = Seq(
-      makeRdfsLabelEn("Link value has source"),
-      makeRdfsCommentEn("Represents the source resource of a link value."),
-    ).map(_.build()),
-  )
+  private val LinkValueHasSource = makeOwlObjectProperty(KA.LinkValueHasSource, KA.Resource)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.LinkValue)
+    .withRdfLabelEn("Link value has source")
+    .withRdfCommentEn("Represents the source resource of a link value.")
 
-  private val LinkValueHasSourceIri: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.LinkValueHasSourceIri,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.LinkValue),
-    objectType = Some(OntologyConstants.Xsd.Uri),
-    predicates = Seq(
-      makeRdfsLabelEn("Link value has source IRI"),
-      makeRdfsCommentEn("Represents the IRI of the source resource of a link value."),
-    ).map(_.build()),
-  )
+  private val LinkValueHasSourceIri = makeOwlDataTypeProperty(KA.LinkValueHasSourceIri, XSD.ANYURI)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.LinkValue)
+    .withRdfLabelEn("Link value has source IRI")
+    .withRdfCommentEn("Represents the IRI of the source resource of a link value.")
 
-  private val LinkValueHasTarget: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.LinkValueHasTarget,
-    propertyType = OntologyConstants.Owl.ObjectProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.LinkValue),
-    objectType = Some(KA.Resource),
-    predicates = Seq(
-      makeRdfsLabelEn("Link value has target"),
-      makeRdfsCommentEn("Represents the target resource of a link value."),
-    ).map(_.build()),
-  )
+  private val LinkValueHasTarget = makeOwlObjectProperty(KA.LinkValueHasTarget, KA.Resource)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.LinkValue)
+    .withRdfLabelEn("Link value has target")
+    .withRdfCommentEn("Represents the target resource of a link value.")
 
-  private val LinkValueHasTargetIri: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.LinkValueHasTargetIri,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.LinkValue),
-    objectType = Some(OntologyConstants.Xsd.Uri),
-    predicates = Seq(
-      makeRdfsLabelEn("Link value has target IRI"),
-      makeRdfsCommentEn("Represents the IRI of the target resource of a link value."),
-    ).map(_.build()),
-  )
+  private val LinkValueHasTargetIri = makeOwlDataTypeProperty(KA.LinkValueHasTargetIri, XSD.ANYURI)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.LinkValue)
+    .withRdfLabelEn("Link value has target IRI")
+    .withRdfCommentEn("Represents the IRI of the target resource of a link value.")
 
-  private val IntValueAsInt: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.IntValueAsInt,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.IntBase),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makeRdfsLabelEn("Integer value as integer"),
-      makeRdfsCommentEn("Represents the literal integer value of an IntValue."),
-    ).map(_.build()),
-  )
+  private val IntValueAsInt = makeOwlDataTypeProperty(KA.IntValueAsInt, XSD.INTEGER)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.IntBase)
+    .withRdfLabelEn("Integer value as integer")
+    .withRdfCommentEn("Represents the literal integer value of an IntValue.")
 
-  private val DecimalValueAsDecimal: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.DecimalValueAsDecimal,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.DecimalBase),
-    objectType = Some(OntologyConstants.Xsd.Decimal),
-    predicates = Seq(
-      makeRdfsLabelEn("Decimal value as decimal"),
-      makeRdfsCommentEn("Represents the literal decimal value of a DecimalValue."),
-    ).map(_.build()),
-  )
+  private val DecimalValueAsDecimal = makeOwlDataTypeProperty(KA.DecimalValueAsDecimal, XSD.DECIMAL)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.DecimalBase)
+    .withRdfLabelEn("Decimal value as decimal")
+    .withRdfCommentEn("Represents the literal decimal value of a DecimalValue.")
 
-  private val IntervalValueHasStart: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.IntervalValueHasStart,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.IntervalBase),
-    objectType = Some(OntologyConstants.Xsd.Decimal),
-    predicates = Seq(
-      makeRdfsLabelEn("interval value has start"),
-      makeRdfsCommentEn("Represents the start position of an interval."),
-    ).map(_.build()),
-  )
+  private val IntervalValueHasStart = makeOwlDataTypeProperty(KA.IntervalValueHasStart, XSD.DECIMAL)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.IntervalBase)
+    .withRdfLabelEn("interval value has start")
+    .withRdfCommentEn("Represents the start position of an interval.")
 
-  private val IntervalValueHasEnd: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.IntervalValueHasEnd,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.IntervalBase),
-    objectType = Some(OntologyConstants.Xsd.Decimal),
-    predicates = Seq(
-      makeRdfsLabelEn("interval value has end"),
-      makeRdfsCommentEn("Represents the end position of an interval."),
-    ).map(_.build()),
-  )
+  private val IntervalValueHasEnd = makeOwlDataTypeProperty(KA.IntervalValueHasEnd, XSD.DECIMAL)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.IntervalBase)
+    .withRdfLabelEn("interval value has end")
+    .withRdfCommentEn("Represents the end position of an interval.")
 
-  private val BooleanValueAsBoolean: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.BooleanValueAsBoolean,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.BooleanBase),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-    predicates = Seq(
-      makeRdfsLabelEn("Boolean value as decimal"),
-      makeRdfsCommentEn("Represents the literal boolean value of a BooleanValue."),
-    ).map(_.build()),
-  )
+  private val BooleanValueAsBoolean = makeOwlDataTypeProperty(KA.BooleanValueAsBoolean, XSD.BOOLEAN)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.BooleanBase)
+    .withRdfLabelEn("Boolean value as decimal")
+    .withRdfCommentEn("Represents the literal boolean value of a BooleanValue.")
 
-  private val GeometryValueAsGeometry: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.GeometryValueAsGeometry,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.GeomValue),
-    objectType = Some(OntologyConstants.Xsd.String),
-    predicates = Seq(
-      makeRdfsLabelEn("Geometry value as JSON"),
-      makeRdfsCommentEn("Represents a 2D geometry value as JSON."),
-    ).map(_.build()),
-  )
+  private val GeometryValueAsGeometry = makeOwlDataTypeProperty(KA.GeometryValueAsGeometry, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.GeomValue)
+    .withRdfLabelEn("Geometry value as JSON")
+    .withRdfCommentEn("Represents a 2D geometry value as JSON.")
 
-  private val ListValueAsListNode: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.ListValueAsListNode,
-    propertyType = OntologyConstants.Owl.ObjectProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.ListValue),
-    objectType = Some(KA.ListNode),
-    predicates = Seq(
-      makeRdfsLabelEn("Hierarchical list value as list node"),
-      makeRdfsCommentEn("Represents a reference to a hierarchical list node."),
-    ).map(_.build()),
-  )
+  private val ListValueAsListNode = makeOwlObjectProperty(KA.ListValueAsListNode, KA.ListNode)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.ListValue)
+    .withRdfLabelEn("Hierarchical list value as list node")
+    .withRdfCommentEn("Represents a reference to a hierarchical list node.")
 
-  private val ColorValueAsColor: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.ColorValueAsColor,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.ColorBase),
-    objectType = Some(OntologyConstants.Xsd.String),
-    predicates = Seq(
-      makeRdfsLabelEn("Color value as color"),
-      makeRdfsCommentEn("Represents the literal RGB value of a ColorValue."),
-    ).map(_.build()),
-  )
+  private val ColorValueAsColor = makeOwlDataTypeProperty(KA.ColorValueAsColor, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.ColorBase)
+    .withRdfLabelEn("Color value as color")
+    .withRdfCommentEn("Represents the literal RGB value of a ColorValue.")
 
-  private val UriValueAsUri: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.UriValueAsUri,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.UriBase),
-    objectType = Some(OntologyConstants.Xsd.Uri),
-    predicates = Seq(
-      makeRdfsLabelEn("URI value as URI"),
-      makeRdfsCommentEn("Represents the literal URI value of a UriValue."),
-    ).map(_.build()),
-  )
+  private val UriValueAsUri = makeOwlDataTypeProperty(KA.UriValueAsUri, XSD.ANYURI)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.UriBase)
+    .withRdfLabelEn("URI value as URI")
+    .withRdfCommentEn("Represents the literal URI value of a UriValue.")
 
-  private val GeonameValueAsGeonameCode: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.GeonameValueAsGeonameCode,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.GeonameValue),
-    objectType = Some(OntologyConstants.Xsd.String),
-    predicates = Seq(
-      makeRdfsLabelEn("Geoname value as Geoname code"),
-      makeRdfsCommentEn("Represents the literal Geoname code of a GeonameValue."),
-    ).map(_.build()),
-  )
+  private val GeonameValueAsGeonameCode = makeOwlDataTypeProperty(KA.GeonameValueAsGeonameCode, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.GeonameValue)
+    .withRdfLabelEn("Geoname value as Geoname code")
+    .withRdfCommentEn("Represents the literal Geoname code of a GeonameValue.")
 
-  private val FileValueAsUrl: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.FileValueAsUrl,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.FileValue),
-    objectType = Some(OntologyConstants.Xsd.Uri),
-    predicates = Seq(
-      makeRdfsLabelEn("File value as URL"),
-      makeRdfsCommentEn("The URL at which the file can be accessed."),
-    ).map(_.build()),
-  )
+  private val FileValueAsUrl = makeOwlDataTypeProperty(KA.FileValueAsUrl, XSD.ANYURI)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.FileValue)
+    .withRdfLabelEn("File value as URL")
+    .withRdfCommentEn("The URL at which the file can be accessed.")
 
-  private val FileValueHasFilename: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.FileValueHasFilename,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.FileValue),
-    objectType = Some(OntologyConstants.Xsd.String),
-    predicates = Seq(
-      makeRdfsLabelEn("File value has filename"),
-      makeRdfsCommentEn("The name of the file that a file value represents."),
-    ).map(_.build()),
-  )
+  private val FileValueHasFilename = makeOwlDataTypeProperty(KA.FileValueHasFilename, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.FileValue)
+    .withRdfLabelEn("File value has filename")
+    .withRdfCommentEn("The name of the file that a file value represents.")
 
-  private val StillImageFileValueHasDimX: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.StillImageFileValueHasDimX,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.StillImageFileValue),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makeRdfsLabelEn("Still image file value has X dimension"),
-      makeRdfsCommentEn("The horizontal dimension of a still image file value."),
-    ).map(_.build()),
-  )
+  private val StillImageFileValueHasDimX = makeOwlDataTypeProperty(KA.StillImageFileValueHasDimX, XSD.INTEGER)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.StillImageFileValue)
+    .withRdfLabelEn("Still image file value has X dimension")
+    .withRdfCommentEn("The horizontal dimension of a still image file value.")
 
-  private val StillImageFileValueHasDimY: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.StillImageFileValueHasDimY,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.StillImageFileValue),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makeRdfsLabelEn("Still image file value has Y dimension"),
-      makeRdfsCommentEn("The vertical dimension of a still image file value."),
-    ).map(_.build()),
-  )
+  private val StillImageFileValueHasDimY = makeOwlDataTypeProperty(KA.StillImageFileValueHasDimY, XSD.INTEGER)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.StillImageFileValue)
+    .withRdfLabelEn("Still image file value has Y dimension")
+    .withRdfCommentEn("The vertical dimension of a still image file value.")
 
-  private val StillImageFileValueHasIIIFBaseUrl: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.StillImageFileValueHasIIIFBaseUrl,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.StillImageFileValue),
-    objectType = Some(OntologyConstants.Xsd.Uri),
-    predicates = Seq(
-      makeRdfsLabelEn("Still image file value has IIIF base URL"),
-      makeRdfsCommentEn("The IIIF base URL of a still image file value."),
-    ).map(_.build()),
-  )
+  private val StillImageFileValueHasIIIFBaseUrl =
+    makeOwlDataTypeProperty(KA.StillImageFileValueHasIIIFBaseUrl, XSD.ANYURI)
+      .withSubPropertyOf(KA.ValueHas)
+      .withSubjectType(KA.StillImageFileValue)
+      .withRdfLabelEn("Still image file value has IIIF base URL")
+      .withRdfCommentEn("The IIIF base URL of a still image file value.")
 
-  private val StillImageFileValueHasExternalUrl: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = KA.StillImageFileValueHasExternalUrl,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(KA.ValueHas),
-    subjectType = Some(KA.StillImageExternalFileValue),
-    objectType = Some(OntologyConstants.Xsd.Uri),
-    predicates = Seq(
-      makeRdfsLabelEn("External Url to the image"),
-      makeRdfsCommentEn("External Url to the image"),
-    ).map(_.build()),
-  )
+  private val StillImageFileValueHasExternalUrl =
+    makeOwlDataTypeProperty(KA.StillImageFileValueHasExternalUrl, XSD.ANYURI)
+      .withSubPropertyOf(KA.ValueHas)
+      .withSubjectType(KA.StillImageExternalFileValue)
+      .withRdfLabelEn("External Url to the image")
+      .withRdfCommentEn("External Url to the image")
 
   private val ResourceCardinalities = Map(
     KA.HasIncomingLinkValue -> Unbounded,
@@ -879,9 +511,9 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
    * See also [[OntologyConstants.CorrespondingIris]].
    */
   override val internalPropertiesToRemove: Set[SmartIri] = Set(
-    OntologyConstants.Rdf.Subject,
-    OntologyConstants.Rdf.Predicate,
-    OntologyConstants.Rdf.Object,
+    RDF.SUBJECT.toString,
+    RDF.PREDICATE.toString,
+    RDF.OBJECT.toString,
     OntologyConstants.KnoraBase.OntologyVersion,
     OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted,
     OntologyConstants.KnoraBase.ObjectDatatypeConstraint,
@@ -1061,9 +693,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     StillImageFileValueHasDimY,
     StillImageFileValueHasIIIFBaseUrl,
     StillImageFileValueHasExternalUrl,
-  ).map { propertyInfo =>
-    propertyInfo.entityInfoContent.propertyIri -> propertyInfo
-  }.toMap
+  ).map(_.build()).map(info => info.entityInfoContent.propertyIri -> info).toMap
 
   final case class PredicateInfoV2Builder private (
     predicateIri: SmartIri,
@@ -1123,13 +753,26 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     def withRdfType(propertyType: SmartIri): ReadPropertyInfoV2Builder =
       withPredicate(PredicateInfoV2Builder.makeRdfType(propertyType).build())
 
+    def withSubjectType(subjectType: Rdf4jIRI): ReadPropertyInfoV2Builder =
+      withSubjectType(sf.toSmartIri(subjectType.toString))
+    def withSubjectType(subjectType: String): ReadPropertyInfoV2Builder =
+      withSubjectType(sf.toSmartIri(subjectType))
     def withSubjectType(subjectType: SmartIri): ReadPropertyInfoV2Builder =
       withPredicate(PredicateInfoV2Builder.make(KA.SubjectType).withObject(SmartIriLiteralV2(subjectType)).build())
 
-    def withObjectType(valueType: Rdf4jIRI)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
-      withObjectType(sf.toSmartIri(valueType.toString))
-    def withObjectType(valueType: SmartIri): ReadPropertyInfoV2Builder =
+    def withObjectType(valueType: String): ReadPropertyInfoV2Builder =
+      withObjectType(sf.toSmartIri(valueType))
+    def withObjectType(valueType: Rdf4jIRI): ReadPropertyInfoV2Builder = withObjectType(
+      sf.toSmartIri(valueType.toString),
+    )
+    private def withObjectType(valueType: SmartIri): ReadPropertyInfoV2Builder =
       withPredicate(PredicateInfoV2Builder.make(KA.ObjectType).withObject(SmartIriLiteralV2(valueType)).build())
+
+    def withSubPropertyOf(propertyIri: String): ReadPropertyInfoV2Builder =
+      self.copy(subPropertyOf = self.subPropertyOf + sf.toSmartIri(propertyIri))
+
+    def withIsResourceProp(): ReadPropertyInfoV2Builder  = self.copy(isResourceProp = true)
+    def withIsLinkValueProp(): ReadPropertyInfoV2Builder = self.copy(isLinkValueProp = true)
 
     def withRdfLabelEn(label: String): ReadPropertyInfoV2Builder =
       withPredicate(PredicateInfoV2Builder.makeRdfsLabelEn(label).build())
@@ -1151,77 +794,37 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
   }
   object ReadPropertyInfoV2Builder {
-    def makeOwlDataTypeProperty(iri: String)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
-      make(sf.toSmartIri(iri), OWL.DATATYPEPROPERTY)
-    def makeOwlDataTypeProperty(iri: Rdf4jIRI)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
-      make(iri, OWL.DATATYPEPROPERTY)
-    def makeOwlDataTypeProperty(iri: SmartIri): ReadPropertyInfoV2Builder = make(iri, OWL.DATATYPEPROPERTY)
+    def makeOwlDataTypeProperty(iri: String, objectType: String): ReadPropertyInfoV2Builder =
+      makeOwlDataTypeProperty(sf.toSmartIri(iri), sf.toSmartIri(objectType))
+    def makeOwlDataTypeProperty(iri: String, objectType: Rdf4jIRI): ReadPropertyInfoV2Builder =
+      makeOwlDataTypeProperty(sf.toSmartIri(iri), sf.toSmartIri(objectType.toString))
+    def makeOwlDataTypeProperty(iri: Rdf4jIRI, objectType: Rdf4jIRI): ReadPropertyInfoV2Builder =
+      makeOwlDataTypeProperty(sf.toSmartIri(iri.toString), sf.toSmartIri(objectType.toString))
+    def makeOwlDataTypeProperty(iri: SmartIri, objectType: SmartIri): ReadPropertyInfoV2Builder =
+      make(iri, OWL.DATATYPEPROPERTY).withObjectType(objectType)
+
+    def makeOwlAnnotationProperty(iri: String, objectType: String): ReadPropertyInfoV2Builder =
+      make(iri, OWL.ANNOTATIONPROPERTY).withObjectType(objectType)
+    def makeOwlAnnotationProperty(iri: String, objectType: Rdf4jIRI): ReadPropertyInfoV2Builder =
+      make(iri, OWL.ANNOTATIONPROPERTY).withObjectType(objectType)
+    def makeOwlAnnotationProperty(iri: SmartIri, objectType: SmartIri): ReadPropertyInfoV2Builder =
+      make(iri, OWL.ANNOTATIONPROPERTY).withObjectType(objectType)
+
+    def makeOwlObjectProperty(iri: String): ReadPropertyInfoV2Builder = make(iri, OWL.OBJECTPROPERTY)
+    def makeOwlObjectProperty(iri: String, objectType: Rdf4jIRI): ReadPropertyInfoV2Builder =
+      make(iri, OWL.OBJECTPROPERTY).withObjectType(objectType)
+    def makeOwlObjectProperty(iri: String, objectType: String): ReadPropertyInfoV2Builder =
+      make(iri, OWL.OBJECTPROPERTY).withObjectType(objectType)
 
     def make(iri: SmartIri, rdfType: SmartIri): ReadPropertyInfoV2Builder =
       ReadPropertyInfoV2Builder(iri).withRdfType(rdfType)
 
-    def make(iri: SmartIri, rdfType: Rdf4jIRI)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+    def make(iri: SmartIri, rdfType: Rdf4jIRI): ReadPropertyInfoV2Builder =
       make(iri, sf.toSmartIri(rdfType.toString))
 
-    def make(iri: Rdf4jIRI, rdfType: Rdf4jIRI)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+    def make(iri: String, rdfType: Rdf4jIRI): ReadPropertyInfoV2Builder =
+      make(sf.toSmartIri(iri), sf.toSmartIri(rdfType.toString))
+    def make(iri: Rdf4jIRI, rdfType: Rdf4jIRI): ReadPropertyInfoV2Builder =
       make(sf.toSmartIri(iri.toString), sf.toSmartIri(rdfType.toString))
-  }
-
-  /**
-   * Makes a [[ReadPropertyInfoV2]].
-   *
-   * @param propertyIri     the IRI of the property.
-   * @param propertyType    the type of the property (owl:ObjectProperty, owl:DatatypeProperty, or rdf:Property).
-   * @param isResourceProp  true if this is a subproperty of `knora-api:hasValue` or `knora-api:hasLinkTo`.
-   * @param subPropertyOf   the set of direct superproperties of this property.
-   * @param isEditable      true if this is a Knora resource property that can be edited via the Knora API.
-   * @param isLinkValueProp true if the property points to a link value (reification).
-   * @param predicates      the property's predicates.
-   * @param subjectType     the required type of the property's subject.
-   * @param objectType      the required type of the property's object.
-   * @return a [[ReadPropertyInfoV2]].
-   */
-  private def makeProperty(
-    propertyIri: IRI,
-    propertyType: IRI,
-    isResourceProp: Boolean = false,
-    subPropertyOf: Set[IRI] = Set.empty[IRI],
-    isEditable: Boolean = false,
-    isLinkProp: Boolean = false,
-    isLinkValueProp: Boolean = false,
-    predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
-    subjectType: Option[IRI] = None,
-    objectType: Option[IRI] = None,
-  ): ReadPropertyInfoV2 = {
-    val propTypePred = PredicateInfoV2Builder.makeRdfType(propertyType.toSmartIri).build()
-
-    val maybeSubjectTypePred = subjectType.map { subjType =>
-      PredicateInfoV2Builder
-        .make(KA.SubjectType)
-        .withObject(SmartIriLiteralV2(subjType.toSmartIri))
-    }.map(_.build())
-
-    val maybeObjectTypePred = objectType.map { objType =>
-      PredicateInfoV2Builder
-        .make(KA.ObjectType)
-        .withObject(SmartIriLiteralV2(objType.toSmartIri))
-    }.map(_.build())
-
-    val predsWithTypes = predicates ++ maybeSubjectTypePred ++ maybeObjectTypePred :+ propTypePred
-
-    ReadPropertyInfoV2(
-      entityInfoContent = PropertyInfoContentV2(
-        propertyIri = propertyIri.toSmartIri,
-        ontologySchema = ApiV2Complex,
-        predicates = predsWithTypes.map { pred =>
-          pred.predicateIri -> pred
-        }.toMap,
-        subPropertyOf = subPropertyOf.map(iri => iri.toSmartIri),
-      ),
-      isResourceProp = isResourceProp,
-      isEditable = isEditable,
-      isLinkProp = isLinkProp,
-      isLinkValueProp = isLinkValueProp,
-    )
   }
 }
