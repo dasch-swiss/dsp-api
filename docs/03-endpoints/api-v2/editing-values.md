@@ -244,7 +244,7 @@ the following types of files:
 - Images: JPEG, JPEG2000, TIFF, or PNG which are stored internally as JPEG2000
 - Documents: PDF
 - Audio: MPEG or Waveform audio file format (.wav, .x-wav, .vnd.wave)
-- Text files: CSV, ODD, RNG, TXT, XLS, XLSX, XML, XSD, XSL
+- Text files: CSV, ODD, RNG, TXT, XLS, XLSX, XML, XSD, XSL, JSON
 - Video files: MP4
 - Archive files: ZIP, TAR, GZIP
 
