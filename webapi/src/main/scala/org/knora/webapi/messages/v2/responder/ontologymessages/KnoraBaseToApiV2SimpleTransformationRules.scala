@@ -580,9 +580,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
     SubjectType,
     ObjectType,
     HasIncomingLink,
-  ).map { propertyInfo =>
-    propertyInfo.entityInfoContent.propertyIri -> propertyInfo
-  }.toMap
+  ).map(propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo).toMap
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Convenience functions for building ontology entities, to make the code above more concise.

@@ -5,7 +5,6 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
-import org.eclipse.rdf4j.model.IRI as Rdf4jIRI
 import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
@@ -18,13 +17,10 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules.ReadPropertyInfoV2Builder.makeOwlAnnotationProperty
-import org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules.ReadPropertyInfoV2Builder.makeOwlDataTypeProperty
-import org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules.ReadPropertyInfoV2Builder.makeOwlObjectProperty
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.makeOwlAnnotationProperty
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.makeOwlDataTypeProperty
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.makeOwlObjectProperty
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 
@@ -694,137 +690,4 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     StillImageFileValueHasIIIFBaseUrl,
     StillImageFileValueHasExternalUrl,
   ).map(_.build()).map(info => info.entityInfoContent.propertyIri -> info).toMap
-
-  final case class PredicateInfoV2Builder private (
-    predicateIri: SmartIri,
-    objects: Seq[OntologyLiteralV2] = Seq.empty,
-  ) {
-    self =>
-    def withObject(obj: OntologyLiteralV2): PredicateInfoV2Builder =
-      copy(objects = self.objects :+ obj)
-    def withObjects(objs: Seq[OntologyLiteralV2]): PredicateInfoV2Builder =
-      copy(objects = self.objects ++ objs)
-    def withStringLiteral(lang: LanguageCode, value: String): PredicateInfoV2Builder =
-      withObject(StringLiteralV2.from(value, Some(lang.code)))
-    def withStringLiteral(value: String): PredicateInfoV2Builder =
-      withObject(StringLiteralV2.from(value, None))
-    def withStringLiterals(literals: Map[LanguageCode, String]): PredicateInfoV2Builder =
-      withObjects(literals.map { case (lang, value) => StringLiteralV2.from(value, lang) }.toSeq)
-    def build(): PredicateInfoV2 = PredicateInfoV2(self.predicateIri, self.objects)
-  }
-  object PredicateInfoV2Builder {
-    def make(predicateIri: IRI): PredicateInfoV2Builder =
-      PredicateInfoV2Builder(predicateIri.toSmartIri)
-    def make(predicateIri: Rdf4jIRI): PredicateInfoV2Builder =
-      make(predicateIri.toString)
-
-    def makeRdfType(typeIri: SmartIri): PredicateInfoV2Builder = makeRdfType().withObject(SmartIriLiteralV2(typeIri))
-    private def makeRdfType(): PredicateInfoV2Builder          = make(RDF.TYPE)
-
-    def makeRdfsLabel(literals: Map[LanguageCode, String]): PredicateInfoV2Builder =
-      makeRdfsLabel().withStringLiterals(literals)
-    def makeRdfsLabelEn(value: String): PredicateInfoV2Builder = makeRdfsLabel(EN, value)
-    private def makeRdfsLabel(lang: LanguageCode, value: String): PredicateInfoV2Builder =
-      makeRdfsLabel().withStringLiteral(lang, value)
-    private def makeRdfsLabel(): PredicateInfoV2Builder = make(RDFS.LABEL)
-
-    def makeRdfsCommentEn(value: String): PredicateInfoV2Builder = makeRdfsComment(EN, value)
-    private def makeRdfsComment(lang: LanguageCode, value: String): PredicateInfoV2Builder =
-      makeRdfsComment().withStringLiteral(lang, value)
-    private def makeRdfsComment(): PredicateInfoV2Builder = make(RDFS.COMMENT)
-  }
-
-  final case class ReadPropertyInfoV2Builder private (
-    // PropertyInfoContentV2 fields
-    propertyIri: SmartIri,
-    predicates: Map[SmartIri, PredicateInfoV2] = Map.empty,
-    subPropertyOf: Set[SmartIri] = Set.empty,
-    ontologySchema: OntologySchema = ApiV2Complex,
-    // ReadPropertyInfoV2 other fields
-    isResourceProp: Boolean = false,
-    isEditable: Boolean = false,
-    isLinkProp: Boolean = false,
-    isLinkValueProp: Boolean = false,
-    isFileValueProp: Boolean = false,
-    isStandoffInternalReferenceProperty: Boolean = false,
-  ) { self =>
-    def withPredicate(v: PredicateInfoV2) = copy(predicates = self.predicates + (v.predicateIri -> v))
-
-    def withRdfType(propertyType: SmartIri): ReadPropertyInfoV2Builder =
-      withPredicate(PredicateInfoV2Builder.makeRdfType(propertyType).build())
-
-    def withSubjectType(subjectType: Rdf4jIRI): ReadPropertyInfoV2Builder =
-      withSubjectType(sf.toSmartIri(subjectType.toString))
-    def withSubjectType(subjectType: String): ReadPropertyInfoV2Builder =
-      withSubjectType(sf.toSmartIri(subjectType))
-    def withSubjectType(subjectType: SmartIri): ReadPropertyInfoV2Builder =
-      withPredicate(PredicateInfoV2Builder.make(KA.SubjectType).withObject(SmartIriLiteralV2(subjectType)).build())
-
-    def withObjectType(valueType: String): ReadPropertyInfoV2Builder =
-      withObjectType(sf.toSmartIri(valueType))
-    def withObjectType(valueType: Rdf4jIRI): ReadPropertyInfoV2Builder = withObjectType(
-      sf.toSmartIri(valueType.toString),
-    )
-    private def withObjectType(valueType: SmartIri): ReadPropertyInfoV2Builder =
-      withPredicate(PredicateInfoV2Builder.make(KA.ObjectType).withObject(SmartIriLiteralV2(valueType)).build())
-
-    def withSubPropertyOf(propertyIri: String): ReadPropertyInfoV2Builder =
-      self.copy(subPropertyOf = self.subPropertyOf + sf.toSmartIri(propertyIri))
-
-    def withIsResourceProp(): ReadPropertyInfoV2Builder  = self.copy(isResourceProp = true)
-    def withIsLinkValueProp(): ReadPropertyInfoV2Builder = self.copy(isLinkValueProp = true)
-
-    def withRdfLabelEn(label: String): ReadPropertyInfoV2Builder =
-      withPredicate(PredicateInfoV2Builder.makeRdfsLabelEn(label).build())
-    def withRdfLabel(label: Map[LanguageCode, String]): ReadPropertyInfoV2Builder =
-      withPredicate(PredicateInfoV2Builder.makeRdfsLabel(label).build())
-
-    def withRdfCommentEn(comment: String): ReadPropertyInfoV2Builder =
-      withPredicate(PredicateInfoV2Builder.makeRdfsCommentEn(comment).build())
-
-    def build(): ReadPropertyInfoV2 = ReadPropertyInfoV2(
-      PropertyInfoContentV2(propertyIri, predicates, subPropertyOf, ontologySchema),
-      isResourceProp,
-      isEditable,
-      isLinkProp,
-      isLinkValueProp,
-      isFileValueProp,
-      isStandoffInternalReferenceProperty,
-    )
-
-  }
-  object ReadPropertyInfoV2Builder {
-    def makeOwlDataTypeProperty(iri: String, objectType: String): ReadPropertyInfoV2Builder =
-      makeOwlDataTypeProperty(sf.toSmartIri(iri), sf.toSmartIri(objectType))
-    def makeOwlDataTypeProperty(iri: String, objectType: Rdf4jIRI): ReadPropertyInfoV2Builder =
-      makeOwlDataTypeProperty(sf.toSmartIri(iri), sf.toSmartIri(objectType.toString))
-    def makeOwlDataTypeProperty(iri: Rdf4jIRI, objectType: Rdf4jIRI): ReadPropertyInfoV2Builder =
-      makeOwlDataTypeProperty(sf.toSmartIri(iri.toString), sf.toSmartIri(objectType.toString))
-    def makeOwlDataTypeProperty(iri: SmartIri, objectType: SmartIri): ReadPropertyInfoV2Builder =
-      make(iri, OWL.DATATYPEPROPERTY).withObjectType(objectType)
-
-    def makeOwlAnnotationProperty(iri: String, objectType: String): ReadPropertyInfoV2Builder =
-      make(iri, OWL.ANNOTATIONPROPERTY).withObjectType(objectType)
-    def makeOwlAnnotationProperty(iri: String, objectType: Rdf4jIRI): ReadPropertyInfoV2Builder =
-      make(iri, OWL.ANNOTATIONPROPERTY).withObjectType(objectType)
-    def makeOwlAnnotationProperty(iri: SmartIri, objectType: SmartIri): ReadPropertyInfoV2Builder =
-      make(iri, OWL.ANNOTATIONPROPERTY).withObjectType(objectType)
-
-    def makeOwlObjectProperty(iri: String): ReadPropertyInfoV2Builder = make(iri, OWL.OBJECTPROPERTY)
-    def makeOwlObjectProperty(iri: String, objectType: Rdf4jIRI): ReadPropertyInfoV2Builder =
-      make(iri, OWL.OBJECTPROPERTY).withObjectType(objectType)
-    def makeOwlObjectProperty(iri: String, objectType: String): ReadPropertyInfoV2Builder =
-      make(iri, OWL.OBJECTPROPERTY).withObjectType(objectType)
-
-    def make(iri: SmartIri, rdfType: SmartIri): ReadPropertyInfoV2Builder =
-      ReadPropertyInfoV2Builder(iri).withRdfType(rdfType)
-
-    def make(iri: SmartIri, rdfType: Rdf4jIRI): ReadPropertyInfoV2Builder =
-      make(iri, sf.toSmartIri(rdfType.toString))
-
-    def make(iri: String, rdfType: Rdf4jIRI): ReadPropertyInfoV2Builder =
-      make(sf.toSmartIri(iri), sf.toSmartIri(rdfType.toString))
-    def make(iri: Rdf4jIRI, rdfType: Rdf4jIRI): ReadPropertyInfoV2Builder =
-      make(sf.toSmartIri(iri.toString), sf.toSmartIri(rdfType.toString))
-  }
 }
