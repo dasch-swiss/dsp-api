@@ -14,7 +14,7 @@ The following table shows the accepted file formats:
 
 | Category              | Accepted format                        | Converted during ingest?                                                   |
 | --------------------- | -------------------------------------- | -------------------------------------------------------------------------- |
-| Text, XML *)          | ODD, RNG, TXT, XML, XSD, XSL, JSON     | No                                                                         |
+| Text, XML *)          | JSON, ODD, RNG, TXT, XML, XSD, XSL     | No                                                                         |
 | Tables                | CSV, XLS, XLSX                         | No                                                                         |
 | 2D Images             | JPG, JPEG, JP2, PNG, TIF, TIFF         | Yes, converted to JPEG 2000 by [Sipi](https://github.com/dasch-swiss/sipi) |
 | Audio                 | MPEG (MP3), WAV                        | No                                                                         |
