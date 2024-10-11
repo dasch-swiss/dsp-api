@@ -67,7 +67,7 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
           reportResource <- shaclValidator(_.validate(validData, shapes, ValidationOptions.default))
         } yield assertTrue(reportResource.hasProperty(SH.conforms, JenaDatatypes.TRUE))
       },
-      test("should do basic rdfs infercenes") {
+      test("should do basic rdfs inferencing") {
         val data = """
                      |@prefix ex: <http://example.org/ns#> .
                      |@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
