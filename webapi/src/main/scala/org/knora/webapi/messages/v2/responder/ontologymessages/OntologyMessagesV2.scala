@@ -14,6 +14,7 @@ import org.eclipse.rdf4j.model.IRI as Rdf4jIRI
 import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
+import org.eclipse.rdf4j.model.vocabulary.XSD
 import zio.*
 import zio.prelude.Validation
 
@@ -2653,6 +2654,77 @@ case class ReadClassInfoV2(
     ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ isKnoraResourceClassStatement ++
       isStandoffClassStatement ++ canBeInstantiatedStatement ++ isValueClassStatement ++ jsonRestriction
   }
+}
+
+final case class ReadClassInfoV2Builder(
+  classIri: SmartIri,
+  datatypeInfo: Option[DatatypeInfoV2] = None,
+  predicates: List[PredicateInfoV2] = List.empty,
+  ontologySchema: ApiV2Schema = ApiV2Complex,
+  allBaseClasses: List[SmartIri] = List.empty,
+) { self =>
+  def withApiV2SimpleSchema: ReadClassInfoV2Builder =
+    copy(ontologySchema = ApiV2Simple)
+
+  def withRdfType(classIri: Rdf4jIRI)(implicit sf: StringFormatter): ReadClassInfoV2Builder = {
+    val rdfType =
+      PredicateInfoV2Builder.make(RDF.TYPE).withObject(SmartIriLiteralV2(sf.toSmartIri(classIri.toString))).build()
+    copy(predicates = rdfType :: self.predicates)
+  }
+
+  def withBaseClass(classIri: String)(implicit sf: StringFormatter): ReadClassInfoV2Builder =
+    copy(allBaseClasses = sf.toSmartIri(classIri) :: self.allBaseClasses)
+
+  def withRdfsLabelEn(label: String)(implicit sf: StringFormatter): ReadClassInfoV2Builder =
+    self.withPredicate(PredicateInfoV2Builder.makeRdfsLabelEn(label))
+
+  def withRdfsCommentEn(comment: String)(implicit sf: StringFormatter): ReadClassInfoV2Builder =
+    self.withPredicate(PredicateInfoV2Builder.makeRdfsCommentEn(comment))
+
+  def withPredicate(builder: PredicateInfoV2Builder): ReadClassInfoV2Builder =
+    copy(predicates = builder.build() :: self.predicates)
+
+  def build(): ReadClassInfoV2 = {
+    val predicatesMap = predicates.map(p => p.predicateIri -> p).toMap
+    val classInfo = ClassInfoContentV2(
+      classIri = classIri,
+      datatypeInfo = datatypeInfo,
+      predicates = predicatesMap,
+      ontologySchema = ontologySchema,
+    )
+
+    ReadClassInfoV2(classInfo, self.allBaseClasses)
+  }
+}
+object ReadClassInfoV2Builder {
+  def makeStringDatatypeClassWithPattern(classIri: String, pattern: String)(implicit
+    sf: StringFormatter,
+  ): ReadClassInfoV2Builder =
+    ReadClassInfoV2Builder(
+      sf.toSmartIri(classIri),
+      Some(DatatypeInfoV2(sf.toSmartIri(XSD.STRING.toString), Some(pattern))),
+    ).withRdfType(RDFS.DATATYPE).withBaseClass(classIri)
+
+  def makeStringDatatypeClass(classIri: String)(implicit
+    sf: StringFormatter,
+  ): ReadClassInfoV2Builder =
+    ReadClassInfoV2Builder(
+      sf.toSmartIri(classIri),
+      Some(DatatypeInfoV2(sf.toSmartIri(XSD.STRING.toString), None)),
+    ).withRdfType(RDFS.DATATYPE).withBaseClass(classIri)
+
+  def makeUriDatatypeClass(classIri: String)(implicit
+    sf: StringFormatter,
+  ): ReadClassInfoV2Builder =
+    ReadClassInfoV2Builder(
+      sf.toSmartIri(classIri),
+      Some(DatatypeInfoV2(sf.toSmartIri(XSD.ANYURI.toString), None)),
+    ).withRdfType(RDFS.DATATYPE).withBaseClass(classIri)
+
+  def makeDatatypeClass(classIri: String, datatype: Rdf4jIRI)(implicit sf: StringFormatter): ReadClassInfoV2Builder =
+    ReadClassInfoV2Builder(sf.toSmartIri(classIri), Some(DatatypeInfoV2(sf.toSmartIri(datatype.toString), None)))
+      .withRdfType(RDFS.DATATYPE)
+      .withBaseClass(classIri)
 }
 
 /**
