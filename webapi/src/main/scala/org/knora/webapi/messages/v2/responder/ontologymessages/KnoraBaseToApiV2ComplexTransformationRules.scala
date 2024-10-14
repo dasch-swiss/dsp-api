@@ -9,6 +9,7 @@ import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
+
 import org.knora.webapi.*
 import org.knora.webapi.LanguageCode.*
 import org.knora.webapi.messages.IriConversions.*
