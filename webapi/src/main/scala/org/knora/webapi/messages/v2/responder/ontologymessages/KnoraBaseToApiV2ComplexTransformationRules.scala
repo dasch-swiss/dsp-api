@@ -19,7 +19,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.makeOwlAnnotationProperty
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.makeOwlDataTypeProperty
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.makeOwlDatatypeProperty
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.makeOwlObjectProperty
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.makeRdfProperty
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
@@ -40,7 +40,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
   private val Label = ReadPropertyInfoV2Builder.make(RDFS.LABEL, OWL.DATATYPEPROPERTY)
 
-  private val Result = makeOwlDataTypeProperty(KA.Result, XSD.STRING)
+  private val Result = makeOwlDatatypeProperty(KA.Result, XSD.STRING)
     .withRdfLabel(
       Map(
         DE -> "Ergebnis",
@@ -51,31 +51,31 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     )
     .withRdfCommentEn("Provides a message indicating that an operation was successful")
 
-  private val Error = makeOwlDataTypeProperty(KA.Error, XSD.STRING)
+  private val Error = makeOwlDatatypeProperty(KA.Error, XSD.STRING)
     .withRdfLabelEn("error")
     .withRdfCommentEn("Provides an error message")
 
-  private val CanDo = makeOwlDataTypeProperty(KA.CanDo, XSD.BOOLEAN)
+  private val CanDo = makeOwlDatatypeProperty(KA.CanDo, XSD.BOOLEAN)
     .withRdfLabelEn("can do")
     .withRdfCommentEn("Indicates whether an operation can be performed")
 
-  private val MayHaveMoreResults = makeOwlDataTypeProperty(KA.MayHaveMoreResults, XSD.BOOLEAN)
+  private val MayHaveMoreResults = makeOwlDatatypeProperty(KA.MayHaveMoreResults, XSD.BOOLEAN)
     .withRdfLabelEn("May have more results")
     .withRdfCommentEn("Indicates whether more results may be available for a search query")
 
-  private val UserHasPermission = makeOwlDataTypeProperty(KA.UserHasPermission, XSD.STRING)
+  private val UserHasPermission = makeOwlDatatypeProperty(KA.UserHasPermission, XSD.STRING)
     .withRdfLabelEn("user has permission")
     .withRdfCommentEn("Provides the requesting user's maximum permission on a resource or value.")
 
-  private val ArkUrl = makeOwlDataTypeProperty(KA.ArkUrl, XSD.ANYURI)
+  private val ArkUrl = makeOwlDatatypeProperty(KA.ArkUrl, XSD.ANYURI)
     .withRdfLabelEn("ARK URL")
     .withRdfCommentEn("Provides the ARK URL of a resource or value.")
 
-  private val VersionArkUrl = makeOwlDataTypeProperty(KA.VersionArkUrl, XSD.ANYURI)
+  private val VersionArkUrl = makeOwlDatatypeProperty(KA.VersionArkUrl, XSD.ANYURI)
     .withRdfLabelEn("version ARK URL")
     .withRdfCommentEn("Provides the ARK URL of a particular version of a resource or value.")
 
-  private val VersionDate = makeOwlDataTypeProperty(KA.VersionDate, XSD.ANYURI)
+  private val VersionDate = makeOwlDatatypeProperty(KA.VersionDate, XSD.ANYURI)
     .withRdfLabelEn("version date")
     .withRdfCommentEn("Provides the date of a particular version of a resource.")
 
@@ -83,11 +83,11 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfLabelEn("author")
     .withRdfCommentEn("Specifies the author of a particular version of a resource.")
 
-  private val IsShared = makeOwlDataTypeProperty(KA.IsShared, XSD.BOOLEAN)
+  private val IsShared = makeOwlDatatypeProperty(KA.IsShared, XSD.BOOLEAN)
     .withRdfLabelEn("is shared")
     .withRdfCommentEn("Indicates whether an ontology can be shared by multiple projects")
 
-  private val IsBuiltIn = makeOwlDataTypeProperty(KA.IsBuiltIn, XSD.BOOLEAN)
+  private val IsBuiltIn = makeOwlDatatypeProperty(KA.IsBuiltIn, XSD.BOOLEAN)
     .withRdfLabelEn("is shared")
     .withRdfCommentEn("Indicates whether an ontology is built into Knora")
 
@@ -126,15 +126,15 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfLabelEn("is inherited")
     .withRdfCommentEn("Indicates whether a cardinality has been inherited from a base class")
 
-  private val NewModificationDate = makeOwlDataTypeProperty(KA.NewModificationDate, XSD.DATETIMESTAMP)
+  private val NewModificationDate = makeOwlDatatypeProperty(KA.NewModificationDate, XSD.DATETIMESTAMP)
     .withRdfLabelEn("new modification date")
     .withRdfCommentEn("Specifies the new modification date of a resource")
 
-  private val OntologyName = makeOwlDataTypeProperty(KA.OntologyName, XSD.STRING)
+  private val OntologyName = makeOwlDatatypeProperty(KA.OntologyName, XSD.STRING)
     .withRdfLabelEn("ontology name")
     .withRdfCommentEn("Represents the short name of an ontology")
 
-  private val MappingHasName = makeOwlDataTypeProperty(KA.MappingHasName, XSD.STRING)
+  private val MappingHasName = makeOwlDatatypeProperty(KA.MappingHasName, XSD.STRING)
     .withRdfLabelEn("Name of a mapping (will be part of the mapping's Iri)")
     .withRdfCommentEn("Represents the name of a mapping")
 
@@ -152,7 +152,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withIsResourceProp()
     .withIsLinkValueProp()
 
-  private val ValueAsString = makeOwlDataTypeProperty(KA.ValueAsString, XSD.STRING)
+  private val ValueAsString = makeOwlDatatypeProperty(KA.ValueAsString, XSD.STRING)
     .withSubjectType(KA.Value)
     .withRdfCommentEn("A plain string representation of a value")
 
@@ -164,7 +164,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfLabelEn("Object type")
     .withRdfCommentEn("Specifies the required type of the objects of a property")
 
-  private val TextValueHasMarkup = makeOwlDataTypeProperty(KA.TextValueHasMarkup, XSD.BOOLEAN)
+  private val TextValueHasMarkup = makeOwlDatatypeProperty(KA.TextValueHasMarkup, XSD.BOOLEAN)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.TextValue)
     .withRdfLabelEn("text value has markup")
@@ -177,39 +177,39 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfCommentEn("Standoff markup attached to a text value.")
 
   private val TextValueHasMaxStandoffStartIndex =
-    makeOwlDataTypeProperty(KA.TextValueHasMaxStandoffStartIndex, XSD.INTEGER)
+    makeOwlDatatypeProperty(KA.TextValueHasMaxStandoffStartIndex, XSD.INTEGER)
       .withSubPropertyOf(KA.ValueHas)
       .withSubjectType(KA.TextValue)
       .withRdfLabelEn("text value has max standoff start index")
       .withRdfCommentEn("The maximum knora-api:standoffTagHasStartIndex in a text value.")
 
-  private val NextStandoffStartIndex = makeOwlDataTypeProperty(KA.NextStandoffStartIndex, XSD.INTEGER)
+  private val NextStandoffStartIndex = makeOwlDatatypeProperty(KA.NextStandoffStartIndex, XSD.INTEGER)
     .withRdfLabelEn("next standoff start index")
     .withRdfCommentEn("The next available knora-api:standoffTagHasStartIndex in a sequence of pages of standoff.")
 
-  private val StandoffTagHasStartParentIndex = makeOwlDataTypeProperty(KA.StandoffTagHasStartParentIndex, XSD.INTEGER)
+  private val StandoffTagHasStartParentIndex = makeOwlDatatypeProperty(KA.StandoffTagHasStartParentIndex, XSD.INTEGER)
     .withSubjectType(KA.StandoffTag)
     .withRdfLabelEn("standoff tag has start parent index")
     .withRdfCommentEn("The next knora-api:standoffTagHasStartIndex of the start parent tag of a standoff tag.")
 
-  private val StandoffTagHasEndParentIndex = makeOwlDataTypeProperty(KA.StandoffTagHasEndParentIndex, XSD.INTEGER)
+  private val StandoffTagHasEndParentIndex = makeOwlDatatypeProperty(KA.StandoffTagHasEndParentIndex, XSD.INTEGER)
     .withSubjectType(KA.StandoffTag)
     .withRdfLabelEn("standoff tag has end parent index")
     .withRdfCommentEn("The next knora-api:standoffTagHasStartIndex of the end parent tag of a standoff tag.")
 
-  private val TextValueHasLanguage = makeOwlDataTypeProperty(KA.TextValueHasLanguage, XSD.STRING)
+  private val TextValueHasLanguage = makeOwlDatatypeProperty(KA.TextValueHasLanguage, XSD.STRING)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.TextValue)
     .withRdfLabelEn("text value has language")
     .withRdfCommentEn("Language code attached to a text value.")
 
-  private val TextValueAsXml = makeOwlDataTypeProperty(KA.TextValueAsXml, XSD.STRING)
+  private val TextValueAsXml = makeOwlDatatypeProperty(KA.TextValueAsXml, XSD.STRING)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.TextValue)
     .withRdfLabelEn("Text value as XML")
     .withRdfCommentEn("A Text value represented in XML.")
 
-  private val TextValueAsHtml = makeOwlDataTypeProperty(KA.TextValueAsHtml, XSD.STRING)
+  private val TextValueAsHtml = makeOwlDatatypeProperty(KA.TextValueAsHtml, XSD.STRING)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.TextValue)
     .withRdfLabelEn("Text value as HTML")
@@ -221,55 +221,55 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfLabelEn("Text value has mapping")
     .withRdfCommentEn("Indicates the mapping that is used to convert a text value's markup from from XML to standoff.")
 
-  private val DateValueHasStartYear = makeOwlDataTypeProperty(KA.DateValueHasStartYear, XSD.INTEGER)
+  private val DateValueHasStartYear = makeOwlDatatypeProperty(KA.DateValueHasStartYear, XSD.INTEGER)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.DateBase)
     .withRdfLabelEn("Date value has start year")
     .withRdfCommentEn("Represents the start year of a date value.")
 
-  private val DateValueHasEndYear = makeOwlDataTypeProperty(KA.DateValueHasEndYear, XSD.INTEGER)
+  private val DateValueHasEndYear = makeOwlDatatypeProperty(KA.DateValueHasEndYear, XSD.INTEGER)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.DateBase)
     .withRdfLabelEn("Date value has end year")
     .withRdfCommentEn("Represents the end year of a date value.")
 
-  private val DateValueHasStartMonth = makeOwlDataTypeProperty(KA.DateValueHasStartMonth, XSD.INTEGER)
+  private val DateValueHasStartMonth = makeOwlDatatypeProperty(KA.DateValueHasStartMonth, XSD.INTEGER)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.DateBase)
     .withRdfLabelEn("Date value has start month")
     .withRdfCommentEn("Represents the start month of a date value.")
 
-  private val DateValueHasEndMonth = makeOwlDataTypeProperty(KA.DateValueHasEndMonth, XSD.INTEGER)
+  private val DateValueHasEndMonth = makeOwlDatatypeProperty(KA.DateValueHasEndMonth, XSD.INTEGER)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.DateBase)
     .withRdfLabelEn("Date value has end month")
     .withRdfCommentEn("Represents the end month of a date value.")
 
-  private val DateValueHasStartDay = makeOwlDataTypeProperty(KA.DateValueHasStartDay, XSD.INTEGER)
+  private val DateValueHasStartDay = makeOwlDatatypeProperty(KA.DateValueHasStartDay, XSD.INTEGER)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.DateBase)
     .withRdfLabelEn("Date value has start day")
     .withRdfCommentEn("Represents the start day of a date value.")
 
-  private val DateValueHasEndDay = makeOwlDataTypeProperty(KA.DateValueHasEndDay, XSD.INTEGER)
+  private val DateValueHasEndDay = makeOwlDatatypeProperty(KA.DateValueHasEndDay, XSD.INTEGER)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.DateBase)
     .withRdfLabelEn("Date value has end day")
     .withRdfCommentEn("Represents the end day of a date value.")
 
-  private val DateValueHasStartEra = makeOwlDataTypeProperty(KA.DateValueHasStartEra, XSD.STRING)
+  private val DateValueHasStartEra = makeOwlDatatypeProperty(KA.DateValueHasStartEra, XSD.STRING)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.DateBase)
     .withRdfLabelEn("Date value has start era")
     .withRdfCommentEn("Represents the start era of a date value.")
 
-  private val DateValueHasEndEra = makeOwlDataTypeProperty(KA.DateValueHasEndEra, XSD.STRING)
+  private val DateValueHasEndEra = makeOwlDatatypeProperty(KA.DateValueHasEndEra, XSD.STRING)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.DateBase)
     .withRdfLabelEn("Date value has end era")
     .withRdfCommentEn("Represents the end era of a date value.")
 
-  private val DateValueHasCalendar = makeOwlDataTypeProperty(KA.DateValueHasCalendar, XSD.STRING)
+  private val DateValueHasCalendar = makeOwlDatatypeProperty(KA.DateValueHasCalendar, XSD.STRING)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.DateBase)
     .withRdfLabelEn("Date value has calendar")
@@ -281,7 +281,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfLabelEn("Link value has source")
     .withRdfCommentEn("Represents the source resource of a link value.")
 
-  private val LinkValueHasSourceIri = makeOwlDataTypeProperty(KA.LinkValueHasSourceIri, XSD.ANYURI)
+  private val LinkValueHasSourceIri = makeOwlDatatypeProperty(KA.LinkValueHasSourceIri, XSD.ANYURI)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.LinkValue)
     .withRdfLabelEn("Link value has source IRI")
@@ -293,43 +293,43 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfLabelEn("Link value has target")
     .withRdfCommentEn("Represents the target resource of a link value.")
 
-  private val LinkValueHasTargetIri = makeOwlDataTypeProperty(KA.LinkValueHasTargetIri, XSD.ANYURI)
+  private val LinkValueHasTargetIri = makeOwlDatatypeProperty(KA.LinkValueHasTargetIri, XSD.ANYURI)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.LinkValue)
     .withRdfLabelEn("Link value has target IRI")
     .withRdfCommentEn("Represents the IRI of the target resource of a link value.")
 
-  private val IntValueAsInt = makeOwlDataTypeProperty(KA.IntValueAsInt, XSD.INTEGER)
+  private val IntValueAsInt = makeOwlDatatypeProperty(KA.IntValueAsInt, XSD.INTEGER)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.IntBase)
     .withRdfLabelEn("Integer value as integer")
     .withRdfCommentEn("Represents the literal integer value of an IntValue.")
 
-  private val DecimalValueAsDecimal = makeOwlDataTypeProperty(KA.DecimalValueAsDecimal, XSD.DECIMAL)
+  private val DecimalValueAsDecimal = makeOwlDatatypeProperty(KA.DecimalValueAsDecimal, XSD.DECIMAL)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.DecimalBase)
     .withRdfLabelEn("Decimal value as decimal")
     .withRdfCommentEn("Represents the literal decimal value of a DecimalValue.")
 
-  private val IntervalValueHasStart = makeOwlDataTypeProperty(KA.IntervalValueHasStart, XSD.DECIMAL)
+  private val IntervalValueHasStart = makeOwlDatatypeProperty(KA.IntervalValueHasStart, XSD.DECIMAL)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.IntervalBase)
     .withRdfLabelEn("interval value has start")
     .withRdfCommentEn("Represents the start position of an interval.")
 
-  private val IntervalValueHasEnd = makeOwlDataTypeProperty(KA.IntervalValueHasEnd, XSD.DECIMAL)
+  private val IntervalValueHasEnd = makeOwlDatatypeProperty(KA.IntervalValueHasEnd, XSD.DECIMAL)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.IntervalBase)
     .withRdfLabelEn("interval value has end")
     .withRdfCommentEn("Represents the end position of an interval.")
 
-  private val BooleanValueAsBoolean = makeOwlDataTypeProperty(KA.BooleanValueAsBoolean, XSD.BOOLEAN)
+  private val BooleanValueAsBoolean = makeOwlDatatypeProperty(KA.BooleanValueAsBoolean, XSD.BOOLEAN)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.BooleanBase)
     .withRdfLabelEn("Boolean value as decimal")
     .withRdfCommentEn("Represents the literal boolean value of a BooleanValue.")
 
-  private val GeometryValueAsGeometry = makeOwlDataTypeProperty(KA.GeometryValueAsGeometry, XSD.STRING)
+  private val GeometryValueAsGeometry = makeOwlDatatypeProperty(KA.GeometryValueAsGeometry, XSD.STRING)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.GeomValue)
     .withRdfLabelEn("Geometry value as JSON")
@@ -341,57 +341,57 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfLabelEn("Hierarchical list value as list node")
     .withRdfCommentEn("Represents a reference to a hierarchical list node.")
 
-  private val ColorValueAsColor = makeOwlDataTypeProperty(KA.ColorValueAsColor, XSD.STRING)
+  private val ColorValueAsColor = makeOwlDatatypeProperty(KA.ColorValueAsColor, XSD.STRING)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.ColorBase)
     .withRdfLabelEn("Color value as color")
     .withRdfCommentEn("Represents the literal RGB value of a ColorValue.")
 
-  private val UriValueAsUri = makeOwlDataTypeProperty(KA.UriValueAsUri, XSD.ANYURI)
+  private val UriValueAsUri = makeOwlDatatypeProperty(KA.UriValueAsUri, XSD.ANYURI)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.UriBase)
     .withRdfLabelEn("URI value as URI")
     .withRdfCommentEn("Represents the literal URI value of a UriValue.")
 
-  private val GeonameValueAsGeonameCode = makeOwlDataTypeProperty(KA.GeonameValueAsGeonameCode, XSD.STRING)
+  private val GeonameValueAsGeonameCode = makeOwlDatatypeProperty(KA.GeonameValueAsGeonameCode, XSD.STRING)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.GeonameValue)
     .withRdfLabelEn("Geoname value as Geoname code")
     .withRdfCommentEn("Represents the literal Geoname code of a GeonameValue.")
 
-  private val FileValueAsUrl = makeOwlDataTypeProperty(KA.FileValueAsUrl, XSD.ANYURI)
+  private val FileValueAsUrl = makeOwlDatatypeProperty(KA.FileValueAsUrl, XSD.ANYURI)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.FileValue)
     .withRdfLabelEn("File value as URL")
     .withRdfCommentEn("The URL at which the file can be accessed.")
 
-  private val FileValueHasFilename = makeOwlDataTypeProperty(KA.FileValueHasFilename, XSD.STRING)
+  private val FileValueHasFilename = makeOwlDatatypeProperty(KA.FileValueHasFilename, XSD.STRING)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.FileValue)
     .withRdfLabelEn("File value has filename")
     .withRdfCommentEn("The name of the file that a file value represents.")
 
-  private val StillImageFileValueHasDimX = makeOwlDataTypeProperty(KA.StillImageFileValueHasDimX, XSD.INTEGER)
+  private val StillImageFileValueHasDimX = makeOwlDatatypeProperty(KA.StillImageFileValueHasDimX, XSD.INTEGER)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.StillImageFileValue)
     .withRdfLabelEn("Still image file value has X dimension")
     .withRdfCommentEn("The horizontal dimension of a still image file value.")
 
-  private val StillImageFileValueHasDimY = makeOwlDataTypeProperty(KA.StillImageFileValueHasDimY, XSD.INTEGER)
+  private val StillImageFileValueHasDimY = makeOwlDatatypeProperty(KA.StillImageFileValueHasDimY, XSD.INTEGER)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.StillImageFileValue)
     .withRdfLabelEn("Still image file value has Y dimension")
     .withRdfCommentEn("The vertical dimension of a still image file value.")
 
   private val StillImageFileValueHasIIIFBaseUrl =
-    makeOwlDataTypeProperty(KA.StillImageFileValueHasIIIFBaseUrl, XSD.ANYURI)
+    makeOwlDatatypeProperty(KA.StillImageFileValueHasIIIFBaseUrl, XSD.ANYURI)
       .withSubPropertyOf(KA.ValueHas)
       .withSubjectType(KA.StillImageFileValue)
       .withRdfLabelEn("Still image file value has IIIF base URL")
       .withRdfCommentEn("The IIIF base URL of a still image file value.")
 
   private val StillImageFileValueHasExternalUrl =
-    makeOwlDataTypeProperty(KA.StillImageFileValueHasExternalUrl, XSD.ANYURI)
+    makeOwlDatatypeProperty(KA.StillImageFileValueHasExternalUrl, XSD.ANYURI)
       .withSubPropertyOf(KA.ValueHas)
       .withSubjectType(KA.StillImageExternalFileValue)
       .withRdfLabelEn("External Url to the image")

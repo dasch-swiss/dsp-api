@@ -36,6 +36,7 @@ import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
@@ -1916,10 +1917,12 @@ final case class PredicateInfoV2Builder private (
   def build(): PredicateInfoV2 = PredicateInfoV2(self.predicateIri, self.objects)
 }
 object PredicateInfoV2Builder {
-  def make(predicateIri: String)(implicit sf: StringFormatter): PredicateInfoV2Builder =
-    PredicateInfoV2Builder(sf.toSmartIri(predicateIri))
   def make(predicateIri: Rdf4jIRI)(implicit sf: StringFormatter): PredicateInfoV2Builder =
-    make(predicateIri.toString)
+    make(sf.toSmartIri(predicateIri.toString))
+  def make(predicateIri: String)(implicit sf: StringFormatter): PredicateInfoV2Builder =
+    make(sf.toSmartIri(predicateIri))
+  def make(predicateIri: SmartIri): PredicateInfoV2Builder =
+    PredicateInfoV2Builder(predicateIri)
 
   def makeRdfType(typeIri: SmartIri)(implicit sf: StringFormatter): PredicateInfoV2Builder =
     makeRdfType().withObject(SmartIriLiteralV2(typeIri))
@@ -2797,6 +2800,8 @@ final case class ReadPropertyInfoV2Builder private (
   predicates: Map[SmartIri, PredicateInfoV2] = Map.empty,
   subPropertyOf: Set[SmartIri] = Set.empty,
   ontologySchema: OntologySchema = ApiV2Complex,
+  objectType: Option[SmartIri] = None,
+  subjectType: Option[SmartIri] = None,
   // ReadPropertyInfoV2 other fields
   isResourceProp: Boolean = false,
   isEditable: Boolean = false,
@@ -2816,16 +2821,9 @@ final case class ReadPropertyInfoV2Builder private (
   def withSubjectType(subjectType: String)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
     withSubjectType(sf.toSmartIri(subjectType))
   def withSubjectType(subjectType: SmartIri)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
-    withPredicate(
-      PredicateInfoV2Builder.make(KnoraApiV2Complex.SubjectType).withObject(SmartIriLiteralV2(subjectType)).build(),
-    )
+    self.copy(subjectType = Some(subjectType))
 
-  def withObjectType(valueType: String)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
-    withObjectType(sf.toSmartIri(valueType))
-  private def withObjectType(valueType: SmartIri)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
-    withPredicate(
-      PredicateInfoV2Builder.make(KnoraApiV2Complex.ObjectType).withObject(SmartIriLiteralV2(valueType)).build(),
-    )
+  private def withObjectType(valueType: SmartIri): ReadPropertyInfoV2Builder = self.copy(objectType = Some(valueType))
 
   def withSubPropertyOf(propertyIri: String)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
     self.copy(subPropertyOf = self.subPropertyOf + sf.toSmartIri(propertyIri))
@@ -2841,15 +2839,30 @@ final case class ReadPropertyInfoV2Builder private (
   def withRdfCommentEn(comment: String)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
     withPredicate(PredicateInfoV2Builder.makeRdfsCommentEn(comment).build())
 
-  def build(): ReadPropertyInfoV2 = ReadPropertyInfoV2(
-    PropertyInfoContentV2(propertyIri, predicates, subPropertyOf, ontologySchema),
-    isResourceProp,
-    isEditable,
-    isLinkProp,
-    isLinkValueProp,
-    isFileValueProp,
-    isStandoffInternalReferenceProperty,
-  )
+  def withApiV2SimpleSchema: ReadPropertyInfoV2Builder = self.copy(ontologySchema = ApiV2Simple)
+
+  def build()(implicit sf: StringFormatter): ReadPropertyInfoV2 = {
+    def mk(predIri: SmartIri, iriLit: SmartIri) =
+      PredicateInfoV2Builder.make(predIri).withObject(SmartIriLiteralV2(iriLit)).build()
+    val (objectTypePropIri, subjectTypePropIri) = ontologySchema match {
+      case ApiV2Simple  => (sf.toSmartIri(KnoraApiV2Simple.ObjectType), sf.toSmartIri(KnoraApiV2Simple.SubjectType))
+      case ApiV2Complex => (sf.toSmartIri(KnoraApiV2Complex.ObjectType), sf.toSmartIri(KnoraApiV2Complex.SubjectType))
+      case _            => throw IllegalArgumentException(s"Only V2 is supported, this is unsupported $ontologySchema")
+    }
+    val predicates = self.predicates ++
+      self.objectType.map(objectTypePropIri -> mk(objectTypePropIri, _)) ++
+      self.subjectType.map(subjectTypePropIri -> mk(subjectTypePropIri, _))
+
+    ReadPropertyInfoV2(
+      PropertyInfoContentV2(propertyIri, predicates, subPropertyOf, ontologySchema),
+      isResourceProp,
+      isEditable,
+      isLinkProp,
+      isLinkValueProp,
+      isFileValueProp,
+      isStandoffInternalReferenceProperty,
+    )
+  }
 
 }
 object ReadPropertyInfoV2Builder {
@@ -2865,30 +2878,45 @@ object ReadPropertyInfoV2Builder {
     sf: StringFormatter,
   ): ReadPropertyInfoV2Builder = make(iri, OWL.ANNOTATIONPROPERTY).withObjectType(objectType)
 
-  def makeOwlDataTypeProperty(iri: String, objectType: Rdf4jIRI)(implicit
+  def makeOwlDatatypeProperty(iri: String, objectType: Rdf4jIRI)(implicit
     sf: StringFormatter,
-  ): ReadPropertyInfoV2Builder = makeOwlDataTypeProperty(iri, objectType.toString)
+  ): ReadPropertyInfoV2Builder = makeOwlDatatypeProperty(iri, objectType.toString)
 
-  def makeOwlDataTypeProperty(iri: Rdf4jIRI, objectType: Rdf4jIRI)(implicit
+  def makeOwlDatatypeProperty(iri: Rdf4jIRI, objectType: Rdf4jIRI)(implicit
     sf: StringFormatter,
-  ): ReadPropertyInfoV2Builder = makeOwlDataTypeProperty(iri.toString, objectType.toString)
+  ): ReadPropertyInfoV2Builder = makeOwlDatatypeProperty(iri.toString, objectType.toString)
 
-  def makeOwlDataTypeProperty(iri: String, objectType: String)(implicit
+  def makeOwlDatatypeProperty(iri: String, objectType: String)(implicit
     sf: StringFormatter,
-  ): ReadPropertyInfoV2Builder = makeOwlDataTypeProperty(sf.toSmartIri(iri), sf.toSmartIri(objectType))
+  ): ReadPropertyInfoV2Builder = makeOwlDatatypeProperty(sf.toSmartIri(iri), sf.toSmartIri(objectType))
 
-  def makeOwlDataTypeProperty(iri: SmartIri, objectType: SmartIri)(implicit
+  def makeOwlDatatypeProperty(iri: SmartIri, objectType: SmartIri)(implicit
     sf: StringFormatter,
-  ): ReadPropertyInfoV2Builder = make(iri, OWL.DATATYPEPROPERTY).withObjectType(objectType)
+  ): ReadPropertyInfoV2Builder = makeOwlDatatypeProperty(iri).withObjectType(objectType)
+
+  def makeOwlDatatypeProperty(iri: Rdf4jIRI)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+    makeOwlDatatypeProperty(sf.toSmartIri(iri.toString))
+
+  def makeOwlDatatypeProperty(iri: String)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+    makeOwlDatatypeProperty(sf.toSmartIri(iri))
+
+  def makeOwlDatatypeProperty(iri: SmartIri)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+    make(iri, OWL.DATATYPEPROPERTY)
 
   def makeOwlObjectProperty(iri: String, objectType: Rdf4jIRI)(implicit
     sf: StringFormatter,
   ): ReadPropertyInfoV2Builder = makeOwlObjectProperty(iri, objectType.toString)
 
   def makeOwlObjectProperty(iri: String, objectType: String)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
-    makeOwlObjectProperty(iri).withObjectType(objectType)
+    makeOwlObjectProperty(sf.toSmartIri(iri)).withObjectType(sf.toSmartIri(objectType))
+
+  def makeOwlObjectProperty(iri: Rdf4jIRI)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+    makeOwlObjectProperty(sf.toSmartIri(iri.toString))
 
   def makeOwlObjectProperty(iri: String)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+    makeOwlObjectProperty(sf.toSmartIri(iri))
+
+  def makeOwlObjectProperty(iri: SmartIri)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
     make(iri, OWL.OBJECTPROPERTY)
 
   def makeRdfProperty(iri: String)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =

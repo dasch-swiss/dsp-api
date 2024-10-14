@@ -5,15 +5,21 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
+import org.eclipse.rdf4j.model.vocabulary.RDFS
+import org.eclipse.rdf4j.model.vocabulary.XSD
+
 import org.knora.webapi.*
+import org.knora.webapi.LanguageCode.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 
@@ -31,199 +37,52 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
     label = Some("The knora-api ontology in the simple schema"),
   )
 
-  private val Label: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.Rdfs.Label,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-  )
+  private val Label = makeOwlDatatypeProperty(RDFS.LABEL)
 
-  private val Result: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Simple.Result,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCode.DE -> "Ergebnis",
-          LanguageCode.EN -> "result",
-          LanguageCode.FR -> "résultat",
-          LanguageCode.IT -> "risultato",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "Provides a message indicating that an operation was successful",
-        ),
-      ),
-    ),
-    objectType = Some(OntologyConstants.Xsd.String),
-  )
+  private val Result = makeOwlDatatypeProperty(KnoraApiV2Simple.Result, XSD.STRING)
+    .withRdfLabel(Map(DE -> "Ergebnis", EN -> "result", FR -> "résultat", IT -> "risultato"))
+    .withRdfCommentEn("Provides a message indicating that an operation was successful")
 
-  private val MayHaveMoreResults: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Simple.MayHaveMoreResults,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "May have more results",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "Indicates whether more results may be available for a search query",
-        ),
-      ),
-    ),
-    objectType = Some(OntologyConstants.Xsd.Boolean),
-  )
+  private val MayHaveMoreResults = makeOwlDatatypeProperty(KnoraApiV2Simple.MayHaveMoreResults, XSD.BOOLEAN)
+    .withRdfLabelEn("May have more results")
+    .withRdfCommentEn("Indicates whether more results may be available for a search query")
 
-  private val Error: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Simple.Error,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCode.DE -> "Fehler",
-          LanguageCode.EN -> "error",
-          LanguageCode.FR -> "erreur",
-          LanguageCode.IT -> "errore",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "Provides a message indicating that an operation was unsuccessful",
-        ),
-      ),
-    ),
-    objectType = Some(OntologyConstants.Xsd.String),
-  )
+  private val Error = makeOwlDatatypeProperty(KnoraApiV2Simple.Error, XSD.STRING)
+    .withRdfLabel(Map(DE -> "Fehler", EN -> "error", FR -> "erreur", IT -> "errore"))
+    .withRdfCommentEn("Provides a message indicating that an operation was unsuccessful")
 
-  private val ArkUrl: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Simple.ArkUrl,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "ARK URL",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "Provides the ARK URL of a resource.",
-        ),
-      ),
-    ),
-    objectType = Some(OntologyConstants.Xsd.Uri),
-  )
+  private val ArkUrl = makeOwlDatatypeProperty(KnoraApiV2Simple.ArkUrl, XSD.ANYURI)
+    .withRdfLabelEn("ARK URL")
+    .withRdfCommentEn("Provides the ARK URL of a resource.")
 
-  private val VersionArkUrl: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Simple.VersionArkUrl,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "version ARK URL",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "Provides the ARK URL of a particular version of a resource.",
-        ),
-      ),
-    ),
-    objectType = Some(OntologyConstants.Xsd.Uri),
-  )
+  private val VersionArkUrl = makeOwlDatatypeProperty(KnoraApiV2Simple.VersionArkUrl, XSD.ANYURI)
+    .withRdfLabelEn("version ARK URL")
+    .withRdfCommentEn("Provides the ARK URL of a particular version of a resource.")
 
-  private val ResourceProperty: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Simple.ResourceProperty,
-    propertyType = OntologyConstants.Rdf.Property,
-    subjectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
-    subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.ResourceProperty),
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "Resource property",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "The base property of properties that point from Knora resources to Knora resources or values. These properties are required to have cardinalities in the resource classes in which they are used.",
-        ),
-      ),
-    ),
-  )
+  private val ResourceProperty = makeRdfProperty(KnoraApiV2Simple.ResourceProperty)
+    .withSubjectType(KnoraApiV2Simple.Resource)
+    .withSubPropertyOf(OntologyConstants.KnoraApiV2Simple.ResourceProperty)
+    .withRdfLabelEn("Resource property")
+    .withRdfCommentEn(
+      "The base property of properties that point from Knora resources to Knora resources or values. These properties are required to have cardinalities in the resource classes in which they are used.",
+    )
 
-  private val HasValue: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Simple.HasValue,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subjectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
-    subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.ResourceProperty),
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "has value",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "The base property of properties that point from Knora resources to Knora values.",
-        ),
-      ),
-    ),
-  )
+  private val HasValue = makeOwlDatatypeProperty(KnoraApiV2Simple.HasValue)
+    .withSubjectType(KnoraApiV2Simple.Resource)
+    .withSubPropertyOf(KnoraApiV2Simple.ResourceProperty)
+    .withRdfLabelEn("has value")
+    .withRdfCommentEn("The base property of properties that point from Knora resources to Knora values.")
 
-  private val SubjectType: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Simple.SubjectType,
-    propertyType = OntologyConstants.Rdf.Property,
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "Subject type",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "Specifies the required type of the subjects of a property",
-        ),
-      ),
-    ),
-  )
+  private val SubjectType = makeRdfProperty(KnoraApiV2Simple.SubjectType)
+    .withRdfLabelEn("Subject type")
+    .withRdfCommentEn("Specifies the required type of the subjects of a property")
 
-  private val ObjectType: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Simple.ObjectType,
-    propertyType = OntologyConstants.Rdf.Property,
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "Object type",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "Specifies the required type of the objects of a property",
-        ),
-      ),
-    ),
-  )
+  private val ObjectType = makeRdfProperty(KnoraApiV2Simple.ObjectType)
+    .withRdfLabelEn("Object type")
+    .withRdfCommentEn("Specifies the required type of the objects of a property")
 
   private val Date: ReadClassInfoV2 = makeDatatype(
-    datatypeIri = OntologyConstants.KnoraApiV2Simple.Date,
+    datatypeIri = KnoraApiV2Simple.Date,
     datatypeInfo = DatatypeInfoV2(
       onDatatype = OntologyConstants.Xsd.String.toSmartIri,
       pattern = Some(
@@ -234,20 +93,20 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCode.EN -> "Date literal",
+          EN -> "Date literal",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCode.EN -> "Represents a date as a period with different possible precisions.",
+          EN -> "Represents a date as a period with different possible precisions.",
         ),
       ),
     ),
   )
 
   private val Color: ReadClassInfoV2 = makeDatatype(
-    datatypeIri = OntologyConstants.KnoraApiV2Simple.Color,
+    datatypeIri = KnoraApiV2Simple.Color,
     datatypeInfo = DatatypeInfoV2(
       onDatatype = OntologyConstants.Xsd.String.toSmartIri,
       pattern = Some("#([0-9a-fA-F]{3}){1,2}"),
@@ -256,20 +115,20 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCode.EN -> "Color literal",
+          EN -> "Color literal",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCode.EN -> "Represents a color.",
+          EN -> "Represents a color.",
         ),
       ),
     ),
   )
 
   private val Interval: ReadClassInfoV2 = makeDatatype(
-    datatypeIri = OntologyConstants.KnoraApiV2Simple.Interval,
+    datatypeIri = KnoraApiV2Simple.Interval,
     datatypeInfo = DatatypeInfoV2(
       onDatatype = OntologyConstants.Xsd.String.toSmartIri,
       pattern = Some("\\d+(\\.\\d+)?,\\d+(\\.\\d+)?"),
@@ -278,20 +137,20 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCode.EN -> "Interval literal",
+          EN -> "Interval literal",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCode.EN -> "Represents an interval.",
+          EN -> "Represents an interval.",
         ),
       ),
     ),
   )
 
   private val Geoname: ReadClassInfoV2 = makeDatatype(
-    datatypeIri = OntologyConstants.KnoraApiV2Simple.Geoname,
+    datatypeIri = KnoraApiV2Simple.Geoname,
     datatypeInfo = DatatypeInfoV2(
       onDatatype = OntologyConstants.Xsd.String.toSmartIri,
       pattern = Some("\\d{1,8}"),
@@ -300,20 +159,20 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCode.EN -> "Geoname code",
+          EN -> "Geoname code",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCode.EN -> "Represents a Geoname code.",
+          EN -> "Represents a Geoname code.",
         ),
       ),
     ),
   )
 
   private val Geom: ReadClassInfoV2 = makeDatatype(
-    datatypeIri = OntologyConstants.KnoraApiV2Simple.Geom,
+    datatypeIri = KnoraApiV2Simple.Geom,
     datatypeInfo = DatatypeInfoV2(
       onDatatype = OntologyConstants.Xsd.String.toSmartIri,
     ),
@@ -321,41 +180,37 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCode.EN -> "Geometry specification",
+          EN -> "Geometry specification",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCode.EN -> "Represents a geometry specification in JSON.",
+          EN -> "Represents a geometry specification in JSON.",
         ),
       ),
     ),
   )
 
   private val File: ReadClassInfoV2 = makeDatatype(
-    datatypeIri = OntologyConstants.KnoraApiV2Simple.File,
+    datatypeIri = KnoraApiV2Simple.File,
     datatypeInfo = DatatypeInfoV2(
       onDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
     ),
     predicates = Seq(
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "File URI",
-        ),
+        objectsWithLang = Map(EN -> "File URI"),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "Represents a file URI.",
-        ),
+        objectsWithLang = Map(EN -> "Represents a file URI."),
       ),
     ),
   )
 
   private val ListNode: ReadClassInfoV2 = makeDatatype(
-    datatypeIri = OntologyConstants.KnoraApiV2Simple.ListNode,
+    datatypeIri = KnoraApiV2Simple.ListNode,
     datatypeInfo = DatatypeInfoV2(
       onDatatype = OntologyConstants.Xsd.String.toSmartIri,
     ),
@@ -363,45 +218,28 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCode.EN -> "List Node",
+          EN -> "List Node",
         ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCode.EN -> "Represents a list node.",
+          EN -> "Represents a list node.",
         ),
       ),
     ),
   )
 
-  private val HasIncomingLink: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Simple.HasIncomingLink,
-    propertyType = OntologyConstants.Owl.ObjectProperty,
-    subjectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
-    objectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
-    subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasLinkTo),
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCode.DE -> "hat eingehenden Verweis",
-          LanguageCode.EN -> "has incoming link",
-        ),
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCode.EN -> "Indicates that this resource referred to by another resource",
-        ),
-      ),
-    ),
-  )
+  private val HasIncomingLink = makeOwlObjectProperty(KnoraApiV2Simple.HasIncomingLink, KnoraApiV2Simple.Resource)
+    .withSubjectType(KnoraApiV2Simple.Resource)
+    .withSubPropertyOf(KnoraApiV2Simple.HasLinkTo)
+    .withRdfLabel(Map(DE -> "hat eingehenden Verweis", EN -> "has incoming link"))
+    .withRdfCommentEn("Indicates that this resource referred to by another resource")
 
   private val ResourceCardinalites = Map(
-    OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> Unbounded,
-    OntologyConstants.KnoraApiV2Simple.ArkUrl          -> ExactlyOne,
-    OntologyConstants.KnoraApiV2Simple.VersionArkUrl   -> ExactlyOne,
+    KnoraApiV2Simple.HasIncomingLink -> Unbounded,
+    KnoraApiV2Simple.ArkUrl          -> ExactlyOne,
+    KnoraApiV2Simple.VersionArkUrl   -> ExactlyOne,
   )
 
   /**
@@ -580,7 +418,10 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
     SubjectType,
     ObjectType,
     HasIncomingLink,
-  ).map(propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo).toMap
+  ).map(_.withApiV2SimpleSchema)
+    .map(_.build())
+    .map(it => it.entityInfoContent.propertyIri -> it)
+    .toMap
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Convenience functions for building ontology entities, to make the code above more concise.
@@ -604,58 +445,6 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
         StringLiteralV2.from(str, lang)
       },
     )
-
-  /**
-   * Makes a [[ReadPropertyInfoV2]].
-   *
-   * @param propertyIri   the IRI of the property.
-   * @param propertyType  the type of the property (owl:ObjectProperty, owl:DatatypeProperty, or rdf:Property).
-   * @param subPropertyOf the set of direct superproperties of this property.
-   * @param predicates    the property's predicates.
-   * @param subjectType   the required type of the property's subject.
-   * @param objectType    the required type of the property's object.
-   * @return a [[ReadPropertyInfoV2]].
-   */
-  private def makeProperty(
-    propertyIri: IRI,
-    propertyType: IRI,
-    subPropertyOf: Set[IRI] = Set.empty[IRI],
-    predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
-    subjectType: Option[IRI] = None,
-    objectType: Option[IRI] = None,
-  ): ReadPropertyInfoV2 = {
-    val propTypePred = makePredicate(
-      predicateIri = OntologyConstants.Rdf.Type,
-      objects = Seq(SmartIriLiteralV2(propertyType.toSmartIri)),
-    )
-
-    val maybeSubjectTypePred = subjectType.map { subjType =>
-      makePredicate(
-        predicateIri = OntologyConstants.KnoraApiV2Simple.SubjectType,
-        objects = Seq(SmartIriLiteralV2(subjType.toSmartIri)),
-      )
-    }
-
-    val maybeObjectTypePred = objectType.map { objType =>
-      makePredicate(
-        predicateIri = OntologyConstants.KnoraApiV2Simple.ObjectType,
-        objects = Seq(SmartIriLiteralV2(objType.toSmartIri)),
-      )
-    }
-
-    val predsWithTypes = predicates ++ maybeSubjectTypePred ++ maybeObjectTypePred :+ propTypePred
-
-    ReadPropertyInfoV2(
-      entityInfoContent = PropertyInfoContentV2(
-        propertyIri = propertyIri.toSmartIri,
-        ontologySchema = ApiV2Simple,
-        predicates = predsWithTypes.map { pred =>
-          pred.predicateIri -> pred
-        }.toMap,
-        subPropertyOf = subPropertyOf.map(_.toSmartIri),
-      ),
-    )
-  }
 
   /**
    * Makes a [[ReadClassInfoV2]] representing an rdfs:Datatype.
