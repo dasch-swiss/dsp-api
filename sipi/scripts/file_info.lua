@@ -101,12 +101,13 @@ local audio_extensions = {
 
 local text_extensions = {
     "csv",
+    "json",
     "odd",
     "rng",
     "txt",
     "xml",
     "xsd",
-    "xsl"
+    "xsl",
 }
 
 local document_extensions = {
