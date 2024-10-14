@@ -2891,6 +2891,9 @@ object ReadPropertyInfoV2Builder {
   def makeOwlObjectProperty(iri: String)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
     make(iri, OWL.OBJECTPROPERTY)
 
+  def makeRdfProperty(iri: String)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
+    make(iri, RDF.PROPERTY)
+
   def make(iri: SmartIri, rdfType: SmartIri)(implicit sf: StringFormatter): ReadPropertyInfoV2Builder =
     ReadPropertyInfoV2Builder(iri).withRdfType(rdfType)
 

@@ -9,7 +9,6 @@ import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
-
 import org.knora.webapi.*
 import org.knora.webapi.LanguageCode.*
 import org.knora.webapi.messages.IriConversions.*
@@ -21,6 +20,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.makeOwlAnnotationProperty
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.makeOwlDataTypeProperty
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.makeOwlObjectProperty
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2Builder.makeRdfProperty
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 
@@ -91,7 +91,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfCommentEn("Indicates whether an ontology is built into Knora")
 
   private val IsEditable = makeOwlAnnotationProperty(KA.IsEditable, XSD.BOOLEAN)
-    .withSubjectType(OWL.OBJECTPROPERTY)
+    .withSubjectType(RDF.PROPERTY)
     .withRdfLabelEn("is editable")
     .withRdfCommentEn("Indicates whether a property's values can be updated via the Knora API.")
 
@@ -155,11 +155,11 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withSubjectType(KA.Value)
     .withRdfCommentEn("A plain string representation of a value")
 
-  private val SubjectType = makeOwlObjectProperty(KA.SubjectType)
+  private val SubjectType = makeRdfProperty(KA.SubjectType)
     .withRdfLabelEn("Subject type")
     .withRdfCommentEn("Specifies the required type of the subjects of a property")
 
-  private val ObjectType = makeOwlObjectProperty(KA.ObjectType)
+  private val ObjectType = makeRdfProperty(KA.ObjectType)
     .withRdfLabelEn("Object type")
     .withRdfCommentEn("Specifies the required type of the objects of a property")
 
