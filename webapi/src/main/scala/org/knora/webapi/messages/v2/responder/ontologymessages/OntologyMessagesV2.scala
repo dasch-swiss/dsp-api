@@ -2672,8 +2672,8 @@ final case class ReadClassInfoV2Builder(
     copy(predicates = rdfType :: self.predicates)
   }
 
-  def withBaseClass(classIri: String)(implicit sf: StringFormatter): ReadClassInfoV2Builder =
-    copy(allBaseClasses = sf.toSmartIri(classIri) :: self.allBaseClasses)
+  def withBaseClass(classIri: SmartIri)(implicit sf: StringFormatter): ReadClassInfoV2Builder =
+    copy(allBaseClasses = classIri :: self.allBaseClasses)
 
   def withRdfsLabelEn(label: String)(implicit sf: StringFormatter): ReadClassInfoV2Builder =
     self.withPredicate(PredicateInfoV2Builder.makeRdfsLabelEn(label))
@@ -2700,31 +2700,18 @@ object ReadClassInfoV2Builder {
   def makeStringDatatypeClassWithPattern(classIri: String, pattern: String)(implicit
     sf: StringFormatter,
   ): ReadClassInfoV2Builder =
-    ReadClassInfoV2Builder(
-      sf.toSmartIri(classIri),
-      Some(DatatypeInfoV2(sf.toSmartIri(XSD.STRING.toString), Some(pattern))),
-    ).withRdfType(RDFS.DATATYPE).withBaseClass(classIri)
+    makeDatatypeClass(sf.toSmartIri(classIri), DatatypeInfoV2(sf.toSmartIri(XSD.STRING.toString), Some(pattern)))
 
-  def makeStringDatatypeClass(classIri: String)(implicit
+  def makeStringDatatypeClass(classIri: String)(implicit sf: StringFormatter): ReadClassInfoV2Builder =
+    makeDatatypeClass(sf.toSmartIri(classIri), DatatypeInfoV2(sf.toSmartIri(XSD.STRING.toString), None))
+
+  def makeUriDatatypeClass(classIri: String)(implicit sf: StringFormatter): ReadClassInfoV2Builder =
+    makeDatatypeClass(sf.toSmartIri(classIri), DatatypeInfoV2(sf.toSmartIri(XSD.ANYURI.toString), None))
+
+  def makeDatatypeClass(classIri: SmartIri, datatypeInfo: DatatypeInfoV2)(implicit
     sf: StringFormatter,
   ): ReadClassInfoV2Builder =
-    ReadClassInfoV2Builder(
-      sf.toSmartIri(classIri),
-      Some(DatatypeInfoV2(sf.toSmartIri(XSD.STRING.toString), None)),
-    ).withRdfType(RDFS.DATATYPE).withBaseClass(classIri)
-
-  def makeUriDatatypeClass(classIri: String)(implicit
-    sf: StringFormatter,
-  ): ReadClassInfoV2Builder =
-    ReadClassInfoV2Builder(
-      sf.toSmartIri(classIri),
-      Some(DatatypeInfoV2(sf.toSmartIri(XSD.ANYURI.toString), None)),
-    ).withRdfType(RDFS.DATATYPE).withBaseClass(classIri)
-
-  def makeDatatypeClass(classIri: String, datatype: Rdf4jIRI)(implicit sf: StringFormatter): ReadClassInfoV2Builder =
-    ReadClassInfoV2Builder(sf.toSmartIri(classIri), Some(DatatypeInfoV2(sf.toSmartIri(datatype.toString), None)))
-      .withRdfType(RDFS.DATATYPE)
-      .withBaseClass(classIri)
+    ReadClassInfoV2Builder(classIri, Some(datatypeInfo)).withRdfType(RDFS.DATATYPE).withBaseClass(classIri)
 }
 
 /**
