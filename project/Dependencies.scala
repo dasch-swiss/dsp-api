@@ -16,7 +16,7 @@ object Dependencies {
 
   val ScalaVersion = "3.3.4"
 
-  val PekkoActorVersion = "1.1.1"
+  val PekkoActorVersion = "1.1.2"
   val PekkoHttpVersion  = "1.0.1"
 
   // rdf and graph libraries
