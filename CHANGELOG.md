@@ -1,5 +1,21 @@
 # Changelog
 
+## [30.21.0](https://github.com/dasch-swiss/dsp-api/compare/v30.20.0...v30.21.0) (2024-10-15)
+
+
+### Maintenances
+
+* Make precedence of daop for creating new Value/Resources obvious  ([#3380](https://github.com/dasch-swiss/dsp-api/issues/3380)) ([0b879af](https://github.com/dasch-swiss/dsp-api/commit/0b879afbf18b4cbed71ea8d6e2fb8ae0b8cd788d))
+
+
+### Enhancements
+
+* Allow uploading JSON text files (DEV-4222) ([#3386](https://github.com/dasch-swiss/dsp-api/issues/3386)) ([3a3c305](https://github.com/dasch-swiss/dsp-api/commit/3a3c305e30446963d2290489ef318e5ee5e828b7))
+* Convert watermark to RGB workspace (DEV-3299) ([#3387](https://github.com/dasch-swiss/dsp-api/issues/3387)) ([0459c60](https://github.com/dasch-swiss/dsp-api/commit/0459c6022fd1ba5376dc34489413a60327304105))
+* Enable rdfs inferencing in shacl validator (DEV-4220) ([#3388](https://github.com/dasch-swiss/dsp-api/issues/3388)) ([a248973](https://github.com/dasch-swiss/dsp-api/commit/a2489733f8807969425776239ee68bb7d549e248))
+* Remove DOAP configuration on SystemProject and KnownUser group (DEV-4138) ([#3383](https://github.com/dasch-swiss/dsp-api/issues/3383)) ([a9b45ad](https://github.com/dasch-swiss/dsp-api/commit/a9b45ad670873cb6f62c28f0647fbf0777bb076c))
+* Watermark with alpha with the new Sipi release (DEV-3299) ([#3382](https://github.com/dasch-swiss/dsp-api/issues/3382)) ([c8f5a71](https://github.com/dasch-swiss/dsp-api/commit/c8f5a713f308dbd98d42ec389120d76a78f960b3))
+
 ## [30.20.0](https://github.com/dasch-swiss/dsp-api/compare/v30.19.0...v30.20.0) (2024-10-04)
 
 
