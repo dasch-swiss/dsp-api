@@ -17,7 +17,7 @@ object Dependencies {
   val ScalaVersion = "3.3.4"
 
   val PekkoActorVersion = "1.1.1"
-  val PekkoHttpVersion  = "1.0.1"
+  val PekkoHttpVersion  = "1.1.0"
 
   // rdf and graph libraries
   // topbraid/shacl is not yet compatible with jena 5 so we need to use jena 4 for now
