@@ -180,7 +180,7 @@ test: ## runs all unit tests
 
 .PHONY: integration-test
 integration-test: docker-build-sipi-image ## runs all integration tests
-	$(SBTX) -v coverage "integration/test" coverageAggregate
+	$(SBTX) -v coverage "integration/testOnly org.knora.webapi.it.v2.KnoraSipiIntegrationV2ITSpec" coverageAggregate
 
 
 #################################
