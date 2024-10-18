@@ -14,4 +14,3 @@ upload-graph ../../webapi/src/main/resources/knora-ontologies/standoff-onto.ttl 
 upload-graph ../../webapi/src/main/resources/knora-ontologies/standoff-data.ttl http://www.knora.org/data/standoff
 upload-graph ../../webapi/src/main/resources/knora-ontologies/salsah-gui.ttl http://www.knora.org/ontology/salsah-gui
 upload-graph ../../test_data/project_data/admin-data-minimal.ttl http://www.knora.org/data/admin
-upload-graph ../../test_data/project_data/permissions-data-minimal.ttl http://www.knora.org/data/permissions
