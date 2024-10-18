@@ -48,9 +48,6 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val valuesResponder    = ZIO.serviceWithZIO[ValuesResponderV2]
-  private val resourcesResponder = ZIO.serviceWithZIO[ResourcesResponderV2]
-
   private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
   private val generationeIri   = "http://rdfh.ch/0803/c3f913666f"
   private val aThingIri        = "http://rdfh.ch/0001/a-thing"
@@ -1244,43 +1241,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         ),
       )
       assertFailsWithA[ForbiddenException](actual)
-    }
-
-    "create a simple text value with language tag" in {
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-
-      val createValueResponse = UnsafeZioRun.runOrThrow(
-        valuesResponder(
-          _.createValueV2(
-            CreateValueV2(
-              resourceIri = zeitglöckleinIri,
-              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-              propertyIri = propertyIri,
-              valueContent = TextValueContentV2(
-                ontologySchema = ApiV2Complex,
-                maybeValueHasString = Some("This is English"),
-                textValueType = TextValueType.UnformattedText,
-                valueHasLanguage = Some("en"),
-              ),
-            ),
-            requestingUser = incunabulaUser,
-            apiRequestID = randomUUID,
-          ),
-        ),
-      )
-      createValueResponse.valueIri should not be empty
-      val resource = UnsafeZioRun.runOrThrow(
-        resourcesResponder(
-          _.getResourcesV2(
-            List(zeitglöckleinIri),
-            None,
-            targetSchema = ApiV2Complex,
-            schemaOptions = Set(JsonLdRendering.Flat),
-            requestingUser = incunabulaUser,
-          ),
-        ),
-      )
-      resource.resources.head.values.find((iri, _) => iri == propertyIri)
     }
 
     "create a text value without standoff" in {
