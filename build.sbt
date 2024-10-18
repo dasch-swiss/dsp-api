@@ -13,7 +13,7 @@ val hikariVersion               = "6.0.0"
 val quillVersion                = "4.8.5"
 val sipiVersion                 = "v30.18.3"
 val sqliteVersion               = "3.46.1.3"
-val tapirVersion                = "1.11.5"
+val tapirVersion                = "1.11.7"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "4.0.2"
 val zioJsonVersion              = "0.7.3"
@@ -22,7 +22,7 @@ val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
 val zioPreludeVersion           = "1.0.0-RC31"
-val zioVersion                  = "2.1.9"
+val zioVersion                  = "2.1.11"
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
 val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
