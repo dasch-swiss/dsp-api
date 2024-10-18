@@ -578,7 +578,9 @@ object CreateValueV2 {
                          .mapError(BadRequestException(_))
                          .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
 
-        shortcode <- ZIO.fromOption(resourceIri.getProjectCode).orElseFail(NotFoundException("Shortcode not found."))
+        shortcode <- ZIO
+                       .fromEither(resourceIri.getProjectShortcode)
+                       .mapError(msg => NotFoundException(s"Shortcode not found. $msg"))
 
         // Get the resource class.
         resourceClassIri <-
@@ -589,7 +591,7 @@ object CreateValueV2 {
           jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
             case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
               for {
-                fileInfo     <- ValueContentV2.getFileInfo(shortcode, ingestState, jsonLdObject).option
+                fileInfo     <- ValueContentV2.getFileInfo(shortcode, ingestState, jsonLdObject)
                 valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser, fileInfo)
 
                 // Get and validate the custom value IRI if provided.
@@ -599,7 +601,7 @@ object CreateValueV2 {
                                            definedNewIri.foreach(
                                              stringFormatter.validateCustomValueIri(
                                                _,
-                                               shortcode,
+                                               shortcode.value,
                                                resourceIri.getResourceID.get,
                                              ),
                                            )
@@ -712,8 +714,10 @@ object UpdateValueV2 {
                 (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
               jsonLDObject.maybeStringWithValidation(HasPermissions, validationFun)
             }
-          shortcode    <- ZIO.fromOption(resourceIri.getProjectCode).orElseFail(NotFoundException("Shortcode not found."))
-          fileInfo     <- ValueContentV2.getFileInfo(shortcode, ingestState, jsonLDObject).option
+          shortcode <- ZIO
+                         .fromEither(resourceIri.getProjectShortcode)
+                         .mapError(msg => NotFoundException(s"Shortcode not found. $msg"))
+          fileInfo     <- ValueContentV2.getFileInfo(shortcode, ingestState, jsonLDObject)
           valueContent <- ValueContentV2.fromJsonLdObject(jsonLDObject, requestingUser, fileInfo)
         } yield UpdateValueContentV2(
           resourceIri = resourceIri.toString,
@@ -1071,30 +1075,61 @@ object ValueContentV2 {
 
   final case class FileInfo(filename: IRI, metadata: FileMetadataSipiResponse)
 
+  /**
+   * Given the jsonLd contains a FileValueHasFilename, it will try to fetch the FileInfo from Sipi or Dsp-Ingest.
+   *
+   * @param shortcode The shortcode of the project
+   * @param ingestState The state of the file, either ingested already or in Sipi temp folder
+   * @param jsonLd the jsonLd object
+   * @return Some FileInfo if FileValueHasFilename found and the remote service returned the metadata.
+   *         None if FileValueHasFilename is not found in the jsonLd object.
+   *         Fails if the file is not found in the remote service or something goes wrong.
+   */
   def getFileInfo(
-    shortcode: String,
+    shortcode: Shortcode,
     ingestState: AssetIngestState,
-    jsonLdObject: JsonLDObject,
-  ): ZIO[SipiService, Throwable, FileInfo] =
+    jsonLd: JsonLDObject,
+  ): ZIO[SipiService, Throwable, Option[FileInfo]] =
+    ZIO
+      .fromEither(jsonLd.getString(FileValueHasFilename))
+      .orElse(ZIO.none)
+      .flatMap(fileMaybe =>
+        (fileMaybe, ingestState) match {
+          case (Some(filename), AssetIngested) => fileInfoFromDspIngest(shortcode, filename).asSome
+          case (Some(filename), AssetInTemp)   => fileInfoFromSipi(filename).asSome
+          case (None, _)                       => ZIO.none
+        },
+      )
+
+  private def fileInfoFromSipi(filename: String) =
+    ZIO.serviceWithZIO[SipiService](
+      _.getFileMetadataFromSipiTemp(filename)
+        .mapBoth(
+          {
+            case NotFoundException(msg) =>
+              NotFoundException(
+                s"Asset '$filename' not found in Sipi temp, when ingested with dsp-ingest you want to add the 'X-Asset-Ingested' header.",
+              )
+            case e => e
+          },
+          FileInfo(filename, _),
+        ),
+    )
+
+  private def fileInfoFromDspIngest(shortcode: Shortcode, filename: String) =
     for {
-      internalFilename <- {
-        val fileNameEncoded = jsonLdObject
-          .getRequiredString(FileValueHasFilename)
-          .flatMap(it => Iri.toSparqlEncodedString(it).toRight(s"$FileValueHasFilename is invalid."))
-        ZIO.fromEither(fileNameEncoded).mapError(BadRequestException(_))
-      }
-      metadata <- ingestState match {
-                    case AssetIngestState.AssetIngested =>
-                      val assetId = AssetId.unsafeFrom(internalFilename.substring(0, internalFilename.indexOf('.')))
-                      ZIO
-                        .serviceWithZIO[SipiService](
-                          _.getFileMetadataFromDspIngest(Shortcode.unsafeFrom(shortcode), assetId),
-                        )
-                        .logError
-                    case AssetIngestState.AssetInTemp =>
-                      ZIO.serviceWithZIO[SipiService](_.getFileMetadataFromSipiTemp(internalFilename))
-                  }
-    } yield FileInfo(internalFilename, metadata)
+      sipiService <- ZIO.service[SipiService]
+      assetId <- ZIO
+                   .fromEither(AssetId.from(filename.substring(0, filename.indexOf('.'))))
+                   .mapError(msg => BadRequestException(s"Invalid value for 'fileValueHasFilename': $msg"))
+      meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
+                case NotFoundException(msg) =>
+                  NotFoundException(
+                    s"Asset '$filename' not found in dsp-ingest, when ingested to Sipi temp you want to remove the 'X-Asset-Ingested' header.",
+                  )
+                case e => e
+              }
+    } yield FileInfo(filename, meta)
 }
 
 /**
