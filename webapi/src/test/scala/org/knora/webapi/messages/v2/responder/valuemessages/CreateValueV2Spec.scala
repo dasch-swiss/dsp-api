@@ -4,21 +4,29 @@
  */
 
 package org.knora.webapi.messages.v2.responder.valuemessages
+
 import zio.ZIO
 import zio.test.Spec
 import zio.test.TestResult
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.MessageRelayLive
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType.UnformattedText
 import org.knora.webapi.routing.v2.AssetIngestState.AssetIngested
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
+import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.SipiService
-import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.iiif.impl.SipiServiceMock
 
 object CreateValueV2Spec extends ZIOSpecDefault {
@@ -34,6 +42,26 @@ object CreateValueV2Spec extends ZIOSpecDefault {
       |    "http://api.knora.org/ontology/knora-api/v2#textValueHasLanguage":"en"
       |  }
       |}""".stripMargin
+
+  private val rootUser =
+    User(
+      id = "http://rdfh.ch/users/root",
+      username = "root",
+      email = "root@example.com",
+      givenName = "System",
+      familyName = "Administrator",
+      status = true,
+      lang = "de",
+      password = Option("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      groups = Seq.empty[Group],
+      projects = Seq.empty[Project],
+      permissions = PermissionsDataADM(
+        groupsPerProject = Map(
+          KnoraProjectRepo.builtIn.SystemProject.id.value -> List(KnoraGroupRepo.builtIn.SystemAdmin.id.value),
+        ),
+        administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionADM]],
+      ),
+    )
 
   override def spec: Spec[Any, Throwable] =
     suite("CreateValueV2Spec")(test("UnformattedText TextValue fromJsonLd should contain the language") {
