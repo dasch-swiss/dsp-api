@@ -328,6 +328,9 @@ object StringLiteralV2 {
   implicit val codec: JsonCodec[StringLiteralV2] = DeriveJsonCodec.gen[StringLiteralV2]
   implicit val schema: Schema[StringLiteralV2]   = Schema.derived[StringLiteralV2]
 
+  def from(value: String, lang: LanguageCode): StringLiteralV2 =
+    from(value, Some(lang.code))
+
   def from(value: String, language: Option[String]): StringLiteralV2 = language match {
     case Some(_) if value.isEmpty => throw BadRequestException("String value is missing.")
     case _                        => StringLiteralV2(value, language)
