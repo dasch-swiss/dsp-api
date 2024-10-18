@@ -1638,18 +1638,20 @@ object TextValueContentV2 {
     maybeValueHasLanguage: Option[IRI],
     maybeMappingResponse: Option[GetMappingResponseV2],
     jsonLdObject: JsonLDObject,
-  ): ZIO[StringFormatter, Throwable, TextValueContentV2] =
+  ) =
     (maybeValueAsString, maybeTextValueAsXml, maybeMappingResponse) match {
       case (Some(valueAsString), None, None) => // Text without standoff.
-        for {
-          maybeComment <- JsonLDUtil.getComment(jsonLdObject)
-        } yield TextValueContentV2(
-          ontologySchema = ApiV2Complex,
-          maybeValueHasString = Some(valueAsString),
-          valueHasLanguage = maybeValueHasLanguage,
-          textValueType = TextValueType.UnformattedText,
-          comment = maybeComment,
-        )
+        JsonLDUtil
+          .getComment(jsonLdObject)
+          .map(comment =>
+            TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueAsString),
+              valueHasLanguage = maybeValueHasLanguage,
+              textValueType = TextValueType.UnformattedText,
+              comment = comment,
+            ),
+          )
 
       case (None, Some(textValueAsXml), Some(mappingResponse)) =>
         for {
