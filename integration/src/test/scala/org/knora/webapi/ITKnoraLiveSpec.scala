@@ -111,11 +111,10 @@ abstract class ITKnoraLiveSpec
         .getOrThrow()
     }
 
-  final override def afterAll(): Unit =
-    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe.shutdown()
-    }
+  final override def afterAll(): Unit = {
+    log.info("Stop ZIO runtime and release resources (e.g., running docker containers)")
+    Unsafe.unsafe(implicit u => runtime.unsafe.shutdown())
+  }
 
   protected def getResponseStringOrThrow(request: HttpRequest): String =
     Unsafe.unsafe { implicit u =>
