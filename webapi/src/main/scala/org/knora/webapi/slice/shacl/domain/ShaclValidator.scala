@@ -35,7 +35,7 @@ final case class ShaclValidator() { self =>
   } yield report
 
   private def readModel(data: InputStream) = ZIO.attempt {
-    val model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM)
+    val model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM_RDFS_INF)
     model.read(data, null, FileUtils.langTurtle)
     model
   }
