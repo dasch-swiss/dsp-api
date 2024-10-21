@@ -396,7 +396,7 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
   def getProjectCode: Option[String]
 
   /**
-   * Returns the s project shortcode, if any.
+   * Returns the project's shortcode, if any.
    */
   def getProjectShortcode: Either[String, Shortcode] =
     getProjectCode
