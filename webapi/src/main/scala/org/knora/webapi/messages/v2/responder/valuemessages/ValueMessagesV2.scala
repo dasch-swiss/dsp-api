@@ -1684,6 +1684,7 @@ object TextValueContentV2 {
             TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some(valueAsString),
+              valueHasLanguage = maybeValueHasLanguage,
               textValueType = TextValueType.UnformattedText,
               comment = comment,
             ),
