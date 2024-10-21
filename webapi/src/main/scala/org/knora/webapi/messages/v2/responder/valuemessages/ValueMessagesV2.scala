@@ -1357,7 +1357,8 @@ case class TextValueContentV2(
   mapping: Option[MappingXMLtoStandoff] = None,
   xslt: Option[String] = None,
   comment: Option[String] = None,
-) extends ValueContentV2 {
+) extends ValueContentV2 { self =>
+
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     OntologyConstants.KnoraBase.TextValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1589,7 +1590,9 @@ case class TextValueContentV2(
     // It doesn't make sense for a resource to have two different text values associated with the same property,
     // containing the same text but different markup.
     that match {
-      case thatTextValue: TextValueContentV2 => valueHasString == thatTextValue.valueHasString
+      case other: TextValueContentV2 =>
+        self.valueHasString == other.valueHasString &&
+        self.valueHasLanguage == other.valueHasLanguage
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
     }
@@ -1598,16 +1601,15 @@ case class TextValueContentV2(
     // It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup
     // or the comment.
     currentVersion match {
-      case thatTextValue: TextValueContentV2 =>
-        val valueHasStringIdentical: Boolean = valueHasString == thatTextValue.valueHasString
-
-        val mappingIdentitcal = mappingIri == thatTextValue.mappingIri
-
+      case other: TextValueContentV2 =>
         // compare standoff nodes (sort them first by index) and the XML-to-standoff mapping IRI
         val standoffIdentical = StandoffTagUtilV2.makeComparableStandoffCollection(standoff) == StandoffTagUtilV2
-          .makeComparableStandoffCollection(thatTextValue.standoff)
+          .makeComparableStandoffCollection(other.standoff)
 
-        valueHasStringIdentical && standoffIdentical && mappingIdentitcal && comment == thatTextValue.comment
+        wouldDuplicateOtherValue(currentVersion) &&
+        self.mappingIri == other.mappingIri &&
+        self.comment == other.comment &&
+        standoffIdentical
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
