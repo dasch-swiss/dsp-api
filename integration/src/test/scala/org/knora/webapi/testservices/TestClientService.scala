@@ -164,14 +164,19 @@ final case class TestClientService(
    */
   def uploadToSipi(loginToken: String, files: Seq[FileToUpload]): Task[SipiUploadResponse] =
     for {
-      url <- ZIO.succeed(targetHostUri.addPath("upload").addParam("token", loginToken))
+      url <- ZIO.succeed(targetHostUri.addPath("upload"))
       multiparts = files.map { file =>
                      multipartFile("file", file.path.toFile)
                        .fileName(file.path.getFileName.toString)
                        .contentType(file.mimeType.toString)
                    }
-      response <- doSipiRequest(quickRequest.post(url).multipartBody(multiparts))
-      json     <- ZIO.fromEither(response.fromJson[SipiUploadResponse]).mapError(Throwable(_))
+      response <- doSipiRequest(
+                    quickRequest
+                      .post(url)
+                      .header("Authorization", s"Bearer $loginToken")
+                      .multipartBody(multiparts),
+                  )
+      json <- ZIO.fromEither(response.fromJson[SipiUploadResponse]).mapError(Throwable(_))
     } yield json
 
   /**
