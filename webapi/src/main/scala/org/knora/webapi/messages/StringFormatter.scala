@@ -396,6 +396,14 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
   def getProjectCode: Option[String]
 
   /**
+   * Returns the project's shortcode, if any.
+   */
+  def getProjectShortcode: Either[String, Shortcode] =
+    getProjectCode
+      .toRight("No project shortcode in IRI")
+      .flatMap(str => Shortcode.from(str))
+
+  /**
    * Returns the IRI's resource ID, if any.
    */
   def getResourceID: Option[String]
