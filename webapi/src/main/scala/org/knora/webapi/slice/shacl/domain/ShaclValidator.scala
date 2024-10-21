@@ -20,7 +20,7 @@ import java.io.InputStream
 
 final case class ValidationOptions(validateShapes: Boolean, reportDetails: Boolean, addBlankNodes: Boolean)
 object ValidationOptions {
-  val default: ValidationOptions = ValidationOptions(true, true, false)
+  val default: ValidationOptions = ValidationOptions(false, true, false)
 }
 
 final case class ShaclValidator() { self =>
@@ -35,7 +35,7 @@ final case class ShaclValidator() { self =>
   } yield report
 
   private def readModel(data: InputStream) = ZIO.attempt {
-    val model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM_RDFS_INF)
+    val model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM)
     model.read(data, null, FileUtils.langTurtle)
     model
   }
