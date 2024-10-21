@@ -447,7 +447,15 @@ class KnoraSipiIntegrationV2ITSpec
         .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
       // no X-Asset-Ingested header
       val request = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      assert(singleAwaitingRequest(request).status == StatusCodes.BadRequest)
+
+      val response = singleAwaitingRequest(request)
+      assert(response.status == StatusCodes.NotFound)
+      val body = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
+      assert(
+        body.contains(
+          "Asset 'De6XyNL4H71-D9QxghOuOPJ.jp2' not found in Sipi temp, when ingested with dsp-ingest you want to add the 'X-Asset-Ingested' header.",
+        ),
+      )
     }
 
     "reject an image file with the wrong file extension" in {
