@@ -39,31 +39,32 @@ object ValueContentV2Spec extends ZIOSpecDefault {
     .parseJsonLD(s"{\"http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename\" : \"$assetId.txt\"}")
     .body
 
-  private val expected = FileMetadataSipiResponse(Some("origName"), None, "text/plain", None, None, None, None, None)
+  private val expected      = FileMetadataSipiResponse(Some("origName"), None, "text/plain", None, None, None, None, None)
+  private val shortcode0001 = KnoraProject.Shortcode.unsafeFrom("0001")
 
-  override def spec: Spec[Any, Throwable] =
+  override def spec: Spec[Any, Option[Throwable]] =
     suite("ValueContentV2.getFileInfo")(
       suite("Given the asset is present in the tmp folder of Sipi")(
         test("When getting file metadata with AssetInTemp from Sipi, then it should succeed") {
           for {
-            temp <- ValueContentV2.getFileInfo("0001", AssetInTemp, jsonLdObj)
+            temp <- ValueContentV2.getFileInfo(shortcode0001, AssetInTemp, jsonLdObj).some
           } yield assertTrue(temp.metadata == expected)
         },
         test("When getting file metadata with AssetIngested from dsp-ingest, then it should fail") {
           for {
-            exit <- ValueContentV2.getFileInfo("0001", AssetIngested, jsonLdObj).exit
+            exit <- ValueContentV2.getFileInfo(shortcode0001, AssetIngested, jsonLdObj).exit
           } yield assert(exit)(failsWithA[AssertionException])
         },
       ).provide(mockSipi(AssetInTemp)),
       suite("Given the asset is ingested")(
         test("When getting file metadata with AssetInTemp from Sipi, then it should fail") {
           for {
-            exit <- ValueContentV2.getFileInfo("0001", AssetInTemp, jsonLdObj).exit
+            exit <- ValueContentV2.getFileInfo(shortcode0001, AssetInTemp, jsonLdObj).exit
           } yield assert(exit)(failsWithA[AssertionException])
         },
         test("When getting file metadata with AssetIngested from dsp-ingest, then it should succeed") {
           for {
-            ingested <- ValueContentV2.getFileInfo("0001", AssetIngested, jsonLdObj)
+            ingested <- ValueContentV2.getFileInfo(shortcode0001, AssetIngested, jsonLdObj).some
           } yield assertTrue(ingested.metadata == expected)
         },
       ).provide(mockSipi(AssetIngested)),
