@@ -171,7 +171,9 @@ final case class SipiServiceLive(
         } else {
           val sipiErrorMsg = SipiUtil.getSipiErrorMessage(response.body)
 
-          if (response.code.code == 404) {
+          if (
+            response.code.code == 404 || (response.code.code == 500 && sipiErrorMsg.contains("file_does_not_exist"))
+          ) {
             ZIO.fail(NotFoundException(sipiErrorMsg))
           } else if (response.isClientError) {
             ZIO.fail(BadRequestException(s"Sipi responded with HTTP status code ${response.code.code}: $sipiErrorMsg"))
