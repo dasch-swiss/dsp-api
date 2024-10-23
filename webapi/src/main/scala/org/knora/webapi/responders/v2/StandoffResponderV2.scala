@@ -17,7 +17,6 @@ import javax.xml.validation.SchemaFactory
 import scala.xml.Node
 import scala.xml.NodeSeq
 import scala.xml.XML
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -124,40 +123,41 @@ final case class StandoffResponderV2(
 
       resource = textRepresentationResponseV2.toResource(xslTransformationIri)
 
-      _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.XSLTransformation) {
-            throw BadRequestException(
-              s"Resource $xslTransformationIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}",
-            )
-          }
+      _ <- ZIO.fail {
+             val msg = s"Resource $xslTransformationIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}"
+             BadRequestException(msg)
+           }.when(resource.resourceClassIri.toString != OntologyConstants.KnoraBase.XSLTransformation)
 
-      (fileValueIri, xsltFileValueContent) =
-        resource.values.get(
-          OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri,
-        ) match {
+      valuIriTextRepr <-
+        resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
           case Some(values: Seq[ReadValueV2]) if values.size == 1 =>
             values.head match {
               case value: ReadValueV2 =>
                 value.valueContent match {
-                  case textRepr: TextFileValueContentV2 => (value.valueIri, textRepr)
+                  case textRepr: TextFileValueContentV2 => ZIO.succeed(value.valueIri, textRepr)
                   case _ =>
-                    throw InconsistentRepositoryDataException(
-                      s"${OntologyConstants.KnoraBase.XSLTransformation} $xslTransformationIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}",
+                    ZIO.fail(
+                      InconsistentRepositoryDataException(
+                        s"${OntologyConstants.KnoraBase.XSLTransformation} $xslTransformationIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}",
+                      ),
                     )
                 }
             }
-
           case _ =>
-            throw InconsistentRepositoryDataException(
-              s"${OntologyConstants.KnoraBase.XSLTransformation} has no or more than one property ${OntologyConstants.KnoraBase.HasTextFileValue}",
+            ZIO.fail(
+              InconsistentRepositoryDataException(
+                s"${OntologyConstants.KnoraBase.XSLTransformation} has no or more than one property ${OntologyConstants.KnoraBase.HasTextFileValue}",
+              ),
             )
         }
+      (fileValueIri, xsltFileValueContent) = valuIriTextRepr
 
       // check if xsltFileValueContent represents an XSL transformation
-      _ = if (!xmlMimeTypes.contains(xsltFileValueContent.fileValue.internalMimeType)) {
-            throw BadRequestException(
-              s"Expected $fileValueIri to be an XML file referring to an XSL transformation, but it has MIME type ${xsltFileValueContent.fileValue.internalMimeType}",
-            )
-          }
+      _ <- ZIO.fail {
+             val msg = s"Expected $fileValueIri to be an XML file referring to an XSL transformation, but it has " +
+               s"MIME type ${xsltFileValueContent.fileValue.internalMimeType}"
+             BadRequestException(msg)
+           }.when(!xmlMimeTypes.contains(xsltFileValueContent.fileValue.internalMimeType))
 
       xsltUrl: String =
         s"${appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
@@ -721,10 +721,9 @@ final case class StandoffResponderV2(
     for {
       mappingResponse <- triplestore.query(Construct(sparql.v2.txt.getMapping(mappingIri)))
 
-      // if the result is empty, the mapping does not exist
-      _ = if (mappingResponse.statements.isEmpty) {
-            throw BadRequestException(s"mapping $mappingIri does not exist in triplestore")
-          }
+      _ <- ZIO // if the result is empty, the mapping does not exist
+             .fail(BadRequestException(s"mapping $mappingIri does not exist in triplestore"))
+             .when(mappingResponse.statements.isEmpty)
 
       // separate MappingElements from other statements (attributes and datatypes)
       (mappingElementStatements, otherStatements) =
