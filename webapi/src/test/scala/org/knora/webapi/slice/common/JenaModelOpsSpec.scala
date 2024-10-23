@@ -52,12 +52,6 @@ object JenaModelOpsSpec extends ZIOSpecDefault {
           model2 <- JenaModelOps.fromJsonLd(jsonLd2)
         } yield assertTrue(model1.isIsomorphicWith(model2))
       },
-      test("get id"){
-        for {
-          model<- JenaModelOps.fromJsonLd(jsonLd)
-          id <- model.getï
-        }
-      }
     ),
   )
 }
