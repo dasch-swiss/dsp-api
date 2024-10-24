@@ -4,7 +4,6 @@
  */
 
 package org.knora.webapi.messages.v2.responder.valuemessages
-
 import zio.ZIO
 
 import java.net.URI
@@ -45,6 +44,8 @@ import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraApiValueModel
+import org.knora.webapi.slice.common.ModelError
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
@@ -569,89 +570,94 @@ object CreateValueV2 {
     ingestState: AssetIngestState,
     jsonLdString: String,
     requestingUser: User,
-  ): ZIO[SipiService & StringFormatter & IriConverter & MessageRelay, Throwable, CreateValueV2] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      for {
-        // Get the IRI of the resource that the value is to be created in.
-        jsonLDDocument <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
-        resourceIri <- jsonLDDocument.body.getRequiredIdValueAsKnoraDataIri
-                         .mapError(BadRequestException(_))
-                         .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
+  ): ZIO[SipiService & StringFormatter & IriConverter & MessageRelay, Throwable, CreateValueV2] = ZIO.scoped {
+    ZIO.serviceWithZIO[IriConverter] { converter =>
+      ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
+        for {
+          // Get the IRI of the resource that the value is to be created in.
+          model          <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
+          jsonLDDocument <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
+          resourceIri <- model.getResourceIri.mapError {
+                           case None                => BadRequestException("Resource IRI not found")
+                           case Some(e: ModelError) => BadRequestException(e.msg)
+                         }
 
-        shortcode <- ZIO
-                       .fromEither(resourceIri.getProjectShortcode)
-                       .mapError(msg => NotFoundException(s"Shortcode not found. $msg"))
+          shortcode <- ZIO
+                         .fromEither(resourceIri.getProjectShortcode)
+                         .mapError(msg => NotFoundException(s"Shortcode not found. $msg"))
 
-        // Get the resource class.
-        resourceClassIri <-
-          jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
+          // Get the resource class.
+          resourceClassIri <-
+            jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
 
-        // Get the resource property and the value to be created.
-        createValue <-
-          jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
-            case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
-              for {
-                fileInfo     <- ValueContentV2.getFileInfo(shortcode, ingestState, jsonLdObject)
-                valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser, fileInfo)
+          // Get the resource property and the value to be created.
+          createValue <-
+            jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
+              case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
+                for {
+                  fileInfo     <- ValueContentV2.getFileInfo(shortcode, ingestState, jsonLdObject)
+                  valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser, fileInfo)
 
-                // Get and validate the custom value IRI if provided.
-                maybeCustomValueIri <- jsonLdObject.getIdValueAsKnoraDataIri
-                                         .mapError(BadRequestException(_))
-                                         .mapAttempt { definedNewIri =>
-                                           definedNewIri.foreach(
-                                             stringFormatter.validateCustomValueIri(
-                                               _,
-                                               shortcode.value,
-                                               resourceIri.getResourceID.get,
-                                             ),
+                  // Get and validate the custom value IRI if provided.
+                  maybeCustomValueIri <- jsonLdObject.getIdValueAsKnoraDataIri
+                                           .mapError(BadRequestException(_))
+                                           .mapAttempt { definedNewIri =>
+                                             definedNewIri.foreach(
+                                               sf.validateCustomValueIri(
+                                                 _,
+                                                 shortcode.value,
+                                                 resourceIri.getResourceID.get,
+                                               ),
+                                             )
+                                             definedNewIri
+                                           }
+
+                  // Get the custom value UUID if provided.
+                  maybeCustomUUID <- jsonLdObject.getUuid(ValueHasUUID).mapError(BadRequestException(_))
+
+                  // Get the value's creation date.
+                  // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
+                  maybeCreationDate <- ZIO.attempt(
+                                         jsonLdObject
+                                           .maybeDatatypeValueInObject(
+                                             key = ValueCreationDate,
+                                             expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                             validationFun = (s, errorFun) =>
+                                               ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
                                            )
-                                           definedNewIri
-                                         }
+                                           .orElse(
+                                             jsonLdObject
+                                               .maybeDatatypeValueInObject(
+                                                 key = CreationDate,
+                                                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                                 validationFun = (s, errorFun) =>
+                                                   ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+                                               ),
+                                           ),
+                                       )
 
-                // Get the custom value UUID if provided.
-                maybeCustomUUID <- jsonLdObject.getUuid(ValueHasUUID).mapError(BadRequestException(_))
-
-                // Get the value's creation date.
-                // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
-                maybeCreationDate <- ZIO.attempt(
-                                       jsonLdObject
-                                         .maybeDatatypeValueInObject(
-                                           key = ValueCreationDate,
-                                           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                           validationFun = (s, errorFun) =>
-                                             ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-                                         )
-                                         .orElse(
-                                           jsonLdObject
-                                             .maybeDatatypeValueInObject(
-                                               key = CreationDate,
-                                               expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                               validationFun = (s, errorFun) =>
-                                                 ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-                                             ),
-                                         ),
-                                     )
-
-                maybePermissions <-
-                  ZIO.attempt {
-                    val validationFun: (String, => Nothing) => String =
-                      (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                    jsonLdObject.maybeStringWithValidation(HasPermissions, validationFun)
-                  }
-              } yield CreateValueV2(
-                resourceIri = resourceIri.toString,
-                resourceClassIri = resourceClassIri,
-                propertyIri = propertyIri,
-                valueContent = valueContent,
-                valueIri = maybeCustomValueIri,
-                valueUUID = maybeCustomUUID,
-                valueCreationDate = maybeCreationDate,
-                permissions = maybePermissions,
-                ingestState = ingestState,
-              )
-          }
-      } yield createValue
+                  maybePermissions <-
+                    ZIO.attempt {
+                      val validationFun: (String, => Nothing) => String =
+                        (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
+                      jsonLdObject.maybeStringWithValidation(HasPermissions, validationFun)
+                    }
+                } yield CreateValueV2(
+                  resourceIri = resourceIri.toString,
+                  resourceClassIri = resourceClassIri,
+                  propertyIri = propertyIri,
+                  valueContent = valueContent,
+                  valueIri = maybeCustomValueIri,
+                  valueUUID = maybeCustomUUID,
+                  valueCreationDate = maybeCreationDate,
+                  permissions = maybePermissions,
+                  ingestState = ingestState,
+                )
+            }
+        } yield createValue
+      }
     }
+  }
 }
 
 /** A trait for classes representing information to be updated in a value. */
