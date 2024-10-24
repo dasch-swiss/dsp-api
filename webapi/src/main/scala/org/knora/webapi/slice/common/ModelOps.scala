@@ -14,6 +14,7 @@ import zio.*
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 import scala.util.Try
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.common.ModelError.IsNoResourceIri

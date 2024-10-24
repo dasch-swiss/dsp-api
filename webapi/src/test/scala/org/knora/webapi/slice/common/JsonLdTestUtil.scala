@@ -19,20 +19,20 @@ object JsonLdTestUtil {
   def jsonLdDocumentFrom(str: String): JsonDocument = JsonDocument.of(ByteArrayInputStream(str.getBytes(UTF_8)))
 
   object JsonLdTransformations {
-    type JsonLdTransformation = String => String
-    val expand: JsonLdTransformation = (jsonLd: String) => {
+
+    val expand: String => String = (jsonLd: String) => {
       val d: JsonDocument   = jsonLdDocumentFrom(jsonLd)
       val api: ExpansionApi = JsonLd.expand(d)
       api.get().toString
     }
 
-    val flatten: JsonLdTransformation = (jsonLd: String) => {
+    val flatten: String => String = (jsonLd: String) => {
       val d: JsonDocument    = jsonLdDocumentFrom(jsonLd)
       val api: FlatteningApi = JsonLd.flatten(d)
       api.get().toString
     }
 
-    val compact: JsonLdTransformation = (jsonLd: String) => {
+    val compact: String => String = (jsonLd: String) => {
       val d: JsonDocument = jsonLdDocumentFrom(jsonLd)
       val api: CompactionApi =
         JsonLd.compact(
@@ -45,15 +45,15 @@ object JsonLdTestUtil {
       api.get().toString
     }
 
-    val noOp: JsonLdTransformation = (jsonLd: String) => jsonLd
+    val noOp: String => String = (jsonLd: String) => jsonLd
 
-    val all: Seq[JsonLdTransformation] = Seq(
+    val all: Seq[String => String] = Seq(
       expand,
       compact,
       flatten,
       noOp,
     )
 
-    val allGen: Gen[Any, JsonLdTransformation] = Gen.fromIterable(JsonLdTransformations.all)
+    val allGen: Gen[Any, String => String] = Gen.fromIterable(JsonLdTransformations.all)
   }
 }
