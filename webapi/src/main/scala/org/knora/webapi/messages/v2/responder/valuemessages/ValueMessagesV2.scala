@@ -45,7 +45,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraApiValueModel
-import org.knora.webapi.slice.common.ModelError
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
@@ -575,22 +574,17 @@ object CreateValueV2 {
       ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
         for {
           // Get the IRI of the resource that the value is to be created in.
-          model          <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
-          jsonLDDocument <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
-          resourceIri <- model.getRootResourceIri.mapError {
-                           case None                => BadRequestException("Resource IRI not found")
-                           case Some(e: ModelError) => BadRequestException(e.msg)
-                         }
-
+          model <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
           shortcode <- ZIO
-                         .fromEither(resourceIri.getProjectShortcode)
+                         .fromEither(model.rootResourceIri.getProjectShortcode)
                          .mapError(msg => NotFoundException(s"Shortcode not found. $msg"))
-
-          // Get the resource class.
-          resourceClassIri <-
-            jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
+          resourceClassIri <- model.rootResourceClassIri.mapError {
+                                case Some(e) => BadRequestException(e.msg)
+                                case None    => BadRequestException("No resource class found")
+                              }
 
           // Get the resource property and the value to be created.
+          jsonLDDocument <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
           createValue <-
             jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
               case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
@@ -606,7 +600,7 @@ object CreateValueV2 {
                                                sf.validateCustomValueIri(
                                                  _,
                                                  shortcode.value,
-                                                 resourceIri.getResourceID.get,
+                                                 model.rootResourceIri.getResourceID.get,
                                                ),
                                              )
                                              definedNewIri
@@ -643,7 +637,7 @@ object CreateValueV2 {
                       jsonLdObject.maybeStringWithValidation(HasPermissions, validationFun)
                     }
                 } yield CreateValueV2(
-                  resourceIri = resourceIri.toString,
+                  resourceIri = model.rootResourceIri.toString,
                   resourceClassIri = resourceClassIri,
                   propertyIri = propertyIri,
                   valueContent = valueContent,

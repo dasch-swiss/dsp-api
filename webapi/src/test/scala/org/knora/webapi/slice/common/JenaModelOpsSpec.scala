@@ -43,14 +43,14 @@ object JenaModelOpsSpec extends ZIOSpecDefault {
   val spec = suite("JenaModelOps")(
     suite("fromJsonLd")(
       test("should parse the json ld") {
-        JenaModelOps.fromJsonLd(jsonLd).flatMap { model =>
+        ModelOps.fromJsonLd(jsonLd).flatMap { model =>
           assertTrue(model.size() == 4)
         }
       },
       test("should produce isomorphic models") {
         for {
-          model1 <- JenaModelOps.fromJsonLd(jsonLd)
-          model2 <- JenaModelOps.fromJsonLd(jsonLd2)
+          model1 <- ModelOps.fromJsonLd(jsonLd)
+          model2 <- ModelOps.fromJsonLd(jsonLd2)
         } yield assertTrue(model1.isIsomorphicWith(model2))
       },
     ),

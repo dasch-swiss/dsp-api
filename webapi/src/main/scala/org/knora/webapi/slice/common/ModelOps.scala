@@ -13,6 +13,7 @@ import zio.*
 
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
+import scala.util.Try
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.common.ModelError.IsNoResourceIri
@@ -20,31 +21,54 @@ import org.knora.webapi.slice.common.ModelError.MoreThanOneRootResource
 import org.knora.webapi.slice.common.ModelError.ParseError
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
-import scala.util.Try
-
 enum ModelError(val msg: String) {
-  case ParseError(override val msg: String)                   extends ModelError(msg)
-  case IsNoResourceIri(override val msg: String, iri: String) extends ModelError(msg)
-  case MoreThanOneRootResource(override val msg: String)      extends ModelError(msg)
-  case NoRootResource(override val msg: String)               extends ModelError(msg)
+  case ParseError(override val msg: String)                           extends ModelError(msg)
+  case IsNoResourceIri(override val msg: String, iri: String)         extends ModelError(msg)
+  case InvalidResourceClassIri(override val msg: String, iri: String) extends ModelError(msg)
+  case MoreThanOneRootResource(override val msg: String)              extends ModelError(msg)
+  case NoRootResource(override val msg: String)                       extends ModelError(msg)
 }
 object ModelError {
   def parseError(ex: Throwable): ParseError = ParseError(ex.getMessage)
-  def parseError(msg: String): ParseError   = ParseError(msg)
   def noResourceIri(iri: SmartIri): IsNoResourceIri =
     IsNoResourceIri(s"This is not a resource IRI $iri", iri.toOntologySchema(ApiV2Complex).toIri)
   def moreThanOneRootResource: MoreThanOneRootResource = MoreThanOneRootResource("More than one root resource found")
   def noRootResource: NoRootResource                   = NoRootResource("No root resource found")
+  def invalidResourceClassIri(iri: SmartIri): InvalidResourceClassIri =
+    InvalidResourceClassIri("Invalid resource class IRI", iri.toIri)
 }
 
 /*
- * The KnoraApiModel represents any incoming values model from our v2 API.
+ * The KnoraApiModel represents any incoming value models from our v2 API.
  */
-final case class KnoraApiValueModel(model: Model, convert: IriConverter) { self =>
+final case class KnoraApiValueModel(model: Model, rootResourceIri: SmartIri, convert: IriConverter) { self =>
   import ResourceOps.*
   import StatementOps.*
 
-  def getRootResourceIri: IO[Option[ModelError], SmartIri] = ZIO.scoped {
+  def rootResource: Resource = model.getResource(rootResourceIri.toString)
+
+  def rootResourceClassIri: IO[Option[ModelError], SmartIri] = ZIO
+    .fromOption(rootResource.rdfsType())
+    .flatMap(convert.asSmartIri(_).mapError(ModelError.parseError).asSomeError)
+    .filterOrElseWith(iri => iri.isKnoraEntityIri && iri.isApiV2ComplexSchema)(iri =>
+      ZIO.fail(ModelError.invalidResourceClassIri(iri)).asSomeError,
+    )
+}
+
+object KnoraApiValueModel { self =>
+  import StatementOps.*
+
+  // available for ease of use in tests
+  def fromJsonLd(str: String): ZIO[Scope & IriConverter, ModelError, KnoraApiValueModel] =
+    ZIO.service[IriConverter].flatMap(self.fromJsonLd(str, _))
+
+  def fromJsonLd(str: String, converter: IriConverter): ZIO[Scope & IriConverter, ModelError, KnoraApiValueModel] =
+    for {
+      model <- ModelOps.fromJsonLd(str)
+      root  <- getRootResourceIri(model, converter)
+    } yield KnoraApiValueModel(model, root, converter)
+
+  private def getRootResourceIri(model: Model, convert: IriConverter): IO[ModelError, SmartIri] =
     val iter    = model.listStatements()
     var objSeen = Set.empty[String]
     var subSeen = Set.empty[String]
@@ -53,31 +77,23 @@ final case class KnoraApiValueModel(model: Model, convert: IriConverter) { self 
       val _    = stmt.objectUri().foreach(iri => objSeen += iri)
       val _    = stmt.subjectUri().foreach(iri => subSeen += iri)
     }
-    val result: IO[Option[ModelError], SmartIri] = (subSeen -- objSeen) match {
+    val result: IO[ModelError, SmartIri] = (subSeen -- objSeen) match {
       case result if result.size == 1 =>
         convert
           .asSmartIri(result.head)
           .mapError(ModelError.parseError)
-          .asSomeError
-          .filterOrElseWith(_.isKnoraResourceIri)(iri => ZIO.fail(ModelError.noResourceIri(iri)).asSomeError)
-      case _ => ZIO.fail(ModelError.moreThanOneRootResource).asSomeError
+          .filterOrElseWith(_.isKnoraResourceIri)(iri => ZIO.fail(ModelError.noResourceIri(iri)))
+      case result if result.isEmpty => ZIO.fail(ModelError.noRootResource)
+      case _                        => ZIO.fail(ModelError.moreThanOneRootResource)
     }
-    result.withFinalizer(_ => ZIO.succeed(iter.close()))
-  }
-
-  def getRootResource: IO[Option[ModelError], Resource] = self.getRootResourceIri.map(_.toIri).map(model.getResource)
-
-  def getRootResourceClassIri: IO[Option[ModelError], SmartIri] =
-    for {
-      resource <- self.getRootResource
-      iri      <- ZIO.fromOption(resource.property(RDF.`type`)).map(_.getObject.asResource().getURI)
-      smartIri <- convert.asSmartIri(iri).orDie
-    } yield smartIri
+    result
 }
 
 object ResourceOps {
   extension (res: Resource) {
     def property(p: Property): Option[Statement] = Option(res.getProperty(p))
+    def rdfsType(): Option[String]               = Option(res.getPropertyResourceValue(RDF.`type`)).flatMap(_.uri)
+    def uri: Option[String]                      = Option(res.getURI)
   }
 }
 
@@ -88,23 +104,7 @@ object StatementOps {
   }
 }
 
-object KnoraApiValueModel { self =>
-
-  // available for ease of use in tests
-  def fromJsonLd(str: String): ZIO[Scope & IriConverter, ModelError, KnoraApiValueModel] =
-    ZIO.service[IriConverter].flatMap(self.fromJsonLd(str, _))
-
-  def fromJsonLd(
-    str: String,
-    converter: IriConverter,
-  ): ZIO[Scope & IriConverter, ModelError, KnoraApiValueModel] =
-    JenaModelOps
-      .fromJsonLd(str)
-      .map(KnoraApiValueModel(_, converter))
-      .tap(_.getRootResource.mapError(_.getOrElse(ModelError.noRootResource)))
-}
-
-object JenaModelOps { self =>
+object ModelOps { self =>
 
   def fromJsonLd(str: String): ZIO[Scope, ParseError, Model] = from(str, Lang.JSONLD)
 

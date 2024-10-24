@@ -10,6 +10,7 @@ import zio.json.DecoderOps
 import zio.json.EncoderOps
 import zio.json.ast.Json
 import zio.test.*
+
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
@@ -58,16 +59,15 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
       check(Gen.fromIterable(Seq(createIntegerValue, createLinkValue).map(_.toJsonPretty))) { json =>
         for {
           model <- KnoraApiValueModel.fromJsonLd(json)
-          iri   <- model.getRootResourceIri
-        } yield assertTrue(iri.toString == "http://rdfh.ch/0001/a-thing")
+        } yield assertTrue(model.rootResourceIri.toString == "http://rdfh.ch/0001/a-thing")
       }
     },
-    test("getResourceClass should get the rdfs:type") {
+    test("rootResourceClassIri should get the rdfs:type") {
       check(Gen.fromIterable(Seq(createIntegerValue, createLinkValue).map(_.toJsonPretty))) { json =>
         for {
-          model <- KnoraApiValueModel.fromJsonLd(createIntegerValue.toJsonPretty())
-          iri   <- model.getRootResourceClassIri
-        } yield assertTrue(iri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing")
+          model            <- KnoraApiValueModel.fromJsonLd(json)
+          resourceClassIri <- model.rootResourceClassIri
+        } yield assertTrue(resourceClassIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing")
       }
     },
   ).provideSome[Scope](IriConverter.layer, StringFormatter.test)
