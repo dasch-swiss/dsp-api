@@ -6,10 +6,12 @@
 package org.knora.webapi.messages.v2.responder.valuemessages
 
 import zio.ZIO
+import zio.test.Gen
 import zio.test.Spec
 import zio.test.TestResult
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+import zio.test.check
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
@@ -25,6 +27,8 @@ import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.common.JsonLdTestUtil
+import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceMock
@@ -65,32 +69,34 @@ object CreateValueV2Spec extends ZIOSpecDefault {
 
   override def spec: Spec[Any, Throwable] =
     suite("CreateValueV2Spec")(test("UnformattedText TextValue fromJsonLd should contain the language") {
-      for {
-        sf    <- ZIO.service[StringFormatter]
-        value <- CreateValueV2.fromJsonLd(AssetIngested, unformattedTextValueWithLanguage, rootUser)
-      } yield assertTrue(
-        value == CreateValueV2(
-          resourceIri = "http://rdfh.ch/0001/a-thing",
-          resourceClassIri = sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"),
-          propertyIri = sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText"),
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some("This is English"),
-            textValueType = UnformattedText,
-            valueHasLanguage = Some("en"),
-            standoff = Nil,
-            mappingIri = None,
-            mapping = None,
-            xslt = None,
-            comment = None,
+      check(Gen.fromIterable(Seq(JsonLdTransformations.noOp))) { f =>
+        for {
+          sf    <- ZIO.service[StringFormatter]
+          value <- CreateValueV2.fromJsonLd(AssetIngested, f(unformattedTextValueWithLanguage), rootUser)
+        } yield assertTrue(
+          value == CreateValueV2(
+            resourceIri = "http://rdfh.ch/0001/a-thing",
+            resourceClassIri = sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"),
+            propertyIri = sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText"),
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some("This is English"),
+              textValueType = UnformattedText,
+              valueHasLanguage = Some("en"),
+              standoff = Nil,
+              mappingIri = None,
+              mapping = None,
+              xslt = None,
+              comment = None,
+            ),
+            valueIri = None,
+            valueUUID = None,
+            valueCreationDate = None,
+            permissions = None,
+            ingestState = AssetIngested,
           ),
-          valueIri = None,
-          valueUUID = None,
-          valueCreationDate = None,
-          permissions = None,
-          ingestState = AssetIngested,
-        ),
-      )
+        )
+      }
     }).provide(StringFormatter.test, MessageRelayLive.layer, IriConverter.layer, SipiServiceMock.layer)
 
 }

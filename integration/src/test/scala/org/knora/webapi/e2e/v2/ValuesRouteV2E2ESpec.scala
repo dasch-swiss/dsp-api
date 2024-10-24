@@ -2836,7 +2836,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-           | "@id" : "$resourceIri",
+           |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
            |  "anything:hasOtherThingValue" : {
            |    "@id" : "$customValueIri",
@@ -2862,7 +2862,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      val bodyStr                = Await.result(Unmarshal(response.entity).to[String], 3.seconds)
+      assert(response.status == StatusCodes.OK, bodyStr)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
