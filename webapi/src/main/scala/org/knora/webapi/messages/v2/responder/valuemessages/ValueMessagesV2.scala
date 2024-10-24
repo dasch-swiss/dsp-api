@@ -577,7 +577,7 @@ object CreateValueV2 {
           // Get the IRI of the resource that the value is to be created in.
           model          <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
           jsonLDDocument <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
-          resourceIri <- model.getResourceIri.mapError {
+          resourceIri <- model.getRootResourceIri.mapError {
                            case None                => BadRequestException("Resource IRI not found")
                            case Some(e: ModelError) => BadRequestException(e.msg)
                          }
