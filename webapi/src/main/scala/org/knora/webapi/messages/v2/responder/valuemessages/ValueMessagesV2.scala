@@ -9,6 +9,7 @@ import zio.ZIO
 import java.net.URI
 import java.time.Instant
 import java.util.UUID
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -16,8 +17,6 @@ import dsp.errors.NotImplementedException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
-import org.apache.jena.rdf.model.Property
-import org.apache.jena.rdf.model.ResourceFactory
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -582,53 +581,28 @@ object CreateValueV2 {
                                 case None    => BadRequestException("No resource class found")
                               }
 
-          // Get the resource property and the value to be created.
+          maybeCustomUUID   <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
+          maybeCreationDate <- ZIO.fromEither(model.valueNode.getValueCreationDate).mapError(BadRequestException(_))
+          fileInfo          <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
+          maybeCustomValueIri <- model.valueNode.getNodeSubject.unsome
+                                   .mapError(e => BadRequestException(e.msg))
+                                   .mapAttempt { definedNewIri =>
+                                     definedNewIri.foreach(
+                                       sf.validateCustomValueIri(
+                                         _,
+                                         model.shortcode.value,
+                                         model.rootResourceIri.getResourceID.get,
+                                       ),
+                                     )
+                                     definedNewIri
+                                   }
+
           jsonLDDocument <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
           createValue <-
             jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
               case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
                 for {
-                  fileInfo     <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
                   valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser, fileInfo)
-
-                  // Get and validate the custom value IRI if provided.
-                  maybeCustomValueIri <- model.valueNode.getNodeSubject.unsome
-                                           .mapError(e => BadRequestException(e.msg))
-                                           .mapAttempt { definedNewIri =>
-                                             definedNewIri.foreach(
-                                               sf.validateCustomValueIri(
-                                                 _,
-                                                 model.shortcode.value,
-                                                 model.rootResourceIri.getResourceID.get,
-                                               ),
-                                             )
-                                             definedNewIri
-                                           }
-
-                  // Get the custom value UUID if provided.
-                  maybeCustomUUID <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
-
-                  // Get the value's creation date.
-                  // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
-                  maybeCreationDate <- ZIO.attempt(
-                                         jsonLdObject
-                                           .maybeDatatypeValueInObject(
-                                             key = ValueCreationDate,
-                                             expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                             validationFun = (s, errorFun) =>
-                                               ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-                                           )
-                                           .orElse(
-                                             jsonLdObject
-                                               .maybeDatatypeValueInObject(
-                                                 key = CreationDate,
-                                                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                                 validationFun = (s, errorFun) =>
-                                                   ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-                                               ),
-                                           ),
-                                       )
-
                   maybePermissions <-
                     ZIO.attempt {
                       val validationFun: (String, => Nothing) => String =

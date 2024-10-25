@@ -10,9 +10,10 @@ import zio.json.DecoderOps
 import zio.json.EncoderOps
 import zio.json.ast.Json
 import zio.test.*
+
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.common.ModelOps.*
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 object KnoraApiValueModelSpec extends ZIOSpecDefault {
 

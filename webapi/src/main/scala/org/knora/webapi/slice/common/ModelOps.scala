@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.common
 
-import dsp.valueobjects.UuidUtil
-import dsp.valueobjects.UuidUtil.base64Decode
 import org.apache.jena.rdf.model.*
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
@@ -14,20 +12,27 @@ import org.apache.jena.vocabulary.RDF
 import zio.*
 
 import java.io.ByteArrayInputStream
+import java.io.StringWriter
 import java.nio.charset.StandardCharsets
+import java.time.Instant
+import java.util.UUID
+import scala.jdk.CollectionConverters.*
 import scala.util.Try
+
+import dsp.valueobjects.UuidUtil
+import dsp.valueobjects.UuidUtil.base64Decode
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.CreationDate
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueCreationDate
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasUUID
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.ModelError.IsNoResourceIri
 import org.knora.webapi.slice.common.ModelError.MoreThanOneRootResource
 import org.knora.webapi.slice.common.ModelError.ParseError
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
-import java.io.StringWriter
-import java.util.UUID
-import scala.jdk.CollectionConverters.*
 
 enum ModelError(val msg: String) {
   case ParseError(override val msg: String)                           extends ModelError(msg)
@@ -146,6 +151,9 @@ final case class KnoraApiValueNode(node: RDFNode, belongsTo: Property, shortcode
     getStringLiteral(ValueHasUUID)
       .map(str => base64Decode(str).map(Some(_)).toEither.left.map(e => s"Invalid UUID '$str': ${e.getMessage}"))
       .fold(Right(None))(identity)
+
+  def getValueCreationDate: Either[String, Option[Instant]] =
+    node.getDateTimeProperty(ResourceFactory.createProperty(ValueCreationDate))
 }
 
 object KnoraApiValueNode {}
@@ -163,6 +171,24 @@ object NodeOps {
     def getStatement(property: Property): Option[Statement] =
       node.toResourceOption.flatMap(r => Option(r.getProperty(property)))
     def toResourceOption: Option[Resource] = Try(node.asResource()).toOption
+    def getDateTimeProperty(property: Property): Either[String, Option[Instant]] =
+      node
+        .getLiteral(property)
+        .map { lit =>
+          Right(lit)
+            .filterOrElse(
+              _.getDatatypeURI == OntologyConstants.Xsd.DateTimeStamp,
+              s"Invalid data type (should be xsd:dateTimeStamp) for value: ${lit.getLexicalForm}",
+            )
+            .map(_.getLexicalForm)
+            .flatMap(str =>
+              ValuesValidator
+                .xsdDateTimeStampToInstant(str)
+                .toRight(s"Invalid xsd:dateTimeStamp value: $str")
+                .map(Some(_)),
+            )
+        }
+        .fold(Right(None))(identity)
   }
 }
 
