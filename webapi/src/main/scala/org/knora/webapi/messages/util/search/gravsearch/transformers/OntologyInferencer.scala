@@ -35,14 +35,8 @@ final case class OntologyInferencer(private val ontologyCache: OntologyCache)(im
       }
 
     // look up subclasses from ontology cache
-    superClasses = cache.classToSubclassLookup
-    knownSubClasses =
-      superClasses
-        .get(baseClassIri.iri)
-        .getOrElse({
-          Set(baseClassIri.iri)
-        })
-        .toSeq
+    superClasses    = cache.classToSubclassLookup
+    knownSubClasses = superClasses.get(baseClassIri.iri).getOrElse(Set(baseClassIri.iri)).toSeq
 
     // if provided, limit the child classes to those that belong to relevant ontologies
     subClasses = limitInferenceToOntologies match {
@@ -58,11 +52,13 @@ final case class OntologyInferencer(private val ontologyCache: OntologyCache)(im
                        }
                      }
                  }
+
     // if subclasses are available, create a union statement that searches for either the provided triple (`?v a <classIRI>`)
     // or triples where the object is a subclass of the provided object (`?v a <subClassIRI>`)
     // i.e. `{?v a <classIRI>} UNION {?v a <subClassIRI>}`
+    types = QueryVariable("resTypes")
     x = if (subClasses.length > 1)
-          Seq(UnionPattern(subClasses.map(newObject => Seq(statementPattern.copy(obj = IriRef(newObject))))))
+          Seq(ValuesPattern(types, subClasses.map(IriRef.apply(_, None)).toSet), statementPattern.copy(obj = types))
         else
           // if no subclasses are available, the initial statement can be used.
           Seq(statementPattern)
@@ -104,11 +100,12 @@ final case class OntologyInferencer(private val ontologyCache: OntologyCache)(im
     // if subproperties are available, create a union statement that searches for either the provided triple (`?a <propertyIRI> ?b`)
     // or triples where the predicate is a subproperty of the provided object (`?a <subPropertyIRI> ?b`)
     // i.e. `{?a <propertyIRI> ?b} UNION {?a <subPropertyIRI> ?b}`
+    val subProp = QueryVariable("subProp")
     val unions = if (subProps.length > 1) {
       Seq(
-        UnionPattern(
-          subProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate)))),
-        ),
+        ValuesPattern(subProp, subProps.map(IriRef.apply(_, None)).toSet),
+        statementPattern.copy(pred = subProp),
+        // UnionPattern(subProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate))))),
       )
     } else {
       // if no subproperties are available, the initial statement can be used
