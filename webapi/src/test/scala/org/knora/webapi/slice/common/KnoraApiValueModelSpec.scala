@@ -66,10 +66,8 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
     test("rootResourceClassIri should get the rdfs:type") {
       check(Gen.fromIterable(Seq(createIntegerValue, createLinkValue).map(_.toJsonPretty))) { json =>
         for {
-          model            <- KnoraApiValueModel.fromJsonLd(json)
-          resourceClassIri <- model.rootResourceClassIri
-          _                <- model.model.printTurtle
-        } yield assertTrue(resourceClassIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing")
+          model <- KnoraApiValueModel.fromJsonLd(json)
+        } yield assertTrue(model.rootResourceClassIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing")
       }
     },
     test("rootResourceProperties should get the props") {

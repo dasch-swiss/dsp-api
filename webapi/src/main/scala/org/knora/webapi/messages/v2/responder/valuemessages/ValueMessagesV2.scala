@@ -575,26 +575,20 @@ object CreateValueV2 {
       ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
         for {
           // Get the IRI of the resource that the value is to be created in.
-          model <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
-          resourceClassIri <- model.rootResourceClassIri.mapError {
-                                case Some(e) => BadRequestException(e.msg)
-                                case None    => BadRequestException("No resource class found")
-                              }
+          model             <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
           maybeCustomUUID   <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
           maybeCreationDate <- ZIO.fromEither(model.valueNode.getValueCreationDate).mapError(BadRequestException(_))
           fileInfo          <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
-          maybeCustomValueIri <- model.valueNode.getNodeSubject.unsome
-                                   .mapError(e => BadRequestException(e.msg))
-                                   .mapAttempt { definedNewIri =>
-                                     definedNewIri.foreach(
-                                       sf.validateCustomValueIri(
-                                         _,
-                                         model.shortcode.value,
-                                         model.rootResourceIri.getResourceID.get,
-                                       ),
-                                     )
-                                     definedNewIri
-                                   }
+          maybeCustomValueIri <-
+            model.valueNode.getNodeSubject
+              .mapError(e => BadRequestException(e.msg))
+              .tap { definedNewIri =>
+                ZIO.attempt(
+                  definedNewIri.foreach(
+                    sf.validateCustomValueIri(_, model.shortcode.value, model.rootResourceIri.getResourceID.get),
+                  ),
+                )
+              }
 
           jsonLDDocument  <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
           maybePermissions = model.valueNode.getHasPermissions
@@ -605,7 +599,7 @@ object CreateValueV2 {
                   valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser, fileInfo)
                 } yield CreateValueV2(
                   resourceIri = model.rootResourceIri.toString,
-                  resourceClassIri = resourceClassIri,
+                  resourceClassIri = model.rootResourceClassIri,
                   propertyIri = propertyIri,
                   valueContent = valueContent,
                   valueIri = maybeCustomValueIri,
