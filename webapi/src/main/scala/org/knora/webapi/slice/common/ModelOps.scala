@@ -21,6 +21,7 @@ import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueCreati
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasUUID
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.ModelError.IsNoResourceIri
 import org.knora.webapi.slice.common.ModelError.MoreThanOneRootResource
 import org.knora.webapi.slice.common.ModelError.ParseError
@@ -29,7 +30,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 enum ModelError(val msg: String) {
   case ParseError(override val msg: String)                           extends ModelError(msg)
   case IsNoResourceIri(override val msg: String, iri: String)         extends ModelError(msg)
-  case IsNoDataIri(override val msg: String, iri: String)             extends ModelError(msg)
+  case InvalidIri(override val msg: String)                           extends ModelError(msg)
   case InvalidResourceClassIri(override val msg: String, iri: String) extends ModelError(msg)
   case MoreThanOneRootResource(override val msg: String)              extends ModelError(msg)
   case NoRootResource(override val msg: String)                       extends ModelError(msg)
@@ -42,8 +43,7 @@ object ModelError {
   def parseError(ex: Throwable): ParseError = ParseError(ex.getMessage)
   def noResourceIri(iri: SmartIri): IsNoResourceIri =
     IsNoResourceIri(s"Invalid Knora resource IRI: $iri", iri.toOntologySchema(ApiV2Complex).toIri)
-  def noDataIri(iri: SmartIri): IsNoDataIri =
-    IsNoDataIri(s"Invalid Knora data IRI: $iri", iri.toOntologySchema(ApiV2Complex).toIri)
+  def invalidIri(msg: String): InvalidIri              = InvalidIri(msg)
   def moreThanOneRootResource: MoreThanOneRootResource = MoreThanOneRootResource("More than one root resource found")
   def noRootResource: NoRootResource                   = NoRootResource("No root resource found")
   def invalidResourceClassIri(iri: SmartIri): InvalidResourceClassIri =
@@ -138,11 +138,11 @@ final case class KnoraApiValueNode(node: RDFNode, belongsTo: Property, shortcode
   import ResourceOps.*
   def getStringLiteral(property: String): Option[String]   = node.getStringLiteral(property)
   def getStringLiteral(property: Property): Option[String] = node.getStringLiteral(property)
-  def getNodeSubject: IO[ModelError, Option[SmartIri]] =
+  def getValueIri: IO[ModelError, Option[ValueIri]] =
     ZIO
       .fromOption(node.toResourceOption.flatMap(_.uri))
       .flatMap(convert.asSmartIri(_).mapError(ModelError.parseError).asSomeError)
-      .filterOrElseWith(_.isKnoraDataIri)(iri => ZIO.fail(ModelError.noDataIri(iri)).asSomeError)
+      .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).mapError(ModelError.invalidIri).asSomeError)
       .unsome
 
   def getValueHasUuid: Either[String, Option[UUID]] =

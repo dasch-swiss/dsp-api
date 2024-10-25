@@ -575,20 +575,11 @@ object CreateValueV2 {
       ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
         for {
           // Get the IRI of the resource that the value is to be created in.
-          model             <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
-          maybeCustomUUID   <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
-          maybeCreationDate <- ZIO.fromEither(model.valueNode.getValueCreationDate).mapError(BadRequestException(_))
-          fileInfo          <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
-          maybeCustomValueIri <-
-            model.valueNode.getNodeSubject
-              .mapError(e => BadRequestException(e.msg))
-              .tap { definedNewIri =>
-                ZIO.attempt(
-                  definedNewIri.foreach(
-                    sf.validateCustomValueIri(_, model.shortcode.value, model.rootResourceIri.getResourceID.get),
-                  ),
-                )
-              }
+          model               <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
+          maybeCustomUUID     <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
+          maybeCreationDate   <- ZIO.fromEither(model.valueNode.getValueCreationDate).mapError(BadRequestException(_))
+          fileInfo            <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
+          maybeCustomValueIri <- model.valueNode.getValueIri.mapError(e => BadRequestException(e.msg))
 
           jsonLDDocument  <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
           maybePermissions = model.valueNode.getHasPermissions
@@ -602,7 +593,7 @@ object CreateValueV2 {
                   resourceClassIri = model.rootResourceClassIri,
                   propertyIri = propertyIri,
                   valueContent = valueContent,
-                  valueIri = maybeCustomValueIri,
+                  valueIri = maybeCustomValueIri.map(_.smartIri),
                   valueUUID = maybeCustomUUID,
                   valueCreationDate = maybeCreationDate,
                   permissions = maybePermissions,
