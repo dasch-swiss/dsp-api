@@ -580,7 +580,6 @@ object CreateValueV2 {
                                 case Some(e) => BadRequestException(e.msg)
                                 case None    => BadRequestException("No resource class found")
                               }
-
           maybeCustomUUID   <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
           maybeCreationDate <- ZIO.fromEither(model.valueNode.getValueCreationDate).mapError(BadRequestException(_))
           fileInfo          <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
@@ -597,18 +596,13 @@ object CreateValueV2 {
                                      definedNewIri
                                    }
 
-          jsonLDDocument <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
+          jsonLDDocument  <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
+          maybePermissions = model.valueNode.getHasPermissions
           createValue <-
             jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
               case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
                 for {
                   valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser, fileInfo)
-                  maybePermissions <-
-                    ZIO.attempt {
-                      val validationFun: (String, => Nothing) => String =
-                        (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                      jsonLdObject.maybeStringWithValidation(HasPermissions, validationFun)
-                    }
                 } yield CreateValueV2(
                   resourceIri = model.rootResourceIri.toString,
                   resourceClassIri = resourceClassIri,
