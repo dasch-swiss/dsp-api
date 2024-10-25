@@ -18,18 +18,21 @@ object KnoraIris {
   opaque type ResourceId = NonEmptyString
   opaque type ValueId    = NonEmptyString
 
-  final case class ValueIri private (
-    smartIri: SmartIri,
-    shortcode: Shortcode,
-    resourceId: ResourceId,
-    valueId: ValueId,
-  ) { self =>
+  trait KnoraIri { self =>
+    def smartIri: SmartIri
     override def toString: String                     = self.smartIri.toString
     def toInternal: InternalIri                       = self.smartIri.toInternalIri
     def toApiV2Complex: SmartIri                      = self.toOntologySchema(ApiV2Complex)
     def toApiV2Simple: SmartIri                       = self.toOntologySchema(ApiV2Simple)
     def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
   }
+
+  final case class ValueIri private (
+    smartIri: SmartIri,
+    shortcode: Shortcode,
+    resourceId: ResourceId,
+    valueId: ValueId,
+  ) extends KnoraIri
 
   object ValueIri {
     def from(iri: SmartIri): Either[String, ValueIri] =
@@ -45,13 +48,8 @@ object KnoraIris {
       }
   }
 
-  final case class ResourceIri private (smartIri: SmartIri, shortcode: Shortcode, resourceId: ResourceId) { self =>
-    override def toString: String                     = self.smartIri.toString
-    def toInternal: InternalIri                       = self.smartIri.toInternalIri
-    def toApiV2Complex: SmartIri                      = self.toOntologySchema(ApiV2Complex)
-    def toApiV2Simple: SmartIri                       = self.toOntologySchema(ApiV2Simple)
-    def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
-  }
+  final case class ResourceIri private (smartIri: SmartIri, shortcode: Shortcode, resourceId: ResourceId)
+      extends KnoraIri
 
   object ResourceIri {
     def from(iri: SmartIri): Either[String, ResourceIri] =
@@ -63,6 +61,17 @@ object KnoraIris {
         val shortcode  = iri.getProjectShortcode.getOrElse(throw Exception())
         val resourceId = NonEmptyString.unsafeFrom(iri.getResourceID.getOrElse(throw Exception()))
         Right(ResourceIri(iri, shortcode, resourceId))
+      }
+  }
+
+  final case class ResourceClassIri private (smartIri: SmartIri) extends KnoraIri
+
+  object ResourceClassIri {
+    def from(iri: SmartIri): Either[String, ResourceClassIri] =
+      if (!iri.isKnoraEntityIri && iri.isApiV2ComplexSchema) {
+        Left(s"<$iri> is not a Knora resource class IRI")
+      } else {
+        Right(ResourceClassIri(iri))
       }
   }
 }

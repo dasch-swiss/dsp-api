@@ -18,7 +18,6 @@ import dsp.valueobjects.UuidUtil.base64Decode
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueCreationDate
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasUUID
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
@@ -27,25 +26,23 @@ import org.knora.webapi.slice.common.ModelError.ParseError
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 enum ModelError(val msg: String) {
-  case ParseError(override val msg: String)                           extends ModelError(msg)
-  case InvalidIri(override val msg: String)                           extends ModelError(msg)
-  case InvalidResourceClassIri(override val msg: String, iri: String) extends ModelError(msg)
-  case MoreThanOneRootResource(override val msg: String)              extends ModelError(msg)
-  case NoRootResource(override val msg: String)                       extends ModelError(msg)
-  case MissingValueProp(override val msg: String)                     extends ModelError(msg)
-  case MultipleValueProp(override val msg: String)                    extends ModelError(msg)
-  case NoRootResourceClassIri(override val msg: String)               extends ModelError(msg)
+  case ParseError(override val msg: String)              extends ModelError(msg)
+  case InvalidIri(override val msg: String)              extends ModelError(msg)
+  case MoreThanOneRootResource(override val msg: String) extends ModelError(msg)
+  case NoRootResource(override val msg: String)          extends ModelError(msg)
+  case MissingValueProp(override val msg: String)        extends ModelError(msg)
+  case MultipleValueProp(override val msg: String)       extends ModelError(msg)
+  case NoRootResourceClassIri(override val msg: String)  extends ModelError(msg)
 }
 object ModelError {
   def parseError(ex: Throwable): ParseError            = ParseError(ex.getMessage)
   def invalidIri(msg: String): InvalidIri              = InvalidIri(msg)
+  def invalidIri(e: Throwable): InvalidIri             = InvalidIri(e.getMessage)
   def moreThanOneRootResource: MoreThanOneRootResource = MoreThanOneRootResource("More than one root resource found")
   def noRootResource: NoRootResource                   = NoRootResource("No root resource found")
-  def invalidResourceClassIri(iri: SmartIri): InvalidResourceClassIri =
-    InvalidResourceClassIri("Invalid resource class IRI", iri.toIri)
-  def missingValueProp: MissingValueProp             = MissingValueProp("No value property found in root resource")
-  def multipleValueProp: MultipleValueProp           = MultipleValueProp("Multiple value properties found in root resource")
-  def noRootResourceClassIri: NoRootResourceClassIri = NoRootResourceClassIri("No root resource class IRI found")
+  def missingValueProp: MissingValueProp               = MissingValueProp("No value property found in root resource")
+  def multipleValueProp: MultipleValueProp             = MultipleValueProp("Multiple value properties found in root resource")
+  def noRootResourceClassIri: NoRootResourceClassIri   = NoRootResourceClassIri("No root resource class IRI found")
 }
 
 /*
@@ -53,7 +50,7 @@ object ModelError {
  */
 final case class KnoraApiValueModel(
   resourceIri: KnoraIris.ResourceIri,
-  rootResourceClassIri: SmartIri,
+  resourceClassIri: KnoraIris.ResourceClassIri,
   valueNode: KnoraApiValueNode,
 ) {
   lazy val shortcode: Shortcode = resourceIri.shortcode
@@ -69,14 +66,14 @@ object KnoraApiValueModel { self =>
 
   def fromJsonLd(str: String, converter: IriConverter): ZIO[Scope & IriConverter, ModelError, KnoraApiValueModel] =
     for {
-      model                <- ModelOps.fromJsonLd(str)
-      resourceIri          <- resourceIri(model, converter)
-      rootResource          = model.getResource(resourceIri.smartIri.toString)
-      rootResourceClassIri <- rootResourceClassIri(rootResource, converter)
-      valueProp            <- valueNode(rootResource, resourceIri.shortcode, converter)
+      model            <- ModelOps.fromJsonLd(str)
+      resourceIri      <- resourceIri(model, converter)
+      resource          = model.getResource(resourceIri.smartIri.toString)
+      resourceClassIri <- resourceClassIri(resource, converter)
+      valueProp        <- valueNode(resource, resourceIri.shortcode, converter)
     } yield KnoraApiValueModel(
       resourceIri,
-      rootResourceClassIri,
+      resourceClassIri,
       valueProp,
     )
 
@@ -117,13 +114,14 @@ object KnoraApiValueModel { self =>
       .filterOrFail(_.size == 1)(ModelError.multipleValueProp)
       .map(_.head)
 
-  private def rootResourceClassIri(rootResource: Resource, convert: IriConverter): IO[ModelError, SmartIri] = ZIO
+  private def resourceClassIri(
+    rootResource: Resource,
+    convert: IriConverter,
+  ): IO[ModelError, KnoraIris.ResourceClassIri] = ZIO
     .fromOption(rootResource.rdfsType())
     .orElseFail(ModelError.noRootResourceClassIri)
-    .flatMap(convert.asSmartIri(_).mapError(ModelError.parseError))
-    .filterOrElseWith(iri => iri.isKnoraEntityIri && iri.isApiV2ComplexSchema)(iri =>
-      ZIO.fail(ModelError.invalidResourceClassIri(iri)),
-    )
+    .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
+    .flatMap(iri => ZIO.fromEither(KnoraIris.ResourceClassIri.from(iri)).mapError(ModelError.invalidIri))
 }
 
 final case class KnoraApiValueNode(node: RDFNode, belongsTo: Property, shortcode: Shortcode, convert: IriConverter) {
