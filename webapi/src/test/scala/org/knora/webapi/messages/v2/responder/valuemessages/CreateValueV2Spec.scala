@@ -37,15 +37,15 @@ object CreateValueV2Spec extends ZIOSpecDefault {
 
   private val unformattedTextValueWithLanguage =
     """
-      |{
-      |  "@id": "http://rdfh.ch/0001/a-thing",
-      |  "@type": "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
-      |  "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText":{
-      |    "@type":"http://api.knora.org/ontology/knora-api/v2#TextValue",
-      |    "http://api.knora.org/ontology/knora-api/v2#valueAsString":"This is English",
-      |    "http://api.knora.org/ontology/knora-api/v2#textValueHasLanguage":"en"
-      |  }
-      |}""".stripMargin
+{
+  "@id": "http://rdfh.ch/0001/a-thing",
+  "@type": "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
+  "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText":{
+    "@type":"http://api.knora.org/ontology/knora-api/v2#TextValue",
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString":"This is English",
+    "http://api.knora.org/ontology/knora-api/v2#textValueHasLanguage":"en"
+  }
+}""".stripMargin
 
   private val rootUser =
     User(
@@ -69,7 +69,10 @@ object CreateValueV2Spec extends ZIOSpecDefault {
 
   override def spec: Spec[Any, Throwable] =
     suite("CreateValueV2Spec")(test("UnformattedText TextValue fromJsonLd should contain the language") {
-      check(Gen.fromIterable(Seq(JsonLdTransformations.noOp))) { f =>
+      // TODO: add use all once the fromJsonLd is free of errors
+      //  val transformations = JsonLdTransformations.all
+      val transformations = Seq(JsonLdTransformations.noOp)
+      check(Gen.fromIterable(transformations)) { f =>
         for {
           sf    <- ZIO.service[StringFormatter]
           value <- CreateValueV2.fromJsonLd(AssetIngested, f(unformattedTextValueWithLanguage), rootUser)

@@ -9,7 +9,6 @@ import zio.ZIO
 import java.net.URI
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -17,6 +16,8 @@ import dsp.errors.NotImplementedException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
+import org.apache.jena.rdf.model.Property
+import org.apache.jena.rdf.model.ResourceFactory
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -45,6 +46,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraApiValueModel
+import org.knora.webapi.slice.common.KnoraApiValueNode
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
@@ -575,9 +577,6 @@ object CreateValueV2 {
         for {
           // Get the IRI of the resource that the value is to be created in.
           model <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
-          shortcode <- ZIO
-                         .fromEither(model.rootResourceIri.getProjectShortcode)
-                         .mapError(msg => NotFoundException(s"Shortcode not found. $msg"))
           resourceClassIri <- model.rootResourceClassIri.mapError {
                                 case Some(e) => BadRequestException(e.msg)
                                 case None    => BadRequestException("No resource class found")
@@ -589,17 +588,17 @@ object CreateValueV2 {
             jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
               case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
                 for {
-                  fileInfo     <- ValueContentV2.getFileInfo(shortcode, ingestState, jsonLdObject)
+                  fileInfo     <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
                   valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser, fileInfo)
 
                   // Get and validate the custom value IRI if provided.
-                  maybeCustomValueIri <- jsonLdObject.getIdValueAsKnoraDataIri
-                                           .mapError(BadRequestException(_))
+                  maybeCustomValueIri <- model.valueNode.getNodeSubject.unsome
+                                           .mapError(e => BadRequestException(e.msg))
                                            .mapAttempt { definedNewIri =>
                                              definedNewIri.foreach(
                                                sf.validateCustomValueIri(
                                                  _,
-                                                 shortcode.value,
+                                                 model.shortcode.value,
                                                  model.rootResourceIri.getResourceID.get,
                                                ),
                                              )
@@ -607,7 +606,7 @@ object CreateValueV2 {
                                            }
 
                   // Get the custom value UUID if provided.
-                  maybeCustomUUID <- jsonLdObject.getUuid(ValueHasUUID).mapError(BadRequestException(_))
+                  maybeCustomUUID <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
 
                   // Get the value's creation date.
                   // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
@@ -1085,28 +1084,34 @@ object ValueContentV2 {
    *         None if FileValueHasFilename is not found in the jsonLd object.
    *         Fails if the file is not found in the remote service or something goes wrong.
    */
+
   def getFileInfo(
     shortcode: Shortcode,
     ingestState: AssetIngestState,
     jsonLd: JsonLDObject,
   ): ZIO[SipiService, Throwable, Option[FileInfo]] =
-    ZIO
-      .fromEither(jsonLd.getString(FileValueHasFilename))
-      .orElse(ZIO.none)
-      .flatMap(fileMaybe =>
-        (fileMaybe, ingestState) match {
-          case (Some(filename), AssetIngested) => fileInfoFromDspIngest(shortcode, filename).asSome
-          case (Some(filename), AssetInTemp)   => fileInfoFromSipi(filename).asSome
-          case (None, _)                       => ZIO.none
-        },
-      )
+    val filenameMaybe = jsonLd.getString(FileValueHasFilename).toOption.flatten
+    fileInfoFromExternal(filenameMaybe, ingestState, shortcode)
+
+  def getFileInfo(
+    state: AssetIngestState,
+    valueNode: KnoraApiValueNode,
+  ): ZIO[SipiService, Throwable, Option[FileInfo]] =
+    val filenameMaybe = valueNode.getStringLiteral(FileValueHasFilename)
+    fileInfoFromExternal(filenameMaybe, state, valueNode.shortcode)
+
+  private def fileInfoFromExternal(filenameMaybe: Option[String], state: AssetIngestState, shortcode: Shortcode) =
+    (filenameMaybe, state) match
+      case (None, _)                       => ZIO.none
+      case (Some(filename), AssetIngested) => fileInfoFromDspIngest(shortcode, filename).asSome
+      case (Some(filename), AssetInTemp)   => fileInfoFromSipi(filename).asSome
 
   private def fileInfoFromSipi(filename: String) =
     ZIO.serviceWithZIO[SipiService](
       _.getFileMetadataFromSipiTemp(filename)
         .mapBoth(
           {
-            case NotFoundException(msg) =>
+            case NotFoundException(_) =>
               NotFoundException(
                 s"Asset '$filename' not found in Sipi temp, when ingested with dsp-ingest you want to add the 'X-Asset-Ingested' header.",
               )
@@ -1123,7 +1128,7 @@ object ValueContentV2 {
                    .fromEither(AssetId.from(filename.substring(0, filename.indexOf('.'))))
                    .mapError(msg => BadRequestException(s"Invalid value for 'fileValueHasFilename': $msg"))
       meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
-                case NotFoundException(msg) =>
+                case NotFoundException(_) =>
                   NotFoundException(
                     s"Asset '$filename' not found in dsp-ingest, when ingested to Sipi temp you want to remove the 'X-Asset-Ingested' header.",
                   )
@@ -2671,8 +2676,8 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
  * Represents image file metadata.
  *
  * @param fileValue the basic metadata about the file value.
- * @param dimX      the with of the the image in pixels.
- * @param dimY      the height of the the image in pixels.
+ * @param dimX      the width of the image in pixels.
+ * @param dimY      the height of the image in pixels.
  * @param comment   a comment on this `StillImageFileValueContentV2`, if any.
  */
 case class StillImageFileValueContentV2(
@@ -2769,8 +2774,6 @@ object StillImageFileValueContentV2 {
  * Represents the external image file metadata.
  *
  * @param fileValue the basic metadata about the file value.
- * @param dimX      the with of the the image in pixels.
- * @param dimY      the height of the the image in pixels.
  * @param comment   a comment on this `StillImageFileValueContentV2`, if any.
  */
 case class StillImageExternalFileValueContentV2(
@@ -2786,7 +2789,7 @@ case class StillImageExternalFileValueContentV2(
 
   override def valueHasString: String = fileValue.internalFilename
 
-  override def toOntologySchema(targetSchema: OntologySchema) =
+  override def toOntologySchema(targetSchema: OntologySchema): StillImageExternalFileValueContentV2 =
     copy(ontologySchema = targetSchema)
 
   def makeFileUrl: String = externalUrl.value.toString
@@ -2873,8 +2876,8 @@ object StillImageExternalFileValueContentV2 {
  *
  * @param fileValue the basic metadata about the file value.
  * @param pageCount the number of pages in the document.
- * @param dimX      the with of the the document in pixels.
- * @param dimY      the height of the the document in pixels.
+ * @param dimX      the width of the document in pixels.
+ * @param dimY      the height of the document in pixels.
  * @param comment   a comment on this `DocumentFileValueContentV2`, if any.
  */
 case class DocumentFileValueContentV2(

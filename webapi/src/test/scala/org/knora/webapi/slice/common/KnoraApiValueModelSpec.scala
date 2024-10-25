@@ -10,9 +10,9 @@ import zio.json.DecoderOps
 import zio.json.EncoderOps
 import zio.json.ast.Json
 import zio.test.*
-
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.common.ModelOps.*
 
 object KnoraApiValueModelSpec extends ZIOSpecDefault {
 
@@ -67,7 +67,16 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
         for {
           model            <- KnoraApiValueModel.fromJsonLd(json)
           resourceClassIri <- model.rootResourceClassIri
+          _                <- model.model.printTurtle
         } yield assertTrue(resourceClassIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing")
+      }
+    },
+    test("rootResourceProperties should get the props") {
+      check(Gen.fromIterable(Seq(createIntegerValue, createLinkValue).map(_.toJsonPretty))) { json =>
+        for {
+          model <- KnoraApiValueModel.fromJsonLd(json)
+          node   = model.valueNode
+        } yield assertTrue(node != null)
       }
     },
   ).provideSome[Scope](IriConverter.layer, StringFormatter.test)
