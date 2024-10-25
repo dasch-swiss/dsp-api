@@ -154,6 +154,9 @@ final case class KnoraApiValueNode(node: RDFNode, belongsTo: Property, shortcode
 
   def getValueCreationDate: Either[String, Option[Instant]] =
     node.getDateTimeProperty(ResourceFactory.createProperty(ValueCreationDate))
+
+  def getHasPermissions: Option[String] =
+    node.getStringLiteral(ResourceFactory.createProperty(OntologyConstants.KnoraApiV2Complex.HasPermissions))
 }
 
 object KnoraApiValueNode {}
