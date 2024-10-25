@@ -24,9 +24,10 @@ object KnoraIris {
     resourceId: ResourceId,
     valueId: ValueId,
   ) { self =>
+    override def toString: String                     = self.smartIri.toString
     def toInternal: InternalIri                       = self.smartIri.toInternalIri
-    def toApiV2Complex: SmartIri                      = self.smartIri.toOntologySchema(ApiV2Complex)
-    def toApiV2Simple: SmartIri                       = self.smartIri.toOntologySchema(ApiV2Simple)
+    def toApiV2Complex: SmartIri                      = self.toOntologySchema(ApiV2Complex)
+    def toApiV2Simple: SmartIri                       = self.toOntologySchema(ApiV2Simple)
     def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
   }
 
@@ -35,12 +36,33 @@ object KnoraIris {
       if (!iri.isKnoraValueIri) {
         Left(s"<$iri> is not a Knora value IRI")
       } else {
-        // the following two calls are safe because we checked that the
+        // the following three calls are safe because we checked that the
         // shortcode, resourceId and valueId are present in isKnoraValueIri
         val shortcode  = iri.getProjectShortcode.getOrElse(throw Exception())
         val resourceId = NonEmptyString.unsafeFrom(iri.getResourceID.getOrElse(throw Exception()))
         val valueId    = NonEmptyString.unsafeFrom(iri.getValueID.getOrElse(throw Exception()))
         Right(ValueIri(iri, shortcode, resourceId, valueId))
+      }
+  }
+
+  final case class ResourceIri private (smartIri: SmartIri, shortcode: Shortcode, resourceId: ResourceId) { self =>
+    override def toString: String                     = self.smartIri.toString
+    def toInternal: InternalIri                       = self.smartIri.toInternalIri
+    def toApiV2Complex: SmartIri                      = self.toOntologySchema(ApiV2Complex)
+    def toApiV2Simple: SmartIri                       = self.toOntologySchema(ApiV2Simple)
+    def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
+  }
+
+  object ResourceIri {
+    def from(iri: SmartIri): Either[String, ResourceIri] =
+      if (!iri.isKnoraResourceIri) {
+        Left(s"<$iri> is not a Knora resource IRI")
+      } else {
+        // the following two calls are safe because we checked that the
+        // shortcode and resourceId are present in isKnoraResourceIri
+        val shortcode  = iri.getProjectShortcode.getOrElse(throw Exception())
+        val resourceId = NonEmptyString.unsafeFrom(iri.getResourceID.getOrElse(throw Exception()))
+        Right(ResourceIri(iri, shortcode, resourceId))
       }
   }
 }

@@ -589,7 +589,7 @@ object CreateValueV2 {
                 for {
                   valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser, fileInfo)
                 } yield CreateValueV2(
-                  resourceIri = model.rootResourceIri.toString,
+                  resourceIri = model.resourceIri.toString,
                   resourceClassIri = model.rootResourceClassIri,
                   propertyIri = propertyIri,
                   valueContent = valueContent,
