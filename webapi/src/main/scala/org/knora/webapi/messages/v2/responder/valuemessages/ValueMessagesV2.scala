@@ -585,13 +585,13 @@ object CreateValueV2 {
           maybePermissions = model.valueNode.getHasPermissions
           createValue <-
             jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
-              case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
+              case (_: SmartIri, jsonLdObject: JsonLDObject) =>
                 for {
                   valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser, fileInfo)
                 } yield CreateValueV2(
                   resourceIri = model.resourceIri.toString,
                   resourceClassIri = model.resourceClassIri.smartIri,
-                  propertyIri = propertyIri,
+                  propertyIri = model.valueNode.propertyIri.smartIri,
                   valueContent = valueContent,
                   valueIri = maybeCustomValueIri.map(_.smartIri),
                   valueUUID = maybeCustomUUID,

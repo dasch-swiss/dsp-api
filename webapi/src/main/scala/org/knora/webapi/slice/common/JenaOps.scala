@@ -33,6 +33,7 @@ import org.knora.webapi.slice.common.ModelError.ParseError
 
 object NodeOps {
   extension (node: RDFNode) {
+    def getUri(): Option[String] = node.toUriResourceOption.map(_.getURI)
     def getStringLiteral(property: String): Option[String] =
       node.getStringLiteral(ResourceFactory.createProperty(property))
     def getStringLiteral(property: Property): Option[String] =
@@ -43,7 +44,8 @@ object NodeOps {
       node.getStatement(property).map(_.getObject)
     def getStatement(property: Property): Option[Statement] =
       node.toResourceOption.flatMap(r => Option(r.getProperty(property)))
-    def toResourceOption: Option[Resource] = Try(node.asResource()).toOption
+    def toResourceOption: Option[Resource]    = Try(node.asResource()).toOption
+    def toUriResourceOption: Option[Resource] = toResourceOption.filter(_.isURIResource)
     def getDateTimeProperty(property: Property): Either[String, Option[Instant]] =
       node
         .getLiteral(property)

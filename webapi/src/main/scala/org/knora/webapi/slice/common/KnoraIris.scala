@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.common
 import eu.timepit.refined.types.string.NonEmptyString
-
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Simple
 import org.knora.webapi.OntologySchema
@@ -25,6 +24,17 @@ object KnoraIris {
     def toApiV2Complex: SmartIri                      = self.toOntologySchema(ApiV2Complex)
     def toApiV2Simple: SmartIri                       = self.toOntologySchema(ApiV2Simple)
     def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
+  }
+
+  final case class PropertyIri private (smartIri: SmartIri) extends KnoraIri
+
+  object PropertyIri {
+    def from(iri: SmartIri): Either[String, PropertyIri] =
+      if (!iri.isKnoraEntityIri && iri.isApiV2ComplexSchema) {
+        Left(s"<$iri> is not a Knora API v2 complex property IRI")
+      } else {
+        Right(PropertyIri(iri))
+      }
   }
 
   final case class ValueIri private (
@@ -50,7 +60,6 @@ object KnoraIris {
 
   final case class ResourceIri private (smartIri: SmartIri, shortcode: Shortcode, resourceId: ResourceId)
       extends KnoraIri
-
   object ResourceIri {
     def from(iri: SmartIri): Either[String, ResourceIri] =
       if (!iri.isKnoraResourceIri) {

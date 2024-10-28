@@ -19,8 +19,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueCreationDate
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasUUID
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
-import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.ModelError.MoreThanOneRootResource
 import org.knora.webapi.slice.common.ModelError.ParseError
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -49,8 +48,8 @@ object ModelError {
  * The KnoraApiModel represents any incoming value models from our v2 API.
  */
 final case class KnoraApiValueModel(
-  resourceIri: KnoraIris.ResourceIri,
-  resourceClassIri: KnoraIris.ResourceClassIri,
+  resourceIri: ResourceIri,
+  resourceClassIri: ResourceClassIri,
   valueNode: KnoraApiValueNode,
 ) {
   lazy val shortcode: Shortcode = resourceIri.shortcode
@@ -77,7 +76,7 @@ object KnoraApiValueModel { self =>
       valueProp,
     )
 
-  private def resourceIri(model: Model, convert: IriConverter): IO[ModelError, KnoraIris.ResourceIri] =
+  private def resourceIri(model: Model, convert: IriConverter): IO[ModelError, ResourceIri] =
     val iter    = model.listStatements()
     var objSeen = Set.empty[String]
     var subSeen = Set.empty[String]
@@ -91,7 +90,7 @@ object KnoraApiValueModel { self =>
         convert
           .asSmartIri(result.head)
           .mapError(ModelError.parseError)
-          .flatMap(iri => ZIO.fromEither(KnoraIris.ResourceIri.from(iri)).mapError(ModelError.invalidIri))
+          .flatMap(iri => ZIO.fromEither(ResourceIri.from(iri)).mapError(ModelError.invalidIri))
       case result if result.isEmpty => ZIO.fail(ModelError.noRootResource)
       case _                        => ZIO.fail(ModelError.moreThanOneRootResource)
     }
@@ -107,26 +106,32 @@ object KnoraApiValueModel { self =>
         .listProperties()
         .asScala
         .filter(_.getPredicate != RDF.`type`)
-        .collect(s => KnoraApiValueNode(s.getObject, s.getPredicate, shortcode, converter))
         .toList
     }
       .filterOrFail(_.nonEmpty)(ModelError.missingValueProp)
       .filterOrFail(_.size == 1)(ModelError.multipleValueProp)
       .map(_.head)
+      .flatMap(s => KnoraApiValueNode.from(s, shortcode, converter))
 
   private def resourceClassIri(
     rootResource: Resource,
     convert: IriConverter,
-  ): IO[ModelError, KnoraIris.ResourceClassIri] = ZIO
+  ): IO[ModelError, ResourceClassIri] = ZIO
     .fromOption(rootResource.rdfsType())
     .orElseFail(ModelError.noRootResourceClassIri)
     .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
-    .flatMap(iri => ZIO.fromEither(KnoraIris.ResourceClassIri.from(iri)).mapError(ModelError.invalidIri))
+    .flatMap(iri => ZIO.fromEither(ResourceClassIri.from(iri)).mapError(ModelError.invalidIri))
 }
 
-final case class KnoraApiValueNode(node: RDFNode, belongsTo: Property, shortcode: Shortcode, convert: IriConverter) {
+final case class KnoraApiValueNode(
+  node: RDFNode,
+  propertyIri: PropertyIri,
+  shortcode: Shortcode,
+  convert: IriConverter,
+) {
   import NodeOps.*
   import ResourceOps.*
+
   def getStringLiteral(property: String): Option[String]   = node.getStringLiteral(property)
   def getStringLiteral(property: Property): Option[String] = node.getStringLiteral(property)
   def getValueIri: IO[ModelError, Option[ValueIri]] =
@@ -148,4 +153,17 @@ final case class KnoraApiValueNode(node: RDFNode, belongsTo: Property, shortcode
     node.getStringLiteral(ResourceFactory.createProperty(OntologyConstants.KnoraApiV2Complex.HasPermissions))
 }
 
-object KnoraApiValueNode {}
+object KnoraApiValueNode {
+  import NodeOps.*
+  def from(
+    stmt: Statement,
+    shortcode: Shortcode,
+    convert: IriConverter,
+  ): IO[ModelError, KnoraApiValueNode] =
+    ZIO
+      .fromOption(stmt.getPredicate.getUri())
+      .orElseFail(ModelError.invalidIri(s"No property IRI found for Value."))
+      .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
+      .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(ModelError.invalidIri))
+      .map(prop => KnoraApiValueNode(stmt.getObject, prop, shortcode, convert))
+}
