@@ -18,6 +18,7 @@ import dsp.valueobjects.UuidUtil.base64Decode
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueCreationDate
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasUUID
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.ModelError.MoreThanOneRootResource
@@ -126,6 +127,7 @@ object KnoraApiValueModel { self =>
 final case class KnoraApiValueNode(
   node: RDFNode,
   propertyIri: PropertyIri,
+  valueType: SmartIri,
   shortcode: Shortcode,
   convert: IriConverter,
 ) {
@@ -155,15 +157,22 @@ final case class KnoraApiValueNode(
 
 object KnoraApiValueNode {
   import NodeOps.*
+  import ResourceOps.*
+  import StatementOps.*
   def from(
     stmt: Statement,
     shortcode: Shortcode,
     convert: IriConverter,
   ): IO[ModelError, KnoraApiValueNode] =
-    ZIO
-      .fromOption(stmt.getPredicate.getUri())
-      .orElseFail(ModelError.invalidIri(s"No property IRI found for Value."))
-      .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
-      .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(ModelError.invalidIri))
-      .map(prop => KnoraApiValueNode(stmt.getObject, prop, shortcode, convert))
+    for {
+      propertyIri <- ZIO
+                       .fromOption(stmt.getPredicate.getUri())
+                       .orElseFail(ModelError.invalidIri(s"No property IRI found for Value."))
+                       .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
+                       .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(ModelError.invalidIri))
+      valueType <- ZIO
+                     .fromOption(stmt.objectAsResource().flatMap(_.rdfsType()))
+                     .orElseFail(ModelError.invalidIri(s"No value type found for Value."))
+                     .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
+    } yield KnoraApiValueNode(stmt.getObject, propertyIri, valueType, shortcode, convert)
 }

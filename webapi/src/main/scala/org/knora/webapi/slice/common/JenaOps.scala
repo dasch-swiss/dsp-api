@@ -76,9 +76,11 @@ object ResourceOps {
 }
 
 object StatementOps {
+  import ResourceOps.*
   extension (stmt: Statement) {
     def subjectUri(): Option[String] = Option(stmt.getSubject.getURI)
-    def objectUri(): Option[String]  = Try(stmt.getObject.asResource()).toOption.flatMap(r => Option(r.getURI))
+    def objectUri(): Option[String]  = stmt.objectAsResource().flatMap(_.uri)
+    def objectAsResource()           = Try(stmt.getObject.asResource()).toOption
   }
 }
 

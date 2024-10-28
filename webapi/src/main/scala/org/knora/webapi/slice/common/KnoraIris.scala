@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.common
 import eu.timepit.refined.types.string.NonEmptyString
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Simple
 import org.knora.webapi.OntologySchema

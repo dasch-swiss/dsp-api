@@ -575,14 +575,15 @@ object CreateValueV2 {
       ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
         for {
           // Get the IRI of the resource that the value is to be created in.
-          model               <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
+          model <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
+
+          maybeCustomValueIri <- model.valueNode.getValueIri.mapError(e => BadRequestException(e.msg))
           maybeCustomUUID     <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
           maybeCreationDate   <- ZIO.fromEither(model.valueNode.getValueCreationDate).mapError(BadRequestException(_))
-          fileInfo            <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
-          maybeCustomValueIri <- model.valueNode.getValueIri.mapError(e => BadRequestException(e.msg))
+          maybePermissions     = model.valueNode.getHasPermissions
 
-          jsonLDDocument  <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
-          maybePermissions = model.valueNode.getHasPermissions
+          fileInfo       <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
+          jsonLDDocument <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
           createValue <-
             jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
               case (_: SmartIri, jsonLdObject: JsonLDObject) =>
