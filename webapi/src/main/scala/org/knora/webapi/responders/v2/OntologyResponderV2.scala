@@ -109,9 +109,9 @@ final case class OntologyResponderV2(
       ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(resourceClassIris, allLanguages, requestingUser)
     case PropertiesGetRequestV2(propertyIris, allLanguages, requestingUser) =>
       getPropertyDefinitionsFromOntologyV2(propertyIris, allLanguages, requestingUser)
-    case OntologyMetadataGetByProjectRequestV2(projectIris, _) =>
+    case OntologyMetadataGetByProjectRequestV2(projectIris) =>
       getOntologyMetadataForProjectsV2(projectIris)
-    case OntologyMetadataGetByIriRequestV2(ontologyIris, _) =>
+    case OntologyMetadataGetByIriRequestV2(ontologyIris) =>
       getOntologyMetadataByIriV2(ontologyIris)
     case createOntologyRequest: CreateOntologyRequestV2 => createOntology(createOntologyRequest)
     case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 =>

@@ -55,10 +55,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
  */
-sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage {
-
-  def requestingUser: User
-}
+sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
 
 /**
  * Requests the creation of an empty ontology. A successful response will be a [[ReadOntologyV2]].
@@ -1226,21 +1223,17 @@ case class OntologyKnoraEntityIrisGetRequestV2(ontologyIri: SmartIri, requesting
  *
  * @param projectIris    the IRIs of the projects for which ontologies should be returned. If this set is empty, information
  *                       about all ontologies is returned.
- * @param requestingUser the user making the request.
  */
-case class OntologyMetadataGetByProjectRequestV2(
-  projectIris: Set[SmartIri] = Set.empty[SmartIri],
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
+case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[SmartIri] = Set.empty[SmartIri])
+    extends OntologiesResponderRequestV2
 
 /**
  * Requests metadata about ontologies by ontology IRI.
  *
  * @param ontologyIris   the IRIs of the ontologies to be queried. If this set is empty, information
  *                       about all ontologies is returned.
- * @param requestingUser the user making the request.
  */
-case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: User)
+case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.empty[SmartIri])
     extends OntologiesResponderRequestV2
 
 /**
