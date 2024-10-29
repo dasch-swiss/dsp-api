@@ -21,6 +21,7 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
 
   private val shapes =
     """
+      |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
       |@prefix sh:   <http://www.w3.org/ns/shacl#> .
       |@prefix owl:  <http://www.w3.org/2002/07/owl#> .
       |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -42,7 +43,8 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
       |onto:Resource0_Shape
       |  a                  sh:NodeShape ;
       |  sh:targetClass     onto:Resource0 ;
-      |  dash:closedByTypes true ;
+      |  sh:closed          true ;
+      |  sh:ignoredProperties (rdf:type) ;
       |  sh:property        [
       |                       a           sh:PropertyShape ;
       |                       sh:path     onto:hasText0 ;
@@ -52,7 +54,8 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
       |
       |onto:Resource1_Shape
       |  a                  sh:NodeShape ;
-      |  dash:closedByTypes true ;
+      |  sh:closed          true ;
+      |  sh:ignoredProperties (rdf:type) ;
       |  sh:targetClass     onto:Resource1 ;
       |  sh:property        [
       |                       a           sh:PropertyShape ;
