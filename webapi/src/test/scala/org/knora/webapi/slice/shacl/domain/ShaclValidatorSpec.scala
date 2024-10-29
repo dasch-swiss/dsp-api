@@ -21,40 +21,91 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
 
   private val shapes =
     """
-      |@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-      |@prefix schema: <http://schema.org/> .
-      |@prefix sh: <http://www.w3.org/ns/shacl#> .
-      |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+      |@prefix sh:   <http://www.w3.org/ns/shacl#> .
+      |@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+      |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+      |@prefix dash: <http://datashapes.org/dash#> .
+      |@prefix onto: <http://0.0.0.0:3333/ontology/9990/onto/v2#> .
+      |@prefix data: <http://0.0.0.0:3333/ontology/9990/data/> .
       |
-      |schema:PersonShape
-      |    a sh:NodeShape ;
-      |    sh:targetClass schema:Person ;
-      |    sh:property [
-      |        sh:path schema:givenName ;
-      |        sh:datatype xsd:string ;
-      |    ] .
+      |# ONTO
+      |onto:Resource0 a owl:Class .
+      |onto:Resource1
+      |  a               owl:Class ;
+      |  rdfs:subClassOf onto:Resource0 .
+      |onto:hasText0 a owl:DatatypeProperty .
+      |onto:hasText1
+      |  a                  owl:DatatypeProperty ;
+      |  rdfs:subPropertyOf onto:hasText0 .
+      |
+      |# SHAPES
+      |onto:Resource0_Shape
+      |  a                  sh:NodeShape ;
+      |  sh:targetClass     onto:Resource0 ;
+      |  dash:closedByTypes true ;
+      |  sh:property        [
+      |                       a           sh:PropertyShape ;
+      |                       sh:path     onto:hasText0 ;
+      |                       sh:minCount 1 ;
+      |                       sh:maxCount 1
+      |                     ] .
+      |
+      |onto:Resource1_Shape
+      |  a                  sh:NodeShape ;
+      |  dash:closedByTypes true ;
+      |  sh:targetClass     onto:Resource1 ;
+      |  sh:property        [
+      |                       a           sh:PropertyShape ;
+      |                       sh:path     onto:hasText1 ;
+      |                       sh:minCount 1 ;
+      |                       sh:maxCount 1
+      |                     ] .
       |""".stripMargin
 
   private val invalidData =
     """
-      |@prefix ex: <http://example.org/ns#> .
-      |@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-      |@prefix schema: <http://schema.org/> .
+      |@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+      |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+      |@prefix onto: <http://0.0.0.0:3333/ontology/9990/onto/v2#> .
+      |@prefix data: <http://0.0.0.0:3333/ontology/9990/data/> .
       |
-      |ex:Bob
-      |    a schema:Person ;
-      |    schema:givenName 0 .
+      |# ONTO
+      |onto:Resource0 a owl:Class .
+      |onto:Resource1
+      |  a               owl:Class ;
+      |  rdfs:subClassOf onto:Resource0 .
+      |onto:hasText0 a owl:DatatypeProperty .
+      |onto:hasText1
+      |  a                  owl:DatatypeProperty ;
+      |  rdfs:subPropertyOf onto:hasText0 .
+      |
+      |# DATA
+      |data:Resource0DataInvalid
+      |  a             onto:Resource0 ;
+      |  onto:hasText0 "Text0" , "Text0.1".
       |""".stripMargin
 
   private val validData =
     """
-      |@prefix ex: <http://example.org/ns#> .
-      |@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-      |@prefix schema: <http://schema.org/> .
+      |@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+      |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+      |@prefix onto: <http://0.0.0.0:3333/ontology/9990/onto/v2#> .
+      |@prefix data: <http://0.0.0.0:3333/ontology/9990/data/> .
       |
-      |ex:Bob
-      |    a schema:Person ;
-      |    schema:givenName "valid name" .
+      |# ONTO
+      |onto:Resource0 a owl:Class .
+      |onto:Resource1
+      |  a               owl:Class ;
+      |  rdfs:subClassOf onto:Resource0 .
+      |onto:hasText0 a owl:DatatypeProperty .
+      |onto:hasText1
+      |  a                  owl:DatatypeProperty ;
+      |  rdfs:subPropertyOf onto:hasText0 .
+      |
+      |# DATA
+      |data:Resource0DataValid
+      |  a             onto:Resource0 ;
+      |  onto:hasText0 "Text0".
       |""".stripMargin
 
   def spec: Spec[Any, Throwable] =
