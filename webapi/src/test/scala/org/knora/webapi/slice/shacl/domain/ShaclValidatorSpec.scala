@@ -6,6 +6,8 @@
 package org.knora.webapi.slice.shacl.domain
 
 import org.apache.jena.rdf.model.Resource
+import org.apache.jena.riot.RDFDataMgr
+import org.apache.jena.riot.RDFFormat
 import org.topbraid.jenax.util.JenaDatatypes
 import org.topbraid.shacl.vocabulary.SH
 import zio.ZIO
@@ -60,11 +62,13 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
       test("validate with invalid data") {
         for {
           reportResource <- shaclValidator(_.validate(invalidData, shapes, ValidationOptions.default))
+          _               = RDFDataMgr.write(java.lang.System.out, reportResource.getModel, RDFFormat.TURTLE)
         } yield assertTrue(reportResource.hasProperty(SH.conforms, JenaDatatypes.FALSE))
       },
       test("validate with valid data") {
         for {
           reportResource <- shaclValidator(_.validate(validData, shapes, ValidationOptions.default))
+          _               = RDFDataMgr.write(java.lang.System.out, reportResource.getModel, RDFFormat.TURTLE)
         } yield assertTrue(reportResource.hasProperty(SH.conforms, JenaDatatypes.TRUE))
       },
     ).provide(ShaclValidator.layer)
