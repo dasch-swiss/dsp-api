@@ -1209,16 +1209,6 @@ case class SubClassesGetRequestV2(resourceClassIri: SmartIri, requestingUser: Us
 case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
 
 /**
- * Request information about the Knora entities (Knora resource classes, standoff class, resource properties, and standoff properties) of a named graph.
- * A successful response will be a [[OntologyKnoraEntitiesIriInfoV2]].
- *
- * @param ontologyIri    the IRI of the named graph.
- * @param requestingUser the user making the request.
- */
-case class OntologyKnoraEntityIrisGetRequestV2(ontologyIri: SmartIri, requestingUser: User)
-    extends OntologiesResponderRequestV2
-
-/**
  * Requests metadata about ontologies by project.
  *
  * @param projectIris    the IRIs of the projects for which ontologies should be returned. If this set is empty, information
