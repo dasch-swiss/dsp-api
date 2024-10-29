@@ -35,8 +35,7 @@ final case class OntologyInferencer(private val ontologyCache: OntologyCache)(im
       }
   } yield {
     // look up subclasses from ontology cache
-    val superClasses    = cache.classToSubclassLookup
-    val knownSubClasses = superClasses.get(baseClassIri.iri).getOrElse(Set(baseClassIri.iri)).toSeq
+    val knownSubClasses = cache.classToSubclassLookup.get(baseClassIri.iri).getOrElse(Set(baseClassIri.iri)).toSeq
 
     // if provided, limit the child classes to those that belong to relevant ontologies
     val subClasses = limitInferenceToOntologies match {
@@ -49,7 +48,7 @@ final case class OntologyInferencer(private val ontologyCache: OntologyCache)(im
     // if subclasses are available, create a union statement that searches for either the provided triple (`?v a <classIRI>`)
     // or triples where the object is a subclass of the provided object (`?v a <subClassIRI>`)
     // i.e. `{?v a <classIRI>} UNION {?v a <subClassIRI>}`
-    val types = QueryVariable("resTypes")
+    val types = QueryVariable(s"resTypes${scala.util.Random.nextInt.abs}")
     if (subClasses.length > 1)
       Seq(ValuesPattern(types, subClasses.map(IriRef.apply(_, None)).toSet), statementPattern.copy(obj = types))
     else
@@ -66,8 +65,7 @@ final case class OntologyInferencer(private val ontologyCache: OntologyCache)(im
     // Expand using rdfs:subPropertyOf*.
 
     // look up subproperties from ontology cache
-    val superProps    = cache.superPropertyOfRelations
-    val knownSubProps = superProps.get(predIri).getOrElse(Set(predIri)).toSeq
+    val knownSubProps = cache.superPropertyOfRelations.get(predIri).getOrElse(Set(predIri)).toSeq
 
     // if provided, limit the child properties to those that belong to relevant ontologies
     val subProps = limitInferenceToOntologies match {
@@ -78,7 +76,7 @@ final case class OntologyInferencer(private val ontologyCache: OntologyCache)(im
     // if subproperties are available, create a union statement that searches for either the provided triple (`?a <propertyIRI> ?b`)
     // or triples where the predicate is a subproperty of the provided object (`?a <subPropertyIRI> ?b`)
     // i.e. `{?a <propertyIRI> ?b} UNION {?a <subPropertyIRI> ?b}`
-    val subProp = QueryVariable("subProp")
+    val subProp = QueryVariable(s"subProp${scala.util.Random.nextInt.abs}")
     if (subProps.length > 1) {
       Seq(ValuesPattern(subProp, subProps.map(IriRef.apply(_, None)).toSet), statementPattern.copy(pred = subProp))
     } else {
