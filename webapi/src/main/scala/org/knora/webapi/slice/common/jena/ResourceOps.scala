@@ -10,6 +10,8 @@ import org.apache.jena.rdf.model.Resource
 import org.apache.jena.rdf.model.Statement
 import org.apache.jena.vocabulary.RDF
 
+import java.time.Instant
+
 object ResourceOps {
   import StatementOps.*
 
@@ -28,6 +30,9 @@ object ResourceOps {
 
     def objectBoolean(p: Property): Either[String, Boolean]               = statement(p).flatMap(_.objectAsBoolean)
     def objectBooleanOption(p: Property): Either[String, Option[Boolean]] = fromStatement(p, _.objectAsBoolean)
+
+    def objectInstant(p: Property): Either[String, Instant]               = statement(p).flatMap(_.objectAsInstant)
+    def objectInstantOption(p: Property): Either[String, Option[Instant]] = fromStatement(p, _.objectAsInstant)
 
     def objectInt(p: Property): Either[String, Int]               = statement(p).flatMap(_.objectAsInt)
     def objectIntOption(p: Property): Either[String, Option[Int]] = fromStatement(p, _.objectAsInt)

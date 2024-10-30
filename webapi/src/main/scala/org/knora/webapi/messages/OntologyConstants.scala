@@ -579,9 +579,6 @@ object OntologyConstants {
 
   object KnoraApiV2Complex {
 
-    given iri2property: Conversion[IRI, Property] with
-      def apply(iri: IRI): Property = ResourceFactory.createProperty(iri)
-
     val VersionSegment = "/v2"
 
     val KnoraApiOntologyIri: IRI       = KnoraApi.ApiOntologyStart + KnoraApi.KnoraApiOntologyLabel + VersionSegment
@@ -619,7 +616,7 @@ object OntologyConstants {
 
     val ValueAsString: IRI      = KnoraApiV2PrefixExpansion + "valueAsString"
     val ValueCreationDate: IRI  = KnoraApiV2PrefixExpansion + "valueCreationDate"
-    val ValueHasUUID: IRI       = KnoraApiV2PrefixExpansion + "valueHasUUID"
+    val ValueHasUUID: String    = KnoraApiV2PrefixExpansion + "valueHasUUID"
     val ValueHasComment: IRI    = KnoraApiV2PrefixExpansion + "valueHasComment"
     val NewValueVersionIri: IRI = KnoraApiV2PrefixExpansion + "newValueVersionIri"
 

@@ -12,28 +12,19 @@ import zio.*
 import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
+import org.knora.webapi.slice.common.jena.JenaConversions.given
 import scala.language.implicitConversions
-
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.UuidUtil.base64Decode
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.BooleanValue
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.DecimalValue
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.GeomValue
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.IntValue
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.IntervalValue
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueCreationDate
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasUUID
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.iri2property
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.v2.responder.valuemessages.BooleanValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.DecimalValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.GeomValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.IntervalValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri as KResourceIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri as KResourceClassIri
 import org.knora.webapi.slice.common.ModelError.MoreThanOneRootResource
 import org.knora.webapi.slice.common.ModelError.ParseError
 import org.knora.webapi.slice.common.jena.ModelOps
@@ -67,15 +58,13 @@ object ModelError {
  */
 final case class KnoraApiValueModel(
   resourceIri: ResourceIri,
-  resourceClassIri: ResourceClassIri,
+  resourceClassIri: KResourceClassIri,
   valueNode: KnoraApiValueNode,
 ) {
   lazy val shortcode: Shortcode = resourceIri.shortcode
 }
 
 object KnoraApiValueModel { self =>
-  import org.knora.webapi.slice.common.jena.StatementOps.*
-  import org.knora.webapi.slice.common.jena.ResourceOps.*
 
   // available for ease of use in tests
   def fromJsonLd(str: String): ZIO[Scope & IriConverter, ModelError, KnoraApiValueModel] =
@@ -103,12 +92,12 @@ object KnoraApiValueModel { self =>
       val _    = stmt.objectUri().foreach(iri => objSeen += iri)
       val _    = stmt.subjectUri().foreach(iri => subSeen += iri)
     }
-    val result: IO[ModelError, ResourceIri] = subSeen -- objSeen match {
+    val result: IO[ModelError, KResourceIri] = subSeen -- objSeen match {
       case result if result.size == 1 =>
         convert
           .asSmartIri(result.head)
           .mapError(ModelError.parseError)
-          .flatMap(iri => ZIO.fromEither(ResourceIri.from(iri)).mapError(ModelError.invalidIri))
+          .flatMap(iri => ZIO.fromEither(KResourceIri.from(iri)).mapError(ModelError.invalidIri))
       case result if result.isEmpty => ZIO.fail(ModelError.noRootResource)
       case _                        => ZIO.fail(ModelError.moreThanOneRootResource)
     }
@@ -134,11 +123,11 @@ object KnoraApiValueModel { self =>
   private def resourceClassIri(
     rootResource: Resource,
     convert: IriConverter,
-  ): IO[ModelError, ResourceClassIri] = ZIO
+  ): IO[ModelError, KResourceClassIri] = ZIO
     .fromOption(rootResource.rdfsType())
     .orElseFail(ModelError.noRootResourceClassIri)
     .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
-    .flatMap(iri => ZIO.fromEither(ResourceClassIri.from(iri)).mapError(ModelError.invalidIri))
+    .flatMap(iri => ZIO.fromEither(KResourceClassIri.from(iri)).mapError(ModelError.invalidIri))
 }
 
 final case class KnoraApiValueNode(
@@ -175,6 +164,7 @@ final case class KnoraApiValueNode(
       case GeomValue     => GeomValueContentV2.from(node)
       case IntValue      => IntegerValueContentV2.from(node)
       case IntervalValue => IntervalValueContentV2.from(node)
+      case TimeValue     => TimeValueContentV2.from(node)
       case _             => Left(s"Unsupported value type: $valueType")
 }
 

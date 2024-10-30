@@ -11,7 +11,6 @@ import zio.json.DecoderOps
 import zio.json.EncoderOps
 import zio.json.ast.Json
 import zio.test.*
-
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.valuemessages.BooleanValueContentV2
@@ -19,9 +18,12 @@ import org.knora.webapi.messages.v2.responder.valuemessages.DecimalValueContentV
 import org.knora.webapi.messages.v2.responder.valuemessages.GeomValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntervalValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TimeValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+
+import java.time.Instant
 
 object KnoraApiValueModelSpec extends ZIOSpecDefault {
   private val sf = StringFormatter.getInitializedTestInstance
@@ -207,6 +209,29 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                                  |}""".stripMargin)
         content = model.valueNode.getValueContent
       } yield assertTrue(content == Right(IntervalValueContentV2(ApiV2Complex, BigDecimal(4), BigDecimal(2), None)))
+    },
+    test("should parse TimeValueContentV2") {
+      for {
+        model <- KnoraApiValueModel.fromJsonLd("""{
+                                                 |  "@id": "http://rdfh.ch/0001/a-thing",
+                                                 |  "@type": "ex:Thing",
+                                                 |  "ex:someTimeValue": {
+                                                 |    "@type": "ka:TimeValue",
+                                                 |    "ka:timeValueAsTimeStamp": {
+                                                 |       "@type": "xsd:dateTimeStamp",
+                                                 |       "@value": "2020-06-04T11:36:54.502951Z"
+                                                 |    }
+                                                 |  },
+                                                 |  "@context": {
+                                                 |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                                                 |    "ex": "https://example.com/test#",
+                                                 |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                                                 |  }
+                                                 |}""".stripMargin)
+        content = model.valueNode.getValueContent
+      } yield assertTrue(
+        content == Right(TimeValueContentV2(ApiV2Complex, Instant.parse("2020-06-04T11:36:54.502951Z"), None)),
+      )
     },
   ).provideSome[Scope](IriConverter.layer, StringFormatter.test)
 }

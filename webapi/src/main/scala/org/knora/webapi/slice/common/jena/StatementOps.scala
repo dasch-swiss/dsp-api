@@ -10,9 +10,10 @@ import org.apache.jena.rdf.model.Resource
 import org.apache.jena.rdf.model.Statement
 
 import scala.util.Try
-
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.common.jena.ResourceOps.*
+
+import java.time.Instant
 
 object StatementOps {
   extension (stmt: Statement) {
@@ -33,6 +34,17 @@ object StatementOps {
 
     def objectAsBoolean: Either[String, Boolean] =
       Try(stmt.getBoolean).toEither.left.map(_ => s"Invalid boolean value for property ${stmt.getPredicate}")
+
+    def objectAsInstant: Either[String, Instant] =
+      stmt.getObject match
+        case l: Literal =>
+          l.getDatatypeURI match
+            case OntologyConstants.Xsd.DateTimeStamp =>
+              Try(Instant.parse(l.getLexicalForm)).toEither.left.map(e =>
+                s"Invalid date time timestamp value for property ${stmt.getPredicate}",
+              )
+            case _ => Left(s"Invalid datatype for property ${stmt.getPredicate}, xsd:dateTimeStamp expected")
+        case _ => Left(s"Invalid date time timestamp value for property ${stmt.getPredicate}")
 
     def objectAsInt: Either[String, Int] =
       Try(stmt.getInt).toEither.left.map(_ => s"Invalid integer value for property ${stmt.getPredicate}")

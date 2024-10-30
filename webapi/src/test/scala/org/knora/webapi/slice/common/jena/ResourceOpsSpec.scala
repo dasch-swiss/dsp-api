@@ -9,11 +9,12 @@ import zio.*
 import zio.test.*
 
 import scala.language.implicitConversions
-
 import org.knora.webapi.slice.common
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
+
+import java.time.Instant
 
 object ResourceOpsSpec extends ZIOSpecDefault {
 
@@ -28,7 +29,8 @@ object ResourceOpsSpec extends ZIOSpecDefault {
       |     ex:int      "4"^^xsd:integer  ;
       |     ex:str      "Foo" ;
       |     ex:decimal  "42.0"^^xsd:decimal ;
-      |     ex:bool     "true"^^xsd:boolean .
+      |     ex:bool     "true"^^xsd:boolean ;
+      |     ex:dts       "1879-03-14T00:00:00Z"^^xsd:dateTimeStamp .
       |""".stripMargin
 
   private def resource() =
@@ -171,6 +173,55 @@ object ResourceOpsSpec extends ZIOSpecDefault {
     ),
   )
 
+  private val objectInstantSuite = suite("Getting Instant values of Objects")(
+    suite("objectInstant")(
+      test("should succeed if value is present") {
+        for {
+          res   <- resource()
+          actual = res.objectInstant("https://example.com/test#dts")
+        } yield assertTrue(actual == Right(Instant.parse("1879-03-14T00:00:00Z")))
+      },
+      test("should fail if type is not correct") {
+        for {
+          res   <- resource()
+          actual = res.objectInstant("https://example.com/test#int")
+        } yield assertTrue(
+          actual == Left(value =
+            "Invalid datatype for property https://example.com/test#int, xsd:dateTimeStamp expected",
+          ),
+        )
+      },
+      test("should fail if property is not present ") {
+        for {
+          res   <- resource()
+          actual = res.objectInstant("https://example.com/test#notPresent")
+        } yield assertTrue(actual == Left("Required property not found https://example.com/test#notPresent"))
+      },
+    ),
+    suite("objectInstantOption")(
+      test("should succeed if value is present") {
+        for {
+          res   <- resource()
+          actual = res.objectInstantOption("https://example.com/test#dts")
+        } yield assertTrue(actual == Right(Some(Instant.parse("1879-03-14T00:00:00Z"))))
+      },
+      test("should fail if type is not correct") {
+        for {
+          res   <- resource()
+          actual = res.objectInstantOption("https://example.com/test#int")
+        } yield assertTrue(
+          actual == Left("Invalid datatype for property https://example.com/test#int, xsd:dateTimeStamp expected"),
+        )
+      },
+      test("should succeed if property is not present ") {
+        for {
+          res   <- resource()
+          actual = res.objectInstantOption("https://example.com/test#notPresent")
+        } yield assertTrue(actual == Right(None))
+      },
+    ),
+  )
+
   private val objectStringSuite = suite("Getting String values of Objects")(
     suite("objectString")(
       test("should succeed if value is present") {
@@ -225,6 +276,7 @@ object ResourceOpsSpec extends ZIOSpecDefault {
     objectBigDecimalSuite,
     objectBooleanSuite,
     objectIntSuite,
+    objectInstantSuite,
     objectStringSuite,
     rdfTypeTest,
   )

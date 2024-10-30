@@ -11,6 +11,7 @@ import zio.ZIO
 import java.net.URI
 import java.time.Instant
 import java.util.UUID
+import org.knora.webapi.slice.common.jena.JenaConversions.given
 import scala.language.implicitConversions
 
 import dsp.errors.AssertionException
@@ -27,7 +28,6 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.iri2property
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
@@ -976,19 +976,25 @@ object ValueContentV2 {
 
         valueContent <-
           valueType.toString match {
-            case TextValue                   => TextValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            case IntValue                    => IntegerValueContentV2.fromJsonLdObject(jsonLdObject)
-            case DecimalValue                => DecimalValueContentV2.fromJsonLdObject(jsonLdObject)
+            case TextValue => TextValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            /*done*/
+            case IntValue => IntegerValueContentV2.fromJsonLdObject(jsonLdObject)
+            /*done*/
+            case DecimalValue => DecimalValueContentV2.fromJsonLdObject(jsonLdObject)
+            /*done*/
             case BooleanValue                => BooleanValueContentV2.fromJsonLdObject(jsonLdObject)
             case KnoraApiV2Complex.DateValue => DateValueContentV2.fromJsonLdObject(jsonLdObject)
-            case GeomValue                   => GeomValueContentV2.fromJsonLdObject(jsonLdObject)
-            case IntervalValue               => IntervalValueContentV2.fromJsonLdObject(jsonLdObject)
-            case TimeValue                   => TimeValueContentV2.fromJsonLdObject(jsonLdObject)
-            case LinkValue                   => LinkValueContentV2.fromJsonLdObject(jsonLdObject)
-            case ListValue                   => HierarchicalListValueContentV2.fromJsonLdObject(jsonLdObject)
-            case UriValue                    => UriValueContentV2.fromJsonLdObject(jsonLdObject)
-            case GeonameValue                => GeonameValueContentV2.fromJsonLdObject(jsonLdObject)
-            case ColorValue                  => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
+            /*done*/
+            case GeomValue => GeomValueContentV2.fromJsonLdObject(jsonLdObject)
+            /*done*/
+            case IntervalValue => IntervalValueContentV2.fromJsonLdObject(jsonLdObject)
+            /*done*/
+            case TimeValue    => TimeValueContentV2.fromJsonLdObject(jsonLdObject)
+            case LinkValue    => LinkValueContentV2.fromJsonLdObject(jsonLdObject)
+            case ListValue    => HierarchicalListValueContentV2.fromJsonLdObject(jsonLdObject)
+            case UriValue     => UriValueContentV2.fromJsonLdObject(jsonLdObject)
+            case GeonameValue => GeonameValueContentV2.fromJsonLdObject(jsonLdObject)
+            case ColorValue   => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
             case StillImageFileValue =>
               for {
                 info <-
@@ -2272,6 +2278,11 @@ object TimeValueContentV2 {
         comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield TimeValueContentV2(ApiV2Complex, valueHasTimeStamp, comment)
     }
+
+  def from(r: Resource): Either[String, TimeValueContentV2] = for {
+    timeStamp <- r.objectInstant(TimeValueAsTimeStamp)
+    comment   <- r.objectStringOption(ValueHasComment)
+  } yield TimeValueContentV2(ApiV2Complex, timeStamp, comment)
 }
 
 /**
