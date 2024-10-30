@@ -17,14 +17,16 @@ import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
-final case class OntologyInferencer(private val ontologyCache: OntologyCache)(implicit
+final case class OntologyInferencer(
+  private val ontologyCache: OntologyCache,
+)(implicit
   private val stringFormatter: StringFormatter,
 ) {
-
   private def inferSubclasses(
     statementPattern: StatementPattern,
     cache: OntologyCacheData,
     limitInferenceToOntologies: Option[Set[SmartIri]],
+    queryVariableSuffix: Option[String],
   ): IO[GravsearchException, Seq[QueryPattern]] = for {
     // Expand using rdfs:subClassOf*.
     baseClassIri <-
@@ -48,7 +50,7 @@ final case class OntologyInferencer(private val ontologyCache: OntologyCache)(im
     // if subclasses are available, create a union statement that searches for either the provided triple (`?v a <classIRI>`)
     // or triples where the object is a subclass of the provided object (`?v a <subClassIRI>`)
     // i.e. `{?v a <classIRI>} UNION {?v a <subClassIRI>}`
-    val types = QueryVariable(s"resTypes${scala.util.Random.nextInt.abs}")
+    val types = QueryVariable(s"resTypes${queryVariableSuffix.getOrElse(scala.util.Random.nextInt.abs)}")
     if (subClasses.length > 1)
       Seq(ValuesPattern(types, subClasses.map(IriRef.apply(_, None)).toSet), statementPattern.copy(obj = types))
     else
@@ -61,6 +63,7 @@ final case class OntologyInferencer(private val ontologyCache: OntologyCache)(im
     predIri: SmartIri,
     cache: OntologyCacheData,
     limitInferenceToOntologies: Option[Set[SmartIri]],
+    queryVariableSuffix: Option[String],
   ): Seq[QueryPattern] = {
     // Expand using rdfs:subPropertyOf*.
 
@@ -76,7 +79,7 @@ final case class OntologyInferencer(private val ontologyCache: OntologyCache)(im
     // if subproperties are available, create a union statement that searches for either the provided triple (`?a <propertyIRI> ?b`)
     // or triples where the predicate is a subproperty of the provided object (`?a <subPropertyIRI> ?b`)
     // i.e. `{?a <propertyIRI> ?b} UNION {?a <subPropertyIRI> ?b}`
-    val subProp = QueryVariable(s"subProp${scala.util.Random.nextInt.abs}")
+    val subProp = QueryVariable(s"subProp${queryVariableSuffix.getOrElse(scala.util.Random.nextInt.abs)}")
     if (subProps.length > 1) {
       Seq(ValuesPattern(subProp, subProps.map(IriRef.apply(_, None)).toSet), statementPattern.copy(pred = subProp))
     } else {
@@ -97,6 +100,7 @@ final case class OntologyInferencer(private val ontologyCache: OntologyCache)(im
     statementPattern: StatementPattern,
     simulateInference: Boolean,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None,
+    queryVariableSuffix: Option[String] = None,
   ): Task[Seq[QueryPattern]] =
     statementPattern.pred match {
       case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>
@@ -108,9 +112,17 @@ final case class OntologyInferencer(private val ontologyCache: OntologyCache)(im
           ontoCache <- ontologyCache.getCacheData
           patternsWithInference <-
             if (iriRef.iri.toIri == OntologyConstants.Rdf.Type)
-              inferSubclasses(statementPattern, ontoCache, limitInferenceToOntologies)
+              inferSubclasses(statementPattern, ontoCache, limitInferenceToOntologies, queryVariableSuffix)
             else
-              ZIO.succeed(inferSubproperties(statementPattern, iriRef.iri, ontoCache, limitInferenceToOntologies))
+              ZIO.succeed(
+                inferSubproperties(
+                  statementPattern,
+                  iriRef.iri,
+                  ontoCache,
+                  limitInferenceToOntologies,
+                  queryVariableSuffix,
+                ),
+              )
         } yield patternsWithInference
       case _ =>
         // The predicate isn't a property IRI or no inference should be done, so no expansion needed.
