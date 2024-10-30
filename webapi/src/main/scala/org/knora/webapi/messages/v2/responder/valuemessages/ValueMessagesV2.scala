@@ -7,13 +7,11 @@ package org.knora.webapi.messages.v2.responder.valuemessages
 
 import org.apache.jena.rdf.model.Resource
 import zio.ZIO
-
+import org.knora.webapi.slice.common.jena.JenaConversions.given
 import java.net.URI
 import java.time.Instant
 import java.util.UUID
-import org.knora.webapi.slice.common.jena.JenaConversions.given
 import scala.language.implicitConversions
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -57,6 +55,7 @@ import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.WithAsIs
+import zio.IO
 
 /**
  * Represents a successful response to a create value Request.
@@ -989,7 +988,8 @@ object ValueContentV2 {
             /*done*/
             case IntervalValue => IntervalValueContentV2.fromJsonLdObject(jsonLdObject)
             /*done*/
-            case TimeValue    => TimeValueContentV2.fromJsonLdObject(jsonLdObject)
+            case TimeValue => TimeValueContentV2.fromJsonLdObject(jsonLdObject)
+            /*done*/
             case LinkValue    => LinkValueContentV2.fromJsonLdObject(jsonLdObject)
             case ListValue    => HierarchicalListValueContentV2.fromJsonLdObject(jsonLdObject)
             case UriValue     => UriValueContentV2.fromJsonLdObject(jsonLdObject)
@@ -3405,6 +3405,15 @@ object LinkValueContentV2 {
         comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield LinkValueContentV2(ApiV2Complex, referredResourceIri = targetIri.toString, comment = comment)
   }
+
+  def from(r: Resource, converter: IriConverter): IO[String, LinkValueContentV2] =
+    for {
+      targetIri <- ZIO.fromEither(r.objectUri(LinkValueHasTargetIri))
+      comment   <- ZIO.fromEither(r.objectStringOption(ValueHasComment))
+      _ <- ZIO
+             .fail(s"Link target IRI <${targetIri}> is not a Knora data IRI")
+             .unlessZIO(converter.isKnoraDataIri(targetIri).mapError(_.getMessage))
+    } yield LinkValueContentV2(ApiV2Complex, referredResourceIri = targetIri, comment = comment)
 }
 
 /**

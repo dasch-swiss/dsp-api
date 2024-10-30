@@ -18,7 +18,6 @@ import java.time.Instant
 object StatementOps {
   extension (stmt: Statement) {
     def subjectUri(): Option[String]         = Option(stmt.getSubject.getURI)
-    def objectUri(): Option[String]          = stmt.objectAsResource().flatMap(_.uri)
     def objectAsResource(): Option[Resource] = Try(stmt.getObject.asResource()).toOption
 
     def objectAsBigDecimal: Either[String, BigDecimal] =
@@ -51,5 +50,8 @@ object StatementOps {
 
     def objectAsString: Either[String, String] =
       Try(stmt.getString).toEither.left.map(_ => s"Invalid string value for property ${stmt.getPredicate}")
+
+    def objectAsUri: Either[String, String] =
+      objectAsResource().flatMap(_.uri).toRight(s"Invalid URI value for property ${stmt.getPredicate}")
   }
 }

@@ -11,9 +11,9 @@ import org.apache.jena.rdf.model.Statement
 import org.apache.jena.vocabulary.RDF
 
 import java.time.Instant
+import org.knora.webapi.slice.common.jena.StatementOps.*
 
 object ResourceOps {
-  import StatementOps.*
 
   extension (res: Resource) {
     def statementOption(p: Property): Option[Statement] = Option(res.getProperty(p))
@@ -39,6 +39,9 @@ object ResourceOps {
 
     def objectString(p: Property): Either[String, String]               = statement(p).flatMap(_.objectAsString)
     def objectStringOption(p: Property): Either[String, Option[String]] = fromStatement(p, _.objectAsString)
+
+    def objectUri(p: Property): Either[String, String]               = statement(p).flatMap(stmt => stmt.objectAsUri)
+    def objectUriOption(p: Property): Either[String, Option[String]] = fromStatement(p, _.objectAsUri)
 
     def rdfsType(): Option[String] = Option(res.getPropertyResourceValue(RDF.`type`)).flatMap(_.uri)
     def uri: Option[String]        = Option(res.getURI)

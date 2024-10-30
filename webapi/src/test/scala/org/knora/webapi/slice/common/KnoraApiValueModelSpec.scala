@@ -18,6 +18,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.DecimalValueContentV
 import org.knora.webapi.messages.v2.responder.valuemessages.GeomValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntervalValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TimeValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
@@ -122,8 +123,8 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                                                  |  }
                                                  |}""".stripMargin)
-        content = model.valueNode.getValueContent
-      } yield assertTrue(content == Right(IntegerValueContentV2(ApiV2Complex, 4, None)))
+        content <- model.valueNode.getValueContent
+      } yield assertTrue(content == IntegerValueContentV2(ApiV2Complex, 4, None))
     },
     test("should parse DecimalValueContentV2") {
       for {
@@ -143,8 +144,8 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                                                  |  }
                                                  |}""".stripMargin)
-        content = model.valueNode.getValueContent
-      } yield assertTrue(content == Right(DecimalValueContentV2(ApiV2Complex, BigDecimal(4), None)))
+        content <- model.valueNode.getValueContent
+      } yield assertTrue(content == DecimalValueContentV2(ApiV2Complex, BigDecimal(4), None))
     },
     test("should parse BooleanValueContentV2") {
       for {
@@ -164,8 +165,8 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                                                  |  }
                                                  |}""".stripMargin)
-        content = model.valueNode.getValueContent
-      } yield assertTrue(content == Right(BooleanValueContentV2(ApiV2Complex, true, None)))
+        content <- model.valueNode.getValueContent
+      } yield assertTrue(content == BooleanValueContentV2(ApiV2Complex, true, None))
     },
     test("should parse GeomValueContentV2") {
       for {
@@ -182,8 +183,8 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                                                  |  }
                                                  |}""".stripMargin)
-        content = model.valueNode.getValueContent
-      } yield assertTrue(content == Right(GeomValueContentV2(ApiV2Complex, "{}", None)))
+        content <- model.valueNode.getValueContent
+      } yield assertTrue(content == GeomValueContentV2(ApiV2Complex, "{}", None))
     },
     test("should parse IntervalValueContentV2") {
       for {
@@ -207,8 +208,8 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                                                  |  }
                                                  |}""".stripMargin)
-        content = model.valueNode.getValueContent
-      } yield assertTrue(content == Right(IntervalValueContentV2(ApiV2Complex, BigDecimal(4), BigDecimal(2), None)))
+        content <- model.valueNode.getValueContent
+      } yield assertTrue(content == IntervalValueContentV2(ApiV2Complex, BigDecimal(4), BigDecimal(2), None))
     },
     test("should parse TimeValueContentV2") {
       for {
@@ -228,10 +229,40 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                                                  |  }
                                                  |}""".stripMargin)
-        content = model.valueNode.getValueContent
+        content <- model.valueNode.getValueContent
       } yield assertTrue(
-        content == Right(TimeValueContentV2(ApiV2Complex, Instant.parse("2020-06-04T11:36:54.502951Z"), None)),
+        content == TimeValueContentV2(ApiV2Complex, Instant.parse("2020-06-04T11:36:54.502951Z"), None),
       )
+    },
+    test("should parse LinkValueContentV2") {
+      for {
+        model <-
+          KnoraApiValueModel.fromJsonLd(s"""
+                                           |{
+                                           |  "@id" : "http://rdfh.ch/0001/a-thing",
+                                           |  "@type" : "ex:Thing",
+                                           |  "ex:hasOtherThingValue" : {
+                                           |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                                           |    "@type" : "ka:LinkValue",
+                                           |    "ka:linkValueHasTargetIri" : {
+                                           |      "@id" : "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
+                                           |    }
+                                           |  },
+                                           |  "@context": {
+                                           |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                                           |    "ex": "https://example.com/test#",
+                                           |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                                           |  }
+                                           |}""".stripMargin)
+        content <- model.valueNode.getValueContent
+      } yield assertTrue(
+        content == LinkValueContentV2(
+          ApiV2Complex,
+          referredResourceIri = "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA",
+          comment = None,
+        ),
+      )
+
     },
   ).provideSome[Scope](IriConverter.layer, StringFormatter.test)
 }

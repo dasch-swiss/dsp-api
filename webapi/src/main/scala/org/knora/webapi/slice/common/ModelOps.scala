@@ -8,11 +8,10 @@ package org.knora.webapi.slice.common
 import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.RDF
 import zio.*
-
+import org.knora.webapi.slice.common.jena.JenaConversions.given
 import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
-import org.knora.webapi.slice.common.jena.JenaConversions.given
 import scala.language.implicitConversions
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.UuidUtil.base64Decode
@@ -89,7 +88,7 @@ object KnoraApiValueModel { self =>
     var subSeen = Set.empty[String]
     while (iter.hasNext) {
       val stmt = iter.nextStatement()
-      val _    = stmt.objectUri().foreach(iri => objSeen += iri)
+      val _    = stmt.objectAsUri.foreach(iri => objSeen += iri)
       val _    = stmt.subjectUri().foreach(iri => subSeen += iri)
     }
     val result: IO[ModelError, KResourceIri] = subSeen -- objSeen match {
@@ -157,15 +156,16 @@ final case class KnoraApiValueNode(
   def getHasPermissions: Option[String] =
     node.getStringLiteral(ResourceFactory.createProperty(OntologyConstants.KnoraApiV2Complex.HasPermissions))
 
-  def getValueContent: Either[String, ValueContentV2] =
+  def getValueContent: IO[String, ValueContentV2] =
     valueType.toString match
-      case BooleanValue  => BooleanValueContentV2.from(node)
-      case DecimalValue  => DecimalValueContentV2.from(node)
-      case GeomValue     => GeomValueContentV2.from(node)
-      case IntValue      => IntegerValueContentV2.from(node)
-      case IntervalValue => IntervalValueContentV2.from(node)
-      case TimeValue     => TimeValueContentV2.from(node)
-      case _             => Left(s"Unsupported value type: $valueType")
+      case BooleanValue  => ZIO.fromEither(BooleanValueContentV2.from(node))
+      case DecimalValue  => ZIO.fromEither(DecimalValueContentV2.from(node))
+      case GeomValue     => ZIO.fromEither(GeomValueContentV2.from(node))
+      case IntValue      => ZIO.fromEither(IntegerValueContentV2.from(node))
+      case IntervalValue => ZIO.fromEither(IntervalValueContentV2.from(node))
+      case TimeValue     => ZIO.fromEither(TimeValueContentV2.from(node))
+      case LinkValue     => LinkValueContentV2.from(node, convert)
+      case _             => ZIO.fail(s"Unsupported value type: $valueType")
 }
 
 object KnoraApiValueNode {

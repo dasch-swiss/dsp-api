@@ -27,6 +27,7 @@ final case class IriConverter(sf: StringFormatter) {
     getOntologySmartIriFromClassIri(iri).mapAttempt(_.toInternalIri)
   def getOntologySmartIriFromClassIri(iri: InternalIri): Task[SmartIri] =
     asInternalSmartIri(iri.value).mapAttempt(_.getOntologyFromEntity)
+  def isKnoraDataIri(iri: String): Task[Boolean] = asSmartIri(iri).map(_.isKnoraDataIri)
 }
 
 object IriConverter {
