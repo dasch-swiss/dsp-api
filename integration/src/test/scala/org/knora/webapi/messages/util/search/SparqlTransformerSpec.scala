@@ -207,7 +207,7 @@ class SparqlTransformerSpec extends CoreSpec {
       UnsafeZioRun.runOrThrow(expandedStatements) should equal(expectedStatements)
     }
 
-    "create a union pattern to simulate RDF inference for a class, if there are known subclasses" in {
+    "create a values pattern to simulate RDF inference for a class, if there are known subclasses" in {
       val typeStatement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
@@ -238,7 +238,7 @@ class SparqlTransformerSpec extends CoreSpec {
       )
     }
 
-    "create a union pattern to simulate RDF inference for a property, if there are known subproperties" in {
+    "create a values pattern to simulate RDF inference for a property, if there are known subproperties" in {
       val hasValueStatement =
         StatementPattern(
           subj = QueryVariable("foo"),

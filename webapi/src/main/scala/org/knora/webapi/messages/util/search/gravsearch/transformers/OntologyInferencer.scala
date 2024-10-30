@@ -28,7 +28,6 @@ final case class OntologyInferencer(
     limitInferenceToOntologies: Option[Set[SmartIri]],
     queryVariableSuffix: Option[String],
   ): IO[GravsearchException, Seq[QueryPattern]] = for {
-    // Expand using rdfs:subClassOf*.
     baseClassIri <-
       statementPattern.obj match {
         case iriRef: IriRef => ZIO.succeed(iriRef)
@@ -47,14 +46,12 @@ final case class OntologyInferencer(
         knownSubClasses.filter(cache.classDefinedInOntology.get(_).exists(relevantOntologyIris.contains(_)))
     }
 
-    // if subclasses are available, create a union statement that searches for either the provided triple (`?v a <classIRI>`)
-    // or triples where the object is a subclass of the provided object (`?v a <subClassIRI>`)
-    // i.e. `{?v a <classIRI>} UNION {?v a <subClassIRI>}`
+    // Searches for a `?v a <subClassIRI>`, or if multiple subclasses are present, then
+    // a `VALUES ?resTypes { <subClassIRI> }` statement is created with a `?v a ?resTypes`.
     val types = QueryVariable(s"resTypes${queryVariableSuffix.getOrElse(scala.util.Random.nextInt.abs)}")
     if (subClasses.length > 1)
       Seq(ValuesPattern(types, subClasses.map(IriRef.apply(_, None)).toSet), statementPattern.copy(obj = types))
     else
-      // if no subclasses are available, the initial statement can be used.
       Seq(statementPattern)
   }
 
@@ -65,8 +62,6 @@ final case class OntologyInferencer(
     limitInferenceToOntologies: Option[Set[SmartIri]],
     queryVariableSuffix: Option[String],
   ): Seq[QueryPattern] = {
-    // Expand using rdfs:subPropertyOf*.
-
     // look up subproperties from ontology cache
     val knownSubProps = cache.superPropertyOfRelations.get(predIri).getOrElse(Set(predIri)).toSeq
 
@@ -76,9 +71,8 @@ final case class OntologyInferencer(
         knownSubProps.filter(cache.propertyDefinedInOntology.get(_).exists(ontologyIris.contains(_)))
       case None => knownSubProps
     }
-    // if subproperties are available, create a union statement that searches for either the provided triple (`?a <propertyIRI> ?b`)
-    // or triples where the predicate is a subproperty of the provided object (`?a <subPropertyIRI> ?b`)
-    // i.e. `{?a <propertyIRI> ?b} UNION {?a <subPropertyIRI> ?b}`
+    // Searches for a `?v <propertyIRI> ?b`, or if multiple propertyIRIs are present, then
+    // a `VALUES ?subProp { <propertyIRI>+ }` statement is created with a `?a ?subProp ?b`.
     val subProp = QueryVariable(s"subProp${queryVariableSuffix.getOrElse(scala.util.Random.nextInt.abs)}")
     if (subProps.length > 1) {
       Seq(ValuesPattern(subProp, subProps.map(IriRef.apply(_, None)).toSet), statementPattern.copy(pred = subProp))
