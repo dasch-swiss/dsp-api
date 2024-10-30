@@ -15,7 +15,7 @@ There are a couple of groups of variables:
 |---------------------|-----------|-------------------------------------------------------------------------------|
 | `SERVICE_PORT`      | `3340`    | Port on which the service will listen                                         |
 | `SERVICE_HOST`      | `0.0.0.0` | Host on which the service will listen                                         |
-| `SERVICE_LOG_LEVEL` | `test`    | Log output format: `json` for json logging, `text` for human readable logging |
+| `SERVICE_LOG_FORMAT`| `text`    | Log output format: `json` for json logging, `text` for human readable logging |
 
 ## Storage
 
