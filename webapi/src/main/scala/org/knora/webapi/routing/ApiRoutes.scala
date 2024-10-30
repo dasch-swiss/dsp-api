@@ -79,12 +79,15 @@ final case class ApiRoutes(
               .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS)),
           ) {
             DSPApiDirectives.handleErrors(routeData.appConfig) {
-              OntologiesRouteV2().makeRoute ~
-                ResourcesRouteV2(routeData.appConfig).makeRoute ~
-                StandoffRouteV2().makeRoute ~
-                ValuesRouteV2().makeRoute ~
+              val tapirRoutes =
                 (adminApiRoutes.routes ++ authenticationApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes ++ listsApiV2Routes.routes ++ shaclApiRoutes.routes)
                   .reduce(_ ~ _)
+              val pekkoRoutes =
+                OntologiesRouteV2().makeRoute ~
+                  ResourcesRouteV2(routeData.appConfig).makeRoute ~
+                  StandoffRouteV2().makeRoute ~
+                  ValuesRouteV2().makeRoute
+              tapirRoutes ~ pekkoRoutes
             }
           }
         }
