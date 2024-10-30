@@ -4,11 +4,14 @@
  */
 
 package org.knora.webapi.messages.v2.responder.valuemessages
+
+import org.apache.jena.rdf.model.Resource
 import zio.ZIO
 
 import java.net.URI
 import java.time.Instant
 import java.util.UUID
+import scala.language.implicitConversions
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -24,6 +27,7 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.iri2property
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
@@ -46,6 +50,7 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraApiValueModel
 import org.knora.webapi.slice.common.KnoraApiValueNode
+import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
@@ -1796,9 +1801,16 @@ object IntegerValueContentV2 {
                     .mapError(BadRequestException(_))
       comment <- JsonLDUtil.getComment(jsonLDObject)
     } yield IntegerValueContentV2(ApiV2Complex, intValue, comment)
+
+  def from(node: Resource): Either[String, IntegerValueContentV2] =
+    for {
+      intValue <- node.objectInt(IntValueAsInt)
+      comment  <- node.objectStringOption(ValueHasComment)
+    } yield IntegerValueContentV2(ApiV2Complex, intValue, comment)
 }
 
 /**
+ * import org.knora.webapi.slice.common.ResourceOps.*
  * Represents a Knora decimal value.
  *
  * @param valueHasDecimal the decimal value.
@@ -1881,6 +1893,12 @@ object DecimalValueContentV2 {
         comment <- JsonLDUtil.getComment(jsonLdObject)
       } yield DecimalValueContentV2(ApiV2Complex, decimalValue, comment)
     }
+
+  def from(node: Resource): Either[String, DecimalValueContentV2] =
+    for {
+      decimalValue <- node.objectBigDecimal(DecimalValueAsDecimal)
+      comment      <- node.objectStringOption(ValueHasComment)
+    } yield DecimalValueContentV2(ApiV2Complex, decimalValue, comment)
 }
 
 /**

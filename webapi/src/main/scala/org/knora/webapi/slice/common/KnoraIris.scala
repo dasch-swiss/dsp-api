@@ -30,6 +30,7 @@ object KnoraIris {
   final case class PropertyIri private (smartIri: SmartIri) extends KnoraIri
 
   object PropertyIri {
+    def unsafeFrom(iri: SmartIri): PropertyIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
     def from(iri: SmartIri): Either[String, PropertyIri] =
       if (!iri.isKnoraEntityIri && iri.isApiV2ComplexSchema) {
         Left(s"<$iri> is not a Knora API v2 complex property IRI")

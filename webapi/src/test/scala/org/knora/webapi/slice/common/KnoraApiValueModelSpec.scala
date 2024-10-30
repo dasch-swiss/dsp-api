@@ -5,17 +5,20 @@
 
 package org.knora.webapi.slice.common
 
-import zio.Scope
+import org.apache.jena.rdf.model.RDFNode
+import zio.*
 import zio.json.DecoderOps
 import zio.json.EncoderOps
 import zio.json.ast.Json
 import zio.test.*
 
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.common.ModelOps.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 object KnoraApiValueModelSpec extends ZIOSpecDefault {
+  private val sf = StringFormatter.getInitializedTestInstance
 
   private val createIntegerValue = """
     {
@@ -77,6 +80,21 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
           node   = model.valueNode
         } yield assertTrue(node != null)
       }
+    },
+    test("valueNode properties should be present") {
+      for {
+        model       <- KnoraApiValueModel.fromJsonLd(createIntegerValue.toJsonPretty)
+        propertyIri  = model.valueNode.propertyIri
+        valueType    = model.valueNode.valueType
+        foo: RDFNode = model.valueNode.node
+
+      } yield assertTrue(
+        propertyIri == PropertyIri.unsafeFrom(
+          sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"),
+        ),
+        valueType == sf.toSmartIri("http://api.knora.org/ontology/knora-api/v2#IntValue"),
+        model.valueNode.shortcode == Shortcode.unsafeFrom("0001"),
+      )
     },
   ).provideSome[Scope](IriConverter.layer, StringFormatter.test)
 }

@@ -12,17 +12,27 @@ import zio.*
 import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
+import scala.language.implicitConversions
 
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.UuidUtil.base64Decode
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.DecimalValue
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.IntValue
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueCreationDate
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasUUID
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.iri2property
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.v2.responder.valuemessages.DecimalValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.ModelError.MoreThanOneRootResource
 import org.knora.webapi.slice.common.ModelError.ParseError
+import org.knora.webapi.slice.common.jena.ModelOps
+import org.knora.webapi.slice.common.jena.RDFNodeOps.*
+import org.knora.webapi.slice.common.jena.ResourceOps.*
+import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 enum ModelError(val msg: String) {
@@ -57,8 +67,8 @@ final case class KnoraApiValueModel(
 }
 
 object KnoraApiValueModel { self =>
-  import StatementOps.*
-  import ResourceOps.*
+  import org.knora.webapi.slice.common.jena.StatementOps.*
+  import org.knora.webapi.slice.common.jena.ResourceOps.*
 
   // available for ease of use in tests
   def fromJsonLd(str: String): ZIO[Scope & IriConverter, ModelError, KnoraApiValueModel] =
@@ -125,16 +135,13 @@ object KnoraApiValueModel { self =>
 }
 
 final case class KnoraApiValueNode(
-  node: RDFNode,
+  node: Resource,
   propertyIri: PropertyIri,
   valueType: SmartIri,
   shortcode: Shortcode,
   convert: IriConverter,
 ) {
-  import NodeOps.*
-  import ResourceOps.*
 
-  def getStringLiteral(property: String): Option[String]   = node.getStringLiteral(property)
   def getStringLiteral(property: Property): Option[String] = node.getStringLiteral(property)
   def getValueIri: IO[ModelError, Option[ValueIri]] =
     ZIO
@@ -153,12 +160,14 @@ final case class KnoraApiValueNode(
 
   def getHasPermissions: Option[String] =
     node.getStringLiteral(ResourceFactory.createProperty(OntologyConstants.KnoraApiV2Complex.HasPermissions))
+
+  def getValueContent =
+    valueType.toString match
+      case IntValue     => IntegerValueContentV2.from(node)
+      case DecimalValue => DecimalValueContentV2.from(node)
 }
 
 object KnoraApiValueNode {
-  import NodeOps.*
-  import ResourceOps.*
-  import StatementOps.*
   def from(
     stmt: Statement,
     shortcode: Shortcode,
@@ -167,12 +176,12 @@ object KnoraApiValueNode {
     for {
       propertyIri <- ZIO
                        .fromOption(stmt.getPredicate.getUri())
-                       .orElseFail(ModelError.invalidIri(s"No property IRI found for Value."))
+                       .orElseFail(ModelError.invalidIri(s"No property IRI found for value."))
                        .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
                        .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(ModelError.invalidIri))
       valueType <- ZIO
                      .fromOption(stmt.objectAsResource().flatMap(_.rdfsType()))
-                     .orElseFail(ModelError.invalidIri(s"No value type found for Value."))
+                     .orElseFail(ModelError.invalidIri(s"No value type found for value."))
                      .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
-    } yield KnoraApiValueNode(stmt.getObject, propertyIri, valueType, shortcode, convert)
+    } yield KnoraApiValueNode(stmt.getObject.asResource(), propertyIri, valueType, shortcode, convert)
 }

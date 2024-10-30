@@ -6,6 +6,9 @@
 package org.knora.webapi
 package messages
 
+import org.apache.jena.rdf.model.Property
+import org.apache.jena.rdf.model.ResourceFactory
+
 import dsp.constants.SalsahGui
 
 /**
@@ -575,6 +578,9 @@ object OntologyConstants {
   }
 
   object KnoraApiV2Complex {
+
+    given iri2property: Conversion[IRI, Property] with
+      def apply(iri: IRI): Property = ResourceFactory.createProperty(iri)
 
     val VersionSegment = "/v2"
 
