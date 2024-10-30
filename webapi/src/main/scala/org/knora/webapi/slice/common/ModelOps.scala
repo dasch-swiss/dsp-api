@@ -17,14 +17,21 @@ import scala.language.implicitConversions
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.UuidUtil.base64Decode
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.BooleanValue
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.DecimalValue
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.GeomValue
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.IntValue
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.IntervalValue
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueCreationDate
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasUUID
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.iri2property
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.v2.responder.valuemessages.BooleanValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DecimalValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.GeomValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.IntervalValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.ModelError.MoreThanOneRootResource
@@ -161,10 +168,14 @@ final case class KnoraApiValueNode(
   def getHasPermissions: Option[String] =
     node.getStringLiteral(ResourceFactory.createProperty(OntologyConstants.KnoraApiV2Complex.HasPermissions))
 
-  def getValueContent =
+  def getValueContent: Either[String, ValueContentV2] =
     valueType.toString match
-      case IntValue     => IntegerValueContentV2.from(node)
-      case DecimalValue => DecimalValueContentV2.from(node)
+      case BooleanValue  => BooleanValueContentV2.from(node)
+      case DecimalValue  => DecimalValueContentV2.from(node)
+      case GeomValue     => GeomValueContentV2.from(node)
+      case IntValue      => IntegerValueContentV2.from(node)
+      case IntervalValue => IntervalValueContentV2.from(node)
+      case _             => Left(s"Unsupported value type: $valueType")
 }
 
 object KnoraApiValueNode {

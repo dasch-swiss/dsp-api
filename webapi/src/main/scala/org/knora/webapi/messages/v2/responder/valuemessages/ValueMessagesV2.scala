@@ -1970,6 +1970,11 @@ object BooleanValueContentV2 {
                         .mapError(BadRequestException(_))
       comment <- JsonLDUtil.getComment(jsonLdObject)
     } yield BooleanValueContentV2(ApiV2Complex, booleanValue, comment)
+
+  def from(r: Resource): Either[String, BooleanValueContentV2] = for {
+    bool    <- r.objectBoolean(BooleanValueAsBoolean)
+    comment <- r.objectStringOption(ValueHasComment)
+  } yield BooleanValueContentV2(ApiV2Complex, bool, comment)
 }
 
 /**
@@ -2049,6 +2054,12 @@ object GeomValueContentV2 {
                                  )
       comment <- JsonLDUtil.getComment(jsonLDObject)
     } yield GeomValueContentV2(ontologySchema = ApiV2Complex, geometryValueAsGeometry, comment)
+
+  def from(r: Resource): Either[String, GeomValueContentV2] = for {
+    geomStr <- r.objectString(GeometryValueAsGeometry)
+    geom    <- ValuesValidator.validateGeometryString(geomStr).toRight(s"Invalid geometry string: $geomStr")
+    comment <- r.objectStringOption(ValueHasComment)
+  } yield GeomValueContentV2(ApiV2Complex, geom, comment)
 }
 
 /**
@@ -2161,6 +2172,13 @@ object IntervalValueContentV2 {
         comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield IntervalValueContentV2(ApiV2Complex, intervalValueHasStart, intervalValueHasEnd, comment)
     }
+
+  def from(r: Resource): Either[String, IntervalValueContentV2] = for {
+    intervalValueHasStart <- r.objectBigDecimal(IntervalValueHasStart)
+    intervalValueHasEnd   <- r.objectBigDecimal(IntervalValueHasEnd)
+    comment               <- r.objectStringOption(ValueHasComment)
+  } yield IntervalValueContentV2(ApiV2Complex, intervalValueHasStart, intervalValueHasEnd, comment)
+
 }
 
 /**
