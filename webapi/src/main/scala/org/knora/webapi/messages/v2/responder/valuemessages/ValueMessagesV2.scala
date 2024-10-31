@@ -584,38 +584,27 @@ object CreateValueV2 {
     ingestState: AssetIngestState,
     jsonLdString: String,
     requestingUser: User,
-  ): ZIO[SipiService & StringFormatter & IriConverter & MessageRelay, Throwable, CreateValueV2] = ZIO.scoped {
-    ZIO.serviceWithZIO[IriConverter] { converter =>
-      for {
-        // Get the IRI of the resource that the value is to be created in.
-        model <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
-
-        maybeCustomValueIri <- model.valueNode.getValueIri.mapError(e => BadRequestException(e.msg))
-        maybeCustomUUID     <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
-        maybeCreationDate   <- ZIO.fromEither(model.valueNode.getValueCreationDate).mapError(BadRequestException(_))
-        maybePermissions     = model.valueNode.getHasPermissions
-
-        fileInfo       <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
-        jsonLDDocument <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
-        createValue <-
-          jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
-            case (_: SmartIri, jsonLdObject: JsonLDObject) =>
-              for {
-                valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser, fileInfo)
-              } yield CreateValueV2(
-                resourceIri = model.resourceIri.toString,
-                resourceClassIri = model.resourceClassIri.smartIri,
-                propertyIri = model.valueNode.propertyIri.smartIri,
-                valueContent = valueContent,
-                valueIri = maybeCustomValueIri.map(_.smartIri),
-                valueUUID = maybeCustomUUID,
-                valueCreationDate = maybeCreationDate,
-                permissions = maybePermissions,
-                ingestState = ingestState,
-              )
-          }
-      } yield createValue
-    }
+  ): ZIO[SipiService & IriConverter & MessageRelay, Throwable, CreateValueV2] = ZIO.scoped {
+    for {
+      converter           <- ZIO.service[IriConverter]
+      model               <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
+      maybeCustomValueIri <- model.valueNode.getValueIri.mapError(e => BadRequestException(e.msg))
+      maybeCustomUUID     <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
+      maybeCreationDate   <- ZIO.fromEither(model.valueNode.getValueCreationDate).mapError(BadRequestException(_))
+      maybePermissions     = model.valueNode.getHasPermissions
+      fileInfo            <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
+      valueContent        <- model.valueNode.getValueContent(fileInfo).mapError(BadRequestException(_))
+    } yield CreateValueV2(
+      resourceIri = model.resourceIri.toString,
+      resourceClassIri = model.resourceClassIri.smartIri,
+      propertyIri = model.valueNode.propertyIri.smartIri,
+      valueContent = valueContent,
+      valueIri = maybeCustomValueIri.map(_.smartIri),
+      valueUUID = maybeCustomUUID,
+      valueCreationDate = maybeCreationDate,
+      permissions = maybePermissions,
+      ingestState = ingestState,
+    )
   }
 }
 
@@ -1709,21 +1698,19 @@ object TextValueContentV2 {
     maybeTextValueAsXml: Option[String],
     maybeValueHasLanguage: Option[IRI],
     maybeMappingResponse: Option[GetMappingResponseV2],
-    jsonLdObject: JsonLDObject,
+    comment: Option[String],
   ) =
     (maybeValueAsString, maybeTextValueAsXml, maybeMappingResponse) match {
       case (Some(valueAsString), None, None) => // Text without standoff.
-        JsonLDUtil
-          .getComment(jsonLdObject)
-          .map(comment =>
-            TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueAsString),
-              valueHasLanguage = maybeValueHasLanguage,
-              textValueType = TextValueType.UnformattedText,
-              comment = comment,
-            ),
-          )
+        ZIO.succeed(
+          TextValueContentV2(
+            ontologySchema = ApiV2Complex,
+            maybeValueHasString = Some(valueAsString),
+            valueHasLanguage = maybeValueHasLanguage,
+            textValueType = TextValueType.UnformattedText,
+            comment = comment,
+          ),
+        )
 
       case (None, Some(textValueAsXml), Some(mappingResponse)) =>
         for {
@@ -1741,8 +1728,7 @@ object TextValueContentV2 {
             } else {
               TextValueType.CustomFormattedText(InternalIri(mappingResponse.mappingIri))
             }
-          text    <- RouteUtilZ.toSparqlEncodedString(textWithStandoffTags.text, "Text value contains invalid characters")
-          comment <- JsonLDUtil.getComment(jsonLdObject)
+          text <- RouteUtilZ.toSparqlEncodedString(textWithStandoffTags.text, "Text value contains invalid characters")
         } yield TextValueContentV2(
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(text),
@@ -1782,23 +1768,41 @@ object TextValueContentV2 {
       maybeMappingResponse <-
         getIriFromObject(jsonLdObject, TextValueHasMapping).flatMap(mappingIriOption =>
           ZIO.foreach(mappingIriOption) { mappingIri =>
-            ZIO.serviceWithZIO[MessageRelay](
-              _.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, requestingUser)),
-            )
+            ZIO.serviceWithZIO[MessageRelay](_.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, null)))
           },
         )
 
-      _ <- JsonLDUtil.getComment(jsonLdObject)
+      comment <- JsonLDUtil.getComment(jsonLdObject)
       // Did the client submit text with or without standoff markup?
-      textValue <- getTextValue(
-                     maybeValueAsString,
-                     maybeTextValueAsXml,
-                     maybeValueHasLanguage,
-                     maybeMappingResponse,
-                     jsonLdObject,
-                   )
+      textValue <-
+        getTextValue(maybeValueAsString, maybeTextValueAsXml, maybeValueHasLanguage, maybeMappingResponse, comment)
 
     } yield textValue
+
+  private def objectSparqlStringOption(r: Resource, property: String) = for {
+    str <- r.objectStringOption(property)
+    iri <- str match
+             case Some(s) => Right(Some(Iri.fromSparqlEncodedString(s)))
+             case None    => Right(None)
+  } yield iri
+
+  def from(r: Resource): ZIO[MessageRelay, IRI, TextValueContentV2] = for {
+    messageRelay          <- ZIO.service[MessageRelay]
+    maybeValueAsString    <- ZIO.fromEither(objectSparqlStringOption(r, ValueAsString))
+    maybeValueHasLanguage <- ZIO.fromEither(objectSparqlStringOption(r, TextValueHasLanguage))
+    maybeTextValueAsXml   <- ZIO.fromEither(r.objectStringOption(TextValueAsXml))
+    comment               <- ZIO.fromEither(objectCommentOption(r))
+    mappingIriOption      <- ZIO.fromEither(r.objectUriOption(TextValueHasMapping))
+    maybeMappingResponse <- ZIO
+                              .foreach(mappingIriOption) { mappingIri =>
+                                messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, null))
+                              }
+                              .mapError(_.getMessage)
+    textValue <-
+      getTextValue(maybeValueAsString, maybeTextValueAsXml, maybeValueHasLanguage, maybeMappingResponse, comment)
+        .mapError(_.getMessage)
+
+  } yield textValue
 }
 
 /**

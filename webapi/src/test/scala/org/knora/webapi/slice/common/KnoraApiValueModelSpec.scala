@@ -15,6 +15,7 @@ import zio.test.*
 import java.time.Instant
 
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.core.MessageRelayLive
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
@@ -624,6 +625,6 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
         ),
       )
     },
-  ).provideSome[Scope](IriConverter.layer, StringFormatter.test)
+  ).provideSome[Scope](IriConverter.layer, MessageRelayLive.layer, StringFormatter.test)
 
 }

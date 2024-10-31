@@ -16,6 +16,7 @@ import scala.language.implicitConversions
 
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.UuidUtil.base64Decode
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasUUID
@@ -159,7 +160,7 @@ final case class KnoraApiValueNode(
   def getHasPermissions: Option[String] =
     node.getStringLiteral(ResourceFactory.createProperty(OntologyConstants.KnoraApiV2Complex.HasPermissions))
 
-  def getValueContent(fileInfo: Option[FileInfo] = None): IO[String, ValueContentV2] =
+  def getValueContent(fileInfo: Option[FileInfo] = None): ZIO[MessageRelay, String, ValueContentV2] =
     def withFileInfo[T](f: FileInfo => Either[String, T]): IO[String, T] =
       fileInfo match
         case None       => ZIO.fail("FileInfo is missing")
@@ -181,6 +182,7 @@ final case class KnoraApiValueNode(
       case MovingImageFileValue        => withFileInfo(MovingImageFileValueContentV2.from(node, _))
       case StillImageExternalFileValue => ZIO.fromEither(StillImageExternalFileValueContentV2.from(node))
       case StillImageFileValue         => withFileInfo(StillImageFileValueContentV2.from(node, _))
+      case TextValue                   => TextValueContentV2.from(node)
       case TextFileValue               => withFileInfo(TextFileValueContentV2.from(node, _))
       case TimeValue                   => ZIO.fromEither(TimeValueContentV2.from(node))
       case UriValue                    => ZIO.fromEither(UriValueContentV2.from(node))
