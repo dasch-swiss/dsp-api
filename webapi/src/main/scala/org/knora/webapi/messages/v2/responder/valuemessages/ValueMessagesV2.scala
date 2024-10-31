@@ -1016,11 +1016,13 @@ object ValueContentV2 {
                   ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for DocumentFileValue"))
                 content <- DocumentFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
+            /*done*/
             case TextFileValue =>
               for {
                 info    <- ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for TextFileValue"))
                 content <- TextFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
+            /*done*/
             case AudioFileValue =>
               for {
                 info <-
@@ -3163,6 +3165,12 @@ object TextFileValueContentV2 {
     FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
     comment,
   )
+
+  def from(r: Resource, info: FileInfo): Either[String, TextFileValueContentV2] = for {
+    comment  <- r.objectStringOption(ValueHasComment)
+    meta      = info.metadata
+    fileValue = FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
+  } yield TextFileValueContentV2(ApiV2Complex, fileValue, comment)
 }
 
 /**
@@ -3240,6 +3248,15 @@ object AudioFileValueContentV2 {
       FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
       comment,
     )
+
+  def from(r: Resource, info: FileInfo): Either[String, AudioFileValueContentV2] = for {
+    comment <- r.objectStringOption(ValueHasComment)
+    meta     = info.metadata
+  } yield AudioFileValueContentV2(
+    ApiV2Complex,
+    FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType),
+    comment,
+  )
 }
 
 /**

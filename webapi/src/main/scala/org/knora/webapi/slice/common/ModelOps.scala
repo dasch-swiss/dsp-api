@@ -163,6 +163,7 @@ final case class KnoraApiValueNode(
         case None       => ZIO.fail("FileInfo is missing")
         case Some(info) => ZIO.fromEither(f(info))
     valueType.toString match
+      case AudioFileValue              => withFileInfo(AudioFileValueContentV2.from(node, _))
       case BooleanValue                => ZIO.fromEither(BooleanValueContentV2.from(node))
       case ColorValue                  => ZIO.fromEither(ColorValueContentV2.from(node))
       case DecimalValue                => ZIO.fromEither(DecimalValueContentV2.from(node))
@@ -174,6 +175,7 @@ final case class KnoraApiValueNode(
       case LinkValue                   => LinkValueContentV2.from(node, convert)
       case StillImageExternalFileValue => ZIO.fromEither(StillImageExternalFileValueContentV2.from(node))
       case StillImageFileValue         => withFileInfo(StillImageFileValueContentV2.from(node, _))
+      case TextFileValue               => withFileInfo(TextFileValueContentV2.from(node, _))
       case TimeValue                   => ZIO.fromEither(TimeValueContentV2.from(node))
       case UriValue                    => ZIO.fromEither(UriValueContentV2.from(node))
       case _                           => ZIO.fail(s"Unsupported value type: $valueType")

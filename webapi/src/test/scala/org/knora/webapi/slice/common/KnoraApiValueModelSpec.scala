@@ -14,6 +14,7 @@ import zio.test.*
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.StillImageExternalFileValue
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.BooleanValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ColorValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DecimalValueContentV2
@@ -28,6 +29,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFi
 import org.knora.webapi.messages.v2.responder.valuemessages.TimeValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.UriValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.getFileInfo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -452,6 +454,52 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
           givenFileInfo.metadata.height,
           None,
         ),
+      )
+    },
+    test("should parse TextFileValueContentV2") {
+      for {
+        model <- KnoraApiValueModel.fromJsonLd(
+                   s"""
+                      |{
+                      |  "@id" : "http://rdfh.ch/0001/a-thing",
+                      |  "@type" : "ex:Thing",
+                      |  "ex:hasOtherThingValue" : {
+                      |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                      |    "@type" : "ka:TextFileValue"
+                      |  },
+                      |  "@context": {
+                      |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                      |    "ex": "https://example.com/test#",
+                      |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                      |  }
+                      |}""".stripMargin,
+                 )
+        content <- model.valueNode.getValueContent(Some(givenFileInfo))
+      } yield assertTrue(
+        content == TextFileValueContentV2(ApiV2Complex, expectedFileValue, None),
+      )
+    },
+    test("should parse AudioFileValueContentV2") {
+      for {
+        model <- KnoraApiValueModel.fromJsonLd(
+                   s"""
+                      |{
+                      |  "@id" : "http://rdfh.ch/0001/a-thing",
+                      |  "@type" : "ex:Thing",
+                      |  "ex:hasOtherThingValue" : {
+                      |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                      |    "@type" : "ka:AudioFileValue"
+                      |  },
+                      |  "@context": {
+                      |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                      |    "ex": "https://example.com/test#",
+                      |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                      |  }
+                      |}""".stripMargin,
+                 )
+        content <- model.valueNode.getValueContent(Some(givenFileInfo))
+      } yield assertTrue(
+        content == AudioFileValueContentV2(ApiV2Complex, expectedFileValue, None),
       )
     },
   ).provideSome[Scope](IriConverter.layer, StringFormatter.test)
