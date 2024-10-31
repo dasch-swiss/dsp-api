@@ -69,9 +69,7 @@ object CreateValueV2Spec extends ZIOSpecDefault {
 
   override def spec: Spec[Any, Throwable] =
     suite("CreateValueV2Spec")(test("UnformattedText TextValue fromJsonLd should contain the language") {
-      // TODO: add use all once the fromJsonLd is free of errors
-      //  val transformations = JsonLdTransformations.all
-      val transformations = Seq(JsonLdTransformations.noOp)
+      val transformations = JsonLdTransformations.all
       check(Gen.fromIterable(transformations)) { f =>
         for {
           sf    <- ZIO.service[StringFormatter]
