@@ -29,6 +29,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.TimeValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.UriValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.getFileInfo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -39,6 +40,27 @@ import java.time.Instant
 
 object KnoraApiValueModelSpec extends ZIOSpecDefault {
   private val sf = StringFormatter.getInitializedTestInstance
+
+  private val givenFileInfo = FileInfo(
+    "internalFilename",
+    FileMetadataSipiResponse(
+      Some("originalFilename"),
+      Some("originalMimeType"),
+      "internalMimeType",
+      Some(640),
+      Some(480),
+      Some(666),
+      None,
+      None,
+    ),
+  )
+
+  private val expectedFileValue = FileValueV2(
+    "internalFilename",
+    "internalMimeType",
+    Some("originalFilename"),
+    Some("originalMimeType"),
+  )
 
   private val createIntegerValue = """
     {
@@ -356,29 +378,13 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                            |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                                            |  }
                                            |}""".stripMargin)
-        content <- model.valueNode.getValueContent(
-                     Some(
-                       FileInfo(
-                         "internalFilename",
-                         FileMetadataSipiResponse(
-                           Some("originalFilename"),
-                           Some("originalMimeType"),
-                           "internalMimeType",
-                           Some(640),
-                           Some(480),
-                           None,
-                           None,
-                           None,
-                         ),
-                       ),
-                     ),
-                   )
+        content <- model.valueNode.getValueContent(Some(givenFileInfo))
       } yield assertTrue(
         content == StillImageFileValueContentV2(
           ApiV2Complex,
-          FileValueV2("internalFilename", "internalMimeType", Some("originalFilename"), Some("originalMimeType")),
-          640,
-          480,
+          expectedFileValue,
+          givenFileInfo.metadata.width.getOrElse(throw new Exception("width is missing")),
+          givenFileInfo.metadata.height.getOrElse(throw new Exception("height is missing")),
           None,
         ),
       )
@@ -420,55 +426,34 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
     },
     test("should parse DocumentFileValue") {
       for {
-        model <-
-          KnoraApiValueModel.fromJsonLd(
-            s"""
-               |{
-               |  "@id" : "http://rdfh.ch/0001/a-thing",
-               |  "@type" : "ex:Thing",
-               |  "ex:hasOtherThingValue" : {
-               |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
-               |    "@type" : "ka:DocumentFileValue"
-               |  },
-               |  "@context": {
-               |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-               |    "ex": "https://example.com/test#",
-               |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-               |  }
-               |}""".stripMargin,
-          )
-        content <- model.valueNode.getValueContent(
-                     Some(
-                       FileInfo(
-                         "internalFilename",
-                         FileMetadataSipiResponse(
-                           Some("originalFilename"),
-                           Some("originalMimeType"),
-                           "internalMimeType",
-                           Some(640),
-                           Some(480),
-                           Some(666),
-                           None,
-                           None,
-                         ),
-                       ),
-                     ),
-                   )
+        model <- KnoraApiValueModel.fromJsonLd(
+                   s"""
+                      |{
+                      |  "@id" : "http://rdfh.ch/0001/a-thing",
+                      |  "@type" : "ex:Thing",
+                      |  "ex:hasOtherThingValue" : {
+                      |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                      |    "@type" : "ka:DocumentFileValue"
+                      |  },
+                      |  "@context": {
+                      |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                      |    "ex": "https://example.com/test#",
+                      |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                      |  }
+                      |}""".stripMargin,
+                 )
+        content <- model.valueNode.getValueContent(Some(givenFileInfo))
       } yield assertTrue(
         content == DocumentFileValueContentV2(
           ApiV2Complex,
-          FileValueV2(
-            "internalFilename",
-            "internalMimeType",
-            Some("originalFilename"),
-            Some("originalMimeType"),
-          ),
-          Some(666),
-          Some(640),
-          Some(480),
+          expectedFileValue,
+          givenFileInfo.metadata.numpages,
+          givenFileInfo.metadata.width,
+          givenFileInfo.metadata.height,
           None,
         ),
       )
     },
   ).provideSome[Scope](IriConverter.layer, StringFormatter.test)
+
 }
