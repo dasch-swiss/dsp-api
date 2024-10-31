@@ -586,37 +586,35 @@ object CreateValueV2 {
     requestingUser: User,
   ): ZIO[SipiService & StringFormatter & IriConverter & MessageRelay, Throwable, CreateValueV2] = ZIO.scoped {
     ZIO.serviceWithZIO[IriConverter] { converter =>
-      ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
-        for {
-          // Get the IRI of the resource that the value is to be created in.
-          model <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
+      for {
+        // Get the IRI of the resource that the value is to be created in.
+        model <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
 
-          maybeCustomValueIri <- model.valueNode.getValueIri.mapError(e => BadRequestException(e.msg))
-          maybeCustomUUID     <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
-          maybeCreationDate   <- ZIO.fromEither(model.valueNode.getValueCreationDate).mapError(BadRequestException(_))
-          maybePermissions     = model.valueNode.getHasPermissions
+        maybeCustomValueIri <- model.valueNode.getValueIri.mapError(e => BadRequestException(e.msg))
+        maybeCustomUUID     <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
+        maybeCreationDate   <- ZIO.fromEither(model.valueNode.getValueCreationDate).mapError(BadRequestException(_))
+        maybePermissions     = model.valueNode.getHasPermissions
 
-          fileInfo       <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
-          jsonLDDocument <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
-          createValue <-
-            jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
-              case (_: SmartIri, jsonLdObject: JsonLDObject) =>
-                for {
-                  valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser, fileInfo)
-                } yield CreateValueV2(
-                  resourceIri = model.resourceIri.toString,
-                  resourceClassIri = model.resourceClassIri.smartIri,
-                  propertyIri = model.valueNode.propertyIri.smartIri,
-                  valueContent = valueContent,
-                  valueIri = maybeCustomValueIri.map(_.smartIri),
-                  valueUUID = maybeCustomUUID,
-                  valueCreationDate = maybeCreationDate,
-                  permissions = maybePermissions,
-                  ingestState = ingestState,
-                )
-            }
-        } yield createValue
-      }
+        fileInfo       <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
+        jsonLDDocument <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
+        createValue <-
+          jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
+            case (_: SmartIri, jsonLdObject: JsonLDObject) =>
+              for {
+                valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser, fileInfo)
+              } yield CreateValueV2(
+                resourceIri = model.resourceIri.toString,
+                resourceClassIri = model.resourceClassIri.smartIri,
+                propertyIri = model.valueNode.propertyIri.smartIri,
+                valueContent = valueContent,
+                valueIri = maybeCustomValueIri.map(_.smartIri),
+                valueUUID = maybeCustomUUID,
+                valueCreationDate = maybeCreationDate,
+                permissions = maybePermissions,
+                ingestState = ingestState,
+              )
+          }
+      } yield createValue
     }
   }
 }
@@ -2536,7 +2534,7 @@ object ColorValueContentV2 {
       comment <- JsonLDUtil.getComment(jsonLDObject)
     } yield ColorValueContentV2(ApiV2Complex, colorValueAsColor, comment)
 
-  def from(r: Resource) = for {
+  def from(r: Resource): Either[IRI, ColorValueContentV2] = for {
     color   <- r.objectString(ColorValueAsColor)
     comment <- objectCommentOption(r)
   } yield ColorValueContentV2(ApiV2Complex, color, comment)
@@ -2627,7 +2625,7 @@ object UriValueContentV2 {
       } yield UriValueContentV2(ApiV2Complex, uriValueAsUri, comment)
     }
 
-  def from(r: Resource) = for {
+  def from(r: Resource): Either[String, UriValueContentV2] = for {
     uri     <- r.objectUri(UriValueAsUri)
     comment <- objectCommentOption(r)
   } yield UriValueContentV2(ApiV2Complex, uri, comment)
@@ -2719,7 +2717,7 @@ object GeonameValueContentV2 {
       comment <- JsonLDUtil.getComment(jsonLDObject)
     } yield GeonameValueContentV2(ApiV2Complex, geonameValueAsGeonameCode, comment)
 
-  def from(r: Resource) = for {
+  def from(r: Resource): Either[String, GeonameValueContentV2] = for {
     geonameCode <- r.objectString(GeonameValueAsGeonameCode)
     comment     <- objectCommentOption(r)
   } yield GeonameValueContentV2(ApiV2Complex, geonameCode, comment)
@@ -2860,7 +2858,7 @@ object StillImageFileValueContentV2 {
       comment = comment,
     )
 
-  def from(r: Resource, fileInfo: FileInfo): Either[IRI, StillImageFileValueContentV2] = for {
+  def from(r: Resource, fileInfo: FileInfo): Either[String, StillImageFileValueContentV2] = for {
     comment  <- objectCommentOption(r)
     meta      = fileInfo.metadata
     fileValue = FileValueV2(fileInfo.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
@@ -3131,7 +3129,7 @@ object DocumentFileValueContentV2 {
       comment,
     )
 
-  def from(r: Resource, info: FileInfo): Either[IRI, DocumentFileValueContentV2] = for {
+  def from(r: Resource, info: FileInfo): Either[String, DocumentFileValueContentV2] = for {
     comment  <- objectCommentOption(r)
     meta      = info.metadata
     fileValue = FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
@@ -3155,7 +3153,7 @@ object ArchiveFileValueContentV2 {
       comment,
     )
 
-  def from(r: Resource, info: FileInfo): Either[IRI, ArchiveFileValueContentV2] = for {
+  def from(r: Resource, info: FileInfo): Either[String, ArchiveFileValueContentV2] = for {
     comment  <- objectCommentOption(r)
     meta      = info.metadata
     fileValue = FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
