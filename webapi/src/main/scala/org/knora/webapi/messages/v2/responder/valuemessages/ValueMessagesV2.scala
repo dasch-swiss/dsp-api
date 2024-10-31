@@ -1037,6 +1037,7 @@ object ValueContentV2 {
                           .orElseFail(BadRequestException("No file info found for MovingImageFileValue"))
                 content <- MovingImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
+            /*done*/
             case ArchiveFileValue =>
               for {
                 info <-
@@ -3090,6 +3091,12 @@ object ArchiveFileValueContentV2 {
       FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
       comment,
     )
+
+  def from(r: Resource, info: FileInfo): Either[IRI, ArchiveFileValueContentV2] = for {
+    comment  <- r.objectStringOption(ValueHasComment)
+    meta      = info.metadata
+    fileValue = FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
+  } yield ArchiveFileValueContentV2(ApiV2Complex, fileValue, comment)
 }
 
 /**

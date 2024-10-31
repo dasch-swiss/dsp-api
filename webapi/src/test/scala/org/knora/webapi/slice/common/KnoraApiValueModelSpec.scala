@@ -14,6 +14,7 @@ import zio.test.*
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.StillImageExternalFileValue
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.v2.responder.valuemessages.ArchiveFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.BooleanValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ColorValueContentV2
@@ -524,6 +525,29 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
         content <- model.valueNode.getValueContent(Some(givenFileInfo))
       } yield assertTrue(
         content == MovingImageFileValueContentV2(ApiV2Complex, expectedFileValue, None),
+      )
+    },
+    test("should parse ArchiveFileValueContentV2") {
+      for {
+        model <- KnoraApiValueModel.fromJsonLd(
+          s"""
+             |{
+             |  "@id" : "http://rdfh.ch/0001/a-thing",
+             |  "@type" : "ex:Thing",
+             |  "ex:hasOtherThingValue" : {
+             |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+             |    "@type" : "ka:ArchiveFileValue"
+             |  },
+             |  "@context": {
+             |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+             |    "ex": "https://example.com/test#",
+             |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+             |  }
+             |}""".stripMargin,
+        )
+        content <- model.valueNode.getValueContent(Some(givenFileInfo))
+      } yield assertTrue(
+        content == ArchiveFileValueContentV2(ApiV2Complex, expectedFileValue, None),
       )
     },
   ).provideSome[Scope](IriConverter.layer, StringFormatter.test)

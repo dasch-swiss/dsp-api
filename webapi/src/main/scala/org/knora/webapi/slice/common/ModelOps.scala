@@ -164,6 +164,7 @@ final case class KnoraApiValueNode(
         case Some(info) => ZIO.fromEither(f(info))
     valueType.toString match
       case AudioFileValue              => withFileInfo(AudioFileValueContentV2.from(node, _))
+      case ArchiveFileValue            => withFileInfo(ArchiveFileValueContentV2.from(node, _))
       case BooleanValue                => ZIO.fromEither(BooleanValueContentV2.from(node))
       case ColorValue                  => ZIO.fromEither(ColorValueContentV2.from(node))
       case DecimalValue                => ZIO.fromEither(DecimalValueContentV2.from(node))
