@@ -8,14 +8,11 @@ package swiss.dasch.api
 import sttp.model.StatusCode
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat.TextPlain
-import sttp.tapir.generic.auto.*
-import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
-import swiss.dasch.api.ProjectsEndpoints.shortcodePathVar
 import swiss.dasch.domain.ProjectShortcode
 import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.schema.{DeriveSchema, Schema}
-import zio.{Chunk, ZLayer}
+import zio.ZLayer
 
 final case class MappingEntry(internalFilename: String, originalFilename: String)
 
@@ -84,13 +81,6 @@ final case class MaintenanceEndpoints(base: BaseEndpoints) {
     .tag(maintenance)
     .description("Authorization: admin scope required.")
 
-  val createOriginalsEndpoint = base.secureEndpoint.post
-    .in(maintenance / "create-originals" / shortcodePathVar)
-    .in(jsonBody[Chunk[MappingEntry]])
-    .out(statusCode(StatusCode.Accepted))
-    .tag(maintenance)
-    .description("Authorization: admin scope required.")
-
   val needsOriginalsEndpoint = base.secureEndpoint.get
     .in(maintenance / "needs-originals")
     .in(query[Option[Boolean]]("imagesOnly"))
@@ -101,7 +91,6 @@ final case class MaintenanceEndpoints(base: BaseEndpoints) {
 
   val endpoints = List(
     postMaintenanceActionEndpoint,
-    createOriginalsEndpoint,
     needsTopLeftCorrectionEndpoint,
     needsOriginalsEndpoint,
   )

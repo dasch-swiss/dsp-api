@@ -41,24 +41,6 @@ final case class MaintenanceEndpointsHandler(
         } yield s"work in progress for projects ${paths.map(_.shortcode).mkString(", ")} (for details see logs)"
       })
 
-  val createOriginalsEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.createOriginalsEndpoint
-    .serverLogic(userSession =>
-      (shortcode, mappings) =>
-        authorizationHandler.ensureAdminScope(userSession) *>
-          projectService
-            .findProject(shortcode)
-            .some
-            .flatMap(projectPath =>
-              maintenanceActions
-                .createOriginals(projectPath, mappings.map(e => e.internalFilename -> e.originalFilename).toMap)
-                .tap(count => ZIO.logInfo(s"Created $count originals for ${projectPath.path}"))
-                .logError
-                .forkDaemon,
-            )
-            .mapError(projectNotFoundOrServerError(_, shortcode))
-            .unit,
-    )
-
   val needsOriginalsEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.needsOriginalsEndpoint
     .serverLogic(userSession =>
       imagesOnlyMaybe =>
@@ -97,7 +79,6 @@ final case class MaintenanceEndpointsHandler(
   val endpoints: List[ZServerEndpoint[Any, Any]] =
     List(
       postMaintenanceEndpoint,
-      createOriginalsEndpoint,
       needsOriginalsEndpoint,
       needsTopLeftCorrectionEndpoint,
       wasTopLeftCorrectionAppliedEndpoint,

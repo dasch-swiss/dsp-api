@@ -5,17 +5,14 @@
 
 package swiss.dasch.domain
 
-import eu.timepit.refined.types.string.NonEmptyString
-import org.apache.commons.io.FilenameUtils
 import swiss.dasch.api.ActionName
 import swiss.dasch.domain
 import swiss.dasch.domain.AugmentedPath.*
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.FileFilters.isJpeg2000
-import swiss.dasch.domain.SipiImageFormat.Tif
 import zio.*
 import zio.json.interop.refined.*
-import zio.json.{DeriveJsonCodec, EncoderOps, JsonCodec, JsonEncoder}
+import zio.json.{DeriveJsonCodec, JsonCodec, JsonEncoder}
 import zio.nio.file
 import zio.nio.file.{Files, Path}
 import zio.stream.{ZSink, ZStream}
@@ -33,7 +30,6 @@ trait MaintenanceActions {
       .foreach(projectPath)(applyTopLeftCorrections)
       .map(_.sum)
       .tap(sum => ZIO.logInfo(s"Finished ${ActionName.ApplyTopLeftCorrection} for $sum files"))
-  def createOriginals(projectPath: ProjectFolder, mapping: Map[String, String]): Task[Int]
   def importProjectsToDb(): Task[Unit]
 }
 
@@ -224,97 +220,6 @@ final case class MaintenanceActionsLive(
         .tap(sum => ZIO.logInfo(s"Top left corrections applied for $sum files in ${projectPath.path}"))
 
   private def findJpeg2000Files(projectPath: ProjectFolder) = StorageService.findInPath(projectPath.path, isJpeg2000)
-
-  override def createOriginals(projectPath: ProjectFolder, mapping: Map[String, String]): Task[Int] =
-    findJpeg2000Files(projectPath)
-      .flatMap(findAssetsWithoutOriginal(_, mapping))
-      .mapZIOPar(8)(createOriginalAndUpdateInfoFile)
-      .run(ZSink.sum)
-
-  final private case class CreateOriginalFor(
-    assetId: AssetId,
-    jpxPath: Path,
-    targetFormat: SipiImageFormat,
-    originalFilename: String,
-  ) {
-    def originalPath: Path = jpxPath.parent.map(_ / s"$assetId.${targetFormat.extension}.orig").orNull
-  }
-
-  private def findAssetsWithoutOriginal(
-    jpxPath: Path,
-    mapping: Map[String, String],
-  ): ZStream[Any, Throwable, CreateOriginalFor] =
-    AssetId.fromPath(jpxPath) match {
-      case Some(assetId) => filterWithoutOriginal(assetId, jpxPath, mapping)
-      case None          => ZStream.logWarning(s"Not an assetId: $jpxPath") *> ZStream.empty
-    }
-
-  private def filterWithoutOriginal(
-    assetId: AssetId,
-    jpxPath: Path,
-    mapping: Map[String, String],
-  ): ZStream[Any, Throwable, CreateOriginalFor] = {
-    val createThis = makeCreateOriginalFor(assetId, jpxPath, mapping)
-    ZStream
-      .fromZIO(Files.exists(createThis.originalPath))
-      .flatMap {
-        case true =>
-          ZStream.logInfo(s"Original for $jpxPath present, skipping ${createThis.originalPath}") *> ZStream.empty
-        case false =>
-          ZStream.logDebug(s"Original for $jpxPath not present") *> ZStream.succeed(createThis)
-      }
-  }
-
-  private def makeCreateOriginalFor(
-    assetId: AssetId,
-    jpxPath: Path,
-    mapping: Map[String, String],
-  ) = {
-    val fallBackFormat             = Tif
-    val originalFilenameMaybe      = mapping.get(jpxPath.filename.toString)
-    val originalFileExtensionMaybe = originalFilenameMaybe.map(FilenameUtils.getExtension).filter(_ != null)
-    val targetFormat               = originalFileExtensionMaybe.flatMap(SipiImageFormat.fromExtension).getOrElse(fallBackFormat)
-    val originalFilename = originalFilenameMaybe.map { fileName =>
-      if (fileName.endsWith(targetFormat.extension)) fileName
-      else fileName.replace(FilenameUtils.getExtension(fileName), targetFormat.extension)
-    }
-      .getOrElse(s"$assetId.${targetFormat.extension}")
-
-    CreateOriginalFor(assetId, jpxPath, targetFormat, originalFilename)
-  }
-
-  private def createOriginalAndUpdateInfoFile =
-    (c: CreateOriginalFor) => createOriginal(c) *> updateAssetInfo(c)
-
-  private def createOriginal(c: CreateOriginalFor) =
-    ZIO.logInfo(s"Creating ${c.originalPath}/${c.targetFormat} for ${c.jpxPath}") *>
-      sipiClient
-        .transcodeImageFile(fileIn = c.jpxPath, fileOut = c.originalPath, outputFormat = c.targetFormat)
-        .tap(sipiOut => ZIO.logDebug(s"Sipi response for $c: $sipiOut"))
-
-  private def updateAssetInfo(c: CreateOriginalFor): Task[Int] = {
-    val infoFilePath = c.jpxPath.parent.orNull / s"${c.assetId}.info"
-    ZIO
-      .whenZIO(Files.exists(c.originalPath))(for {
-        _    <- ZIO.logInfo(s"Updating ${c.assetId} info file $infoFilePath")
-        info <- createNewAssetInfoFileContent(c)
-        _    <- Files.deleteIfExists(infoFilePath) *> Files.createFile(infoFilePath)
-        _    <- Files.writeBytes(infoFilePath, Chunk.fromArray(info.toJsonPretty.getBytes))
-      } yield 1)
-      .someOrElseZIO(ZIO.logWarning(s"Sipi did not create an original for $c").as(0))
-  }
-
-  private def createNewAssetInfoFileContent(c: CreateOriginalFor): IO[Throwable, AssetInfoFileContent] =
-    for {
-      checksumOriginal   <- FileChecksumService.createSha256Hash(c.originalPath)
-      checksumDerivative <- FileChecksumService.createSha256Hash(c.jpxPath)
-    } yield AssetInfoFileContent(
-      internalFilename = NonEmptyString.unsafeFrom(c.jpxPath.filename.toString),
-      originalInternalFilename = NonEmptyString.unsafeFrom(c.originalPath.filename.toString),
-      originalFilename = NonEmptyString.unsafeFrom(c.originalFilename),
-      checksumOriginal = checksumOriginal,
-      checksumDerivative = checksumDerivative,
-    )
 
   override def importProjectsToDb(): Task[Unit] = for {
     prjFolders <- projectService.listAllProjects()
