@@ -173,6 +173,7 @@ final case class KnoraApiValueNode(
       case IntValue                    => ZIO.fromEither(IntegerValueContentV2.from(node))
       case IntervalValue               => ZIO.fromEither(IntervalValueContentV2.from(node))
       case LinkValue                   => LinkValueContentV2.from(node, convert)
+      case MovingImageFileValue        => withFileInfo(MovingImageFileValueContentV2.from(node, _))
       case StillImageExternalFileValue => ZIO.fromEither(StillImageExternalFileValueContentV2.from(node))
       case StillImageFileValue         => withFileInfo(StillImageFileValueContentV2.from(node, _))
       case TextFileValue               => withFileInfo(TextFileValueContentV2.from(node, _))

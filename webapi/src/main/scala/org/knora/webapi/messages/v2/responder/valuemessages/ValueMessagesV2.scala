@@ -1029,6 +1029,7 @@ object ValueContentV2 {
                   ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for AudioFileValue"))
                 content <- AudioFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
+            /*done*/
             case MovingImageFileValue =>
               for {
                 info <- ZIO
@@ -3336,6 +3337,15 @@ object MovingImageFileValueContentV2 {
       FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
       comment,
     )
+
+  def from(r: Resource, info: FileInfo): Either[String, MovingImageFileValueContentV2] = for {
+    comment <- r.objectStringOption(ValueHasComment)
+    meta     = info.metadata
+  } yield MovingImageFileValueContentV2(
+    ApiV2Complex,
+    FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType),
+    comment,
+  )
 }
 
 /**
