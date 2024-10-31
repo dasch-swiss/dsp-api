@@ -9,11 +9,11 @@ import org.apache.jena.rdf.model.Literal
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.rdf.model.Statement
 
+import java.time.Instant
 import scala.util.Try
+
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.common.jena.ResourceOps.*
-
-import java.time.Instant
 
 object StatementOps {
   extension (stmt: Statement) {

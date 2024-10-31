@@ -8,13 +8,13 @@ package org.knora.webapi.slice.common.jena
 import zio.*
 import zio.test.*
 
+import java.time.Instant
 import scala.language.implicitConversions
+
 import org.knora.webapi.slice.common
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
-
-import java.time.Instant
 
 object ResourceOpsSpec extends ZIOSpecDefault {
 

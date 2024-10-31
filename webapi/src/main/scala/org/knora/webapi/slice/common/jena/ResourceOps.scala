@@ -11,6 +11,7 @@ import org.apache.jena.rdf.model.Statement
 import org.apache.jena.vocabulary.RDF
 
 import java.time.Instant
+
 import org.knora.webapi.slice.common.jena.StatementOps.*
 
 object ResourceOps {

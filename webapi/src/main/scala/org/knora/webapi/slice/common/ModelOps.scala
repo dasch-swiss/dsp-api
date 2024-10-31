@@ -8,11 +8,12 @@ package org.knora.webapi.slice.common
 import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.RDF
 import zio.*
-import org.knora.webapi.slice.common.jena.JenaConversions.given
+
 import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
+
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.UuidUtil.base64Decode
 import org.knora.webapi.messages.OntologyConstants
@@ -23,10 +24,11 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri as KResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri as KResourceClassIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri as KResourceIri
 import org.knora.webapi.slice.common.ModelError.MoreThanOneRootResource
 import org.knora.webapi.slice.common.ModelError.ParseError
+import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.RDFNodeOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*

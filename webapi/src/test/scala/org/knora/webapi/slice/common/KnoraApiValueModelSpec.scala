@@ -11,11 +11,13 @@ import zio.json.DecoderOps
 import zio.json.EncoderOps
 import zio.json.ast.Json
 import zio.test.*
+
+import java.time.Instant
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
-import org.knora.webapi.messages.util.DatePrecisionYear
 import org.knora.webapi.messages.v2.responder.valuemessages.ArchiveFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.BooleanValueContentV2
@@ -32,18 +34,16 @@ import org.knora.webapi.messages.v2.responder.valuemessages.IntervalValueContent
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.TimeValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.UriValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TimeValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.UriValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
-
-import java.time.Instant
 
 object KnoraApiValueModelSpec extends ZIOSpecDefault {
   private val sf = StringFormatter.getInitializedTestInstance

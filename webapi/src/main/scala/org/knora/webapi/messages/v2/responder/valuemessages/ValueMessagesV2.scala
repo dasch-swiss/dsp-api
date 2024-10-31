@@ -6,13 +6,15 @@
 package org.knora.webapi.messages.v2.responder.valuemessages
 
 import org.apache.jena.rdf.model.Resource
+import zio.IO
 import zio.ZIO
-import org.knora.webapi.slice.common.jena.JenaConversions.given
 
 import java.net.URI
 import java.time.Instant
 import java.util.UUID
 import scala.language.implicitConversions
+import scala.util.Try
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -50,6 +52,7 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraApiValueModel
 import org.knora.webapi.slice.common.KnoraApiValueNode
+import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -57,9 +60,6 @@ import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.WithAsIs
-import zio.IO
-
-import scala.util.Try
 
 /**
  * Represents a successful response to a create value Request.
