@@ -6,9 +6,6 @@
 package org.knora.webapi
 package messages
 
-import org.apache.jena.rdf.model.Property
-import org.apache.jena.rdf.model.ResourceFactory
-
 import dsp.constants.SalsahGui
 
 /**
@@ -616,7 +613,7 @@ object OntologyConstants {
 
     val ValueAsString: IRI      = KnoraApiV2PrefixExpansion + "valueAsString"
     val ValueCreationDate: IRI  = KnoraApiV2PrefixExpansion + "valueCreationDate"
-    val ValueHasUUID: String    = KnoraApiV2PrefixExpansion + "valueHasUUID"
+    val ValueHasUUID: IRI       = KnoraApiV2PrefixExpansion + "valueHasUUID"
     val ValueHasComment: IRI    = KnoraApiV2PrefixExpansion + "valueHasComment"
     val NewValueVersionIri: IRI = KnoraApiV2PrefixExpansion + "newValueVersionIri"
 
