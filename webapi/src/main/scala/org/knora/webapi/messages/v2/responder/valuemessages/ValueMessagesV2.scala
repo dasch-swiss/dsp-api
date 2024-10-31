@@ -61,6 +61,12 @@ import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.WithAsIs
 
+private def objectCommentOption(r: Resource): Either[String, Option[String]] =
+  r.objectStringOption(ValueHasComment) flatMap {
+    case Some(str) => Iri.toSparqlEncodedString(str).toRight(s"Invalid comment: $str").map(Some(_))
+    case None      => Right(None)
+  }
+
 /**
  * Represents a successful response to a create value Request.
  *
@@ -1369,7 +1375,7 @@ object DateValueContentV2 {
       startEnd          <- Try(dateRange.toJulianDayRange).toEither.left.map(_.getMessage)
       (startJdn, endJdn) = startEnd
 
-      comment <- r.objectStringOption(ValueHasComment)
+      comment <- objectCommentOption(r)
     } yield DateValueContentV2(
       ApiV2Complex,
       startJdn,
@@ -1869,10 +1875,10 @@ object IntegerValueContentV2 {
       comment <- JsonLDUtil.getComment(jsonLDObject)
     } yield IntegerValueContentV2(ApiV2Complex, intValue, comment)
 
-  def from(node: Resource): Either[String, IntegerValueContentV2] =
+  def from(r: Resource): Either[String, IntegerValueContentV2] =
     for {
-      intValue <- node.objectInt(IntValueAsInt)
-      comment  <- node.objectStringOption(ValueHasComment)
+      intValue <- r.objectInt(IntValueAsInt)
+      comment  <- objectCommentOption(r)
     } yield IntegerValueContentV2(ApiV2Complex, intValue, comment)
 }
 
@@ -1961,10 +1967,10 @@ object DecimalValueContentV2 {
       } yield DecimalValueContentV2(ApiV2Complex, decimalValue, comment)
     }
 
-  def from(node: Resource): Either[String, DecimalValueContentV2] =
+  def from(r: Resource): Either[String, DecimalValueContentV2] =
     for {
-      decimalValue <- node.objectBigDecimal(DecimalValueAsDecimal)
-      comment      <- node.objectStringOption(ValueHasComment)
+      decimalValue <- r.objectBigDecimal(DecimalValueAsDecimal)
+      comment      <- objectCommentOption(r)
     } yield DecimalValueContentV2(ApiV2Complex, decimalValue, comment)
 }
 
@@ -2040,7 +2046,7 @@ object BooleanValueContentV2 {
 
   def from(r: Resource): Either[String, BooleanValueContentV2] = for {
     bool    <- r.objectBoolean(BooleanValueAsBoolean)
-    comment <- r.objectStringOption(ValueHasComment)
+    comment <- objectCommentOption(r)
   } yield BooleanValueContentV2(ApiV2Complex, bool, comment)
 }
 
@@ -2125,7 +2131,7 @@ object GeomValueContentV2 {
   def from(r: Resource): Either[String, GeomValueContentV2] = for {
     geomStr <- r.objectString(GeometryValueAsGeometry)
     geom    <- ValuesValidator.validateGeometryString(geomStr).toRight(s"Invalid geometry string: $geomStr")
-    comment <- r.objectStringOption(ValueHasComment)
+    comment <- objectCommentOption(r)
   } yield GeomValueContentV2(ApiV2Complex, geom, comment)
 }
 
@@ -2243,7 +2249,7 @@ object IntervalValueContentV2 {
   def from(r: Resource): Either[String, IntervalValueContentV2] = for {
     intervalValueHasStart <- r.objectBigDecimal(IntervalValueHasStart)
     intervalValueHasEnd   <- r.objectBigDecimal(IntervalValueHasEnd)
-    comment               <- r.objectStringOption(ValueHasComment)
+    comment               <- objectCommentOption(r)
   } yield IntervalValueContentV2(ApiV2Complex, intervalValueHasStart, intervalValueHasEnd, comment)
 
 }
@@ -2342,7 +2348,7 @@ object TimeValueContentV2 {
 
   def from(r: Resource): Either[String, TimeValueContentV2] = for {
     timeStamp <- r.objectInstant(TimeValueAsTimeStamp)
-    comment   <- r.objectStringOption(ValueHasComment)
+    comment   <- objectCommentOption(r)
   } yield TimeValueContentV2(ApiV2Complex, timeStamp, comment)
 }
 
@@ -2445,7 +2451,7 @@ object HierarchicalListValueContentV2 {
   }
 
   def from(r: Resource, converter: IriConverter): IO[String, HierarchicalListValueContentV2] = for {
-    comment  <- ZIO.fromEither(r.objectStringOption(ValueHasComment))
+    comment  <- ZIO.fromEither(objectCommentOption(r))
     listNode <- ZIO.fromEither(r.objectUri(ListValueAsListNode))
     _ <- ZIO
            .fail(s"List node IRI <$listNode> is not a Knora data IRI")
@@ -2532,7 +2538,7 @@ object ColorValueContentV2 {
 
   def from(r: Resource) = for {
     color   <- r.objectString(ColorValueAsColor)
-    comment <- r.objectStringOption(ValueHasComment)
+    comment <- objectCommentOption(r)
   } yield ColorValueContentV2(ApiV2Complex, color, comment)
 }
 
@@ -2623,7 +2629,7 @@ object UriValueContentV2 {
 
   def from(r: Resource) = for {
     uri     <- r.objectUri(UriValueAsUri)
-    comment <- r.objectStringOption(ValueHasComment)
+    comment <- objectCommentOption(r)
   } yield UriValueContentV2(ApiV2Complex, uri, comment)
 }
 
@@ -2715,7 +2721,7 @@ object GeonameValueContentV2 {
 
   def from(r: Resource) = for {
     geonameCode <- r.objectString(GeonameValueAsGeonameCode)
-    comment     <- r.objectStringOption(ValueHasComment)
+    comment     <- objectCommentOption(r)
   } yield GeonameValueContentV2(ApiV2Complex, geonameCode, comment)
 }
 
@@ -2855,7 +2861,7 @@ object StillImageFileValueContentV2 {
     )
 
   def from(r: Resource, fileInfo: FileInfo): Either[IRI, StillImageFileValueContentV2] = for {
-    comment  <- r.objectStringOption(ValueHasComment)
+    comment  <- objectCommentOption(r)
     meta      = fileInfo.metadata
     fileValue = FileValueV2(fileInfo.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
   } yield StillImageFileValueContentV2(
@@ -2970,7 +2976,7 @@ object StillImageExternalFileValueContentV2 {
   def from(r: Resource): Either[String, StillImageExternalFileValueContentV2] = for {
     externalUrlStr <- r.objectString(StillImageFileValueHasExternalUrl)
     iifUrl         <- IiifImageRequestUrl.from(externalUrlStr)
-    comment        <- r.objectStringOption(ValueHasComment)
+    comment        <- objectCommentOption(r)
     fileValue       = FileValueV2("internalFilename", "internalMimeType", Some("originalFilename"), Some("originalMimeType"))
   } yield StillImageExternalFileValueContentV2(ApiV2Complex, fileValue, iifUrl, comment)
 }
@@ -3126,7 +3132,7 @@ object DocumentFileValueContentV2 {
     )
 
   def from(r: Resource, info: FileInfo): Either[IRI, DocumentFileValueContentV2] = for {
-    comment  <- r.objectStringOption(ValueHasComment)
+    comment  <- objectCommentOption(r)
     meta      = info.metadata
     fileValue = FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
   } yield DocumentFileValueContentV2(ApiV2Complex, fileValue, meta.numpages, meta.width, meta.height, comment)
@@ -3150,7 +3156,7 @@ object ArchiveFileValueContentV2 {
     )
 
   def from(r: Resource, info: FileInfo): Either[IRI, ArchiveFileValueContentV2] = for {
-    comment  <- r.objectStringOption(ValueHasComment)
+    comment  <- objectCommentOption(r)
     meta      = info.metadata
     fileValue = FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
   } yield ArchiveFileValueContentV2(ApiV2Complex, fileValue, comment)
@@ -3232,7 +3238,7 @@ object TextFileValueContentV2 {
   )
 
   def from(r: Resource, info: FileInfo): Either[String, TextFileValueContentV2] = for {
-    comment  <- r.objectStringOption(ValueHasComment)
+    comment  <- objectCommentOption(r)
     meta      = info.metadata
     fileValue = FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
   } yield TextFileValueContentV2(ApiV2Complex, fileValue, comment)
@@ -3315,7 +3321,7 @@ object AudioFileValueContentV2 {
     )
 
   def from(r: Resource, info: FileInfo): Either[String, AudioFileValueContentV2] = for {
-    comment <- r.objectStringOption(ValueHasComment)
+    comment <- objectCommentOption(r)
     meta     = info.metadata
   } yield AudioFileValueContentV2(
     ApiV2Complex,
@@ -3403,7 +3409,7 @@ object MovingImageFileValueContentV2 {
     )
 
   def from(r: Resource, info: FileInfo): Either[String, MovingImageFileValueContentV2] = for {
-    comment <- r.objectStringOption(ValueHasComment)
+    comment <- objectCommentOption(r)
     meta     = info.metadata
   } yield MovingImageFileValueContentV2(
     ApiV2Complex,
@@ -3548,7 +3554,7 @@ object LinkValueContentV2 {
   def from(r: Resource, converter: IriConverter): IO[String, LinkValueContentV2] =
     for {
       targetIri <- ZIO.fromEither(r.objectUri(LinkValueHasTargetIri))
-      comment   <- ZIO.fromEither(r.objectStringOption(ValueHasComment))
+      comment   <- ZIO.fromEither(objectCommentOption(r))
       _ <- ZIO
              .fail(s"Link target IRI <${targetIri}> is not a Knora data IRI")
              .unlessZIO(converter.isKnoraDataIri(targetIri).mapError(_.getMessage))

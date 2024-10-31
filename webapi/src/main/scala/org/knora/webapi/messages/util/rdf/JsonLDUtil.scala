@@ -1633,4 +1633,5 @@ object JsonLDUtil {
       .mapError(BadRequestException(_))
       .flatMap(ZIO.foreach(_)(value => RouteUtilZ.toSparqlEncodedString(value, s"Invalid $key: $value")))
   }
+
 }
