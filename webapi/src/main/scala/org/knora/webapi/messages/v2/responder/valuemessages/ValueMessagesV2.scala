@@ -1009,6 +1009,7 @@ object ValueContentV2 {
               } yield content
             /*done*/
             case StillImageExternalFileValue => StillImageExternalFileValueContentV2.fromJsonLdObject(jsonLdObject)
+            /*done*/
             case DocumentFileValue =>
               for {
                 info <-
@@ -3062,6 +3063,12 @@ object DocumentFileValueContentV2 {
       dimY = metadata.height,
       comment,
     )
+
+  def from(r: Resource, info: FileInfo): Either[IRI, DocumentFileValueContentV2] = for {
+    comment  <- r.objectStringOption(ValueHasComment)
+    meta      = info.metadata
+    fileValue = FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
+  } yield DocumentFileValueContentV2(ApiV2Complex, fileValue, meta.numpages, meta.width, meta.height, comment)
 }
 
 /**

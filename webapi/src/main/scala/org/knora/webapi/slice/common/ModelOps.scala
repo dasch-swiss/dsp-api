@@ -166,6 +166,7 @@ final case class KnoraApiValueNode(
       case BooleanValue                => ZIO.fromEither(BooleanValueContentV2.from(node))
       case ColorValue                  => ZIO.fromEither(ColorValueContentV2.from(node))
       case DecimalValue                => ZIO.fromEither(DecimalValueContentV2.from(node))
+      case DocumentFileValue           => withFileInfo(DocumentFileValueContentV2.from(node, _))
       case GeomValue                   => ZIO.fromEither(GeomValueContentV2.from(node))
       case GeonameValue                => ZIO.fromEither(GeonameValueContentV2.from(node))
       case IntValue                    => ZIO.fromEither(IntegerValueContentV2.from(node))
