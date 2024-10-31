@@ -315,7 +315,8 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                            |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
                                            |    "@type" : "ka:UriValue",
                                            |    "ka:uriValueAsUri" :  {
-                                           |      "@id" : "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
+                                           |      "@type" : "xsd:anyURI",
+                                           |      "@value" : "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
                                            |    }
                                            |  },
                                            |  "@context": {

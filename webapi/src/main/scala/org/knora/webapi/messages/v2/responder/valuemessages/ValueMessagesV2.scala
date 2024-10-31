@@ -2611,7 +2611,7 @@ object UriValueContentV2 {
     }
 
   def from(r: Resource): Either[String, UriValueContentV2] = for {
-    uri     <- r.objectUri(UriValueAsUri)
+    uri     <- r.objectDataType(UriValueAsUri, OntologyConstants.Xsd.Uri)
     comment <- objectCommentOption(r)
   } yield UriValueContentV2(ApiV2Complex, uri, comment)
 }

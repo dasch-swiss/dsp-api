@@ -21,29 +21,19 @@ object StatementOps {
     def objectAsResource(): Option[Resource] = Try(stmt.getObject.asResource()).toOption
 
     def objectAsBigDecimal: Either[String, BigDecimal] =
-      stmt.getObject match
-        case l: Literal =>
-          l.getDatatypeURI match
-            case OntologyConstants.Xsd.Decimal =>
-              Try(BigDecimal(l.getLexicalForm)).toEither.left.map(e =>
-                s"Invalid decimal value for property ${stmt.getPredicate}",
-              )
-            case _ => Left(s"Invalid datatype for property ${stmt.getPredicate}, xsd:decimal expected")
-        case _ => Left(s"Invalid decimal value for property ${stmt.getPredicate}")
+      objectAsDataType(OntologyConstants.Xsd.Decimal).flatMap(str =>
+        Try(BigDecimal(str)).toEither.left.map(_ => s"Invalid decimal value for property ${stmt.getPredicate}"),
+      )
 
     def objectAsBoolean: Either[String, Boolean] =
       Try(stmt.getBoolean).toEither.left.map(_ => s"Invalid boolean value for property ${stmt.getPredicate}")
 
     def objectAsInstant: Either[String, Instant] =
-      stmt.getObject match
-        case l: Literal =>
-          l.getDatatypeURI match
-            case OntologyConstants.Xsd.DateTimeStamp =>
-              Try(Instant.parse(l.getLexicalForm)).toEither.left.map(e =>
-                s"Invalid date time timestamp value for property ${stmt.getPredicate}",
-              )
-            case _ => Left(s"Invalid datatype for property ${stmt.getPredicate}, xsd:dateTimeStamp expected")
-        case _ => Left(s"Invalid date time timestamp value for property ${stmt.getPredicate}")
+      objectAsDataType(OntologyConstants.Xsd.DateTimeStamp).flatMap(str =>
+        Try(Instant.parse(str)).toEither.left.map(_ =>
+          s"Invalid date time timestamp value for property ${stmt.getPredicate}",
+        ),
+      )
 
     def objectAsInt: Either[String, Int] =
       Try(stmt.getInt).toEither.left.map(_ => s"Invalid integer value for property ${stmt.getPredicate}")
@@ -53,5 +43,12 @@ object StatementOps {
 
     def objectAsUri: Either[String, String] =
       objectAsResource().flatMap(_.uri).toRight(s"Invalid URI value for property ${stmt.getPredicate}")
+
+    def objectAsDataType(dataTypeUri: String): Either[String, String] =
+      stmt.getObject match
+        case l: Literal =>
+          l.getDatatypeURI match
+            case `dataTypeUri` => Right(l.getLexicalForm)
+            case _             => Left(s"Invalid datatype for property ${stmt.getPredicate}, ${dataTypeUri} expected")
   }
 }

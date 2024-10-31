@@ -96,7 +96,9 @@ object ResourceOpsSpec extends ZIOSpecDefault {
           res   <- resource()
           actual = res.objectBigDecimal("https://example.com/test#str")
         } yield assertTrue(
-          actual == Left("Invalid datatype for property https://example.com/test#str, xsd:decimal expected"),
+          actual == Left(
+            "Invalid datatype for property https://example.com/test#str, http://www.w3.org/2001/XMLSchema#decimal expected",
+          ),
         )
       },
       test("should fail if property is not present ") {
@@ -118,7 +120,9 @@ object ResourceOpsSpec extends ZIOSpecDefault {
           res   <- resource()
           actual = res.objectBigDecimalOption("https://example.com/test#str")
         } yield assertTrue(
-          actual == Left("Invalid datatype for property https://example.com/test#str, xsd:decimal expected"),
+          actual == Left(
+            "Invalid datatype for property https://example.com/test#str, http://www.w3.org/2001/XMLSchema#decimal expected",
+          ),
         )
       },
       test("should succeed if property is not present ") {
@@ -187,7 +191,7 @@ object ResourceOpsSpec extends ZIOSpecDefault {
           actual = res.objectInstant("https://example.com/test#int")
         } yield assertTrue(
           actual == Left(value =
-            "Invalid datatype for property https://example.com/test#int, xsd:dateTimeStamp expected",
+            "Invalid datatype for property https://example.com/test#int, http://www.w3.org/2001/XMLSchema#dateTimeStamp expected",
           ),
         )
       },
@@ -210,7 +214,9 @@ object ResourceOpsSpec extends ZIOSpecDefault {
           res   <- resource()
           actual = res.objectInstantOption("https://example.com/test#int")
         } yield assertTrue(
-          actual == Left("Invalid datatype for property https://example.com/test#int, xsd:dateTimeStamp expected"),
+          actual == Left(
+            "Invalid datatype for property https://example.com/test#int, http://www.w3.org/2001/XMLSchema#dateTimeStamp expected",
+          ),
         )
       },
       test("should succeed if property is not present ") {
