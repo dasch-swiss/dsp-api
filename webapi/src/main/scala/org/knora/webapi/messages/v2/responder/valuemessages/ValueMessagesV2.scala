@@ -8,6 +8,7 @@ package org.knora.webapi.messages.v2.responder.valuemessages
 import org.apache.jena.rdf.model.Resource
 import zio.ZIO
 import org.knora.webapi.slice.common.jena.JenaConversions.given
+
 import java.net.URI
 import java.time.Instant
 import java.util.UUID
@@ -37,6 +38,7 @@ import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.routing.v2.AssetIngestState
@@ -996,13 +998,16 @@ object ValueContentV2 {
             case UriValue => UriValueContentV2.fromJsonLdObject(jsonLdObject)
             /*done*/
             case GeonameValue => GeonameValueContentV2.fromJsonLdObject(jsonLdObject)
-            case ColorValue   => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
+            /*done*/
+            case ColorValue => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
+            /*done*/
             case StillImageFileValue =>
               for {
                 info <-
                   ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for StillImageFileValue"))
                 content <- StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
+            /*done*/
             case StillImageExternalFileValue => StillImageExternalFileValueContentV2.fromJsonLdObject(jsonLdObject)
             case DocumentFileValue =>
               for {
@@ -2462,6 +2467,11 @@ object ColorValueContentV2 {
                            }
       comment <- JsonLDUtil.getComment(jsonLDObject)
     } yield ColorValueContentV2(ApiV2Complex, colorValueAsColor, comment)
+
+  def from(r: Resource) = for {
+    color   <- r.objectString(ColorValueAsColor)
+    comment <- r.objectStringOption(ValueHasComment)
+  } yield ColorValueContentV2(ApiV2Complex, color, comment)
 }
 
 /**
@@ -2781,6 +2791,18 @@ object StillImageFileValueContentV2 {
       dimY = metadata.height.getOrElse(0),
       comment = comment,
     )
+
+  def from(r: Resource, fileInfo: FileInfo): Either[IRI, StillImageFileValueContentV2] = for {
+    comment  <- r.objectStringOption(ValueHasComment)
+    meta      = fileInfo.metadata
+    fileValue = FileValueV2(fileInfo.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
+  } yield StillImageFileValueContentV2(
+    ApiV2Complex,
+    fileValue,
+    meta.width.getOrElse(0),
+    meta.height.getOrElse(0),
+    comment,
+  )
 }
 
 /**
@@ -2882,6 +2904,13 @@ object StillImageExternalFileValueContentV2 {
       externalUrl = externalUrl,
       comment = comment,
     )
+
+  def from(r: Resource): Either[String, StillImageExternalFileValueContentV2] = for {
+    externalUrlStr <- r.objectString(StillImageFileValueHasExternalUrl)
+    iifUrl         <- IiifImageRequestUrl.from(externalUrlStr)
+    comment        <- r.objectStringOption(ValueHasComment)
+    fileValue       = FileValueV2("internalFilename", "internalMimeType", Some("originalFilename"), Some("originalMimeType"))
+  } yield StillImageExternalFileValueContentV2(ApiV2Complex, fileValue, iifUrl, comment)
 }
 
 /**

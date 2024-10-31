@@ -20,6 +20,7 @@ import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasUUID
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri as KResourceIri
@@ -156,18 +157,25 @@ final case class KnoraApiValueNode(
   def getHasPermissions: Option[String] =
     node.getStringLiteral(ResourceFactory.createProperty(OntologyConstants.KnoraApiV2Complex.HasPermissions))
 
-  def getValueContent: IO[String, ValueContentV2] =
+  def getValueContent(fileInfo: Option[FileInfo] = None): IO[String, ValueContentV2] =
+    def withFileInfo[T](f: FileInfo => Either[String, T]): IO[String, T] =
+      fileInfo match
+        case None       => ZIO.fail("FileInfo is missing")
+        case Some(info) => ZIO.fromEither(f(info))
     valueType.toString match
-      case BooleanValue  => ZIO.fromEither(BooleanValueContentV2.from(node))
-      case DecimalValue  => ZIO.fromEither(DecimalValueContentV2.from(node))
-      case GeomValue     => ZIO.fromEither(GeomValueContentV2.from(node))
-      case GeonameValue  => ZIO.fromEither(GeonameValueContentV2.from(node))
-      case IntValue      => ZIO.fromEither(IntegerValueContentV2.from(node))
-      case IntervalValue => ZIO.fromEither(IntervalValueContentV2.from(node))
-      case TimeValue     => ZIO.fromEither(TimeValueContentV2.from(node))
-      case LinkValue     => LinkValueContentV2.from(node, convert)
-      case UriValue      => ZIO.fromEither(UriValueContentV2.from(node))
-      case _             => ZIO.fail(s"Unsupported value type: $valueType")
+      case BooleanValue                => ZIO.fromEither(BooleanValueContentV2.from(node))
+      case ColorValue                  => ZIO.fromEither(ColorValueContentV2.from(node))
+      case DecimalValue                => ZIO.fromEither(DecimalValueContentV2.from(node))
+      case GeomValue                   => ZIO.fromEither(GeomValueContentV2.from(node))
+      case GeonameValue                => ZIO.fromEither(GeonameValueContentV2.from(node))
+      case IntValue                    => ZIO.fromEither(IntegerValueContentV2.from(node))
+      case IntervalValue               => ZIO.fromEither(IntervalValueContentV2.from(node))
+      case LinkValue                   => LinkValueContentV2.from(node, convert)
+      case StillImageExternalFileValue => ZIO.fromEither(StillImageExternalFileValueContentV2.from(node))
+      case StillImageFileValue         => withFileInfo(StillImageFileValueContentV2.from(node, _))
+      case TimeValue                   => ZIO.fromEither(TimeValueContentV2.from(node))
+      case UriValue                    => ZIO.fromEither(UriValueContentV2.from(node))
+      case _                           => ZIO.fail(s"Unsupported value type: $valueType")
 }
 
 object KnoraApiValueNode {
