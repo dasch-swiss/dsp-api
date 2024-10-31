@@ -446,9 +446,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Request the metadata of all ontologies to check that 'foo' isn't listed.
 
-      appActor ! OntologyMetadataGetByProjectRequestV2(
-        requestingUser = imagesUser,
-      )
+      appActor ! OntologyMetadataGetByProjectRequestV2()
 
       val cachedMetadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(!cachedMetadataResponse.ontologies.exists(_.ontologyIri == fooIri.get.toSmartIri))
@@ -458,19 +456,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)),
       )
 
-      appActor ! OntologyMetadataGetByProjectRequestV2(
-        requestingUser = imagesUser,
-      )
+      appActor ! OntologyMetadataGetByProjectRequestV2()
 
       val loadedMetadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(!loadedMetadataResponse.ontologies.exists(_.ontologyIri == fooIri.get.toSmartIri))
     }
 
     "not delete the 'anything' ontology, because it is used in data and in the 'something' ontology" in {
-      appActor ! OntologyMetadataGetByProjectRequestV2(
-        projectIris = Set(anythingProjectIri),
-        requestingUser = anythingAdminUser,
-      )
+      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
 
       val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(metadataResponse.ontologies.size == 3)
@@ -676,10 +669,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not allow a user to create a property if they are not a sysadmin or an admin in the ontology's project" in {
 
-      appActor ! OntologyMetadataGetByProjectRequestV2(
-        projectIris = Set(anythingProjectIri),
-        requestingUser = anythingNonAdminUser,
-      )
+      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
 
       val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(metadataResponse.ontologies.size == 3)
@@ -738,10 +728,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name" in {
 
-      appActor ! OntologyMetadataGetByProjectRequestV2(
-        projectIris = Set(anythingProjectIri),
-        requestingUser = anythingAdminUser,
-      )
+      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
 
       val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(metadataResponse.ontologies.size == 3)
@@ -827,10 +814,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "create a link property in the 'anything' ontology, and automatically create the corresponding link value property" in {
 
-      appActor ! OntologyMetadataGetByProjectRequestV2(
-        projectIris = Set(anythingProjectIri),
-        requestingUser = anythingAdminUser,
-      )
+      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
 
       val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(metadataResponse.ontologies.size == 3)
@@ -6209,10 +6193,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val classIri: SmartIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
 
       // create the property anything:hasFoafName
-      appActor ! OntologyMetadataGetByProjectRequestV2(
-        projectIris = Set(anythingProjectIri),
-        requestingUser = anythingAdminUser,
-      )
+      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
 
       val metadataResponse: ReadOntologyMetadataV2 = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(metadataResponse.ontologies.size == 3)

@@ -10,14 +10,14 @@ import sbt._
 object Dependencies {
   // should be the same version as in docker-compose.yml,
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
-  val fusekiImage = "daschswiss/apache-jena-fuseki:5.1.0"
+  val fusekiImage = "daschswiss/apache-jena-fuseki:5.2.0"
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.14.0"
 
   val ScalaVersion = "3.3.4"
 
   val PekkoActorVersion = "1.1.1"
-  val PekkoHttpVersion  = "1.0.1"
+  val PekkoHttpVersion  = "1.1.0"
 
   // rdf and graph libraries
   // topbraid/shacl is not yet compatible with jena 5 so we need to use jena 4 for now
@@ -45,7 +45,7 @@ object Dependencies {
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
   val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
-  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.8"
+  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.10.1"
 
   // refined
   val refined = Seq(

@@ -100,18 +100,17 @@ final case class OntologyResponderV2(
     case StandoffAllPropertyEntitiesGetRequestV2(_) => getAllStandoffPropertyEntitiesV2
     case CheckSubClassRequestV2(subClassIri, superClassIri, _) =>
       checkSubClassV2(subClassIri, superClassIri)
-    case SubClassesGetRequestV2(resourceClassIri, requestingUser) => getSubClassesV2(resourceClassIri, requestingUser)
-    case OntologyKnoraEntityIrisGetRequestV2(namedGraphIri, _) =>
-      getKnoraEntityIrisInNamedGraphV2(namedGraphIri)
+    case SubClassesGetRequestV2(resourceClassIri, requestingUser) =>
+      getSubClassesV2(resourceClassIri, requestingUser)
     case OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, requestingUser) =>
       getOntologyEntitiesV2(ontologyIri, allLanguages, requestingUser)
     case ClassesGetRequestV2(resourceClassIris, allLanguages, requestingUser) =>
       ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(resourceClassIris, allLanguages, requestingUser)
     case PropertiesGetRequestV2(propertyIris, allLanguages, requestingUser) =>
       getPropertyDefinitionsFromOntologyV2(propertyIris, allLanguages, requestingUser)
-    case OntologyMetadataGetByProjectRequestV2(projectIris, _) =>
+    case OntologyMetadataGetByProjectRequestV2(projectIris) =>
       getOntologyMetadataForProjectsV2(projectIris)
-    case OntologyMetadataGetByIriRequestV2(ontologyIris, _) =>
+    case OntologyMetadataGetByIriRequestV2(ontologyIris) =>
       getOntologyMetadataByIriV2(ontologyIris)
     case createOntologyRequest: CreateOntologyRequestV2 => createOntology(createOntologyRequest)
     case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 =>
@@ -295,30 +294,6 @@ final case class OntologyResponderV2(
             .map(SubClassInfoV2(subClassIri, _))
         }
     } yield SubClassesGetResponseV2(subClasses)
-
-  /**
-   * Gets the [[OntologyKnoraEntitiesIriInfoV2]] for an ontology.
-   *
-   * @param ontologyIri    the IRI of the ontology to query
-   * @return an [[OntologyKnoraEntitiesIriInfoV2]].
-   */
-  private def getKnoraEntityIrisInNamedGraphV2(ontologyIri: SmartIri): Task[OntologyKnoraEntitiesIriInfoV2] =
-    for {
-      cacheData <- ontologyCache.getCacheData
-      ontology   = cacheData.ontologies(ontologyIri)
-    } yield OntologyKnoraEntitiesIriInfoV2(
-      ontologyIri = ontologyIri,
-      propertyIris = ontology.properties.keySet.filter { propertyIri =>
-        OntologyHelpers.isKnoraResourceProperty(propertyIri, cacheData)
-      },
-      classIris = ontology.classes.filter { case (_, classDef) =>
-        classDef.isResourceClass
-      }.keySet,
-      standoffClassIris = ontology.classes.filter { case (_, classDef) =>
-        classDef.isStandoffClass
-      }.keySet,
-      standoffPropertyIris = ontology.properties.keySet.filter(cacheData.standoffProperties),
-    )
 
   /**
    * Gets the metadata describing the ontologies that belong to selected projects, or to all projects.
