@@ -29,10 +29,13 @@ object DateEraV2 {
    * @return a [[DateEraV2]] representing the era.
    */
   def parse(eraStr: String, errorFun: => Nothing): DateEraV2 =
+    fromString(eraStr).getOrElse(errorFun)
+
+  def fromString(eraStr: String): Either[String, DateEraV2] =
     eraStr match {
-      case StringFormatter.Era_AD | StringFormatter.Era_CE  => DateEraCE
-      case StringFormatter.Era_BC | StringFormatter.Era_BCE => DateEraBCE
-      case _                                                => errorFun
+      case StringFormatter.Era_AD | StringFormatter.Era_CE  => Right(DateEraCE)
+      case StringFormatter.Era_BC | StringFormatter.Era_BCE => Right(DateEraBCE)
+      case _                                                => Left(s"Invalid era: $eraStr")
     }
 }
 
@@ -110,11 +113,14 @@ object CalendarNameV2 {
    * @return a [[CalendarNameV2]] representing the name of the calendar.
    */
   def parse(calendarNameStr: String, errorFun: => Nothing): CalendarNameV2 =
+    fromString(calendarNameStr).getOrElse(errorFun)
+
+  def fromString(calendarNameStr: String): Either[String, CalendarNameV2] =
     calendarNameStr match {
-      case StringFormatter.CalendarGregorian => CalendarNameGregorian
-      case StringFormatter.CalendarJulian    => CalendarNameJulian
-      case StringFormatter.CalendarIslamic   => CalendarNameIslamic
-      case _                                 => errorFun
+      case StringFormatter.CalendarGregorian => Right(CalendarNameGregorian)
+      case StringFormatter.CalendarJulian    => Right(CalendarNameJulian)
+      case StringFormatter.CalendarIslamic   => Right(CalendarNameIslamic)
+      case _                                 => Left(s"Invalid calendar name: $calendarNameStr")
     }
 }
 

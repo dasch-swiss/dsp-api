@@ -59,6 +59,8 @@ import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.WithAsIs
 import zio.IO
 
+import scala.util.Try
+
 /**
  * Represents a successful response to a create value Request.
  *
@@ -983,7 +985,8 @@ object ValueContentV2 {
             /*done*/
             case DecimalValue => DecimalValueContentV2.fromJsonLdObject(jsonLdObject)
             /*done*/
-            case BooleanValue                => BooleanValueContentV2.fromJsonLdObject(jsonLdObject)
+            case BooleanValue => BooleanValueContentV2.fromJsonLdObject(jsonLdObject)
+            /*done*/
             case KnoraApiV2Complex.DateValue => DateValueContentV2.fromJsonLdObject(jsonLdObject)
             /*done*/
             case GeomValue => GeomValueContentV2.fromJsonLdObject(jsonLdObject)
@@ -1332,6 +1335,51 @@ object DateValueContentV2 {
       valueHasCalendar = calendarName,
       comment,
     )
+
+  def from(r: Resource): Either[String, DateValueContentV2] = {
+    def objectEraOption(resource: Resource, property: String) = for {
+      eraStr <- resource.objectStringOption(property)
+      era <- eraStr match
+               case Some(e) => DateEraV2.fromString(e).map(Some(_))
+               case None    => Right(None)
+    } yield era
+    for {
+      startYear  <- r.objectInt(DateValueHasStartYear)
+      startMonth <- r.objectIntOption(DateValueHasStartMonth)
+      startDay   <- r.objectIntOption(DateValueHasStartDay)
+      startEra   <- objectEraOption(r, DateValueHasStartEra)
+
+      endYear  <- r.objectInt(DateValueHasEndYear)
+      endMonth <- r.objectIntOption(DateValueHasEndMonth)
+      endDay   <- r.objectIntOption(DateValueHasEndDay)
+      endEra   <- objectEraOption(r, DateValueHasEndEra)
+
+      calendarName <- r.objectString(DateValueHasCalendar).flatMap(CalendarNameV2.fromString)
+
+      // validate the combination of start/end dates and calendarName
+      _ <- if (startMonth.isEmpty && startDay.isDefined) Left(s"Start day defined, missing start month") else Right(())
+      _ <- if (endMonth.isEmpty && endDay.isDefined) Left(s"End day defined, missing end month") else Right(())
+      _ <- if (calendarName.isInstanceOf[CalendarNameGregorianOrJulian] && (startEra.isEmpty || endEra.isEmpty))
+             Left(s"Era is required in calendar $calendarName")
+           else Right(())
+
+      startDate          = CalendarDateV2(calendarName, startYear, startMonth, startDay, startEra)
+      endDate            = CalendarDateV2(calendarName, endYear, endMonth, endDay, endEra)
+      dateRange          = CalendarDateRangeV2(startDate, endDate)
+      startEnd          <- Try(dateRange.toJulianDayRange).toEither.left.map(_.getMessage)
+      (startJdn, endJdn) = startEnd
+
+      comment <- r.objectStringOption(ValueHasComment)
+    } yield DateValueContentV2(
+      ApiV2Complex,
+      startJdn,
+      endJdn,
+      startDate.precision,
+      endDate.precision,
+      calendarName,
+      comment,
+    )
+  }
 }
 
 /**
