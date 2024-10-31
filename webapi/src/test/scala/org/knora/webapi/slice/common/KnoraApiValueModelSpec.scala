@@ -12,7 +12,6 @@ import zio.json.EncoderOps
 import zio.json.ast.Json
 import zio.test.*
 import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.StillImageExternalFileValue
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.valuemessages.ArchiveFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
@@ -23,6 +22,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.DocumentFileValueCon
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeomValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntervalValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
@@ -33,7 +33,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages.UriValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
-import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.getFileInfo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -530,24 +529,50 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
     test("should parse ArchiveFileValueContentV2") {
       for {
         model <- KnoraApiValueModel.fromJsonLd(
-          s"""
-             |{
-             |  "@id" : "http://rdfh.ch/0001/a-thing",
-             |  "@type" : "ex:Thing",
-             |  "ex:hasOtherThingValue" : {
-             |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
-             |    "@type" : "ka:ArchiveFileValue"
-             |  },
-             |  "@context": {
-             |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-             |    "ex": "https://example.com/test#",
-             |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-             |  }
-             |}""".stripMargin,
-        )
+                   s"""
+                      |{
+                      |  "@id" : "http://rdfh.ch/0001/a-thing",
+                      |  "@type" : "ex:Thing",
+                      |  "ex:hasOtherThingValue" : {
+                      |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                      |    "@type" : "ka:ArchiveFileValue"
+                      |  },
+                      |  "@context": {
+                      |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                      |    "ex": "https://example.com/test#",
+                      |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                      |  }
+                      |}""".stripMargin,
+                 )
         content <- model.valueNode.getValueContent(Some(givenFileInfo))
       } yield assertTrue(
         content == ArchiveFileValueContentV2(ApiV2Complex, expectedFileValue, None),
+      )
+    },
+    test("should parse HierarchicalListValueContentV2") {
+      for {
+        model <- KnoraApiValueModel.fromJsonLd(
+                   s"""
+                      |{
+                      |  "@id" : "http://rdfh.ch/0001/a-thing",
+                      |  "@type" : "ex:Thing",
+                      |  "ex:hasOtherThingValue" : {
+                      |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                      |    "@type" : "ka:ListValue",
+                      |    "ka:listValueAsListNode": {
+                      |      "@id" : "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
+                      |    }
+                      |  },
+                      |  "@context": {
+                      |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                      |    "ex": "https://example.com/test#",
+                      |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                      |  }
+                      |}""".stripMargin,
+                 )
+        content <- model.valueNode.getValueContent(Some(givenFileInfo))
+      } yield assertTrue(
+        content == HierarchicalListValueContentV2(ApiV2Complex, "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA", None, None),
       )
     },
   ).provideSome[Scope](IriConverter.layer, StringFormatter.test)

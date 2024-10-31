@@ -993,6 +993,7 @@ object ValueContentV2 {
             case TimeValue => TimeValueContentV2.fromJsonLdObject(jsonLdObject)
             /*done*/
             case LinkValue => LinkValueContentV2.fromJsonLdObject(jsonLdObject)
+            /*done*/
             case ListValue => HierarchicalListValueContentV2.fromJsonLdObject(jsonLdObject)
             /*done*/
             case UriValue => UriValueContentV2.fromJsonLdObject(jsonLdObject)
@@ -2394,6 +2395,14 @@ object HierarchicalListValueContentV2 {
         comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield HierarchicalListValueContentV2(ApiV2Complex, listValueAsListNode.toString, None, comment)
   }
+
+  def from(r: Resource, converter: IriConverter): IO[String, HierarchicalListValueContentV2] = for {
+    comment  <- ZIO.fromEither(r.objectStringOption(ValueHasComment))
+    listNode <- ZIO.fromEither(r.objectUri(ListValueAsListNode))
+    _ <- ZIO
+           .fail(s"List node IRI <$listNode> is not a Knora data IRI")
+           .unlessZIO(converter.isKnoraDataIri(listNode).mapError(_.getMessage))
+  } yield HierarchicalListValueContentV2(ApiV2Complex, listNode, None, comment)
 }
 
 /**
