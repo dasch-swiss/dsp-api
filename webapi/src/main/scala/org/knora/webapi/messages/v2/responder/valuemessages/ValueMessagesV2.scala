@@ -1768,7 +1768,7 @@ object TextValueContentV2 {
       maybeMappingResponse <-
         getIriFromObject(jsonLdObject, TextValueHasMapping).flatMap(mappingIriOption =>
           ZIO.foreach(mappingIriOption) { mappingIri =>
-            ZIO.serviceWithZIO[MessageRelay](_.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, null)))
+            ZIO.serviceWithZIO[MessageRelay](_.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri)))
           },
         )
 
@@ -1795,7 +1795,7 @@ object TextValueContentV2 {
     mappingIriOption      <- ZIO.fromEither(r.objectUriOption(TextValueHasMapping))
     maybeMappingResponse <- ZIO
                               .foreach(mappingIriOption) { mappingIri =>
-                                messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, null))
+                                messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri))
                               }
                               .mapError(_.getMessage)
     textValue <-

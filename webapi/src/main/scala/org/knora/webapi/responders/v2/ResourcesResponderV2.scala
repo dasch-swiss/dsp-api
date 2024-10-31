@@ -961,7 +961,7 @@ final case class ResourcesResponderV2(
       mappingToBeApplied = mappingIri.getOrElse(OntologyConstants.KnoraBase.TEIMapping)
 
       // get mapping to convert standoff markup to TEI/XML
-      teiMapping <- messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingToBeApplied, requestingUser))
+      teiMapping <- messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingToBeApplied))
 
       // get XSLT from mapping for the TEI body
       bodyXslt <- teiMapping.mappingIri match {

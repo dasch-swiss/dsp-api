@@ -93,7 +93,7 @@ final case class OntologyResponderV2(
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) =>
       getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
-    case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, _) =>
+    case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris) =>
       getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris)
     case StandoffClassesWithDataTypeGetRequestV2(_) =>
       getStandoffStandoffClassesWithDataTypeV2

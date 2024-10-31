@@ -1127,9 +1127,8 @@ case class EntityInfoGetResponseV2(
  * @param requestingUser       the user making the request.
  */
 case class StandoffEntityInfoGetRequestV2(
-  standoffClassIris: Set[SmartIri] = Set.empty[SmartIri],
-  standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri],
-  requestingUser: User,
+  standoffClassIris: Set[SmartIri] = Set.empty,
+  standoffPropertyIris: Set[SmartIri] = Set.empty,
 ) extends OntologiesResponderRequestV2
 
 /**
