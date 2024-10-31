@@ -11,6 +11,7 @@ services:
       - SERVICE_HOST=0.0.0.0
       - SERVICE_PORT=3340
       - SERVICE_LOG_FORMAT=text
+      - SERVICE_LOG_LEVEL=info
       - STORAGE_ASSET_DIR=/opt/images
       - STORAGE_TEMP_DIR=/opt/temp
       - JWT_AUDIENCE=http://localhost:3340

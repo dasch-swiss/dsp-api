@@ -12,11 +12,19 @@ import zio.logging.slf4j.bridge.Slf4jBridge
 
 object Logger {
 
-  private val logFilter = LogFilter.LogLevelByNameConfig(
-    LogLevel.Info,
-      // Uncomment the following lines to change the log level for specific loggers:
-      // , ("zio.logging.slf4j", LogLevel.Debug)
-      // , ("SLF4J-LOGGER", LogLevel.Warning)
+  private def logFilter(logLevel: String) = LogFilter.LogLevelByNameConfig(
+    logLevel.toLowerCase() match {
+      case "trace" => LogLevel.Trace
+      case "debug" => LogLevel.Debug
+      case "info"  => LogLevel.Info
+      case "warn"  => LogLevel.Warning
+      case "error" => LogLevel.Error
+      case "fatal" => LogLevel.Fatal
+      case _       => LogLevel.Info
+    },
+    // Uncomment the following lines to change the log level for specific loggers:
+    // , ("zio.logging.slf4j", LogLevel.Debug)
+    // , ("SLF4J-LOGGER", LogLevel.Warning)
   )
 
   private val logFormatText: LogFormat =
@@ -28,8 +36,8 @@ object Logger {
       label("spans", bracketed(spans)) +
       (space + label("cause", cause).highlight).filter(LogFilter.causeNonEmpty)
 
-  private val textLogger: ZLayer[Any, Nothing, Unit] = consoleLogger(
-    ConsoleLoggerConfig(logFormatText, logFilter),
+  private def textLogger(logLevel: String): ZLayer[Any, Nothing, Unit] = consoleLogger(
+    ConsoleLoggerConfig(logFormatText, logFilter(logLevel)),
   )
 
   private val logFormatJson: LogFormat =
@@ -38,14 +46,15 @@ object Logger {
       LogFormat.annotations +
       LogFormat.spans
 
-  private val jsonLogger: ZLayer[Any, Nothing, Unit] = consoleJsonLogger(
-    ConsoleLoggerConfig(logFormatJson, logFilter),
+  private def jsonLogger(logLevel: String): ZLayer[Any, Nothing, Unit] = consoleJsonLogger(
+    ConsoleLoggerConfig(logFormatJson, logFilter(logLevel)),
   )
 
   private val logger: ZLayer[ServiceConfig, Nothing, Unit] = ZLayer.service[ServiceConfig].flatMap { config =>
     val value: ServiceConfig = config.get
-    if (value.logFormat.toLowerCase() == "json") jsonLogger
-    else textLogger
+    val logLevel             = value.logLevel
+    if (value.logFormat.toLowerCase() == "json") jsonLogger(logLevel)
+    else textLogger(logLevel)
   }
 
   val layer: URLayer[ServiceConfig, Unit] =

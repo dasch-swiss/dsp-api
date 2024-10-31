@@ -36,6 +36,7 @@ object Configuration {
     host: String,
     port: Int,
     logFormat: String,
+    logLevel: String,
   )
 
   final case class SipiConfig(useLocalDev: Boolean)
