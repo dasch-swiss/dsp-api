@@ -161,10 +161,12 @@ final case class KnoraApiValueNode(
       case BooleanValue  => ZIO.fromEither(BooleanValueContentV2.from(node))
       case DecimalValue  => ZIO.fromEither(DecimalValueContentV2.from(node))
       case GeomValue     => ZIO.fromEither(GeomValueContentV2.from(node))
+      case GeonameValue  => ZIO.fromEither(GeonameValueContentV2.from(node))
       case IntValue      => ZIO.fromEither(IntegerValueContentV2.from(node))
       case IntervalValue => ZIO.fromEither(IntervalValueContentV2.from(node))
       case TimeValue     => ZIO.fromEither(TimeValueContentV2.from(node))
       case LinkValue     => LinkValueContentV2.from(node, convert)
+      case UriValue      => ZIO.fromEither(UriValueContentV2.from(node))
       case _             => ZIO.fail(s"Unsupported value type: $valueType")
 }
 

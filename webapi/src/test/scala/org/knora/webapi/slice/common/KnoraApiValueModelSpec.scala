@@ -16,10 +16,12 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.valuemessages.BooleanValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DecimalValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeomValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntervalValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TimeValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.UriValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -262,7 +264,54 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
           comment = None,
         ),
       )
-
+    },
+    test("should parse UriValueContentV2") {
+      for {
+        model <-
+          KnoraApiValueModel.fromJsonLd(s"""
+                                           |{
+                                           |  "@id" : "http://rdfh.ch/0001/a-thing",
+                                           |  "@type" : "ex:Thing",
+                                           |  "ex:hasOtherThingValue" : {
+                                           |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                                           |    "@type" : "ka:UriValue",
+                                           |    "ka:uriValueAsUri" :  {
+                                           |      "@id" : "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
+                                           |    }
+                                           |  },
+                                           |  "@context": {
+                                           |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                                           |    "ex": "https://example.com/test#",
+                                           |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                                           |  }
+                                           |}""".stripMargin)
+        content <- model.valueNode.getValueContent
+      } yield assertTrue(
+        content == UriValueContentV2(ApiV2Complex, "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA", None),
+      )
+    },
+    test("should parse GeonameValueContentV2") {
+      for {
+        model <-
+          KnoraApiValueModel.fromJsonLd(s"""
+                                           |{
+                                           |  "@id" : "http://rdfh.ch/0001/a-thing",
+                                           |  "@type" : "ex:Thing",
+                                           |  "ex:hasOtherThingValue" : {
+                                           |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                                           |    "@type" : "ka:GeonameValue",
+                                           |    "ka:geonameValueAsGeonameCode" : "foo"
+                                           |  },
+                                           |  "@context": {
+                                           |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                                           |    "ex": "https://example.com/test#",
+                                           |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                                           |  }
+                                           |}""".stripMargin)
+        content <- model.valueNode.getValueContent
+      } yield assertTrue(
+        content == GeonameValueContentV2(ApiV2Complex, "foo", None),
+      )
     },
   ).provideSome[Scope](IriConverter.layer, StringFormatter.test)
 }

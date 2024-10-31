@@ -990,9 +990,11 @@ object ValueContentV2 {
             /*done*/
             case TimeValue => TimeValueContentV2.fromJsonLdObject(jsonLdObject)
             /*done*/
-            case LinkValue    => LinkValueContentV2.fromJsonLdObject(jsonLdObject)
-            case ListValue    => HierarchicalListValueContentV2.fromJsonLdObject(jsonLdObject)
-            case UriValue     => UriValueContentV2.fromJsonLdObject(jsonLdObject)
+            case LinkValue => LinkValueContentV2.fromJsonLdObject(jsonLdObject)
+            case ListValue => HierarchicalListValueContentV2.fromJsonLdObject(jsonLdObject)
+            /*done*/
+            case UriValue => UriValueContentV2.fromJsonLdObject(jsonLdObject)
+            /*done*/
             case GeonameValue => GeonameValueContentV2.fromJsonLdObject(jsonLdObject)
             case ColorValue   => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
             case StillImageFileValue =>
@@ -2546,6 +2548,11 @@ object UriValueContentV2 {
         comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield UriValueContentV2(ApiV2Complex, uriValueAsUri, comment)
     }
+
+  def from(r: Resource) = for {
+    uri     <- r.objectUri(UriValueAsUri)
+    comment <- r.objectStringOption(ValueHasComment)
+  } yield UriValueContentV2(ApiV2Complex, uri, comment)
 }
 
 /**
@@ -2633,6 +2640,11 @@ object GeonameValueContentV2 {
                                    }
       comment <- JsonLDUtil.getComment(jsonLDObject)
     } yield GeonameValueContentV2(ApiV2Complex, geonameValueAsGeonameCode, comment)
+
+  def from(r: Resource) = for {
+    geonameCode <- r.objectString(GeonameValueAsGeonameCode)
+    comment     <- r.objectStringOption(ValueHasComment)
+  } yield GeonameValueContentV2(ApiV2Complex, geonameCode, comment)
 }
 
 /**
