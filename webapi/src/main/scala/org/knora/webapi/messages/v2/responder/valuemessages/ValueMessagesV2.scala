@@ -972,61 +972,43 @@ object ValueContentV2 {
 
         valueContent <-
           valueType.toString match {
-            case TextValue => TextValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            /*done*/
-            case IntValue => IntegerValueContentV2.fromJsonLdObject(jsonLdObject)
-            /*done*/
-            case DecimalValue => DecimalValueContentV2.fromJsonLdObject(jsonLdObject)
-            /*done*/
-            case BooleanValue => BooleanValueContentV2.fromJsonLdObject(jsonLdObject)
-            /*done*/
+            case TextValue                   => TextValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            case IntValue                    => IntegerValueContentV2.fromJsonLdObject(jsonLdObject)
+            case DecimalValue                => DecimalValueContentV2.fromJsonLdObject(jsonLdObject)
+            case BooleanValue                => BooleanValueContentV2.fromJsonLdObject(jsonLdObject)
             case KnoraApiV2Complex.DateValue => DateValueContentV2.fromJsonLdObject(jsonLdObject)
-            /*done*/
-            case GeomValue => GeomValueContentV2.fromJsonLdObject(jsonLdObject)
-            /*done*/
-            case IntervalValue => IntervalValueContentV2.fromJsonLdObject(jsonLdObject)
-            /*done*/
-            case TimeValue => TimeValueContentV2.fromJsonLdObject(jsonLdObject)
-            /*done*/
-            case LinkValue => LinkValueContentV2.fromJsonLdObject(jsonLdObject)
-            /*done*/
-            case ListValue => HierarchicalListValueContentV2.fromJsonLdObject(jsonLdObject)
-            /*done*/
-            case UriValue => UriValueContentV2.fromJsonLdObject(jsonLdObject)
-            /*done*/
-            case GeonameValue => GeonameValueContentV2.fromJsonLdObject(jsonLdObject)
-            /*done*/
-            case ColorValue => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
-            /*done*/
+            case GeomValue                   => GeomValueContentV2.fromJsonLdObject(jsonLdObject)
+            case IntervalValue               => IntervalValueContentV2.fromJsonLdObject(jsonLdObject)
+            case TimeValue                   => TimeValueContentV2.fromJsonLdObject(jsonLdObject)
+            case LinkValue                   => LinkValueContentV2.fromJsonLdObject(jsonLdObject)
+            case ListValue                   => HierarchicalListValueContentV2.fromJsonLdObject(jsonLdObject)
+            case UriValue                    => UriValueContentV2.fromJsonLdObject(jsonLdObject)
+            case GeonameValue                => GeonameValueContentV2.fromJsonLdObject(jsonLdObject)
+            case ColorValue                  => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
             case StillImageFileValue =>
               for {
                 info <-
                   ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for StillImageFileValue"))
                 content <- StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
-            /*done*/
             case StillImageExternalFileValue => StillImageExternalFileValueContentV2.fromJsonLdObject(jsonLdObject)
-            /*done*/
             case DocumentFileValue =>
               for {
                 info <-
                   ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for DocumentFileValue"))
                 content <- DocumentFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
-            /*done*/
             case TextFileValue =>
               for {
                 info    <- ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for TextFileValue"))
                 content <- TextFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
-            /*done*/
             case AudioFileValue =>
               for {
                 info <-
                   ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for AudioFileValue"))
                 content <- AudioFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
-            /*done*/
             case MovingImageFileValue =>
               for {
                 info <- ZIO
@@ -1034,7 +1016,6 @@ object ValueContentV2 {
                           .orElseFail(BadRequestException("No file info found for MovingImageFileValue"))
                 content <- MovingImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
-            /*done*/
             case ArchiveFileValue =>
               for {
                 info <-
