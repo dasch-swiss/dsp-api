@@ -1763,7 +1763,7 @@ object TextValueContentV2 {
   private def objectSparqlStringOption(r: Resource, property: String) = for {
     str <- r.objectStringOption(property)
     iri <- str match
-             case Some(s) => Right(Some(Iri.fromSparqlEncodedString(s)))
+             case Some(s) => Right(Iri.toSparqlEncodedString(s))
              case None    => Right(None)
   } yield iri
 
