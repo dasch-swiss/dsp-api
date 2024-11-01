@@ -196,7 +196,7 @@ object LayersLive {
       StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
-      ValuesResponderV2Live.layer,
+      ValuesResponderV2.layer,
       org.knora.webapi.core.ActorSystem.layer,
       // ZLayer.Debug.mermaid,
     )

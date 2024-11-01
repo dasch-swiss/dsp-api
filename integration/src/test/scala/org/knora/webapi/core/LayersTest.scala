@@ -218,7 +218,7 @@ object LayersTest {
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
-      ValuesResponderV2Live.layer,
+      ValuesResponderV2.layer,
     )
 
   private val commonLayersForAllIntegrationTests2 =
