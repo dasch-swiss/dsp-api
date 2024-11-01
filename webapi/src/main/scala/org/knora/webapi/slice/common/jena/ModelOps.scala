@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.common.jena
 
-import scala.jdk.CollectionConverters.*
-
 import org.apache.jena.rdf.model.*
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
@@ -16,6 +14,8 @@ import zio.ZIO
 
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
+import scala.jdk.CollectionConverters.*
+
 import org.knora.webapi.slice.common.ModelError
 import org.knora.webapi.slice.common.ModelError.ParseError
 
