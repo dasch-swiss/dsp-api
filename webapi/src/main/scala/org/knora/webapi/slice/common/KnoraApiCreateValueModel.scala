@@ -50,14 +50,12 @@ final case class KnoraApiCreateValueModel(
   valueIri: Option[ValueIri],
   valueUuid: Option[UUID],
   valueCreationDate: Option[Instant],
+  valuePermissions: Option[String],
+  valueFileValueFilename: Option[String],
   private val valueResource: Resource,
   private val converter: IriConverter,
 ) {
   lazy val shortcode: Shortcode = resourceIri.shortcode
-
-  def getFileValueHasFilename: Either[String, Option[String]] = valueResource.objectStringOption(FileValueHasFilename)
-
-  def getHasPermissions: Either[String, Option[String]] = valueResource.objectStringOption(HasPermissions)
 
   def getValueContent(fileInfo: Option[FileInfo] = None): ZIO[MessageRelay, String, ValueContentV2] =
     def withFileInfo[T](f: FileInfo => Either[String, T]): IO[String, T] =
@@ -107,6 +105,8 @@ object KnoraApiCreateValueModel { self =>
       valueIri               <- valueIri(valueResource, converter)
       valueUuid              <- ZIO.fromEither(valueHasUuid(valueResource))
       valueCreationDate      <- ZIO.fromEither(valueCreationDate(valueResource))
+      valuePermissions       <- ZIO.fromEither(valuePermissions(valueResource))
+      valueFileValueFilename <- ZIO.fromEither(valueFileValueFilename(valueResource))
     } yield KnoraApiCreateValueModel(
       resourceIri,
       resourceClassIri,
@@ -115,6 +115,8 @@ object KnoraApiCreateValueModel { self =>
       valueIri,
       valueUuid,
       valueCreationDate,
+      valuePermissions,
+      valueFileValueFilename,
       valueResource,
       converter,
     )
@@ -163,6 +165,12 @@ object KnoraApiCreateValueModel { self =>
       case Some(str) => ValuesValidator.parseXsdDateTimeStamp(str).map(Some(_))
       case None      => Right(None)
     }
+
+  private def valuePermissions(valueResource: Resource): Either[String, Option[String]] =
+    valueResource.objectStringOption(HasPermissions)
+
+  private def valueFileValueFilename(valueResource: Resource): Either[String, Option[String]] =
+    valueResource.objectStringOption(FileValueHasFilename)
 
   private def resourceClassIri(rootResource: Resource, convert: IriConverter): IO[String, KResourceClassIri] = ZIO
     .fromOption(rootResource.rdfsType)
