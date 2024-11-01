@@ -15,6 +15,8 @@ object AssetFilename {
   // Allow letters, numbers, underscores, hyphens, spaces, full stops, comma, single quote, apostrophe and braces
   private val regex = """^[\p{L}\p{N}_\- .,'`()+=!?<>|]+$""".r
 
+  def fromPath(path: Path): Either[String, AssetFilename] = from(path.filename.toString)
+
   def from(valueUnnormalized: String): Either[String, AssetFilename] = {
     val value       = Normalizer.normalize(valueUnnormalized, Normalizer.Form.NFC)
     val valueAsPath = Path(value)

@@ -11,6 +11,13 @@ import zio.nio.file.Path
 import java.nio.file.Files
 
 object PathOps {
+
+  def fromString(str: String, separator: String = "/"): Either[String, Path] =
+    str.split(separator).toList match {
+      case Nil          => Left("Empty path")
+      case head :: tail => Right(Path(head, tail: _*))
+    }
+
   extension (path: Path) {
     def fileExtension: String =
       Option(FilenameUtils.getExtension(path.filename.toString)).getOrElse("")

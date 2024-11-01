@@ -8,7 +8,11 @@ alias dog := docs-openapi-generate
 localdev-cleandb:
     rm ./localdev/storage/db/ingest.sqlite
 
-# Build a docker image locally and run it with docker compose up
+# Start the service locally with sbt
+localdev-run:
+    export JWT_DISABLE_AUTH=true; sbt "~run"
+
+# Build a docker image locally and run it with docker-compose up
 build-and-run-docker:
     export DOCKER_BUILDKIT=1; sbt Docker/publishLocal
     docker compose up -d

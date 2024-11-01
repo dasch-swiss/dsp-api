@@ -57,7 +57,7 @@ final case class BulkIngestService(
       .orElseFail(())
 
   private def withSemaphore[E, A](key: ProjectShortcode)(zio: IO[E, A]): IO[Option[E], A] =
-    withSemaphoreDaemon(key)(zio).orElseFail(None: Option[Nothing]).flatMap(f => f.join.mapError(Some(_)))
+    withSemaphoreDaemon(key)(zio).orElseFail(None: Option[Nothing]).flatMap(f => f.join.asSomeError)
 
   def startBulkIngest(
     shortcode: ProjectShortcode,
@@ -168,15 +168,14 @@ final case class BulkIngestService(
 
   def uploadSingleFile(
     shortcode: ProjectShortcode,
-    filenames: List[String],
+    path: Path,
     stream: ZStream[Any, Throwable, Byte],
   ): IO[Option[Throwable], Unit] =
     withSemaphore(shortcode) {
       for {
-        importFolder <- storage.getImportFolder(shortcode)
-        file          = importFolder / filenames.filter(f => f != "." && f != "..").mkString("/")
-        _            <- ZIO.foreachDiscard(file.parent)(Files.createDirectories(_))
-        _            <- stream.run(ZSink.fromFile(file.toFile))
+        file <- storage.getImportFolder(shortcode).map(_ / path)
+        _    <- ZIO.foreachDiscard(file.parent)(Files.createDirectories(_))
+        _    <- stream.run(ZSink.fromFile(file.toFile))
       } yield ()
     }
 }

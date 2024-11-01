@@ -121,9 +121,9 @@ object BulkIngestServiceSpec extends ZIOSpecDefault {
     for {
       // given
       importDir <- storageService(_.getImportFolder(shortcode))
-      filenames  = List("one", "..", "two", "out.txt")
+      filepath   = Path("one") / "two" / "out.txt"
       // when
-      _ <- ZIO.serviceWithZIO[BulkIngestService](_.uploadSingleFile(shortcode, filenames, ZStream(0)))
+      _ <- ZIO.serviceWithZIO[BulkIngestService](_.uploadSingleFile(shortcode, filepath, ZStream(0)))
       // then
       file <- Files.readAllBytes(importDir / "one" / "two" / "out.txt")
     } yield assertTrue(file == Chunk(0))
