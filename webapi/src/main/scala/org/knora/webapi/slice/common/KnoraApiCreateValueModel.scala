@@ -47,19 +47,13 @@ final case class KnoraApiCreateValueModel(
   resourceClassIri: KResourceClassIri,
   valuePropertyIri: PropertyIri,
   valueType: SmartIri,
+  valueIri: Option[ValueIri],
   private val valueResource: Resource,
   private val converter: IriConverter,
 ) {
   lazy val shortcode: Shortcode = resourceIri.shortcode
 
   def getFileValueHasFilename: Either[String, Option[String]] = valueResource.objectStringOption(FileValueHasFilename)
-
-  def getValueIri: IO[String, Option[ValueIri]] =
-    ZIO
-      .fromOption(valueResource.uri)
-      .flatMap(converter.asSmartIri(_).mapError(_.getMessage).asSomeError)
-      .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).asSomeError)
-      .unsome
 
   def getValueHasUuid: Either[String, Option[UUID]] =
     valueResource.objectStringOption(ValueHasUUID).flatMap {
@@ -111,10 +105,7 @@ object KnoraApiCreateValueModel { self =>
   def fromJsonLd(str: String): ZIO[Scope & IriConverter, String, KnoraApiCreateValueModel] =
     ZIO.service[IriConverter].flatMap(self.fromJsonLd(str, _))
 
-  def fromJsonLd(
-    str: String,
-    converter: IriConverter,
-  ): ZIO[Scope & IriConverter, String, KnoraApiCreateValueModel] =
+  def fromJsonLd(str: String, converter: IriConverter): ZIO[Scope & IriConverter, String, KnoraApiCreateValueModel] =
     for {
       model                  <- ModelOps.fromJsonLd(str)
       resourceAndIri         <- resourceAndIri(model, converter)
@@ -123,12 +114,15 @@ object KnoraApiCreateValueModel { self =>
       valueStatement         <- valueStatement(resource)
       propertyIri            <- valuePropertyIri(converter, valueStatement)
       valueType              <- valueType(valueStatement, converter)
+      valueResource           = valueStatement.getObject.asResource()
+      valueIri               <- valueIri(valueResource, converter)
     } yield KnoraApiCreateValueModel(
       resourceIri,
       resourceClassIri,
       propertyIri,
       valueType,
-      valueStatement.getObject.asResource(),
+      valueIri,
+      valueResource,
       converter,
     )
 
@@ -157,6 +151,12 @@ object KnoraApiCreateValueModel { self =>
     .fromEither(stmt.objectAsResource().flatMap(_.rdfsType.toRight("No rdf:type found for value.")))
     .orElseFail(s"No value type found for value.")
     .flatMap(converter.asSmartIri(_).mapError(ModelError.invalidIri))
+
+  private def valueIri(valueResource: Resource, converter: IriConverter): IO[String, Option[ValueIri]] = ZIO
+    .fromOption(valueResource.uri)
+    .flatMap(converter.asSmartIri(_).mapError(_.getMessage).asSomeError)
+    .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).asSomeError)
+    .unsome
 
   private def resourceClassIri(rootResource: Resource, convert: IriConverter): IO[String, KResourceClassIri] = ZIO
     .fromOption(rootResource.rdfsType)
