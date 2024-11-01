@@ -13,14 +13,16 @@ import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
-
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.UuidUtil.base64Decode
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasUUID
+import org.knora.webapi.messages.OntologyConstants.Xsd
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -155,7 +157,10 @@ final case class KnoraApiValueNode(
       .fold(Right(None))(identity)
 
   def getValueCreationDate: Either[String, Option[Instant]] =
-    node.getDateTimeProperty(ResourceFactory.createProperty(ValueCreationDate))
+    node.objectDataTypeOption(ValueCreationDate, Xsd.DateTimeStamp).flatMap {
+      case Some(str) => ValuesValidator.parseXsdDateTimeStamp(str).map(Some(_))
+      case None      => Right(None)
+    }
 
   def getHasPermissions: Option[String] =
     node.getStringLiteral(ResourceFactory.createProperty(OntologyConstants.KnoraApiV2Complex.HasPermissions))

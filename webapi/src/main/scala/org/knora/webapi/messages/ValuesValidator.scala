@@ -79,7 +79,12 @@ object ValuesValidator {
    * @return [[Option]] of [[Instant]].
    */
   def xsdDateTimeStampToInstant(s: String): Option[Instant] =
-    Try(Instant.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s))).toOption
+    parseXsdDateTimeStamp(s).toOption
+
+  def parseXsdDateTimeStamp(s: String): Either[String, Instant] =
+    Try(Instant.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s))).toEither.left.map(e =>
+      s"Invalid xsd:dateTimeStamp value '$s': ${e.getMessage}",
+    )
 
   /**
    * Parses a DSP ARK timestamp.

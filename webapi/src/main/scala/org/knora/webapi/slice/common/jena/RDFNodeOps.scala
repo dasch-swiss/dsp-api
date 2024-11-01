@@ -11,11 +11,7 @@ import org.apache.jena.rdf.model.Resource
 import org.apache.jena.rdf.model.ResourceFactory
 import org.apache.jena.rdf.model.Statement
 
-import java.time.Instant
 import scala.util.Try
-
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ValuesValidator
 
 object RDFNodeOps {
   extension (node: RDFNode) {
@@ -32,23 +28,5 @@ object RDFNodeOps {
       node.toResourceOption.flatMap(r => Option(r.getProperty(property)))
     def toResourceOption: Option[Resource]    = Try(node.asResource()).toOption
     def toUriResourceOption: Option[Resource] = toResourceOption.filter(_.isURIResource)
-    def getDateTimeProperty(property: Property): Either[String, Option[Instant]] =
-      node
-        .getLiteral(property)
-        .map { lit =>
-          Right(lit)
-            .filterOrElse(
-              _.getDatatypeURI == OntologyConstants.Xsd.DateTimeStamp,
-              s"Invalid data type (should be xsd:dateTimeStamp) for value: ${lit.getLexicalForm}",
-            )
-            .map(_.getLexicalForm)
-            .flatMap(str =>
-              ValuesValidator
-                .xsdDateTimeStampToInstant(str)
-                .toRight(s"Invalid xsd:dateTimeStamp value: $str")
-                .map(Some(_)),
-            )
-        }
-        .fold(Right(None))(identity)
   }
 }
