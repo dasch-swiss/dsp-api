@@ -84,7 +84,7 @@ final case class ValuesRouteV2()(
               requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
               apiRequestId   <- Random.nextUUID
               ingestState     = AssetIngestState.headerAssetIngestState(ctx.request.headers)
-              valueToCreate  <- CreateValueV2.fromJsonLd(ingestState, jsonLdString, requestingUser)
+              valueToCreate  <- CreateValueV2.fromJsonLd(ingestState, jsonLdString)
               response <-
                 ZIO.serviceWithZIO[ValuesResponderV2](_.createValueV2(valueToCreate, requestingUser, apiRequestId))
             } yield response,

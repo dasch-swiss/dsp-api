@@ -576,13 +576,11 @@ object CreateValueV2 {
    *
    * @param ingestState indicates the state of the file, either ingested or in temp folder
    * @param jsonLdString  JSON-LD input as String.
-   * @param requestingUser       the user making the request.
    * @return a case class instance representing the input.
    */
   def fromJsonLd(
     ingestState: AssetIngestState,
     jsonLdString: String,
-    requestingUser: User,
   ): ZIO[SipiService & IriConverter & MessageRelay, Throwable, CreateValueV2] = ZIO.scoped {
     for {
       converter           <- ZIO.service[IriConverter]
