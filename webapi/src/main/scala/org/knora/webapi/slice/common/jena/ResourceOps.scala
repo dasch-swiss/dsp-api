@@ -50,6 +50,6 @@ object ResourceOps {
       fromStatement(p, _.objectAsDataType(dt))
 
     def rdfsType: Option[String] = Option(res.getPropertyResourceValue(RDF.`type`)).flatMap(_.uri)
-    def uri: Option[String]        = Option(res.getURI)
+    def uri: Option[String]      = Option(res.getURI)
   }
 }
