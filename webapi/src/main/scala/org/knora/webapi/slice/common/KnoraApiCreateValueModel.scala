@@ -49,18 +49,13 @@ final case class KnoraApiCreateValueModel(
   valueType: SmartIri,
   valueIri: Option[ValueIri],
   valueUuid: Option[UUID],
+  valueCreationDate: Option[Instant],
   private val valueResource: Resource,
   private val converter: IriConverter,
 ) {
   lazy val shortcode: Shortcode = resourceIri.shortcode
 
   def getFileValueHasFilename: Either[String, Option[String]] = valueResource.objectStringOption(FileValueHasFilename)
-
-  def getValueCreationDate: Either[String, Option[Instant]] =
-    valueResource.objectDataTypeOption(ValueCreationDate, Xsd.DateTimeStamp).flatMap {
-      case Some(str) => ValuesValidator.parseXsdDateTimeStamp(str).map(Some(_))
-      case None      => Right(None)
-    }
 
   def getHasPermissions: Either[String, Option[String]] = valueResource.objectStringOption(HasPermissions)
 
@@ -111,6 +106,7 @@ object KnoraApiCreateValueModel { self =>
       valueResource           = valueStatement.getObject.asResource()
       valueIri               <- valueIri(valueResource, converter)
       valueUuid              <- ZIO.fromEither(valueHasUuid(valueResource))
+      valueCreationDate      <- ZIO.fromEither(valueCreationDate(valueResource))
     } yield KnoraApiCreateValueModel(
       resourceIri,
       resourceClassIri,
@@ -118,6 +114,7 @@ object KnoraApiCreateValueModel { self =>
       valueType,
       valueIri,
       valueUuid,
+      valueCreationDate,
       valueResource,
       converter,
     )
@@ -159,6 +156,12 @@ object KnoraApiCreateValueModel { self =>
       case Some(str) =>
         UuidUtil.base64Decode(str).map(Some(_)).toEither.left.map(e => s"Invalid UUID '$str': ${e.getMessage}")
       case None => Right(None)
+    }
+
+  private def valueCreationDate(valueResource: Resource): Either[String, Option[Instant]] =
+    valueResource.objectDataTypeOption(ValueCreationDate, Xsd.DateTimeStamp).flatMap {
+      case Some(str) => ValuesValidator.parseXsdDateTimeStamp(str).map(Some(_))
+      case None      => Right(None)
     }
 
   private def resourceClassIri(rootResource: Resource, convert: IriConverter): IO[String, KResourceClassIri] = ZIO
