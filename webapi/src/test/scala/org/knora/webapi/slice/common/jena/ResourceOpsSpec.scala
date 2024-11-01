@@ -36,7 +36,7 @@ object ResourceOpsSpec extends ZIOSpecDefault {
   private def resource() =
     ModelOps
       .fromTurtle(integerValue)
-      .mapBoth(_.msg, _.resource("https://example.com/a-thing"))
+      .map(_.resource("https://example.com/a-thing"))
       .flatMap(ZIO.fromEither(_))
       .mapError(msg => s"Failing to parse model: $msg")
 

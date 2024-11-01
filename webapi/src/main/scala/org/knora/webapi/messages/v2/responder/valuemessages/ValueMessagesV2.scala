@@ -586,8 +586,8 @@ object CreateValueV2 {
   ): ZIO[SipiService & IriConverter & MessageRelay, Throwable, CreateValueV2] = ZIO.scoped {
     for {
       converter           <- ZIO.service[IriConverter]
-      model               <- KnoraApiCreateValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
-      maybeCustomValueIri <- model.getValueIri.mapError(e => BadRequestException(e.msg))
+      model               <- KnoraApiCreateValueModel.fromJsonLd(jsonLdString, converter).mapError(BadRequestException(_))
+      maybeCustomValueIri <- model.getValueIri.mapError(BadRequestException(_))
       maybeCustomUUID     <- ZIO.fromEither(model.getValueHasUuid).mapError(BadRequestException(_))
       maybeCreationDate   <- ZIO.fromEither(model.getValueCreationDate).mapError(BadRequestException(_))
       maybePermissions    <- ZIO.fromEither(model.getHasPermissions).mapError(BadRequestException(_))

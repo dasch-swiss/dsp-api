@@ -17,7 +17,6 @@ import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters.*
 
 import org.knora.webapi.slice.common.ModelError
-import org.knora.webapi.slice.common.ModelError.ParseError
 
 object ModelOps { self =>
 
@@ -43,17 +42,17 @@ object ModelOps { self =>
       }
   }
 
-  def fromJsonLd(str: String): ZIO[Scope, ParseError, Model] = from(str, Lang.JSONLD)
-  def fromTurtle(str: String): ZIO[Scope, ParseError, Model] = from(str, Lang.TURTLE)
+  def fromJsonLd(str: String): ZIO[Scope, String, Model] = from(str, Lang.JSONLD)
+  def fromTurtle(str: String): ZIO[Scope, String, Model] = from(str, Lang.TURTLE)
 
   private val createModel =
     ZIO.acquireRelease(ZIO.succeed(ModelFactory.createDefaultModel()))(m => ZIO.succeed(m.close()))
 
-  def from(str: String, lang: Lang): ZIO[Scope, ParseError, Model] =
+  def from(str: String, lang: Lang): ZIO[Scope, String, Model] =
     for {
       m <- createModel
       _ <- ZIO
              .attempt(RDFDataMgr.read(m, ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8)), lang))
-             .mapError(ModelError.parseError)
+             .mapError(_.getMessage)
     } yield m
 }

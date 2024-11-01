@@ -28,7 +28,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri as KResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri as KResourceIri
-import org.knora.webapi.slice.common.ModelError.ParseError
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
@@ -36,22 +35,11 @@ import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
-enum ModelError(val msg: String) {
-  case ParseError(override val msg: String)             extends ModelError(msg)
-  case InvalidIri(override val msg: String)             extends ModelError(msg)
-  case InvalidModel(override val msg: String)           extends ModelError(msg)
-  case MissingValueProp(override val msg: String)       extends ModelError(msg)
-  case MultipleValueProp(override val msg: String)      extends ModelError(msg)
-  case NoRootResourceClassIri(override val msg: String) extends ModelError(msg)
-}
 object ModelError {
-  def parseError(ex: Throwable): ParseError          = ParseError(ex.getMessage)
-  def invalidIri(msg: String): InvalidIri            = InvalidIri(msg)
-  def invalidIri(e: Throwable): InvalidIri           = InvalidIri(e.getMessage)
-  def invalidModel(msg: String): InvalidModel        = InvalidModel(msg)
-  def missingValueProp: MissingValueProp             = MissingValueProp("No value property found in root resource")
-  def multipleValueProp: MultipleValueProp           = MultipleValueProp("Multiple value properties found in root resource")
-  def noRootResourceClassIri: NoRootResourceClassIri = NoRootResourceClassIri("No root resource class IRI found")
+  def invalidIri(e: Throwable): String = e.getMessage
+  def missingValueProp: String         = "No value property found in root resource"
+  def multipleValueProp: String        = "Multiple value properties found in root resource"
+  def noRootResourceClassIri: String   = "No root resource class IRI found"
 }
 
 final case class KnoraApiCreateValueModel(
@@ -66,13 +54,12 @@ final case class KnoraApiCreateValueModel(
 
   def getFileValueHasFilename: Either[String, Option[String]] = valueResource.objectStringOption(FileValueHasFilename)
 
-  def getValueIri: IO[ModelError, Option[ValueIri]] =
+  def getValueIri: IO[String, Option[ValueIri]] =
     ZIO
       .fromOption(valueResource.uri)
       .flatMap(converter.asSmartIri(_).mapError(_.getMessage).asSomeError)
       .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).asSomeError)
       .unsome
-      .mapError(ModelError.invalidIri)
 
   def getValueHasUuid: Either[String, Option[UUID]] =
     valueResource.objectStringOption(ValueHasUUID).flatMap {
@@ -121,13 +108,13 @@ final case class KnoraApiCreateValueModel(
 object KnoraApiCreateValueModel { self =>
 
   // available for ease of use in tests
-  def fromJsonLd(str: String): ZIO[Scope & IriConverter, ModelError, KnoraApiCreateValueModel] =
+  def fromJsonLd(str: String): ZIO[Scope & IriConverter, String, KnoraApiCreateValueModel] =
     ZIO.service[IriConverter].flatMap(self.fromJsonLd(str, _))
 
   def fromJsonLd(
     str: String,
     converter: IriConverter,
-  ): ZIO[Scope & IriConverter, ModelError, KnoraApiCreateValueModel] =
+  ): ZIO[Scope & IriConverter, String, KnoraApiCreateValueModel] =
     for {
       model                  <- ModelOps.fromJsonLd(str)
       resourceAndIri         <- resourceAndIri(model, converter)
@@ -145,16 +132,16 @@ object KnoraApiCreateValueModel { self =>
       converter,
     )
 
-  private def resourceAndIri(model: Model, convert: IriConverter): IO[ModelError, (Resource, ResourceIri)] =
-    ZIO.fromEither(model.singleRootResource).mapError(ModelError.invalidModel).flatMap { (r: Resource) =>
+  private def resourceAndIri(model: Model, convert: IriConverter): IO[String, (Resource, ResourceIri)] =
+    ZIO.fromEither(model.singleRootResource).flatMap { (r: Resource) =>
       convert
         .asSmartIri(r.uri.getOrElse(""))
         .mapError(ModelError.invalidIri)
-        .flatMap(iri => ZIO.fromEither(KResourceIri.from(iri)).mapError(ModelError.invalidIri))
+        .flatMap(iri => ZIO.fromEither(KResourceIri.from(iri)))
         .map((r, _))
     }
 
-  private def valueStatement(rootResource: Resource): IO[ModelError, Statement] = ZIO
+  private def valueStatement(rootResource: Resource): IO[String, Statement] = ZIO
     .succeed(rootResource.listProperties().asScala.filter(_.getPredicate != RDF.`type`).toList)
     .filterOrFail(_.nonEmpty)(ModelError.missingValueProp)
     .filterOrFail(_.size == 1)(ModelError.multipleValueProp)
@@ -164,16 +151,16 @@ object KnoraApiCreateValueModel { self =>
     converter
       .asSmartIri(valueStatement.predicateUri)
       .mapError(ModelError.invalidIri)
-      .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(ModelError.invalidIri))
+      .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)))
 
   private def valueType(stmt: Statement, converter: IriConverter) = ZIO
     .fromEither(stmt.objectAsResource().flatMap(_.rdfsType.toRight("No rdf:type found for value.")))
-    .orElseFail(ModelError.invalidIri(s"No value type found for value."))
+    .orElseFail(s"No value type found for value.")
     .flatMap(converter.asSmartIri(_).mapError(ModelError.invalidIri))
 
-  private def resourceClassIri(rootResource: Resource, convert: IriConverter): IO[ModelError, KResourceClassIri] = ZIO
+  private def resourceClassIri(rootResource: Resource, convert: IriConverter): IO[String, KResourceClassIri] = ZIO
     .fromOption(rootResource.rdfsType)
     .orElseFail(ModelError.noRootResourceClassIri)
     .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
-    .flatMap(iri => ZIO.fromEither(KResourceClassIri.from(iri)).mapError(ModelError.invalidIri))
+    .flatMap(iri => ZIO.fromEither(KResourceClassIri.from(iri)))
 }
