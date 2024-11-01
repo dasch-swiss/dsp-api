@@ -77,16 +77,17 @@ object KnoraApiCreateValueModel { self =>
     converter: IriConverter,
   ): ZIO[Scope & IriConverter, ModelError, KnoraApiCreateValueModel] =
     for {
-      model                  <- ModelOps.fromJsonLd(str)
-      resourceAndIri         <- resourceAndIri(model, converter)
-      (resource, resourceIri) = resourceAndIri
-      resourceClassIri       <- resourceClassIri(resource, converter)
-      valueProp              <- valueNode(resource, converter)
+      model                     <- ModelOps.fromJsonLd(str)
+      resourceAndIri            <- resourceAndIri(model, converter)
+      (resource, resourceIri)    = resourceAndIri
+      resourceClassIri          <- resourceClassIri(resource, converter)
+      nodeAndProp               <- valueNode(resource, converter)
+      (valueResource, valueProp) = nodeAndProp
     } yield KnoraApiCreateValueModel(
       resourceIri,
       resourceClassIri,
       valueProp,
-      resource,
+      valueResource,
     )
 
   private def resourceAndIri(model: Model, convert: IriConverter): IO[ModelError, (Resource, ResourceIri)] =
@@ -101,7 +102,7 @@ object KnoraApiCreateValueModel { self =>
   private def valueNode(
     rootResource: Resource,
     converter: IriConverter,
-  ): IO[ModelError, KnoraApiValueNode] =
+  ): IO[ModelError, (Resource, KnoraApiValueNode)] =
     ZIO.succeed {
       rootResource
         .listProperties()
@@ -112,7 +113,7 @@ object KnoraApiCreateValueModel { self =>
       .filterOrFail(_.nonEmpty)(ModelError.missingValueProp)
       .filterOrFail(_.size == 1)(ModelError.multipleValueProp)
       .map(_.head)
-      .flatMap(s => KnoraApiValueNode.from(s, converter))
+      .flatMap(s => KnoraApiValueNode.from(s, converter).map((s.getObject.asResource(), _)))
 
   private def resourceClassIri(
     rootResource: Resource,
