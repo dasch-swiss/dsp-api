@@ -585,7 +585,7 @@ object CreateValueV2 {
     for {
       converter    <- ZIO.service[IriConverter]
       model        <- KnoraApiCreateValueModel.fromJsonLd(jsonLdString, converter).mapError(BadRequestException(_))
-      fileInfo     <- ValueContentV2.getFileInfo(ingestState, model)
+      fileInfo     <- ValueContentV2.fileInfoFromExternal(model.valueFileValueFilename, ingestState, model.shortcode)
       valueContent <- model.getValueContent(fileInfo).mapError(BadRequestException(_))
     } yield CreateValueV2(
       resourceIri = model.resourceIri.toString,
@@ -1032,7 +1032,6 @@ object ValueContentV2 {
    *         None if FileValueHasFilename is not found in the jsonLd object.
    *         Fails if the file is not found in the remote service or something goes wrong.
    */
-
   def getFileInfo(
     shortcode: Shortcode,
     ingestState: AssetIngestState,
@@ -1041,13 +1040,11 @@ object ValueContentV2 {
     val filenameMaybe = jsonLd.getString(FileValueHasFilename).toOption.flatten
     fileInfoFromExternal(filenameMaybe, ingestState, shortcode)
 
-  def getFileInfo(
+  def fileInfoFromExternal(
+    filenameMaybe: Option[String],
     state: AssetIngestState,
-    model: KnoraApiCreateValueModel,
+    shortcode: Shortcode,
   ): ZIO[SipiService, Throwable, Option[FileInfo]] =
-    fileInfoFromExternal(model.valueFileValueFilename, state, model.shortcode)
-
-  private def fileInfoFromExternal(filenameMaybe: Option[String], state: AssetIngestState, shortcode: Shortcode) =
     (filenameMaybe, state) match
       case (None, _)                       => ZIO.none
       case (Some(filename), AssetIngested) => fileInfoFromDspIngest(shortcode, filename).asSome
