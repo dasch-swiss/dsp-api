@@ -183,55 +183,6 @@ class SparqlTransformerSpec extends CoreSpec {
       UnsafeZioRun.runOrThrow(expandedStatements) should equal(expectedStatements)
     }
 
-    "create a union pattern to simulate RDF inference for a class, if there are known subclasses" in {
-      val typeStatement = StatementPattern(
-        subj = QueryVariable("foo"),
-        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef(thingIRI),
-      )
-      val expectedUnionPattern = UnionPattern(
-        Seq(
-          Seq(
-            StatementPattern(
-              subj = QueryVariable("foo"),
-              pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-              obj = IriRef(thingIRI),
-            ),
-          ),
-          Seq(
-            StatementPattern(
-              subj = QueryVariable("foo"),
-              pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-              obj = IriRef(blueThingIRI),
-            ),
-          ),
-          Seq(
-            StatementPattern(
-              subj = QueryVariable("foo"),
-              pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-              obj = IriRef("http://www.knora.org/ontology/0001/something#Something".toSmartIri),
-            ),
-          ),
-          Seq(
-            StatementPattern(
-              subj = QueryVariable("foo"),
-              pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-              obj = IriRef("http://www.knora.org/ontology/0001/anything#ThingWithSeqnum".toSmartIri),
-            ),
-          ),
-        ),
-      )
-      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
-        statementPattern = typeStatement,
-        simulateInference = true,
-      )
-      UnsafeZioRun.runOrThrow(expandedStatements) match {
-        case (head: UnionPattern) :: Nil =>
-          head.blocks.toSet should equal(expectedUnionPattern.blocks.toSet)
-        case _ => throw new AssertionError("Simulated RDF inference should have resulted in exactly one Union Pattern")
-      }
-    }
-
     "not simulate any RDF inference for a property, if there are no known subproperties" in {
       val hasValueStatement =
         StatementPattern(
@@ -256,56 +207,63 @@ class SparqlTransformerSpec extends CoreSpec {
       UnsafeZioRun.runOrThrow(expandedStatements) should equal(expectedStatements)
     }
 
-    "create a union pattern to simulate RDF inference for a property, if there are known subproperties" in {
+    "create a values pattern to simulate RDF inference for a class, if there are known subclasses" in {
+      val typeStatement = StatementPattern(
+        subj = QueryVariable("foo"),
+        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+        obj = IriRef(thingIRI),
+      )
+      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
+        statementPattern = typeStatement,
+        simulateInference = true,
+        queryVariableSuffix = Some("5432"),
+      )
+      UnsafeZioRun.runOrThrow(expandedStatements) should equal(
+        List(
+          ValuesPattern(
+            QueryVariable("resTypes5432"),
+            Set(
+              IriRef("http://www.knora.org/ontology/0001/something#Something".toSmartIri),
+              IriRef("http://www.knora.org/ontology/0001/anything#BlueThing".toSmartIri),
+              IriRef("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri),
+              IriRef("http://www.knora.org/ontology/0001/anything#ThingWithSeqnum".toSmartIri),
+            ),
+          ),
+          StatementPattern(
+            QueryVariable("foo"),
+            IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+            QueryVariable("resTypes5432"),
+          ),
+        ),
+      )
+    }
+
+    "create a values pattern to simulate RDF inference for a property, if there are known subproperties" in {
       val hasValueStatement =
         StatementPattern(
           subj = QueryVariable("foo"),
           pred = IriRef(hasOtherThingIRI),
           obj = QueryVariable("text"),
         )
-      val expectedUnionPattern: UnionPattern = UnionPattern(
-        Seq(
-          Seq(
-            StatementPattern(
-              subj = QueryVariable(variableName = "foo"),
-              pred = IriRef(
-                iri = "http://www.knora.org/ontology/0001/something#hasOtherSomething".toSmartIri,
-                propertyPathOperator = None,
-              ),
-              obj = QueryVariable(variableName = "text"),
-            ),
-          ),
-          Seq(
-            StatementPattern(
-              subj = QueryVariable(variableName = "foo"),
-              pred = IriRef(
-                iri = hasOtherThingIRI,
-                propertyPathOperator = None,
-              ),
-              obj = QueryVariable(variableName = "text"),
-            ),
-          ),
-          Seq(
-            StatementPattern(
-              subj = QueryVariable(variableName = "foo"),
-              pred = IriRef(
-                iri = "http://www.knora.org/ontology/0001/anything#hasBlueThing".toSmartIri,
-                propertyPathOperator = None,
-              ),
-              obj = QueryVariable(variableName = "text"),
-            ),
-          ),
-        ),
-      )
       val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
         statementPattern = hasValueStatement,
         simulateInference = true,
+        queryVariableSuffix = Some("5432"),
       )
-      UnsafeZioRun.runOrThrow(expandedStatements) match {
-        case (head: UnionPattern) :: Nil =>
-          head.blocks.toSet should equal(expectedUnionPattern.blocks.toSet)
-        case _ => throw new AssertionError("Simulated RDF inference should have resulted in exactly one Union Pattern")
-      }
+
+      UnsafeZioRun.runOrThrow(expandedStatements) should equal(
+        List(
+          ValuesPattern(
+            QueryVariable("subProp5432"),
+            Set(
+              IriRef("http://www.knora.org/ontology/0001/something#hasOtherSomething".toSmartIri),
+              IriRef("http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri),
+              IriRef("http://www.knora.org/ontology/0001/anything#hasBlueThing".toSmartIri),
+            ),
+          ),
+          StatementPattern(QueryVariable("foo"), QueryVariable("subProp5432"), QueryVariable("text")),
+        ),
+      )
     }
   }
 }
