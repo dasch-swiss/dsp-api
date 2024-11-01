@@ -73,23 +73,24 @@ object KnoraApiValueModel { self =>
 
   def fromJsonLd(str: String, converter: IriConverter): ZIO[Scope & IriConverter, ModelError, KnoraApiValueModel] =
     for {
-      model            <- ModelOps.fromJsonLd(str)
-      resourceIri      <- resourceIri(model, converter)
-      resource          = model.getResource(resourceIri.smartIri.toString)
-      resourceClassIri <- resourceClassIri(resource, converter)
-      valueProp        <- valueNode(resource, resourceIri.shortcode, converter)
+      model                  <- ModelOps.fromJsonLd(str)
+      resourceAndIri         <- resourceAndIri(model, converter)
+      (resource, resourceIri) = resourceAndIri
+      resourceClassIri       <- resourceClassIri(resource, converter)
+      valueProp              <- valueNode(resource, resourceIri.shortcode, converter)
     } yield KnoraApiValueModel(
       resourceIri,
       resourceClassIri,
       valueProp,
     )
 
-  private def resourceIri(model: Model, convert: IriConverter): IO[ModelError, ResourceIri] =
+  private def resourceAndIri(model: Model, convert: IriConverter): IO[ModelError, (Resource, ResourceIri)] =
     ZIO.fromEither(model.singleRootResource).mapError(ModelError.invalidModel).flatMap { (r: Resource) =>
       convert
         .asSmartIri(r.uri.getOrElse(""))
         .mapError(ModelError.invalidIri)
         .flatMap(iri => ZIO.fromEither(KResourceIri.from(iri)).mapError(ModelError.invalidIri))
+        .map((r, _))
     }
 
   private def valueNode(
