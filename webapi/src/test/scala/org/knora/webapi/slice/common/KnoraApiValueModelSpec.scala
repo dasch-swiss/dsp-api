@@ -122,19 +122,11 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
         } yield assertTrue(model.resourceClassIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing")
       }
     },
-    test("rootResourceProperties should get the props") {
-      check(Gen.fromIterable(Seq(createIntegerValue, createLinkValue).map(_.toJsonPretty))) { json =>
-        for {
-          model <- KnoraApiCreateValueModel.fromJsonLd(json)
-          node   = model.valueNode
-        } yield assertTrue(node != null)
-      }
-    },
     test("valueNode properties should be present") {
       for {
-        model       <- KnoraApiCreateValueModel.fromJsonLd(createIntegerValue.toJsonPretty)
-        propertyIri  = model.valuePropertyIri
-        valueType    = model.valueNode.valueType
+        model      <- KnoraApiCreateValueModel.fromJsonLd(createIntegerValue.toJsonPretty)
+        propertyIri = model.valuePropertyIri
+        valueType   = model.valueType
       } yield assertTrue(
         propertyIri == PropertyIri.unsafeFrom(
           sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"),
@@ -161,7 +153,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                                                        |  }
                                                        |}""".stripMargin)
-        content <- model.valueNode.getValueContent()
+        content <- model.getValueContent()
       } yield assertTrue(content == IntegerValueContentV2(ApiV2Complex, 4, None))
     },
     test("should parse DecimalValueContentV2") {
@@ -182,7 +174,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                                                        |  }
                                                        |}""".stripMargin)
-        content <- model.valueNode.getValueContent()
+        content <- model.getValueContent()
       } yield assertTrue(content == DecimalValueContentV2(ApiV2Complex, BigDecimal(4), None))
     },
     test("should parse BooleanValueContentV2") {
@@ -203,7 +195,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                                                        |  }
                                                        |}""".stripMargin)
-        content <- model.valueNode.getValueContent()
+        content <- model.getValueContent()
       } yield assertTrue(content == BooleanValueContentV2(ApiV2Complex, true, None))
     },
     test("should parse GeomValueContentV2") {
@@ -221,7 +213,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                                                        |  }
                                                        |}""".stripMargin)
-        content <- model.valueNode.getValueContent()
+        content <- model.getValueContent()
       } yield assertTrue(content == GeomValueContentV2(ApiV2Complex, "{}", None))
     },
     test("should parse IntervalValueContentV2") {
@@ -246,7 +238,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                                                        |  }
                                                        |}""".stripMargin)
-        content <- model.valueNode.getValueContent()
+        content <- model.getValueContent()
       } yield assertTrue(content == IntervalValueContentV2(ApiV2Complex, BigDecimal(4), BigDecimal(2), None))
     },
     test("should parse TimeValueContentV2") {
@@ -267,7 +259,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                                                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                                                        |  }
                                                        |}""".stripMargin)
-        content <- model.valueNode.getValueContent()
+        content <- model.getValueContent()
       } yield assertTrue(
         content == TimeValueContentV2(ApiV2Complex, Instant.parse("2020-06-04T11:36:54.502951Z"), None),
       )
@@ -294,7 +286,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                |  }
                |}""".stripMargin,
           )
-        content <- model.valueNode.getValueContent()
+        content <- model.getValueContent()
       } yield assertTrue(
         content == LinkValueContentV2(
           ApiV2Complex,
@@ -326,7 +318,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                |  }
                |}""".stripMargin,
           )
-        content <- model.valueNode.getValueContent()
+        content <- model.getValueContent()
       } yield assertTrue(content == UriValueContentV2(ApiV2Complex, "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA", None))
     },
     test("should parse GeonameValueContentV2") {
@@ -349,7 +341,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                |  }
                |}""".stripMargin,
           )
-        content <- model.valueNode.getValueContent()
+        content <- model.getValueContent()
       } yield assertTrue(content == GeonameValueContentV2(ApiV2Complex, "foo", None))
     },
     test("should parse ColorValue") {
@@ -372,7 +364,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                |  }
                |}""".stripMargin,
           )
-        content <- model.valueNode.getValueContent()
+        content <- model.getValueContent()
       } yield assertTrue(content == ColorValueContentV2(ApiV2Complex, "red", None))
     },
     test("should parse StillImageFileValue") {
@@ -394,7 +386,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                |  }
                |}""".stripMargin,
           )
-        content <- model.valueNode.getValueContent(Some(givenFileInfo))
+        content <- model.getValueContent(Some(givenFileInfo))
       } yield assertTrue(
         content == StillImageFileValueContentV2(
           ApiV2Complex,
@@ -425,7 +417,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                |  }
                |}""".stripMargin,
           )
-        content <- model.valueNode.getValueContent()
+        content <- model.getValueContent()
       } yield assertTrue(
         content == StillImageExternalFileValueContentV2(
           ApiV2Complex,
@@ -458,7 +450,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                       |  }
                       |}""".stripMargin,
                  )
-        content <- model.valueNode.getValueContent(Some(givenFileInfo))
+        content <- model.getValueContent(Some(givenFileInfo))
       } yield assertTrue(
         content == DocumentFileValueContentV2(
           ApiV2Complex,
@@ -488,7 +480,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                       |  }
                       |}""".stripMargin,
                  )
-        content <- model.valueNode.getValueContent(Some(givenFileInfo))
+        content <- model.getValueContent(Some(givenFileInfo))
       } yield assertTrue(
         content == TextFileValueContentV2(ApiV2Complex, expectedFileValue, None),
       )
@@ -511,7 +503,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                       |  }
                       |}""".stripMargin,
                  )
-        content <- model.valueNode.getValueContent(Some(givenFileInfo))
+        content <- model.getValueContent(Some(givenFileInfo))
       } yield assertTrue(
         content == AudioFileValueContentV2(ApiV2Complex, expectedFileValue, None),
       )
@@ -534,7 +526,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                       |  }
                       |}""".stripMargin,
                  )
-        content <- model.valueNode.getValueContent(Some(givenFileInfo))
+        content <- model.getValueContent(Some(givenFileInfo))
       } yield assertTrue(
         content == MovingImageFileValueContentV2(ApiV2Complex, expectedFileValue, None),
       )
@@ -557,7 +549,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                       |  }
                       |}""".stripMargin,
                  )
-        content <- model.valueNode.getValueContent(Some(givenFileInfo))
+        content <- model.getValueContent(Some(givenFileInfo))
       } yield assertTrue(
         content == ArchiveFileValueContentV2(ApiV2Complex, expectedFileValue, None),
       )
@@ -583,7 +575,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                       |  }
                       |}""".stripMargin,
                  )
-        content <- model.valueNode.getValueContent(Some(givenFileInfo))
+        content <- model.getValueContent(Some(givenFileInfo))
       } yield assertTrue(
         content == HierarchicalListValueContentV2(
           ApiV2Complex,
@@ -620,7 +612,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
                       |  }
                       |}""".stripMargin,
                  )
-        content <- model.valueNode.getValueContent()
+        content <- model.getValueContent()
       } yield assertTrue(
         content == DateValueContentV2(
           ApiV2Complex,

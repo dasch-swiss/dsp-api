@@ -587,12 +587,12 @@ object CreateValueV2 {
     for {
       converter           <- ZIO.service[IriConverter]
       model               <- KnoraApiCreateValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
-      maybeCustomValueIri <- model.valueNode.getValueIri.mapError(e => BadRequestException(e.msg))
-      maybeCustomUUID     <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
-      maybeCreationDate   <- ZIO.fromEither(model.valueNode.getValueCreationDate).mapError(BadRequestException(_))
-      maybePermissions    <- ZIO.fromEither(model.valueNode.getHasPermissions).mapError(BadRequestException(_))
+      maybeCustomValueIri <- model.getValueIri.mapError(e => BadRequestException(e.msg))
+      maybeCustomUUID     <- ZIO.fromEither(model.getValueHasUuid).mapError(BadRequestException(_))
+      maybeCreationDate   <- ZIO.fromEither(model.getValueCreationDate).mapError(BadRequestException(_))
+      maybePermissions    <- ZIO.fromEither(model.getHasPermissions).mapError(BadRequestException(_))
       fileInfo            <- ValueContentV2.getFileInfo(ingestState, model)
-      valueContent        <- model.valueNode.getValueContent(fileInfo).mapError(BadRequestException(_))
+      valueContent        <- model.getValueContent(fileInfo).mapError(BadRequestException(_))
     } yield CreateValueV2(
       resourceIri = model.resourceIri.toString,
       resourceClassIri = model.resourceClassIri.smartIri,
@@ -1051,7 +1051,7 @@ object ValueContentV2 {
     state: AssetIngestState,
     model: KnoraApiCreateValueModel,
   ): ZIO[SipiService, Throwable, Option[FileInfo]] = ZIO
-    .fromEither(model.valueNode.node.objectStringOption(FileValueHasFilename))
+    .fromEither(model.getFileValueHasFilename)
     .mapError(BadRequestException(_))
     .flatMap(fileInfoFromExternal(_, state, model.shortcode))
 

@@ -13,6 +13,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
+
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
@@ -59,80 +60,21 @@ object ModelError {
 final case class KnoraApiCreateValueModel(
   resourceIri: ResourceIri,
   resourceClassIri: KResourceClassIri,
-  valueNode: KnoraApiValueNode,
   valueStatement: Statement,
   valuePropertyIri: PropertyIri,
+  valueType: SmartIri,
+  private val converter: IriConverter,
 ) {
   lazy val shortcode: Shortcode = resourceIri.shortcode
-}
 
-object KnoraApiCreateValueModel { self =>
+  private lazy val node: Resource = valueStatement.getObject.asResource()
 
-  // available for ease of use in tests
-  def fromJsonLd(str: String): ZIO[Scope & IriConverter, ModelError, KnoraApiCreateValueModel] =
-    ZIO.service[IriConverter].flatMap(self.fromJsonLd(str, _))
-
-  def fromJsonLd(
-    str: String,
-    converter: IriConverter,
-  ): ZIO[Scope & IriConverter, ModelError, KnoraApiCreateValueModel] =
-    for {
-      model                  <- ModelOps.fromJsonLd(str)
-      resourceAndIri         <- resourceAndIri(model, converter)
-      (resource, resourceIri) = resourceAndIri
-      resourceClassIri       <- resourceClassIri(resource, converter)
-      valueStatement         <- valueStatement(resource)
-      propertyIri            <- valuePropertyIri(converter, valueStatement)
-      valueProp              <- KnoraApiValueNode.from(valueStatement, converter)
-    } yield KnoraApiCreateValueModel(
-      resourceIri,
-      resourceClassIri,
-      valueProp,
-      valueStatement,
-      propertyIri,
-    )
-
-  private def resourceAndIri(model: Model, convert: IriConverter): IO[ModelError, (Resource, ResourceIri)] =
-    ZIO.fromEither(model.singleRootResource).mapError(ModelError.invalidModel).flatMap { (r: Resource) =>
-      convert
-        .asSmartIri(r.uri.getOrElse(""))
-        .mapError(ModelError.invalidIri)
-        .flatMap(iri => ZIO.fromEither(KResourceIri.from(iri)).mapError(ModelError.invalidIri))
-        .map((r, _))
-    }
-
-  private def valueStatement(rootResource: Resource): IO[ModelError, Statement] = ZIO
-    .succeed(rootResource.listProperties().asScala.filter(_.getPredicate != RDF.`type`).toList)
-    .filterOrFail(_.nonEmpty)(ModelError.missingValueProp)
-    .filterOrFail(_.size == 1)(ModelError.multipleValueProp)
-    .map(_.head)
-
-  private def valuePropertyIri(converter: IriConverter, valueStatement: Statement) =
-    converter
-      .asSmartIri(valueStatement.predicateUri)
-      .mapError(ModelError.invalidIri)
-      .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(ModelError.invalidIri))
-
-  private def resourceClassIri(
-    rootResource: Resource,
-    convert: IriConverter,
-  ): IO[ModelError, KResourceClassIri] = ZIO
-    .fromOption(rootResource.rdfsType)
-    .orElseFail(ModelError.noRootResourceClassIri)
-    .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
-    .flatMap(iri => ZIO.fromEither(KResourceClassIri.from(iri)).mapError(ModelError.invalidIri))
-}
-
-final case class KnoraApiValueNode(
-  node: Resource,
-  valueType: SmartIri,
-  convert: IriConverter,
-) {
+  def getFileValueHasFilename: Either[String, Option[String]] = node.objectStringOption(FileValueHasFilename)
 
   def getValueIri: IO[ModelError, Option[ValueIri]] =
     ZIO
       .fromOption(node.uri)
-      .flatMap(convert.asSmartIri(_).mapError(_.getMessage).asSomeError)
+      .flatMap(converter.asSmartIri(_).mapError(_.getMessage).asSomeError)
       .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).asSomeError)
       .unsome
       .mapError(ModelError.invalidIri)
@@ -170,8 +112,8 @@ final case class KnoraApiValueNode(
       case GeonameValue                => ZIO.fromEither(GeonameValueContentV2.from(node))
       case IntValue                    => ZIO.fromEither(IntegerValueContentV2.from(node))
       case IntervalValue               => ZIO.fromEither(IntervalValueContentV2.from(node))
-      case ListValue                   => HierarchicalListValueContentV2.from(node, convert)
-      case LinkValue                   => LinkValueContentV2.from(node, convert)
+      case ListValue                   => HierarchicalListValueContentV2.from(node, converter)
+      case LinkValue                   => LinkValueContentV2.from(node, converter)
       case MovingImageFileValue        => withFileInfo(MovingImageFileValueContentV2.from(node, _))
       case StillImageExternalFileValue => ZIO.fromEither(StillImageExternalFileValueContentV2.from(node))
       case StillImageFileValue         => withFileInfo(StillImageFileValueContentV2.from(node, _))
@@ -182,16 +124,64 @@ final case class KnoraApiValueNode(
       case _                           => ZIO.fail(s"Unsupported value type: $valueType")
 }
 
-object KnoraApiValueNode {
-  def from(
-    stmt: Statement,
-    convert: IriConverter,
-  ): IO[ModelError, KnoraApiValueNode] =
-    for {
+object KnoraApiCreateValueModel { self =>
 
-      valueType <- ZIO
-                     .fromEither(stmt.objectAsResource().flatMap(_.rdfsType.toRight("No rdf:type found for value.")))
-                     .orElseFail(ModelError.invalidIri(s"No value type found for value."))
-                     .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
-    } yield KnoraApiValueNode(stmt.getObject.asResource(), valueType, convert)
+  // available for ease of use in tests
+  def fromJsonLd(str: String): ZIO[Scope & IriConverter, ModelError, KnoraApiCreateValueModel] =
+    ZIO.service[IriConverter].flatMap(self.fromJsonLd(str, _))
+
+  def fromJsonLd(
+    str: String,
+    converter: IriConverter,
+  ): ZIO[Scope & IriConverter, ModelError, KnoraApiCreateValueModel] =
+    for {
+      model                  <- ModelOps.fromJsonLd(str)
+      resourceAndIri         <- resourceAndIri(model, converter)
+      (resource, resourceIri) = resourceAndIri
+      resourceClassIri       <- resourceClassIri(resource, converter)
+      valueStatement         <- valueStatement(resource)
+      propertyIri            <- valuePropertyIri(converter, valueStatement)
+      valueType <-
+        ZIO
+          .fromEither(valueStatement.objectAsResource().flatMap(_.rdfsType.toRight("No rdf:type found for value.")))
+          .orElseFail(ModelError.invalidIri(s"No value type found for value."))
+          .flatMap(converter.asSmartIri(_).mapError(ModelError.invalidIri))
+    } yield KnoraApiCreateValueModel(
+      resourceIri,
+      resourceClassIri,
+      valueStatement,
+      propertyIri,
+      valueType,
+      converter,
+    )
+
+  private def resourceAndIri(model: Model, convert: IriConverter): IO[ModelError, (Resource, ResourceIri)] =
+    ZIO.fromEither(model.singleRootResource).mapError(ModelError.invalidModel).flatMap { (r: Resource) =>
+      convert
+        .asSmartIri(r.uri.getOrElse(""))
+        .mapError(ModelError.invalidIri)
+        .flatMap(iri => ZIO.fromEither(KResourceIri.from(iri)).mapError(ModelError.invalidIri))
+        .map((r, _))
+    }
+
+  private def valueStatement(rootResource: Resource): IO[ModelError, Statement] = ZIO
+    .succeed(rootResource.listProperties().asScala.filter(_.getPredicate != RDF.`type`).toList)
+    .filterOrFail(_.nonEmpty)(ModelError.missingValueProp)
+    .filterOrFail(_.size == 1)(ModelError.multipleValueProp)
+    .map(_.head)
+
+  private def valuePropertyIri(converter: IriConverter, valueStatement: Statement) =
+    converter
+      .asSmartIri(valueStatement.predicateUri)
+      .mapError(ModelError.invalidIri)
+      .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(ModelError.invalidIri))
+
+  private def resourceClassIri(
+    rootResource: Resource,
+    convert: IriConverter,
+  ): IO[ModelError, KResourceClassIri] = ZIO
+    .fromOption(rootResource.rdfsType)
+    .orElseFail(ModelError.noRootResourceClassIri)
+    .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
+    .flatMap(iri => ZIO.fromEither(KResourceClassIri.from(iri)).mapError(ModelError.invalidIri))
 }
