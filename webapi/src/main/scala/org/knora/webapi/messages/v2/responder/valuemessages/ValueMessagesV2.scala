@@ -1054,7 +1054,7 @@ object ValueContentV2 {
   ): ZIO[SipiService, Throwable, Option[FileInfo]] = ZIO
     .fromEither(valueNode.node.objectStringOption(FileValueHasFilename))
     .mapError(BadRequestException(_))
-    .flatMap(filenameMaybe => fileInfoFromExternal(filenameMaybe, state, valueNode.shortcode))
+    .flatMap(fileInfoFromExternal(_, state, valueNode.shortcode))
 
   private def fileInfoFromExternal(filenameMaybe: Option[String], state: AssetIngestState, shortcode: Shortcode) =
     (filenameMaybe, state) match

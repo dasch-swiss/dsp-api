@@ -274,7 +274,7 @@ object ResourceOpsSpec extends ZIOSpecDefault {
   private val rdfTypeTest = test("rdfsType should get the type") {
     for {
       res   <- resource()
-      actual = res.rdfsType()
+      actual = res.rdfsType
     } yield assertTrue(actual.contains("https://example.com/test#Thing"))
   }
 

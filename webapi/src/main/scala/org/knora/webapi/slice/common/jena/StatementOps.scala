@@ -17,8 +17,11 @@ import org.knora.webapi.slice.common.jena.ResourceOps.*
 
 object StatementOps {
   extension (stmt: Statement) {
-    def subjectUri(): Option[String]         = Option(stmt.getSubject.getURI)
-    def objectAsResource(): Option[Resource] = Try(stmt.getObject.asResource()).toOption
+    def subjectUri(): Option[String] = Option(stmt.getSubject.getURI)
+    def objectAsResource(): Either[String, Resource] =
+      Try(stmt.getObject.asResource()).toEither.left.map(e =>
+        s"Object is not a resource: ${stmt.getPredicate} ${e.getMessage}",
+      )
 
     def objectAsBigDecimal: Either[String, BigDecimal] =
       objectAsDataType(OntologyConstants.Xsd.Decimal).flatMap(str =>
@@ -42,7 +45,7 @@ object StatementOps {
       Try(stmt.getString).toEither.left.map(_ => s"Invalid string value for property ${stmt.getPredicate}")
 
     def objectAsUri: Either[String, String] =
-      objectAsResource().flatMap(_.uri).toRight(s"Invalid URI value for property ${stmt.getPredicate}")
+      objectAsResource().flatMap(_.uri.toRight(s"Invalid URI value for property ${stmt.getPredicate}"))
 
     def objectAsDataType(dataTypeUri: String): Either[String, String] =
       stmt.getObject match

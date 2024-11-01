@@ -15,7 +15,6 @@ import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
 import dsp.valueobjects.UuidUtil
-import dsp.valueobjects.UuidUtil.base64Decode
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
@@ -128,7 +127,7 @@ object KnoraApiValueModel { self =>
     rootResource: Resource,
     convert: IriConverter,
   ): IO[ModelError, KResourceClassIri] = ZIO
-    .fromOption(rootResource.rdfsType())
+    .fromOption(rootResource.rdfsType)
     .orElseFail(ModelError.noRootResourceClassIri)
     .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
     .flatMap(iri => ZIO.fromEither(KResourceClassIri.from(iri)).mapError(ModelError.invalidIri))
@@ -207,7 +206,7 @@ object KnoraApiValueNode {
                        .mapError(ModelError.invalidIri)
                        .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(ModelError.invalidIri))
       valueType <- ZIO
-                     .fromOption(stmt.objectAsResource().flatMap(_.rdfsType()))
+                     .fromEither(stmt.objectAsResource().flatMap(_.rdfsType.toRight("No rdf:type found for value.")))
                      .orElseFail(ModelError.invalidIri(s"No value type found for value."))
                      .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
     } yield KnoraApiValueNode(stmt.getObject.asResource(), propertyIri, valueType, shortcode, convert)
