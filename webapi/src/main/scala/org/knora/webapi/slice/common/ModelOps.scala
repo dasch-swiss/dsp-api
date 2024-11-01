@@ -28,32 +28,30 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri as KResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri as KResourceIri
-import org.knora.webapi.slice.common.ModelError.MoreThanOneRootResource
 import org.knora.webapi.slice.common.ModelError.ParseError
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
+import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 enum ModelError(val msg: String) {
-  case ParseError(override val msg: String)              extends ModelError(msg)
-  case InvalidIri(override val msg: String)              extends ModelError(msg)
-  case MoreThanOneRootResource(override val msg: String) extends ModelError(msg)
-  case NoRootResource(override val msg: String)          extends ModelError(msg)
-  case MissingValueProp(override val msg: String)        extends ModelError(msg)
-  case MultipleValueProp(override val msg: String)       extends ModelError(msg)
-  case NoRootResourceClassIri(override val msg: String)  extends ModelError(msg)
+  case ParseError(override val msg: String)             extends ModelError(msg)
+  case InvalidIri(override val msg: String)             extends ModelError(msg)
+  case InvalidModel(override val msg: String)           extends ModelError(msg)
+  case MissingValueProp(override val msg: String)       extends ModelError(msg)
+  case MultipleValueProp(override val msg: String)      extends ModelError(msg)
+  case NoRootResourceClassIri(override val msg: String) extends ModelError(msg)
 }
 object ModelError {
-  def parseError(ex: Throwable): ParseError            = ParseError(ex.getMessage)
-  def invalidIri(msg: String): InvalidIri              = InvalidIri(msg)
-  def invalidIri(e: Throwable): InvalidIri             = InvalidIri(e.getMessage)
-  def moreThanOneRootResource: MoreThanOneRootResource = MoreThanOneRootResource("More than one root resource found")
-  def noRootResource: NoRootResource                   = NoRootResource("No root resource found")
-  def missingValueProp: MissingValueProp               = MissingValueProp("No value property found in root resource")
-  def multipleValueProp: MultipleValueProp             = MultipleValueProp("Multiple value properties found in root resource")
-  def noRootResourceClassIri: NoRootResourceClassIri   = NoRootResourceClassIri("No root resource class IRI found")
+  def parseError(ex: Throwable): ParseError          = ParseError(ex.getMessage)
+  def invalidIri(msg: String): InvalidIri            = InvalidIri(msg)
+  def invalidIri(e: Throwable): InvalidIri           = InvalidIri(e.getMessage)
+  def invalidModel(msg: String): InvalidModel        = InvalidModel(msg)
+  def missingValueProp: MissingValueProp             = MissingValueProp("No value property found in root resource")
+  def multipleValueProp: MultipleValueProp           = MultipleValueProp("Multiple value properties found in root resource")
+  def noRootResourceClassIri: NoRootResourceClassIri = NoRootResourceClassIri("No root resource class IRI found")
 }
 
 /*
@@ -87,16 +85,11 @@ object KnoraApiValueModel { self =>
     )
 
   private def resourceIri(model: Model, convert: IriConverter): IO[ModelError, ResourceIri] =
-    val objSeen = model.listObjects().asScala.collect { case r: Resource => Option(r.getURI) }.toSet.flatten
-    val subSeen = model.listSubjects().asScala.collect { case r: Resource => Option(r.getURI) }.toSet.flatten
-    (subSeen -- objSeen) match {
-      case iris if iris.size == 1 =>
-        convert
-          .asSmartIri(iris.head)
-          .mapError(ModelError.parseError)
-          .flatMap(iri => ZIO.fromEither(KResourceIri.from(iri)).mapError(ModelError.invalidIri))
-      case iris if iris.isEmpty => ZIO.fail(ModelError.noRootResource)
-      case _                    => ZIO.fail(ModelError.moreThanOneRootResource)
+    ZIO.fromEither(model.singleRootResource).mapError(ModelError.invalidModel).flatMap { (r: Resource) =>
+      convert
+        .asSmartIri(r.uri.getOrElse(""))
+        .mapError(ModelError.invalidIri)
+        .flatMap(iri => ZIO.fromEither(KResourceIri.from(iri)).mapError(ModelError.invalidIri))
     }
 
   private def valueNode(

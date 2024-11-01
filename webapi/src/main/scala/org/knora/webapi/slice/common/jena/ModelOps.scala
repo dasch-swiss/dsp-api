@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.common.jena
 
+import scala.jdk.CollectionConverters.*
+
 import org.apache.jena.rdf.model.*
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
@@ -14,7 +16,6 @@ import zio.ZIO
 
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
-
 import org.knora.webapi.slice.common.ModelError
 import org.knora.webapi.slice.common.ModelError.ParseError
 
@@ -32,6 +33,14 @@ object ModelOps { self =>
     def statement(s: Resource, p: Property): Either[String, Statement] =
       statementOption(s, p).toRight(s"Statement not found '${s.getURI} ${p.getURI} ?o .'")
 
+    def singleRootResource: Either[String, Resource] =
+      val objSeen = model.listObjects().asScala.collect { case r: Resource => Option(r.getURI) }.toSet.flatten
+      val subSeen = model.listSubjects().asScala.collect { case r: Resource => Option(r.getURI) }.toSet.flatten
+      (subSeen -- objSeen) match {
+        case iris if iris.size == 1 => model.resource(iris.head)
+        case iris if iris.isEmpty   => Left("No root resource found in model")
+        case iris                   => Left(s"Multiple root resources found in model: ${iris.mkString(", ")}")
+      }
   }
 
   def fromJsonLd(str: String): ZIO[Scope, ParseError, Model] = from(str, Lang.JSONLD)
