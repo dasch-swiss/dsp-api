@@ -54,46 +54,40 @@ object ModelError {
   def noRootResourceClassIri: NoRootResourceClassIri = NoRootResourceClassIri("No root resource class IRI found")
 }
 
-/*
- * The KnoraApiModel represents any incoming value models from our v2 API.
- */
 final case class KnoraApiCreateValueModel(
   resourceIri: ResourceIri,
   resourceClassIri: KResourceClassIri,
-  valueStatement: Statement,
   valuePropertyIri: PropertyIri,
   valueType: SmartIri,
+  private val valueResource: Resource,
   private val converter: IriConverter,
 ) {
   lazy val shortcode: Shortcode = resourceIri.shortcode
 
-  private lazy val node: Resource = valueStatement.getObject.asResource()
-
-  def getFileValueHasFilename: Either[String, Option[String]] = node.objectStringOption(FileValueHasFilename)
+  def getFileValueHasFilename: Either[String, Option[String]] = valueResource.objectStringOption(FileValueHasFilename)
 
   def getValueIri: IO[ModelError, Option[ValueIri]] =
     ZIO
-      .fromOption(node.uri)
+      .fromOption(valueResource.uri)
       .flatMap(converter.asSmartIri(_).mapError(_.getMessage).asSomeError)
       .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).asSomeError)
       .unsome
       .mapError(ModelError.invalidIri)
 
   def getValueHasUuid: Either[String, Option[UUID]] =
-    node.objectStringOption(ValueHasUUID).flatMap {
+    valueResource.objectStringOption(ValueHasUUID).flatMap {
       case Some(str) =>
         UuidUtil.base64Decode(str).map(Some(_)).toEither.left.map(e => s"Invalid UUID '$str': ${e.getMessage}")
       case None => Right(None)
     }
 
   def getValueCreationDate: Either[String, Option[Instant]] =
-    node.objectDataTypeOption(ValueCreationDate, Xsd.DateTimeStamp).flatMap {
+    valueResource.objectDataTypeOption(ValueCreationDate, Xsd.DateTimeStamp).flatMap {
       case Some(str) => ValuesValidator.parseXsdDateTimeStamp(str).map(Some(_))
       case None      => Right(None)
     }
 
-  def getHasPermissions: Either[String, Option[String]] =
-    node.objectStringOption(OntologyConstants.KnoraApiV2Complex.HasPermissions)
+  def getHasPermissions: Either[String, Option[String]] = valueResource.objectStringOption(HasPermissions)
 
   def getValueContent(fileInfo: Option[FileInfo] = None): ZIO[MessageRelay, String, ValueContentV2] =
     def withFileInfo[T](f: FileInfo => Either[String, T]): IO[String, T] =
@@ -101,26 +95,26 @@ final case class KnoraApiCreateValueModel(
         case None       => ZIO.fail("FileInfo is missing")
         case Some(info) => ZIO.fromEither(f(info))
     valueType.toString match
-      case AudioFileValue              => withFileInfo(AudioFileValueContentV2.from(node, _))
-      case ArchiveFileValue            => withFileInfo(ArchiveFileValueContentV2.from(node, _))
-      case BooleanValue                => ZIO.fromEither(BooleanValueContentV2.from(node))
-      case ColorValue                  => ZIO.fromEither(ColorValueContentV2.from(node))
-      case DateValue                   => ZIO.fromEither(DateValueContentV2.from(node))
-      case DecimalValue                => ZIO.fromEither(DecimalValueContentV2.from(node))
-      case DocumentFileValue           => withFileInfo(DocumentFileValueContentV2.from(node, _))
-      case GeomValue                   => ZIO.fromEither(GeomValueContentV2.from(node))
-      case GeonameValue                => ZIO.fromEither(GeonameValueContentV2.from(node))
-      case IntValue                    => ZIO.fromEither(IntegerValueContentV2.from(node))
-      case IntervalValue               => ZIO.fromEither(IntervalValueContentV2.from(node))
-      case ListValue                   => HierarchicalListValueContentV2.from(node, converter)
-      case LinkValue                   => LinkValueContentV2.from(node, converter)
-      case MovingImageFileValue        => withFileInfo(MovingImageFileValueContentV2.from(node, _))
-      case StillImageExternalFileValue => ZIO.fromEither(StillImageExternalFileValueContentV2.from(node))
-      case StillImageFileValue         => withFileInfo(StillImageFileValueContentV2.from(node, _))
-      case TextValue                   => TextValueContentV2.from(node)
-      case TextFileValue               => withFileInfo(TextFileValueContentV2.from(node, _))
-      case TimeValue                   => ZIO.fromEither(TimeValueContentV2.from(node))
-      case UriValue                    => ZIO.fromEither(UriValueContentV2.from(node))
+      case AudioFileValue              => withFileInfo(AudioFileValueContentV2.from(valueResource, _))
+      case ArchiveFileValue            => withFileInfo(ArchiveFileValueContentV2.from(valueResource, _))
+      case BooleanValue                => ZIO.fromEither(BooleanValueContentV2.from(valueResource))
+      case ColorValue                  => ZIO.fromEither(ColorValueContentV2.from(valueResource))
+      case DateValue                   => ZIO.fromEither(DateValueContentV2.from(valueResource))
+      case DecimalValue                => ZIO.fromEither(DecimalValueContentV2.from(valueResource))
+      case DocumentFileValue           => withFileInfo(DocumentFileValueContentV2.from(valueResource, _))
+      case GeomValue                   => ZIO.fromEither(GeomValueContentV2.from(valueResource))
+      case GeonameValue                => ZIO.fromEither(GeonameValueContentV2.from(valueResource))
+      case IntValue                    => ZIO.fromEither(IntegerValueContentV2.from(valueResource))
+      case IntervalValue               => ZIO.fromEither(IntervalValueContentV2.from(valueResource))
+      case ListValue                   => HierarchicalListValueContentV2.from(valueResource, converter)
+      case LinkValue                   => LinkValueContentV2.from(valueResource, converter)
+      case MovingImageFileValue        => withFileInfo(MovingImageFileValueContentV2.from(valueResource, _))
+      case StillImageExternalFileValue => ZIO.fromEither(StillImageExternalFileValueContentV2.from(valueResource))
+      case StillImageFileValue         => withFileInfo(StillImageFileValueContentV2.from(valueResource, _))
+      case TextValue                   => TextValueContentV2.from(valueResource)
+      case TextFileValue               => withFileInfo(TextFileValueContentV2.from(valueResource, _))
+      case TimeValue                   => ZIO.fromEither(TimeValueContentV2.from(valueResource))
+      case UriValue                    => ZIO.fromEither(UriValueContentV2.from(valueResource))
       case _                           => ZIO.fail(s"Unsupported value type: $valueType")
 }
 
@@ -141,17 +135,13 @@ object KnoraApiCreateValueModel { self =>
       resourceClassIri       <- resourceClassIri(resource, converter)
       valueStatement         <- valueStatement(resource)
       propertyIri            <- valuePropertyIri(converter, valueStatement)
-      valueType <-
-        ZIO
-          .fromEither(valueStatement.objectAsResource().flatMap(_.rdfsType.toRight("No rdf:type found for value.")))
-          .orElseFail(ModelError.invalidIri(s"No value type found for value."))
-          .flatMap(converter.asSmartIri(_).mapError(ModelError.invalidIri))
+      valueType              <- valueType(valueStatement, converter)
     } yield KnoraApiCreateValueModel(
       resourceIri,
       resourceClassIri,
-      valueStatement,
       propertyIri,
       valueType,
+      valueStatement.getObject.asResource(),
       converter,
     )
 
@@ -176,10 +166,12 @@ object KnoraApiCreateValueModel { self =>
       .mapError(ModelError.invalidIri)
       .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(ModelError.invalidIri))
 
-  private def resourceClassIri(
-    rootResource: Resource,
-    convert: IriConverter,
-  ): IO[ModelError, KResourceClassIri] = ZIO
+  private def valueType(stmt: Statement, converter: IriConverter) = ZIO
+    .fromEither(stmt.objectAsResource().flatMap(_.rdfsType.toRight("No rdf:type found for value.")))
+    .orElseFail(ModelError.invalidIri(s"No value type found for value."))
+    .flatMap(converter.asSmartIri(_).mapError(ModelError.invalidIri))
+
+  private def resourceClassIri(rootResource: Resource, convert: IriConverter): IO[ModelError, KResourceClassIri] = ZIO
     .fromOption(rootResource.rdfsType)
     .orElseFail(ModelError.noRootResourceClassIri)
     .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
