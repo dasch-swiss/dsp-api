@@ -50,7 +50,7 @@ import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.KnoraApiValueModel
+import org.knora.webapi.slice.common.KnoraApiCreateValueModel
 import org.knora.webapi.slice.common.KnoraApiValueNode
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ResourceOps.*
@@ -587,7 +587,7 @@ object CreateValueV2 {
   ): ZIO[SipiService & IriConverter & MessageRelay, Throwable, CreateValueV2] = ZIO.scoped {
     for {
       converter           <- ZIO.service[IriConverter]
-      model               <- KnoraApiValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
+      model               <- KnoraApiCreateValueModel.fromJsonLd(jsonLdString, converter).mapError(e => BadRequestException(e.msg))
       maybeCustomValueIri <- model.valueNode.getValueIri.mapError(e => BadRequestException(e.msg))
       maybeCustomUUID     <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
       maybeCreationDate   <- ZIO.fromEither(model.valueNode.getValueCreationDate).mapError(BadRequestException(_))

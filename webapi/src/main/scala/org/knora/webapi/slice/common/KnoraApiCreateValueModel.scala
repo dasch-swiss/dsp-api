@@ -57,31 +57,33 @@ object ModelError {
 /*
  * The KnoraApiModel represents any incoming value models from our v2 API.
  */
-final case class KnoraApiValueModel(
+final case class KnoraApiCreateValueModel(
   resourceIri: ResourceIri,
   resourceClassIri: KResourceClassIri,
   valueNode: KnoraApiValueNode,
+  valueResource: Resource,
 ) {
   lazy val shortcode: Shortcode = resourceIri.shortcode
 }
 
-object KnoraApiValueModel { self =>
+object KnoraApiCreateValueModel { self =>
 
   // available for ease of use in tests
-  def fromJsonLd(str: String): ZIO[Scope & IriConverter, ModelError, KnoraApiValueModel] =
+  def fromJsonLd(str: String): ZIO[Scope & IriConverter, ModelError, KnoraApiCreateValueModel] =
     ZIO.service[IriConverter].flatMap(self.fromJsonLd(str, _))
 
-  def fromJsonLd(str: String, converter: IriConverter): ZIO[Scope & IriConverter, ModelError, KnoraApiValueModel] =
+  def fromJsonLd(str: String, converter: IriConverter): ZIO[Scope & IriConverter, ModelError, KnoraApiCreateValueModel] =
     for {
       model                  <- ModelOps.fromJsonLd(str)
       resourceAndIri         <- resourceAndIri(model, converter)
       (resource, resourceIri) = resourceAndIri
       resourceClassIri       <- resourceClassIri(resource, converter)
       valueProp              <- valueNode(resource, resourceIri.shortcode, converter)
-    } yield KnoraApiValueModel(
+    } yield KnoraApiCreateValueModel(
       resourceIri,
       resourceClassIri,
       valueProp,
+      resource,
     )
 
   private def resourceAndIri(model: Model, convert: IriConverter): IO[ModelError, (Resource, ResourceIri)] =
