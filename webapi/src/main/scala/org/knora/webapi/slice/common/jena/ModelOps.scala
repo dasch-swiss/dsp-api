@@ -16,8 +16,6 @@ import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters.*
 
-import org.knora.webapi.slice.common.ModelError
-
 object ModelOps { self =>
 
   extension (model: Model) {

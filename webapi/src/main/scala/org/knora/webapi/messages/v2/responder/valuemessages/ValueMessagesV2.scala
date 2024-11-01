@@ -585,7 +585,6 @@ object CreateValueV2 {
     for {
       converter         <- ZIO.service[IriConverter]
       model             <- KnoraApiCreateValueModel.fromJsonLd(jsonLdString, converter).mapError(BadRequestException(_))
-      maybeCustomUUID   <- ZIO.fromEither(model.getValueHasUuid).mapError(BadRequestException(_))
       maybeCreationDate <- ZIO.fromEither(model.getValueCreationDate).mapError(BadRequestException(_))
       maybePermissions  <- ZIO.fromEither(model.getHasPermissions).mapError(BadRequestException(_))
       fileInfo          <- ValueContentV2.getFileInfo(ingestState, model)
@@ -596,7 +595,7 @@ object CreateValueV2 {
       propertyIri = model.valuePropertyIri.smartIri,
       valueContent = valueContent,
       valueIri = model.valueIri.map(_.smartIri),
-      valueUUID = maybeCustomUUID,
+      valueUUID = model.valueUuid,
       valueCreationDate = maybeCreationDate,
       permissions = maybePermissions,
       ingestState = ingestState,
