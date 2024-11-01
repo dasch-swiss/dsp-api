@@ -13,6 +13,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
+
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.UuidUtil.base64Decode
 import org.knora.webapi.core.MessageRelay
@@ -22,7 +23,6 @@ import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasUUI
 import org.knora.webapi.messages.OntologyConstants.Xsd
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -33,7 +33,6 @@ import org.knora.webapi.slice.common.ModelError.MoreThanOneRootResource
 import org.knora.webapi.slice.common.ModelError.ParseError
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
-import org.knora.webapi.slice.common.jena.RDFNodeOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -143,18 +142,20 @@ final case class KnoraApiValueNode(
   convert: IriConverter,
 ) {
 
-  def getStringLiteral(property: Property): Option[String] = node.getStringLiteral(property)
   def getValueIri: IO[ModelError, Option[ValueIri]] =
     ZIO
-      .fromOption(node.toResourceOption.flatMap(_.uri))
-      .flatMap(convert.asSmartIri(_).mapError(ModelError.parseError).asSomeError)
-      .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).mapError(ModelError.invalidIri).asSomeError)
+      .fromOption(node.uri)
+      .flatMap(convert.asSmartIri(_).mapError(_.getMessage).asSomeError)
+      .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).asSomeError)
       .unsome
+      .mapError(ModelError.invalidIri)
 
   def getValueHasUuid: Either[String, Option[UUID]] =
-    getStringLiteral(ValueHasUUID)
-      .map(str => base64Decode(str).map(Some(_)).toEither.left.map(e => s"Invalid UUID '$str': ${e.getMessage}"))
-      .fold(Right(None))(identity)
+    node.objectStringOption(ValueHasUUID).flatMap {
+      case Some(str) =>
+        UuidUtil.base64Decode(str).map(Some(_)).toEither.left.map(e => s"Invalid UUID '$str': ${e.getMessage}")
+      case None => Right(None)
+    }
 
   def getValueCreationDate: Either[String, Option[Instant]] =
     node.objectDataTypeOption(ValueCreationDate, Xsd.DateTimeStamp).flatMap {
@@ -162,8 +163,8 @@ final case class KnoraApiValueNode(
       case None      => Right(None)
     }
 
-  def getHasPermissions: Option[String] =
-    node.getStringLiteral(ResourceFactory.createProperty(OntologyConstants.KnoraApiV2Complex.HasPermissions))
+  def getHasPermissions: Either[String, Option[String]] =
+    node.objectStringOption(OntologyConstants.KnoraApiV2Complex.HasPermissions)
 
   def getValueContent(fileInfo: Option[FileInfo] = None): ZIO[MessageRelay, String, ValueContentV2] =
     def withFileInfo[T](f: FileInfo => Either[String, T]): IO[String, T] =
@@ -201,10 +202,9 @@ object KnoraApiValueNode {
     convert: IriConverter,
   ): IO[ModelError, KnoraApiValueNode] =
     for {
-      propertyIri <- ZIO
-                       .fromOption(stmt.getPredicate.getUri())
-                       .orElseFail(ModelError.invalidIri(s"No property IRI found for value."))
-                       .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
+      propertyIri <- convert
+                       .asSmartIri(stmt.predicateUri)
+                       .mapError(ModelError.invalidIri)
                        .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(ModelError.invalidIri))
       valueType <- ZIO
                      .fromOption(stmt.objectAsResource().flatMap(_.rdfsType()))

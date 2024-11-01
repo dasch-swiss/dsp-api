@@ -591,7 +591,7 @@ object CreateValueV2 {
       maybeCustomValueIri <- model.valueNode.getValueIri.mapError(e => BadRequestException(e.msg))
       maybeCustomUUID     <- ZIO.fromEither(model.valueNode.getValueHasUuid).mapError(BadRequestException(_))
       maybeCreationDate   <- ZIO.fromEither(model.valueNode.getValueCreationDate).mapError(BadRequestException(_))
-      maybePermissions     = model.valueNode.getHasPermissions
+      maybePermissions    <- ZIO.fromEither(model.valueNode.getHasPermissions).mapError(BadRequestException(_))
       fileInfo            <- ValueContentV2.getFileInfo(ingestState, model.valueNode)
       valueContent        <- model.valueNode.getValueContent(fileInfo).mapError(BadRequestException(_))
     } yield CreateValueV2(
@@ -1051,9 +1051,10 @@ object ValueContentV2 {
   def getFileInfo(
     state: AssetIngestState,
     valueNode: KnoraApiValueNode,
-  ): ZIO[SipiService, Throwable, Option[FileInfo]] =
-    val filenameMaybe = valueNode.getStringLiteral(FileValueHasFilename)
-    fileInfoFromExternal(filenameMaybe, state, valueNode.shortcode)
+  ): ZIO[SipiService, Throwable, Option[FileInfo]] = ZIO
+    .fromEither(valueNode.node.objectStringOption(FileValueHasFilename))
+    .mapError(BadRequestException(_))
+    .flatMap(filenameMaybe => fileInfoFromExternal(filenameMaybe, state, valueNode.shortcode))
 
   private def fileInfoFromExternal(filenameMaybe: Option[String], state: AssetIngestState, shortcode: Shortcode) =
     (filenameMaybe, state) match

@@ -50,5 +50,7 @@ object StatementOps {
           l.getDatatypeURI match
             case `dataTypeUri` => Right(l.getLexicalForm)
             case _             => Left(s"Invalid datatype for property ${stmt.getPredicate}, ${dataTypeUri} expected")
+
+    def predicateUri: String = stmt.getPredicate.getURI
   }
 }
