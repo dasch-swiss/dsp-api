@@ -72,13 +72,16 @@ object KnoraApiCreateValueModel { self =>
   def fromJsonLd(str: String): ZIO[Scope & IriConverter, ModelError, KnoraApiCreateValueModel] =
     ZIO.service[IriConverter].flatMap(self.fromJsonLd(str, _))
 
-  def fromJsonLd(str: String, converter: IriConverter): ZIO[Scope & IriConverter, ModelError, KnoraApiCreateValueModel] =
+  def fromJsonLd(
+    str: String,
+    converter: IriConverter,
+  ): ZIO[Scope & IriConverter, ModelError, KnoraApiCreateValueModel] =
     for {
       model                  <- ModelOps.fromJsonLd(str)
       resourceAndIri         <- resourceAndIri(model, converter)
       (resource, resourceIri) = resourceAndIri
       resourceClassIri       <- resourceClassIri(resource, converter)
-      valueProp              <- valueNode(resource, resourceIri.shortcode, converter)
+      valueProp              <- valueNode(resource, converter)
     } yield KnoraApiCreateValueModel(
       resourceIri,
       resourceClassIri,
@@ -97,7 +100,6 @@ object KnoraApiCreateValueModel { self =>
 
   private def valueNode(
     rootResource: Resource,
-    shortcode: Shortcode,
     converter: IriConverter,
   ): IO[ModelError, KnoraApiValueNode] =
     ZIO.succeed {
@@ -110,7 +112,7 @@ object KnoraApiCreateValueModel { self =>
       .filterOrFail(_.nonEmpty)(ModelError.missingValueProp)
       .filterOrFail(_.size == 1)(ModelError.multipleValueProp)
       .map(_.head)
-      .flatMap(s => KnoraApiValueNode.from(s, shortcode, converter))
+      .flatMap(s => KnoraApiValueNode.from(s, converter))
 
   private def resourceClassIri(
     rootResource: Resource,
@@ -126,7 +128,6 @@ final case class KnoraApiValueNode(
   node: Resource,
   propertyIri: PropertyIri,
   valueType: SmartIri,
-  shortcode: Shortcode,
   convert: IriConverter,
 ) {
 
@@ -186,7 +187,6 @@ final case class KnoraApiValueNode(
 object KnoraApiValueNode {
   def from(
     stmt: Statement,
-    shortcode: Shortcode,
     convert: IriConverter,
   ): IO[ModelError, KnoraApiValueNode] =
     for {
@@ -198,5 +198,5 @@ object KnoraApiValueNode {
                      .fromEither(stmt.objectAsResource().flatMap(_.rdfsType.toRight("No rdf:type found for value.")))
                      .orElseFail(ModelError.invalidIri(s"No value type found for value."))
                      .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
-    } yield KnoraApiValueNode(stmt.getObject.asResource(), propertyIri, valueType, shortcode, convert)
+    } yield KnoraApiValueNode(stmt.getObject.asResource(), propertyIri, valueType, convert)
 }

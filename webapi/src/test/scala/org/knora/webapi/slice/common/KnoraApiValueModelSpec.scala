@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.common
 
-import org.apache.jena.rdf.model.RDFNode
 import zio.*
 import zio.json.DecoderOps
 import zio.json.EncoderOps
@@ -136,14 +135,12 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
         model       <- KnoraApiCreateValueModel.fromJsonLd(createIntegerValue.toJsonPretty)
         propertyIri  = model.valueNode.propertyIri
         valueType    = model.valueNode.valueType
-        foo: RDFNode = model.valueNode.node
-
       } yield assertTrue(
         propertyIri == PropertyIri.unsafeFrom(
           sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"),
         ),
         valueType == sf.toSmartIri("http://api.knora.org/ontology/knora-api/v2#IntValue"),
-        model.valueNode.shortcode == Shortcode.unsafeFrom("0001"),
+        model.shortcode == Shortcode.unsafeFrom("0001"),
       )
     },
     test("should parse integer value") {
