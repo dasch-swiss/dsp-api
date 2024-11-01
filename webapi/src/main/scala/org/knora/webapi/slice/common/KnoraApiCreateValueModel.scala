@@ -13,7 +13,6 @@ import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
-
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
@@ -61,7 +60,8 @@ final case class KnoraApiCreateValueModel(
   resourceIri: ResourceIri,
   resourceClassIri: KResourceClassIri,
   valueNode: KnoraApiValueNode,
-  valueResource: Resource,
+  valueStatement: Statement,
+  valuePropertyIri: PropertyIri,
 ) {
   lazy val shortcode: Shortcode = resourceIri.shortcode
 }
@@ -77,17 +77,19 @@ object KnoraApiCreateValueModel { self =>
     converter: IriConverter,
   ): ZIO[Scope & IriConverter, ModelError, KnoraApiCreateValueModel] =
     for {
-      model                     <- ModelOps.fromJsonLd(str)
-      resourceAndIri            <- resourceAndIri(model, converter)
-      (resource, resourceIri)    = resourceAndIri
-      resourceClassIri          <- resourceClassIri(resource, converter)
-      nodeAndProp               <- valueNode(resource, converter)
-      (valueResource, valueProp) = nodeAndProp
+      model                  <- ModelOps.fromJsonLd(str)
+      resourceAndIri         <- resourceAndIri(model, converter)
+      (resource, resourceIri) = resourceAndIri
+      resourceClassIri       <- resourceClassIri(resource, converter)
+      valueStatement         <- valueStatement(resource)
+      propertyIri            <- valuePropertyIri(converter, valueStatement)
+      valueProp              <- KnoraApiValueNode.from(valueStatement, converter)
     } yield KnoraApiCreateValueModel(
       resourceIri,
       resourceClassIri,
       valueProp,
-      valueResource,
+      valueStatement,
+      propertyIri,
     )
 
   private def resourceAndIri(model: Model, convert: IriConverter): IO[ModelError, (Resource, ResourceIri)] =
@@ -99,21 +101,17 @@ object KnoraApiCreateValueModel { self =>
         .map((r, _))
     }
 
-  private def valueNode(
-    rootResource: Resource,
-    converter: IriConverter,
-  ): IO[ModelError, (Resource, KnoraApiValueNode)] =
-    ZIO.succeed {
-      rootResource
-        .listProperties()
-        .asScala
-        .filter(_.getPredicate != RDF.`type`)
-        .toList
-    }
-      .filterOrFail(_.nonEmpty)(ModelError.missingValueProp)
-      .filterOrFail(_.size == 1)(ModelError.multipleValueProp)
-      .map(_.head)
-      .flatMap(s => KnoraApiValueNode.from(s, converter).map((s.getObject.asResource(), _)))
+  private def valueStatement(rootResource: Resource): IO[ModelError, Statement] = ZIO
+    .succeed(rootResource.listProperties().asScala.filter(_.getPredicate != RDF.`type`).toList)
+    .filterOrFail(_.nonEmpty)(ModelError.missingValueProp)
+    .filterOrFail(_.size == 1)(ModelError.multipleValueProp)
+    .map(_.head)
+
+  private def valuePropertyIri(converter: IriConverter, valueStatement: Statement) =
+    converter
+      .asSmartIri(valueStatement.predicateUri)
+      .mapError(ModelError.invalidIri)
+      .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(ModelError.invalidIri))
 
   private def resourceClassIri(
     rootResource: Resource,
@@ -127,7 +125,6 @@ object KnoraApiCreateValueModel { self =>
 
 final case class KnoraApiValueNode(
   node: Resource,
-  propertyIri: PropertyIri,
   valueType: SmartIri,
   convert: IriConverter,
 ) {
@@ -191,13 +188,10 @@ object KnoraApiValueNode {
     convert: IriConverter,
   ): IO[ModelError, KnoraApiValueNode] =
     for {
-      propertyIri <- convert
-                       .asSmartIri(stmt.predicateUri)
-                       .mapError(ModelError.invalidIri)
-                       .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(ModelError.invalidIri))
+
       valueType <- ZIO
                      .fromEither(stmt.objectAsResource().flatMap(_.rdfsType.toRight("No rdf:type found for value.")))
                      .orElseFail(ModelError.invalidIri(s"No value type found for value."))
                      .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
-    } yield KnoraApiValueNode(stmt.getObject.asResource(), propertyIri, valueType, convert)
+    } yield KnoraApiValueNode(stmt.getObject.asResource(), valueType, convert)
 }

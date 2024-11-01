@@ -133,7 +133,7 @@ object KnoraApiValueModelSpec extends ZIOSpecDefault {
     test("valueNode properties should be present") {
       for {
         model       <- KnoraApiCreateValueModel.fromJsonLd(createIntegerValue.toJsonPretty)
-        propertyIri  = model.valueNode.propertyIri
+        propertyIri  = model.valuePropertyIri
         valueType    = model.valueNode.valueType
       } yield assertTrue(
         propertyIri == PropertyIri.unsafeFrom(

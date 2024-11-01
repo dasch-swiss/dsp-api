@@ -596,7 +596,7 @@ object CreateValueV2 {
     } yield CreateValueV2(
       resourceIri = model.resourceIri.toString,
       resourceClassIri = model.resourceClassIri.smartIri,
-      propertyIri = model.valueNode.propertyIri.smartIri,
+      propertyIri = model.valuePropertyIri.smartIri,
       valueContent = valueContent,
       valueIri = maybeCustomValueIri.map(_.smartIri),
       valueUUID = maybeCustomUUID,
