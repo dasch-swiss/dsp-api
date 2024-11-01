@@ -87,24 +87,17 @@ object KnoraApiValueModel { self =>
     )
 
   private def resourceIri(model: Model, convert: IriConverter): IO[ModelError, ResourceIri] =
-    val iter    = model.listStatements()
-    var objSeen = Set.empty[String]
-    var subSeen = Set.empty[String]
-    while (iter.hasNext) {
-      val stmt = iter.nextStatement()
-      val _    = stmt.objectAsUri.foreach(iri => objSeen += iri)
-      val _    = stmt.subjectUri().foreach(iri => subSeen += iri)
-    }
-    val result: IO[ModelError, KResourceIri] = subSeen -- objSeen match {
-      case result if result.size == 1 =>
+    val objSeen = model.listObjects().asScala.collect { case r: Resource => Option(r.getURI) }.toSet.flatten
+    val subSeen = model.listSubjects().asScala.collect { case r: Resource => Option(r.getURI) }.toSet.flatten
+    (subSeen -- objSeen) match {
+      case iris if iris.size == 1 =>
         convert
-          .asSmartIri(result.head)
+          .asSmartIri(iris.head)
           .mapError(ModelError.parseError)
           .flatMap(iri => ZIO.fromEither(KResourceIri.from(iri)).mapError(ModelError.invalidIri))
-      case result if result.isEmpty => ZIO.fail(ModelError.noRootResource)
-      case _                        => ZIO.fail(ModelError.moreThanOneRootResource)
+      case iris if iris.isEmpty => ZIO.fail(ModelError.noRootResource)
+      case _                    => ZIO.fail(ModelError.moreThanOneRootResource)
     }
-    result
 
   private def valueNode(
     rootResource: Resource,
