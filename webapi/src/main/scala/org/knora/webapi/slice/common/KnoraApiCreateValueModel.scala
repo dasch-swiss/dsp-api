@@ -35,13 +35,6 @@ import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
-object ModelError {
-  def invalidIri(e: Throwable): String = e.getMessage
-  def missingValueProp: String         = "No value property found in root resource"
-  def multipleValueProp: String        = "Multiple value properties found in root resource"
-  def noRootResourceClassIri: String   = "No root resource class IRI found"
-}
-
 final case class KnoraApiCreateValueModel(
   resourceIri: ResourceIri,
   resourceClassIri: KResourceClassIri,
@@ -125,27 +118,27 @@ object KnoraApiCreateValueModel { self =>
     ZIO.fromEither(model.singleRootResource).flatMap { (r: Resource) =>
       convert
         .asSmartIri(r.uri.getOrElse(""))
-        .mapError(ModelError.invalidIri)
+        .mapError(_.getMessage)
         .flatMap(iri => ZIO.fromEither(KResourceIri.from(iri)))
         .map((r, _))
     }
 
   private def valueStatement(rootResource: Resource): IO[String, Statement] = ZIO
     .succeed(rootResource.listProperties().asScala.filter(_.getPredicate != RDF.`type`).toList)
-    .filterOrFail(_.nonEmpty)(ModelError.missingValueProp)
-    .filterOrFail(_.size == 1)(ModelError.multipleValueProp)
+    .filterOrFail(_.nonEmpty)("No value property found in root resource")
+    .filterOrFail(_.size == 1)("Multiple value properties found in root resource")
     .map(_.head)
 
   private def valuePropertyIri(converter: IriConverter, valueStatement: Statement) =
     converter
       .asSmartIri(valueStatement.predicateUri)
-      .mapError(ModelError.invalidIri)
+      .mapError(_.getMessage)
       .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)))
 
   private def valueType(stmt: Statement, converter: IriConverter) = ZIO
     .fromEither(stmt.objectAsResource().flatMap(_.rdfsType.toRight("No rdf:type found for value.")))
     .orElseFail(s"No value type found for value.")
-    .flatMap(converter.asSmartIri(_).mapError(ModelError.invalidIri))
+    .flatMap(converter.asSmartIri(_).mapError(_.getMessage))
 
   private def valueIri(valueResource: Resource, converter: IriConverter): IO[String, Option[ValueIri]] = ZIO
     .fromOption(valueResource.uri)
@@ -174,7 +167,7 @@ object KnoraApiCreateValueModel { self =>
 
   private def resourceClassIri(rootResource: Resource, convert: IriConverter): IO[String, KResourceClassIri] = ZIO
     .fromOption(rootResource.rdfsType)
-    .orElseFail(ModelError.noRootResourceClassIri)
-    .flatMap(convert.asSmartIri(_).mapError(ModelError.invalidIri))
+    .orElseFail("No root resource class IRI found")
+    .flatMap(convert.asSmartIri(_).mapError(_.getMessage))
     .flatMap(iri => ZIO.fromEither(KResourceClassIri.from(iri)))
 }
