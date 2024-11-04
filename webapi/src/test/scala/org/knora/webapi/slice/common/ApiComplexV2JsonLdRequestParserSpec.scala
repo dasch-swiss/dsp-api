@@ -39,7 +39,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContent
 import org.knora.webapi.messages.v2.responder.valuemessages.TimeValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.UriValueContentV2
 import org.knora.webapi.routing.v2.AssetIngestState.AssetIngested
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
@@ -121,188 +120,184 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     test("getResourceIri should get the id") {
       check(Gen.fromIterable(Seq(createIntegerValue, createLinkValue).map(_.toJsonPretty))) { json =>
         for {
-          model <- service(_.createValueModelFromJsonLd(json, AssetIngested))
-        } yield assertTrue(model.resourceIri.toString == "http://rdfh.ch/0001/a-thing")
+          actual <- service(_.createValueV2FromJsonLd(json, AssetIngested))
+        } yield assertTrue(actual.resourceIri == "http://rdfh.ch/0001/a-thing")
       }
     },
     test("rootResourceClassIri should get the rdfs:type") {
       check(Gen.fromIterable(Seq(createIntegerValue, createLinkValue).map(_.toJsonPretty))) { json =>
         for {
-          model <- service(_.createValueModelFromJsonLd(json, AssetIngested))
-        } yield assertTrue(model.resourceClassIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing")
+          actual <- service(_.createValueV2FromJsonLd(json, AssetIngested))
+        } yield assertTrue(actual.resourceClassIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing")
       }
     },
     test("valueNode properties should be present") {
       for {
-        model      <- service(_.createValueModelFromJsonLd(createIntegerValue.toJsonPretty, AssetIngested))
-        propertyIri = model.valuePropertyIri
-        valueType   = model.valueType
+        actual <- service(_.createValueV2FromJsonLd(createIntegerValue.toJsonPretty, AssetIngested))
       } yield assertTrue(
-        propertyIri == PropertyIri.unsafeFrom(
-          sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"),
-        ),
-        valueType == sf.toSmartIri("http://api.knora.org/ontology/knora-api/v2#IntValue"),
-        model.shortcode == Shortcode.unsafeFrom("0001"),
+        actual.propertyIri == sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"),
       )
     },
     test("should parse integer value") {
       for {
-        model <- service(
-                   _.createValueModelFromJsonLd(
-                     """{
-                       |  "@id": "http://rdfh.ch/0001/a-thing",
-                       |  "@type": "ex:Thing",
-                       |  "ex:someInt": {
-                       |    "@type": "ka:IntValue",
-                       |    "ka:intValueAsInt": {
-                       |       "@type": "xsd:integer",
-                       |       "@value": 4
-                       |    }
-                       |  },
-                       |  "@context": {
-                       |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                       |    "ex": "https://example.com/test#",
-                       |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                       |  }
-                       |}""".stripMargin,
-                     AssetIngested,
-                   ),
-                 )
-      } yield assertTrue(model.valueContent == IntegerValueContentV2(ApiV2Complex, 4, None))
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      """{
+                        |  "@id": "http://rdfh.ch/0001/a-thing",
+                        |  "@type": "ex:Thing",
+                        |  "ex:someInt": {
+                        |    "@type": "ka:IntValue",
+                        |    "ka:intValueAsInt": {
+                        |       "@type": "xsd:integer",
+                        |       "@value": 4
+                        |    }
+                        |  },
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "https://example.com/test#",
+                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                        |  }
+                        |}""".stripMargin,
+                      AssetIngested,
+                    ),
+                  )
+      } yield assertTrue(actual.valueContent == IntegerValueContentV2(ApiV2Complex, 4, None))
     },
     test("should parse DecimalValueContentV2") {
       for {
-        model <- service(
-                   _.createValueModelFromJsonLd(
-                     """{
-                       |  "@id": "http://rdfh.ch/0001/a-thing",
-                       |  "@type": "ex:Thing",
-                       |  "ex:someDec": {
-                       |    "@type": "ka:DecimalValue",
-                       |    "ka:decimalValueAsDecimal": {
-                       |       "@type": "xsd:decimal",
-                       |       "@value": "4"
-                       |    }
-                       |  },
-                       |  "@context": {
-                       |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                       |    "ex": "https://example.com/test#",
-                       |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                       |  }
-                       |}""".stripMargin,
-                     AssetIngested,
-                   ),
-                 )
-      } yield assertTrue(model.valueContent == DecimalValueContentV2(ApiV2Complex, BigDecimal(4), None))
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      """{
+                        |  "@id": "http://rdfh.ch/0001/a-thing",
+                        |  "@type": "ex:Thing",
+                        |  "ex:someDec": {
+                        |    "@type": "ka:DecimalValue",
+                        |    "ka:decimalValueAsDecimal": {
+                        |       "@type": "xsd:decimal",
+                        |       "@value": "4"
+                        |    }
+                        |  },
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "https://example.com/test#",
+                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                        |  }
+                        |}""".stripMargin,
+                      AssetIngested,
+                    ),
+                  )
+      } yield assertTrue(actual.valueContent == DecimalValueContentV2(ApiV2Complex, BigDecimal(4), None))
     },
     test("should parse BooleanValueContentV2") {
       for {
-        model <- service(
-                   _.createValueModelFromJsonLd(
-                     """{
-                       |  "@id": "http://rdfh.ch/0001/a-thing",
-                       |  "@type": "ex:Thing",
-                       |  "ex:someBool": {
-                       |    "@type": "ka:BooleanValue",
-                       |    "ka:booleanValueAsBoolean": {
-                       |       "@type": "xsd:boolean",
-                       |       "@value": "true"
-                       |    }
-                       |  },
-                       |  "@context": {
-                       |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                       |    "ex": "https://example.com/test#",
-                       |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                       |  }
-                       |}""".stripMargin,
-                     AssetIngested,
-                   ),
-                 )
-      } yield assertTrue(model.valueContent == BooleanValueContentV2(ApiV2Complex, true, None))
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      """{
+                        |  "@id": "http://rdfh.ch/0001/a-thing",
+                        |  "@type": "ex:Thing",
+                        |  "ex:someBool": {
+                        |    "@type": "ka:BooleanValue",
+                        |    "ka:booleanValueAsBoolean": {
+                        |       "@type": "xsd:boolean",
+                        |       "@value": "true"
+                        |    }
+                        |  },
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "https://example.com/test#",
+                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                        |  }
+                        |}""".stripMargin,
+                      AssetIngested,
+                    ),
+                  )
+      } yield assertTrue(actual.valueContent == BooleanValueContentV2(ApiV2Complex, true, None))
     },
     test("should parse GeomValueContentV2") {
       for {
-        model <- service(
-                   _.createValueModelFromJsonLd(
-                     """{
-                       |  "@id": "http://rdfh.ch/0001/a-thing",
-                       |  "@type": "ex:Thing",
-                       |  "ex:someGeom": {
-                       |    "@type": "ka:GeomValue",
-                       |    "ka:geometryValueAsGeometry": "{}"
-                       |  },
-                       |  "@context": {
-                       |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                       |    "ex": "https://example.com/test#",
-                       |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                       |  }
-                       |}""".stripMargin,
-                     AssetIngested,
-                   ),
-                 )
-      } yield assertTrue(model.valueContent == GeomValueContentV2(ApiV2Complex, "{}", None))
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      """{
+                        |  "@id": "http://rdfh.ch/0001/a-thing",
+                        |  "@type": "ex:Thing",
+                        |  "ex:someGeom": {
+                        |    "@type": "ka:GeomValue",
+                        |    "ka:geometryValueAsGeometry": "{}"
+                        |  },
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "https://example.com/test#",
+                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                        |  }
+                        |}""".stripMargin,
+                      AssetIngested,
+                    ),
+                  )
+      } yield assertTrue(actual.valueContent == GeomValueContentV2(ApiV2Complex, "{}", None))
     },
     test("should parse IntervalValueContentV2") {
       for {
-        model <- service(
-                   _.createValueModelFromJsonLd(
-                     """{
-                       |  "@id": "http://rdfh.ch/0001/a-thing",
-                       |  "@type": "ex:Thing",
-                       |  "ex:someInterval": {
-                       |    "@type": "ka:IntervalValue",
-                       |    "ka:intervalValueHasStart": {
-                       |       "@type": "xsd:decimal",
-                       |       "@value": 4
-                       |    },
-                       |    "ka:intervalValueHasEnd": {
-                       |       "@type": "xsd:decimal",
-                       |       "@value": 2
-                       |    }
-                       |  },
-                       |  "@context": {
-                       |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                       |    "ex": "https://example.com/test#",
-                       |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                       |  }
-                       |}""".stripMargin,
-                     AssetIngested,
-                   ),
-                 )
-      } yield assertTrue(model.valueContent == IntervalValueContentV2(ApiV2Complex, BigDecimal(4), BigDecimal(2), None))
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      """{
+                        |  "@id": "http://rdfh.ch/0001/a-thing",
+                        |  "@type": "ex:Thing",
+                        |  "ex:someInterval": {
+                        |    "@type": "ka:IntervalValue",
+                        |    "ka:intervalValueHasStart": {
+                        |       "@type": "xsd:decimal",
+                        |       "@value": 4
+                        |    },
+                        |    "ka:intervalValueHasEnd": {
+                        |       "@type": "xsd:decimal",
+                        |       "@value": 2
+                        |    }
+                        |  },
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "https://example.com/test#",
+                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                        |  }
+                        |}""".stripMargin,
+                      AssetIngested,
+                    ),
+                  )
+      } yield assertTrue(
+        actual.valueContent == IntervalValueContentV2(ApiV2Complex, BigDecimal(4), BigDecimal(2), None),
+      )
     },
     test("should parse TimeValueContentV2") {
       for {
-        model <- service(
-                   _.createValueModelFromJsonLd(
-                     """{
-                       |  "@id": "http://rdfh.ch/0001/a-thing",
-                       |  "@type": "ex:Thing",
-                       |  "ex:someTimeValue": {
-                       |    "@type": "ka:TimeValue",
-                       |    "ka:timeValueAsTimeStamp": {
-                       |       "@type": "xsd:dateTimeStamp",
-                       |       "@value": "2020-06-04T11:36:54.502951Z"
-                       |    }
-                       |  },
-                       |  "@context": {
-                       |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                       |    "ex": "https://example.com/test#",
-                       |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                       |  }
-                       |}""".stripMargin,
-                     AssetIngested,
-                   ),
-                 )
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      """{
+                        |  "@id": "http://rdfh.ch/0001/a-thing",
+                        |  "@type": "ex:Thing",
+                        |  "ex:someTimeValue": {
+                        |    "@type": "ka:TimeValue",
+                        |    "ka:timeValueAsTimeStamp": {
+                        |       "@type": "xsd:dateTimeStamp",
+                        |       "@value": "2020-06-04T11:36:54.502951Z"
+                        |    }
+                        |  },
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "https://example.com/test#",
+                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                        |  }
+                        |}""".stripMargin,
+                      AssetIngested,
+                    ),
+                  )
       } yield assertTrue(
-        model.valueContent == TimeValueContentV2(ApiV2Complex, Instant.parse("2020-06-04T11:36:54.502951Z"), None),
+        actual.valueContent == TimeValueContentV2(ApiV2Complex, Instant.parse("2020-06-04T11:36:54.502951Z"), None),
       )
     },
     test("should parse LinkValueContentV2") {
       for {
-        model <-
+        actual <-
           service(
-            _.createValueModelFromJsonLd(
+            _.createValueV2FromJsonLd(
               s"""
                  |{
                  |  "@id" : "http://rdfh.ch/0001/a-thing",
@@ -324,7 +319,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             ),
           )
       } yield assertTrue(
-        model.valueContent == LinkValueContentV2(
+        actual.valueContent == LinkValueContentV2(
           ApiV2Complex,
           referredResourceIri = "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA",
           comment = None,
@@ -333,9 +328,9 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     },
     test("should parse UriValueContentV2") {
       for {
-        model <-
+        actual <-
           service(
-            _.createValueModelFromJsonLd(
+            _.createValueV2FromJsonLd(
               s"""
                  |{
                  |  "@id" : "http://rdfh.ch/0001/a-thing",
@@ -358,14 +353,14 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             ),
           )
       } yield assertTrue(
-        model.valueContent == UriValueContentV2(ApiV2Complex, "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA", None),
+        actual.valueContent == UriValueContentV2(ApiV2Complex, "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA", None),
       )
     },
     test("should parse GeonameValueContentV2") {
       for {
-        model <-
+        actual <-
           service(
-            _.createValueModelFromJsonLd(
+            _.createValueV2FromJsonLd(
               s"""
                  |{
                  |  "@id" : "http://rdfh.ch/0001/a-thing",
@@ -384,13 +379,13 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
               AssetIngested,
             ),
           )
-      } yield assertTrue(model.valueContent == GeonameValueContentV2(ApiV2Complex, "foo", None))
+      } yield assertTrue(actual.valueContent == GeonameValueContentV2(ApiV2Complex, "foo", None))
     },
     test("should parse ColorValue") {
       for {
-        model <-
+        actual <-
           service(
-            _.createValueModelFromJsonLd(
+            _.createValueV2FromJsonLd(
               s"""
                  |{
                  |  "@id" : "http://rdfh.ch/0001/a-thing",
@@ -409,14 +404,14 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
               AssetIngested,
             ),
           )
-      } yield assertTrue(model.valueContent == ColorValueContentV2(ApiV2Complex, "red", None))
+      } yield assertTrue(actual.valueContent == ColorValueContentV2(ApiV2Complex, "red", None))
     },
     test("should parse StillImageFileValue") {
       for {
         _ <- configureSipiServiceMock
-        model <-
+        actual <-
           service(
-            _.createValueModelFromJsonLd(
+            _.createValueV2FromJsonLd(
               s"""
                  |{
                  |  "@id" : "http://rdfh.ch/0001/a-thing",
@@ -436,7 +431,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             ),
           )
       } yield assertTrue(
-        model.valueContent == StillImageFileValueContentV2(
+        actual.valueContent == StillImageFileValueContentV2(
           ApiV2Complex,
           expectedFileValue,
           givenFileInfo.width.getOrElse(throw new Exception("width is missing")),
@@ -448,9 +443,9 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     test("should parse StillImageExternalFileValue") {
       for {
         _ <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
-        model <-
+        actual <-
           service(
-            _.createValueModelFromJsonLd(
+            _.createValueV2FromJsonLd(
               s"""
                  |{
                  |  "@id" : "http://rdfh.ch/0001/a-thing",
@@ -470,7 +465,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             ),
           )
       } yield assertTrue(
-        model.valueContent == StillImageExternalFileValueContentV2(
+        actual.valueContent == StillImageExternalFileValueContentV2(
           ApiV2Complex,
           FileValueV2(
             "internalFilename",
@@ -486,28 +481,28 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     test("should parse DocumentFileValue") {
       for {
         _ <- configureSipiServiceMock
-        model <- service(
-                   _.createValueModelFromJsonLd(
-                     s"""
-                        |{
-                        |  "@id" : "http://rdfh.ch/0001/a-thing",
-                        |  "@type" : "ex:Thing",
-                        |  "ex:hasOtherThingValue" : {
-                        |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
-                        |    "@type" : "ka:DocumentFileValue",
-                        |    "ka:fileValueHasFilename": "internalFilename.ext"
-                        |  },
-                        |  "@context": {
-                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
-                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                        |  }
-                        |}""".stripMargin,
-                     AssetIngested,
-                   ),
-                 )
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:DocumentFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "https://example.com/test#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                      AssetIngested,
+                    ),
+                  )
       } yield assertTrue(
-        model.valueContent == DocumentFileValueContentV2(
+        actual.valueContent == DocumentFileValueContentV2(
           ApiV2Complex,
           expectedFileValue,
           givenFileInfo.numpages,
@@ -520,137 +515,137 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     test("should parse TextFileValueContentV2") {
       for {
         _ <- configureSipiServiceMock
-        model <- service(
-                   _.createValueModelFromJsonLd(
-                     s"""
-                        |{
-                        |  "@id" : "http://rdfh.ch/0001/a-thing",
-                        |  "@type" : "ex:Thing",
-                        |  "ex:hasOtherThingValue" : {
-                        |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
-                        |    "@type" : "ka:TextFileValue",
-                        |    "ka:fileValueHasFilename": "internalFilename.ext"
-                        |  },
-                        |  "@context": {
-                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
-                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                        |  }
-                        |}""".stripMargin,
-                     AssetIngested,
-                   ),
-                 )
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:TextFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "https://example.com/test#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                      AssetIngested,
+                    ),
+                  )
       } yield assertTrue(
-        model.valueContent == TextFileValueContentV2(ApiV2Complex, expectedFileValue, None),
+        actual.valueContent == TextFileValueContentV2(ApiV2Complex, expectedFileValue, None),
       )
     },
     test("should parse AudioFileValueContentV2") {
       for {
         _ <- configureSipiServiceMock
-        model <- service(
-                   _.createValueModelFromJsonLd(
-                     s"""
-                        |{
-                        |  "@id" : "http://rdfh.ch/0001/a-thing",
-                        |  "@type" : "ex:Thing",
-                        |  "ex:hasOtherThingValue" : {
-                        |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
-                        |    "@type" : "ka:AudioFileValue",
-                        |    "ka:fileValueHasFilename": "internalFilename.ext"
-                        |  },
-                        |  "@context": {
-                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
-                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                        |  }
-                        |}""".stripMargin,
-                     AssetIngested,
-                   ),
-                 )
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:AudioFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "https://example.com/test#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                      AssetIngested,
+                    ),
+                  )
       } yield assertTrue(
-        model.valueContent == AudioFileValueContentV2(ApiV2Complex, expectedFileValue, None),
+        actual.valueContent == AudioFileValueContentV2(ApiV2Complex, expectedFileValue, None),
       )
     },
     test("should parse MovingImageFileValueContentV2") {
       for {
         _ <- configureSipiServiceMock
-        model <- service(
-                   _.createValueModelFromJsonLd(
-                     s"""
-                        |{
-                        |  "@id" : "http://rdfh.ch/0001/a-thing",
-                        |  "@type" : "ex:Thing",
-                        |  "ex:hasOtherThingValue" : {
-                        |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
-                        |    "@type" : "ka:MovingImageFileValue",
-                        |    "ka:fileValueHasFilename": "internalFilename.ext"
-                        |  },
-                        |  "@context": {
-                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
-                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                        |  }
-                        |}""".stripMargin,
-                     AssetIngested,
-                   ),
-                 )
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:MovingImageFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "https://example.com/test#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                      AssetIngested,
+                    ),
+                  )
       } yield assertTrue(
-        model.valueContent == MovingImageFileValueContentV2(ApiV2Complex, expectedFileValue, None),
+        actual.valueContent == MovingImageFileValueContentV2(ApiV2Complex, expectedFileValue, None),
       )
     },
     test("should parse ArchiveFileValueContentV2") {
       for {
         _ <- configureSipiServiceMock
-        model <- service(
-                   _.createValueModelFromJsonLd(
-                     s"""
-                        |{
-                        |  "@id" : "http://rdfh.ch/0001/a-thing",
-                        |  "@type" : "ex:Thing",
-                        |  "ex:hasOtherThingValue" : {
-                        |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
-                        |    "@type" : "ka:ArchiveFileValue",
-                        |    "ka:fileValueHasFilename": "internalFilename.ext"
-                        |  },
-                        |  "@context": {
-                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
-                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                        |  }
-                        |}""".stripMargin,
-                     AssetIngested,
-                   ),
-                 )
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:ArchiveFileValue",
+                         |    "ka:fileValueHasFilename": "internalFilename.ext"
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "https://example.com/test#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                      AssetIngested,
+                    ),
+                  )
       } yield assertTrue(
-        model.valueContent == ArchiveFileValueContentV2(ApiV2Complex, expectedFileValue, None),
+        actual.valueContent == ArchiveFileValueContentV2(ApiV2Complex, expectedFileValue, None),
       )
     },
     test("should parse HierarchicalListValueContentV2") {
       for {
-        model <- service(
-                   _.createValueModelFromJsonLd(
-                     s"""
-                        |{
-                        |  "@id" : "http://rdfh.ch/0001/a-thing",
-                        |  "@type" : "ex:Thing",
-                        |  "ex:hasOtherThingValue" : {
-                        |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
-                        |    "@type" : "ka:ListValue",
-                        |    "ka:listValueAsListNode": {
-                        |      "@id" : "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
-                        |    }
-                        |  },
-                        |  "@context": {
-                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
-                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                        |  }
-                        |}""".stripMargin,
-                     AssetIngested,
-                   ),
-                 )
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:ListValue",
+                         |    "ka:listValueAsListNode": {
+                         |      "@id" : "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
+                         |    }
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "https://example.com/test#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                      AssetIngested,
+                    ),
+                  )
       } yield assertTrue(
-        model.valueContent == HierarchicalListValueContentV2(
+        actual.valueContent == HierarchicalListValueContentV2(
           ApiV2Complex,
           "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA",
           None,
@@ -660,36 +655,36 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     },
     test("should parse DateValueContentV2") {
       for {
-        model <- service(
-                   _.createValueModelFromJsonLd(
-                     s"""
-                        |{
-                        |  "@id" : "http://rdfh.ch/0001/a-thing",
-                        |  "@type" : "ex:Thing",
-                        |  "ex:hasOtherThingValue" : {
-                        |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
-                        |    "@type" : "ka:DateValue",
-                        |    "ka:dateValueHasCalendar" : "GREGORIAN",
-                        |    "ka:dateValueHasEndEra" : "CE",
-                        |    "ka:dateValueHasEndYear" : 1489,
-                        |    "ka:dateValueHasEndMonth" : 12,
-                        |    "ka:dateValueHasEndDay" : 24,
-                        |    "ka:dateValueHasStartEra" : "CE",
-                        |    "ka:dateValueHasStartMonth" : 1,
-                        |    "ka:dateValueHasStartDay" : 28,
-                        |    "ka:dateValueHasStartYear" : 1488
-                        |  },
-                        |  "@context": {
-                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
-                        |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                        |  }
-                        |}""".stripMargin,
-                     AssetIngested,
-                   ),
-                 )
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasOtherThingValue" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:DateValue",
+                         |    "ka:dateValueHasCalendar" : "GREGORIAN",
+                         |    "ka:dateValueHasEndEra" : "CE",
+                         |    "ka:dateValueHasEndYear" : 1489,
+                         |    "ka:dateValueHasEndMonth" : 12,
+                         |    "ka:dateValueHasEndDay" : 24,
+                         |    "ka:dateValueHasStartEra" : "CE",
+                         |    "ka:dateValueHasStartMonth" : 1,
+                         |    "ka:dateValueHasStartDay" : 28,
+                         |    "ka:dateValueHasStartYear" : 1488
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "https://example.com/test#",
+                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
+                         |  }
+                         |}""".stripMargin,
+                      AssetIngested,
+                    ),
+                  )
       } yield assertTrue(
-        model.valueContent == DateValueContentV2(
+        actual.valueContent == DateValueContentV2(
           ApiV2Complex,
           2264568,
           2265264,

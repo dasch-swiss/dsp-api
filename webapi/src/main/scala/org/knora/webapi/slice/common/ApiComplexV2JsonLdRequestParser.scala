@@ -38,16 +38,15 @@ final case class ApiComplexV2JsonLdRequestParser(
   sipiService: SipiService,
 ) {
 
-  def createValueModelFromJsonLd(str: String, ingestState: AssetIngestState): IO[String, KnoraApiCreateValueModel] =
+  def createValueV2FromJsonLd(str: String, ingestState: AssetIngestState): IO[String, CreateValueV2] =
     ZIO.scoped {
       for {
         model                  <- ModelOps.fromJsonLd(str)
         resourceAndIri         <- resourceAndIri(model)
         (resource, resourceIri) = resourceAndIri
-        shortcode               = resourceIri.shortcode
         resourceClassIri       <- resourceClassIri(resource)
         valueStatement         <- valueStatement(resource)
-        propertyIri            <- valuePropertyIri(valueStatement)
+        valuePropertyIri       <- valuePropertyIri(valueStatement)
         valueType              <- valueType(valueStatement)
         valueResource           = valueStatement.getObject.asResource()
         valueIri               <- valueIri(valueResource)
@@ -56,19 +55,17 @@ final case class ApiComplexV2JsonLdRequestParser(
         valuePermissions       <- ZIO.fromEither(valuePermissions(valueResource))
         valueFileValueFilename <- ZIO.fromEither(valueFileValueFilename(valueResource))
         valueContent <-
-          getValueContent(valueType.toString, valueResource, valueFileValueFilename, shortcode, ingestState)
-      } yield KnoraApiCreateValueModel(
-        shortcode,
-        resourceIri,
-        resourceClassIri,
-        propertyIri,
-        valueType,
-        valueIri,
-        valueUuid,
-        valueCreationDate,
-        valuePermissions,
-        valueFileValueFilename,
-        valueContent,
+          getValueContent(valueType.toString, valueResource, valueFileValueFilename, resourceIri.shortcode, ingestState)
+      } yield CreateValueV2(
+        resourceIri = resourceIri.toString,
+        resourceClassIri = resourceClassIri.smartIri,
+        propertyIri = valuePropertyIri.smartIri,
+        valueContent = valueContent,
+        valueIri = valueIri.map(_.smartIri),
+        valueUUID = valueUuid,
+        valueCreationDate = valueCreationDate,
+        permissions = valuePermissions,
+        ingestState = ingestState,
       )
     }
 

@@ -587,19 +587,8 @@ object CreateValueV2 {
       sipiService  <- ZIO.service[SipiService]
       messageRelay <- ZIO.service[MessageRelay]
       s             = ApiComplexV2JsonLdRequestParser(converter, messageRelay, sipiService)
-      model <- s.createValueModelFromJsonLd(jsonLdString, ingestState)
-                 .mapError(BadRequestException(_))
-    } yield CreateValueV2(
-      resourceIri = model.resourceIri.toString,
-      resourceClassIri = model.resourceClassIri.smartIri,
-      propertyIri = model.valuePropertyIri.smartIri,
-      valueContent = model.valueContent,
-      valueIri = model.valueIri.map(_.smartIri),
-      valueUUID = model.valueUuid,
-      valueCreationDate = model.valueCreationDate,
-      permissions = model.valuePermissions,
-      ingestState = ingestState,
-    )
+      model        <- s.createValueV2FromJsonLd(jsonLdString, ingestState).mapError(BadRequestException(_))
+    } yield model
   }
 }
 
