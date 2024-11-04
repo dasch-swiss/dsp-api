@@ -50,7 +50,7 @@ import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.KnoraApiCreateValueModel
+import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -584,14 +584,16 @@ object CreateValueV2 {
   ): ZIO[SipiService & IriConverter & MessageRelay, Throwable, CreateValueV2] = ZIO.scoped {
     for {
       converter    <- ZIO.service[IriConverter]
-      model        <- KnoraApiCreateValueModel.fromJsonLd(jsonLdString, converter).mapError(BadRequestException(_))
-      fileInfo     <- ValueContentV2.fileInfoFromExternal(model.valueFileValueFilename, ingestState, model.shortcode)
-      valueContent <- model.getValueContent(fileInfo).mapError(BadRequestException(_))
+      sipiService  <- ZIO.service[SipiService]
+      messageRelay <- ZIO.service[MessageRelay]
+      s             = ApiComplexV2JsonLdRequestParser(converter, messageRelay, sipiService)
+      model <- s.createValueModelFromJsonLd(jsonLdString, ingestState)
+                 .mapError(BadRequestException(_))
     } yield CreateValueV2(
       resourceIri = model.resourceIri.toString,
       resourceClassIri = model.resourceClassIri.smartIri,
       propertyIri = model.valuePropertyIri.smartIri,
-      valueContent = valueContent,
+      valueContent = model.valueContent,
       valueIri = model.valueIri.map(_.smartIri),
       valueUUID = model.valueUuid,
       valueCreationDate = model.valueCreationDate,
