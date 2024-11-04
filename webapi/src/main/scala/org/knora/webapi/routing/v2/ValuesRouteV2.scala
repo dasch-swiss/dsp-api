@@ -21,6 +21,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.store.iiif.api.SipiService
@@ -30,7 +31,8 @@ import org.knora.webapi.store.iiif.api.SipiService
  */
 final case class ValuesRouteV2()(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & SipiService & StringFormatter & MessageRelay & ValuesResponderV2,
+    ApiComplexV2JsonLdRequestParser & AppConfig & Authenticator & IriConverter & SipiService & StringFormatter &
+      MessageRelay & ValuesResponderV2,
   ],
 ) {
 
@@ -84,7 +86,9 @@ final case class ValuesRouteV2()(
               requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
               apiRequestId   <- Random.nextUUID
               ingestState     = AssetIngestState.headerAssetIngestState(ctx.request.headers)
-              valueToCreate  <- CreateValueV2.fromJsonLd(ingestState, jsonLdString)
+              valueToCreate <- ZIO.serviceWithZIO[ApiComplexV2JsonLdRequestParser](
+                                 _.createValueV2FromJsonLd(jsonLdString, ingestState).mapError(BadRequestException(_)),
+                               )
               response <-
                 ZIO.serviceWithZIO[ValuesResponderV2](_.createValueV2(valueToCreate, requestingUser, apiRequestId))
             } yield response,

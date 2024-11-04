@@ -50,7 +50,6 @@ import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -565,32 +564,6 @@ case class CreateValueV2(
   permissions: Option[String] = None,
   ingestState: AssetIngestState = AssetInTemp,
 )
-
-/**
- * Constructs [[CreateValueV2]] instances based on JSON-LD input.
- */
-object CreateValueV2 {
-
-  /**
-   * Converts JSON-LD input to a [[CreateValueV2]].
-   *
-   * @param ingestState indicates the state of the file, either ingested or in temp folder
-   * @param jsonLdString  JSON-LD input as String.
-   * @return a case class instance representing the input.
-   */
-  def fromJsonLd(
-    ingestState: AssetIngestState,
-    jsonLdString: String,
-  ): ZIO[SipiService & IriConverter & MessageRelay, Throwable, CreateValueV2] = ZIO.scoped {
-    for {
-      converter    <- ZIO.service[IriConverter]
-      sipiService  <- ZIO.service[SipiService]
-      messageRelay <- ZIO.service[MessageRelay]
-      s             = ApiComplexV2JsonLdRequestParser(converter, messageRelay, sipiService)
-      model        <- s.createValueV2FromJsonLd(jsonLdString, ingestState).mapError(BadRequestException(_))
-    } yield model
-  }
-}
 
 /** A trait for classes representing information to be updated in a value. */
 sealed trait UpdateValueV2 {
