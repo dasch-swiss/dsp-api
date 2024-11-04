@@ -57,15 +57,15 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueContent <-
           getValueContent(valueType.toString, valueResource, valueFileValueFilename, resourceIri.shortcode, ingestState)
       } yield CreateValueV2(
-        resourceIri = resourceIri.toString,
-        resourceClassIri = resourceClassIri.smartIri,
-        propertyIri = valuePropertyIri.smartIri,
-        valueContent = valueContent,
-        valueIri = valueIri.map(_.smartIri),
-        valueUUID = valueUuid,
-        valueCreationDate = valueCreationDate,
-        permissions = valuePermissions,
-        ingestState = ingestState,
+        resourceIri.toString,
+        resourceClassIri.smartIri,
+        valuePropertyIri.smartIri,
+        valueContent,
+        valueIri.map(_.smartIri),
+        valueUuid,
+        valueCreationDate,
+        valuePermissions,
+        ingestState,
       )
     }
 
