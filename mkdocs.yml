@@ -105,7 +105,6 @@ nav:
   - Migration Guides and Deprecations: 10-migration-guides/index.md
 
 plugins:
-  - include-markdown
   - search
   - git-revision-date-localized
   - neoteroi.mkdocsoad:
@@ -113,9 +112,28 @@ plugins:
 
 theme:
   name: material
+  logo: "assets/icons/logo_bw.svg"
+  favicon: "assets/icons/logo_bw.svg"
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   features:
-    - navigation.tabs
-    - navigation.sections
+    # - navigation.tabs
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - search.suggest
+    - version
+
+extra_css:
+  - assets/css/theme.css
+  - assets/css/mkdocsoad-v1.0.2.css
 
 markdown_extensions:
   - admonition
@@ -130,6 +148,3 @@ markdown_extensions:
       custom_checkbox: true
   - pymdownx.tabbed:
       alternate_style: true
-
-extra_css:
-  - css/mkdocsoad-v1.0.2.css
