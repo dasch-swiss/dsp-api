@@ -120,7 +120,7 @@ abstract class E2ESpec
   protected def singleAwaitingRequest(
     request: HttpRequest,
     timeout: Option[zio.Duration] = None,
-    printFailure: Boolean = false,
+    printFailure: Boolean = true,
   ): HttpResponse =
     UnsafeZioRun.runOrThrow(
       ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request, timeout, printFailure)),

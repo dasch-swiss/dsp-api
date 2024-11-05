@@ -108,7 +108,6 @@ final case class StandoffTagUtilV2Live(messageRelay: MessageRelay)(implicit val 
                               StandoffEntityInfoGetRequestV2(
                                 standoffClassIris = standoffClassIris,
                                 standoffPropertyIris = standoffPropertyIris,
-                                requestingUser = requestingUser,
                               ),
                             )
 

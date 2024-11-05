@@ -430,7 +430,7 @@ final case class CreateResourceV2Handler(
         ZIO.foreach(valuesWithIndex) { case (propertyIri, valueToCreate, valueHasOrder) =>
           for {
             newValueUUID <-
-              ValuesResponderV2Live.makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
+              ValuesResponderV2.makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
             newValueIri <-
               iriService.checkOrCreateEntityIri(
                 valueToCreate.customValueIri,
@@ -484,7 +484,7 @@ final case class CreateResourceV2Handler(
                   ZIO.succeed(IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd))
                 case TimeValueContentV2(_, valueHasTimeStamp, _) =>
                   ZIO.succeed(TimeValueInfo(valueHasTimeStamp))
-                case HierarchicalListValueContentV2(_, valueHasListNode, listNodeLabel, _) =>
+                case HierarchicalListValueContentV2(_, valueHasListNode, _, _) =>
                   ZIO.succeed(HierarchicalListValueInfo(InternalIri(valueHasListNode)))
                 case ColorValueContentV2(_, valueHasColor, _) =>
                   ZIO.succeed(ColorValueInfo(valueHasColor))

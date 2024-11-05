@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.common
+package org.knora.webapi.slice.common.jena
 
 import zio.*
 import zio.test.*
 
-object JenaModelOpsSpec extends ZIOSpecDefault {
+object ModelOpsSpec extends ZIOSpecDefault {
 
   private val jsonLd = """{
                      "@id" : "http://rdfh.ch/0001/a-thing",
@@ -40,7 +40,7 @@ object JenaModelOpsSpec extends ZIOSpecDefault {
                      }
                    }
                    """.stripMargin
-  val spec = suite("JenaModelOps")(
+  val spec = suite("ModelOps")(
     suite("fromJsonLd")(
       test("should parse the json ld") {
         ModelOps.fromJsonLd(jsonLd).flatMap { model =>
