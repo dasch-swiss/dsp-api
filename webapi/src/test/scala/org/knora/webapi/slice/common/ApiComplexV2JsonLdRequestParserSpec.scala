@@ -131,7 +131,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
         } yield assertTrue(actual.resourceClassIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing")
       }
     },
-    test("valueNode properties should be present") {
+    test("value property should be present") {
       for {
         actual <- service(_.createValueV2FromJsonLd(createIntegerValue.toJsonPretty, AssetIngested))
       } yield assertTrue(
