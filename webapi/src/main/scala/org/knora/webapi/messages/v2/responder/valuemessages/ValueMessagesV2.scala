@@ -50,7 +50,6 @@ import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.KnoraApiCreateValueModel
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -565,41 +564,6 @@ case class CreateValueV2(
   permissions: Option[String] = None,
   ingestState: AssetIngestState = AssetInTemp,
 )
-
-/**
- * Constructs [[CreateValueV2]] instances based on JSON-LD input.
- */
-object CreateValueV2 {
-
-  /**
-   * Converts JSON-LD input to a [[CreateValueV2]].
-   *
-   * @param ingestState indicates the state of the file, either ingested or in temp folder
-   * @param jsonLdString  JSON-LD input as String.
-   * @return a case class instance representing the input.
-   */
-  def fromJsonLd(
-    ingestState: AssetIngestState,
-    jsonLdString: String,
-  ): ZIO[SipiService & IriConverter & MessageRelay, Throwable, CreateValueV2] = ZIO.scoped {
-    for {
-      converter    <- ZIO.service[IriConverter]
-      model        <- KnoraApiCreateValueModel.fromJsonLd(jsonLdString, converter).mapError(BadRequestException(_))
-      fileInfo     <- ValueContentV2.fileInfoFromExternal(model.valueFileValueFilename, ingestState, model.shortcode)
-      valueContent <- model.getValueContent(fileInfo).mapError(BadRequestException(_))
-    } yield CreateValueV2(
-      resourceIri = model.resourceIri.toString,
-      resourceClassIri = model.resourceClassIri.smartIri,
-      propertyIri = model.valuePropertyIri.smartIri,
-      valueContent = valueContent,
-      valueIri = model.valueIri.map(_.smartIri),
-      valueUUID = model.valueUuid,
-      valueCreationDate = model.valueCreationDate,
-      permissions = model.valuePermissions,
-      ingestState = ingestState,
-    )
-  }
-}
 
 /** A trait for classes representing information to be updated in a value. */
 sealed trait UpdateValueV2 {
