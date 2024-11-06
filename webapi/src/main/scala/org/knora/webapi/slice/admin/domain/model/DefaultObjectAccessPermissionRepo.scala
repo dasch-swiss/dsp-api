@@ -13,6 +13,8 @@ import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.D
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.service.EntityWithId
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.repo.service.CrudRepository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
@@ -29,8 +31,31 @@ object DefaultObjectAccessPermission {
     case ResourceClass(iri: InternalIri)
     case Property(iri: InternalIri)
     case ResourceClassAndProperty(resourceClass: InternalIri, property: InternalIri)
+
+    def groupOption: Option[GroupIri] = this match {
+      case Group(iri) => Some(iri)
+      case _          => None
+    }
+    def resourceClassOption: Option[InternalIri] = this match {
+      case ResourceClass(iri)               => Some(iri)
+      case ResourceClassAndProperty(iri, _) => Some(iri)
+      case _                                => None
+    }
+    def propertyOption: Option[InternalIri] = this match {
+      case Property(iri)                    => Some(iri)
+      case ResourceClassAndProperty(_, iri) => Some(iri)
+      case _                                => None
+    }
   }
   object ForWhat {
+
+    def fromIris(
+      group: Option[GroupIri],
+      resourceClass: Option[ResourceClassIri],
+      property: Option[PropertyIri],
+    ): Either[String, ForWhat] =
+      from(group, resourceClass.map(_.toInternal), property.map(_.toInternal))
+
     def from(
       group: Option[GroupIri],
       resourceClass: Option[InternalIri],
@@ -41,7 +66,12 @@ object DefaultObjectAccessPermission {
         case (None, None, Some(p: InternalIri))                  => Right(Property(p))
         case (None, Some(rc: InternalIri), None)                 => Right(ResourceClass(rc))
         case (Some(g: GroupIri), None, None)                     => Right(Group(g))
-        case _                                                   => Left(s"Invalid combination of group $group resourceClass $resourceClass and property $property.")
+        case _ =>
+          Left(
+            s"Invalid combination of group '${group.map(_.value).getOrElse("")}', " +
+              s"resourceClass '${resourceClass.map(_.value).getOrElse("")}' " +
+              s"and property '${property.map(_.value).getOrElse("")}'.",
+          )
       }
   }
 

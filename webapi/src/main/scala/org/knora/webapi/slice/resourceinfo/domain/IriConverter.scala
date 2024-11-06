@@ -9,10 +9,13 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import dsp.errors.DataConversionException
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 
 final case class IriConverter(sf: StringFormatter) {
   def asSmartIri(iri: String): Task[SmartIri]              = ZIO.attempt(sf.toSmartIri(iri, requireInternal = false))
@@ -28,6 +31,15 @@ final case class IriConverter(sf: StringFormatter) {
   def getOntologySmartIriFromClassIri(iri: InternalIri): Task[SmartIri] =
     asInternalSmartIri(iri.value).mapAttempt(_.getOntologyFromEntity)
   def isKnoraDataIri(iri: String): Task[Boolean] = asSmartIri(iri).map(_.isKnoraDataIri)
+
+  def asResourceClassIri(iri: String): Task[ResourceClassIri] =
+    asSmartIri(iri).flatMap(sIri =>
+      ZIO.fromEither(ResourceClassIri.from(sIri)).mapError(msg => DataConversionException(msg)),
+    )
+  def asPropertyIri(iri: String): Task[PropertyIri] =
+    asSmartIri(iri).flatMap(sIri =>
+      ZIO.fromEither(PropertyIri.from(sIri)).mapError(msg => DataConversionException(msg)),
+    )
 }
 
 object IriConverter {

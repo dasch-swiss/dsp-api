@@ -162,7 +162,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.imagesUser01,
         ),
       )
-      assertFailsWithA[BadRequestException](exit, s"Invalid group IRI $groupIri")
+      assertFailsWithA[BadRequestException](exit, s"Group IRI is invalid: $groupIri")
     }
 
     "return 'BadRequest' if the supplied custom permission IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
@@ -317,7 +317,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.rootUser,
         ),
       )
-      assertFailsWithA[BadRequestException](exit, "Not allowed to supply groupIri and resourceClassIri together.")
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "return 'BadRequest' if the both group and property are supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
@@ -334,7 +334,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.rootUser,
         ),
       )
-      assertFailsWithA[BadRequestException](exit, "Not allowed to supply groupIri and propertyIri together.")
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "return 'BadRequest' if propertyIri supplied for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
@@ -384,10 +384,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.rootUser,
         ),
       )
-      assertFailsWithA[BadRequestException](
-        exit,
-        "Either a group, a resource class, a property, or a combination of resource class and property must be given.",
-      )
+      assertFailsWithA[BadRequestException](exit)
     }
   }
 
