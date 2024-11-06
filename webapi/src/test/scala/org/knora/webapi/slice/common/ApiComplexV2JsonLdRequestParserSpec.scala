@@ -22,6 +22,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ArchiveFileValueCont
 import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.BooleanValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ColorValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DecimalValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DocumentFileValueContentV2
@@ -36,9 +37,12 @@ import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValue
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType.UnformattedText
 import org.knora.webapi.messages.v2.responder.valuemessages.TimeValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.UriValueContentV2
 import org.knora.webapi.routing.v2.AssetIngestState.AssetIngested
+import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
@@ -694,6 +698,51 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
           None,
         ),
       )
+    },
+    test("should handle transformed json-ld") {
+      val transformations = JsonLdTransformations.all
+      check(Gen.fromIterable(transformations)) { jsonLdTransform =>
+        for {
+          sf <- ZIO.service[StringFormatter]
+          value <- service(
+                     _.createValueV2FromJsonLd(
+                       jsonLdTransform("""
+                       {
+                          "@id": "http://rdfh.ch/0001/a-thing",
+                          "@type": "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
+                          "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText":{
+                            "@type":"http://api.knora.org/ontology/knora-api/v2#TextValue",
+                            "http://api.knora.org/ontology/knora-api/v2#valueAsString":"This is English",
+                            "http://api.knora.org/ontology/knora-api/v2#textValueHasLanguage":"en"
+                          }
+                       }""".stripMargin),
+                       AssetIngested,
+                     ),
+                   )
+        } yield assertTrue(
+          value == CreateValueV2(
+            resourceIri = "http://rdfh.ch/0001/a-thing",
+            resourceClassIri = sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"),
+            propertyIri = sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText"),
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some("This is English"),
+              textValueType = UnformattedText,
+              valueHasLanguage = Some("en"),
+              standoff = Nil,
+              mappingIri = None,
+              mapping = None,
+              xslt = None,
+              comment = None,
+            ),
+            valueIri = None,
+            valueUUID = None,
+            valueCreationDate = None,
+            permissions = None,
+            ingestState = AssetIngested,
+          ),
+        )
+      }
     },
   ).provideSome[Scope](
     IriConverter.layer,
