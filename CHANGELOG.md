@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.14.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.13.1...v0.14.0) (2024-11-01)
+
+
+### Maintenances
+
+* Dependency updates ([#288](https://github.com/dasch-swiss/dsp-ingest/issues/288)) ([6fa3fba](https://github.com/dasch-swiss/dsp-ingest/commit/6fa3fbabcfd4360132efca0314d6979c9d40a369))
+* Make log level configurable ([#284](https://github.com/dasch-swiss/dsp-ingest/issues/284)) ([faeb6cc](https://github.com/dasch-swiss/dsp-ingest/commit/faeb6ccae104d122a562fc14ac46c65a9c49181f))
+* Minor dependency updates ([#279](https://github.com/dasch-swiss/dsp-ingest/issues/279)) ([073947c](https://github.com/dasch-swiss/dsp-ingest/commit/073947c7014f8c5f0e00992d7e9635292fa4c0ee))
+* Minor dependency updates ([#287](https://github.com/dasch-swiss/dsp-ingest/issues/287)) ([46aeb3e](https://github.com/dasch-swiss/dsp-ingest/commit/46aeb3e1c8f3c0036dd09e8ad30a2c9dc78245eb))
+* Patch dependency updates ([#278](https://github.com/dasch-swiss/dsp-ingest/issues/278)) ([88db806](https://github.com/dasch-swiss/dsp-ingest/commit/88db8064993e4cf2c7a732617fd41245f5d23ab9))
+* Remove Create Originals maintenance action (DEV-4271) ([#282](https://github.com/dasch-swiss/dsp-ingest/issues/282)) ([df6feb9](https://github.com/dasch-swiss/dsp-ingest/commit/df6feb9025605663763cb48435904e19d55c2715))
+* Revert Minor dependency updates ([#279](https://github.com/dasch-swiss/dsp-ingest/issues/279)) ([#280](https://github.com/dasch-swiss/dsp-ingest/issues/280)) ([652a1c9](https://github.com/dasch-swiss/dsp-ingest/commit/652a1c9fcaca6ebf970c31a56261609159326bd6))
+* Update sttp.client3 to 3.10.1 ([#281](https://github.com/dasch-swiss/dsp-ingest/issues/281)) ([21fb3b5](https://github.com/dasch-swiss/dsp-ingest/commit/21fb3b52785a39989d6b098120e68923e4cc91dc))
+
+
+### Documentation
+
+* Replace SERVICE_LOG_LEVEL by SERVICE_LOG_FORMAT ([#283](https://github.com/dasch-swiss/dsp-ingest/issues/283)) ([0877ad7](https://github.com/dasch-swiss/dsp-ingest/commit/0877ad7fff3fbc70a27c6ea590b907d1d20882d4))
+
+
+### Enhancements
+
+* Allow uploading JSON text files (DEV-4222) ([#276](https://github.com/dasch-swiss/dsp-ingest/issues/276)) ([25a5f34](https://github.com/dasch-swiss/dsp-ingest/commit/25a5f340f8ecbc10f739a87615743f18f0ba8247))
+
+
+### Bug Fixes
+
+* Verify filename for POST /projects/:shortcode/bulk-ingest/ingest/:file_path (DEV-4167) ([#285](https://github.com/dasch-swiss/dsp-ingest/issues/285)) ([05dfc29](https://github.com/dasch-swiss/dsp-ingest/commit/05dfc2945bfe779248771a5afb36352d8ddd57be))
+
 ## [0.13.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.13.0...v0.13.1) (2024-10-01)
 
 
