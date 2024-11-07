@@ -40,6 +40,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -55,6 +56,7 @@ final case class PermissionsResponder(
   private val auth: AuthorizationRestService,
   private val administrativePermissionService: AdministrativePermissionService,
   private val iriConverter: IriConverter,
+  private val ontologyRepo: OntologyRepo,
 )(implicit val stringFormatter: StringFormatter)
     extends LazyLogging {
 
@@ -569,16 +571,23 @@ final case class PermissionsResponder(
       projectIri    <- ZIO.fromEither(ProjectIri.from(req.forProject))
       project       <- knoraProjectService.findById(projectIri).orDie.someOrFail("Project not found")
       permissionIri <- ZIO.fromEither(req.id.fold(Right(None))(PermissionIri.from(_).map(Some(_))))
-      groupIri      <- ZIO.fromEither(req.forGroup.fold(Right(None))(GroupIri.from(_).map(Some(_))))
-      _             <- ZIO.foreachDiscard(groupIri)(groupService.findById(_).orDie.someOrFail("Group not found"))
+
+      groupIri <- ZIO.fromEither(req.forGroup.fold(Right(None))(GroupIri.from(_).map(Some(_))))
+      _        <- ZIO.foreachDiscard(groupIri)(groupService.findById(_).orDie.someOrFail("Group not found"))
+
       resourceClassIri <-
         ZIO.foreach(req.forResourceClass)(
           iriConverter.asSmartIri(_).mapError(_.getMessage).flatMap(s => ZIO.fromEither(ResourceClassIri.from(s))),
         )
+
       propertyIri <-
         ZIO.foreach(req.forProperty)(
           iriConverter.asSmartIri(_).mapError(_.getMessage).flatMap(s => ZIO.fromEither(PropertyIri.from(s))),
         )
+      _ <- ZIO.foreachDiscard(propertyIri)(
+             ontologyRepo.findProperty(_).orDie.someOrFail(s"Property $propertyIri not found"),
+           )
+
       forWhat <- ZIO.fromEither(ForWhat.fromIris(groupIri, resourceClassIri, propertyIri))
       _       <- ZIO.fail("Permissions needs to be supplied.").when(req.hasPermissions.isEmpty)
     } yield (permissionIri, project, forWhat)

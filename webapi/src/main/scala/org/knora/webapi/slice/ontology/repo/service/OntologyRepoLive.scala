@@ -13,10 +13,14 @@ import zio.prelude.ForEachOps
 
 import scala.annotation.tailrec
 
+import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.KnoraIris
+import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -140,6 +144,15 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
       case classes => findAllSuperClassesBy(toClassIris(classes), acc ::: classes, cache, upToClassIri)
     }
   }
+
+  override def findProperty(propertyIri: PropertyIri): Task[Option[ReadPropertyInfoV2]] =
+    getCache.map { c =>
+      val iri = propertyIri.smartIri.toOntologySchema(InternalSchema)
+      for {
+        ontology <- c.ontologies.get(iri.getOntologyFromEntity)
+        property <- ontology.properties.get(iri)
+      } yield property
+    }
 }
 
 object OntologyRepoLive {
