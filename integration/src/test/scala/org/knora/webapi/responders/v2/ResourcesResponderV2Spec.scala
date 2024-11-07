@@ -30,7 +30,6 @@ import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionYear
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
@@ -537,10 +536,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
   override implicit val timeout: FiniteDuration = 30.seconds
 
   "Load test data" in {
-    appActor ! GetMappingRequestV2(
-      mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-      requestingUser = KnoraSystemInstances.Users.SystemUser,
-    )
+    appActor ! GetMappingRequestV2("http://rdfh.ch/standoff/mappings/StandardMapping")
 
     expectMsgPF(timeout) { case mappingResponse: GetMappingResponseV2 =>
       standardMapping = Some(mappingResponse.mapping)

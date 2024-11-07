@@ -41,6 +41,7 @@ import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
+import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.CacheManager
@@ -102,6 +103,7 @@ object LayersTest {
     // format: off
     AdminApiEndpoints &
     AdminModule.Provided &
+    ApiComplexV2JsonLdRequestParser &
     ApiRoutes &
     AppRouter &
     AuthenticationApiModule.Provided &
@@ -167,6 +169,7 @@ object LayersTest {
     ZLayer.makeSome[CommonR0, CommonR](
       AdminApiModule.layer,
       AdminModule.layer,
+      ApiComplexV2JsonLdRequestParser.layer,
       ApiRoutes.layer,
       AppRouter.layer,
       AssetPermissionsResponder.layer,
@@ -218,7 +221,7 @@ object LayersTest {
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
-      ValuesResponderV2Live.layer,
+      ValuesResponderV2.layer,
     )
 
   private val commonLayersForAllIntegrationTests2 =

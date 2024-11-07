@@ -70,7 +70,7 @@ class AddCardinalitiesToClassSpec extends CoreSpec {
       val newPropertyIri = "http://www.knora.org/ontology/0001/freetest#hasName".toSmartIri
 
       // check ontology first
-      appActor ! OntologyMetadataGetByIriRequestV2(ontologyIris = Set(freetestOntologyIri), requestingUser = user)
+      appActor ! OntologyMetadataGetByIriRequestV2(ontologyIris = Set(freetestOntologyIri))
       val ontologyMetadata = expectMsgType[ReadOntologyMetadataV2]
       val ontologyLastModificationDate = ontologyMetadata.ontologies.head.lastModificationDate
         .getOrElse(throw new AssertionError("Ontology does not have a LastModificationDate"))

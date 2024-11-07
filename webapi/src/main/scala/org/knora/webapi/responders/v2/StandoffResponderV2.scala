@@ -90,8 +90,7 @@ final case class StandoffResponderV2(
         requestingUser,
         uuid,
       )
-    case GetMappingRequestV2(mappingIri, requestingUser) =>
-      getMappingV2(mappingIri, requestingUser)
+    case GetMappingRequestV2(mappingIri) => getMappingV2(mappingIri)
     case GetXSLTransformationRequestV2(xsltTextReprIri, requestingUser) =>
       getXSLTransformation(xsltTextReprIri, requestingUser)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
@@ -432,7 +431,7 @@ final case class StandoffResponderV2(
         // checks if the standoff classes exist in the ontology
         // checks if the standoff properties exist in the ontology
         // checks if the attributes defined for XML elements have cardinalities for the standoff properties defined on the standoff class
-        _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff, requestingUser)
+        _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff)
 
         // check if the mapping IRI already exists
         getExistingMappingSparql = sparql.v2.txt.getMapping(mappingIri)
@@ -667,21 +666,15 @@ final case class StandoffResponderV2(
    * Gets a mapping either from the cache or by making a request to the triplestore.
    *
    * @param mappingIri           the IRI of the mapping to retrieve.
-   * @param requestingUser       the user making the request.
    * @return a [[MappingXMLtoStandoff]].
    */
-  private def getMappingV2(
-    mappingIri: IRI,
-    requestingUser: User,
-  ): Task[GetMappingResponseV2] = {
+  private def getMappingV2(mappingIri: IRI): Task[GetMappingResponseV2] = {
 
     val mappingFuture: Task[GetMappingResponseV2] =
       mappingCache.get(mappingIri) match {
         case Some(mapping: MappingXMLtoStandoff) =>
           for {
-
-            entities <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
-
+            entities <- getStandoffEntitiesFromMappingV2(mapping)
           } yield GetMappingResponseV2(
             mappingIri = mappingIri,
             mapping = mapping,
@@ -690,10 +683,8 @@ final case class StandoffResponderV2(
 
         case None =>
           for {
-            mapping <- getMappingFromTriplestore(mappingIri = mappingIri)
-
-            entities <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
-
+            mapping  <- getMappingFromTriplestore(mappingIri = mappingIri)
+            entities <- getStandoffEntitiesFromMappingV2(mapping)
           } yield GetMappingResponseV2(
             mappingIri = mappingIri,
             mapping = mapping,
@@ -822,12 +813,10 @@ final case class StandoffResponderV2(
    * Gets the required standoff entities (classes and properties) from the mapping and requests information about these entities from the ontology responder.
    *
    * @param mappingXMLtoStandoff the mapping to be used.
-   * @param requestingUser       the client that made the request.
    * @return a [[StandoffEntityInfoGetResponseV2]] holding information about standoff classes and properties.
    */
   private def getStandoffEntitiesFromMappingV2(
     mappingXMLtoStandoff: MappingXMLtoStandoff,
-    requestingUser: User,
   ): Task[StandoffEntityInfoGetResponseV2] = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -862,7 +851,6 @@ final case class StandoffResponderV2(
           .ask[StandoffEntityInfoGetResponseV2](
             StandoffEntityInfoGetRequestV2(
               standoffClassIris = standoffTagIrisFromMapping.map(_.toSmartIri),
-              requestingUser = requestingUser,
             ),
           )
 
@@ -890,7 +878,6 @@ final case class StandoffResponderV2(
           .ask[StandoffEntityInfoGetResponseV2](
             StandoffEntityInfoGetRequestV2(
               standoffPropertyIris = standoffPropertyIrisFromOntologyResponder,
-              requestingUser = requestingUser,
             ),
           )
 

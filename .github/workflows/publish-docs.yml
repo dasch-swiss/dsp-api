@@ -1,0 +1,29 @@
+name: publish docs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:  
+  publish-docs:
+    name: Publish Docs to Github Pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+      - name: Install Just
+        uses: taiki-e/install-action@just
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.13'
+      - name: Install Graphviz
+        run: sudo apt-get install graphviz
+      - name: Prepare docs
+        run: just docs-build-dependent
+      - name: Deploy docs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REQUIREMENTS: docs/requirements.txt
