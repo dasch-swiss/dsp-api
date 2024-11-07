@@ -34,6 +34,7 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
+import org.knora.webapi.slice.admin.domain.service.DefaultObjectAccessPermissionService
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -57,6 +58,7 @@ final case class PermissionsResponder(
   private val administrativePermissionService: AdministrativePermissionService,
   private val iriConverter: IriConverter,
   private val ontologyRepo: OntologyRepo,
+  private val doapService: DefaultObjectAccessPermissionService,
 )(implicit val stringFormatter: StringFormatter)
     extends LazyLogging {
 
@@ -627,21 +629,7 @@ final case class PermissionsResponder(
                  )
                case None => ZIO.unit
              }
-
-        // Create the default object access permission.
-        permissions <- verifyHasPermissionsDOAP(createRequest.hasPermissions)
-        createNewDefaultObjectAccessPermissionSparqlString =
-          sparql.admin.txt.createNewDefaultObjectAccessPermission(
-            AdminConstants.permissionsDataNamedGraph.value,
-            permissionIri = doap.id.value,
-            permissionClassIri = OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
-            projectIri = doap.forProject.value,
-            maybeGroupIri = doap.forWhat.groupOption.map(_.value),
-            maybeResourceClassIri = doap.forWhat.resourceClassOption.map(_.value),
-            maybePropertyIri = doap.forWhat.propertyOption.map(_.value),
-            permissions = PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.DOAP),
-          )
-        _ <- triplestore.query(Update(createNewDefaultObjectAccessPermissionSparqlString))
+        _ <- doapService.save(doap)
 
         newDefaultObjectAccessPermission <-
           defaultObjectAccessPermissionGetADM(doap).someOrFail(

@@ -28,6 +28,9 @@ final case class DefaultObjectAccessPermissionService(
     permission: Chunk[DefaultObjectAccessPermissionPart],
   ): Task[DefaultObjectAccessPermission] =
     repo.save(DefaultObjectAccessPermission(PermissionIri.makeNew(project.shortcode), project.id, forWhat, permission))
+
+  def save(permission: DefaultObjectAccessPermission): Task[DefaultObjectAccessPermission] =
+    repo.save(permission)
 }
 
 object DefaultObjectAccessPermissionService {
