@@ -594,8 +594,7 @@ final case class PermissionsResponder(
         (permissionIri, project, forWhat) = valid
         permissionIri                    <- ZIO.foreach(permissionIri.map(_.value))(iriConverter.asSmartIri)
         _                                <- auth.ensureSystemAdminOrProjectAdmin(user, project)
-        checkResult                      <- defaultObjectAccessPermissionGetADM(project, forWhat)
-        _ <- checkResult match {
+        _ <- defaultObjectAccessPermissionGetADM(project, forWhat).flatMap {
                case Some(doap: DefaultObjectAccessPermissionADM) =>
                  val errorMessage = if (doap.forGroup.nonEmpty) {
                    s"and group: '${doap.forGroup.get}' "
