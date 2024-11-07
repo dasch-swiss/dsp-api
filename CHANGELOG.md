@@ -1,5 +1,55 @@
 # Changelog
 
+## [30.21.0](https://github.com/dasch-swiss/dsp-api/compare/v30.20.0...v30.21.0) (2024-11-07)
+
+
+### Maintenances
+
+* Dependency updates ([#3412](https://github.com/dasch-swiss/dsp-api/issues/3412)) ([2d9ec5b](https://github.com/dasch-swiss/dsp-api/commit/2d9ec5bd6540bc949d067e24bd9cdd7f3b47a257))
+* Introduce PredicateInfoV2Builder & ReadPropertyInfoV2Builder and simplify api transformation rule ([#3385](https://github.com/dasch-swiss/dsp-api/issues/3385)) ([9bc08fa](https://github.com/dasch-swiss/dsp-api/commit/9bc08fa2452cb186e6808171155f35a10f9cb82e))
+* Make precedence of daop for creating new Value/Resources obvious  ([#3380](https://github.com/dasch-swiss/dsp-api/issues/3380)) ([0b879af](https://github.com/dasch-swiss/dsp-api/commit/0b879afbf18b4cbed71ea8d6e2fb8ae0b8cd788d))
+* Minor dependency updates ([#3390](https://github.com/dasch-swiss/dsp-api/issues/3390)) ([791a1d7](https://github.com/dasch-swiss/dsp-api/commit/791a1d7010a0a045b1f35679068f9827d04399dd))
+* Patch dependency updates ([#3389](https://github.com/dasch-swiss/dsp-api/issues/3389)) ([97f85b2](https://github.com/dasch-swiss/dsp-api/commit/97f85b24e925ed07fce49d116c737dc9c882eac2))
+* Remove `KnoraApiCreateValueModel` and move code to service which is directly assembling the `CreateValueV2` (DEV-4305)  ([#3413](https://github.com/dasch-swiss/dsp-api/issues/3413)) ([34be717](https://github.com/dasch-swiss/dsp-api/commit/34be7170fdb52f6b8bdc959da1e2a78c9cc9bff2))
+* Remove user auth from ontology endpoints ignoring the user anyway (DEV-4292) ([#3408](https://github.com/dasch-swiss/dsp-api/issues/3408)) ([2071909](https://github.com/dasch-swiss/dsp-api/commit/2071909f82a712138961927c2a95f9c774a5e6e2))
+* Start replacing Json-LD parsing with using an RDF model ([#3401](https://github.com/dasch-swiss/dsp-api/issues/3401)) ([79e7194](https://github.com/dasch-swiss/dsp-api/commit/79e719421958d465887d5b92aab3184afc2e8100))
+* Update fuseki and app in docker-compose ([#3395](https://github.com/dasch-swiss/dsp-api/issues/3395)) ([c5b0c45](https://github.com/dasch-swiss/dsp-api/commit/c5b0c45073f041cd621c7682515ce591e6616529))
+
+
+### Documentation
+
+* Apply corporate design to repo-specific standalone docs ([#3415](https://github.com/dasch-swiss/dsp-api/issues/3415)) ([f398bf8](https://github.com/dasch-swiss/dsp-api/commit/f398bf841d59fc68081aa7c0f28b11f3d4f40184))
+* Fix docs publish CI failing on main ([#3411](https://github.com/dasch-swiss/dsp-api/issues/3411)) ([263e6a4](https://github.com/dasch-swiss/dsp-api/commit/263e6a479082edb7ddc7756fb5d01b86b185f850))
+* Publish API docs to github pages ([#3407](https://github.com/dasch-swiss/dsp-api/issues/3407)) ([4dd46c7](https://github.com/dasch-swiss/dsp-api/commit/4dd46c7c86389a67ac730ac3110077dc0b447bb2))
+
+
+### Enhancements
+
+* Allow uploading JSON text files (DEV-4222) ([#3386](https://github.com/dasch-swiss/dsp-api/issues/3386)) ([3a3c305](https://github.com/dasch-swiss/dsp-api/commit/3a3c305e30446963d2290489ef318e5ee5e828b7))
+* Convert watermark to RGB workspace (DEV-3299) ([#3387](https://github.com/dasch-swiss/dsp-api/issues/3387)) ([0459c60](https://github.com/dasch-swiss/dsp-api/commit/0459c6022fd1ba5376dc34489413a60327304105))
+* Disable rdfs inferencing in shacl validator and deactivate validateShapes as default (DEV-4261) ([#3396](https://github.com/dasch-swiss/dsp-api/issues/3396)) ([a281fd8](https://github.com/dasch-swiss/dsp-api/commit/a281fd85d0abc2072bdd5c59be2e55ff1820b31a))
+* Enable rdfs inferencing in shacl validator (DEV-4220) ([#3388](https://github.com/dasch-swiss/dsp-api/issues/3388)) ([a248973](https://github.com/dasch-swiss/dsp-api/commit/a2489733f8807969425776239ee68bb7d549e248))
+* Make create value endpoint fully support JSON-LD (DEV-4305) ([#3410](https://github.com/dasch-swiss/dsp-api/issues/3410)) ([cc42d41](https://github.com/dasch-swiss/dsp-api/commit/cc42d4141536bcb208bdd5503b108d6482856cd4))
+* Raise the max content-lenght to 512 MB (DEV-4218) ([#3399](https://github.com/dasch-swiss/dsp-api/issues/3399)) ([2a2b322](https://github.com/dasch-swiss/dsp-api/commit/2a2b32202e772e627c0a22002e40485c00c29202))
+* Remove DOAP configuration on SystemProject and KnownUser group (DEV-4138) ([#3383](https://github.com/dasch-swiss/dsp-api/issues/3383)) ([a9b45ad](https://github.com/dasch-swiss/dsp-api/commit/a9b45ad670873cb6f62c28f0647fbf0777bb076c))
+* Watermark with alpha with the new Sipi release (DEV-3299) ([#3382](https://github.com/dasch-swiss/dsp-api/issues/3382)) ([c8f5a71](https://github.com/dasch-swiss/dsp-api/commit/c8f5a713f308dbd98d42ec389120d76a78f960b3))
+
+
+### Bug Fixes
+
+* Allow creation of unformatted TextValues with language tags (DEV-4234) ([#3394](https://github.com/dasch-swiss/dsp-api/issues/3394)) ([3b9a42e](https://github.com/dasch-swiss/dsp-api/commit/3b9a42eae3b809857c3d46eedd702e83e7568325))
+* Attempt to optimize OntologyInferencer (DEV-4063) ([#3402](https://github.com/dasch-swiss/dsp-api/issues/3402)) ([5e0f976](https://github.com/dasch-swiss/dsp-api/commit/5e0f97609035dd68eea5e00674c21b40d23a88c1))
+* Clarify error message when create file resources and asset is not available ([#3392](https://github.com/dasch-swiss/dsp-api/issues/3392)) ([fc86f5b](https://github.com/dasch-swiss/dsp-api/commit/fc86f5b19472988f332cc1be72d44ad944ec1dc6))
+* Fix precedence of endpoints so that /v2/resources/info is routed to the ResourceInfoEndpointHandler ([#3409](https://github.com/dasch-swiss/dsp-api/issues/3409)) ([af0388e](https://github.com/dasch-swiss/dsp-api/commit/af0388ef0dd00b6b9264cdcf4d727b1f402b9aa1))
+* Fix reset triplestore content endpoint (DEV-2380) ([#3391](https://github.com/dasch-swiss/dsp-api/issues/3391)) ([65197cd](https://github.com/dasch-swiss/dsp-api/commit/65197cde7d66138d2ab3cbfd1c810025edb63ce7))
+* Take language into account when checking for duplicate TextValues (DEV-4264) ([#3397](https://github.com/dasch-swiss/dsp-api/issues/3397)) ([7eeb9a2](https://github.com/dasch-swiss/dsp-api/commit/7eeb9a2853aaf29e5f3c363f11b83930a43349c2))
+
+
+### Tests
+
+* Migrate JsonLDUtilSpec to zio-test and move to webapi.test ([#3400](https://github.com/dasch-swiss/dsp-api/issues/3400)) ([13a101d](https://github.com/dasch-swiss/dsp-api/commit/13a101d3cd3775da02854a687a5163da20b45d05))
+* Use Authorization header instead of url parms in TestClientService ([#3398](https://github.com/dasch-swiss/dsp-api/issues/3398)) ([22d433e](https://github.com/dasch-swiss/dsp-api/commit/22d433ec3cd11ce290a9f1a87648cc9b8cb81250))
+
 ## [30.20.0](https://github.com/dasch-swiss/dsp-api/compare/v30.19.0...v30.20.0) (2024-10-04)
 
 
