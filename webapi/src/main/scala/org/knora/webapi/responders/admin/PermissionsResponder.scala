@@ -601,7 +601,6 @@ final case class PermissionsResponder(
       for {
         valid                            <- validate(createRequest).mapError(BadRequestException(_))
         (permissionIri, project, forWhat) = valid
-        permissionIri                    <- ZIO.foreach(permissionIri.map(_.value))(iriConverter.asSmartIri)
         _                                <- auth.ensureSystemAdminOrProjectAdmin(user, project)
         _ <- defaultObjectAccessPermissionGetADM(project, forWhat).flatMap {
                case Some(doap: DefaultObjectAccessPermissionADM) =>
@@ -629,7 +628,9 @@ final case class PermissionsResponder(
              }
 
         newPermissionIri <-
-          iriService.checkOrCreateEntityIri(permissionIri, PermissionIri.makeNew(project.shortcode).value)
+          ZIO
+            .foreach(permissionIri.map(_.value))(iriConverter.asSmartIri)
+            .flatMap(iriService.checkOrCreateEntityIri(_, PermissionIri.makeNew(project.shortcode).value))
 
         // Create the default object access permission.
         permissions <- verifyHasPermissionsDOAP(createRequest.hasPermissions)
@@ -646,14 +647,12 @@ final case class PermissionsResponder(
           )
         _ <- triplestore.query(Update(createNewDefaultObjectAccessPermissionSparqlString))
 
-        maybePermission <- defaultObjectAccessPermissionGetADM(project, forWhat)
-        newDefaultObjectAccessPermission: DefaultObjectAccessPermissionADM =
-          maybePermission.getOrElse(
-            throw BadRequestException(
+        newDefaultObjectAccessPermission <-
+          defaultObjectAccessPermissionGetADM(project, forWhat).someOrFail(
+            InconsistentRepositoryDataException(
               "Requested default object access permission could not be created, report this as a possible bug.",
             ),
           )
-
       } yield DefaultObjectAccessPermissionCreateResponseADM(newDefaultObjectAccessPermission)
 
     IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI, createPermissionTask)
