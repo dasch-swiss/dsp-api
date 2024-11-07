@@ -5,10 +5,10 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import zio.Chunk
 import zio.NonEmptyChunk
 import zio.Task
-
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -78,6 +78,26 @@ object DefaultObjectAccessPermission {
     permission: Permission.ObjectAccess,
     groups: NonEmptyChunk[GroupIri],
   )
+  object DefaultObjectAccessPermissionPart {
+    def from(adm: PermissionADM): Either[String, DefaultObjectAccessPermissionPart] =
+      for {
+        group <- adm.additionalInformation.toRight("No object access code present").flatMap(GroupIri.from)
+        perm   = adm.permissionCode.flatMap(Permission.ObjectAccess.from).getOrElse(Permission.ObjectAccess.Delete)
+      } yield DefaultObjectAccessPermissionPart(perm, NonEmptyChunk(group))
+  }
+
+  def from(
+    id: PermissionIri,
+    forProject: ProjectIri,
+    forWhat: ForWhat,
+    perms: Set[PermissionADM],
+  ): Either[String, DefaultObjectAccessPermission] =
+    perms
+      .map(DefaultObjectAccessPermissionPart.from)
+      .map(_.map(Chunk(_)))
+      .fold(Right(Chunk.empty))((a, b) => a.flatMap(aa => b.map(bb => aa ++ bb)))
+      .flatMap(NonEmptyChunk.fromChunk(_).toRight("No permissions found"))
+      .map(DefaultObjectAccessPermission(id, forProject, forWhat, _))
 }
 
 trait DefaultObjectAccessPermissionRepo extends CrudRepository[DefaultObjectAccessPermission, PermissionIri] {

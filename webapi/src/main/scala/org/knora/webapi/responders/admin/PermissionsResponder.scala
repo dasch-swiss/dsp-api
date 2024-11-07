@@ -9,7 +9,6 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import java.util.UUID
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
@@ -26,6 +25,7 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -305,19 +305,17 @@ final case class PermissionsResponder(
    * - resource class and property
    * - property
    *
-   * @param project       the project
-   * @param forWhat       the restriction
+   * @param doap the DefaultObjectAccessPermission
    * @return an optional [[DefaultObjectAccessPermissionADM]]
    */
   private def defaultObjectAccessPermissionGetADM(
-    project: KnoraProject,
-    forWhat: ForWhat,
+    doap: DefaultObjectAccessPermission,
   ): Task[Option[DefaultObjectAccessPermissionADM]] =
     defaultObjectAccessPermissionGetADM(
-      project.id,
-      forWhat.groupOption.map(_.value),
-      forWhat.resourceClassOption.map(_.value),
-      forWhat.propertyOption.map(_.value),
+      doap.forProject,
+      doap.forWhat.groupOption.map(_.value),
+      doap.forWhat.resourceClassOption.map(_.value),
+      doap.forWhat.propertyOption.map(_.value),
     )
 
   /**
@@ -566,11 +564,15 @@ final case class PermissionsResponder(
 
   private def validate(
     req: CreateDefaultObjectAccessPermissionAPIRequestADM,
-  ): IO[String, (Option[PermissionIri], KnoraProject, ForWhat)] =
+  ): IO[String, DefaultObjectAccessPermission] =
     for {
-      projectIri    <- ZIO.fromEither(ProjectIri.from(req.forProject))
-      project       <- knoraProjectService.findById(projectIri).orDie.someOrFail("Project not found")
-      permissionIri <- ZIO.fromEither(req.id.fold(Right(None))(PermissionIri.from(_).map(Some(_))))
+      projectIri <- ZIO.fromEither(ProjectIri.from(req.forProject))
+      project    <- knoraProjectService.findById(projectIri).orDie.someOrFail("Project not found")
+      permissionIri <-
+        ZIO
+          .foreach(req.id)(iriConverter.asSmartIri)
+          .flatMap(iriService.checkOrCreateEntityIri(_, PermissionIri.makeNew(project.shortcode).value))
+          .mapBoth(_.getMessage, PermissionIri.unsafeFrom)
 
       groupIri <- ZIO.fromEither(req.forGroup.fold(Right(None))(GroupIri.from(_).map(Some(_))))
       _        <- ZIO.foreachDiscard(groupIri)(groupService.findById(_).orDie.someOrFail("Group not found"))
@@ -590,7 +592,8 @@ final case class PermissionsResponder(
 
       forWhat <- ZIO.fromEither(ForWhat.fromIris(groupIri, resourceClassIri, propertyIri))
       _       <- ZIO.fail("Permissions needs to be supplied.").when(req.hasPermissions.isEmpty)
-    } yield (permissionIri, project, forWhat)
+      doap    <- ZIO.fromEither(DefaultObjectAccessPermission.from(permissionIri, projectIri, forWhat, req.hasPermissions))
+    } yield doap
 
   def createDefaultObjectAccessPermission(
     createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
@@ -599,56 +602,49 @@ final case class PermissionsResponder(
   ): Task[DefaultObjectAccessPermissionCreateResponseADM] = {
     val createPermissionTask =
       for {
-        valid                            <- validate(createRequest).mapError(BadRequestException(_))
-        (permissionIri, project, forWhat) = valid
-        _                                <- auth.ensureSystemAdminOrProjectAdmin(user, project)
-        _ <- defaultObjectAccessPermissionGetADM(project, forWhat).flatMap {
-               case Some(doap: DefaultObjectAccessPermissionADM) =>
-                 val errorMessage = if (doap.forGroup.nonEmpty) {
-                   s"and group: '${doap.forGroup.get}' "
+        doap <- validate(createRequest).mapError(BadRequestException(_))
+        _ <- defaultObjectAccessPermissionGetADM(doap).flatMap {
+               case Some(doapADM: DefaultObjectAccessPermissionADM) =>
+                 val errorMessage = if (doapADM.forGroup.nonEmpty) {
+                   s"and group: '${doapADM.forGroup.get}' "
                  } else {
-                   val resourceClassExists = if (doap.forResourceClass.nonEmpty) {
-                     s"and resourceClass: '${doap.forResourceClass.get}' "
+                   val resourceClassExists = if (doapADM.forResourceClass.nonEmpty) {
+                     s"and resourceClass: '${doapADM.forResourceClass.get}' "
                    } else ""
-                   val propExists = if (doap.forProperty.nonEmpty) {
-                     s"and property: '${doap.forProperty.get}' "
+                   val propExists = if (doapADM.forProperty.nonEmpty) {
+                     s"and property: '${doapADM.forProperty.get}' "
                    } else ""
                    resourceClassExists + propExists
                  }
                  ZIO.fail(
                    DuplicateValueException(
-                     s"A default object access permission for project: '${project.id.value}' " +
+                     s"A default object access permission for project: '${doap.forProject.value}' " +
                        errorMessage + "combination already exists. " +
                        s"This permission currently has the scope '${PermissionUtilADM
-                           .formatPermissionADMs(doap.hasPermissions, PermissionType.OAP)}'. " +
-                       s"Use its IRI ${doap.iri} to modify it, if necessary.",
+                           .formatPermissionADMs(doapADM.hasPermissions, PermissionType.OAP)}'. " +
+                       s"Use its IRI ${doapADM.iri} to modify it, if necessary.",
                    ),
                  )
                case None => ZIO.unit
              }
-
-        newPermissionIri <-
-          ZIO
-            .foreach(permissionIri.map(_.value))(iriConverter.asSmartIri)
-            .flatMap(iriService.checkOrCreateEntityIri(_, PermissionIri.makeNew(project.shortcode).value))
 
         // Create the default object access permission.
         permissions <- verifyHasPermissionsDOAP(createRequest.hasPermissions)
         createNewDefaultObjectAccessPermissionSparqlString =
           sparql.admin.txt.createNewDefaultObjectAccessPermission(
             AdminConstants.permissionsDataNamedGraph.value,
-            permissionIri = newPermissionIri,
+            permissionIri = doap.id.value,
             permissionClassIri = OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
-            projectIri = project.id.value,
-            maybeGroupIri = forWhat.groupOption.map(_.value),
-            maybeResourceClassIri = forWhat.resourceClassOption.map(_.value),
-            maybePropertyIri = forWhat.propertyOption.map(_.value),
-            permissions = PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP),
+            projectIri = doap.forProject.value,
+            maybeGroupIri = doap.forWhat.groupOption.map(_.value),
+            maybeResourceClassIri = doap.forWhat.resourceClassOption.map(_.value),
+            maybePropertyIri = doap.forWhat.propertyOption.map(_.value),
+            permissions = PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.DOAP),
           )
         _ <- triplestore.query(Update(createNewDefaultObjectAccessPermissionSparqlString))
 
         newDefaultObjectAccessPermission <-
-          defaultObjectAccessPermissionGetADM(project, forWhat).someOrFail(
+          defaultObjectAccessPermissionGetADM(doap).someOrFail(
             InconsistentRepositoryDataException(
               "Requested default object access permission could not be created, report this as a possible bug.",
             ),

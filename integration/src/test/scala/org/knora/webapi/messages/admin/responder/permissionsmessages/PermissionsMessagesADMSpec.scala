@@ -180,7 +180,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.imagesUser01,
         ),
       )
-      assertFailsWithA[BadRequestException](exit, s"Invalid permission IRI: $permissionIri.")
+      assertFailsWithA[BadRequestException](exit, s"Couldn't parse IRI: $permissionIri")
     }
 
     "return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
