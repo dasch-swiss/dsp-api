@@ -11,6 +11,7 @@ import zio.test.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.KnoraIrisSpec.test
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -26,7 +27,8 @@ object KnoraIrisSpec extends ZIOSpecDefault {
   private val internalResourceClassIri     = "http://www.knora.org/ontology/0001/anything#Thing"
   private val apiV2ComplexResourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"
 
-  private val valueIri = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
+  private val valueIri    = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
+  private val resourceIri = "http://rdfh.ch/080C/Ef9heHjPWDS7dMR_gGax2Q"
 
   private val propertyIriSuite = suite("PropertyIri")(
     suite("from")(
@@ -119,6 +121,7 @@ object KnoraIrisSpec extends ZIOSpecDefault {
           apiV2ComplexResourceClassIri,
           internalPropertyIri,
           apiV2ComplexPropertyIri,
+          resourceIri,
         )
         check(Gen.fromIterable(invalidIris)) { iri =>
           for {
@@ -130,8 +133,39 @@ object KnoraIrisSpec extends ZIOSpecDefault {
     ),
   )
 
+  private val resourceIriSuite = suite("ResourceIri")(
+    suite("from")(
+      test("should return a ResourceIri") {
+        val validIris = Seq(resourceIri)
+        check(Gen.fromIterable(validIris)) { iri =>
+          for {
+            sIri  <- converter(_.asSmartIri(iri))
+            actual = ResourceIri.from(sIri)
+          } yield assertTrue(actual.map(_.smartIri) == Right(sIri))
+        }
+      },
+      test("should fail for an invalid ResourceIri") {
+        val invalidIris = Seq(
+          "http://example.com/ontology#Foo",
+          internalResourceClassIri,
+          apiV2ComplexResourceClassIri,
+          internalPropertyIri,
+          apiV2ComplexPropertyIri,
+          valueIri,
+        )
+        check(Gen.fromIterable(invalidIris)) { iri =>
+          for {
+            sIri  <- converter(_.asSmartIri(iri))
+            actual = ResourceIri.from(sIri)
+          } yield assertTrue(actual == Left(s"<${sIri.toIri}> is not a Knora resource IRI"))
+        }
+      },
+    ),
+  )
+
   val spec = suite("KnoraIris")(
     resourceClassIriSuite,
+    resourceIriSuite,
     propertyIriSuite,
     valueIriSuite,
   ).provide(IriConverter.layer, StringFormatter.test)
