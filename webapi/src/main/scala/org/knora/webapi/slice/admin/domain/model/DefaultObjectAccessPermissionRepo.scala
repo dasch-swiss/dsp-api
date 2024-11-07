@@ -5,10 +5,11 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import zio.Chunk
 import zio.NonEmptyChunk
 import zio.Task
+
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -105,4 +106,6 @@ trait DefaultObjectAccessPermissionRepo extends CrudRepository[DefaultObjectAcce
   def findByProject(projectIri: ProjectIri): Task[Chunk[DefaultObjectAccessPermission]]
 
   final def findByProject(project: KnoraProject): Task[Chunk[DefaultObjectAccessPermission]] = findByProject(project.id)
+
+  def findByProjectAndForWhat(projectIri: ProjectIri, forWhat: ForWhat): Task[Option[DefaultObjectAccessPermission]]
 }

@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import java.util.UUID
+
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
@@ -27,6 +28,10 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.Group
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.Property
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClass
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClassAndProperty
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -38,6 +43,7 @@ import org.knora.webapi.slice.admin.domain.service.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.repo.service.DefaultObjectAccessPermissionRepoLive
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -599,32 +605,25 @@ final case class PermissionsResponder(
 
   def createDefaultObjectAccessPermission(
     createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
-    user: User,
     apiRequestID: UUID,
   ): Task[DefaultObjectAccessPermissionCreateResponseADM] = {
     val createPermissionTask =
       for {
         doap <- validate(createRequest).mapError(BadRequestException(_))
-        _ <- defaultObjectAccessPermissionGetADM(doap).flatMap {
-               case Some(doapADM: DefaultObjectAccessPermissionADM) =>
-                 val errorMessage = if (doapADM.forGroup.nonEmpty) {
-                   s"and group: '${doapADM.forGroup.get}' "
-                 } else {
-                   val resourceClassExists = if (doapADM.forResourceClass.nonEmpty) {
-                     s"and resourceClass: '${doapADM.forResourceClass.get}' "
-                   } else ""
-                   val propExists = if (doapADM.forProperty.nonEmpty) {
-                     s"and property: '${doapADM.forProperty.get}' "
-                   } else ""
-                   resourceClassExists + propExists
-                 }
+        _ <- doapService.findByProjectAndForWhat(doap.forProject, doap.forWhat).flatMap {
+               case Some(existing: DefaultObjectAccessPermission) =>
+                 val msg = existing.forWhat match
+                   case Group(g)          => s"and group: '${g.value}' "
+                   case ResourceClass(rc) => s"and resourceClass: '${rc.value}' "
+                   case Property(prop)    => s"and property: '${prop.value}' "
+                   case ResourceClassAndProperty(rc, prop) =>
+                     s"and resourceClass: '${rc.value}' and property: '${prop.value}' "
                  ZIO.fail(
                    DuplicateValueException(
                      s"A default object access permission for project: '${doap.forProject.value}' " +
-                       errorMessage + "combination already exists. " +
-                       s"This permission currently has the scope '${PermissionUtilADM
-                           .formatPermissionADMs(doapADM.hasPermissions, PermissionType.OAP)}'. " +
-                       s"Use its IRI ${doapADM.iri} to modify it, if necessary.",
+                       msg + "combination already exists. " +
+                       s"This permission currently has the scope '${DefaultObjectAccessPermissionRepoLive.toStringLiteral(existing.permission)}'. " +
+                       s"Use its IRI ${existing.id.value} to modify it, if necessary.",
                    ),
                  )
                case None => ZIO.unit
@@ -1257,7 +1256,6 @@ final case class PermissionsResponder(
                  PermissionADM.from(Permission.ObjectAccess.Delete, builtIn.ProjectMember.id.value),
                ),
              ),
-             KnoraSystemInstances.Users.SystemUser,
              UUID.randomUUID(),
            )
 
@@ -1271,7 +1269,6 @@ final case class PermissionsResponder(
                  PermissionADM.from(Permission.ObjectAccess.Delete, builtIn.ProjectMember.id.value),
                ),
              ),
-             KnoraSystemInstances.Users.SystemUser,
              UUID.randomUUID(),
            )
     } yield ()

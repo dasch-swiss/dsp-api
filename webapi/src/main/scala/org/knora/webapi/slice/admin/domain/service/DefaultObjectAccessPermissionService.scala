@@ -31,6 +31,9 @@ final case class DefaultObjectAccessPermissionService(
 
   def save(permission: DefaultObjectAccessPermission): Task[DefaultObjectAccessPermission] =
     repo.save(permission)
+
+  def findByProjectAndForWhat(projectIri: ProjectIri, forWhat: ForWhat): Task[Option[DefaultObjectAccessPermission]] =
+    repo.findByProjectAndForWhat(projectIri, forWhat)
 }
 
 object DefaultObjectAccessPermissionService {

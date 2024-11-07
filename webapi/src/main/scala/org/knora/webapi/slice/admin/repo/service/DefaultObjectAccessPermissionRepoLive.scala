@@ -24,9 +24,7 @@ import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
-import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.Group
-import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClass
-import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClassAndProperty
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.*
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -57,12 +55,25 @@ final case class DefaultObjectAccessPermissionRepoLive(
 
   override def findByProject(projectIri: ProjectIri): Task[Chunk[DefaultObjectAccessPermission]] =
     findAllByTriplePattern(_.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)))
+
+  def findByProjectAndForWhat(projectIri: ProjectIri, forWhat: ForWhat): Task[Option[DefaultObjectAccessPermission]] =
+    findOneByTriplePattern(p =>
+      val pattern = p.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value))
+      forWhat match {
+        case Group(g)          => pattern.andHas(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(g.value))
+        case ResourceClass(rc) => pattern.andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))
+        case Property(prop)    => pattern.andHas(Vocabulary.KnoraAdmin.forProperty, Rdf.iri(prop.value))
+        case ResourceClassAndProperty(rc, prop) =>
+          pattern
+            .andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))
+            .andHas(Vocabulary.KnoraAdmin.forProperty, Rdf.iri(prop.value))
+      },
+    )
 }
 
 object DefaultObjectAccessPermissionRepoLive {
+  private val permissionsDelimiter = '|'
   private val mapper = new RdfEntityMapper[DefaultObjectAccessPermission] {
-
-    private val permissionsDelimiter = '|'
 
     override def toEntity(resource: RdfResource): IO[RdfError, DefaultObjectAccessPermission] = for {
       id <- resource.iri.flatMap { iri =>
@@ -130,13 +141,13 @@ object DefaultObjectAccessPermissionRepoLive {
             .andHas(Vocabulary.KnoraAdmin.forProperty, Rdf.iri(p.value))
       }
     }
+  }
 
-    private def toStringLiteral(permissions: Chunk[DefaultObjectAccessPermissionPart]): String = {
-      def withOutPrefixExpansion(str: String) = str.replace(KnoraAdminPrefixExpansion, KnoraAdminPrefix)
-      permissions
-        .map(p => s"${p.permission.token} ${p.groups.map(_.value).map(withOutPrefixExpansion).mkString(",")}")
-        .mkString(permissionsDelimiter.toString)
-    }
+  def toStringLiteral(permissions: Chunk[DefaultObjectAccessPermissionPart]): String = {
+    def withOutPrefixExpansion(str: String) = str.replace(KnoraAdminPrefixExpansion, KnoraAdminPrefix)
+    permissions
+      .map(p => s"${p.permission.token} ${p.groups.map(_.value).map(withOutPrefixExpansion).mkString(",")}")
+      .mkString(permissionsDelimiter.toString)
   }
 
   val layer = ZLayer.succeed(mapper) >>> ZLayer.derive[DefaultObjectAccessPermissionRepoLive]
