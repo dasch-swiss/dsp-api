@@ -609,19 +609,7 @@ final case class PermissionsResponder(
                case None => ZIO.unit
              }
         _ <- doapService.save(doap)
-
-        newDefaultObjectAccessPermission <-
-          defaultObjectAccessPermissionGetADM(
-            doap.forProject,
-            doap.forWhat.groupOption.map(_.value),
-            doap.forWhat.resourceClassOption.map(_.value),
-            doap.forWhat.propertyOption.map(_.value),
-          ).someOrFail(
-            InconsistentRepositoryDataException(
-              "Requested default object access permission could not be created, report this as a possible bug.",
-            ),
-          )
-      } yield DefaultObjectAccessPermissionCreateResponseADM(newDefaultObjectAccessPermission)
+      } yield DefaultObjectAccessPermissionCreateResponseADM(doapService.asDefaultObjectAccessPermissionADM(doap))
 
     IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI, createPermissionTask)
   }

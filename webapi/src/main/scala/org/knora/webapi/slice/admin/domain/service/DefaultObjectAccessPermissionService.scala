@@ -8,6 +8,8 @@ import zio.Chunk
 import zio.Task
 import zio.ZLayer
 
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
@@ -34,6 +36,27 @@ final case class DefaultObjectAccessPermissionService(
 
   def findByProjectAndForWhat(projectIri: ProjectIri, forWhat: ForWhat): Task[Option[DefaultObjectAccessPermission]] =
     repo.findByProjectAndForWhat(projectIri, forWhat)
+
+  def asDefaultObjectAccessPermissionADM(doap: DefaultObjectAccessPermission): DefaultObjectAccessPermissionADM =
+    DefaultObjectAccessPermissionADM(
+      doap.id.value,
+      doap.forProject.value,
+      doap.forWhat.groupOption.map(_.value),
+      doap.forWhat.resourceClassOption.map(_.value),
+      doap.forWhat.propertyOption.map(_.value),
+      asPermissionADM(doap.permission).toSet,
+    )
+
+  def asPermissionADM(parts: Chunk[DefaultObjectAccessPermissionPart]): Chunk[PermissionADM] =
+    parts.flatMap { part =>
+      part.groups.map(group =>
+        PermissionADM(
+          part.permission.token,
+          Some(group.value),
+          Some(part.permission.code),
+        ),
+      )
+    }
 }
 
 object DefaultObjectAccessPermissionService {
