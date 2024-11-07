@@ -47,30 +47,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-/**
- * Handles requests to read and write Knora values.
- */
-trait ValuesResponderV2 {
-  def createValueV2(
-    createValue: CreateValueV2,
-    requestingUser: User,
-    apiRequestID: UUID,
-  ): Task[CreateValueResponseV2]
-
-  def updateValueV2(
-    updateValue: UpdateValueV2,
-    requestingUser: User,
-    apiRequestId: UUID,
-  ): Task[UpdateValueResponseV2]
-
-  def deleteValueV2(
-    deleteValue: DeleteValueV2,
-    requestingUser: User,
-    apiRequestId: UUID,
-  ): Task[SuccessResponseV2]
-}
-
-final case class ValuesResponderV2Live(
+final case class ValuesResponderV2(
   appConfig: AppConfig,
   iriService: IriService,
   messageRelay: MessageRelay,
@@ -79,8 +56,7 @@ final case class ValuesResponderV2Live(
   searchResponderV2: SearchResponderV2,
   triplestoreService: TriplestoreService,
   permissionsResponder: PermissionsResponder,
-)(implicit val stringFormatter: StringFormatter)
-    extends ValuesResponderV2 {
+)(implicit val stringFormatter: StringFormatter) {
 
   /**
    * Creates a new value in an existing resource.
@@ -90,7 +66,7 @@ final case class ValuesResponderV2Live(
    * @param apiRequestID the API request ID.
    * @return a [[CreateValueResponseV2]].
    */
-  override def createValueV2(
+  def createValueV2(
     valueToCreate: CreateValueV2,
     requestingUser: User,
     apiRequestID: UUID,
@@ -452,7 +428,7 @@ final case class ValuesResponderV2Live(
     for {
 
       // Make a new value UUID.
-      newValueUUID <- ValuesResponderV2Live.makeNewValueUUID(maybeValueIri, maybeValueUUID)
+      newValueUUID <- ValuesResponderV2.makeNewValueUUID(maybeValueIri, maybeValueUUID)
 
       // Make an IRI for the new value.
       newValueIri <-
@@ -539,7 +515,7 @@ final case class ValuesResponderV2Live(
     // Make a new value UUID.
 
     for {
-      newValueUUID <- ValuesResponderV2Live.makeNewValueUUID(maybeValueIri, maybeValueUUID)
+      newValueUUID <- ValuesResponderV2.makeNewValueUUID(maybeValueIri, maybeValueUUID)
       sparqlTemplateLinkUpdate <-
         incrementLinkValue(
           sourceResourceInfo = resourceInfo,
@@ -584,7 +560,7 @@ final case class ValuesResponderV2Live(
    * @param apiRequestId      the ID of the API request.
    * @return a [[UpdateValueResponseV2]].
    */
-  override def updateValueV2(
+  def updateValueV2(
     updateValue: UpdateValueV2,
     requestingUser: User,
     apiRequestId: UUID,
@@ -1240,7 +1216,7 @@ final case class ValuesResponderV2Live(
    * @param requestingUser the user making the request.
    * @param apiRequestId the API request ID.
    */
-  override def deleteValueV2(
+  def deleteValueV2(
     deleteValue: DeleteValueV2,
     requestingUser: User,
     apiRequestId: UUID,
@@ -2138,8 +2114,8 @@ final case class ValuesResponderV2Live(
     iriService.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri))
 }
 
-object ValuesResponderV2Live {
-  val layer = ZLayer.derive[ValuesResponderV2Live]
+object ValuesResponderV2 {
+  val layer = ZLayer.derive[ValuesResponderV2]
 
   /**
    * Make a new value UUID considering optional custom value UUID and custom value IRI.

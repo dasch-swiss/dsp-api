@@ -1674,7 +1674,7 @@ final case class ConstructResponseUtilV2Live(
 
     // get all the mappings
     val mappingResponsesFuture = mappingIris.map { (mappingIri: IRI) =>
-      messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, requestingUser))
+      messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri))
     }
 
     for {

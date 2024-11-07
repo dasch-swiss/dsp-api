@@ -137,10 +137,10 @@ final case class OntologiesRouteV2()(
   private def getOntologyMetadata(): Route =
     path(ontologiesBasePath / "metadata") {
       get { requestContext =>
-        val requestTask = for {
-          maybeProjectIri <- RouteUtilV2.getProjectIri(requestContext)
-          requestingUser  <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield OntologyMetadataGetByProjectRequestV2(maybeProjectIri.toSet, requestingUser)
+        val requestTask = RouteUtilV2
+          .getProjectIri(requestContext)
+          .map(_.toSet)
+          .map(OntologyMetadataGetByProjectRequestV2(_))
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
@@ -166,12 +166,10 @@ final case class OntologiesRouteV2()(
   private def getOntologyMetadataForProjects(): Route =
     path(ontologiesBasePath / "metadata" / Segments) { (projectIris: List[IRI]) =>
       get { requestContext =>
-        val requestTask = for {
-          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-          validatedProjectIris <- ZIO.foreach(projectIris) { iri =>
-                                    RouteUtilZ.toSmartIri(iri, s"Invalid project IRI: $iri")
-                                  }
-        } yield OntologyMetadataGetByProjectRequestV2(validatedProjectIris.toSet, requestingUser)
+        val requestTask = ZIO
+          .foreach(projectIris)(iri => RouteUtilZ.toSmartIri(iri, s"Invalid project IRI: $iri"))
+          .map(_.toSet)
+          .map(OntologyMetadataGetByProjectRequestV2(_))
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }

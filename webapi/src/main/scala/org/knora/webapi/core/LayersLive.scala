@@ -38,6 +38,7 @@ import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
@@ -82,6 +83,7 @@ object LayersLive {
     ActorSystem &
     AdminApiEndpoints &
     AdminModule.Provided &
+    ApiComplexV2JsonLdRequestParser &
     ApiRoutes &
     ApiV2Endpoints &
     AppConfigurations &
@@ -139,6 +141,7 @@ object LayersLive {
     ZLayer.make[DspEnvironmentLive](
       AdminApiModule.layer,
       AdminModule.layer,
+      ApiComplexV2JsonLdRequestParser.layer,
       ApiRoutes.layer,
       ApiV2Endpoints.layer,
       AppConfig.layer,
@@ -196,7 +199,7 @@ object LayersLive {
       StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
-      ValuesResponderV2Live.layer,
+      ValuesResponderV2.layer,
       org.knora.webapi.core.ActorSystem.layer,
       // ZLayer.Debug.mermaid,
     )

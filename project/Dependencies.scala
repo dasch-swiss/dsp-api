@@ -10,7 +10,7 @@ import sbt._
 object Dependencies {
   // should be the same version as in docker-compose.yml,
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
-  val fusekiImage = "daschswiss/apache-jena-fuseki:5.1.0"
+  val fusekiImage = "daschswiss/apache-jena-fuseki:5.2.0"
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.14.0"
 
@@ -91,7 +91,7 @@ object Dependencies {
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.78.1"
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.79"
 
   // caching
   val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
@@ -99,7 +99,7 @@ object Dependencies {
   // other
   val diff        = "com.sksamuel.diff" % "diff"         % "1.1.11"
   val gwtServlet  = "com.google.gwt"    % "gwt-servlet"  % "2.10.0"
-  val icu4j       = "com.ibm.icu"       % "icu4j"        % "75.1"
+  val icu4j       = "com.ibm.icu"       % "icu4j"        % "76.1"
   val jakartaJSON = "org.glassfish"     % "jakarta.json" % "2.0.1"
   val saxonHE     = "net.sf.saxon"      % "Saxon-HE"     % "12.5"
   val scalaGraph =

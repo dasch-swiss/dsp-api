@@ -55,10 +55,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
  */
-sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage {
-
-  def requestingUser: User
-}
+sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
 
 /**
  * Requests the creation of an empty ontology. A successful response will be a [[ReadOntologyV2]].
@@ -1130,9 +1127,8 @@ case class EntityInfoGetResponseV2(
  * @param requestingUser       the user making the request.
  */
 case class StandoffEntityInfoGetRequestV2(
-  standoffClassIris: Set[SmartIri] = Set.empty[SmartIri],
-  standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri],
-  requestingUser: User,
+  standoffClassIris: Set[SmartIri] = Set.empty,
+  standoffPropertyIris: Set[SmartIri] = Set.empty,
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -1212,35 +1208,21 @@ case class SubClassesGetRequestV2(resourceClassIri: SmartIri, requestingUser: Us
 case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
 
 /**
- * Request information about the Knora entities (Knora resource classes, standoff class, resource properties, and standoff properties) of a named graph.
- * A successful response will be a [[OntologyKnoraEntitiesIriInfoV2]].
- *
- * @param ontologyIri    the IRI of the named graph.
- * @param requestingUser the user making the request.
- */
-case class OntologyKnoraEntityIrisGetRequestV2(ontologyIri: SmartIri, requestingUser: User)
-    extends OntologiesResponderRequestV2
-
-/**
  * Requests metadata about ontologies by project.
  *
  * @param projectIris    the IRIs of the projects for which ontologies should be returned. If this set is empty, information
  *                       about all ontologies is returned.
- * @param requestingUser the user making the request.
  */
-case class OntologyMetadataGetByProjectRequestV2(
-  projectIris: Set[SmartIri] = Set.empty[SmartIri],
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
+case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[SmartIri] = Set.empty[SmartIri])
+    extends OntologiesResponderRequestV2
 
 /**
  * Requests metadata about ontologies by ontology IRI.
  *
  * @param ontologyIris   the IRIs of the ontologies to be queried. If this set is empty, information
  *                       about all ontologies is returned.
- * @param requestingUser the user making the request.
  */
-case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: User)
+case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.empty[SmartIri])
     extends OntologiesResponderRequestV2
 
 /**
