@@ -313,26 +313,6 @@ final case class PermissionsResponder(
    * - resource class and property
    * - property
    *
-   * @param doap the DefaultObjectAccessPermission
-   * @return an optional [[DefaultObjectAccessPermissionADM]]
-   */
-  private def defaultObjectAccessPermissionGetADM(
-    doap: DefaultObjectAccessPermission,
-  ): Task[Option[DefaultObjectAccessPermissionADM]] =
-    defaultObjectAccessPermissionGetADM(
-      doap.forProject,
-      doap.forWhat.groupOption.map(_.value),
-      doap.forWhat.resourceClassOption.map(_.value),
-      doap.forWhat.propertyOption.map(_.value),
-    )
-
-  /**
-   * Gets a single default object access permission identified by project and either:
-   * - group
-   * - resource class
-   * - resource class and property
-   * - property
-   *
    * @param projectIri       the project's IRI.
    * @param groupIri         the group's IRI.
    * @param resourceClassIri the resource's class IRI
@@ -631,7 +611,12 @@ final case class PermissionsResponder(
         _ <- doapService.save(doap)
 
         newDefaultObjectAccessPermission <-
-          defaultObjectAccessPermissionGetADM(doap).someOrFail(
+          defaultObjectAccessPermissionGetADM(
+            doap.forProject,
+            doap.forWhat.groupOption.map(_.value),
+            doap.forWhat.resourceClassOption.map(_.value),
+            doap.forWhat.propertyOption.map(_.value),
+          ).someOrFail(
             InconsistentRepositoryDataException(
               "Requested default object access permission could not be created, report this as a possible bug.",
             ),
