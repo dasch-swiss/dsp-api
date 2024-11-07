@@ -8,6 +8,7 @@ package org.knora.webapi.slice.resourceinfo.domain
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.SmartIri

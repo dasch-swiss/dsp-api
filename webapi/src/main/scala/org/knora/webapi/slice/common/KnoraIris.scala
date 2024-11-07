@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.common
 
 import eu.timepit.refined.types.string.NonEmptyString
+
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
