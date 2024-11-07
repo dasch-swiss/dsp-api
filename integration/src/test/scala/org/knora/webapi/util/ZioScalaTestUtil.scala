@@ -7,6 +7,7 @@ package org.knora.webapi.util
 
 import org.scalatest.Assertions
 import org.scalatest.matchers.should.Matchers.*
+import org.scalatest.matchers.should.Matchers.a as T
 import zio.Exit
 
 import scala.reflect.ClassTag
@@ -22,6 +23,15 @@ object ZioScalaTestUtil {
     case Exit.Failure(err) => {
       err.squash shouldBe a[T]
       err.squash.getMessage shouldEqual expectedError
+    }
+    case _ => Assertions.fail(s"Expected Exit.Failure with specific T.")
+  }
+
+  def assertFailsWithA[T <: Throwable: ClassTag](actual: Exit[Throwable, ?], errorPredicate: Throwable => Boolean) = actual match {
+    case Exit.Failure(err) => {
+      val errSquashed = err.squash
+      errSquashed shouldBe a[T]
+      errorPredicate(errSquashed) shouldBe true
     }
     case _ => Assertions.fail(s"Expected Exit.Failure with specific T.")
   }

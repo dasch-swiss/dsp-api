@@ -68,9 +68,8 @@ object DefaultObjectAccessPermission {
         case (Some(g: GroupIri), None, None)                     => Right(Group(g))
         case _ =>
           Left(
-            s"Invalid combination of group '${group.map(_.value).getOrElse("")}', " +
-              s"resourceClass '${resourceClass.map(_.value).getOrElse("")}' " +
-              s"and property '${property.map(_.value).getOrElse("")}'.",
+            s"DOAP restrictions must be either for a group, a resource class, a property, " +
+              s"or a combination of a resource class and a property. ",
           )
       }
   }

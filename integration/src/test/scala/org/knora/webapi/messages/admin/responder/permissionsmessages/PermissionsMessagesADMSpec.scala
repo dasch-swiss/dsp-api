@@ -317,7 +317,11 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.rootUser,
         ),
       )
-      assertFailsWithA[BadRequestException](exit)
+      assertFailsWithA[BadRequestException](
+        exit,
+        "DOAP restrictions must be either for a group, a resource class, a property, " +
+          "or a combination of a resource class and a property. ",
+      )
     }
 
     "return 'BadRequest' if the both group and property are supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
@@ -334,7 +338,11 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.rootUser,
         ),
       )
-      assertFailsWithA[BadRequestException](exit)
+      assertFailsWithA[BadRequestException](
+        exit,
+        "DOAP restrictions must be either for a group, a resource class, a property, " +
+          "or a combination of a resource class and a property. ",
+      )
     }
 
     "return 'BadRequest' if propertyIri supplied for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
@@ -350,25 +358,9 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.rootUser,
         ),
       )
-      assertFailsWithA[BadRequestException](exit, s"Invalid property IRI: ${SharedTestDataADM.customValueIRI}")
-    }
-
-    "return 'BadRequest' if resourceClassIri supplied for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
-      val exit = UnsafeZioRun.run(
-        PermissionRestService.createDefaultObjectAccessPermission(
-          CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = anythingProjectIri,
-            forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
-            hasPermissions = Set(
-              PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
-            ),
-          ),
-          SharedTestDataADM.rootUser,
-        ),
-      )
       assertFailsWithA[BadRequestException](
         exit,
-        s"Invalid resource class IRI: $ANYTHING_THING_RESOURCE_CLASS_LocalHost",
+        "<http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw/values/tdWAtnWK2qUC6tr4uQLAHA> is not a Knora property IRI",
       )
     }
 
@@ -384,7 +376,11 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.rootUser,
         ),
       )
-      assertFailsWithA[BadRequestException](exit)
+      assertFailsWithA[BadRequestException](
+        exit,
+        "DOAP restrictions must be either for a group, a resource class, a property, " +
+          "or a combination of a resource class and a property. ",
+      )
     }
   }
 

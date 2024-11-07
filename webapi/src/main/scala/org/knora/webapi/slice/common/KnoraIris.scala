@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.common
 import eu.timepit.refined.types.string.NonEmptyString
-
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Simple
 import org.knora.webapi.OntologySchema
@@ -32,11 +31,8 @@ object KnoraIris {
   object PropertyIri {
     def unsafeFrom(iri: SmartIri): PropertyIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
     def from(iri: SmartIri): Either[String, PropertyIri] =
-      if (!iri.isKnoraEntityIri && iri.isApiV2ComplexSchema) {
-        Left(s"<$iri> is not a Knora API v2 complex property IRI")
-      } else {
-        Right(PropertyIri(iri))
-      }
+      if iri.isKnoraEntityIri then Right(PropertyIri(iri))
+      else Left(s"<$iri> is not a Knora property IRI")
   }
 
   final case class ValueIri private (
@@ -75,14 +71,11 @@ object KnoraIris {
       }
   }
 
-  final case class ResourceClassIri private (smartIri: SmartIri) extends KnoraIri
+  final case class ResourceClassIri private (smartIri: SmartIri, entityName: String) extends KnoraIri
 
   object ResourceClassIri {
     def from(iri: SmartIri): Either[String, ResourceClassIri] =
-      if (!iri.isKnoraEntityIri && iri.isApiV2ComplexSchema) {
-        Left(s"<$iri> is not a Knora resource class IRI")
-      } else {
-        Right(ResourceClassIri(iri))
-      }
+      if iri.isKnoraEntityIri then Right(ResourceClassIri(iri, iri.getEntityName))
+      else Left(s"<$iri> is not a Knora resource class IRI")
   }
 }
