@@ -158,7 +158,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                         |  },
                         |  "@context": {
                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                         |  }
                         |}""".stripMargin,
@@ -183,7 +183,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                         |  },
                         |  "@context": {
                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                         |  }
                         |}""".stripMargin,
@@ -208,7 +208,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                         |  },
                         |  "@context": {
                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                         |  }
                         |}""".stripMargin,
@@ -230,7 +230,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                         |  },
                         |  "@context": {
                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                         |  }
                         |}""".stripMargin,
@@ -259,7 +259,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                         |  },
                         |  "@context": {
                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                         |  }
                         |}""".stripMargin,
@@ -286,7 +286,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                         |  },
                         |  "@context": {
                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                         |  }
                         |}""".stripMargin,
@@ -315,7 +315,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |  },
                  |  "@context": {
                  |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                 |    "ex": "https://example.com/test#",
+                 |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                  |  }
                  |}""".stripMargin,
@@ -349,7 +349,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |  },
                  |  "@context": {
                  |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                 |    "ex": "https://example.com/test#",
+                 |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                  |  }
                  |}""".stripMargin,
@@ -376,7 +376,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |  },
                  |  "@context": {
                  |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                 |    "ex": "https://example.com/test#",
+                 |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                  |  }
                  |}""".stripMargin,
@@ -401,7 +401,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |  },
                  |  "@context": {
                  |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                 |    "ex": "https://example.com/test#",
+                 |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                  |  }
                  |}""".stripMargin,
@@ -427,7 +427,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |  },
                  |  "@context": {
                  |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                 |    "ex": "https://example.com/test#",
+                 |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                  |  }
                  |}""".stripMargin,
@@ -461,7 +461,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |  },
                  |  "@context": {
                  |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                 |    "ex": "https://example.com/test#",
+                 |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                  |  }
                  |}""".stripMargin,
@@ -498,7 +498,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
@@ -532,7 +532,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
@@ -559,7 +559,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
@@ -586,7 +586,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
@@ -613,7 +613,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
@@ -641,7 +641,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
@@ -680,7 +680,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
