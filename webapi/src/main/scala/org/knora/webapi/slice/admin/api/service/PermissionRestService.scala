@@ -101,7 +101,7 @@ final case class PermissionRestService(
     for {
       _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
       uuid   <- Random.nextUUID
-      result <- responder.createDefaultObjectAccessPermission(request, user, uuid)
+      result <- responder.createDefaultObjectAccessPermission(request, uuid)
       ext    <- format.toExternal(result)
     } yield ext
 

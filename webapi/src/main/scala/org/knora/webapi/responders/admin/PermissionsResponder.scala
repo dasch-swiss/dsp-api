@@ -26,16 +26,29 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.Group
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.Property
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClass
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClassAndProperty
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
+import org.knora.webapi.slice.admin.domain.service.DefaultObjectAccessPermissionService
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.repo.service.DefaultObjectAccessPermissionRepoLive
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -49,6 +62,9 @@ final case class PermissionsResponder(
   private val triplestore: TriplestoreService,
   private val auth: AuthorizationRestService,
   private val administrativePermissionService: AdministrativePermissionService,
+  private val iriConverter: IriConverter,
+  private val ontologyRepo: OntologyRepo,
+  private val doapService: DefaultObjectAccessPermissionService,
 )(implicit val stringFormatter: StringFormatter)
     extends LazyLogging {
 
@@ -534,151 +550,66 @@ final case class PermissionsResponder(
     } yield DefaultObjectAccessPermissionsStringResponseADM(resultStr)
   }
 
-  private def validate(req: CreateDefaultObjectAccessPermissionAPIRequestADM) = ZIO.attempt {
-    val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+  private def validate(
+    req: CreateDefaultObjectAccessPermissionAPIRequestADM,
+  ): IO[String, DefaultObjectAccessPermission] =
+    for {
+      projectIri <- ZIO.fromEither(ProjectIri.from(req.forProject))
+      project    <- knoraProjectService.findById(projectIri).orDie.someOrFail("Project not found")
+      permissionIri <-
+        ZIO
+          .foreach(req.id)(iriConverter.asSmartIri)
+          .flatMap(iriService.checkOrCreateEntityIri(_, PermissionIri.makeNew(project.shortcode).value))
+          .mapBoth(_.getMessage, PermissionIri.unsafeFrom)
 
-    req.id.foreach(iri => PermissionIri.from(iri).fold(msg => throw BadRequestException(msg), _ => ()))
+      groupIri <- ZIO.fromEither(req.forGroup.fold(Right(None))(GroupIri.from(_).map(Some(_))))
+      _        <- ZIO.foreachDiscard(groupIri)(groupService.findById(_).orDie.someOrFail("Group not found"))
 
-    ProjectIri.from(req.forProject).getOrElse(throw BadRequestException(s"Invalid project IRI  ${req.forProject}"))
-
-    (req.forGroup, req.forResourceClass, req.forProperty) match {
-      case (None, None, None) =>
-        throw BadRequestException(
-          "Either a group, a resource class, a property, or a combination of resource class and property must be given.",
+      resourceClassIri <-
+        ZIO.foreach(req.forResourceClass)(
+          iriConverter.asSmartIri(_).mapError(_.getMessage).flatMap(s => ZIO.fromEither(ResourceClassIri.from(s))),
         )
-      case (Some(_), Some(_), _) =>
-        throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
-      case (Some(_), _, Some(_)) =>
-        throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
-      case (Some(groupIri), None, None) =>
-        GroupIri.from(groupIri).getOrElse(throw BadRequestException(s"Invalid group IRI $groupIri"))
-      case (None, resourceClassIriMaybe, propertyIriMaybe) =>
-        resourceClassIriMaybe.foreach { resourceClassIri =>
-          if (!sf.toSmartIri(resourceClassIri).isKnoraEntityIri) {
-            throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
-          }
-        }
-        propertyIriMaybe.foreach { propertyIri =>
-          if (!sf.toSmartIri(propertyIri).isKnoraEntityIri) {
-            throw BadRequestException(s"Invalid property IRI: $propertyIri")
-          }
-        }
-      case _ => ()
-    }
 
-    if (req.hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
-  }
+      propertyIri <-
+        ZIO.foreach(req.forProperty)(
+          iriConverter.asSmartIri(_).mapError(_.getMessage).flatMap(s => ZIO.fromEither(PropertyIri.from(s))),
+        )
+      _ <- ZIO.foreachDiscard(propertyIri)(
+             ontologyRepo.findProperty(_).orDie.someOrFail(s"Property $propertyIri not found"),
+           )
+
+      forWhat <- ZIO.fromEither(ForWhat.fromIris(groupIri, resourceClassIri, propertyIri))
+      _       <- ZIO.fail("Permissions needs to be supplied.").when(req.hasPermissions.isEmpty)
+      doap    <- ZIO.fromEither(DefaultObjectAccessPermission.from(permissionIri, projectIri, forWhat, req.hasPermissions))
+    } yield doap
 
   def createDefaultObjectAccessPermission(
     createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
-    user: User,
     apiRequestID: UUID,
   ): Task[DefaultObjectAccessPermissionCreateResponseADM] = {
-
-    /**
-     * The actual change project task run with an IRI lock.
-     */
     val createPermissionTask =
       for {
-        _          <- validate(createRequest)
-        projectIri <- ZIO.fromEither(ProjectIri.from(createRequest.forProject)).mapError(BadRequestException.apply)
-        project <- knoraProjectService
-                     .findById(projectIri)
-                     .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
-        _ <- auth.ensureSystemAdminOrProjectAdmin(user, project)
-        checkResult <- defaultObjectAccessPermissionGetADM(
-                         projectIri,
-                         createRequest.forGroup,
-                         createRequest.forResourceClass,
-                         createRequest.forProperty,
-                       )
-
-        _ = checkResult match {
-              case Some(doap: DefaultObjectAccessPermissionADM) =>
-                val errorMessage = if (doap.forGroup.nonEmpty) {
-                  s"and group: '${doap.forGroup.get}' "
-                } else {
-                  val resourceClassExists = if (doap.forResourceClass.nonEmpty) {
-                    s"and resourceClass: '${doap.forResourceClass.get}' "
-                  } else ""
-                  val propExists = if (doap.forProperty.nonEmpty) {
-                    s"and property: '${doap.forProperty.get}' "
-                  } else ""
-                  resourceClassExists + propExists
-                }
-                throw DuplicateValueException(
-                  s"A default object access permission for project: '${createRequest.forProject}' " +
-                    errorMessage + "combination already exists. " +
-                    s"This permission currently has the scope '${PermissionUtilADM
-                        .formatPermissionADMs(doap.hasPermissions, PermissionType.OAP)}'. " +
-                    s"Use its IRI ${doap.iri} to modify it, if necessary.",
-                )
-              case None => ()
-            }
-
-        customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => stringFormatter.toSmartIri(iri))
-        newPermissionIri <- iriService.checkOrCreateEntityIri(
-                              customPermissionIri,
-                              PermissionIri.makeNew(project.shortcode).value,
-                            )
-        // verify group, if any given.
-        // Is a group given that is not a built-in one?
-        maybeGroupIri <-
-          if (createRequest.forGroup.exists(!builtIn.all.map(_.id.value).contains(_))) {
-            // Yes. Check if it is a known group.
-            for {
-              maybeIri <- ZIO
-                            .fromOption(createRequest.forGroup)
-                            .orElseFail(NotFoundException("Group IRI not found."))
-              groupIri <- ZIO.fromEither(GroupIri.from(maybeIri)).mapError(ValidationException(_))
-              group <-
-                groupService
-                  .findById(groupIri)
-                  .someOrFail(NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
-            } yield Some(group.id)
-          } else {
-            // No, return given group as it is. That means:
-            // If given group is a built-in one, no verification is necessary, return it as it is.
-            // In case no group IRI is given, returns None.
-            ZIO.succeed(createRequest.forGroup)
-          }
-
-        // Create the default object access permission.
-        permissions <- verifyHasPermissionsDOAP(createRequest.hasPermissions)
-        createNewDefaultObjectAccessPermissionSparqlString = sparql.admin.txt.createNewDefaultObjectAccessPermission(
-                                                               AdminConstants.permissionsDataNamedGraph.value,
-                                                               permissionIri = newPermissionIri,
-                                                               permissionClassIri =
-                                                                 OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
-                                                               projectIri = project.id.value,
-                                                               maybeGroupIri = maybeGroupIri,
-                                                               maybeResourceClassIri = createRequest.forResourceClass,
-                                                               maybePropertyIri = createRequest.forProperty,
-                                                               permissions = PermissionUtilADM.formatPermissionADMs(
-                                                                 permissions,
-                                                                 PermissionType.OAP,
-                                                               ),
-                                                             )
-        _ <- triplestore.query(Update(createNewDefaultObjectAccessPermissionSparqlString))
-
-        // try to retrieve the newly created permission
-        maybePermission <- defaultObjectAccessPermissionGetADM(
-                             projectIri,
-                             createRequest.forGroup,
-                             createRequest.forResourceClass,
-                             createRequest.forProperty,
-                           )
-
-        newDefaultObjectAcessPermission: DefaultObjectAccessPermissionADM =
-          maybePermission.getOrElse(
-            throw BadRequestException(
-              "Requested default object access permission could not be created, report this as a possible bug.",
-            ),
-          )
-
-      } yield DefaultObjectAccessPermissionCreateResponseADM(defaultObjectAccessPermission =
-        newDefaultObjectAcessPermission,
-      )
+        doap <- validate(createRequest).mapError(BadRequestException(_))
+        _ <- doapService.findByProjectAndForWhat(doap.forProject, doap.forWhat).flatMap {
+               case Some(existing: DefaultObjectAccessPermission) =>
+                 val msg = existing.forWhat match
+                   case Group(g)          => s"and group: '${g.value}' "
+                   case ResourceClass(rc) => s"and resourceClass: '${rc.value}' "
+                   case Property(prop)    => s"and property: '${prop.value}' "
+                   case ResourceClassAndProperty(rc, prop) =>
+                     s"and resourceClass: '${rc.value}' and property: '${prop.value}' "
+                 ZIO.fail(
+                   DuplicateValueException(
+                     s"A default object access permission for project: '${doap.forProject.value}' " +
+                       msg + "combination already exists. " +
+                       s"This permission currently has the scope '${DefaultObjectAccessPermissionRepoLive.toStringLiteral(existing.permission)}'. " +
+                       s"Use its IRI ${existing.id.value} to modify it, if necessary.",
+                   ),
+                 )
+               case None => ZIO.unit
+             }
+        _ <- doapService.save(doap)
+      } yield DefaultObjectAccessPermissionCreateResponseADM(doapService.asDefaultObjectAccessPermissionADM(doap))
 
     IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI, createPermissionTask)
   }
@@ -1298,7 +1229,6 @@ final case class PermissionsResponder(
                  PermissionADM.from(Permission.ObjectAccess.Delete, builtIn.ProjectMember.id.value),
                ),
              ),
-             KnoraSystemInstances.Users.SystemUser,
              UUID.randomUUID(),
            )
 
@@ -1312,7 +1242,6 @@ final case class PermissionsResponder(
                  PermissionADM.from(Permission.ObjectAccess.Delete, builtIn.ProjectMember.id.value),
                ),
              ),
-             KnoraSystemInstances.Users.SystemUser,
              UUID.randomUUID(),
            )
     } yield ()

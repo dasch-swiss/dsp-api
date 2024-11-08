@@ -4,10 +4,9 @@
  */
 
 package org.knora.webapi.slice.common
+
 import eu.timepit.refined.types.string.NonEmptyString
 
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.ApiV2Simple
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -17,26 +16,36 @@ object KnoraIris {
 
   opaque type ResourceId = NonEmptyString
   opaque type ValueId    = NonEmptyString
+  opaque type EntityName = NonEmptyString
 
   trait KnoraIri { self =>
     def smartIri: SmartIri
     override def toString: String                     = self.smartIri.toString
     def toInternal: InternalIri                       = self.smartIri.toInternalIri
-    def toApiV2Complex: SmartIri                      = self.toOntologySchema(ApiV2Complex)
-    def toApiV2Simple: SmartIri                       = self.toOntologySchema(ApiV2Simple)
     def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
   }
+
+  // PropertyIri and ResourceClassIri currently have the same constraint
+  // i.e. they only have to be a KnoraEntityIri (SmartIri.isKnoraEntityIri)
+  // but they are kept separate for clarity of method signatures
+
+  // Both Iris have an internal and external representation, thus we provide
+  // functions which create these from a SmartIri. `from` accepts any SmartIri. `fromApiV2Complex` only accepts
+  // SmartIris that are part of the API v2 complex schema.
 
   final case class PropertyIri private (smartIri: SmartIri) extends KnoraIri
 
   object PropertyIri {
+
     def unsafeFrom(iri: SmartIri): PropertyIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
+
+    def fromApiV2Complex(iri: SmartIri): Either[String, PropertyIri] =
+      if iri.isApiV2ComplexSchema then from(iri)
+      else Left(s"Not an API v2 complex IRI ${iri.toString}")
+
     def from(iri: SmartIri): Either[String, PropertyIri] =
-      if (!iri.isKnoraEntityIri && iri.isApiV2ComplexSchema) {
-        Left(s"<$iri> is not a Knora API v2 complex property IRI")
-      } else {
-        Right(PropertyIri(iri))
-      }
+      if iri.isKnoraEntityIri then Right(PropertyIri(iri))
+      else Left(s"<$iri> is not a Knora property IRI")
   }
 
   final case class ValueIri private (
@@ -46,43 +55,51 @@ object KnoraIris {
     valueId: ValueId,
   ) extends KnoraIri
 
+  final case class ResourceClassIri private (smartIri: SmartIri, entityName: EntityName) extends KnoraIri
+
+  object ResourceClassIri {
+    def unsafeFrom(iri: SmartIri): ResourceClassIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
+
+    def fromApiV2Complex(iri: SmartIri): Either[String, ResourceClassIri] =
+      if iri.isApiV2ComplexSchema then from(iri)
+      else Left(s"Not an API v2 complex IRI ${iri.toString}")
+
+    def from(iri: SmartIri): Either[String, ResourceClassIri] =
+      if iri.isKnoraEntityIri then Right(ResourceClassIri(iri, NonEmptyString.unsafeFrom(iri.getEntityName)))
+      else Left(s"<$iri> is not a Knora resource class IRI")
+  }
+
+  // `ValueIri` and `ResourceIri` have no different internal representation.
+  // Thus, we only provide functions which create these from a `SmartIri`.
+  // The `fromApiV2Complex` is not required as these Iris are not part of the API v2 complex schema.
   object ValueIri {
+
+    def unsafeFrom(iri: SmartIri): ValueIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
+
     def from(iri: SmartIri): Either[String, ValueIri] =
-      if (!iri.isKnoraValueIri) {
-        Left(s"<$iri> is not a Knora value IRI")
-      } else {
+      if iri.isKnoraValueIri then
         // the following three calls are safe because we checked that the
         // shortcode, resourceId and valueId are present in isKnoraValueIri
         val shortcode  = iri.getProjectShortcode.getOrElse(throw Exception())
         val resourceId = NonEmptyString.unsafeFrom(iri.getResourceID.getOrElse(throw Exception()))
         val valueId    = NonEmptyString.unsafeFrom(iri.getValueID.getOrElse(throw Exception()))
         Right(ValueIri(iri, shortcode, resourceId, valueId))
-      }
+      else Left(s"<$iri> is not a Knora value IRI")
   }
 
   final case class ResourceIri private (smartIri: SmartIri, shortcode: Shortcode, resourceId: ResourceId)
       extends KnoraIri
   object ResourceIri {
+
+    def unsafeFrom(iri: SmartIri): ResourceIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
+
     def from(iri: SmartIri): Either[String, ResourceIri] =
-      if (!iri.isKnoraResourceIri) {
-        Left(s"<$iri> is not a Knora resource IRI")
-      } else {
+      if iri.isKnoraResourceIri then
         // the following two calls are safe because we checked that the
         // shortcode and resourceId are present in isKnoraResourceIri
         val shortcode  = iri.getProjectShortcode.getOrElse(throw Exception())
         val resourceId = NonEmptyString.unsafeFrom(iri.getResourceID.getOrElse(throw Exception()))
         Right(ResourceIri(iri, shortcode, resourceId))
-      }
-  }
-
-  final case class ResourceClassIri private (smartIri: SmartIri) extends KnoraIri
-
-  object ResourceClassIri {
-    def from(iri: SmartIri): Either[String, ResourceClassIri] =
-      if (!iri.isKnoraEntityIri && iri.isApiV2ComplexSchema) {
-        Left(s"<$iri> is not a Knora resource class IRI")
-      } else {
-        Right(ResourceClassIri(iri))
-      }
+      else Left(s"<$iri> is not a Knora resource IRI")
   }
 }
