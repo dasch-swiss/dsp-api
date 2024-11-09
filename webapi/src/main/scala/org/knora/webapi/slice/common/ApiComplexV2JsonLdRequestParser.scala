@@ -56,7 +56,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueType              <- valueType(valueStatement)
         valueResource           = valueStatement.getObject.asResource()
         valueIri               <- valueIri(valueResource).someOrFail("The value IRI is required")
-        newValueVersionIri     <- newValueVersionIri(valueResource)
+        newValueVersionIri     <- newValueVersionIri(valueResource, valueIri)
         valueCreationDate      <- ZIO.fromEither(valueCreationDate(valueResource))
         valuePermissions       <- ZIO.fromEither(valuePermissions(valueResource))
         valueFileValueFilename <- ZIO.fromEither(valueFileValueFilename(valueResource))
@@ -75,7 +75,7 @@ final case class ApiComplexV2JsonLdRequestParser(
                                valueContentV2,
                                valuePermissions,
                                valueCreationDate,
-                               newValueVersionIri,
+                               newValueVersionIri.map(_.smartIri),
                                ingestState,
                              ),
                            )
@@ -93,13 +93,27 @@ final case class ApiComplexV2JsonLdRequestParser(
                                    valueType,
                                    permissions,
                                    valueCreationDate,
-                                   newValueVersionIri,
+                                   newValueVersionIri.map(_.smartIri),
                                  ),
                              )
       } yield updateValue
     }
 
-  private def newValueVersionIri(r: Resource): IO[String, Option[SmartIri]] = ???
+  private def newValueVersionIri(r: Resource, valueIri: ValueIri): IO[String, Option[ValueIri]] =
+    ZIO
+      .fromEither(r.objectUriOption(NewValueVersionIri))
+      .some
+      .flatMap(converter.asSmartIri(_).mapError(_.getMessage).asSomeError)
+      .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).asSomeError)
+      .filterOrFail(newV => newV != valueIri)(
+        Some(s"The IRI of a new value version cannot be the same as the IRI of the current version"),
+      )
+      .filterOrFail(newV => newV.sameResourceAs(valueIri))(
+        Some(
+          s"The project shortcode and resource must be equal for the new value version and the current version",
+        ),
+      )
+      .unsome
 
   def createValueV2FromJsonLd(str: String, ingestState: AssetIngestState): IO[String, CreateValueV2] =
     ZIO.scoped {
