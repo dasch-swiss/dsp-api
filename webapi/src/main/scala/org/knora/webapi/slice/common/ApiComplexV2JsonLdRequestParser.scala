@@ -250,7 +250,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         resourceClassIri       <- resourceClassIri(resource)
         valueStatement         <- valueStatement(resource)
         valuePropertyIri       <- valuePropertyIri(valueStatement)
-        valueResource           = valueStatement.getObject.asResource()
+        valueResource          <- ZIO.fromEither(valueStatement.objectAsResource())
         valueIri               <- valueIri(valueResource)
         valueUuid              <- ZIO.fromEither(valueHasUuid(valueResource))
         valueCreationDate      <- ZIO.fromEither(valueCreationDate(valueResource))
