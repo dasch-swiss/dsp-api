@@ -17,6 +17,7 @@ import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
@@ -25,7 +26,6 @@ import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.OntologyConstants.Xsd
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.util.UserUtilADM
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
@@ -41,7 +41,6 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri as KResourceClassIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri as KResourceIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
@@ -154,14 +153,20 @@ final case class ApiComplexV2JsonLdRequestParser(
     for {
       userStr <- ZIO.fromEither(r.objectUriOption(AttachedToUser))
       userIri <- ZIO.foreach(userStr)(iri => ZIO.fromEither(UserIri.from(iri)))
-      user <- ZIO
-                .foreach(userIri)(iri =>
-                  UserUtilADM
-                    .switchToUser(requestingUser, iri.value, projectIri.value)
-                    .mapError(_.getMessage),
-                )
-                .provide(ZLayer.succeed(userService))
+      user    <- ZIO.foreach(userIri)(iri => checkUser(requestingUser, iri, projectIri))
     } yield user.getOrElse(requestingUser)
+
+  private def checkUser(requestingUser: User, userIri: UserIri, projectIri: ProjectIri): IO[String, User] =
+    requestingUser match {
+      case _ if requestingUser.id == userIri.value => ZIO.succeed(requestingUser)
+      case _
+          if !(requestingUser.permissions.isSystemAdmin ||
+            requestingUser.permissions.isProjectAdmin(projectIri.value)) =>
+        ZIO.fail(
+          s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can perform an operation as another user",
+        )
+      case _ => userService.findUserByIri(userIri).orDie.someOrFail(s"User '${userIri.value}' not found")
+    }
 
   def attachedToProject(r: Resource): IO[String, Project] =
     for {
