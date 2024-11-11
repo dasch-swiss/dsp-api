@@ -53,7 +53,10 @@ object KnoraIris {
     shortcode: Shortcode,
     resourceId: ResourceId,
     valueId: ValueId,
-  ) extends KnoraIri
+  ) extends KnoraIri {
+    def sameResourceAs(other: ValueIri): Boolean =
+      this.shortcode == other.shortcode && this.resourceId == other.resourceId
+  }
 
   final case class ResourceClassIri private (smartIri: SmartIri, entityName: EntityName) extends KnoraIri
 

@@ -53,6 +53,15 @@ object ModelOpsSpec extends ZIOSpecDefault {
           model2 <- ModelOps.fromJsonLd(jsonLd2)
         } yield assertTrue(model1.isIsomorphicWith(model2))
       },
+      test("should fail on invalid json ld") {
+        for {
+          exit <- ModelOps.fromJsonLd("invalid json ld").exit
+        } yield assertTrue(
+          exit == Exit.Failure(
+            Cause.fail("[line: 1, col: 1 ] The document could not be loaded or parsed [code=LOADING_DOCUMENT_FAILED]."),
+          ),
+        )
+      },
     ),
   )
 }

@@ -3066,7 +3066,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "not update an integer value with an invalid custom new value version IRI" in {
       val resourceIri: IRI        = AThing.iri
       val intValue: Int           = 8
-      val newValueVersionIri: IRI = "foo"
+      val newValueVersionIri: IRI = "http://example.com/foo"
 
       val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,

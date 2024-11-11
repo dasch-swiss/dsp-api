@@ -20,6 +20,7 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.OntologyConstants.Xsd
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
@@ -42,6 +43,77 @@ final case class ApiComplexV2JsonLdRequestParser(
   messageRelay: MessageRelay,
   sipiService: SipiService,
 ) {
+
+  def updateValueV2fromJsonLd(str: String, ingestState: AssetIngestState): IO[String, UpdateValueV2] =
+    ZIO.scoped {
+      for {
+        model                  <- ModelOps.fromJsonLd(str)
+        resourceAndIri         <- resourceAndIri(model)
+        (resource, resourceIri) = resourceAndIri
+        resourceClassIri       <- resourceClassIri(resource)
+        valueStatement         <- valueStatement(resource)
+        valuePropertyIri       <- valuePropertyIri(valueStatement)
+        valueType              <- valueType(valueStatement)
+        valueResource           = valueStatement.getObject.asResource()
+        valueIri               <- valueIri(valueResource).someOrFail("The value IRI is required")
+        newValueVersionIri     <- newValueVersionIri(valueResource, valueIri)
+        valueCreationDate      <- ZIO.fromEither(valueCreationDate(valueResource))
+        valuePermissions       <- ZIO.fromEither(valuePermissions(valueResource))
+        valueFileValueFilename <- ZIO.fromEither(valueFileValueFilename(valueResource))
+        valueContent <-
+          getValueContent(valueType.toString, valueResource, valueFileValueFilename, resourceIri.shortcode, ingestState)
+            .map(Some(_))
+            .orElse(ZIO.none)
+        updateValue <- valueContent match
+                         case Some(valueContentV2) =>
+                           ZIO.succeed(
+                             UpdateValueContentV2(
+                               resourceIri.toString,
+                               resourceClassIri.smartIri,
+                               valuePropertyIri.smartIri,
+                               valueIri.toString,
+                               valueContentV2,
+                               valuePermissions,
+                               valueCreationDate,
+                               newValueVersionIri.map(_.smartIri),
+                               ingestState,
+                             ),
+                           )
+                         case None =>
+                           ZIO
+                             .fromOption(valuePermissions)
+                             .mapBoth(
+                               _ => "No permissions and no value content found",
+                               permissions =>
+                                 UpdateValuePermissionsV2(
+                                   resourceIri.toString,
+                                   resourceClassIri.smartIri,
+                                   valuePropertyIri.smartIri,
+                                   valueIri.toString,
+                                   valueType,
+                                   permissions,
+                                   valueCreationDate,
+                                   newValueVersionIri.map(_.smartIri),
+                                 ),
+                             )
+      } yield updateValue
+    }
+
+  private def newValueVersionIri(r: Resource, valueIri: ValueIri): IO[String, Option[ValueIri]] =
+    ZIO
+      .fromEither(r.objectUriOption(NewValueVersionIri))
+      .some
+      .flatMap(converter.asSmartIri(_).mapError(_.getMessage).asSomeError)
+      .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).asSomeError)
+      .filterOrFail(newV => newV != valueIri)(
+        Some(s"The IRI of a new value version cannot be the same as the IRI of the current version"),
+      )
+      .filterOrFail(newV => newV.sameResourceAs(valueIri))(
+        Some(
+          s"The project shortcode and resource must be equal for the new value version and the current version",
+        ),
+      )
+      .unsome
 
   def createValueV2FromJsonLd(str: String, ingestState: AssetIngestState): IO[String, CreateValueV2] =
     ZIO.scoped {

@@ -108,7 +108,9 @@ final case class ValuesRouteV2()(
               requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
               apiRequestId   <- Random.nextUUID
               ingestState     = AssetIngestState.headerAssetIngestState(ctx.request.headers)
-              updateValue    <- UpdateValueV2.fromJsonLd(ingestState, jsonLdString, requestingUser)
+              updateValue <- ZIO.serviceWithZIO[ApiComplexV2JsonLdRequestParser](
+                               _.updateValueV2fromJsonLd(jsonLdString, ingestState).mapError(BadRequestException(_)),
+                             )
               response <-
                 ZIO.serviceWithZIO[ValuesResponderV2](_.updateValueV2(updateValue, requestingUser, apiRequestId))
             } yield response,
