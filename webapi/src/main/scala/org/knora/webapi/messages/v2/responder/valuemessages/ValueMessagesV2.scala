@@ -18,7 +18,6 @@ import scala.util.Try
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-import dsp.errors.NotImplementedException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
@@ -49,7 +48,6 @@ import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -738,80 +736,6 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] with WithAsIs
  */
 object ValueContentV2 {
 
-  /**
-   * Converts a JSON-LD object to a [[ValueContentV2]].
-   *
-   * @param jsonLdObject         the JSON-LD object.
-   * @param requestingUser       the user making the request.
-   * @return a [[ValueContentV2]].
-   */
-  def fromJsonLdObject(
-    jsonLdObject: JsonLDObject,
-    requestingUser: User,
-    fileInfo: Option[FileInfo],
-  ): ZIO[StringFormatter & MessageRelay, Throwable, ValueContentV2] =
-    ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
-      for {
-        valueType <-
-          ZIO.attempt(jsonLdObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr))
-
-        valueContent <-
-          valueType.toString match {
-            case TextValue                   => TextValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            case IntValue                    => IntegerValueContentV2.fromJsonLdObject(jsonLdObject)
-            case DecimalValue                => DecimalValueContentV2.fromJsonLdObject(jsonLdObject)
-            case BooleanValue                => BooleanValueContentV2.fromJsonLdObject(jsonLdObject)
-            case KnoraApiV2Complex.DateValue => DateValueContentV2.fromJsonLdObject(jsonLdObject)
-            case GeomValue                   => GeomValueContentV2.fromJsonLdObject(jsonLdObject)
-            case IntervalValue               => IntervalValueContentV2.fromJsonLdObject(jsonLdObject)
-            case TimeValue                   => TimeValueContentV2.fromJsonLdObject(jsonLdObject)
-            case LinkValue                   => LinkValueContentV2.fromJsonLdObject(jsonLdObject)
-            case ListValue                   => HierarchicalListValueContentV2.fromJsonLdObject(jsonLdObject)
-            case UriValue                    => UriValueContentV2.fromJsonLdObject(jsonLdObject)
-            case GeonameValue                => GeonameValueContentV2.fromJsonLdObject(jsonLdObject)
-            case ColorValue                  => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
-            case StillImageFileValue =>
-              for {
-                info <-
-                  ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for StillImageFileValue"))
-                content <- StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
-              } yield content
-            case StillImageExternalFileValue => StillImageExternalFileValueContentV2.fromJsonLdObject(jsonLdObject)
-            case DocumentFileValue =>
-              for {
-                info <-
-                  ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for DocumentFileValue"))
-                content <- DocumentFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
-              } yield content
-            case TextFileValue =>
-              for {
-                info    <- ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for TextFileValue"))
-                content <- TextFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
-              } yield content
-            case AudioFileValue =>
-              for {
-                info <-
-                  ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for AudioFileValue"))
-                content <- AudioFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
-              } yield content
-            case MovingImageFileValue =>
-              for {
-                info <- ZIO
-                          .fromOption(fileInfo)
-                          .orElseFail(BadRequestException("No file info found for MovingImageFileValue"))
-                content <- MovingImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
-              } yield content
-            case ArchiveFileValue =>
-              for {
-                info <-
-                  ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for ArchiveFileValue"))
-                content <- ArchiveFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
-              } yield content
-            case other => ZIO.fail(NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other"))
-          }
-      } yield valueContent
-    }
-
   final case class FileInfo(filename: IRI, metadata: FileMetadataSipiResponse)
 
   /**
@@ -1012,84 +936,6 @@ object DateValueContentV2 {
       valueHasCalendar = dateRange.startCalendarDate.calendarName,
     )
   }
-
-  /**
-   * Converts a JSON-LD object to a [[DateValueContentV2]].
-   *
-   * @param jsonLDObject         the JSON-LD object.
-   * @return a [[DateValueContentV2]].
-   */
-  def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, DateValueContentV2] =
-    for {
-      comment      <- JsonLDUtil.getComment(jsonLDObject)
-      calendarName <- ZIO.attempt(jsonLDObject.requireStringWithValidation(DateValueHasCalendar, CalendarNameV2.parse))
-      dateValueHasStartYear <- ZIO
-                                 .fromEither(jsonLDObject.getRequiredInt(DateValueHasStartYear))
-                                 .mapError(BadRequestException(_))
-      maybeDateValueHasStartMonth <- ZIO
-                                       .fromEither(jsonLDObject.getInt(DateValueHasStartMonth))
-                                       .mapError(BadRequestException(_))
-      maybeDateValueHasStartDay <- ZIO
-                                     .fromEither(jsonLDObject.getInt(DateValueHasStartDay))
-                                     .mapError(BadRequestException(_))
-      maybeDateValueHasStartEra <-
-        ZIO.attempt(jsonLDObject.maybeStringWithValidation(DateValueHasStartEra, DateEraV2.parse))
-      dateValueHasEndYear <- ZIO
-                               .fromEither(jsonLDObject.getRequiredInt(DateValueHasEndYear))
-                               .mapError(BadRequestException(_))
-      maybeDateValueHasEndMonth <- ZIO
-                                     .fromEither(jsonLDObject.getInt(DateValueHasEndMonth))
-                                     .mapError(BadRequestException(_))
-      maybeDateValueHasEndDay <- ZIO
-                                   .fromEither(jsonLDObject.getInt(DateValueHasEndDay))
-                                   .mapError(BadRequestException(_))
-      maybeDateValueHasEndEra <-
-        ZIO.attempt(jsonLDObject.maybeStringWithValidation(DateValueHasEndEra, DateEraV2.parse))
-      _ <- ZIO
-             .fail(AssertionException(s"Invalid date: $jsonLDObject"))
-             .when(maybeDateValueHasStartMonth.isEmpty && maybeDateValueHasStartDay.isDefined)
-      _ <- ZIO
-             .fail(AssertionException(s"Invalid date: $jsonLDObject"))
-             .when(maybeDateValueHasEndMonth.isEmpty && maybeDateValueHasEndDay.isDefined)
-      // Check that the era is given if required.
-      _ <- ZIO
-             .fail(AssertionException(s"Era is required in calendar $calendarName"))
-             .when(
-               calendarName.isInstanceOf[CalendarNameGregorianOrJulian] &&
-                 (maybeDateValueHasStartEra.isEmpty || maybeDateValueHasEndEra.isEmpty),
-             )
-
-      // Construct a CalendarDateRangeV2 representing the start and end dates.
-      startCalendarDate = CalendarDateV2(
-                            calendarName = calendarName,
-                            year = dateValueHasStartYear,
-                            maybeMonth = maybeDateValueHasStartMonth,
-                            maybeDay = maybeDateValueHasStartDay,
-                            maybeEra = maybeDateValueHasStartEra,
-                          )
-
-      endCalendarDate = CalendarDateV2(
-                          calendarName = calendarName,
-                          year = dateValueHasEndYear,
-                          maybeMonth = maybeDateValueHasEndMonth,
-                          maybeDay = maybeDateValueHasEndDay,
-                          maybeEra = maybeDateValueHasEndEra,
-                        )
-
-      dateRange = CalendarDateRangeV2(startCalendarDate, endCalendarDate)
-
-      // Convert the CalendarDateRangeV2 to start and end Julian Day Numbers.
-      (startJDN, endJDN) = dateRange.toJulianDayRange
-
-    } yield DateValueContentV2(
-      ontologySchema = ApiV2Complex,
-      valueHasStartJDN = startJDN,
-      valueHasEndJDN = endJDN,
-      valueHasStartPrecision = startCalendarDate.precision,
-      valueHasEndPrecision = endCalendarDate.precision,
-      valueHasCalendar = calendarName,
-      comment,
-    )
 
   def from(r: Resource): Either[String, DateValueContentV2] = {
     def objectEraOption(resource: Resource, property: String) = for {
@@ -1440,21 +1286,6 @@ case class TextValueContentV2(
  * Constructs [[TextValueContentV2]] objects based on JSON-LD input.
  */
 object TextValueContentV2 {
-  private def getSparqlEncodedString(
-    obj: JsonLDObject,
-    key: String,
-  ): ZIO[StringFormatter, BadRequestException, Option[IRI]] =
-    ZIO
-      .fromEither(obj.getString(key))
-      .mapError(BadRequestException(_))
-      .flatMap(ZIO.foreach(_)(it => RouteUtilZ.toSparqlEncodedString(it, s"Invalid key: $key: $it")))
-
-  private def getIriFromObject(obj: JsonLDObject, key: String): ZIO[StringFormatter, BadRequestException, Option[IRI]] =
-    obj
-      .getIriInObject(key)
-      .mapError(BadRequestException(_))
-      .flatMap(ZIO.foreach(_)(it => RouteUtilZ.validateAndEscapeIri(it, s"Invalid key: $key: $it")))
-
   private def getTextValue(
     maybeValueAsString: Option[IRI],
     maybeTextValueAsXml: Option[String],
@@ -1509,37 +1340,6 @@ object TextValueContentV2 {
           ),
         )
     }
-
-  /**
-   * Converts a JSON-LD object to a [[TextValueContentV2]].
-   *
-   * @param jsonLdObject         the JSON-LD object.
-   * @param requestingUser       the user making the request.
-   * @return a [[TextValueContentV2]].
-   */
-  def fromJsonLdObject(
-    jsonLdObject: JsonLDObject,
-    requestingUser: User,
-  ): ZIO[StringFormatter & MessageRelay, Throwable, TextValueContentV2] =
-    for {
-      maybeValueAsString    <- getSparqlEncodedString(jsonLdObject, ValueAsString)
-      maybeValueHasLanguage <- getSparqlEncodedString(jsonLdObject, TextValueHasLanguage)
-      maybeTextValueAsXml   <- ZIO.fromEither(jsonLdObject.getString(TextValueAsXml)).mapError(BadRequestException(_))
-
-      // If the client supplied the IRI of a standoff-to-XML mapping, get the mapping.
-      maybeMappingResponse <-
-        getIriFromObject(jsonLdObject, TextValueHasMapping).flatMap(mappingIriOption =>
-          ZIO.foreach(mappingIriOption) { mappingIri =>
-            ZIO.serviceWithZIO[MessageRelay](_.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri)))
-          },
-        )
-
-      comment <- JsonLDUtil.getComment(jsonLdObject)
-      // Did the client submit text with or without standoff markup?
-      textValue <-
-        getTextValue(maybeValueAsString, maybeTextValueAsXml, maybeValueHasLanguage, maybeMappingResponse, comment)
-
-    } yield textValue
 
   private def objectSparqlStringOption(r: Resource, property: String) = for {
     str <- r.objectStringOption(property)
@@ -1622,23 +1422,6 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema, valueHasInteger
  * Constructs [[IntegerValueContentV2]] objects based on JSON-LD input.
  */
 object IntegerValueContentV2 {
-
-  /**
-   * Converts a JSON-LD object to an [[IntegerValueContentV2]].
-   *
-   * @param jsonLDObject     the JSON-LD object.
-   * @return an [[IntegerValueContentV2]].
-   */
-  def fromJsonLdObject(
-    jsonLDObject: JsonLDObject,
-  ): ZIO[StringFormatter, Throwable, IntegerValueContentV2] =
-    for {
-      intValue <- ZIO
-                    .fromEither(jsonLDObject.getRequiredInt(IntValueAsInt))
-                    .mapError(BadRequestException(_))
-      comment <- JsonLDUtil.getComment(jsonLDObject)
-    } yield IntegerValueContentV2(ApiV2Complex, intValue, comment)
-
   def from(r: Resource): Either[String, IntegerValueContentV2] =
     for {
       intValue <- r.objectInt(IntValueAsInt)
@@ -1710,27 +1493,6 @@ case class DecimalValueContentV2(
  * Constructs [[DecimalValueContentV2]] objects based on JSON-LD input.
  */
 object DecimalValueContentV2 {
-
-  /**
-   * Converts a JSON-LD object to a [[DecimalValueContentV2]].
-   *
-   * @param jsonLdObject     the JSON-LD object.
-   * @return an [[DecimalValueContentV2]].
-   */
-  def fromJsonLdObject(jsonLdObject: JsonLDObject): ZIO[StringFormatter, Throwable, DecimalValueContentV2] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      for {
-        decimalValue <- ZIO.attempt(
-                          jsonLdObject.requireDatatypeValueInObject(
-                            key = DecimalValueAsDecimal,
-                            expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-                            validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
-                          ),
-                        )
-        comment <- JsonLDUtil.getComment(jsonLdObject)
-      } yield DecimalValueContentV2(ApiV2Complex, decimalValue, comment)
-    }
-
   def from(r: Resource): Either[String, DecimalValueContentV2] =
     for {
       decimalValue <- r.objectBigDecimal(DecimalValueAsDecimal)
@@ -1793,21 +1555,6 @@ case class BooleanValueContentV2(
  * Constructs [[BooleanValueContentV2]] objects based on JSON-LD input.
  */
 object BooleanValueContentV2 {
-
-  /**
-   * Converts a JSON-LD object to a [[BooleanValueContentV2]].
-   *
-   * @param jsonLdObject     the JSON-LD object.
-   * @return an [[BooleanValueContentV2]].
-   */
-  def fromJsonLdObject(jsonLdObject: JsonLDObject): ZIO[StringFormatter, Throwable, BooleanValueContentV2] =
-    for {
-      booleanValue <- ZIO
-                        .fromEither(jsonLdObject.getRequiredBoolean(BooleanValueAsBoolean))
-                        .mapError(BadRequestException(_))
-      comment <- JsonLDUtil.getComment(jsonLdObject)
-    } yield BooleanValueContentV2(ApiV2Complex, booleanValue, comment)
-
   def from(r: Resource): Either[String, BooleanValueContentV2] = for {
     bool    <- r.objectBoolean(BooleanValueAsBoolean)
     comment <- objectCommentOption(r)
@@ -1874,24 +1621,6 @@ case class GeomValueContentV2(ontologySchema: OntologySchema, valueHasGeometry: 
  * Constructs [[GeomValueContentV2]] objects based on JSON-LD input.
  */
 object GeomValueContentV2 {
-
-  /**
-   * Converts a JSON-LD object to a [[GeomValueContentV2]].
-   *
-   * @param jsonLDObject     the JSON-LD object.
-   * @return an [[GeomValueContentV2]].
-   */
-  def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, GeomValueContentV2] =
-    for {
-      geometryValueAsGeometry <- ZIO.attempt(
-                                   jsonLDObject.requireStringWithValidation(
-                                     GeometryValueAsGeometry,
-                                     (s, errorFun) => ValuesValidator.validateGeometryString(s).getOrElse(errorFun),
-                                   ),
-                                 )
-      comment <- JsonLDUtil.getComment(jsonLDObject)
-    } yield GeomValueContentV2(ontologySchema = ApiV2Complex, geometryValueAsGeometry, comment)
-
   def from(r: Resource): Either[String, GeomValueContentV2] = for {
     geomStr <- r.objectString(GeometryValueAsGeometry)
     geom    <- ValuesValidator.validateGeometryString(geomStr).toRight(s"Invalid geometry string: $geomStr")
@@ -1979,37 +1708,6 @@ case class IntervalValueContentV2(
  * Constructs [[IntervalValueContentV2]] objects based on JSON-LD input.
  */
 object IntervalValueContentV2 {
-
-  /**
-   * Converts a JSON-LD object to an [[IntervalValueContentV2]].
-   *
-   * @param jsonLDObject     the JSON-LD object.
-   * @return an [[IntervalValueContentV2]].
-   */
-  def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, IntervalValueContentV2] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      for {
-        intervalValueHasStart <- ZIO.attempt(
-                                   jsonLDObject.requireDatatypeValueInObject(
-                                     key = IntervalValueHasStart,
-                                     expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-                                     validationFun =
-                                       (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
-                                   ),
-                                 )
-
-        intervalValueHasEnd <- ZIO.attempt(
-                                 jsonLDObject.requireDatatypeValueInObject(
-                                   key = IntervalValueHasEnd,
-                                   expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-                                   validationFun =
-                                     (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
-                                 ),
-                               )
-        comment <- JsonLDUtil.getComment(jsonLDObject)
-      } yield IntervalValueContentV2(ApiV2Complex, intervalValueHasStart, intervalValueHasEnd, comment)
-    }
-
   def from(r: Resource): Either[String, IntervalValueContentV2] = for {
     intervalValueHasStart <- r.objectBigDecimal(IntervalValueHasStart)
     intervalValueHasEnd   <- r.objectBigDecimal(IntervalValueHasEnd)
@@ -2088,28 +1786,6 @@ case class TimeValueContentV2(
  * Constructs [[TimeValueContentV2]] objects based on JSON-LD input.
  */
 object TimeValueContentV2 {
-
-  /**
-   * Converts a JSON-LD object to a [[TimeValueContentV2]].
-   *
-   * @param jsonLDObject     the JSON-LD object.
-   * @return an [[IntervalValueContentV2]].
-   */
-  def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, TimeValueContentV2] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      for {
-        valueHasTimeStamp <- ZIO.attempt(
-                               jsonLDObject.requireDatatypeValueInObject(
-                                 key = TimeValueAsTimeStamp,
-                                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                 validationFun =
-                                   (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-                               ),
-                             )
-        comment <- JsonLDUtil.getComment(jsonLDObject)
-      } yield TimeValueContentV2(ApiV2Complex, valueHasTimeStamp, comment)
-    }
-
   def from(r: Resource): Either[String, TimeValueContentV2] = for {
     timeStamp <- r.objectInstant(TimeValueAsTimeStamp)
     comment   <- objectCommentOption(r)
@@ -2192,28 +1868,6 @@ case class HierarchicalListValueContentV2(
  * Constructs [[HierarchicalListValueContentV2]] objects based on JSON-LD input.
  */
 object HierarchicalListValueContentV2 {
-
-  /**
-   * Converts a JSON-LD object to a [[HierarchicalListValueContentV2]].
-   *
-   * @param jsonLDObject     the JSON-LD object.
-   * @return a [[HierarchicalListValueContentV2]].
-   */
-  def fromJsonLdObject(
-    jsonLDObject: JsonLDObject,
-  ): ZIO[StringFormatter, Throwable, HierarchicalListValueContentV2] = ZIO.serviceWithZIO[StringFormatter] {
-    implicit stringFormatter =>
-      for {
-        listValueAsListNode <- ZIO.attempt(
-                                 jsonLDObject.requireIriInObject(ListValueAsListNode, stringFormatter.toSmartIriWithErr),
-                               )
-        _ <- ZIO
-               .fail(BadRequestException(s"List node IRI <$listValueAsListNode> is not a Knora data IRI"))
-               .when(!listValueAsListNode.isKnoraDataIri)
-        comment <- JsonLDUtil.getComment(jsonLDObject)
-      } yield HierarchicalListValueContentV2(ApiV2Complex, listValueAsListNode.toString, None, comment)
-  }
-
   def from(r: Resource, converter: IriConverter): IO[String, HierarchicalListValueContentV2] = for {
     comment  <- ZIO.fromEither(objectCommentOption(r))
     listNode <- ZIO.fromEither(r.objectUri(ListValueAsListNode))
@@ -2283,23 +1937,6 @@ case class ColorValueContentV2(ontologySchema: OntologySchema, valueHasColor: St
  * Constructs [[ColorValueContentV2]] objects based on JSON-LD input.
  */
 object ColorValueContentV2 {
-
-  /**
-   * Converts a JSON-LD object to a [[ColorValueContentV2]].
-   *
-   * @param jsonLDObject     the JSON-LD object.
-   * @return a [[ColorValueContentV2]].
-   */
-  def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, ColorValueContentV2] =
-    for {
-      colorValueAsColor <- ZIO.attempt {
-                             val validationFun: (String, => Nothing) => String =
-                               (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                             jsonLDObject.requireStringWithValidation(ColorValueAsColor, validationFun)
-                           }
-      comment <- JsonLDUtil.getComment(jsonLDObject)
-    } yield ColorValueContentV2(ApiV2Complex, colorValueAsColor, comment)
-
   def from(r: Resource): Either[IRI, ColorValueContentV2] = for {
     color   <- r.objectString(ColorValueAsColor)
     comment <- objectCommentOption(r)
@@ -2368,29 +2005,6 @@ case class UriValueContentV2(ontologySchema: OntologySchema, valueHasUri: String
  * Constructs [[UriValueContentV2]] objects based on JSON-LD input.
  */
 object UriValueContentV2 {
-
-  /**
-   * Converts a JSON-LD object to a [[UriValueContentV2]].
-   *
-   * @param jsonLDObject     the JSON-LD object.
-   * @return a [[UriValueContentV2]].
-   */
-  def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, UriValueContentV2] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      for {
-        uriValueAsUri <- ZIO.attempt {
-                           val validationFun: (String, => Nothing) => String =
-                             (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                           jsonLDObject.requireDatatypeValueInObject(
-                             UriValueAsUri,
-                             OntologyConstants.Xsd.Uri.toSmartIri,
-                             validationFun,
-                           )
-                         }
-        comment <- JsonLDUtil.getComment(jsonLDObject)
-      } yield UriValueContentV2(ApiV2Complex, uriValueAsUri, comment)
-    }
-
   def from(r: Resource): Either[String, UriValueContentV2] = for {
     uri     <- r.objectDataType(UriValueAsUri, OntologyConstants.Xsd.Uri)
     comment <- objectCommentOption(r)
@@ -2463,26 +2077,6 @@ case class GeonameValueContentV2(
  * Constructs [[GeonameValueContentV2]] objects based on JSON-LD input.
  */
 object GeonameValueContentV2 {
-
-  /**
-   * Converts a JSON-LD object to a [[GeonameValueContentV2]].
-   *
-   * @param jsonLDObject     the JSON-LD object.
-   * @return a [[GeonameValueContentV2]].
-   */
-  def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, GeonameValueContentV2] =
-    for {
-      geonameValueAsGeonameCode <- ZIO.attempt {
-                                     val validationFun: (String, => Nothing) => String =
-                                       (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                                     jsonLDObject.requireStringWithValidation(
-                                       GeonameValueAsGeonameCode,
-                                       validationFun,
-                                     )
-                                   }
-      comment <- JsonLDUtil.getComment(jsonLDObject)
-    } yield GeonameValueContentV2(ApiV2Complex, geonameValueAsGeonameCode, comment)
-
   def from(r: Resource): Either[String, GeonameValueContentV2] = for {
     geonameCode <- r.objectString(GeonameValueAsGeonameCode)
     comment     <- objectCommentOption(r)
@@ -2608,22 +2202,6 @@ case class StillImageFileValueContentV2(
  * Constructs [[StillImageFileValueContentV2]] objects based on JSON-LD input.
  */
 object StillImageFileValueContentV2 {
-  def fromJsonLdObject(
-    jsonLDObject: JsonLDObject,
-    internalFilename: String,
-    metadata: FileMetadataSipiResponse,
-  ): ZIO[StringFormatter, Throwable, StillImageFileValueContentV2] =
-    for {
-      comment <- JsonLDUtil.getComment(jsonLDObject)
-    } yield StillImageFileValueContentV2(
-      ontologySchema = ApiV2Complex,
-      fileValue =
-        FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
-      dimX = metadata.width.getOrElse(0),
-      dimY = metadata.height.getOrElse(0),
-      comment = comment,
-    )
-
   def from(r: Resource, fileInfo: FileInfo): Either[String, StillImageFileValueContentV2] = for {
     comment  <- objectCommentOption(r)
     meta      = fileInfo.metadata
@@ -2713,30 +2291,6 @@ case class StillImageExternalFileValueContentV2(
  * Constructs [[StillImageFileValueContentV2]] objects based on JSON-LD input.
  */
 object StillImageExternalFileValueContentV2 {
-
-  def fromJsonLdObject(
-    jsonLDObject: JsonLDObject,
-  ): ZIO[StringFormatter, Throwable, StillImageExternalFileValueContentV2] =
-    for {
-      comment    <- JsonLDUtil.getComment(jsonLDObject)
-      fromUrlType = jsonLDObject.getRequiredUri(StillImageFileValueHasExternalUrl).map(_.toString)
-      // from String is kept for backwards compatibility
-      fromString = jsonLDObject.getRequiredString(StillImageFileValueHasExternalUrl, FileValueHasExternalUrl)
-      externalUrl <- ZIO
-                       .fromEither(fromUrlType.orElse(fromString).flatMap(IiifImageRequestUrl.from))
-                       .mapError(BadRequestException.apply)
-    } yield StillImageExternalFileValueContentV2(
-      ontologySchema = ApiV2Complex,
-      fileValue = FileValueV2(
-        "internalFilename",
-        "internalMimeType",
-        Some("originalFilename"),
-        Some("originalMimeType"),
-      ),
-      externalUrl = externalUrl,
-      comment = comment,
-    )
-
   def from(r: Resource): Either[String, StillImageExternalFileValueContentV2] = for {
     externalUrlStr <- r.objectString(StillImageFileValueHasExternalUrl)
     iifUrl         <- IiifImageRequestUrl.from(externalUrlStr)
@@ -2878,23 +2432,6 @@ case class ArchiveFileValueContentV2(
  * Constructs [[DocumentFileValueContentV2]] objects based on JSON-LD input.
  */
 object DocumentFileValueContentV2 {
-  def fromJsonLdObject(
-    jsonLdObject: JsonLDObject,
-    internalFilename: String,
-    metadata: FileMetadataSipiResponse,
-  ): ZIO[StringFormatter, Throwable, DocumentFileValueContentV2] =
-    for {
-      comment <- JsonLDUtil.getComment(jsonLdObject)
-    } yield DocumentFileValueContentV2(
-      ontologySchema = ApiV2Complex,
-      fileValue =
-        FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
-      pageCount = metadata.numpages,
-      dimX = metadata.width,
-      dimY = metadata.height,
-      comment,
-    )
-
   def from(r: Resource, info: FileInfo): Either[String, DocumentFileValueContentV2] = for {
     comment  <- objectCommentOption(r)
     meta      = info.metadata
@@ -2906,19 +2443,6 @@ object DocumentFileValueContentV2 {
  * Constructs [[ArchiveFileValueContentV2]] objects based on JSON-LD input.
  */
 object ArchiveFileValueContentV2 {
-  def fromJsonLdObject(
-    jsonLdObject: JsonLDObject,
-    internalFilename: String,
-    metadata: FileMetadataSipiResponse,
-  ): ZIO[StringFormatter, Throwable, ArchiveFileValueContentV2] =
-    for {
-      comment <- JsonLDUtil.getComment(jsonLdObject)
-    } yield ArchiveFileValueContentV2(
-      ApiV2Complex,
-      FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
-      comment,
-    )
-
   def from(r: Resource, info: FileInfo): Either[String, ArchiveFileValueContentV2] = for {
     comment  <- objectCommentOption(r)
     meta      = info.metadata
@@ -2989,18 +2513,6 @@ case class TextFileValueContentV2(
  * Constructs [[TextFileValueContentV2]] objects based on JSON-LD input.
  */
 object TextFileValueContentV2 {
-  def fromJsonLdObject(
-    jsonLDObject: JsonLDObject,
-    internalFilename: String,
-    metadata: FileMetadataSipiResponse,
-  ): ZIO[StringFormatter, Throwable, TextFileValueContentV2] = for {
-    comment <- JsonLDUtil.getComment(jsonLDObject)
-  } yield TextFileValueContentV2(
-    ApiV2Complex,
-    FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
-    comment,
-  )
-
   def from(r: Resource, info: FileInfo): Either[String, TextFileValueContentV2] = for {
     comment  <- objectCommentOption(r)
     meta      = info.metadata
@@ -3071,19 +2583,6 @@ case class AudioFileValueContentV2(
  * Constructs [[AudioFileValueContentV2]] objects based on JSON-LD input.
  */
 object AudioFileValueContentV2 {
-  def fromJsonLdObject(
-    jsonLDObject: JsonLDObject,
-    internalFilename: String,
-    metadata: FileMetadataSipiResponse,
-  ): ZIO[StringFormatter, Throwable, AudioFileValueContentV2] =
-    for {
-      comment <- JsonLDUtil.getComment(jsonLDObject)
-    } yield AudioFileValueContentV2(
-      ApiV2Complex,
-      FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
-      comment,
-    )
-
   def from(r: Resource, info: FileInfo): Either[String, AudioFileValueContentV2] = for {
     comment <- objectCommentOption(r)
     meta     = info.metadata
@@ -3159,19 +2658,6 @@ case class MovingImageFileValueContentV2(
  * Constructs [[MovingImageFileValueContentV2]] objects based on JSON-LD input.
  */
 object MovingImageFileValueContentV2 {
-  def fromJsonLdObject(
-    jsonLDObject: JsonLDObject,
-    internalFilename: String,
-    metadata: FileMetadataSipiResponse,
-  ): ZIO[StringFormatter, Throwable, MovingImageFileValueContentV2] =
-    for {
-      comment <- JsonLDUtil.getComment(jsonLDObject)
-    } yield MovingImageFileValueContentV2(
-      ApiV2Complex,
-      FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
-      comment,
-    )
-
   def from(r: Resource, info: FileInfo): Either[String, MovingImageFileValueContentV2] = for {
     comment <- objectCommentOption(r)
     meta     = info.metadata
@@ -3297,30 +2783,12 @@ case class LinkValueContentV2(
  * Constructs [[LinkValueContentV2]] objects based on JSON-LD input.
  */
 object LinkValueContentV2 {
-  def fromJsonLdObject(
-    jsonLDObject: JsonLDObject,
-  ): ZIO[StringFormatter, Throwable, LinkValueContentV2] = ZIO.serviceWithZIO[StringFormatter] {
-    implicit stringFormatter =>
-      for {
-        targetIri <- ZIO.attempt(
-                       jsonLDObject.requireIriInObject(
-                         LinkValueHasTargetIri,
-                         stringFormatter.toSmartIriWithErr,
-                       ),
-                     )
-        _ <- ZIO
-               .fail(BadRequestException(s"Link target IRI <$targetIri> is not a Knora data IRI"))
-               .when(!targetIri.isKnoraDataIri)
-        comment <- JsonLDUtil.getComment(jsonLDObject)
-      } yield LinkValueContentV2(ApiV2Complex, referredResourceIri = targetIri.toString, comment = comment)
-  }
-
   def from(r: Resource, converter: IriConverter): IO[String, LinkValueContentV2] =
     for {
       targetIri <- ZIO.fromEither(r.objectUri(LinkValueHasTargetIri))
       comment   <- ZIO.fromEither(objectCommentOption(r))
       _ <- ZIO
-             .fail(s"Link target IRI <${targetIri}> is not a Knora data IRI")
+             .fail(s"Link target IRI <$targetIri> is not a Knora data IRI")
              .unlessZIO(converter.isKnoraDataIri(targetIri).mapError(_.getMessage))
     } yield LinkValueContentV2(ApiV2Complex, referredResourceIri = targetIri, comment = comment)
 }
