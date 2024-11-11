@@ -68,6 +68,7 @@ final case class ApiComplexV2JsonLdRequestParser(
     ZIO.scoped {
       for {
         model                  <- ModelOps.fromJsonLd(str)
+        _                      <- model.printTurtle
         resourceAndIri         <- resourceAndIriOption(model)
         (resource, resourceIri) = resourceAndIri
         resourceClassIri       <- resourceClassIri(resource)
@@ -101,22 +102,22 @@ final case class ApiComplexV2JsonLdRequestParser(
     shortcode: Shortcode,
     ingestState: AssetIngestState,
   ): IO[String, Map[SmartIri, Seq[CreateValueInNewResourceV2]]] =
-    for {
-      _ <- ZIO.fail("Not implemented")
-      filteredProperties = Seq(
-                             RDF.`type`.toString,
-                             Rdfs.Label,
-                             KnoraApiV2Complex.AttachedToProject,
-                             KnoraApiV2Complex.AttachedToUser,
-                             KnoraApiV2Complex.HasPermissions,
-                             KnoraApiV2Complex.CreationDate,
-                           )
-      valueStatements = r.listProperties()
-                          .asScala
-                          .filter(p => !filteredProperties.contains(p.getPredicate.toString))
-                          .toList
-      values <- ZIO.foreach(valueStatements)(valueStatementAsContent(_, shortcode, ingestState))
-    } yield values.groupMap(_._1.smartIri)(_._2)
+    val filteredProperties = Seq(
+      RDF.`type`.toString,
+      Rdfs.Label,
+      KnoraApiV2Complex.AttachedToProject,
+      KnoraApiV2Complex.AttachedToUser,
+      KnoraApiV2Complex.HasPermissions,
+      KnoraApiV2Complex.CreationDate,
+    )
+    val valueStatements = r
+      .listProperties()
+      .asScala
+      .filter(p => !filteredProperties.contains(p.getPredicate.toString))
+      .toSeq
+    ZIO
+      .foreach(valueStatements)(valueStatementAsContent(_, shortcode, ingestState))
+      .map(_.groupMap(_._1.smartIri)(_._2))
 
   private def valueStatementAsContent(
     statement: Statement,
