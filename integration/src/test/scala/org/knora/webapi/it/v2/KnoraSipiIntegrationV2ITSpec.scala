@@ -449,7 +449,7 @@ class KnoraSipiIntegrationV2ITSpec
       val request = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
 
       val response = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.NotFound)
+      assert(response.status == StatusCodes.BadRequest)
       val body = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
       assert(
         body.contains(
