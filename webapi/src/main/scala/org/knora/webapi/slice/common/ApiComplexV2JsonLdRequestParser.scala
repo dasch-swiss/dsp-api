@@ -12,20 +12,33 @@ import zio.ZLayer
 
 import java.time.Instant
 import java.util.UUID
+import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
+import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.OntologyConstants.Xsd
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages.util.UserUtilADM
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
 import org.knora.webapi.routing.v2.AssetIngestState
+import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri as KResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
@@ -42,7 +55,119 @@ final case class ApiComplexV2JsonLdRequestParser(
   converter: IriConverter,
   messageRelay: MessageRelay,
   sipiService: SipiService,
+  projectService: ProjectService,
+  userService: UserService,
 ) {
+
+  def createResourceRequestV2(
+    str: String,
+    ingestState: AssetIngestState,
+    requestingUser: User,
+    uuid: UUID,
+  ): IO[String, CreateResourceRequestV2] =
+    ZIO.scoped {
+      for {
+        model                  <- ModelOps.fromJsonLd(str)
+        resourceAndIri         <- resourceAndIriOption(model)
+        (resource, resourceIri) = resourceAndIri
+        resourceClassIri       <- resourceClassIri(resource)
+        label                  <- ZIO.fromEither(resource.objectString(Rdfs.Label))
+        project                <- attachedToProject(resource)
+        _ <- ZIO
+               .fail("Resource Iri and project Iri must reference the same project")
+               .when(resourceIri.exists(iri => iri.shortcode != project.getShortcode))
+        permissions    <- ZIO.fromEither(resource.objectStringOption(HasPermissions))
+        attachedToUser <- attachedToUser(resource, requestingUser, project.projectIri)
+        creationDate   <- creationDate(resource)
+        values         <- extractValues(resource, project.getShortcode, ingestState)
+      } yield CreateResourceRequestV2(
+        CreateResourceV2(
+          resourceIri.map(_.smartIri),
+          resourceClassIri.smartIri,
+          label,
+          values,
+          project,
+          permissions,
+          creationDate,
+        ),
+        attachedToUser,
+        uuid,
+        ingestState,
+      )
+    }
+
+  private def extractValues(
+    r: Resource,
+    shortcode: Shortcode,
+    ingestState: AssetIngestState,
+  ): IO[String, Map[SmartIri, Seq[CreateValueInNewResourceV2]]] =
+    for {
+      _ <- ZIO.fail("Not implemented")
+      filteredProperties = Seq(
+                             RDF.`type`.toString,
+                             Rdfs.Label,
+                             KnoraApiV2Complex.AttachedToProject,
+                             KnoraApiV2Complex.AttachedToUser,
+                             KnoraApiV2Complex.HasPermissions,
+                             KnoraApiV2Complex.CreationDate,
+                           )
+      valueStatements = r.listProperties()
+                          .asScala
+                          .filter(p => !filteredProperties.contains(p.getPredicate.toString))
+                          .toList
+      values <- ZIO.foreach(valueStatements)(valueStatementAsContent(_, shortcode, ingestState))
+    } yield values.groupMap(_._1.smartIri)(_._2)
+
+  private def valueStatementAsContent(
+    statement: Statement,
+    shortcode: Shortcode,
+    ingestState: AssetIngestState,
+  ): IO[String, (PropertyIri, CreateValueInNewResourceV2)] =
+    val valueResource = statement.getObject.asResource()
+    for {
+      typ                     <- ZIO.fromEither(valueResource.rdfsType.toRight("No rdf:type found for value."))
+      filename                <- ZIO.fromEither(valueFileValueFilename(valueResource))
+      cnt                     <- getValueContent(typ, valueResource, filename, shortcode, ingestState)
+      propertyIri             <- valuePropertyIri(statement)
+      customValueIri          <- valueIri(valueResource)
+      customValueUuid         <- ZIO.fromEither(valueHasUuid(valueResource))
+      customValueCreationDate <- ZIO.fromEither(valueCreationDate(valueResource))
+      permissions             <- ZIO.fromEither(valuePermissions(valueResource))
+    } yield (
+      propertyIri,
+      CreateValueInNewResourceV2(
+        cnt,
+        customValueIri.map(_.smartIri),
+        customValueUuid,
+        customValueCreationDate,
+        permissions,
+      ),
+    )
+
+  def creationDate(r: Resource): IO[String, Option[Instant]] =
+    for {
+      dateStr <- ZIO.fromEither(r.objectDataTypeOption(CreationDate, Xsd.DateTimeStamp))
+      inst    <- ZIO.foreach(dateStr)(str => ZIO.fromEither(ValuesValidator.parseXsdDateTimeStamp(str)))
+    } yield inst
+
+  def attachedToUser(r: Resource, requestingUser: User, projectIri: ProjectIri): IO[String, User] =
+    for {
+      userStr <- ZIO.fromEither(r.objectUriOption(AttachedToUser))
+      userIri <- ZIO.foreach(userStr)(iri => ZIO.fromEither(UserIri.from(iri)))
+      user <- ZIO
+                .foreach(userIri)(iri =>
+                  UserUtilADM
+                    .switchToUser(requestingUser, iri.value, projectIri.value)
+                    .mapError(_.getMessage),
+                )
+                .provide(ZLayer.succeed(userService))
+    } yield user.getOrElse(requestingUser)
+
+  def attachedToProject(r: Resource): IO[String, Project] =
+    for {
+      projectIri <- ZIO.fromEither(r.objectUri(AttachedToProject)).flatMap(iri => ZIO.fromEither(ProjectIri.from(iri)))
+      project    <- projectService.findById(projectIri).orDie.someOrFail(s"Project ${projectIri.value} not found")
+    } yield project
 
   def updateValueV2fromJsonLd(str: String, ingestState: AssetIngestState): IO[String, UpdateValueV2] =
     ZIO.scoped {
@@ -53,13 +178,13 @@ final case class ApiComplexV2JsonLdRequestParser(
         resourceClassIri       <- resourceClassIri(resource)
         valueStatement         <- valueStatement(resource)
         valuePropertyIri       <- valuePropertyIri(valueStatement)
-        valueType              <- valueType(valueStatement)
         valueResource           = valueStatement.getObject.asResource()
         valueIri               <- valueIri(valueResource).someOrFail("The value IRI is required")
         newValueVersionIri     <- newValueVersionIri(valueResource, valueIri)
         valueCreationDate      <- ZIO.fromEither(valueCreationDate(valueResource))
         valuePermissions       <- ZIO.fromEither(valuePermissions(valueResource))
         valueFileValueFilename <- ZIO.fromEither(valueFileValueFilename(valueResource))
+        valueType              <- valueType(valueResource)
         valueContent <-
           getValueContent(valueType.toString, valueResource, valueFileValueFilename, resourceIri.shortcode, ingestState)
             .map(Some(_))
@@ -124,13 +249,13 @@ final case class ApiComplexV2JsonLdRequestParser(
         resourceClassIri       <- resourceClassIri(resource)
         valueStatement         <- valueStatement(resource)
         valuePropertyIri       <- valuePropertyIri(valueStatement)
-        valueType              <- valueType(valueStatement)
         valueResource           = valueStatement.getObject.asResource()
         valueIri               <- valueIri(valueResource)
         valueUuid              <- ZIO.fromEither(valueHasUuid(valueResource))
         valueCreationDate      <- ZIO.fromEither(valueCreationDate(valueResource))
         valuePermissions       <- ZIO.fromEither(valuePermissions(valueResource))
         valueFileValueFilename <- ZIO.fromEither(valueFileValueFilename(valueResource))
+        valueType              <- valueType(valueResource)
         valueContent <-
           getValueContent(valueType.toString, valueResource, valueFileValueFilename, resourceIri.shortcode, ingestState)
       } yield CreateValueV2(
@@ -147,11 +272,17 @@ final case class ApiComplexV2JsonLdRequestParser(
     }
 
   private def resourceAndIri(model: Model): IO[String, (Resource, ResourceIri)] =
+    resourceAndIriOption(model).flatMap {
+      case (r, Some(iri)) => ZIO.succeed((r, iri))
+      case (r, None)      => ZIO.fail("No resource IRI found")
+    }
+
+  private def resourceAndIriOption(model: Model): IO[String, (Resource, Option[KResourceIri])] =
     ZIO.fromEither(model.singleRootResource).flatMap { (r: Resource) =>
-      converter
-        .asSmartIri(r.uri.getOrElse(""))
-        .mapError(_.getMessage)
-        .flatMap(iri => ZIO.fromEither(KResourceIri.from(iri)))
+      ZIO
+        .foreach(r.uri)(
+          converter.asSmartIri(_).mapError(_.getMessage).flatMap(iri => ZIO.fromEither(KResourceIri.from(iri))),
+        )
         .map((r, _))
     }
 
@@ -167,8 +298,8 @@ final case class ApiComplexV2JsonLdRequestParser(
       .mapError(_.getMessage)
       .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)))
 
-  private def valueType(stmt: Statement) = ZIO
-    .fromEither(stmt.objectAsResource().flatMap(_.rdfsType.toRight("No rdf:type found for value.")))
+  private def valueType(resource: Resource) = ZIO
+    .fromEither(resource.rdfsType.toRight("No rdf:type found for value."))
     .orElseFail(s"No value type found for value.")
     .flatMap(converter.asSmartIri(_).mapError(_.getMessage))
 

@@ -34,6 +34,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
+import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.ApiV2.Headers.xKnoraAcceptProject
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.security.Authenticator
@@ -44,8 +45,8 @@ import org.knora.webapi.store.iiif.api.SipiService
  */
 final case class ResourcesRouteV2(appConfig: AppConfig)(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & ProjectService & MessageRelay & SearchResponderV2 & SipiService &
-      StringFormatter & UserService,
+    ApiComplexV2JsonLdRequestParser & AppConfig & Authenticator & IriConverter & ProjectService & MessageRelay &
+      SearchResponderV2 & SipiService & StringFormatter & UserService,
   ],
 ) extends LazyLogging {
   private val sipiConfig: Sipi             = appConfig.sipi
@@ -103,7 +104,11 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             apiRequestId   <- RouteUtilZ.randomUuid()
             ingestState     = AssetIngestState.headerAssetIngestState(requestContext.request.headers)
-            requestMessage <- CreateResourceRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser, ingestState)
+            requestMessage <- ZIO
+                                .serviceWithZIO[org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser](
+                                  _.createResourceRequestV2(jsonRequest, ingestState, requestingUser, apiRequestId),
+                                )
+                                .mapError(BadRequestException(_))
             // check for each value which represents a file value if the file's MIME type is allowed
             _ <- checkMimeTypesForFileValueContents(requestMessage.createResource.flatValues)
           } yield requestMessage

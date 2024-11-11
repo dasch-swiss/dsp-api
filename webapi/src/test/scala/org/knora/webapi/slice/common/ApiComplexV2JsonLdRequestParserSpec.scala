@@ -14,6 +14,7 @@ import zio.test.*
 import java.time.Instant
 
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelayLive
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
@@ -41,9 +42,15 @@ import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType.UnformattedText
 import org.knora.webapi.messages.v2.responder.valuemessages.TimeValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.UriValueContentV2
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.routing.v2.AssetIngestState.AssetIngested
+import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.repo.*
+import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.admin.repo.service.*
 import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.KnoraIris.*
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
@@ -51,6 +58,7 @@ import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.iiif.impl.SipiServiceMock.SipiMockMethodName.GetFileMetadataFromDspIngest
 import org.knora.webapi.store.iiif.impl.SipiServiceMock.SipiMockMethodName.GetFileMetadataFromSipiTemp
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
   private val sf = StringFormatter.getInitializedTestInstance
@@ -745,10 +753,27 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       }
     },
   ).provideSome[Scope](
-    IriConverter.layer,
-    MessageRelayLive.layer,
-    StringFormatter.test,
+    AdministrativePermissionRepoInMemory.layer,
+    AdministrativePermissionService.layer,
     ApiComplexV2JsonLdRequestParser.layer,
+    GroupService.layer,
+    IriConverter.layer,
+    IriService.layer,
+    KnoraGroupRepoInMemory.layer,
+    KnoraGroupService.layer,
+    KnoraProjectRepoInMemory.layer,
+    KnoraProjectService.layer,
+    KnoraUserRepoInMemory.layer,
+    KnoraUserService.layer,
+    KnoraUserToUserConverter.layer,
+    MessageRelayLive.layer,
+    OntologyRepoInMemory.emptyLayer,
+    PasswordService.layer,
+    ProjectService.layer,
     SipiServiceMock.layer,
+    StringFormatter.test,
+    TriplestoreServiceInMemory.emptyLayer,
+    UserService.layer,
+    AppConfig.layer,
   )
 }
