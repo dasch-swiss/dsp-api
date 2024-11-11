@@ -68,7 +68,6 @@ final case class ApiComplexV2JsonLdRequestParser(
     ZIO.scoped {
       for {
         model                  <- ModelOps.fromJsonLd(str)
-        _                      <- model.printTurtle
         resourceAndIri         <- resourceAndIriOption(model)
         (resource, resourceIri) = resourceAndIri
         resourceClassIri       <- resourceClassIri(resource)
