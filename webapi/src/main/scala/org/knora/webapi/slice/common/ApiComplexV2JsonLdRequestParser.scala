@@ -170,6 +170,22 @@ final case class ApiComplexV2JsonLdRequestParser(
       project    <- projectService.findById(projectIri).orDie.someOrFail(s"Project ${projectIri.value} not found")
     } yield project
 
+  private def newValueVersionIri(r: Resource, valueIri: ValueIri): IO[String, Option[ValueIri]] =
+    ZIO
+      .fromEither(r.objectUriOption(NewValueVersionIri))
+      .some
+      .flatMap(converter.asSmartIri(_).mapError(_.getMessage).asSomeError)
+      .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).asSomeError)
+      .filterOrFail(newV => newV != valueIri)(
+        Some(s"The IRI of a new value version cannot be the same as the IRI of the current version"),
+      )
+      .filterOrFail(newV => newV.sameResourceAs(valueIri))(
+        Some(
+          s"The project shortcode and resource must be equal for the new value version and the current version",
+        ),
+      )
+      .unsome
+
   def updateValueV2fromJsonLd(str: String, ingestState: AssetIngestState): IO[String, UpdateValueV2] =
     ZIO.scoped {
       for {
@@ -180,12 +196,12 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueStatement         <- valueStatement(resource)
         valuePropertyIri       <- valuePropertyIri(valueStatement)
         valueResource           = valueStatement.getObject.asResource()
+        valueType              <- valueType(valueResource)
         valueIri               <- valueIri(valueResource).someOrFail("The value IRI is required")
         newValueVersionIri     <- newValueVersionIri(valueResource, valueIri)
         valueCreationDate      <- ZIO.fromEither(valueCreationDate(valueResource))
         valuePermissions       <- ZIO.fromEither(valuePermissions(valueResource))
         valueFileValueFilename <- ZIO.fromEither(valueFileValueFilename(valueResource))
-        valueType              <- valueType(valueResource)
         valueContent <-
           getValueContent(valueType.toString, valueResource, valueFileValueFilename, resourceIri.shortcode, ingestState)
             .map(Some(_))
@@ -224,22 +240,6 @@ final case class ApiComplexV2JsonLdRequestParser(
                              )
       } yield updateValue
     }
-
-  private def newValueVersionIri(r: Resource, valueIri: ValueIri): IO[String, Option[ValueIri]] =
-    ZIO
-      .fromEither(r.objectUriOption(NewValueVersionIri))
-      .some
-      .flatMap(converter.asSmartIri(_).mapError(_.getMessage).asSomeError)
-      .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).asSomeError)
-      .filterOrFail(newV => newV != valueIri)(
-        Some(s"The IRI of a new value version cannot be the same as the IRI of the current version"),
-      )
-      .filterOrFail(newV => newV.sameResourceAs(valueIri))(
-        Some(
-          s"The project shortcode and resource must be equal for the new value version and the current version",
-        ),
-      )
-      .unsome
 
   def createValueV2FromJsonLd(str: String, ingestState: AssetIngestState): IO[String, CreateValueV2] =
     ZIO.scoped {
