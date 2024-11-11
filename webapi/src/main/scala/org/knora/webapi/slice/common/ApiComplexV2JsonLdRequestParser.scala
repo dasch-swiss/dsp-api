@@ -75,7 +75,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         project                <- attachedToProject(resource)
         _ <- ZIO
                .fail("Resource Iri and project Iri must reference the same project")
-               .when(resourceIri.exists(iri => iri.shortcode != project.getShortcode))
+               .when(resourceIri.exists(_.shortcode != project.getShortcode))
         permissions    <- ZIO.fromEither(resource.objectStringOption(HasPermissions))
         attachedToUser <- attachedToUser(resource, requestingUser, project.projectIri)
         creationDate   <- creationDate(resource)
