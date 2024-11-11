@@ -180,15 +180,15 @@ a resource class of a specific project:
 ```json
 {
     "id": "http://rdfh.ch/permissions/00FF/fSw7w1sI5IwDjEfFi1jOeQ",
-    "forGroup":null,
-    "forProject":"http://rdfh.ch/projects/00FF",
-    "forProperty":null,
-    "forResourceClass":"http://www.knora.org/ontology/00FF/images#bild",
-    "hasPermissions":[
+    "forGroup": null,
+    "forProject": "http://rdfh.ch/projects/00FF",
+    "forProperty": null,
+    "forResourceClass": "http://api.dasch.swiss/ontology/00FF/images/v2#bild",
+    "hasPermissions": [
       {
-        "additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember",
-        "name":"D",
-        "permissionCode":7
+        "additionalInformation": "http://www.knora.org/ontology/knora-admin#ProjectMember",
+        "name": "D",
+        "permissionCode": 7
       }
     ]
 }
@@ -202,7 +202,7 @@ The response contains the newly created permission and its IRI, as:
         "forGroup": null,
         "forProject": "http://rdfh.ch/projects/00FF",
         "forProperty": null,
-        "forResourceClass": "http://www.knora.org/ontology/00FF/images#bild",
+        "forResourceClass": "http://api.dasch.swiss/ontology/00FF/images/v2#bild",
         "hasPermissions": [
             {
                 "additionalInformation": "http://www.knora.org/ontology/knora-admin#ProjectMember",
@@ -276,7 +276,7 @@ updating a default object acceess permission. The IRI of the new resource class 
 
 ```json
 {
-    "forResourceClass": "http://www.knora.org/ontology/0803/incunabula#book"
+    "forResourceClass": "http://api.dasch.swiss/ontology/0803/incunabula/v2#bild"
 }
 ```
 
@@ -292,7 +292,7 @@ updating a default object access permission. The IRI of the new property must be
 
 ```json
 {
-   "forProperty":"http://www.knora.org/ontology/00FF/images#titel"
+   "forProperty" :"http://api.dasch.swiss/ontology/00FF/images/v2#titel"
 }
 ```
 
