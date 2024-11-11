@@ -105,7 +105,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
             apiRequestId   <- RouteUtilZ.randomUuid()
             ingestState     = AssetIngestState.headerAssetIngestState(requestContext.request.headers)
             requestMessage <- ZIO
-                                .serviceWithZIO[org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser](
+                                .serviceWithZIO[ApiComplexV2JsonLdRequestParser](
                                   _.createResourceRequestV2(jsonRequest, ingestState, requestingUser, apiRequestId),
                                 )
                                 .mapError(BadRequestException(_))
