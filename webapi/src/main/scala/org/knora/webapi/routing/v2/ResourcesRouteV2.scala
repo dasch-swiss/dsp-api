@@ -102,7 +102,6 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestTask = for {
-            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             apiRequestId   <- RouteUtilZ.randomUuid()
             ingestState     = AssetIngestState.headerAssetIngestState(requestContext.request.headers)
