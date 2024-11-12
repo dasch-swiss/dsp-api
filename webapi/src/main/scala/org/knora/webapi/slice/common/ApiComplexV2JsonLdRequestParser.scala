@@ -58,6 +58,37 @@ final case class ApiComplexV2JsonLdRequestParser(
   userService: UserService,
 ) {
 
+  def deleteValueV2FromJsonLd(str: String): IO[String, DeleteValueV2] = ZIO.scoped {
+    for {
+      model                  <- ModelOps.fromJsonLd(str)
+      resourceAndIri         <- resourceAndIri(model)
+      (resource, resourceIri) = resourceAndIri
+      resourceClassIri       <- resourceClassIri(resource)
+      valueStatement         <- valueStatement(resource)
+      valueResource           = valueStatement.getObject.asResource()
+      valueIri               <- valueIri(valueResource).someOrFail("The value IRI is required")
+      valueTypeIri           <- valueType(valueResource)
+      propertyIri            <- valuePropertyIri(valueStatement)
+      valueDeleteDate        <- valueDeleteDate(valueResource)
+      valueDeleteComment     <- ZIO.fromEither(valueResource.objectStringOption(DeleteComment))
+    } yield DeleteValueV2(
+      resourceIri.smartIri.toIri,
+      resourceClassIri.smartIri,
+      propertyIri.smartIri,
+      valueIri.smartIri.toIri,
+      valueTypeIri,
+      valueDeleteComment,
+      valueDeleteDate,
+    )
+  }
+
+  private def valueDeleteDate(valueResource: Resource) =
+    ZIO.fromEither(valueResource.objectDataTypeOption(DeleteDate, Xsd.DateTimeStamp)).flatMap {
+      case Some(dateStr) =>
+        ZIO.fromEither(ValuesValidator.parseXsdDateTimeStamp(dateStr)).map(Some(_))
+      case None => ZIO.none
+    }
+
   def createResourceRequestV2(
     str: String,
     ingestState: AssetIngestState,
@@ -301,7 +332,7 @@ final case class ApiComplexV2JsonLdRequestParser(
     converter
       .asSmartIri(valueStatement.predicateUri)
       .mapError(_.getMessage)
-      .flatMap(iri => ZIO.fromEither(PropertyIri.from(iri)))
+      .flatMap(iri => ZIO.fromEither(PropertyIri.fromApiV2Complex(iri)))
 
   private def valueType(resource: Resource) = ZIO
     .fromEither(resource.rdfsType.toRight("No rdf:type found for value."))
@@ -337,7 +368,7 @@ final case class ApiComplexV2JsonLdRequestParser(
     .fromOption(rootResource.rdfsType)
     .orElseFail("No root resource class IRI found")
     .flatMap(converter.asSmartIri(_).mapError(_.getMessage))
-    .flatMap(iri => ZIO.fromEither(KResourceClassIri.from(iri)))
+    .flatMap(iri => ZIO.fromEither(KResourceClassIri.fromApiV2Complex(iri)))
 
   private def getValueContent(
     valueType: String,

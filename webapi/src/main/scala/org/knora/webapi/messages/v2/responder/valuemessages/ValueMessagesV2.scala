@@ -19,7 +19,6 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -40,7 +39,6 @@ import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
-import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.routing.v2.AssetIngestState
 import org.knora.webapi.routing.v2.AssetIngestState.*
@@ -170,68 +168,6 @@ case class DeleteValueV2(
   deleteComment: Option[String] = None,
   deleteDate: Option[Instant] = None,
 )
-
-object DeleteValueV2 {
-
-  /**
-   * Converts JSON-LD input into a case class instance.
-   *
-   * @param jsonLdString the JSON-LD input as String.
-   * @return a case class instance representing the input.
-   */
-  def fromJsonLd(jsonLdString: String): ZIO[StringFormatter & IriConverter, Throwable, DeleteValueV2] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      RouteUtilV2.parseJsonLd(jsonLdString).flatMap { jsonLDDocument =>
-        jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
-          case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-            for {
-              resourceIri <-
-                jsonLDDocument.body.getRequiredIdValueAsKnoraDataIri
-                  .mapError(BadRequestException(_))
-                  .tap(iri =>
-                    ZIO.fail(BadRequestException(s"Invalid resource IRI: <$iri>")).when(!iri.isKnoraResourceIri),
-                  )
-
-              resourceClassIri <-
-                jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
-              valueIri <- jsonLDObject.getRequiredIdValueAsKnoraDataIri.mapError(BadRequestException(_))
-              _        <- ZIO.fail(BadRequestException(s"Invalid value IRI: <$valueIri>")).when(!valueIri.isKnoraValueIri)
-              _ <- ZIO
-                     .fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-                     .when(
-                       UuidUtil.hasValidLength(UuidUtil.fromIri(valueIri.toString)) &&
-                         !UuidUtil.hasSupportedVersion(valueIri.toString),
-                     )
-              valueTypeIri <- jsonLDObject.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
-              deleteComment <- ZIO.attempt {
-                                 val validationFun: (String, => Nothing) => String =
-                                   (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                                 jsonLDObject.maybeStringWithValidation(
-                                   OntologyConstants.KnoraApiV2Complex.DeleteComment,
-                                   validationFun,
-                                 )
-                               }
-              deleteDate <- ZIO.attempt(
-                              jsonLDObject.maybeDatatypeValueInObject(
-                                key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
-                                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                validationFun =
-                                  (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-                              ),
-                            )
-            } yield DeleteValueV2(
-              resourceIri = resourceIri.toString,
-              resourceClassIri = resourceClassIri,
-              propertyIri = propertyIri,
-              valueIri = valueIri.toString,
-              valueTypeIri = valueTypeIri,
-              deleteComment = deleteComment,
-              deleteDate = deleteDate,
-            )
-        }
-      }
-    }
-}
 
 case class GenerateSparqlForValueInNewResourceV2(
   valueContent: ValueContentV2,
