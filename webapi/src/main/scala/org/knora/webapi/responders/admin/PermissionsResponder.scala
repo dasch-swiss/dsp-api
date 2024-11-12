@@ -608,11 +608,16 @@ final case class PermissionsResponder(
                  )
                case None => ZIO.unit
              }
-        _ <- doapService.save(doap)
-      } yield DefaultObjectAccessPermissionCreateResponseADM(doapService.asDefaultObjectAccessPermissionADM(doap))
+        _        <- doapService.save(doap)
+        external <- makeExternal(doapService.asDefaultObjectAccessPermissionADM(doap))
+      } yield DefaultObjectAccessPermissionCreateResponseADM(external)
 
     IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI, createPermissionTask)
   }
+  private def makeExternal(doap: DefaultObjectAccessPermissionADM): Task[DefaultObjectAccessPermissionADM] = for {
+    forResourceClass <- ZIO.foreach(doap.forResourceClass)(iriConverter.asExternalIri)
+    forProperty      <- ZIO.foreach(doap.forProperty)(iriConverter.asExternalIri)
+  } yield doap.copy(forResourceClass = forResourceClass, forProperty = forProperty)
 
   def verifyHasPermissionsDOAP(hasPermissions: Set[PermissionADM]): Task[Set[PermissionADM]] = ZIO.attempt {
     validateDOAPHasPermissions(hasPermissions)

@@ -22,7 +22,8 @@ final case class IriConverter(sf: StringFormatter) {
   def asInternalSmartIri(iri: InternalIri): Task[SmartIri] = asInternalSmartIri(iri.value)
   def asInternalSmartIri(iri: SmartIri): Task[SmartIri]    = ZIO.attempt(iri.toOntologySchema(InternalSchema))
   def asExternalIri(iri: InternalIri): Task[String] =
-    asInternalSmartIri(iri.value).mapAttempt(_.toOntologySchema(ApiV2Complex)).map(_.toIri)
+    asInternalSmartIri(iri.value).mapAttempt(_.toComplexSchema).map(_.toIri)
+  def asExternalIri(iri: String): Task[String] = asSmartIri(iri).mapAttempt(_.toComplexSchema).map(_.toIri)
   def getOntologyIriFromClassIri(iri: InternalIri): Task[InternalIri] =
     getOntologySmartIriFromClassIri(iri).mapAttempt(_.toInternalIri)
   def getOntologySmartIriFromClassIri(iri: InternalIri): Task[SmartIri] =
