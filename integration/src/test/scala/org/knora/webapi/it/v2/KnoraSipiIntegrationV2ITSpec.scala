@@ -734,7 +734,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       val request  = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
       val response = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.NotFound)
+      assert(response.status == StatusCodes.BadRequest)
     }
 
     "create a resource of type ArchiveRepresentation with a Zip file" in {
