@@ -10,7 +10,6 @@ import zio.*
 import zio.ZIO
 import zio.ZLayer
 
-import java.time.Instant
 import java.util.UUID
 import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters.*
@@ -19,17 +18,17 @@ import scala.language.implicitConversions
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.OntologyConstants.Xsd
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages.ValuesValidator.parseXsdDateTimeStamp
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.DeleteOrEraseResourceRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.UpdateResourceMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
 import org.knora.webapi.routing.v2.AssetIngestState
@@ -59,6 +58,32 @@ final case class ApiComplexV2JsonLdRequestParser(
   userService: UserService,
 ) {
 
+  def updateResourceMetadataRequestV2(
+    str: String,
+    requestingUser: User,
+    uuid: UUID,
+  ): IO[String, UpdateResourceMetadataRequestV2] = ZIO.scoped {
+    for {
+      model                  <- ModelOps.fromJsonLd(str)
+      resourceAndIri         <- resourceAndIri(model)
+      (resource, resourceIri) = resourceAndIri
+      resourceClassIri       <- resourceClassIri(resource)
+      lastModificationDate   <- instantOption(resource, LastModificationDate)
+      label                  <- ZIO.fromEither(resource.objectStringOption(Rdfs.Label))
+      permissions            <- ZIO.fromEither(resource.objectStringOption(HasPermissions))
+      newModificationDate    <- instantOption(resource, NewModificationDate)
+    } yield UpdateResourceMetadataRequestV2(
+      resourceIri.smartIri.toIri,
+      resourceClassIri.smartIri,
+      lastModificationDate,
+      label,
+      permissions,
+      newModificationDate,
+      requestingUser,
+      uuid,
+    )
+  }
+
   def deleteOrEraseResourceRequestV2(
     str: String,
     requestingUser: User,
@@ -85,10 +110,8 @@ final case class ApiComplexV2JsonLdRequestParser(
   }
 
   private def instantOption(r: Resource, p: Property) =
-    ZIO.fromEither(r.objectDataTypeOption(p, Xsd.DateTimeStamp)).flatMap {
-      case Some(dateStr) =>
-        ZIO.fromEither(ValuesValidator.parseXsdDateTimeStamp(dateStr)).map(Some(_))
-      case None => ZIO.none
+    ZIO.fromEither(r.objectDataTypeOption(p, Xsd.DateTimeStamp)).flatMap { option =>
+      ZIO.foreach(option)(dateStr => ZIO.fromEither(parseXsdDateTimeStamp(dateStr)))
     }
 
   def deleteValueV2FromJsonLd(str: String): IO[String, DeleteValueV2] = ZIO.scoped {
@@ -102,7 +125,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       valueIri               <- valueIri(valueResource).someOrFail("The value IRI is required")
       valueTypeIri           <- valueType(valueResource)
       propertyIri            <- valuePropertyIri(valueStatement)
-      valueDeleteDate        <- valueDeleteDate(valueResource)
+      valueDeleteDate        <- instantOption(valueResource, DeleteDate)
       valueDeleteComment     <- ZIO.fromEither(valueResource.objectStringOption(DeleteComment))
     } yield DeleteValueV2(
       resourceIri.smartIri.toIri,
@@ -114,12 +137,6 @@ final case class ApiComplexV2JsonLdRequestParser(
       valueDeleteDate,
     )
   }
-  private def valueDeleteDate(valueResource: Resource) =
-    ZIO.fromEither(valueResource.objectDataTypeOption(DeleteDate, Xsd.DateTimeStamp)).flatMap {
-      case Some(dateStr) =>
-        ZIO.fromEither(ValuesValidator.parseXsdDateTimeStamp(dateStr)).map(Some(_))
-      case None => ZIO.none
-    }
 
   def createResourceRequestV2(
     str: String,
@@ -140,7 +157,7 @@ final case class ApiComplexV2JsonLdRequestParser(
                .when(resourceIri.exists(_.shortcode != project.getShortcode))
         permissions    <- ZIO.fromEither(resource.objectStringOption(HasPermissions))
         attachedToUser <- attachedToUser(resource, requestingUser, project.projectIri)
-        creationDate   <- creationDate(resource)
+        creationDate   <- instantOption(resource, CreationDate)
         values         <- extractValues(resource, project.getShortcode, ingestState)
       } yield CreateResourceRequestV2(
         CreateResourceV2(
@@ -166,10 +183,10 @@ final case class ApiComplexV2JsonLdRequestParser(
     val filteredProperties = Seq(
       RDF.`type`.toString,
       Rdfs.Label,
-      KnoraApiV2Complex.AttachedToProject,
-      KnoraApiV2Complex.AttachedToUser,
-      KnoraApiV2Complex.HasPermissions,
-      KnoraApiV2Complex.CreationDate,
+      AttachedToProject,
+      AttachedToUser,
+      HasPermissions,
+      CreationDate,
     )
     val valueStatements = r
       .listProperties()
@@ -193,7 +210,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       propertyIri             <- valuePropertyIri(statement)
       customValueIri          <- valueIri(valueResource)
       customValueUuid         <- ZIO.fromEither(valueHasUuid(valueResource))
-      customValueCreationDate <- ZIO.fromEither(valueCreationDate(valueResource))
+      customValueCreationDate <- instantOption(valueResource, ValueCreationDate)
       permissions             <- ZIO.fromEither(valuePermissions(valueResource))
     } yield (
       propertyIri,
@@ -205,12 +222,6 @@ final case class ApiComplexV2JsonLdRequestParser(
         permissions,
       ),
     )
-
-  def creationDate(r: Resource): IO[String, Option[Instant]] =
-    for {
-      dateStr <- ZIO.fromEither(r.objectDataTypeOption(CreationDate, Xsd.DateTimeStamp))
-      inst    <- ZIO.foreach(dateStr)(str => ZIO.fromEither(ValuesValidator.parseXsdDateTimeStamp(str)))
-    } yield inst
 
   def attachedToUser(r: Resource, requestingUser: User, projectIri: ProjectIri): IO[String, User] =
     for {
@@ -266,7 +277,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueType              <- valueType(valueResource)
         valueIri               <- valueIri(valueResource).someOrFail("The value IRI is required")
         newValueVersionIri     <- newValueVersionIri(valueResource, valueIri)
-        valueCreationDate      <- ZIO.fromEither(valueCreationDate(valueResource))
+        valueCreationDate      <- instantOption(valueResource, ValueCreationDate)
         valuePermissions       <- ZIO.fromEither(valuePermissions(valueResource))
         valueFileValueFilename <- ZIO.fromEither(valueFileValueFilename(valueResource))
         valueContent <-
@@ -320,7 +331,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueResource          <- ZIO.fromEither(valueStatement.objectAsResource())
         valueIri               <- valueIri(valueResource)
         valueUuid              <- ZIO.fromEither(valueHasUuid(valueResource))
-        valueCreationDate      <- ZIO.fromEither(valueCreationDate(valueResource))
+        valueCreationDate      <- instantOption(valueResource, ValueCreationDate)
         valuePermissions       <- ZIO.fromEither(valuePermissions(valueResource))
         valueFileValueFilename <- ZIO.fromEither(valueFileValueFilename(valueResource))
         valueType              <- valueType(valueResource)
@@ -382,12 +393,6 @@ final case class ApiComplexV2JsonLdRequestParser(
       case Some(str) =>
         UuidUtil.base64Decode(str).map(Some(_)).toEither.left.map(e => s"Invalid UUID '$str': ${e.getMessage}")
       case None => Right(None)
-    }
-
-  private def valueCreationDate(valueResource: Resource): Either[String, Option[Instant]] =
-    valueResource.objectDataTypeOption(ValueCreationDate, Xsd.DateTimeStamp).flatMap {
-      case Some(str) => ValuesValidator.parseXsdDateTimeStamp(str).map(Some(_))
-      case None      => Right(None)
     }
 
   private def valuePermissions(valueResource: Resource): Either[String, Option[String]] =

@@ -26,7 +26,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.ValuesValidator.arkTimestampToInstant
 import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.v2.SearchResponderV2
@@ -124,10 +123,11 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestMessageFuture = for {
-            requestDoc     <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <- UpdateResourceMetadataRequestV2.fromJsonLD(requestDoc, requestingUser, apiRequestId)
+            requestMessage <-
+              jsonLdRequestParser(_.updateResourceMetadataRequestV2(jsonRequest, requestingUser, apiRequestId))
+                .mapError(BadRequestException.apply)
           } yield requestMessage
           RouteUtilV2.runRdfRouteZ(requestMessageFuture, requestContext)
         }
