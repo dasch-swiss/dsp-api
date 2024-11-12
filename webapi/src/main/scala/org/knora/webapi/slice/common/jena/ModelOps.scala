@@ -31,10 +31,10 @@ object ModelOps { self =>
       statementOption(s, p).toRight(s"Statement not found '${s.getURI} ${p.getURI} ?o .'")
 
     def singleRootResource: Either[String, Resource] =
-      val objSeen = model.listObjects().asScala.collect { case r: Resource => Option(r.getURI) }.toSet.flatten
-      val subSeen = model.listSubjects().asScala.collect { case r: Resource => Option(r.getURI) }.toSet.flatten
-      (subSeen -- objSeen) match {
-        case iris if iris.size == 1 => model.resource(iris.head)
+      val subs = model.listSubjects().asScala.toSet
+      val objs = model.listObjects().asScala.collect { case r: Resource => r }.toSet
+      (subs -- objs) match {
+        case iris if iris.size == 1 => Right(iris.head)
         case iris if iris.isEmpty   => Left("No root resource found in model")
         case iris                   => Left(s"Multiple root resources found in model: ${iris.mkString(", ")}")
       }
