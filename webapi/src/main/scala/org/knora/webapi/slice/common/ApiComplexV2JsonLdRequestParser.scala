@@ -73,7 +73,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         label                  <- ZIO.fromEither(resource.objectString(Rdfs.Label))
         project                <- attachedToProject(resource)
         _ <- ZIO
-               .fail("Resource Iri and project Iri must reference the same project")
+               .fail("Resource IRI and project IRI must reference the same project.")
                .when(resourceIri.exists(_.shortcode != project.getShortcode))
         permissions    <- ZIO.fromEither(resource.objectStringOption(HasPermissions))
         attachedToUser <- attachedToUser(resource, requestingUser, project.projectIri)
