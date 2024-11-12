@@ -171,7 +171,7 @@ abstract class ITKnoraLiveSpec
         .getOrThrowFiberFailure()
     }
 
-  protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
+  protected def uploadToIngest(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(

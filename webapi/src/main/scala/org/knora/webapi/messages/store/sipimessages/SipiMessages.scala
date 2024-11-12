@@ -17,6 +17,7 @@ import org.knora.webapi.slice.admin.domain.model.User
  */
 sealed trait IIIFRequest extends StoreRequest with RelayedMessage
 
+// NOTE: consider renaming all with Ingest prefixes
 sealed trait SipiRequest extends IIIFRequest
 
 /**
