@@ -72,6 +72,9 @@ final case class ApiComplexV2JsonLdRequestParser(
       label                  <- ZIO.fromEither(resource.objectStringOption(Rdfs.Label))
       permissions            <- ZIO.fromEither(resource.objectStringOption(HasPermissions))
       newModificationDate    <- instantOption(resource, NewModificationDate)
+      _ <- ZIO
+             .fail("No updated resource metadata provided")
+             .when(label.isEmpty && permissions.isEmpty && newModificationDate.isEmpty)
     } yield UpdateResourceMetadataRequestV2(
       resourceIri.smartIri.toIri,
       resourceClassIri.smartIri,
