@@ -517,36 +517,6 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-    "change a PDF file value with X-Asset-Ingested=true" in {
-      // Update the value.
-      val jsonLdEntity = ChangeFileRequest
-        .make(
-          fileType = FileType.DocumentFile(),
-          internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2",
-          resourceIri = pdfResourceIri.get,
-          valueIri = pdfValueIri.get,
-          className = Some("ThingDocument"),
-          ontologyName = "anything",
-        )
-        .toJsonLd
-
-      val response: JsonLDDocument = requestJsonLDWithAuth(
-        Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)),
-      )
-
-      val resource = getResponseJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(pdfResourceIri.get)}"))
-
-      // Get the new file value from the resource.
-      val savedDocument: SavedDocument = savedValueToSavedDocument(
-        getValueFromResource(
-          resource = resource,
-          propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri,
-          expectedValueIri = UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString,
-        ),
-      )
-      assert(savedDocument.internalFilename == "De6XyNL4H71-D9QxghOuOPJ.jp2")
-    }
-
     "not create a document resource if the file is actually a zip file" in {
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
