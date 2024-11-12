@@ -65,8 +65,8 @@ case class SipiGetTextFileResponse(content: String)
 case class SipiUploadResponseEntry(
   originalFilename: String,
   internalFilename: String,
-  temporaryUrl: String,
-  fileType: String,
+  temporaryUrl: Option[String],
+  fileType: Option[String],
 )
 
 /**

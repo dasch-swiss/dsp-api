@@ -192,11 +192,6 @@ routes = {
     },
     {
         method = 'POST',
-        route = '/upload',
-        script = 'upload.lua'
-    },
-    {
-        method = 'POST',
         route = '/store',
         script = 'store.lua'
     },
