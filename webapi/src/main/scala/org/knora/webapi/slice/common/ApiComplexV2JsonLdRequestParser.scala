@@ -10,6 +10,7 @@ import zio.*
 import zio.ZIO
 import zio.ZLayer
 
+import java.time.Instant
 import java.util.UUID
 import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters.*
@@ -58,26 +59,83 @@ final case class ApiComplexV2JsonLdRequestParser(
   userService: UserService,
 ) {
 
+  /**
+   * Every value or resource request MUST only contain a single root rdf resource.
+   * The root resource MUST have a rdf:type property that specifies the Knora resource class.
+   * The root resource MAY be an uri resource or a blank node resource.
+   * The ResourceAccessors trait provides some common methods to access the properties of the root resource.
+   */
+  private trait ResourceAccessors {
+    def resource: Resource
+
+    def resourceClassIri: ResourceClassIri
+    def resourceClassSmartIri: SmartIri = resourceClassIri.smartIri
+
+    // accessor methods for various properties of the root resource
+    def deleteComment: IO[String, Option[String]]               = ZIO.fromEither(resource.objectStringOption(DeleteComment))
+    def deleteDate: IO[String, Option[Instant]]                 = instantOption(resource, DeleteDate)
+    def hasPermissionsOption: IO[String, Option[String]]        = ZIO.fromEither(resource.objectStringOption(HasPermissions))
+    def creationDate: IO[String, Option[Instant]]               = instantOption(resource, CreationDate)
+    def lastModificationDateOption: IO[String, Option[Instant]] = instantOption(resource, LastModificationDate)
+    def newModificationDateOption: IO[String, Option[Instant]]  = instantOption(resource, NewModificationDate)
+    def rdfsLabelOption: IO[String, Option[String]]             = ZIO.fromEither(resource.objectStringOption(Rdfs.Label))
+  }
+
+  private case class RootUriResource(resource: Resource, resourceIri: ResourceIri, resourceClassIri: ResourceClassIri)
+      extends ResourceAccessors {
+    def resourceIriStr: String = resourceIri.smartIri.toIri
+    def shortcode: Shortcode   = resourceIri.shortcode
+  }
+  private object RootUriResource {
+    def fromJsonLd(str: String): ZIO[Scope, String, RootUriResource] =
+      for {
+        r   <- RootResource.fromJsonLd(str)
+        iri <- ZIO.fromOption(r.resourceIri).orElseFail("No resource IRI found")
+      } yield RootUriResource(r.resource, iri, r.resourceClassIri)
+  }
+
+  private case class RootResource(
+    resource: Resource,
+    resourceIri: Option[ResourceIri],
+    resourceClassIri: ResourceClassIri,
+  ) extends ResourceAccessors
+  private object RootResource {
+    def fromJsonLd(str: String): ZIO[Scope, String, RootResource] =
+      for {
+        model    <- ModelOps.fromJsonLd(str)
+        resource <- ZIO.fromEither(model.singleRootResource)
+        resourceIriOption <-
+          ZIO
+            .foreach(resource.uri)(
+              converter.asSmartIri(_).mapError(_.getMessage).flatMap(iri => ZIO.fromEither(KResourceIri.from(iri))),
+            )
+        resourceClassIri <- resourceClassIri(resource)
+      } yield RootResource(resource, resourceIriOption, resourceClassIri)
+
+    private def resourceClassIri(r: Resource): IO[String, ResourceClassIri] = ZIO
+      .fromOption(r.rdfsType)
+      .orElseFail("No root resource class IRI found")
+      .flatMap(converter.asSmartIri(_).mapError(_.getMessage))
+      .flatMap(iri => ZIO.fromEither(KResourceClassIri.fromApiV2Complex(iri)))
+  }
+
   def updateResourceMetadataRequestV2(
     str: String,
     requestingUser: User,
     uuid: UUID,
   ): IO[String, UpdateResourceMetadataRequestV2] = ZIO.scoped {
     for {
-      model                  <- ModelOps.fromJsonLd(str)
-      resourceAndIri         <- resourceAndIri(model)
-      (resource, resourceIri) = resourceAndIri
-      resourceClassIri       <- resourceClassIri(resource)
-      lastModificationDate   <- instantOption(resource, LastModificationDate)
-      label                  <- ZIO.fromEither(resource.objectStringOption(Rdfs.Label))
-      permissions            <- ZIO.fromEither(resource.objectStringOption(HasPermissions))
-      newModificationDate    <- instantOption(resource, NewModificationDate)
+      r                    <- RootUriResource.fromJsonLd(str)
+      label                <- r.rdfsLabelOption
+      permissions          <- r.hasPermissionsOption
+      lastModificationDate <- r.lastModificationDateOption
+      newModificationDate  <- r.newModificationDateOption
       _ <- ZIO
              .fail("No updated resource metadata provided")
              .when(label.isEmpty && permissions.isEmpty && newModificationDate.isEmpty)
     } yield UpdateResourceMetadataRequestV2(
-      resourceIri.smartIri.toIri,
-      resourceClassIri.smartIri,
+      r.resourceIriStr,
+      r.resourceClassSmartIri,
       lastModificationDate,
       label,
       permissions,
@@ -93,16 +151,13 @@ final case class ApiComplexV2JsonLdRequestParser(
     uuid: UUID,
   ): IO[String, DeleteOrEraseResourceRequestV2] = ZIO.scoped {
     for {
-      model                  <- ModelOps.fromJsonLd(str)
-      resourceAndIri         <- resourceAndIri(model)
-      (resource, resourceIri) = resourceAndIri
-      resourceClassIri       <- resourceClassIri(resource)
-      deleteComment          <- ZIO.fromEither(resource.objectStringOption(DeleteComment))
-      deleteDate             <- instantOption(resource, DeleteDate)
-      lastModificationDate   <- instantOption(resource, LastModificationDate)
+      r                    <- RootUriResource.fromJsonLd(str)
+      deleteComment        <- r.deleteComment
+      deleteDate           <- r.deleteDate
+      lastModificationDate <- r.lastModificationDateOption
     } yield DeleteOrEraseResourceRequestV2(
-      resourceIri.smartIri.toIri,
-      resourceClassIri.smartIri,
+      r.resourceIriStr,
+      r.resourceClassSmartIri,
       deleteComment,
       deleteDate,
       lastModificationDate,
@@ -119,20 +174,17 @@ final case class ApiComplexV2JsonLdRequestParser(
 
   def deleteValueV2FromJsonLd(str: String): IO[String, DeleteValueV2] = ZIO.scoped {
     for {
-      model                  <- ModelOps.fromJsonLd(str)
-      resourceAndIri         <- resourceAndIri(model)
-      (resource, resourceIri) = resourceAndIri
-      resourceClassIri       <- resourceClassIri(resource)
-      valueStatement         <- valueStatement(resource)
-      valueResource           = valueStatement.getObject.asResource()
-      valueIri               <- valueIri(valueResource).someOrFail("The value IRI is required")
-      valueTypeIri           <- valueType(valueResource)
-      propertyIri            <- valuePropertyIri(valueStatement)
-      valueDeleteDate        <- instantOption(valueResource, DeleteDate)
-      valueDeleteComment     <- ZIO.fromEither(valueResource.objectStringOption(DeleteComment))
+      r                  <- RootUriResource.fromJsonLd(str)
+      valueStatement     <- valueStatement(r.resource)
+      valueResource       = valueStatement.getObject.asResource()
+      valueIri           <- valueIri(valueResource).someOrFail("The value IRI is required")
+      valueTypeIri       <- valueType(valueResource)
+      propertyIri        <- valuePropertyIri(valueStatement)
+      valueDeleteDate    <- instantOption(valueResource, DeleteDate)
+      valueDeleteComment <- ZIO.fromEither(valueResource.objectStringOption(DeleteComment))
     } yield DeleteValueV2(
-      resourceIri.smartIri.toIri,
-      resourceClassIri.smartIri,
+      r.resourceIriStr,
+      r.resourceClassSmartIri,
       propertyIri.smartIri,
       valueIri.smartIri.toIri,
       valueTypeIri,
@@ -146,37 +198,33 @@ final case class ApiComplexV2JsonLdRequestParser(
     ingestState: AssetIngestState,
     requestingUser: User,
     uuid: UUID,
-  ): IO[String, CreateResourceRequestV2] =
-    ZIO.scoped {
-      for {
-        model                  <- ModelOps.fromJsonLd(str)
-        resourceAndIri         <- resourceAndIriOption(model)
-        (resource, resourceIri) = resourceAndIri
-        resourceClassIri       <- resourceClassIri(resource)
-        label                  <- ZIO.fromEither(resource.objectString(Rdfs.Label))
-        project                <- attachedToProject(resource)
-        _ <- ZIO
-               .fail("Resource Iri and project Iri must reference the same project")
-               .when(resourceIri.exists(_.shortcode != project.getShortcode))
-        permissions    <- ZIO.fromEither(resource.objectStringOption(HasPermissions))
-        attachedToUser <- attachedToUser(resource, requestingUser, project.projectIri)
-        creationDate   <- instantOption(resource, CreationDate)
-        values         <- extractValues(resource, project.getShortcode, ingestState)
-      } yield CreateResourceRequestV2(
-        CreateResourceV2(
-          resourceIri.map(_.smartIri),
-          resourceClassIri.smartIri,
-          label,
-          values,
-          project,
-          permissions,
-          creationDate,
-        ),
-        attachedToUser,
-        uuid,
-        ingestState,
-      )
-    }
+  ): IO[String, CreateResourceRequestV2] = ZIO.scoped {
+    for {
+      r            <- RootResource.fromJsonLd(str)
+      permissions  <- r.hasPermissionsOption
+      creationDate <- r.creationDate
+      label        <- r.rdfsLabelOption.someOrFail("A Resource must have an rdfs:label")
+      project      <- attachedToProject(r.resource)
+      _ <- ZIO
+             .fail("Resource IRI and project IRI must reference the same project")
+             .when(r.resourceIri.exists(_.shortcode != project.getShortcode))
+      attachedToUser <- attachedToUser(r.resource, requestingUser, project.projectIri)
+      values         <- extractValues(r.resource, project.getShortcode, ingestState)
+    } yield CreateResourceRequestV2(
+      CreateResourceV2(
+        r.resourceIri.map(_.smartIri),
+        r.resourceClassSmartIri,
+        label,
+        values,
+        project,
+        permissions,
+        creationDate,
+      ),
+      attachedToUser,
+      uuid,
+      ingestState,
+    )
+  }
 
   private def extractValues(
     r: Resource,
@@ -270,11 +318,8 @@ final case class ApiComplexV2JsonLdRequestParser(
   def updateValueV2fromJsonLd(str: String, ingestState: AssetIngestState): IO[String, UpdateValueV2] =
     ZIO.scoped {
       for {
-        model                  <- ModelOps.fromJsonLd(str)
-        resourceAndIri         <- resourceAndIri(model)
-        (resource, resourceIri) = resourceAndIri
-        resourceClassIri       <- resourceClassIri(resource)
-        valueStatement         <- valueStatement(resource)
+        r                      <- RootUriResource.fromJsonLd(str)
+        valueStatement         <- valueStatement(r.resource)
         valuePropertyIri       <- valuePropertyIri(valueStatement)
         valueResource           = valueStatement.getObject.asResource()
         valueType              <- valueType(valueResource)
@@ -284,15 +329,15 @@ final case class ApiComplexV2JsonLdRequestParser(
         valuePermissions       <- ZIO.fromEither(valuePermissions(valueResource))
         valueFileValueFilename <- ZIO.fromEither(valueFileValueFilename(valueResource))
         valueContent <-
-          getValueContent(valueType.toString, valueResource, valueFileValueFilename, resourceIri.shortcode, ingestState)
+          getValueContent(valueType.toString, valueResource, valueFileValueFilename, r.shortcode, ingestState)
             .map(Some(_))
             .orElse(ZIO.none)
         updateValue <- valueContent match
                          case Some(valueContentV2) =>
                            ZIO.succeed(
                              UpdateValueContentV2(
-                               resourceIri.toString,
-                               resourceClassIri.smartIri,
+                               r.resourceIriStr,
+                               r.resourceClassSmartIri,
                                valuePropertyIri.smartIri,
                                valueIri.toString,
                                valueContentV2,
@@ -309,8 +354,8 @@ final case class ApiComplexV2JsonLdRequestParser(
                                _ => "No permissions and no value content found",
                                permissions =>
                                  UpdateValuePermissionsV2(
-                                   resourceIri.toString,
-                                   resourceClassIri.smartIri,
+                                   r.resourceIriStr,
+                                   r.resourceClassSmartIri,
                                    valuePropertyIri.smartIri,
                                    valueIri.toString,
                                    valueType,
@@ -325,11 +370,8 @@ final case class ApiComplexV2JsonLdRequestParser(
   def createValueV2FromJsonLd(str: String, ingestState: AssetIngestState): IO[String, CreateValueV2] =
     ZIO.scoped {
       for {
-        model                  <- ModelOps.fromJsonLd(str)
-        resourceAndIri         <- resourceAndIri(model)
-        (resource, resourceIri) = resourceAndIri
-        resourceClassIri       <- resourceClassIri(resource)
-        valueStatement         <- valueStatement(resource)
+        r                      <- RootUriResource.fromJsonLd(str)
+        valueStatement         <- valueStatement(r.resource)
         valuePropertyIri       <- valuePropertyIri(valueStatement)
         valueResource          <- ZIO.fromEither(valueStatement.objectAsResource())
         valueIri               <- valueIri(valueResource)
@@ -339,10 +381,10 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueFileValueFilename <- ZIO.fromEither(valueFileValueFilename(valueResource))
         valueType              <- valueType(valueResource)
         valueContent <-
-          getValueContent(valueType.toString, valueResource, valueFileValueFilename, resourceIri.shortcode, ingestState)
+          getValueContent(valueType.toString, valueResource, valueFileValueFilename, r.shortcode, ingestState)
       } yield CreateValueV2(
-        resourceIri.toString,
-        resourceClassIri.smartIri,
+        r.resourceIriStr,
+        r.resourceClassSmartIri,
         valuePropertyIri.smartIri,
         valueContent,
         valueIri.map(_.smartIri),
@@ -351,21 +393,6 @@ final case class ApiComplexV2JsonLdRequestParser(
         valuePermissions,
         ingestState,
       )
-    }
-
-  private def resourceAndIri(model: Model): IO[String, (Resource, ResourceIri)] =
-    resourceAndIriOption(model).flatMap {
-      case (r, Some(iri)) => ZIO.succeed((r, iri))
-      case (r, None)      => ZIO.fail("No resource IRI found")
-    }
-
-  private def resourceAndIriOption(model: Model): IO[String, (Resource, Option[KResourceIri])] =
-    ZIO.fromEither(model.singleRootResource).flatMap { (r: Resource) =>
-      ZIO
-        .foreach(r.uri)(
-          converter.asSmartIri(_).mapError(_.getMessage).flatMap(iri => ZIO.fromEither(KResourceIri.from(iri))),
-        )
-        .map((r, _))
     }
 
   private def valueStatement(rootResource: Resource): IO[String, Statement] = ZIO
@@ -403,12 +430,6 @@ final case class ApiComplexV2JsonLdRequestParser(
 
   private def valueFileValueFilename(valueResource: Resource): Either[String, Option[String]] =
     valueResource.objectStringOption(FileValueHasFilename)
-
-  private def resourceClassIri(rootResource: Resource): IO[String, KResourceClassIri] = ZIO
-    .fromOption(rootResource.rdfsType)
-    .orElseFail("No root resource class IRI found")
-    .flatMap(converter.asSmartIri(_).mapError(_.getMessage))
-    .flatMap(iri => ZIO.fromEither(KResourceClassIri.fromApiV2Complex(iri)))
 
   private def getValueContent(
     valueType: String,
