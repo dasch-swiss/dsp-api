@@ -29,6 +29,7 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.DeleteOrEraseResourceRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
 import org.knora.webapi.routing.v2.AssetIngestState
@@ -58,6 +59,38 @@ final case class ApiComplexV2JsonLdRequestParser(
   userService: UserService,
 ) {
 
+  def deleteOrEraseResourceRequestV2(
+    str: String,
+    requestingUser: User,
+    uuid: UUID,
+  ): IO[String, DeleteOrEraseResourceRequestV2] = ZIO.scoped {
+    for {
+      model                  <- ModelOps.fromJsonLd(str)
+      resourceAndIri         <- resourceAndIri(model)
+      (resource, resourceIri) = resourceAndIri
+      resourceClassIri       <- resourceClassIri(resource)
+      deleteComment          <- ZIO.fromEither(resource.objectStringOption(DeleteComment))
+      deleteDate             <- instantOption(resource, DeleteDate)
+      lastModificationDate   <- instantOption(resource, LastModificationDate)
+    } yield DeleteOrEraseResourceRequestV2(
+      resourceIri.smartIri.toIri,
+      resourceClassIri.smartIri,
+      deleteComment,
+      deleteDate,
+      lastModificationDate,
+      false,
+      requestingUser,
+      uuid,
+    )
+  }
+
+  private def instantOption(r: Resource, p: Property) =
+    ZIO.fromEither(r.objectDataTypeOption(p, Xsd.DateTimeStamp)).flatMap {
+      case Some(dateStr) =>
+        ZIO.fromEither(ValuesValidator.parseXsdDateTimeStamp(dateStr)).map(Some(_))
+      case None => ZIO.none
+    }
+
   def deleteValueV2FromJsonLd(str: String): IO[String, DeleteValueV2] = ZIO.scoped {
     for {
       model                  <- ModelOps.fromJsonLd(str)
@@ -81,7 +114,6 @@ final case class ApiComplexV2JsonLdRequestParser(
       valueDeleteDate,
     )
   }
-
   private def valueDeleteDate(valueResource: Resource) =
     ZIO.fromEither(valueResource.objectDataTypeOption(DeleteDate, Xsd.DateTimeStamp)).flatMap {
       case Some(dateStr) =>

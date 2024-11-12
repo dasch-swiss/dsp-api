@@ -863,63 +863,6 @@ case class DeleteOrEraseResourceRequestV2(
   apiRequestID: UUID,
 ) extends ResourcesResponderRequestV2
 
-object DeleteOrEraseResourceRequestV2 {
-
-  /**
-   * Converts JSON-LD input into an instance of [[DeleteOrEraseResourceRequestV2]].
-   *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @return a case class instance representing the input.
-   */
-  def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    requestingUser: User,
-    apiRequestID: UUID,
-  ): ZIO[StringFormatter & IriConverter, Throwable, DeleteOrEraseResourceRequestV2] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
-      for {
-        resourceIri <-
-          jsonLDDocument.body.getRequiredIdValueAsKnoraDataIri
-            .mapError(BadRequestException(_))
-            .tap(iri =>
-              ZIO.when(!iri.isKnoraResourceIri)(ZIO.fail(BadRequestException(s"Invalid resource IRI: <$iri>"))),
-            )
-
-        resourceClassIri <-
-          jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
-
-        maybeLastModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
-                                                       key = KnoraApiV2Complex.LastModificationDate,
-                                                       expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
-                                                       validationFun = (s, errorFun) =>
-                                                         xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-                                                     )
-
-        maybeDeleteComment: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
-                                               KnoraApiV2Complex.DeleteComment,
-                                               (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun),
-                                             )
-
-        maybeDeleteDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
-                                             KnoraApiV2Complex.DeleteDate,
-                                             Xsd.DateTimeStamp.toSmartIri,
-                                             (s, errorFun) => xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-                                           )
-
-      } yield DeleteOrEraseResourceRequestV2(
-        resourceIri = resourceIri.toString,
-        resourceClassIri = resourceClassIri,
-        maybeDeleteComment = maybeDeleteComment,
-        maybeDeleteDate = maybeDeleteDate,
-        maybeLastModificationDate = maybeLastModificationDate,
-        requestingUser = requestingUser,
-        apiRequestID = apiRequestID,
-      )
-    }
-}
-
 /**
  * Represents a sequence of resources read back from Knora.
  *
