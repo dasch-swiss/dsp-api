@@ -163,7 +163,7 @@ final case class ApiComplexV2JsonLdRequestParser(
           if !(requestingUser.permissions.isSystemAdmin ||
             requestingUser.permissions.isProjectAdmin(projectIri.value)) =>
         ZIO.fail(
-          s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can perform an operation as another user",
+          s"You are logged in as ${requestingUser.username}, but only a system or project administrator can perform an operation as another user.",
         )
       case _ => userService.findUserByIri(userIri).orDie.someOrFail(s"User '${userIri.value}' not found")
     }
