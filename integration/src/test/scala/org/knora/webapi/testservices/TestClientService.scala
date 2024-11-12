@@ -17,6 +17,7 @@ import sttp.client3.httpclient.zio.HttpClientZioBackend
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
+import zio.nio.file.Files
 
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
@@ -41,7 +42,6 @@ import org.knora.webapi.store.iiif.errors.SipiException
 
 import pekko.http.scaladsl.client.RequestBuilding
 import pekko.http.scaladsl.unmarshalling.Unmarshal
-import zio.nio.file.Files
 
 /**
  * Represents a file to be uploaded to the IIF Service.

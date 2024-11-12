@@ -6,6 +6,7 @@
 package org.knora.webapi.e2e.v2
 
 import org.apache.pekko.http.scaladsl.model.HttpEntity
+import org.apache.pekko.http.scaladsl.model.HttpResponse
 import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
@@ -16,7 +17,7 @@ import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.{KnoraApiV2Complex => OntConsts}
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as OntConsts
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -24,7 +25,6 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
-import org.apache.pekko.http.scaladsl.model.HttpResponse
 
 /**
  * Tests creating a still image file value using a mock Sipi.
