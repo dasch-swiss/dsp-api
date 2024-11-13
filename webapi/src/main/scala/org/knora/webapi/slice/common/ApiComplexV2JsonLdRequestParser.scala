@@ -349,8 +349,6 @@ final case class ApiComplexV2JsonLdRequestParser(
         newValueVersionIri <- newValueVersionIri(v, valueIri)
         valueContent       <- getValueContent(v, resourceIri.shortcode, ingestState).map(Some(_)).orElse(ZIO.none)
         updateValue <- (valueContent, valuePermissions) match
-                         case (Some(_), Some(_)) =>
-                           ZIO.fail("Both value content and permissions provided, only one is allowed")
                          case (Some(valueContentV2), _) =>
                            ZIO.succeed(
                              UpdateValueContentV2(
