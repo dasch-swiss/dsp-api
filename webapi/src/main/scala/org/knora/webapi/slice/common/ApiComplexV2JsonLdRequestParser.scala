@@ -59,7 +59,7 @@ final case class ApiComplexV2JsonLdRequestParser(
    * Every value or resource request MUST only contain a single root rdf resource.
    * The root resource MUST have a rdf:type property that specifies the Knora resource class.
    * The root resource MAY be an uri resource or a blank node resource.
-   * The ResourceAccessors trait provides some common methods to access the properties of the root resource.
+   * The RootResource provides some common methods to access the properties of the root resource.
    */
   private case class RootResource(
     resource: Resource,
