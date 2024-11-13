@@ -71,9 +71,9 @@ final case class ApiComplexV2JsonLdRequestParser(
     def resourceClassSmartIri: SmartIri = resourceClassIri.smartIri
 
     // accessor methods for various properties of the root resource
-    def creationDate: IO[String, Option[Instant]]        = ZIO.fromEither(resource.objectInstantOption(CreationDate))
-    def deleteComment: IO[String, Option[String]]        = ZIO.fromEither(resource.objectStringOption(DeleteComment))
-    def deleteDate: IO[String, Option[Instant]]          = ZIO.fromEither(resource.objectInstantOption(DeleteDate))
+    def creationDateOption: IO[String, Option[Instant]]  = ZIO.fromEither(resource.objectInstantOption(CreationDate))
+    def deleteCommentOption: IO[String, Option[String]]  = ZIO.fromEither(resource.objectStringOption(DeleteComment))
+    def deleteDateOption: IO[String, Option[Instant]]    = ZIO.fromEither(resource.objectInstantOption(DeleteDate))
     def hasPermissionsOption: IO[String, Option[String]] = ZIO.fromEither(resource.objectStringOption(HasPermissions))
     def lastModificationDateOption: IO[String, Option[Instant]] =
       ZIO.fromEither(resource.objectInstantOption(LastModificationDate))
@@ -137,8 +137,8 @@ final case class ApiComplexV2JsonLdRequestParser(
     for {
       r                    <- RootResource.fromJsonLd(str)
       resourceIri          <- r.resourceIriOrFail
-      deleteComment        <- r.deleteComment
-      deleteDate           <- r.deleteDate
+      deleteComment        <- r.deleteCommentOption
+      deleteDate           <- r.deleteDateOption
       lastModificationDate <- r.lastModificationDateOption
     } yield DeleteOrEraseResourceRequestV2(
       resourceIri.smartIri.toString,
@@ -158,8 +158,8 @@ final case class ApiComplexV2JsonLdRequestParser(
       resourceIri        <- r.resourceIriOrFail
       v                  <- ValueResource.from(r)
       valueIri           <- v.valueIriOrFail
-      valueDeleteDate    <- v.deleteDate
-      valueDeleteComment <- v.deleteComment
+      valueDeleteDate    <- v.deleteDateOption
+      valueDeleteComment <- v.deleteCommentOption
     } yield DeleteValueV2(
       resourceIri.smartIri.toString,
       r.resourceClassSmartIri,
@@ -181,13 +181,14 @@ final case class ApiComplexV2JsonLdRequestParser(
     def propertySmartIri: SmartIri           = propertyIri.smartIri
 
     // accessor methods for various properties of the value resource
-    def deleteComment: IO[String, Option[String]]        = ZIO.fromEither(r.objectStringOption(DeleteComment))
-    def deleteDate: IO[String, Option[Instant]]          = ZIO.fromEither(r.objectInstantOption(DeleteDate))
-    def fileValueHasFilename: IO[String, Option[String]] = ZIO.fromEither(r.objectStringOption(FileValueHasFilename))
-    def hasPermissions: IO[String, Option[String]]       = ZIO.fromEither(r.objectStringOption(HasPermissions))
-    def newValueVersionIri: IO[String, Option[String]]   = ZIO.fromEither(r.objectUriOption(NewValueVersionIri))
-    def valueCreationDate: IO[String, Option[Instant]]   = ZIO.fromEither(r.objectInstantOption(ValueCreationDate))
-    def valueHasUuid: IO[String, Option[UUID]]           = ZIO.fromEither(r.objectUuidOption(ValueHasUUID))
+    def deleteCommentOption: IO[String, Option[String]] = ZIO.fromEither(r.objectStringOption(DeleteComment))
+    def deleteDateOption: IO[String, Option[Instant]]   = ZIO.fromEither(r.objectInstantOption(DeleteDate))
+    def fileValueHasFilenameOption: IO[String, Option[String]] =
+      ZIO.fromEither(r.objectStringOption(FileValueHasFilename))
+    def hasPermissionsOption: IO[String, Option[String]]     = ZIO.fromEither(r.objectStringOption(HasPermissions))
+    def newValueVersionIriOption: IO[String, Option[String]] = ZIO.fromEither(r.objectUriOption(NewValueVersionIri))
+    def valueCreationDateOption: IO[String, Option[Instant]] = ZIO.fromEither(r.objectInstantOption(ValueCreationDate))
+    def valueHasUuidOption: IO[String, Option[UUID]]         = ZIO.fromEither(r.objectUuidOption(ValueHasUUID))
   }
 
   private object ValueResource {
@@ -236,7 +237,7 @@ final case class ApiComplexV2JsonLdRequestParser(
     for {
       r            <- RootResource.fromJsonLd(str)
       permissions  <- r.hasPermissionsOption
-      creationDate <- r.creationDate
+      creationDate <- r.creationDateOption
       label        <- r.rdfsLabelOption.someOrFail("A Resource must have an rdfs:label")
       project      <- attachedToProject(r.resource)
       _ <- ZIO
@@ -290,9 +291,9 @@ final case class ApiComplexV2JsonLdRequestParser(
     for {
       v                       <- ValueResource.from(statement)
       cnt                     <- getValueContent(v, shortcode, ingestState)
-      customValueUuid         <- v.valueHasUuid
-      customValueCreationDate <- v.valueCreationDate
-      permissions             <- v.hasPermissions
+      customValueUuid         <- v.valueHasUuidOption
+      customValueCreationDate <- v.valueCreationDateOption
+      permissions             <- v.hasPermissionsOption
     } yield (
       v.propertyIri,
       CreateValueInNewResourceV2(cnt, v.valueIri.map(_.smartIri), customValueUuid, customValueCreationDate, permissions),
@@ -324,7 +325,7 @@ final case class ApiComplexV2JsonLdRequestParser(
     } yield project
 
   private def newValueVersionIri(r: ValueResource, valueIri: ValueIri): IO[String, Option[ValueIri]] =
-    r.newValueVersionIri.some
+    r.newValueVersionIriOption.some
       .flatMap(converter.asSmartIri(_).mapError(_.getMessage).asSomeError)
       .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).asSomeError)
       .filterOrFail(newV => newV != valueIri)(
@@ -344,8 +345,8 @@ final case class ApiComplexV2JsonLdRequestParser(
         resourceIri        <- r.resourceIriOrFail
         v                  <- ValueResource.from(r)
         valueIri           <- v.valueIriOrFail
-        valueCreationDate  <- v.valueCreationDate
-        valuePermissions   <- v.hasPermissions
+        valueCreationDate  <- v.valueCreationDateOption
+        valuePermissions   <- v.hasPermissionsOption
         newValueVersionIri <- newValueVersionIri(v, valueIri)
         valueContent       <- getValueContent(v, resourceIri.shortcode, ingestState).map(Some(_)).orElse(ZIO.none)
         updateValue <- (valueContent, valuePermissions) match
@@ -386,9 +387,9 @@ final case class ApiComplexV2JsonLdRequestParser(
         r                 <- RootResource.fromJsonLd(str)
         resourceIri       <- r.resourceIriOrFail
         v                 <- ValueResource.from(r)
-        valueUuid         <- v.valueHasUuid
-        valueCreationDate <- v.valueCreationDate
-        valuePermissions  <- v.hasPermissions
+        valueUuid         <- v.valueHasUuidOption
+        valueCreationDate <- v.valueCreationDateOption
+        valuePermissions  <- v.hasPermissionsOption
         valueContent      <- getValueContent(v, resourceIri.shortcode, ingestState)
       } yield CreateValueV2(
         resourceIri.smartIri.toString,
@@ -413,7 +414,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         case None       => ZIO.fail("FileInfo is missing")
         case Some(info) => ZIO.fromEither(f(info))
     for {
-      maybeFileName <- v.fileValueHasFilename
+      maybeFileName <- v.fileValueHasFilenameOption
       valueResource  = v.r
       i <-
         ValueContentV2
