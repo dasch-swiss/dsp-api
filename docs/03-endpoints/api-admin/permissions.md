@@ -300,6 +300,7 @@ The IRI of the new property must be given in the request body as:
 All properties of the default object access permission are optional and may be combined.
 
 [NOTE!] Only certain combinations of properties are allowed. The following combinations are allowed:
+
 - `forGroup`
 - `forResourceClass`
 - `forProperty`
