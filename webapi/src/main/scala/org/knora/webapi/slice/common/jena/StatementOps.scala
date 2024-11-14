@@ -10,8 +10,10 @@ import org.apache.jena.rdf.model.Resource
 import org.apache.jena.rdf.model.Statement
 
 import java.time.Instant
+import java.util.UUID
 import scala.util.Try
 
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 
@@ -46,6 +48,11 @@ object StatementOps {
 
     def objectAsUri: Either[String, String] =
       objectAsResource().flatMap(_.uri.toRight(s"Invalid URI value for property ${stmt.getPredicate}"))
+
+    def objectAsUuid: Either[String, UUID] =
+      objectAsString.flatMap(str =>
+        UuidUtil.base64Decode(str).toEither.left.map(e => s"Invalid UUID '$str': ${e.getMessage}"),
+      )
 
     def objectAsDataType(dataTypeUri: String): Either[String, String] =
       stmt.getObject match

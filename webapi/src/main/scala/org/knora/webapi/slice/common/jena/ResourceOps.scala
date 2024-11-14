@@ -11,6 +11,7 @@ import org.apache.jena.rdf.model.Statement
 import org.apache.jena.vocabulary.RDF
 
 import java.time.Instant
+import java.util.UUID
 
 import org.knora.webapi.slice.common.jena.StatementOps.*
 
@@ -43,6 +44,9 @@ object ResourceOps {
 
     def objectUri(p: Property): Either[String, String]               = statement(p).flatMap(stmt => stmt.objectAsUri)
     def objectUriOption(p: Property): Either[String, Option[String]] = fromStatement(p, _.objectAsUri)
+
+    def objectUuid(p: Property): Either[String, UUID]               = statement(p).flatMap(stmt => stmt.objectAsUuid)
+    def objectUuidOption(p: Property): Either[String, Option[UUID]] = fromStatement(p, _.objectAsUuid)
 
     def objectDataType(p: Property, dt: String): Either[String, String] =
       statement(p).flatMap(stmt => stmt.objectAsDataType(dt))
