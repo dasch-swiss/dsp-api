@@ -692,8 +692,17 @@ final case class PermissionsResponder(
     permissionIri: PermissionIri,
     req: ChangeDoapRequest,
     uuid: UUID,
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] = {
-    val task: Task[DefaultObjectAccessPermissionGetResponseADM] = for {
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] =
+    val task = updateDoapInternal(permissionIri, req)
+      .flatMap(makeExternal)
+      .map(DefaultObjectAccessPermissionGetResponseADM.apply)
+    IriLocker.runWithIriLock(uuid, permissionIri.value, task)
+
+  private def updateDoapInternal(
+    permissionIri: PermissionIri,
+    req: ChangeDoapRequest,
+  ): Task[DefaultObjectAccessPermissionADM] =
+    for {
       doap <-
         doapService.findById(permissionIri).someOrFail(NotFoundException(s"DOAP ${permissionIri.value} not found."))
       group         <- ZIO.foreach(req.forGroup)(checkGroupExists)
@@ -711,11 +720,8 @@ final case class PermissionsResponder(
                  permission = newPermissions.getOrElse(doap.permission),
                )
 
-      newDoap  <- doapService.save(update)
-      external <- makeExternal(doapService.asDefaultObjectAccessPermissionADM(newDoap))
-    } yield DefaultObjectAccessPermissionGetResponseADM(external)
-    IriLocker.runWithIriLock(uuid, permissionIri.value, task)
-  }
+      newDoap <- doapService.save(update)
+    } yield doapService.asDefaultObjectAccessPermissionADM(newDoap)
 
   private def checkGroupExists(groupIri: IRI): Task[GroupIri] = for {
     gIri <- ZIO.fromEither(GroupIri.from(groupIri)).mapError(BadRequestException.apply)
@@ -797,7 +803,8 @@ final case class PermissionsResponder(
                 updatedPermission.asInstanceOf[AdministrativePermissionADM],
               )
             case _: DefaultObjectAccessPermissionADM =>
-              updateDoap(permissionIri, ChangeDoapRequest(forGroup = Some(groupIri.value)), apiRequestID)
+              updateDoapInternal(permissionIri, ChangeDoapRequest(forGroup = Some(groupIri.value)))
+                .map(DefaultObjectAccessPermissionGetResponseADM.apply)
           }
       } yield response
 
@@ -870,7 +877,8 @@ final case class PermissionsResponder(
                         )
                       case _: DefaultObjectAccessPermissionADM =>
                         val request = ChangeDoapRequest(hasPermissions = Some(newHasPermissions.toSet))
-                        updateDoap(permissionIri, request, apiRequestID)
+                        updateDoapInternal(permissionIri, request)
+                          .map(DefaultObjectAccessPermissionGetResponseADM.apply)
                       case _ =>
                         throw UpdateNotPerformedException(
                           s"Permission ${permissionIri.value} was not updated. Please report this as a bug.",
