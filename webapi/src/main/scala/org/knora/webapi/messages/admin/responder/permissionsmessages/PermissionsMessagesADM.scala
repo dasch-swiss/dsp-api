@@ -98,16 +98,7 @@ object ChangePermissionHasPermissionsApiRequestADM {
  *
  * @param forResourceClass the new resource class IRI of the doap permission.
  */
-case class ChangePermissionResourceClassApiRequestADM(forResourceClass: IRI) {
-  if (forResourceClass.isEmpty) {
-    throw BadRequestException(s"Resource class IRI cannot be empty.")
-  }
-  Iri
-    .validateAndEscapeIri(forResourceClass)
-    .getOrElse(
-      throw BadRequestException(s"Invalid resource class IRI $forResourceClass is given."),
-    )
-}
+case class ChangePermissionResourceClassApiRequestADM(forResourceClass: String)
 object ChangePermissionResourceClassApiRequestADM {
   implicit val codec: JsonCodec[ChangePermissionResourceClassApiRequestADM] =
     DeriveJsonCodec.gen[ChangePermissionResourceClassApiRequestADM]
