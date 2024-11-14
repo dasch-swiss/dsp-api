@@ -8,19 +8,20 @@
 For an extensive explanation on how DSP permissions are implemented, see
 [here](../../05-internals/design/api-admin/administration.md#permissions).
 
-| Route                                                   | Operations | Explanation                                                                                                                                                                               |
-| ------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/admin/permissions/{projectIri}`                       | `GET`      | [get all permissions of a project](#getting-permissions)                                                                                                                                  |
-| `/admin/permissions/ap/{projectIri}`                    | `GET`      | [get all administrative permissions of a project](#getting-permissions)                                                                                                                   |
-| `/admin/permissions/ap/{projectIri}/{groupIri}`         | `GET`      | [get all administrative permissions of a group](#getting-permissions)                                                                                                                     |
-| `/admin/permissions/doap/{projectIri}`                  | `GET`      | [get all default object access permissions of a project](#getting-permissions)                                                                                                            |
-| `/admin/permissions/ap`                                 | `POST`     | [create a new administrative permission](#creating-new-administrative-permissions)                                                                                                        |
-| `/admin/permissions/doap`                               | `POST`     | [create a new default object access permission](#creating-new-default-object-access-permissions)                                                                                          |
-| `/admin/permissions/{permissionIri}/group`              | `PUT`      | [update for which group an administrative or default object access permission is used](#updating-a-permissions-group)                                                                     |
-| `/admin/permissions/{permissionIri}/hasPermission`      | `PUT`      | [update the scope of an administrative or default object access permission](#updating-a-permissions-scope), i.e. what permissions are granted to which group when this permission applies |
-| `/admin/permissions/{doap_permissionIri}/resourceClass` | `PUT`      | [update for which resource class a default object access permission applies](#updating-a-default-object-access-permissions-resource-class)                                                |
-| `/admin/permissions/{doap_permissionIri}/property`      | `PUT`      | [update for which property a default object access permission applies](#updating-a-default-object-access-permissions-property)                                                            |
-| `/admin/permissions/{permissionIri}`                    | `DELETE`   | [delete an administrative or default object access permission](#deleting-a-permission)                                                                                                    |
+| Route                                                       | Operations | Explanation                                                                                                                                                                               |
+|-------------------------------------------------------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `/admin/permissions/{projectIri}`                           | `GET`      | [get all permissions of a project](#getting-permissions)                                                                                                                                  |
+| `/admin/permissions/ap/{projectIri}`                        | `GET`      | [get all administrative permissions of a project](#getting-permissions)                                                                                                                   |
+| `/admin/permissions/ap/{projectIri}/{groupIri}`             | `GET`      | [get all administrative permissions of a group](#getting-permissions)                                                                                                                     |
+| `/admin/permissions/doap/{projectIri}`                      | `GET`      | [get all default object access permissions of a project](#getting-permissions)                                                                                                            |
+| `/admin/permissions/ap`                                     | `POST`     | [create a new administrative permission](#creating-new-administrative-permissions)                                                                                                        |
+| `/admin/permissions/doap`                                   | `POST`     | [create a new default object access permission](#creating-new-default-object-access-permissions)                                                                                          |
+| `/admin/permissions/doap/{permissionIri}`                   | `PUT`      | [update an existing default object access permission](#updating-an-existing-default-object-access-permission)                                                                             |
+| `/admin/permissions/{permissionIri}/group`                  | `PUT`      | [update for which group an administrative or default object access permission is used](#updating-a-permissions-group)                                                                     |
+| `/admin/permissions/{permissionIri}/hasPermission`          | `PUT`      | [update the scope of an administrative or default object access permission](#updating-a-permissions-scope), i.e. what permissions are granted to which group when this permission applies |
+| `/admin/permissions/{permissionIri}`                        | `DELETE`   | [delete an administrative or default object access permission](#deleting-a-permission)                                                                                                    |
+| ~~`/admin/permissions/{doap_permissionIri}/resourceClass`~~ | `PUT`      | **deprecated**, use `/admin/permissions/doap/{permissionIri}` instead)                                                                                                                    |
+| ~~`/admin/permissions/{doap_permissionIri}/property`~~      | `PUT`      | **deprecated**,  use `/admin/permissions/doap/{permissionIri}` instead)                                                                                                                   | 
 
 ## Permission Operations
 
@@ -224,6 +225,9 @@ However, the default permissions set for these groups can be modified; see below
 
 ### Updating a Permission's Group
 
+[NOTE!] For Default Object Access Permissions this endpoint is deprecated, 
+use [`PUT: /admin/permissions/doap/<permissionIri>`](#updating-an-existing-default-object-access-permission) instead. 
+
 - `PUT: /admin/permissions/<permissionIri>/group` to change the group for which an administrative or a default object 
 access permission, identified by its IRI `<permissionIri>`, is defined. The request body must contain the IRI of the new 
 group as below:
@@ -241,6 +245,9 @@ the combination of both, the permission will be defined for the newly specified 
 `forResourceClass` and `forProperty` values will be deleted.
 
 ### Updating a Permission's Scope
+
+[NOTE!] For Default Object Access Permissions this endpoint is deprecated,
+use [`PUT: /admin/permissions/doap/<permissionIri>`](#updating-an-existing-default-object-access-permission) instead.
 
 - `PUT: /admin/permissions/<permissionIri>/hasPermissions` to change the scope of permissions assigned to an administrative
   or a default object access permission identified by it IRI, `<permissionIri>`. The request body must contain the new set 
@@ -268,37 +275,44 @@ Either the `name` or the `permissionCode` must be present; it is not necessary t
 The previous permission set is *replaced* by the new permission set. In order to remove a permission for a group
 entirely, you can provide a new set of permissions, leaving out the permission specification for the group.
 
-### Updating a Default Object Access Permission's Resource Class
 
-- `PUT: /admin/permissions/<doap_permissionIri>/resourceClass` to change the resource class for which a default object 
-access permission, identified by it IRI `<doap_permissionIri>`, is defined. This operation is only valid for 
-updating a default object acceess permission. The IRI of the new resource class must be given in the request body as:
+### Updating an existing Default Object Access Permission
 
-```json
-{
-    "forResourceClass": "http://api.dasch.swiss/ontology/0803/incunabula/v2#bild"
-}
-```
-
-Note that if the default object access permission was originally defined for a group, with this operation, the permission 
-will be defined for the given resource class instead of the group. That means the value of the `forGroup` will 
-be deleted.
-
-### Updating a Default Object Access Permission's Property
-
-- `PUT: /admin/permissions/<doap_permissionIri>/property` to change the property for which a default object 
-access permission, identified by it IRI `<doap_permissionIri>`, is defined. This operation is only valid for 
-updating a default object access permission. The IRI of the new property must be given in the request body as:
+- `PUT: /admin/permissions/doap/<doap_permissionIri>` to change the properties of an existing default object 
+access permission, identified by it IRI `<doap_permissionIri>`. 
+The IRI of the new property must be given in the request body as:
 
 ```json
 {
-   "forProperty" :"http://api.dasch.swiss/ontology/00FF/images/v2#titel"
+  "forProperty" :    "http://api.dasch.swiss/ontology/00FF/images/v2#titel",
+  "forResourceClass": "http://api.dasch.swiss/ontology/0803/incunabula/v2#bild",
+  "forGroup":         "http://www.knora.org/ontology/knora-admin#ProjectMember",
+  "hasPermissions":[
+    {
+      "additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember",
+      "name":"D",
+      "permissionCode":7
+    }
+  ]
 }
 ```
 
-Note that if the default object access permission was originally defined for a group, with this operation, the permission 
-will be defined for the given property instead of the group. That means the value of the `forGroup` will 
-be deleted.
+All properties of the default object access permission are optional and may be combined.
+
+[NOTE!] that the only certain combinations of properties are allowed. The following combinations are allowed:
+* `forGroup`
+* `forResourceClass`
+* `forProperty`
+* `forResourceClass` and `forProperty` 
+
+If the combination of properties is not allowed, the request will fail with a `400 Bad Request` error.
+Any valid combination of properties will replace the existing values. 
+
+If present, the `hasPermissions` property must contain the necessary parameters with respect to the type of the permission 
+as described in the [Creating New Default Object Access Permissions](#creating-new-default-object-access-permissions) section.
+
+The response is the updated default object access permission with its new properties and is the same as when 
+[creating a new default object access permission](#creating-new-default-object-access-permissions).
 
 ### Deleting a Permission
 
