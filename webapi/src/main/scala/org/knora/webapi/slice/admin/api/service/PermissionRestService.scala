@@ -24,11 +24,13 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermi
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionCreateResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
 import org.knora.webapi.responders.admin.PermissionsResponder
+import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapForWhatRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -141,6 +143,18 @@ final case class PermissionRestService(
       _      <- auth.ensureSystemAdmin(user)
       uuid   <- Random.nextUUID
       result <- responder.updatePermissionResourceClass(permissionIri, request, uuid)
+      ext    <- format.toExternal(result)
+    } yield ext
+
+  def updateDoapForWhat(
+    iri: PermissionIri,
+    req: ChangeDoapForWhatRequest,
+    user: User,
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] =
+    for {
+      _      <- auth.ensureSystemAdmin(user)
+      uuid   <- Random.nextUUID
+      result <- responder.updateDoapForWhat(iri, req, uuid)
       ext    <- format.toExternal(result)
     } yield ext
 

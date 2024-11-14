@@ -5,9 +5,12 @@
 
 package org.knora.webapi.slice.admin.domain.service
 import zio.Chunk
+import zio.IO
 import zio.Task
+import zio.ZIO
 import zio.ZLayer
 
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
@@ -35,8 +38,18 @@ final case class DefaultObjectAccessPermissionService(
   ): Task[DefaultObjectAccessPermission] =
     repo.save(DefaultObjectAccessPermission(PermissionIri.makeNew(project.shortcode), project.id, forWhat, permission))
 
-  def save(permission: DefaultObjectAccessPermission): Task[DefaultObjectAccessPermission] =
-    repo.save(permission)
+  def save(
+    doap: DefaultObjectAccessPermission,
+  ): IO[InconsistentRepositoryDataException, DefaultObjectAccessPermission] =
+    repo.findByProjectAndForWhat(doap.forProject, doap.forWhat).orDie.flatMap {
+      case Some(doapExisting) if doapExisting.id != doap.id =>
+        ZIO.fail(
+          InconsistentRepositoryDataException(
+            s"Permission already exists for project ${doapExisting.forProject.value} and ${doapExisting.forWhat}",
+          ),
+        )
+      case _ => repo.save(doap).orDie
+    }
 
   def findByProjectAndForWhat(projectIri: ProjectIri, forWhat: ForWhat): Task[Option[DefaultObjectAccessPermission]] =
     repo.findByProjectAndForWhat(projectIri, forWhat)

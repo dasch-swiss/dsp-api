@@ -17,10 +17,12 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermi
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionCreateResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
+import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapForWhatRequest
 import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -96,6 +98,17 @@ final case class PermissionsEndpointsHandlers(
       },
     )
 
+  private val putPermissionsDoapForWhatHandler =
+    SecuredEndpointHandler[
+      (PermissionIri, ChangeDoapForWhatRequest),
+      DefaultObjectAccessPermissionGetResponseADM,
+    ](
+      permissionsEndpoints.putPermissionsDoapForWhat,
+      user => { case (permissionIri: PermissionIri, request: ChangeDoapForWhatRequest) =>
+        restService.updateDoapForWhat(permissionIri, request, user)
+      },
+    )
+
   private val putPermissionsProjectIriGroupHandler =
     SecuredEndpointHandler[
       (PermissionIri, ChangePermissionGroupApiRequestADM),
@@ -141,6 +154,7 @@ final case class PermissionsEndpointsHandlers(
       getPermissionsApByProjectAndGroupIriHandler,
       getPermissionsDaopByProjectIriHandler,
       getPermissionsByProjectIriHandler,
+      putPermissionsDoapForWhatHandler,
       putPermissionsProjectIriGroupHandler,
       putPermissionsHasPermissionsHandler,
       putPermissionsProperty,

@@ -26,6 +26,7 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapForWhatRequest
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.Group
@@ -699,6 +700,46 @@ final case class PermissionsResponder(
         }.toSet
     } yield PermissionsForProjectGetResponseADM(permissionsInfo)
 
+  def updateDoapForWhat(
+    permissionIri: PermissionIri,
+    req: ChangeDoapForWhatRequest,
+    uuid: UUID,
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] = {
+    val task: Task[DefaultObjectAccessPermissionGetResponseADM] = for {
+      doap <-
+        doapService.findById(permissionIri).someOrFail(NotFoundException(s"DOAP ${permissionIri.value} not found."))
+      group         <- ZIO.foreach(req.forWhat.group)(checkGroupExists)
+      resourceClass <- ZIO.foreach(req.forWhat.resourceClass)(checkResourceClassExists)
+      property      <- ZIO.foreach(req.forWhat.property)(checkPropertyExists)
+      newForWhat    <- ZIO.fromEither(ForWhat.fromIris(group, resourceClass, property)).mapError(BadRequestException.apply)
+      newDoap       <- doapService.save(doap.copy(forWhat = newForWhat))
+      external      <- makeExternal(doapService.asDefaultObjectAccessPermissionADM(newDoap))
+    } yield DefaultObjectAccessPermissionGetResponseADM(external)
+    IriLocker.runWithIriLock(uuid, permissionIri.value, task)
+  }
+
+  private def checkGroupExists(groupIri: IRI): Task[GroupIri] = for {
+    gIri <- ZIO.fromEither(GroupIri.from(groupIri)).mapError(BadRequestException.apply)
+    _    <- groupService.findById(gIri).someOrFail(BadRequestException(s"Group ${groupIri} not found."))
+  } yield gIri
+
+  private def checkPropertyExists(propertyIri: IRI): Task[PropertyIri] = for {
+    smartIri <- iriConverter.asSmartIri(propertyIri).mapError(BadRequestException.apply)
+    pIri     <- ZIO.fromEither(PropertyIri.from(smartIri)).mapError(BadRequestException.apply)
+    _        <- ontologyRepo.findProperty(pIri).someOrFail(BadRequestException(s"Property ${pIri} not found."))
+  } yield pIri
+
+  private def checkResourceClassExists(resourceClassIri: IRI): Task[ResourceClassIri] = for {
+    smartIri <- iriConverter.asSmartIri(resourceClassIri).mapError(BadRequestException.apply)
+    rcIri    <- ZIO.fromEither(ResourceClassIri.from(smartIri)).mapError(BadRequestException.apply)
+    _        <- ontologyRepo.findClassBy(rcIri).someOrFail(BadRequestException(s"Resource class ${rcIri} not found."))
+  } yield rcIri
+
+  private def makeExternal(doap: DefaultObjectAccessPermissionADM): Task[DefaultObjectAccessPermissionADM] = for {
+    forResourceClass <- ZIO.foreach(doap.forResourceClass)(iriConverter.asExternalIri)
+    forProperty      <- ZIO.foreach(doap.forProperty)(iriConverter.asExternalIri)
+  } yield doap.copy(forResourceClass = forResourceClass, forProperty = forProperty)
+
   def updatePermissionsGroup(
     permissionIri: PermissionIri,
     groupIri: GroupIri,
@@ -736,26 +777,28 @@ final case class PermissionsResponder(
       for {
         // get permission
         permission <- permissionGetADM(permissionIri.value, requestingUser)
-        response <- permission match {
-                      // Is permission an administrative permission?
-                      case ap: AdministrativePermissionADM =>
-                        // Yes. Update the group
-                        for {
-                          _                 <- updatePermission(permissionIri = ap.iri, maybeGroup = Some(groupIri.value))
-                          updatedPermission <- verifyPermissionGroupUpdate
-                        } yield AdministrativePermissionGetResponseADM(
-                          updatedPermission.asInstanceOf[AdministrativePermissionADM],
-                        )
-                      case doap: DefaultObjectAccessPermissionADM =>
-                        // No. It is a default object access permission
-                        for {
-                          // if a doap permission has a group defined, it cannot have either resourceClass or property
-                          _                 <- updatePermission(permissionIri = doap.iri, maybeGroup = Some(groupIri.value))
-                          updatedPermission <- verifyPermissionGroupUpdate
-                        } yield DefaultObjectAccessPermissionGetResponseADM(
-                          updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM],
-                        )
-                    }
+        response <-
+          permission match {
+            // Is permission an administrative permission?
+            case ap: AdministrativePermissionADM =>
+              // Yes. Update the group
+              for {
+                _                 <- updatePermission(permissionIri = ap.iri, maybeGroup = Some(groupIri.value))
+                updatedPermission <- verifyPermissionGroupUpdate
+              } yield AdministrativePermissionGetResponseADM(
+                updatedPermission.asInstanceOf[AdministrativePermissionADM],
+              )
+            case _: DefaultObjectAccessPermissionADM =>
+              for {
+                doap <- doapService
+                          .findById(permissionIri)
+                          .someOrFail(NotFoundException(s"DOAP ${permissionIri.value} not found."))
+                groupIri <- checkGroupExists(groupIri.value)
+                newDoap  <- doapService.save(doap.copy(forWhat = Group(groupIri)))
+              } yield DefaultObjectAccessPermissionGetResponseADM(
+                doapService.asDefaultObjectAccessPermissionADM(newDoap),
+              )
+          }
       } yield response
 
     IriLocker.runWithIriLock(apiRequestID, permissionIri.value, permissionGroupChangeTask)
@@ -852,63 +895,39 @@ final case class PermissionsResponder(
   /**
    * Update a doap permission's resource class.
    *
-   * @param permissionIri                 the IRI of the permission.
-   * @param changePermissionResourceClass the request to change hasPermissions.
-   * @param requestingUser                the [[User]] of the requesting user.
+   * @param permission                    the IRI of the permission.
+   * @param changeRequest                 the request to change hasPermissions.
    * @param apiRequestID                  the API request ID.
-   * @return [[PermissionGetResponseADM]].
-   *         fails with an UpdateNotPerformedException if something has gone wrong.
+   * @return [[DefaultObjectAccessPermissionGetResponseADM]].
    */
   def updatePermissionResourceClass(
-    permissionIri: PermissionIri,
+    permission: PermissionIri,
     changeRequest: ChangePermissionResourceClassApiRequestADM,
     apiRequestID: UUID,
   ): Task[DefaultObjectAccessPermissionGetResponseADM] = {
     val task: Task[DefaultObjectAccessPermissionGetResponseADM] =
       for {
-        doap <-
-          doapService.findById(permissionIri).someOrFail(NotFoundException(s"DOAP ${permissionIri.value} not found."))
-        resourceClassIri <- iriConverter
-                              .asSmartIri(changeRequest.forResourceClass)
-                              .mapError(_.getMessage)
-                              .flatMap(smartIri => ZIO.fromEither(ResourceClassIri.from(smartIri)))
-                              .mapError(BadRequestException(_))
-        newForWhat = doap.forWhat match
-                       case Group(_)                       => ResourceClass(resourceClassIri.toInternal)
-                       case ResourceClass(_)               => ResourceClass(resourceClassIri.toInternal)
-                       case Property(p)                    => ResourceClassAndProperty(resourceClassIri.toInternal, p)
-                       case ResourceClassAndProperty(_, p) => ResourceClassAndProperty(resourceClassIri.toInternal, p)
-        newDoap          <- doapService.save(doap.copy(forWhat = newForWhat))
-        updatedPermission = doapService.asDefaultObjectAccessPermissionADM(newDoap)
-      } yield DefaultObjectAccessPermissionGetResponseADM(updatedPermission)
+        doap          <- doapService.findById(permission).someOrFail(NotFoundException(s"DOAP ${permission.value} not found."))
+        resourceClass <- checkResourceClassExists(changeRequest.forResourceClass)
+        newDoap       <- doapService.save(doap.copy(forWhat = ResourceClass(resourceClass.toInternal)))
+      } yield DefaultObjectAccessPermissionGetResponseADM(doapService.asDefaultObjectAccessPermissionADM(newDoap))
 
-    IriLocker.runWithIriLock(apiRequestID, permissionIri.value, task)
+    IriLocker.runWithIriLock(apiRequestID, permission.value, task)
   }
 
   def updatePermissionProperty(
-    permissionIri: PermissionIri,
+    permission: PermissionIri,
     changeRequest: ChangePermissionPropertyApiRequestADM,
     apiRequestID: UUID,
   ): Task[DefaultObjectAccessPermissionGetResponseADM] = {
     val task: Task[DefaultObjectAccessPermissionGetResponseADM] =
       for {
-        doap <-
-          doapService.findById(permissionIri).someOrFail(NotFoundException(s"DOAP ${permissionIri.value} not found."))
-        propertyIri <- iriConverter
-                         .asSmartIri(changeRequest.forProperty)
-                         .mapError(_.getMessage)
-                         .flatMap(smartIri => ZIO.fromEither(PropertyIri.from(smartIri)))
-                         .mapError(BadRequestException(_))
-        newForWhat = doap.forWhat match
-                       case Group(_)                        => Property(propertyIri.toInternal)
-                       case ResourceClass(_)                => Property(propertyIri.toInternal)
-                       case Property(_)                     => Property(propertyIri.toInternal)
-                       case ResourceClassAndProperty(rc, _) => ResourceClassAndProperty(rc, propertyIri.toInternal)
-        newDoap          <- doapService.save(doap.copy(forWhat = newForWhat))
-        updatedPermission = doapService.asDefaultObjectAccessPermissionADM(newDoap)
-      } yield DefaultObjectAccessPermissionGetResponseADM(updatedPermission)
+        doap     <- doapService.findById(permission).someOrFail(NotFoundException(s"DOAP ${permission.value} not found."))
+        property <- checkPropertyExists(changeRequest.forProperty)
+        newDoap  <- doapService.save(doap.copy(forWhat = Property(property.toInternal)))
+      } yield DefaultObjectAccessPermissionGetResponseADM(doapService.asDefaultObjectAccessPermissionADM(newDoap))
 
-    IriLocker.runWithIriLock(apiRequestID, permissionIri.value, task)
+    IriLocker.runWithIriLock(apiRequestID, permission.value, task)
   }
 
   def deletePermission(

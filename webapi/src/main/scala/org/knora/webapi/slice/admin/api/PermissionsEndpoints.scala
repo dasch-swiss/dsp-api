@@ -6,15 +6,40 @@
 package org.knora.webapi.slice.admin.api
 
 import sttp.tapir.*
+import sttp.tapir.EndpointIO.Example
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
+import zio.json.JsonDecoder
 
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIriPathVar
 import org.knora.webapi.slice.admin.api.AdminPathVariables.permissionIri
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
+import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapForWhatRequest
+import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ForWhatRequest
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.common.api.BaseEndpoints
+
+object PermissionEndpointsRequests {
+  final case class ChangeDoapForWhatRequest(
+    forWhat: ForWhatRequest,
+  )
+  object ChangeDoapForWhatRequest {
+    given JsonCodec[ChangeDoapForWhatRequest] = DeriveJsonCodec.gen[ChangeDoapForWhatRequest]
+  }
+  final case class ForWhatRequest(
+    group: Option[String],
+    resourceClass: Option[String],
+    property: Option[String],
+  )
+  object ForWhatRequest {
+    given JsonCodec[ForWhatRequest] = DeriveJsonCodec.gen[ForWhatRequest]
+  }
+}
 
 final case class PermissionsEndpoints(base: BaseEndpoints) {
 
@@ -57,6 +82,43 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
     .in(jsonBody[CreateDefaultObjectAccessPermissionAPIRequestADM])
     .out(jsonBody[DefaultObjectAccessPermissionCreateResponseADM])
 
+  val putPermissionsDoapForWhat = base.securedEndpoint.put
+    .in(permissionsBase / "doap" / permissionIri / "for-what")
+    .description("Create a new default object access permission")
+    .in(
+      jsonBody[ChangeDoapForWhatRequest]
+        .description(
+          "Default object access permissions can be only for group, resource class, property or both resource class and property." +
+            "If an invalid combination is provided, the request will fail with a Bad Request response." +
+            "The iris for resource class and property must be valid Api V2 complex iris.",
+        )
+        .examples(
+          List(
+            Example(
+              ChangeDoapForWhatRequest(
+                ForWhatRequest(Some(KnoraGroupRepo.builtIn.ProjectMember.id.value), None, None),
+              ),
+              name = Some("For a group"),
+              summary = None,
+              description = None,
+            ),
+            Example(
+              ChangeDoapForWhatRequest(
+                ForWhatRequest(
+                  None,
+                  Some("http://api.dasch.swiss/ontology/0803/incunabula/v2#bild"),
+                  Some("http://api.dasch.swiss/ontology/0803/incunabula/v2#pagenum"),
+                ),
+              ),
+              name = Some("For a resource class and a property"),
+              summary = None,
+              description = None,
+            ),
+          ),
+        ),
+    )
+    .out(jsonBody[DefaultObjectAccessPermissionGetResponseADM])
+
   val putPermissionsProjectIriGroup = base.securedEndpoint.put
     .in(permissionsBase / permissionIri / "group")
     .description("Update a permission's group")
@@ -89,6 +151,7 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
     getPermissionsByProjectIri,
     deletePermission,
     postPermissionsDoap,
+    putPermissionsDoapForWhat,
     putPermissionsProjectIriGroup,
     putPerrmissionsHasPermissions,
     putPermisssionsResourceClass,
