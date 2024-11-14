@@ -284,9 +284,9 @@ The IRI of the new property must be given in the request body as:
 
 ```json
 {
-  "forProperty" :    "http://api.dasch.swiss/ontology/00FF/images/v2#titel",
+  "forProperty" : "http://api.dasch.swiss/ontology/00FF/images/v2#titel",
   "forResourceClass": "http://api.dasch.swiss/ontology/0803/incunabula/v2#bild",
-  "forGroup":         "http://www.knora.org/ontology/knora-admin#ProjectMember",
+  "forGroup": null, 
   "hasPermissions":[
     {
       "additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember",
@@ -299,7 +299,7 @@ The IRI of the new property must be given in the request body as:
 
 All properties of the default object access permission are optional and may be combined.
 
-[NOTE!] that the only certain combinations of properties are allowed. The following combinations are allowed:
+[NOTE!] Only certain combinations of properties are allowed. The following combinations are allowed:
 * `forGroup`
 * `forResourceClass`
 * `forProperty`
