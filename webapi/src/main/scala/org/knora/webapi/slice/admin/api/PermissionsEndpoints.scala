@@ -26,10 +26,10 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 
 object PermissionEndpointsRequests {
   final case class ChangeDoapRequest(
-    forGroup: Option[String],
-    forResourceClass: Option[String],
-    forProperty: Option[String],
-    hasPermissions: Option[Set[PermissionADM]],
+    forGroup: Option[String] = None,
+    forResourceClass: Option[String] = None,
+    forProperty: Option[String] = None,
+    hasPermissions: Option[Set[PermissionADM]] = None,
   ) {
     def isEmpty: Boolean =
       forGroup.isEmpty &&

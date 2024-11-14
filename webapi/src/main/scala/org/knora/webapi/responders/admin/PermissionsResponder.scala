@@ -797,15 +797,7 @@ final case class PermissionsResponder(
                 updatedPermission.asInstanceOf[AdministrativePermissionADM],
               )
             case _: DefaultObjectAccessPermissionADM =>
-              for {
-                doap <- doapService
-                          .findById(permissionIri)
-                          .someOrFail(NotFoundException(s"DOAP ${permissionIri.value} not found."))
-                groupIri <- checkGroupExists(groupIri.value)
-                newDoap  <- doapService.save(doap.copy(forWhat = Group(groupIri)))
-              } yield DefaultObjectAccessPermissionGetResponseADM(
-                doapService.asDefaultObjectAccessPermissionADM(newDoap),
-              )
+              updateDoap(permissionIri, ChangeDoapRequest(forGroup = Some(groupIri.value)), apiRequestID)
           }
       } yield response
 
@@ -876,20 +868,9 @@ final case class PermissionsResponder(
                         } yield AdministrativePermissionGetResponseADM(
                           updatedPermission.asInstanceOf[AdministrativePermissionADM],
                         )
-                      case doap: DefaultObjectAccessPermissionADM =>
-                        // No. It is a default object access permission.
-                        for {
-                          verifiedPermissions <- verifyHasPermissionsDOAP(newHasPermissions.toSet)
-                          formattedPermissions <-
-                            ZIO.attempt(
-                              PermissionUtilADM.formatPermissionADMs(verifiedPermissions, PermissionType.OAP),
-                            )
-                          _ <-
-                            updatePermission(permissionIri = doap.iri, maybeHasPermissions = Some(formattedPermissions))
-                          updatedPermission <- verifyUpdateOfHasPermissions(verifiedPermissions)
-                        } yield DefaultObjectAccessPermissionGetResponseADM(
-                          updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM],
-                        )
+                      case _: DefaultObjectAccessPermissionADM =>
+                        val request = ChangeDoapRequest(hasPermissions = Some(newHasPermissions.toSet))
+                        updateDoap(permissionIri, request, apiRequestID)
                       case _ =>
                         throw UpdateNotPerformedException(
                           s"Permission ${permissionIri.value} was not updated. Please report this as a bug.",
