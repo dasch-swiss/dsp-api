@@ -60,14 +60,10 @@ case class SipiGetTextFileResponse(content: String)
  *
  * @param originalFilename the original filename that was submitted to Sipi.
  * @param internalFilename Sipi's internal filename for the stored temporary file.
- * @param temporaryUrl     the URL at which the temporary file can be accessed.
- * @param fileType         `image`, `text`, or `document`.
  */
 case class SipiUploadResponseEntry(
   originalFilename: String,
   internalFilename: String,
-  temporaryUrl: Option[String],
-  fileType: Option[String],
 )
 
 /**

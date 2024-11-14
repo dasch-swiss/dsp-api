@@ -528,7 +528,6 @@ class KnoraSipiIntegrationV2ITSpec
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
-      uploadedFile.fileType should equal("archive")
 
       // Create the resource in the API.
 
