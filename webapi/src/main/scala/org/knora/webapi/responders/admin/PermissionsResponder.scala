@@ -565,8 +565,8 @@ final case class PermissionsResponder(
           .mapBoth(_.getMessage, PermissionIri.unsafeFrom)
 
       groupIri         <- ZIO.foreach(req.forGroup)(checkGroupExists).mapError(_.getMessage)
-      resourceClassIri <- ZIO.foreach(req.forResourceClass)(checkResourceClassExists).mapError(_.getMessage)
-      propertyIri      <- ZIO.foreach(req.forProperty)(checkPropertyExists).mapError(_.getMessage)
+      resourceClassIri <- ZIO.foreach(req.forResourceClass)(checkResourceClassIri).mapError(_.getMessage)
+      propertyIri      <- ZIO.foreach(req.forProperty)(checkPropertyIri).mapError(_.getMessage)
       forWhat          <- ZIO.fromEither(ForWhat.fromIris(groupIri, resourceClassIri, propertyIri))
       _                <- ZIO.fail("Permissions needs to be supplied.").when(req.hasPermissions.isEmpty)
       doap             <- ZIO.fromEither(DefaultObjectAccessPermission.from(permissionIri, projectIri, forWhat, req.hasPermissions))
@@ -697,8 +697,8 @@ final case class PermissionsResponder(
       doap <-
         doapService.findById(permissionIri).someOrFail(NotFoundException(s"DOAP ${permissionIri.value} not found."))
       group         <- ZIO.foreach(req.forGroup)(checkGroupExists)
-      resourceClass <- ZIO.foreach(req.forResourceClass)(checkResourceClassExists)
-      property      <- ZIO.foreach(req.forProperty)(checkPropertyExists)
+      resourceClass <- ZIO.foreach(req.forResourceClass)(checkResourceClassIri)
+      property      <- ZIO.foreach(req.forProperty)(checkPropertyIri)
       newForWhat <- ZIO
                       .fromEither(ForWhat.fromIris(group, resourceClass, property))
                       .when(req.hasForWhat)
@@ -722,16 +722,14 @@ final case class PermissionsResponder(
     _    <- groupService.findById(gIri).someOrFail(BadRequestException(s"Group ${groupIri} not found."))
   } yield gIri
 
-  private def checkPropertyExists(propertyIri: IRI): Task[PropertyIri] = for {
+  private def checkPropertyIri(propertyIri: IRI): Task[PropertyIri] = for {
     smartIri <- iriConverter.asSmartIri(propertyIri).mapError(BadRequestException.apply)
     pIri     <- ZIO.fromEither(PropertyIri.from(smartIri)).mapError(BadRequestException.apply)
-    _        <- ontologyRepo.findProperty(pIri).someOrFail(BadRequestException(s"Property ${pIri} not found."))
   } yield pIri
 
-  private def checkResourceClassExists(resourceClassIri: IRI): Task[ResourceClassIri] = for {
+  private def checkResourceClassIri(resourceClassIri: IRI): Task[ResourceClassIri] = for {
     smartIri <- iriConverter.asSmartIri(resourceClassIri).mapError(BadRequestException.apply)
     rcIri    <- ZIO.fromEither(ResourceClassIri.from(smartIri)).mapError(BadRequestException.apply)
-    _        <- ontologyRepo.findClassBy(rcIri).someOrFail(BadRequestException(s"Resource class ${rcIri} not found."))
   } yield rcIri
 
   private def asDefaultObjectAccessPermissionParts(
@@ -918,7 +916,7 @@ final case class PermissionsResponder(
     val task: Task[DefaultObjectAccessPermissionGetResponseADM] =
       for {
         doap          <- doapService.findById(permission).someOrFail(NotFoundException(s"DOAP ${permission.value} not found."))
-        resourceClass <- checkResourceClassExists(changeRequest.forResourceClass)
+        resourceClass <- checkResourceClassIri(changeRequest.forResourceClass)
         newDoap       <- doapService.save(doap.copy(forWhat = ResourceClass(resourceClass.toInternal)))
       } yield DefaultObjectAccessPermissionGetResponseADM(doapService.asDefaultObjectAccessPermissionADM(newDoap))
 
@@ -933,7 +931,7 @@ final case class PermissionsResponder(
     val task: Task[DefaultObjectAccessPermissionGetResponseADM] =
       for {
         doap     <- doapService.findById(permission).someOrFail(NotFoundException(s"DOAP ${permission.value} not found."))
-        property <- checkPropertyExists(changeRequest.forProperty)
+        property <- checkPropertyIri(changeRequest.forProperty)
         newDoap  <- doapService.save(doap.copy(forWhat = Property(property.toInternal)))
       } yield DefaultObjectAccessPermissionGetResponseADM(doapService.asDefaultObjectAccessPermissionADM(newDoap))
 

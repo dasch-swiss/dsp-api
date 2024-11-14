@@ -7,10 +7,8 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.Chunk
 import zio.IO
 import zio.Task
-import zio.ZIO
 import zio.ZLayer
 
-import dsp.errors.DuplicateValueException
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
@@ -38,18 +36,7 @@ final case class DefaultObjectAccessPermissionService(
   ): Task[DefaultObjectAccessPermission] =
     repo.save(DefaultObjectAccessPermission(PermissionIri.makeNew(project.shortcode), project.id, forWhat, permission))
 
-  def save(
-    doap: DefaultObjectAccessPermission,
-  ): IO[DuplicateValueException, DefaultObjectAccessPermission] =
-    repo.findByProjectAndForWhat(doap.forProject, doap.forWhat).orDie.flatMap {
-      case Some(doapExisting) if doapExisting.id != doap.id =>
-        ZIO.fail(
-          DuplicateValueException(
-            s"Permission already exists for project ${doapExisting.forProject.value} and ${doapExisting.forWhat}",
-          ),
-        )
-      case _ => repo.save(doap).orDie
-    }
+  def save(doap: DefaultObjectAccessPermission): Task[DefaultObjectAccessPermission] = repo.save(doap)
 
   def findByProjectAndForWhat(projectIri: ProjectIri, forWhat: ForWhat): Task[Option[DefaultObjectAccessPermission]] =
     repo.findByProjectAndForWhat(projectIri, forWhat)
