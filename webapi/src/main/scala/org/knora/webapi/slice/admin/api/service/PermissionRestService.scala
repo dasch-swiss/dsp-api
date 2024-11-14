@@ -128,7 +128,7 @@ final case class PermissionRestService(
     for {
       _      <- auth.ensureSystemAdmin(user)
       uuid   <- Random.nextUUID
-      result <- responder.updatePermissionProperty(permissionIri, request, user, uuid)
+      result <- responder.updatePermissionProperty(permissionIri, request, uuid)
       ext    <- format.toExternal(result)
     } yield ext
 
@@ -140,7 +140,7 @@ final case class PermissionRestService(
     for {
       _      <- auth.ensureSystemAdmin(user)
       uuid   <- Random.nextUUID
-      result <- responder.updatePermissionResourceClass(permissionIri, request, user, uuid)
+      result <- responder.updatePermissionResourceClass(permissionIri, request, uuid)
       ext    <- format.toExternal(result)
     } yield ext
 

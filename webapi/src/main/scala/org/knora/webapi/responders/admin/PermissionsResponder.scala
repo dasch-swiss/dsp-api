@@ -861,148 +861,54 @@ final case class PermissionsResponder(
    */
   def updatePermissionResourceClass(
     permissionIri: PermissionIri,
-    changePermissionResourceClass: ChangePermissionResourceClassApiRequestADM,
-    requestingUser: User,
+    changeRequest: ChangePermissionResourceClassApiRequestADM,
     apiRequestID: UUID,
-  ): Task[PermissionGetResponseADM] = {
-    val permissionIriInternal =
-      stringFormatter.toSmartIri(permissionIri.value).toOntologySchema(InternalSchema).toString
-    /*Verify that resource class of doap is updated successfully*/
-    val verifyUpdateOfResourceClass =
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] = {
+    val task: Task[DefaultObjectAccessPermissionGetResponseADM] =
       for {
-        updatedPermission <- permissionGetADM(permissionIriInternal, requestingUser)
+        doap <-
+          doapService.findById(permissionIri).someOrFail(NotFoundException(s"DOAP ${permissionIri.value} not found."))
+        resourceClassIri <- iriConverter
+                              .asSmartIri(changeRequest.forResourceClass)
+                              .mapError(_.getMessage)
+                              .flatMap(smartIri => ZIO.fromEither(ResourceClassIri.from(smartIri)))
+                              .mapError(BadRequestException(_))
+        newForWhat = doap.forWhat match
+                       case Group(_)                       => ResourceClass(resourceClassIri.toInternal)
+                       case ResourceClass(_)               => ResourceClass(resourceClassIri.toInternal)
+                       case Property(p)                    => ResourceClassAndProperty(resourceClassIri.toInternal, p)
+                       case ResourceClassAndProperty(_, p) => ResourceClassAndProperty(resourceClassIri.toInternal, p)
+        newDoap          <- doapService.save(doap.copy(forWhat = newForWhat))
+        updatedPermission = doapService.asDefaultObjectAccessPermissionADM(newDoap)
+      } yield DefaultObjectAccessPermissionGetResponseADM(updatedPermission)
 
-        /*Verify that update was successful*/
-        _ <- ZIO.attempt(updatedPermission match {
-               case doap: DefaultObjectAccessPermissionADM =>
-                 if (doap.forResourceClass.get != changePermissionResourceClass.forResourceClass)
-                   throw UpdateNotPerformedException(
-                     s"The resource class of ${doap.iri} was not updated. Please report this as a bug.",
-                   )
-
-                 if (doap.forGroup.isDefined)
-                   throw UpdateNotPerformedException(
-                     s"The $permissionIriInternal is not correctly updated. Please report this as a bug.",
-                   )
-
-               case _ =>
-                 throw UpdateNotPerformedException(
-                   s"Incorrect permission type returned for $permissionIriInternal. Please report this as a bug.",
-                 )
-             })
-      } yield updatedPermission
-
-    /**
-     * The actual task run with an IRI lock.
-     */
-    val permissionResourceClassChangeTask: Task[PermissionGetResponseADM] =
-      for {
-        // get permission
-        permission <- permissionGetADM(permissionIri.value, requestingUser)
-        response <- permission match {
-                      // Is permission an administrative permission?
-                      case ap: AdministrativePermissionADM =>
-                        // Yes.
-                        ZIO.fail(
-                          ForbiddenException(
-                            s"Permission ${ap.iri} is of type administrative permission. " +
-                              s"Only a default object access permission defined for a resource class can be updated.",
-                          ),
-                        )
-                      case doap: DefaultObjectAccessPermissionADM =>
-                        // No. It is a default object access permission.
-                        for {
-                          _ <- updatePermission(
-                                 permissionIri = doap.iri,
-                                 maybeResourceClass = Some(changePermissionResourceClass.forResourceClass),
-                               )
-                          updatedPermission <- verifyUpdateOfResourceClass
-                        } yield DefaultObjectAccessPermissionGetResponseADM(
-                          updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM],
-                        )
-                      case _ =>
-                        ZIO.fail(
-                          UpdateNotPerformedException(
-                            s"Permission ${permissionIri.value} was not updated. Please report this as a bug.",
-                          ),
-                        )
-                    }
-      } yield response
-
-    IriLocker.runWithIriLock(apiRequestID, permissionIri.value, permissionResourceClassChangeTask)
+    IriLocker.runWithIriLock(apiRequestID, permissionIri.value, task)
   }
 
   def updatePermissionProperty(
     permissionIri: PermissionIri,
-    changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
-    requestingUser: User,
+    changeRequest: ChangePermissionPropertyApiRequestADM,
     apiRequestID: UUID,
-  ): Task[PermissionGetResponseADM] = {
-    val permissionIriInternal =
-      stringFormatter.toSmartIri(permissionIri.value).toOntologySchema(InternalSchema).toString
-    /*Verify that property of doap is updated successfully*/
-    def verifyUpdateOfProperty: Task[PermissionItemADM] =
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] = {
+    val task: Task[DefaultObjectAccessPermissionGetResponseADM] =
       for {
-        updatedPermission <- permissionGetADM(permissionIriInternal, requestingUser)
+        doap <-
+          doapService.findById(permissionIri).someOrFail(NotFoundException(s"DOAP ${permissionIri.value} not found."))
+        propertyIri <- iriConverter
+                         .asSmartIri(changeRequest.forProperty)
+                         .mapError(_.getMessage)
+                         .flatMap(smartIri => ZIO.fromEither(PropertyIri.from(smartIri)))
+                         .mapError(BadRequestException(_))
+        newForWhat = doap.forWhat match
+                       case Group(_)                        => Property(propertyIri.toInternal)
+                       case ResourceClass(_)                => Property(propertyIri.toInternal)
+                       case Property(_)                     => Property(propertyIri.toInternal)
+                       case ResourceClassAndProperty(rc, _) => ResourceClassAndProperty(rc, propertyIri.toInternal)
+        newDoap          <- doapService.save(doap.copy(forWhat = newForWhat))
+        updatedPermission = doapService.asDefaultObjectAccessPermissionADM(newDoap)
+      } yield DefaultObjectAccessPermissionGetResponseADM(updatedPermission)
 
-        /*Verify that update was successful*/
-        _ <- ZIO.attempt(updatedPermission match {
-               case doap: DefaultObjectAccessPermissionADM =>
-                 if (doap.forProperty.get != changePermissionPropertyRequest.forProperty)
-                   throw UpdateNotPerformedException(
-                     s"The property of ${doap.iri} was not updated. Please report this as a bug.",
-                   )
-
-                 if (doap.forGroup.isDefined)
-                   throw UpdateNotPerformedException(
-                     s"The $permissionIriInternal is not correctly updated. Please report this as a bug.",
-                   )
-
-               case _ =>
-                 throw UpdateNotPerformedException(
-                   s"Incorrect permission type returned for $permissionIriInternal. Please report this as a bug.",
-                 )
-             })
-      } yield updatedPermission
-
-    /**
-     * The actual task run with an IRI lock.
-     */
-    val permissionPropertyChangeTask =
-      for {
-        // get permission
-        permission <- permissionGetADM(permissionIri.value, requestingUser)
-        response <- permission match {
-                      // Is permission an administrative permission?
-                      case ap: AdministrativePermissionADM =>
-                        // Yes.
-                        ZIO.fail(
-                          ForbiddenException(
-                            s"Permission ${ap.iri} is of type administrative permission. " +
-                              s"Only a default object access permission defined for a property can be updated.",
-                          ),
-                        )
-                      case doap: DefaultObjectAccessPermissionADM =>
-                        // No. It is a default object access permission.
-                        for {
-                          _ <- updatePermission(
-                                 permissionIri = doap.iri,
-                                 maybeProperty = Some(changePermissionPropertyRequest.forProperty),
-                               )
-                          updatedPermission <- verifyUpdateOfProperty
-                        } yield DefaultObjectAccessPermissionGetResponseADM(
-                          updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM],
-                        )
-                      case _ =>
-                        ZIO.fail(
-                          UpdateNotPerformedException(
-                            s"Permission $permissionIri was not updated. Please report this as a bug.",
-                          ),
-                        )
-                    }
-      } yield response
-
-    IriLocker.runWithIriLock(apiRequestID, permissionIri.value, permissionPropertyChangeTask)
+    IriLocker.runWithIriLock(apiRequestID, permissionIri.value, task)
   }
 
   def deletePermission(
