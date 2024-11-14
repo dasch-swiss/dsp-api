@@ -22,7 +22,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
-import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapForWhatRequest
+import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapRequest
 import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -100,11 +100,11 @@ final case class PermissionsEndpointsHandlers(
 
   private val putPermissionsDoapForWhatHandler =
     SecuredEndpointHandler[
-      (PermissionIri, ChangeDoapForWhatRequest),
+      (PermissionIri, ChangeDoapRequest),
       DefaultObjectAccessPermissionGetResponseADM,
     ](
       permissionsEndpoints.putPermissionsDoapForWhat,
-      user => { case (permissionIri: PermissionIri, request: ChangeDoapForWhatRequest) =>
+      user => { case (permissionIri: PermissionIri, request: ChangeDoapRequest) =>
         restService.updateDoapForWhat(permissionIri, request, user)
       },
     )

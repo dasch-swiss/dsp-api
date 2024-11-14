@@ -10,7 +10,7 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
-import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.DuplicateValueException
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
@@ -40,11 +40,11 @@ final case class DefaultObjectAccessPermissionService(
 
   def save(
     doap: DefaultObjectAccessPermission,
-  ): IO[InconsistentRepositoryDataException, DefaultObjectAccessPermission] =
+  ): IO[DuplicateValueException, DefaultObjectAccessPermission] =
     repo.findByProjectAndForWhat(doap.forProject, doap.forWhat).orDie.flatMap {
       case Some(doapExisting) if doapExisting.id != doap.id =>
         ZIO.fail(
-          InconsistentRepositoryDataException(
+          DuplicateValueException(
             s"Permission already exists for project ${doapExisting.forProject.value} and ${doapExisting.forWhat}",
           ),
         )

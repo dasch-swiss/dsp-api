@@ -26,8 +26,9 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapForWhatRequest
+import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapRequest
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.Group
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.Property
@@ -563,25 +564,12 @@ final case class PermissionsResponder(
           .flatMap(iriService.checkOrCreateEntityIri(_, PermissionIri.makeNew(project.shortcode).value))
           .mapBoth(_.getMessage, PermissionIri.unsafeFrom)
 
-      groupIri <- ZIO.fromEither(req.forGroup.fold(Right(None))(GroupIri.from(_).map(Some(_))))
-      _        <- ZIO.foreachDiscard(groupIri)(groupService.findById(_).orDie.someOrFail("Group not found"))
-
-      resourceClassIri <-
-        ZIO.foreach(req.forResourceClass)(
-          iriConverter.asSmartIri(_).mapError(_.getMessage).flatMap(s => ZIO.fromEither(ResourceClassIri.from(s))),
-        )
-
-      propertyIri <-
-        ZIO.foreach(req.forProperty)(
-          iriConverter.asSmartIri(_).mapError(_.getMessage).flatMap(s => ZIO.fromEither(PropertyIri.from(s))),
-        )
-      _ <- ZIO.foreachDiscard(propertyIri)(
-             ontologyRepo.findProperty(_).orDie.someOrFail(s"Property $propertyIri not found"),
-           )
-
-      forWhat <- ZIO.fromEither(ForWhat.fromIris(groupIri, resourceClassIri, propertyIri))
-      _       <- ZIO.fail("Permissions needs to be supplied.").when(req.hasPermissions.isEmpty)
-      doap    <- ZIO.fromEither(DefaultObjectAccessPermission.from(permissionIri, projectIri, forWhat, req.hasPermissions))
+      groupIri         <- ZIO.foreach(req.forGroup)(checkGroupExists).mapError(_.getMessage)
+      resourceClassIri <- ZIO.foreach(req.forResourceClass)(checkResourceClassExists).mapError(_.getMessage)
+      propertyIri      <- ZIO.foreach(req.forProperty)(checkPropertyExists).mapError(_.getMessage)
+      forWhat          <- ZIO.fromEither(ForWhat.fromIris(groupIri, resourceClassIri, propertyIri))
+      _                <- ZIO.fail("Permissions needs to be supplied.").when(req.hasPermissions.isEmpty)
+      doap             <- ZIO.fromEither(DefaultObjectAccessPermission.from(permissionIri, projectIri, forWhat, req.hasPermissions))
     } yield doap
 
   def createDefaultObjectAccessPermission(
@@ -702,7 +690,7 @@ final case class PermissionsResponder(
 
   def updateDoapForWhat(
     permissionIri: PermissionIri,
-    req: ChangeDoapForWhatRequest,
+    req: ChangeDoapRequest,
     uuid: UUID,
   ): Task[DefaultObjectAccessPermissionGetResponseADM] = {
     val task: Task[DefaultObjectAccessPermissionGetResponseADM] = for {
@@ -711,9 +699,20 @@ final case class PermissionsResponder(
       group         <- ZIO.foreach(req.forGroup)(checkGroupExists)
       resourceClass <- ZIO.foreach(req.forResourceClass)(checkResourceClassExists)
       property      <- ZIO.foreach(req.forProperty)(checkPropertyExists)
-      newForWhat    <- ZIO.fromEither(ForWhat.fromIris(group, resourceClass, property)).mapError(BadRequestException.apply)
-      newDoap       <- doapService.save(doap.copy(forWhat = newForWhat))
-      external      <- makeExternal(doapService.asDefaultObjectAccessPermissionADM(newDoap))
+      newForWhat <- ZIO
+                      .fromEither(ForWhat.fromIris(group, resourceClass, property))
+                      .when(req.hasForWhat)
+                      .mapError(BadRequestException.apply)
+
+      newPermissions <- ZIO.foreach(req.hasPermissions)(asDefaultObjectAccessPermissionParts)
+
+      update = doap.copy(
+                 forWhat = newForWhat.getOrElse(doap.forWhat),
+                 permission = newPermissions.getOrElse(doap.permission),
+               )
+
+      newDoap  <- doapService.save(update)
+      external <- makeExternal(doapService.asDefaultObjectAccessPermissionADM(newDoap))
     } yield DefaultObjectAccessPermissionGetResponseADM(external)
     IriLocker.runWithIriLock(uuid, permissionIri.value, task)
   }
@@ -734,6 +733,17 @@ final case class PermissionsResponder(
     rcIri    <- ZIO.fromEither(ResourceClassIri.from(smartIri)).mapError(BadRequestException.apply)
     _        <- ontologyRepo.findClassBy(rcIri).someOrFail(BadRequestException(s"Resource class ${rcIri} not found."))
   } yield rcIri
+
+  private def asDefaultObjectAccessPermissionParts(
+    permissions: Set[PermissionADM],
+  ): IO[BadRequestException, Chunk[DefaultObjectAccessPermissionPart]] =
+    ZIO
+      .foreach(permissions)(p =>
+        ZIO
+          .fromEither(DefaultObjectAccessPermissionPart.from(p))
+          .mapError(BadRequestException.apply),
+      )
+      .map(Chunk.fromIterable)
 
   private def makeExternal(doap: DefaultObjectAccessPermissionADM): Task[DefaultObjectAccessPermissionADM] = for {
     forResourceClass <- ZIO.foreach(doap.forResourceClass)(iriConverter.asExternalIri)

@@ -30,7 +30,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionD
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
 import org.knora.webapi.responders.admin.PermissionsResponder
-import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapForWhatRequest
+import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -148,11 +148,12 @@ final case class PermissionRestService(
 
   def updateDoapForWhat(
     iri: PermissionIri,
-    req: ChangeDoapForWhatRequest,
+    req: ChangeDoapRequest,
     user: User,
   ): Task[DefaultObjectAccessPermissionGetResponseADM] =
     for {
       _      <- auth.ensureSystemAdmin(user)
+      _      <- ZIO.fail(BadRequestException("No update provided.")).when(req.isEmpty)
       uuid   <- Random.nextUUID
       result <- responder.updateDoapForWhat(iri, req, uuid)
       ext    <- format.toExternal(result)

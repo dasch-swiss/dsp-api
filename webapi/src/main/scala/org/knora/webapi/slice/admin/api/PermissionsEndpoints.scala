@@ -18,19 +18,32 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIriPathVar
 import org.knora.webapi.slice.admin.api.AdminPathVariables.permissionIri
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
-import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapForWhatRequest
+import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 object PermissionEndpointsRequests {
-  final case class ChangeDoapForWhatRequest(
+  final case class ChangeDoapRequest(
     forGroup: Option[String],
     forResourceClass: Option[String],
     forProperty: Option[String],
-  )
-  object ChangeDoapForWhatRequest {
-    given JsonCodec[ChangeDoapForWhatRequest] = DeriveJsonCodec.gen[ChangeDoapForWhatRequest]
+    hasPermissions: Option[Set[PermissionADM]],
+  ) {
+    def isEmpty: Boolean =
+      forGroup.isEmpty &&
+        forResourceClass.isEmpty &&
+        forProperty.isEmpty &&
+        hasPermissions.isEmpty
+    def hasForWhat: Boolean =
+      forGroup.isDefined ||
+        forResourceClass.isDefined ||
+        forProperty.isDefined
+  }
+  object ChangeDoapRequest {
+    import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.projectIri
+    given JsonCodec[ChangeDoapRequest] = DeriveJsonCodec.gen[ChangeDoapRequest]
   }
 }
 
@@ -77,9 +90,12 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
 
   val putPermissionsDoapForWhat = base.securedEndpoint.put
     .in(permissionsBase / "doap" / permissionIri)
-    .description("Create a new default object access permission")
+    .description(
+      "Update an existing default object access permission. " +
+        "The request may update the hasPermission and/or any allowed combination of group, resource class and property for the permission.",
+    )
     .in(
-      jsonBody[ChangeDoapForWhatRequest]
+      jsonBody[ChangeDoapRequest]
         .description(
           "Default object access permissions can be only for group, resource class, property or both resource class and property." +
             "If an invalid combination is provided, the request will fail with a Bad Request response." +
@@ -88,16 +104,17 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
         .examples(
           List(
             Example(
-              ChangeDoapForWhatRequest(Some(KnoraGroupRepo.builtIn.ProjectMember.id.value), None, None),
+              ChangeDoapRequest(Some(KnoraGroupRepo.builtIn.ProjectMember.id.value), None, None, None),
               name = Some("For a group"),
               summary = None,
               description = None,
             ),
             Example(
-              ChangeDoapForWhatRequest(
+              ChangeDoapRequest(
                 None,
                 Some("http://api.dasch.swiss/ontology/0803/incunabula/v2#bild"),
                 Some("http://api.dasch.swiss/ontology/0803/incunabula/v2#pagenum"),
+                None,
               ),
               name = Some("For a resource class and a property"),
               summary = None,
