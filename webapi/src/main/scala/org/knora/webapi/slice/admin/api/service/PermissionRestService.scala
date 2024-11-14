@@ -126,7 +126,7 @@ final case class PermissionRestService(
     permissionIri: PermissionIri,
     request: ChangePermissionPropertyApiRequestADM,
     user: User,
-  ): Task[PermissionGetResponseADM] =
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] =
     for {
       _      <- auth.ensureSystemAdmin(user)
       uuid   <- Random.nextUUID
@@ -138,7 +138,7 @@ final case class PermissionRestService(
     permissionIri: PermissionIri,
     request: ChangePermissionResourceClassApiRequestADM,
     user: User,
-  ): Task[PermissionGetResponseADM] =
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] =
     for {
       _      <- auth.ensureSystemAdmin(user)
       uuid   <- Random.nextUUID

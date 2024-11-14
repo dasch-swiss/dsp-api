@@ -708,9 +708,9 @@ final case class PermissionsResponder(
     val task: Task[DefaultObjectAccessPermissionGetResponseADM] = for {
       doap <-
         doapService.findById(permissionIri).someOrFail(NotFoundException(s"DOAP ${permissionIri.value} not found."))
-      group         <- ZIO.foreach(req.forWhat.group)(checkGroupExists)
-      resourceClass <- ZIO.foreach(req.forWhat.resourceClass)(checkResourceClassExists)
-      property      <- ZIO.foreach(req.forWhat.property)(checkPropertyExists)
+      group         <- ZIO.foreach(req.forGroup)(checkGroupExists)
+      resourceClass <- ZIO.foreach(req.forResourceClass)(checkResourceClassExists)
+      property      <- ZIO.foreach(req.forProperty)(checkPropertyExists)
       newForWhat    <- ZIO.fromEither(ForWhat.fromIris(group, resourceClass, property)).mapError(BadRequestException.apply)
       newDoap       <- doapService.save(doap.copy(forWhat = newForWhat))
       external      <- makeExternal(doapService.asDefaultObjectAccessPermissionADM(newDoap))

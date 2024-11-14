@@ -132,7 +132,10 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val putPermissionsResourceClass =
-    SecuredEndpointHandler[(PermissionIri, ChangePermissionResourceClassApiRequestADM), PermissionGetResponseADM](
+    SecuredEndpointHandler[
+      (PermissionIri, ChangePermissionResourceClassApiRequestADM),
+      DefaultObjectAccessPermissionGetResponseADM,
+    ](
       permissionsEndpoints.putPermisssionsResourceClass,
       user => { case (permissionIri: PermissionIri, request: ChangePermissionResourceClassApiRequestADM) =>
         restService.updatePermissionResourceClass(permissionIri, request, user)
@@ -140,7 +143,10 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val putPermissionsProperty =
-    SecuredEndpointHandler[(PermissionIri, ChangePermissionPropertyApiRequestADM), PermissionGetResponseADM](
+    SecuredEndpointHandler[
+      (PermissionIri, ChangePermissionPropertyApiRequestADM),
+      DefaultObjectAccessPermissionGetResponseADM,
+    ](
       permissionsEndpoints.putPermissionsProperty,
       user => { case (permissionIri: PermissionIri, request: ChangePermissionPropertyApiRequestADM) =>
         restService.updatePermissionProperty(permissionIri, request, user)

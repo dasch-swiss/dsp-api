@@ -19,25 +19,18 @@ import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIriPathVar
 import org.knora.webapi.slice.admin.api.AdminPathVariables.permissionIri
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
 import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ChangeDoapForWhatRequest
-import org.knora.webapi.slice.admin.api.PermissionEndpointsRequests.ForWhatRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 object PermissionEndpointsRequests {
   final case class ChangeDoapForWhatRequest(
-    forWhat: ForWhatRequest,
+    forGroup: Option[String],
+    forResourceClass: Option[String],
+    forProperty: Option[String],
   )
   object ChangeDoapForWhatRequest {
     given JsonCodec[ChangeDoapForWhatRequest] = DeriveJsonCodec.gen[ChangeDoapForWhatRequest]
-  }
-  final case class ForWhatRequest(
-    group: Option[String],
-    resourceClass: Option[String],
-    property: Option[String],
-  )
-  object ForWhatRequest {
-    given JsonCodec[ForWhatRequest] = DeriveJsonCodec.gen[ForWhatRequest]
   }
 }
 
@@ -83,7 +76,7 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
     .out(jsonBody[DefaultObjectAccessPermissionCreateResponseADM])
 
   val putPermissionsDoapForWhat = base.securedEndpoint.put
-    .in(permissionsBase / "doap" / permissionIri / "for-what")
+    .in(permissionsBase / "doap" / permissionIri)
     .description("Create a new default object access permission")
     .in(
       jsonBody[ChangeDoapForWhatRequest]
@@ -95,20 +88,16 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
         .examples(
           List(
             Example(
-              ChangeDoapForWhatRequest(
-                ForWhatRequest(Some(KnoraGroupRepo.builtIn.ProjectMember.id.value), None, None),
-              ),
+              ChangeDoapForWhatRequest(Some(KnoraGroupRepo.builtIn.ProjectMember.id.value), None, None),
               name = Some("For a group"),
               summary = None,
               description = None,
             ),
             Example(
               ChangeDoapForWhatRequest(
-                ForWhatRequest(
-                  None,
-                  Some("http://api.dasch.swiss/ontology/0803/incunabula/v2#bild"),
-                  Some("http://api.dasch.swiss/ontology/0803/incunabula/v2#pagenum"),
-                ),
+                None,
+                Some("http://api.dasch.swiss/ontology/0803/incunabula/v2#bild"),
+                Some("http://api.dasch.swiss/ontology/0803/incunabula/v2#pagenum"),
               ),
               name = Some("For a resource class and a property"),
               summary = None,
@@ -133,15 +122,17 @@ final case class PermissionsEndpoints(base: BaseEndpoints) {
 
   val putPermisssionsResourceClass = base.securedEndpoint.put
     .in(permissionsBase / permissionIri / "resourceClass")
-    .description("Update a permission's resource class")
+    .description("Update a DOAP's resource class. Use `PUT /admin/permissions/doap/{permissionIri}` instead.")
     .in(jsonBody[ChangePermissionResourceClassApiRequestADM])
-    .out(jsonBody[PermissionGetResponseADM])
+    .out(jsonBody[DefaultObjectAccessPermissionGetResponseADM])
+    .deprecated()
 
   val putPermissionsProperty = base.securedEndpoint.put
     .in(permissionsBase / permissionIri / "property")
-    .description("Update a permission's property")
+    .description("Update a DAOP's property. Use `PUT /admin/permissions/doap/{permissionIri}` instead.")
     .in(jsonBody[ChangePermissionPropertyApiRequestADM])
-    .out(jsonBody[PermissionGetResponseADM])
+    .out(jsonBody[DefaultObjectAccessPermissionGetResponseADM])
+    .deprecated()
 
   val endpoints: Seq[AnyEndpoint] = Seq(
     postPermissionsAp,
