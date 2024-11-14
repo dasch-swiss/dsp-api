@@ -688,7 +688,7 @@ final case class PermissionsResponder(
         }.toSet
     } yield PermissionsForProjectGetResponseADM(permissionsInfo)
 
-  def updateDoapForWhat(
+  def updateDoap(
     permissionIri: PermissionIri,
     req: ChangeDoapRequest,
     uuid: UUID,

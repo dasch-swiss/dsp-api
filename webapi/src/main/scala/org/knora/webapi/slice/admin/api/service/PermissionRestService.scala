@@ -155,7 +155,7 @@ final case class PermissionRestService(
       _      <- auth.ensureSystemAdmin(user)
       _      <- ZIO.fail(BadRequestException("No update provided.")).when(req.isEmpty)
       uuid   <- Random.nextUUID
-      result <- responder.updateDoapForWhat(iri, req, uuid)
+      result <- responder.updateDoap(iri, req, uuid)
       ext    <- format.toExternal(result)
     } yield ext
 
