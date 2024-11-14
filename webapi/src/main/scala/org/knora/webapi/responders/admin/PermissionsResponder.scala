@@ -643,7 +643,7 @@ final case class PermissionsResponder(
         )
       if (permission.permissionCode.nonEmpty) {
         val code = permission.permissionCode.get
-        if (Permission.ObjectAccess.from(code).isEmpty) {
+        if (Permission.ObjectAccess.from(code).isLeft) {
           throw BadRequestException(
             s"Invalid value for permissionCode parameter of hasPermissions: $code, it should be one of " +
               s"${Permission.ObjectAccess.allCodes.mkString(", ")}",

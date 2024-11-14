@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.admin.domain.service
 import zio.Chunk
-import zio.IO
 import zio.Task
 import zio.ZLayer
 

@@ -930,7 +930,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"Given permission code $code and permission name $name are not consistent.",
+          s"Given permission code '$code' and permission name '$name' are not consistent.",
         )
       }
 
@@ -957,7 +957,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"Invalid value for name parameter of hasPermissions: $name, it should be one of " +
+          s"Invalid permission token '$name', it should be one of " +
             s"${Permission.ObjectAccess.allTokens.mkString(", ")}",
         )
       }
@@ -985,8 +985,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"Invalid value for permissionCode parameter of hasPermissions: $code, it should be one of " +
-            s"${Permission.ObjectAccess.allCodes.mkString(", ")}",
+          s"Invalid permission code '$code', it should be one of " + s"${Permission.ObjectAccess.allCodes.mkString(", ")}",
         )
       }
 
@@ -1012,7 +1011,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"One of permission code or permission name must be provided for a default object access permission.",
+          s"Invalid permission token '', it should be one of RV, M, V, CR, D",
         )
       }
     }
