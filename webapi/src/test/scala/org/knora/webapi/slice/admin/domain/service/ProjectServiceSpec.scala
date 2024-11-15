@@ -33,7 +33,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           keywords = List.empty,
           logo = None,
           ontologies = List.empty,
-          status = true,
+          status = Status.Active,
           selfjoin = SelfJoin.CanJoin,
           copyrightAttribution = None,
           license = None,

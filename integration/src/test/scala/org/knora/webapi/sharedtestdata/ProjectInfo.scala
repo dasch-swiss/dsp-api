@@ -45,7 +45,7 @@ object ProjectInfo {
       keywords = project.keywords.headOption.map(_ => project.keywords.mkString(", ")),
       logo = project.logo.map(_.value),
       ontologies = project.ontologies,
-      status = project.status,
+      status = project.status.value,
       selfjoin = project.selfjoin.value,
     )
 }
