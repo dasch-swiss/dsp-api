@@ -901,31 +901,23 @@ final case class PermissionsResponder(
     permission: PermissionIri,
     changeRequest: ChangePermissionResourceClassApiRequestADM,
     apiRequestID: UUID,
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] = {
-    val task: Task[DefaultObjectAccessPermissionGetResponseADM] =
-      for {
-        doap          <- doapService.findById(permission).someOrFail(NotFoundException(s"DOAP ${permission.value} not found."))
-        resourceClass <- checkResourceClassIri(changeRequest.forResourceClass)
-        newDoap       <- doapService.save(doap.copy(forWhat = ResourceClass(resourceClass.toInternal)))
-      } yield DefaultObjectAccessPermissionGetResponseADM(doapService.asDefaultObjectAccessPermissionADM(newDoap))
-
-    IriLocker.runWithIriLock(apiRequestID, permission.value, task)
-  }
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] = IriLocker.runWithIriLock(
+    apiRequestID,
+    permission.value,
+    updateDoapInternal(permission, ChangeDoapRequest(forResourceClass = Some(changeRequest.forResourceClass)))
+      .map(DefaultObjectAccessPermissionGetResponseADM.apply),
+  )
 
   def updatePermissionProperty(
     permission: PermissionIri,
     changeRequest: ChangePermissionPropertyApiRequestADM,
     apiRequestID: UUID,
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] = {
-    val task: Task[DefaultObjectAccessPermissionGetResponseADM] =
-      for {
-        doap     <- doapService.findById(permission).someOrFail(NotFoundException(s"DOAP ${permission.value} not found."))
-        property <- checkPropertyIri(changeRequest.forProperty)
-        newDoap  <- doapService.save(doap.copy(forWhat = Property(property.toInternal)))
-      } yield DefaultObjectAccessPermissionGetResponseADM(doapService.asDefaultObjectAccessPermissionADM(newDoap))
-
-    IriLocker.runWithIriLock(apiRequestID, permission.value, task)
-  }
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] = IriLocker.runWithIriLock(
+    apiRequestID,
+    permission.value,
+    updateDoapInternal(permission, ChangeDoapRequest(forProperty = Some(changeRequest.forProperty)))
+      .map(DefaultObjectAccessPermissionGetResponseADM.apply),
+  )
 
   def deletePermission(
     permissionIri: PermissionIri,
