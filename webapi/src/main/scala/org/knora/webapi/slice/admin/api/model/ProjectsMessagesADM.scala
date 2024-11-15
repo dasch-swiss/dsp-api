@@ -39,7 +39,7 @@ case class Project(
   keywords: Seq[String],
   logo: Option[Logo],
   ontologies: Seq[IRI],
-  status: Boolean,
+  status: Status,
   selfjoin: SelfJoin,
 ) extends Ordered[Project] {
 

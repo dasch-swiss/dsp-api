@@ -28,6 +28,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin.CannotJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status.Active
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
@@ -94,7 +95,7 @@ object Examples {
       description = Seq(StringLiteralV2.from("An example project", Some("en"))),
       keywords = Seq("example", "project"),
       logo = None,
-      status = true,
+      status = Active,
       ontologies = Seq.empty,
       selfjoin = CannotJoin,
     )
