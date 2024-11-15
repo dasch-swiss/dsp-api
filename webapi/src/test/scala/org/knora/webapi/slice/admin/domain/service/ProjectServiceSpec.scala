@@ -34,7 +34,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           logo = None,
           ontologies = List.empty,
           status = true,
-          selfjoin = true,
+          selfjoin = SelfJoin.CanJoin,
           copyrightAttribution = None,
           license = None,
         )

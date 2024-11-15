@@ -27,6 +27,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttributi
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin.CannotJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
@@ -97,7 +98,7 @@ object Examples {
       logo = None,
       status = true,
       ontologies = Seq.empty,
-      selfjoin = false,
+      selfjoin = CannotJoin,
       copyrightAttribution = Some(CopyrightAttribution.unsafeFrom("2024, Example Project")),
       license = Some(License.unsafeFrom("CC-BY-4.0")),
     )
