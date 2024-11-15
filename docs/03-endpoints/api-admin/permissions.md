@@ -287,11 +287,11 @@ The IRI of the new property must be given in the request body as:
   "forProperty" : "http://api.dasch.swiss/ontology/00FF/images/v2#titel",
   "forResourceClass": "http://api.dasch.swiss/ontology/0803/incunabula/v2#bild",
   "forGroup": null, 
-  "hasPermissions":[
+  "hasPermissions": [
     {
-      "additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember",
-      "name":"D",
-      "permissionCode":7
+      "additionalInformation": "http://www.knora.org/ontology/knora-admin#ProjectMember",
+      "name": "D",
+      "permissionCode": 7
     }
   ]
 }
