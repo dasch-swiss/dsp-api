@@ -46,33 +46,35 @@ final case class ProjectService(
     .map(_.map(_.ontologyMetadata.ontologyIri.toIri))
     .map(ontologies =>
       Project(
-        knoraProject.id.value,
-        knoraProject.shortname.value,
-        knoraProject.shortcode.value,
-        knoraProject.longname.map(_.value),
-        knoraProject.description.map(_.value),
-        knoraProject.keywords.map(_.value),
-        knoraProject.logo.map(_.value),
+        knoraProject.id,
+        knoraProject.shortname,
+        knoraProject.shortcode,
+        knoraProject.longname,
+        knoraProject.description.toList,
+        knoraProject.keywords,
+        knoraProject.logo,
         ontologies,
-        knoraProject.status.value,
-        knoraProject.selfjoin.value,
+        knoraProject.status,
+        knoraProject.selfjoin,
+        knoraProject.copyrightAttribution,
+        knoraProject.license,
       ),
     )
 
   private def toKnoraProject(project: Project, restrictedView: RestrictedView): KnoraProject =
     KnoraProject(
-      id = ProjectIri.unsafeFrom(project.id),
-      shortname = Shortname.unsafeFrom(project.shortname),
-      shortcode = Shortcode.unsafeFrom(project.shortcode),
-      longname = project.longname.map(Longname.unsafeFrom),
-      description = NonEmptyChunk
-        .fromIterable(project.description.head, project.description.tail)
-        .map(Description.unsafeFrom),
-      keywords = project.keywords.map(Keyword.unsafeFrom).toList,
-      logo = project.logo.map(Logo.unsafeFrom),
-      status = Status.from(project.status),
-      selfjoin = SelfJoin.from(project.selfjoin),
+      id = project.id,
+      shortname = project.shortname,
+      shortcode = project.shortcode,
+      longname = project.longname,
+      description = NonEmptyChunk.fromIterable(project.description.head, project.description.tail),
+      keywords = project.keywords,
+      logo = project.logo,
+      status = project.status,
+      selfjoin = project.selfjoin,
       restrictedView,
+      project.copyrightAttribution,
+      project.license,
     )
 
   def setProjectRestrictedView(project: Project, settings: RestrictedView): Task[RestrictedView] =
@@ -93,11 +95,8 @@ object ProjectService {
    * @param project A [[ProjectADM]].
    * @return the [[InternalIri]] of the project's data named graph.
    */
-  def projectDataNamedGraphV2(project: Project): InternalIri = {
-    val shortcode = Shortcode.unsafeFrom(project.shortcode)
-    val shortname = Shortname.unsafeFrom(project.shortname)
-    projectDataNamedGraphV2(shortcode, shortname)
-  }
+  def projectDataNamedGraphV2(project: Project): InternalIri =
+    projectDataNamedGraphV2(project.shortcode, project.shortname)
 
   /**
    * Given the [[KnoraProject]] constructs the project's data named graph.

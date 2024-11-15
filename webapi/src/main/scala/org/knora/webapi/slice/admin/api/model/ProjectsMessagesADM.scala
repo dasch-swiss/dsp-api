@@ -10,7 +10,7 @@ import zio.json.JsonCodec
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
@@ -30,27 +30,24 @@ import org.knora.webapi.slice.admin.domain.model.User
  * @param selfjoin    The project's self-join status.
  */
 case class Project(
-  id: IRI,
-  shortname: String,
-  shortcode: String,
-  longname: Option[String],
-  description: Seq[StringLiteralV2],
-  keywords: Seq[String],
-  logo: Option[String],
+  id: ProjectIri,
+  shortname: Shortname,
+  shortcode: Shortcode,
+  longname: Option[Longname],
+  description: List[Description],
+  keywords: List[Keyword],
+  logo: Option[Logo],
   ontologies: Seq[IRI],
-  status: Boolean,
-  selfjoin: Boolean,
+  status: Status,
+  selfjoin: SelfJoin,
+  copyrightAttribution: Option[CopyrightAttribution],
+  license: Option[License],
 ) extends Ordered[Project] {
-
-  def projectIri: ProjectIri = ProjectIri.unsafeFrom(id)
-
-  def getShortname: Shortname = Shortname.unsafeFrom(shortname)
-  def getShortcode: Shortcode = Shortcode.unsafeFrom(shortcode)
 
   /**
    * Allows to sort collections of ProjectADM. Sorting is done by the id.
    */
-  def compare(that: Project): Int = this.id.compareTo(that.id)
+  def compare(that: Project): Int = this.id.value.compareTo(that.id.value)
 }
 object Project {
   implicit val projectCodec: JsonCodec[Project] = DeriveJsonCodec.gen[Project]

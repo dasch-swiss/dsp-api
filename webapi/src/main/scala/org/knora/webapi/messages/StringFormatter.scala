@@ -1589,9 +1589,9 @@ class StringFormatter private (
    * @param projectShortcode the project's shortcode.
    * @return a new resource IRI.
    */
-  def makeRandomResourceIri(projectShortcode: String): IRI = {
+  def makeRandomResourceIri(shortcode: Shortcode): IRI = {
     val knoraResourceID = UuidUtil.makeRandomBase64EncodedUuid
-    s"http://$IriDomain/$projectShortcode/$knoraResourceID"
+    s"http://$IriDomain/${shortcode.value}/$knoraResourceID"
   }
 
   /**

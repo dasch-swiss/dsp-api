@@ -39,13 +39,27 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.model.ProjectAdminMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.Value.BooleanValue
+import org.knora.webapi.slice.common.Value.StringValue
 
 /**
  * A spray-json protocol for generating Knora API JSON providing data about projects.
@@ -189,8 +203,73 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
       "ontologies",
       "status",
       "selfjoin",
+      "copyrightAttribution",
+      "license",
     ),
   )
+
+  implicit object DescriptionFormat extends JsonFormat[Description] with TriplestoreJsonProtocol {
+    val lit                                       = implicitly[JsonFormat[StringLiteralV2]]
+    override def write(obj: Description): JsValue = lit.write(obj.value)
+    override def read(json: JsValue): Description = Description
+      .from(lit.read(json))
+      .fold(err => throw DeserializationException(err), identity)
+  }
+  trait StringValueFormat[T <: StringValue] extends JsonFormat[T] { self =>
+    def from: String => Either[String, T]
+    override def write(v: T): JsValue = JsString(v.value)
+    override def read(json: JsValue): T = json match
+      case JsString(str) => self.from(str).fold(err => throw DeserializationException(err), identity)
+      case _             => throw DeserializationException("Must be a json String")
+  }
+
+  implicit object ProjectIriFormat extends StringValueFormat[ProjectIri] {
+    override val from: String => Either[String, ProjectIri] = ProjectIri.from
+  }
+
+  implicit object CopyrightAttributionFormat extends StringValueFormat[CopyrightAttribution] {
+    override val from: String => Either[String, CopyrightAttribution] = CopyrightAttribution.from
+  }
+
+  implicit object LicenseFormat extends StringValueFormat[License] {
+    override val from: String => Either[String, License] = License.from
+  }
+
+  implicit object ShortnameFormat extends StringValueFormat[Shortname] {
+    override val from: String => Either[String, Shortname] = Shortname.from
+  }
+
+  implicit object ShortcodeFormat extends StringValueFormat[Shortcode] {
+    override val from: String => Either[String, Shortcode] = Shortcode.from
+  }
+
+  implicit object LongnameFormat extends StringValueFormat[Longname] {
+    override val from: String => Either[String, Longname] = Longname.from
+  }
+
+  implicit object LogoFormat extends StringValueFormat[Logo] {
+    override val from: String => Either[String, Logo] = Logo.from
+  }
+
+  implicit object KeywordFormat extends StringValueFormat[Keyword] {
+    override val from: String => Either[String, Keyword] = Keyword.from
+  }
+
+  trait BooleanValueFormat[T <: BooleanValue] extends JsonFormat[T] { self =>
+    def from: Boolean => T
+    override def write(v: T): JsValue = JsString(v.value.toString)
+    override def read(json: JsValue): T = json match
+      case JsBoolean(bool) => self.from(bool)
+      case _               => throw DeserializationException("Must be a json Boolean")
+  }
+
+  implicit object SelfJoinValueFormat extends BooleanValueFormat[SelfJoin] {
+    override val from: Boolean => SelfJoin = SelfJoin.from
+  }
+
+  implicit object StatusFormat extends BooleanValueFormat[Status] {
+    override val from: Boolean => Status = Status.from
+  }
 
   implicit val groupFormat: JsonFormat[Group] = jsonFormat6(Group.apply)
 

@@ -16,6 +16,15 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
@@ -129,22 +138,22 @@ object SharedTestDataADM {
       projects = Seq(incunabulaProject, imagesProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          incunabulaProjectIri -> List(
+          incunabulaProjectIri.value -> List(
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
             KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
-          imagesProjectIri -> List(
+          imagesProjectIri.value -> List(
             "http://rdfh.ch/groups/00FF/images-reviewer",
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
             KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
-          incunabulaProjectIri -> Set(
+          incunabulaProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectAdminAll),
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
-          imagesProjectIri -> Set(
+          imagesProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectAdminAll),
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
@@ -154,12 +163,13 @@ object SharedTestDataADM {
 
   /* represents the full ProjectADM of the Knora System project */
   def systemProject: Project = Project(
-    id = KnoraProjectRepo.builtIn.SystemProject.id.value,
-    shortname = "SystemProject",
-    shortcode = "FFFF",
-    longname = Some("Knora System Project"),
-    description = Seq(StringLiteralV2.from(value = "Knora System Project", language = Some("en"))),
-    keywords = Seq.empty[String],
+    id = KnoraProjectRepo.builtIn.SystemProject.id,
+    shortname = Shortname.unsafeFrom("SystemProject"),
+    shortcode = Shortcode.unsafeFrom("FFFF"),
+    longname = Some(Longname.unsafeFrom("Knora System Project")),
+    description =
+      List(StringLiteralV2.from(value = "Knora System Project", language = Some("en"))).map(Description.unsafeFrom),
+    keywords = List.empty,
     logo = None,
     ontologies = Seq(
       OntologyConstants.KnoraBase.KnoraBaseOntologyIri,
@@ -167,22 +177,27 @@ object SharedTestDataADM {
       SalsahGui.SalsahGuiOntologyIri,
       OntologyConstants.Standoff.StandoffOntologyIri,
     ),
-    status = true,
-    selfjoin = false,
+    status = Status.Active,
+    selfjoin = SelfJoin.CannotJoin,
+    copyrightAttribution = None,
+    license = None,
   )
 
   /* represents the full ProjectADM of the default shared ontologies project */
   def defaultSharedOntologiesProject: Project = Project(
     id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
-    shortname = "DefaultSharedOntologiesProject",
-    shortcode = "0000",
-    longname = Some("Default Knora Shared Ontologies Project"),
-    description = Seq(StringLiteralV2.from(value = "Default Knora Shared Ontologies Project", language = Some("en"))),
-    keywords = Seq.empty[String],
+    shortname = Shortname.unsafeFrom("DefaultSharedOntologiesProject"),
+    shortcode = Shortcode.unsafeFrom("0000"),
+    longname = Some(Longname.unsafeFrom("Default Knora Shared Ontologies Project")),
+    description = List(StringLiteralV2.from(value = "Default Knora Shared Ontologies Project", language = Some("en")))
+      .map(Description.unsafeFrom),
+    keywords = List.empty,
     logo = None,
     ontologies = Seq.empty[IRI],
-    status = true,
-    selfjoin = false,
+    status = Status.Active,
+    selfjoin = SelfJoin.CannotJoin,
+    copyrightAttribution = None,
+    license = None,
   )
 
   /**
@@ -192,7 +207,7 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val imagesProjectIri = "http://rdfh.ch/projects/00FF"
+  val imagesProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/00FF")
 
   /* represents 'user01' as found in admin-data.ttl  */
   def imagesUser01: User =
@@ -209,13 +224,13 @@ object SharedTestDataADM {
       projects = Seq(imagesProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          imagesProjectIri -> List(
+          imagesProjectIri.value -> List(
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
             KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
-          imagesProjectIri -> Set(
+          imagesProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectAdminAll),
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
@@ -238,10 +253,10 @@ object SharedTestDataADM {
       projects = Seq(imagesProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          imagesProjectIri -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+          imagesProjectIri.value -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
         ),
         administrativePermissionsPerProject = Map(
-          imagesProjectIri -> Set(
+          imagesProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
@@ -263,13 +278,13 @@ object SharedTestDataADM {
       projects = Seq(imagesProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          imagesProjectIri -> List(
+          imagesProjectIri.value -> List(
             "http://rdfh.ch/groups/00FF/images-reviewer",
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
-          imagesProjectIri -> Set(
+          imagesProjectIri.value -> Set(
             PermissionADM.from(
               Permission.Administrative.ProjectResourceCreateRestricted,
               s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild",
@@ -286,29 +301,35 @@ object SharedTestDataADM {
   /* represents the full ProjectADM of the images project */
   def imagesProject: Project = Project(
     id = imagesProjectIri,
-    shortname = "images",
-    shortcode = "00FF",
-    longname = Some("Image Collection Demo"),
-    description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
-    keywords = Seq("images", "collection").sorted,
+    shortname = Shortname.unsafeFrom("images"),
+    shortcode = Shortcode.unsafeFrom("00FF"),
+    longname = Some(Longname.unsafeFrom("Image Collection Demo")),
+    description = List(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en")))
+      .map(Description.unsafeFrom),
+    keywords = List("images", "collection").map(Keyword.unsafeFrom),
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
-    status = true,
-    selfjoin = false,
+    status = Status.Active,
+    selfjoin = SelfJoin.CannotJoin,
+    copyrightAttribution = None,
+    license = None,
   )
 
   /* represents the full ProjectADM of the images project in the external format */
   def imagesProjectExternal: Project = Project(
     id = imagesProjectIri,
-    shortname = "images",
-    shortcode = "00FF",
-    longname = Some("Image Collection Demo"),
-    description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
-    keywords = Seq("images", "collection").sorted,
+    shortname = Shortname.unsafeFrom("images"),
+    shortcode = Shortcode.unsafeFrom("00FF"),
+    longname = Some(Longname.unsafeFrom("Image Collection Demo")),
+    description = List(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en")))
+      .map(Description.unsafeFrom),
+    keywords = List("images", "collection").map(Keyword.unsafeFrom),
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI_LocalHost),
-    status = true,
-    selfjoin = false,
+    status = Status.Active,
+    selfjoin = SelfJoin.CannotJoin,
+    copyrightAttribution = None,
+    license = None,
   )
 
   /* represents the full GroupADM of the images ProjectAdmin group */
@@ -358,7 +379,7 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val incunabulaProjectIri = "http://rdfh.ch/projects/0803"
+  val incunabulaProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0803")
 
   /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
   def incunabulaProjectAdminUser: User =
@@ -375,13 +396,13 @@ object SharedTestDataADM {
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          incunabulaProjectIri -> List(
+          incunabulaProjectIri.value -> List(
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
             KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
-          incunabulaProjectIri -> Set(
+          incunabulaProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectAdminAll),
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
@@ -404,10 +425,10 @@ object SharedTestDataADM {
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          incunabulaProjectIri -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+          incunabulaProjectIri.value -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
         ),
         administrativePermissionsPerProject = Map(
-          incunabulaProjectIri -> Set(
+          incunabulaProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
@@ -429,10 +450,10 @@ object SharedTestDataADM {
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          incunabulaProjectIri -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+          incunabulaProjectIri.value -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
         ),
         administrativePermissionsPerProject = Map(
-          incunabulaProjectIri -> Set(
+          incunabulaProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
@@ -442,17 +463,17 @@ object SharedTestDataADM {
   /* represents the ProjectADM of the incunabula project */
   def incunabulaProject: Project = Project(
     id = incunabulaProjectIri,
-    shortname = "incunabula",
-    shortcode = "0803",
-    longname = Some("Bilderfolgen Basler Frühdrucke"),
-    description = Seq(
+    shortname = Shortname.unsafeFrom("incunabula"),
+    shortcode = Shortcode.unsafeFrom("0803"),
+    longname = Some(Longname.unsafeFrom("Bilderfolgen Basler Frühdrucke")),
+    description = List(
       StringLiteralV2.from(
         value =
           "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
         language = None,
       ),
-    ),
-    keywords = Seq(
+    ).map(Description.unsafeFrom),
+    keywords = List(
       "Basler Frühdrucke",
       "Inkunabel",
       "Narrenschiff",
@@ -467,27 +488,29 @@ object SharedTestDataADM {
       "Letterpress Printing",
       "Basel",
       "Contectualisation of images",
-    ).sorted,
-    logo = Some("incunabula_logo.png"),
+    ).map(Keyword.unsafeFrom),
+    logo = Some(Logo.unsafeFrom("incunabula_logo.png")),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
-    status = true,
-    selfjoin = false,
+    status = Status.Active,
+    selfjoin = SelfJoin.CannotJoin,
+    copyrightAttribution = None,
+    license = None,
   )
 
   /* represents the ProjectADM of the incunabula project in the external format*/
   def incunabulaProjectExternal: Project = Project(
     id = incunabulaProjectIri,
-    shortname = "incunabula",
-    shortcode = "0803",
-    longname = Some("Bilderfolgen Basler Frühdrucke"),
-    description = Seq(
+    shortname = Shortname.unsafeFrom("incunabula"),
+    shortcode = Shortcode.unsafeFrom("0803"),
+    longname = Some(Longname.unsafeFrom("Bilderfolgen Basler Frühdrucke")),
+    description = List(
       StringLiteralV2.from(
         value =
           "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
         language = None,
       ),
-    ),
-    keywords = Seq(
+    ).map(Description.unsafeFrom),
+    keywords = List(
       "Basler Frühdrucke",
       "Inkunabel",
       "Narrenschiff",
@@ -502,11 +525,13 @@ object SharedTestDataADM {
       "Letterpress Printing",
       "Basel",
       "Contectualisation of images",
-    ).sorted,
-    logo = Some("incunabula_logo.png"),
+    ).map(Keyword.unsafeFrom),
+    logo = Some(Logo.unsafeFrom("incunabula_logo.png")),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI_LocalHost),
-    status = true,
-    selfjoin = false,
+    status = Status.Active,
+    selfjoin = SelfJoin.CannotJoin,
+    copyrightAttribution = None,
+    license = None,
   )
 
   /**
@@ -516,7 +541,7 @@ object SharedTestDataADM {
   /**
    * *********************************
    */
-  val anythingProjectIri = "http://rdfh.ch/projects/0001"
+  val anythingProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
 
   val customResourceIRI: IRI                    = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
   val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
@@ -543,13 +568,13 @@ object SharedTestDataADM {
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          anythingProjectIri -> List(
+          anythingProjectIri.value -> List(
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
             KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
-          anythingProjectIri -> Set(
+          anythingProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectAdminAll),
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
@@ -571,13 +596,13 @@ object SharedTestDataADM {
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          anythingProjectIri -> List(
+          anythingProjectIri.value -> List(
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
             "http://rdfh.ch/groups/0001/thing-searcher",
           ),
         ),
         administrativePermissionsPerProject = Map(
-          anythingProjectIri -> Set(
+          anythingProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
@@ -598,10 +623,10 @@ object SharedTestDataADM {
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          anythingProjectIri -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+          anythingProjectIri.value -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
         ),
         administrativePermissionsPerProject = Map(
-          anythingProjectIri -> Set(
+          anythingProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
@@ -610,31 +635,35 @@ object SharedTestDataADM {
 
   def anythingProject: Project = Project(
     id = anythingProjectIri,
-    shortname = "anything",
-    shortcode = "0001",
-    longname = Some("Anything Project"),
-    description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
-    keywords = Seq("things", "arbitrary test data").sorted,
+    shortname = Shortname.unsafeFrom("anything"),
+    shortcode = Shortcode.unsafeFrom("0001"),
+    longname = Some(Longname.unsafeFrom("Anything Project")),
+    description = List(StringLiteralV2.from(value = "Anything Project", language = None)).map(Description.unsafeFrom),
+    keywords = List("things", "arbitrary test data").map(Keyword.unsafeFrom),
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI, SharedOntologyTestDataADM.SomethingOntologyIri),
-    status = true,
-    selfjoin = false,
+    status = Status.Active,
+    selfjoin = SelfJoin.CannotJoin,
+    copyrightAttribution = None,
+    license = None,
   )
 
   def anythingProjectExternal: Project = Project(
     id = anythingProjectIri,
-    shortname = "anything",
-    shortcode = "0001",
-    longname = Some("Anything Project"),
-    description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
-    keywords = Seq("things", "arbitrary test data").sorted,
+    shortname = Shortname.unsafeFrom("anything"),
+    shortcode = Shortcode.unsafeFrom("0001"),
+    longname = Some(Longname.unsafeFrom("Anything Project")),
+    description = List(StringLiteralV2.from(value = "Anything Project", language = None)).map(Description.unsafeFrom),
+    keywords = List("things", "arbitrary test data").map(Keyword.unsafeFrom),
     logo = None,
     ontologies = Seq(
       SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost,
       SharedOntologyTestDataADM.SomethingOntologyIriLocalhost,
     ),
-    status = true,
-    selfjoin = false,
+    status = Status.Active,
+    selfjoin = SelfJoin.CannotJoin,
+    copyrightAttribution = None,
+    license = None,
   )
 
   /* represents the full GroupADM of the Thing searcher group */
@@ -654,15 +683,16 @@ object SharedTestDataADM {
   /**
    * *********************************
    */
-  val beolProjectIri = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+  val beolProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF")
 
   def beolProject: Project = Project(
     id = beolProjectIri,
-    shortname = "beol",
-    shortcode = "0801",
-    longname = Some("Bernoulli-Euler Online"),
-    description = Seq(StringLiteralV2.from(value = "Bernoulli-Euler Online", language = None)),
-    keywords = Seq.empty[String],
+    shortname = Shortname.unsafeFrom("beol"),
+    shortcode = Shortcode.unsafeFrom("0801"),
+    longname = Some(Longname.unsafeFrom("Bernoulli-Euler Online")),
+    description =
+      List(StringLiteralV2.from(value = "Bernoulli-Euler Online", language = None)).map(Description.unsafeFrom),
+    keywords = List.empty,
     logo = None,
     ontologies = Seq(
       "http://www.knora.org/ontology/0801/beol",
@@ -670,8 +700,10 @@ object SharedTestDataADM {
       "http://www.knora.org/ontology/0801/leibniz",
       "http://www.knora.org/ontology/0801/newton",
     ),
-    status = true,
-    selfjoin = false,
+    status = Status.Active,
+    selfjoin = SelfJoin.CannotJoin,
+    copyrightAttribution = None,
+    license = None,
   )
 
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
@@ -688,13 +720,13 @@ object SharedTestDataADM {
     projects = Seq(beolProject),
     permissions = PermissionsDataADM(
       groupsPerProject = Map(
-        beolProjectIri -> List(
+        beolProjectIri.value -> List(
           KnoraGroupRepo.builtIn.ProjectMember.id.value,
           KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
         ),
       ),
       administrativePermissionsPerProject = Map(
-        beolProjectIri -> Set(
+        beolProjectIri.value -> Set(
           PermissionADM.from(Permission.Administrative.ProjectAdminAll),
         ),
       ),
@@ -708,18 +740,20 @@ object SharedTestDataADM {
   /**
    * *********************************
    */
-  val dokubibProjectIri = "http://rdfh.ch/projects/0804"
+  val dokubibProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0804")
 
   def dokubibProject: Project = Project(
     id = dokubibProjectIri,
-    shortname = "dokubib",
-    shortcode = "0804",
-    longname = Some("Dokubib"),
-    description = Seq(StringLiteralV2.from(value = "Dokubib", language = None)),
-    keywords = Seq.empty[String],
+    shortname = Shortname.unsafeFrom("dokubib"),
+    shortcode = Shortcode.unsafeFrom("0804"),
+    longname = Some(Longname.unsafeFrom("Dokubib")),
+    description = List(StringLiteralV2.from(value = "Dokubib", language = None)).map(Description.unsafeFrom),
+    keywords = List.empty,
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0804/dokubib"),
-    status = false,
-    selfjoin = false,
+    status = Status.Inactive,
+    selfjoin = SelfJoin.CannotJoin,
+    copyrightAttribution = None,
+    license = None,
   )
 }

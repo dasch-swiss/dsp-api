@@ -20,31 +20,35 @@ import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 object ProjectServiceSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Nothing] =
-    suite("projectDataNamedGraphV2 should return the data named graph of a project with shortcode for")(
+    suite("projectDataNamedGraphV2 shouldshortcodefor")(
       test("a ProjectADM") {
-        val shortname = "someProject"
-        val shortcode = "0001"
+        val shortname = Shortname.unsafeFrom("someProject")
+        val shortcode = Shortcode.unsafeFrom("0001")
         val p = Project(
           id = IriTestConstants.Project.TestProject,
           shortname = shortname,
           shortcode = shortcode,
           longname = None,
-          description = List(StringLiteralV2.from("description not used in test", None)),
+          description = List(StringLiteralV2.from("description not used in test", None)).map(Description.unsafeFrom),
           keywords = List.empty,
           logo = None,
           ontologies = List.empty,
-          status = true,
-          selfjoin = true,
+          status = Status.Active,
+          selfjoin = SelfJoin.CanJoin,
+          copyrightAttribution = None,
+          license = None,
         )
         assertTrue(
-          ProjectService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/$shortname",
+          ProjectService
+            .projectDataNamedGraphV2(p)
+            .value == s"http://www.knora.org/data/${shortcode.value}/${shortname.value}",
         )
       },
       test("a KnoraProject") {
         val shortcode = "0002"
         val shortname = "someOtherProject"
         val p: KnoraProject = KnoraProject(
-          id = ProjectIri.unsafeFrom(IriTestConstants.Project.TestProject),
+          id = IriTestConstants.Project.TestProject,
           shortname = Shortname.unsafeFrom(shortname),
           shortcode = Shortcode.unsafeFrom(shortcode),
           longname = None,
@@ -55,6 +59,8 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           status = Status.Active,
           selfjoin = SelfJoin.CanJoin,
           restrictedView = RestrictedView.default,
+          copyrightAttribution = None,
+          license = None,
         )
         assertTrue(
           ProjectService

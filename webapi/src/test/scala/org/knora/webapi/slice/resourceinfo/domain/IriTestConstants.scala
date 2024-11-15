@@ -5,10 +5,11 @@
 
 package org.knora.webapi.slice.resourceinfo.domain
 import org.knora.webapi.IRI
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 object IriTestConstants {
   object Project {
-    val TestProject: IRI = "http://rdfh.ch/projects/0000"
+    val TestProject: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0000")
   }
   private def makeEntity(ontologyIri: InternalIri, entityName: String) =
     InternalIri(s"${ontologyIri.value}#$entityName")

@@ -436,7 +436,7 @@ final case class OntologyResponderV2(
         // If this is a shared ontology, make sure it's in the default shared ontologies project.
         _ <-
           ZIO.when(
-            createOntologyRequest.isShared && createOntologyRequest.projectIri.toString != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
+            createOntologyRequest.isShared && createOntologyRequest.projectIri.toString != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.value,
           ) {
             val msg =
               s"Shared ontologies must be created in project <${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}>"
@@ -446,7 +446,7 @@ final case class OntologyResponderV2(
         // If it's in the default shared ontologies project, make sure it's a shared ontology.
         _ <-
           ZIO.when(
-            createOntologyRequest.projectIri.toString == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject && !createOntologyRequest.isShared,
+            createOntologyRequest.projectIri.toString == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.value && !createOntologyRequest.isShared,
           ) {
             val msg =
               s"Ontologies created in project <${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}> must be shared"

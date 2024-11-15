@@ -23,7 +23,16 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin.CannotJoin
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status.Active
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
@@ -83,16 +92,18 @@ object Examples {
     )
 
     private val project: Project = Project(
-      id = ProjectExample.projectIri.value,
-      shortname = "example",
-      shortcode = "0001",
-      longname = Some("Example Project"),
-      description = Seq(StringLiteralV2.from("An example project", Some("en"))),
-      keywords = Seq("example", "project"),
+      id = ProjectExample.projectIri,
+      shortname = Shortname.unsafeFrom("example"),
+      shortcode = Shortcode.unsafeFrom("0001"),
+      longname = Some(Longname.unsafeFrom("Example Project")),
+      description = List(StringLiteralV2.from("An example project", Some("en"))).map(Description.unsafeFrom),
+      keywords = List("example", "project").map(Keyword.unsafeFrom),
       logo = None,
-      status = true,
+      status = Active,
       ontologies = Seq.empty,
-      selfjoin = false,
+      selfjoin = CannotJoin,
+      copyrightAttribution = Some(CopyrightAttribution.unsafeFrom("2024, Example Project")),
+      license = Some(License.unsafeFrom("CC-BY-4.0")),
     )
 
     private val group = Group(

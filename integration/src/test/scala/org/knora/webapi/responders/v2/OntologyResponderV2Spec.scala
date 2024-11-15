@@ -51,10 +51,10 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val imagesUser           = SharedTestDataADM.imagesUser01
-  private val imagesProjectIri     = SharedTestDataADM.imagesProjectIri.toSmartIri
+  private val imagesProjectIri     = SharedTestDataADM.imagesProjectIri.value.toSmartIri
   private val anythingAdminUser    = SharedTestDataADM.anythingAdminUser
   private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
-  private val anythingProjectIri   = SharedTestDataADM.anythingProjectIri.toSmartIri
+  private val anythingProjectIri   = SharedTestDataADM.anythingProjectIri.value.toSmartIri
   private val ontologyResponder    = ZIO.serviceWithZIO[OntologyResponderV2]
   private val triplestoreService   = ZIO.serviceWithZIO[TriplestoreService]
 
@@ -636,7 +636,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create a non-shared ontology in the shared ontologies project" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "misplaced",
-        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.toSmartIri,
+        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.value.toSmartIri,
         label = "The invalid non-shared ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = SharedTestDataADM.superUser,
@@ -650,7 +650,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "create a shared ontology" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "chair",
-        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.toSmartIri,
+        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.value.toSmartIri,
         isShared = true,
         label = "a chaired ontology",
         apiRequestID = UUID.randomUUID,

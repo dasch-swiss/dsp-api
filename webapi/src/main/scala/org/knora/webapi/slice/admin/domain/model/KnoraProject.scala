@@ -34,6 +34,8 @@ case class KnoraProject(
   status: Status,
   selfjoin: SelfJoin,
   restrictedView: RestrictedView,
+  copyrightAttribution: Option[CopyrightAttribution],
+  license: Option[License],
 ) extends EntityWithId[ProjectIri]
 
 object KnoraProject {
@@ -172,5 +174,24 @@ object KnoraProject {
     case object CannotJoin extends SelfJoin { val value = false }
 
     def from(value: Boolean): SelfJoin = if (value) CanJoin else CannotJoin
+  }
+
+  final case class CopyrightAttribution private (override val value: String) extends StringValue
+  object CopyrightAttribution extends StringValueCompanion[CopyrightAttribution] {
+    private val maxLength = 1_000
+    def from(str: String): Either[String, CopyrightAttribution] =
+      if (str.isEmpty) Left("Copyright attribution cannot be empty.")
+      else if (str.contains("\n")) Left("Copyright attribution may not contain line breaks.")
+      else if (str.length >= maxLength) Left(s"Copyright attribution may only be ${maxLength} characters long.")
+      else Right(CopyrightAttribution(str))
+  }
+
+  final case class License private (override val value: String) extends StringValue
+  object License extends StringValueCompanion[License] {
+    private val maxLength = 10_000
+    def from(str: String): Either[String, License] =
+      if (str.isEmpty) Left("License cannot be empty.")
+      else if (str.length >= maxLength) Left(s"License may only be ${maxLength} characters long.")
+      else Right(License(str))
   }
 }

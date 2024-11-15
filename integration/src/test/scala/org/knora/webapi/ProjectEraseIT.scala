@@ -83,6 +83,8 @@ object ProjectEraseIT extends E2EZSpec {
         None,
         KnoraProject.Status.Active,
         KnoraProject.SelfJoin.CanJoin,
+        None,
+        None,
       ),
     ),
   ).orDie

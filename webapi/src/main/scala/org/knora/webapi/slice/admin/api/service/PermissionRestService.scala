@@ -70,12 +70,12 @@ final case class PermissionRestService(
       .tap(auth.ensureSystemAdminOrProjectAdmin(user, _))
 
   def getPermissionsApByProjectIri(
-    value: ProjectIri,
+    projectIri: ProjectIri,
     user: User,
   ): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
-      _      <- ensureProjectIriExistsAndUserHasAccess(value, user)
-      result <- responder.getPermissionsApByProjectIri(value.value)
+      _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
+      result <- responder.getPermissionsApByProjectIri(projectIri)
       ext    <- format.toExternal(result)
     } yield ext
 

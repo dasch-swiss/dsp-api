@@ -652,7 +652,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val orderByProperty = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title", "UTF-8")
       val request =
         Get(s"$baseApiUrl/v2/resources?resourceClass=$resourceClass&orderByProperty=$orderByProperty&page=0")
-          .addHeader(new ProjectHeader(SharedTestDataADM.incunabulaProject.id)) ~> addCredentials(
+          .addHeader(new ProjectHeader(SharedTestDataADM.incunabulaProject.id.value)) ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.incunabulaProjectAdminUser.email, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
