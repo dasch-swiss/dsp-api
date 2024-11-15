@@ -20,8 +20,8 @@ For an extensive explanation on how DSP permissions are implemented, see
 | `/admin/permissions/{permissionIri}/group`                  | `PUT`      | [update for which group an administrative or default object access permission is used](#updating-a-permissions-group)                                                                     |
 | `/admin/permissions/{permissionIri}/hasPermission`          | `PUT`      | [update the scope of an administrative or default object access permission](#updating-a-permissions-scope), i.e. what permissions are granted to which group when this permission applies |
 | `/admin/permissions/{permissionIri}`                        | `DELETE`   | [delete an administrative or default object access permission](#deleting-a-permission)                                                                                                    |
-| ~~`/admin/permissions/{doap_permissionIri}/resourceClass`~~ | `PUT`      | **deprecated**, use `/admin/permissions/doap/{permissionIri}` instead)                                                                                                                    |
-| ~~`/admin/permissions/{doap_permissionIri}/property`~~      | `PUT`      | **deprecated**,  use `/admin/permissions/doap/{permissionIri}` instead)                                                                                                                   | 
+| ~~`/admin/permissions/{doap_permissionIri}/resourceClass`~~ | `PUT`      | **deprecated**, use `/admin/permissions/doap/{permissionIri}` instead                                                                                                                     |
+| ~~`/admin/permissions/{doap_permissionIri}/property`~~      | `PUT`      | **deprecated**,  use `/admin/permissions/doap/{permissionIri}` instead                                                                                                                    | 
 
 ## Permission Operations
 
