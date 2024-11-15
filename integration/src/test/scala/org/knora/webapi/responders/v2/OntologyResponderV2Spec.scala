@@ -56,7 +56,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   private val imagesProjectIri     = SharedTestDataADM.imagesProjectIri
   private val anythingAdminUser    = SharedTestDataADM.anythingAdminUser
   private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
-  private val anythingProjectIri   = SharedTestDataADM.anythingProjectIri.toSmartIri
+  private val anythingProjectIri   = SharedTestDataADM.anythingProjectIri
   private val ontologyResponder    = ZIO.serviceWithZIO[OntologyResponderV2]
   private val triplestoreService   = ZIO.serviceWithZIO[TriplestoreService]
 
@@ -463,7 +463,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not delete the 'anything' ontology, because it is used in data and in the 'something' ontology" in {
-      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
+      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri.value.toSmartIri))
 
       val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(metadataResponse.ontologies.size == 3)
@@ -669,7 +669,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not allow a user to create a property if they are not a sysadmin or an admin in the ontology's project" in {
 
-      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
+      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri.value.toSmartIri))
 
       val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(metadataResponse.ontologies.size == 3)
@@ -728,7 +728,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name" in {
 
-      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
+      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri.value.toSmartIri))
 
       val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(metadataResponse.ontologies.size == 3)
@@ -814,7 +814,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "create a link property in the 'anything' ontology, and automatically create the corresponding link value property" in {
 
-      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
+      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri.value.toSmartIri))
 
       val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(metadataResponse.ontologies.size == 3)
@@ -936,7 +936,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "create a subproperty of an existing custom link property and add it to a resource class, check if the correct link and link value properties were added to the class" in {
       val metadataResponse = UnsafeZioRun.runOrThrow(
-        ontologyResponder(_.getOntologyMetadataForProjectsV2(Set(anythingProjectIri))),
+        ontologyResponder(_.getOntologyMetadataForProjectsV2(Set(anythingProjectIri.value.toSmartIri))),
       )
       assert(metadataResponse.ontologies.size == 3)
       freetestLastModDate = metadataResponse
@@ -6193,7 +6193,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val classIri: SmartIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
 
       // create the property anything:hasFoafName
-      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
+      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri.value.toSmartIri))
 
       val metadataResponse: ReadOntologyMetadataV2 = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(metadataResponse.ontologies.size == 3)

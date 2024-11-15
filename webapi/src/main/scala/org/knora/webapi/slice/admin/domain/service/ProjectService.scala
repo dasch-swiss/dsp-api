@@ -46,7 +46,7 @@ final case class ProjectService(
     .map(_.map(_.ontologyMetadata.ontologyIri.toIri))
     .map(ontologies =>
       Project(
-        knoraProject.id.value,
+        knoraProject.id,
         knoraProject.shortname,
         knoraProject.shortcode,
         knoraProject.longname,
@@ -61,7 +61,7 @@ final case class ProjectService(
 
   private def toKnoraProject(project: Project, restrictedView: RestrictedView): KnoraProject =
     KnoraProject(
-      id = ProjectIri.unsafeFrom(project.id),
+      id = project.id,
       shortname = project.shortname,
       shortcode = project.shortcode,
       longname = project.longname,

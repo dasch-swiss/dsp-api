@@ -136,7 +136,7 @@ object SharedTestDataADM {
       projects = Seq(incunabulaProject, imagesProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          incunabulaProjectIri -> List(
+          incunabulaProjectIri.value -> List(
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
             KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
@@ -147,7 +147,7 @@ object SharedTestDataADM {
           ),
         ),
         administrativePermissionsPerProject = Map(
-          incunabulaProjectIri -> Set(
+          incunabulaProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectAdminAll),
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
@@ -161,7 +161,7 @@ object SharedTestDataADM {
 
   /* represents the full ProjectADM of the Knora System project */
   def systemProject: Project = Project(
-    id = KnoraProjectRepo.builtIn.SystemProject.id.value,
+    id = KnoraProjectRepo.builtIn.SystemProject.id,
     shortname = Shortname.unsafeFrom("SystemProject"),
     shortcode = Shortcode.unsafeFrom("FFFF"),
     longname = Some(Longname.unsafeFrom("Knora System Project")),
@@ -180,7 +180,7 @@ object SharedTestDataADM {
 
   /* represents the full ProjectADM of the default shared ontologies project */
   def defaultSharedOntologiesProject: Project = Project(
-    id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.value,
+    id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
     shortname = Shortname.unsafeFrom("DefaultSharedOntologiesProject"),
     shortcode = Shortcode.unsafeFrom("0000"),
     longname = Some(Longname.unsafeFrom("Default Knora Shared Ontologies Project")),
@@ -292,7 +292,7 @@ object SharedTestDataADM {
 
   /* represents the full ProjectADM of the images project */
   def imagesProject: Project = Project(
-    id = imagesProjectIri.value,
+    id = imagesProjectIri,
     shortname = Shortname.unsafeFrom("images"),
     shortcode = Shortcode.unsafeFrom("00FF"),
     longname = Some(Longname.unsafeFrom("Image Collection Demo")),
@@ -306,7 +306,7 @@ object SharedTestDataADM {
 
   /* represents the full ProjectADM of the images project in the external format */
   def imagesProjectExternal: Project = Project(
-    id = imagesProjectIri.value,
+    id = imagesProjectIri,
     shortname = Shortname.unsafeFrom("images"),
     shortcode = Shortcode.unsafeFrom("00FF"),
     longname = Some(Longname.unsafeFrom("Image Collection Demo")),
@@ -365,7 +365,7 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val incunabulaProjectIri = "http://rdfh.ch/projects/0803"
+  val incunabulaProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0803")
 
   /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
   def incunabulaProjectAdminUser: User =
@@ -382,13 +382,13 @@ object SharedTestDataADM {
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          incunabulaProjectIri -> List(
+          incunabulaProjectIri.value -> List(
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
             KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
-          incunabulaProjectIri -> Set(
+          incunabulaProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectAdminAll),
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
@@ -411,10 +411,10 @@ object SharedTestDataADM {
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          incunabulaProjectIri -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+          incunabulaProjectIri.value -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
         ),
         administrativePermissionsPerProject = Map(
-          incunabulaProjectIri -> Set(
+          incunabulaProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
@@ -436,10 +436,10 @@ object SharedTestDataADM {
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          incunabulaProjectIri -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+          incunabulaProjectIri.value -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
         ),
         administrativePermissionsPerProject = Map(
-          incunabulaProjectIri -> Set(
+          incunabulaProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
@@ -523,7 +523,7 @@ object SharedTestDataADM {
   /**
    * *********************************
    */
-  val anythingProjectIri = "http://rdfh.ch/projects/0001"
+  val anythingProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
 
   val customResourceIRI: IRI                    = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
   val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
@@ -550,13 +550,13 @@ object SharedTestDataADM {
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          anythingProjectIri -> List(
+          anythingProjectIri.value -> List(
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
             KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
-          anythingProjectIri -> Set(
+          anythingProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectAdminAll),
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
@@ -578,13 +578,13 @@ object SharedTestDataADM {
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          anythingProjectIri -> List(
+          anythingProjectIri.value -> List(
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
             "http://rdfh.ch/groups/0001/thing-searcher",
           ),
         ),
         administrativePermissionsPerProject = Map(
-          anythingProjectIri -> Set(
+          anythingProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
@@ -605,10 +605,10 @@ object SharedTestDataADM {
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          anythingProjectIri -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+          anythingProjectIri.value -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
         ),
         administrativePermissionsPerProject = Map(
-          anythingProjectIri -> Set(
+          anythingProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
@@ -661,7 +661,7 @@ object SharedTestDataADM {
   /**
    * *********************************
    */
-  val beolProjectIri = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+  val beolProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF")
 
   def beolProject: Project = Project(
     id = beolProjectIri,
@@ -695,13 +695,13 @@ object SharedTestDataADM {
     projects = Seq(beolProject),
     permissions = PermissionsDataADM(
       groupsPerProject = Map(
-        beolProjectIri -> List(
+        beolProjectIri.value -> List(
           KnoraGroupRepo.builtIn.ProjectMember.id.value,
           KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
         ),
       ),
       administrativePermissionsPerProject = Map(
-        beolProjectIri -> Set(
+        beolProjectIri.value -> Set(
           PermissionADM.from(Permission.Administrative.ProjectAdminAll),
         ),
       ),
@@ -715,7 +715,7 @@ object SharedTestDataADM {
   /**
    * *********************************
    */
-  val dokubibProjectIri = "http://rdfh.ch/projects/0804"
+  val dokubibProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0804")
 
   def dokubibProject: Project = Project(
     id = dokubibProjectIri,

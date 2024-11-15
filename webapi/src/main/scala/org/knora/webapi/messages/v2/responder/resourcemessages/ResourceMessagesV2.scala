@@ -434,7 +434,7 @@ case class ReadResourceV2(
     val metadataForComplexSchema: Map[IRI, JsonLDValue] = if (targetSchema == ApiV2Complex) {
       val requiredMetadataForComplexSchema: Map[IRI, JsonLDValue] = Map(
         KnoraApiV2Complex.AttachedToUser    -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
-        KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id),
+        KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id.value),
         KnoraApiV2Complex.HasPermissions    -> JsonLDString(permissions),
         KnoraApiV2Complex.UserHasPermission -> JsonLDString(userPermission.toString),
         KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
@@ -1191,7 +1191,7 @@ case class ResourceEventBody(
       Map(
         KnoraApiV2Complex.ResourceIri       -> JsonLDString(resourceIri),
         KnoraApiV2Complex.ResourceClassIri  -> JsonLDString(resourceClassIri.toString),
-        KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id),
+        KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id.value),
       ) ++ resourceLabel ++ creationDateAsJsonLD ++ propertiesAndValuesAsJsonLD ++ lastModificationDateAsJsonLD
         ++ deletionInfoAsJsonLD ++ permissionAsJsonLD,
     )

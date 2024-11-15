@@ -51,7 +51,7 @@ final case class GroupService(
       groupName = GroupName.unsafeFrom(group.name),
       groupDescriptions = GroupDescriptions.unsafeFrom(group.descriptions),
       status = GroupStatus.from(group.status),
-      belongsToProject = group.project.map(it => ProjectIri.unsafeFrom(it.id)),
+      belongsToProject = group.project.map(_.id),
       hasSelfJoinEnabled = GroupSelfJoin.from(group.selfjoin),
     )
 

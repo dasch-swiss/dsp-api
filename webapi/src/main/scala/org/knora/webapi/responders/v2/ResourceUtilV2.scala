@@ -86,7 +86,7 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, sipiService
   ): IO[ForbiddenException, Unit] = {
     val maybeUserPermission: Option[Permission.ObjectAccess] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = resourceInfo.attachedToUser,
-      entityProject = resourceInfo.projectADM.id,
+      entityProject = resourceInfo.projectADM.id.value,
       entityPermissionLiteral = resourceInfo.permissions,
       requestingUser = requestingUser,
     )
@@ -119,7 +119,7 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, sipiService
   ): IO[ForbiddenException, Unit] = {
     val maybeUserPermission: Option[Permission.ObjectAccess] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = valueInfo.attachedToUser,
-      entityProject = resourceInfo.projectADM.id,
+      entityProject = resourceInfo.projectADM.id.value,
       entityPermissionLiteral = valueInfo.permissions,
       requestingUser = requestingUser,
     )

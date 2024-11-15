@@ -34,7 +34,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
     isInProject: Iterable[IRI],
     isInGroup: Iterable[IRI],
     systemAdmin: SystemAdmin,
-    isInProjectAdminGroup: Iterable[IRI],
+    isInProjectAdminGroup: Iterable[ProjectIri],
   ) = KnoraUser(
     UserIri.unsafeFrom("http://rdfh.ch/users/dummy"),
     Username.unsafeFrom("dummy"),
@@ -47,7 +47,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
     isInProject.map(ProjectIri.unsafeFrom).toChunk,
     isInGroup.map(GroupIri.unsafeFrom).toChunk,
     systemAdmin,
-    isInProjectAdminGroup.map(ProjectIri.unsafeFrom).toChunk,
+    isInProjectAdminGroup.toChunk,
   )
 
   private val knoraUserToUserConverter = ZIO.serviceWithZIO[KnoraUserToUserConverter]
@@ -70,7 +70,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
           SharedTestDataADM2.multiuserUser.projects_info.keys,
           SharedTestDataADM2.multiuserUser.groups,
           SystemAdmin.IsNotSystemAdmin,
-          Chunk(SharedTestDataADM.incunabulaProjectIri, imagesProjectIri.value),
+          Chunk(SharedTestDataADM.incunabulaProjectIri, imagesProjectIri),
         )
         for {
           actual <- knoraUserToUserConverter(_.toUser(user))
@@ -117,7 +117,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
             SharedTestDataADM2.imagesUser01.projects_info.keys,
             SharedTestDataADM2.imagesUser01.groups,
             SystemAdmin.IsNotSystemAdmin,
-            Chunk(imagesProjectIri.value),
+            Chunk(imagesProjectIri),
           )
         for {
           actual <- knoraUserToUserConverter(_.toUser(user))
