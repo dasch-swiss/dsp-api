@@ -6,7 +6,6 @@
 package org.knora.webapi.messages.admin.responder
 
 import spray.json.*
-
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionADM
@@ -47,6 +46,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.Value.StringValue
@@ -216,6 +216,10 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
 
   implicit object ShortnameFormat extends StringValueFormat[Shortname] {
     override val from: String => Either[String, Shortname] = Shortname.from
+  }
+
+  implicit object ShortcodeFormat extends StringValueFormat[Shortcode] {
+    override val from: String => Either[String, Shortcode] = Shortcode.from
   }
 
   implicit val groupFormat: JsonFormat[Group] = jsonFormat6(Group.apply)

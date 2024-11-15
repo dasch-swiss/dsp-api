@@ -115,7 +115,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return restricted view settings using project SHORTCODE" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectRestrictedViewSettingsByShortcode(SharedTestDataADM.imagesProject.getShortcode),
+            _.getProjectRestrictedViewSettingsByShortcode(SharedTestDataADM.imagesProject.shortcode),
           ),
         )
         actual shouldEqual expectedResult
@@ -468,7 +468,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return all members of a project identified by shortcode" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectMembersByShortcode(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.getShortcode),
+            _.getProjectMembersByShortcode(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.shortcode),
           ),
         )
 
@@ -545,7 +545,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
           ProjectRestService(
             _.getProjectAdminMembersByShortcode(
               SharedTestDataADM.rootUser,
-              SharedTestDataADM.imagesProject.getShortcode,
+              SharedTestDataADM.imagesProject.shortcode,
             ),
           ),
         )

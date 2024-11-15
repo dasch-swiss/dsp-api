@@ -228,7 +228,7 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, sipiService
             sipiService.moveTemporaryFileToPermanentStorage(
               MoveTemporaryFileToPermanentStorageRequest(
                 file.fileValue.internalFilename,
-                updateInProject.projectADM.shortcode,
+                updateInProject.projectADM.shortcode.value,
                 requestingUser,
               ),
             )

@@ -10,7 +10,6 @@ import spray.json.DefaultJsonProtocol.*
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.AssertionException
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
@@ -20,6 +19,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewR
 import org.knora.webapi.messages.v2.responder.valuemessages.DocumentFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 class FileModelsSpec extends CoreSpec {
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -263,7 +263,7 @@ class FileModelsSpec extends CoreSpec {
           .toJsonLd(
             className = className,
             ontologyName = ontologyName,
-            shortcode = shortcode,
+            shortcode = shortcode.value,
             ontologyIRI = ontologyIRI,
           )
           .parseJson
@@ -408,8 +408,8 @@ class FileModelsSpec extends CoreSpec {
 
     "creating a ChangeFileRequest," should {
       "create a valid representation of a DocumentRepresentation with default values" in {
-        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI    = stringFormatter.makeRandomResourceIri("0000")
+        val resourceIRI = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+        val valueIRI    = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
 
         val change = ChangeFileRequest.make(
           fileType = FileType.DocumentFile(),
@@ -432,8 +432,8 @@ class FileModelsSpec extends CoreSpec {
       }
 
       "create a valid representation of a DocumentRepresentation with custom values" in {
-        val resourceIRI  = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI     = stringFormatter.makeRandomResourceIri("0000")
+        val resourceIRI  = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+        val valueIRI     = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
         val pageCount    = Some(33)
         val dimX         = Some(44)
         val dimY         = Some(55)
@@ -467,8 +467,8 @@ class FileModelsSpec extends CoreSpec {
       }
 
       "create a valid representation of a StillImageRepresentation with default values" in {
-        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI    = stringFormatter.makeRandomResourceIri("0000")
+        val resourceIRI = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+        val valueIRI    = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
 
         val change = ChangeFileRequest.make(
           fileType = FileType.StillImageFile(),
@@ -490,8 +490,8 @@ class FileModelsSpec extends CoreSpec {
       }
 
       "create a valid representation of a MovingImageRepresentation with default values" in {
-        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI    = stringFormatter.makeRandomResourceIri("0000")
+        val resourceIRI = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+        val valueIRI    = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
 
         val change = ChangeFileRequest.make(
           fileType = FileType.MovingImageFile(),
@@ -513,8 +513,8 @@ class FileModelsSpec extends CoreSpec {
       }
 
       "create a valid representation of a AudioRepresentation with default values" in {
-        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI    = stringFormatter.makeRandomResourceIri("0000")
+        val resourceIRI = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+        val valueIRI    = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
 
         val change = ChangeFileRequest.make(
           fileType = FileType.AudioFile,
@@ -531,8 +531,8 @@ class FileModelsSpec extends CoreSpec {
       }
 
       "create a valid representation of a TextRepresentation with default values" in {
-        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI    = stringFormatter.makeRandomResourceIri("0000")
+        val resourceIRI = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+        val valueIRI    = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
 
         val change = ChangeFileRequest.make(
           fileType = FileType.TextFile,
@@ -549,8 +549,8 @@ class FileModelsSpec extends CoreSpec {
       }
 
       "create a valid representation of a ArchiveRepresentation with default values" in {
-        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI    = stringFormatter.makeRandomResourceIri("0000")
+        val resourceIRI = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
+        val valueIRI    = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("0000"))
 
         val change = ChangeFileRequest.make(
           fileType = FileType.ArchiveFile,
@@ -569,8 +569,8 @@ class FileModelsSpec extends CoreSpec {
 
     "generating a JSON-LD representation of a ChangeFileRequest," should {
       "correctly serialize a DocumentRepresentation with default values" in {
-        val resourceIRI = stringFormatter.makeRandomResourceIri("7777")
-        val valueIRI    = stringFormatter.makeRandomResourceIri("7777")
+        val resourceIRI = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("7777"))
+        val valueIRI    = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("7777"))
 
         val documentRepresentation = ChangeFileRequest.make(
           fileType = FileType.DocumentFile(),
@@ -598,8 +598,8 @@ class FileModelsSpec extends CoreSpec {
       }
 
       "correctly serialize a DocumentRepresentation with custom values" in {
-        val resourceIRI = stringFormatter.makeRandomResourceIri("7777")
-        val valueIRI    = stringFormatter.makeRandomResourceIri("7777")
+        val resourceIRI = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("7777"))
+        val valueIRI    = stringFormatter.makeRandomResourceIri(Shortcode.unsafeFrom("7777"))
         val className   = "CustomDocumentRepresentation"
         val prefix      = "onto"
 

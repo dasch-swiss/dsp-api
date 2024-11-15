@@ -48,7 +48,7 @@ final case class ProjectService(
       Project(
         knoraProject.id.value,
         knoraProject.shortname,
-        knoraProject.shortcode.value,
+        knoraProject.shortcode,
         knoraProject.longname.map(_.value),
         knoraProject.description.map(_.value),
         knoraProject.keywords.map(_.value),
@@ -65,7 +65,7 @@ final case class ProjectService(
     KnoraProject(
       id = ProjectIri.unsafeFrom(project.id),
       shortname = project.shortname,
-      shortcode = Shortcode.unsafeFrom(project.shortcode),
+      shortcode = project.shortcode,
       longname = project.longname.map(Longname.unsafeFrom),
       description = NonEmptyChunk
         .fromIterable(project.description.head, project.description.tail)
@@ -97,10 +97,8 @@ object ProjectService {
    * @param project A [[ProjectADM]].
    * @return the [[InternalIri]] of the project's data named graph.
    */
-  def projectDataNamedGraphV2(project: Project): InternalIri = {
-    val shortcode = Shortcode.unsafeFrom(project.shortcode)
-    projectDataNamedGraphV2(shortcode, project.shortname)
-  }
+  def projectDataNamedGraphV2(project: Project): InternalIri =
+    projectDataNamedGraphV2(project.shortcode, project.shortname)
 
   /**
    * Given the [[KnoraProject]] constructs the project's data named graph.

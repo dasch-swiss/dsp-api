@@ -20,10 +20,10 @@ import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 object ProjectServiceSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Nothing] =
-    suite("projectDataNamedGraphV2 should return the data named graph of a project with shortcode for")(
+    suite("projectDataNamedGraphV2 shouldshortcodefor")(
       test("a ProjectADM") {
         val shortname = Shortname.unsafeFrom("someProject")
-        val shortcode = "0001"
+        val shortcode = Shortcode.unsafeFrom("0001")
         val p = Project(
           id = IriTestConstants.Project.TestProject,
           shortname = shortname,
@@ -39,7 +39,9 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           license = None,
         )
         assertTrue(
-          ProjectService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/${shortname.value}",
+          ProjectService
+            .projectDataNamedGraphV2(p)
+            .value == s"http://www.knora.org/data/${shortcode.value}/${shortname.value}",
         )
       },
       test("a KnoraProject") {

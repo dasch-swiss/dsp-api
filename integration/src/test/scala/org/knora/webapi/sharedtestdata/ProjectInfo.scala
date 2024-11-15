@@ -39,7 +39,7 @@ object ProjectInfo {
     ProjectInfo(
       id = project.id,
       shortname = project.shortname.value,
-      shortcode = project.shortcode,
+      shortcode = project.shortcode.value,
       longname = project.longname,
       description = project.description.headOption.map(_.value),
       keywords = project.keywords.headOption.map(_ => project.keywords.mkString(", ")),
