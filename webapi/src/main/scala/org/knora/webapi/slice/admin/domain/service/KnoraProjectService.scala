@@ -99,6 +99,8 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
                      logo = updateReq.logo.orElse(project.logo),
                      status = updateReq.status.getOrElse(project.status),
                      selfjoin = updateReq.selfjoin.getOrElse(project.selfjoin),
+                     copyrightAttribution = updateReq.copyrightAttribution.orElse(project.copyrightAttribution),
+                     license = updateReq.license.orElse(project.license),
                    ),
                  )
     } yield updated
