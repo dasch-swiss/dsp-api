@@ -27,6 +27,8 @@ object ProjectsEndpointsRequestsAndResponses {
     logo: Option[Logo] = None,
     status: Status,
     selfjoin: SelfJoin,
+    copyrightAttribution: Option[String],
+    license: Option[String],
   )
   object ProjectCreateRequest {
     implicit val codec: JsonCodec[ProjectCreateRequest] = DeriveJsonCodec.gen[ProjectCreateRequest]

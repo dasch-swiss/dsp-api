@@ -45,6 +45,8 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
+    Some("2024, Example Project"),
+    Some("Apache-2.0"),
   )
 
   private val someProjectTrig =
@@ -62,7 +64,9 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |    knora-admin:projectLogo "logo.png" ;
         |    knora-admin:status true ;
         |    knora-admin:hasSelfJoinEnabled false ;
-        |    knora-admin:projectRestrictedViewSize "!128,128" .
+        |    knora-admin:projectRestrictedViewSize "!128,128" ;
+        |    knora-base:hasCopyrightAttribution "2024, Example Project" ;
+        |    knora-base:hasLicense "Apache-2.0" .
         |}
         |""".stripMargin
 
@@ -106,7 +110,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
           for {
             _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
             project <- KnoraProjectRepo(_.findById(ProjectIri.unsafeFrom("http://rdfh.ch/projects/1234")))
-          } yield assertTrue(project.contains(someProject))
+          } yield assertTrue(project == Some(someProject))
         },
         test("return None if project does not exist") {
           for {

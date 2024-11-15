@@ -189,6 +189,8 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
       "ontologies",
       "status",
       "selfjoin",
+      "copyrightAttribution",
+      "license",
     ),
   )
 

@@ -40,6 +40,8 @@ case class Project(
   ontologies: Seq[IRI],
   status: Boolean,
   selfjoin: Boolean,
+  copyrightAttribution: Option[String],
+  license: Option[String],
 ) extends Ordered[Project] {
 
   def projectIri: ProjectIri = ProjectIri.unsafeFrom(id)

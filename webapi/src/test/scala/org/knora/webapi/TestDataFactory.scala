@@ -99,5 +99,7 @@ object TestDataFactory {
     Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
+    Some("2024, Example Project"),
+    Some("CC-BY-4.0"),
   )
 }

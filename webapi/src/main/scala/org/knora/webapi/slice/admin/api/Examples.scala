@@ -93,6 +93,8 @@ object Examples {
       status = true,
       ontologies = Seq.empty,
       selfjoin = false,
+      copyrightAttribution = Some("2024, Example Project"),
+      license = Some("CC-BY-4.0"),
     )
 
     private val group = Group(
