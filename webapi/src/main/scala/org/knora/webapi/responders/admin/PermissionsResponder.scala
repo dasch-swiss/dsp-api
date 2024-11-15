@@ -75,11 +75,11 @@ final case class PermissionsResponder(
     case Property
   }
 
-  def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM] =
+  def getPermissionsApByProjectIri(projectIri: ProjectIri): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
       permissionsQueryResponseRows <-
         triplestore
-          .query(Select(sparql.admin.txt.getAdministrativePermissionsForProject(projectIRI)))
+          .query(Select(sparql.admin.txt.getAdministrativePermissionsForProject(projectIri.value)))
           .map(_.results.bindings)
 
       permissionsWithProperties =

@@ -455,7 +455,7 @@ final case class ResourcesResponderV2(
 
         // Ensure that the requesting user is a system admin, or an admin of this project.
         _ <- ZIO.when(
-               !(eraseResourceV2.requestingUser.permissions.isProjectAdmin(resource.projectADM.id) ||
+               !(eraseResourceV2.requestingUser.permissions.isProjectAdmin(resource.projectADM.id.value) ||
                  eraseResourceV2.requestingUser.permissions.isSystemAdmin),
              ) {
                ZIO.fail(ForbiddenException(s"Only a system admin or project admin can erase a resource"))

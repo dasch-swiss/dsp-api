@@ -50,7 +50,7 @@ class UsersADME2ESpec extends E2ESpec with SprayJsonSupport {
   private val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
 
   private val imagesProjectIri    = SharedTestDataADM.imagesProject.id
-  private val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
+  private val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri.value, "utf-8")
 
   private val imagesReviewerGroupIri    = SharedTestDataADM.imagesReviewerGroup.id
   private val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")

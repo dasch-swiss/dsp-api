@@ -303,7 +303,7 @@ class SearchResponderV2Spec extends CoreSpec {
     "search by project and resource class" in {
       val result = UnsafeZioRun.runOrThrow(
         searchResourcesByProjectAndClassV2(
-          projectIri = SharedTestDataADM.incunabulaProject.id.toSmartIri,
+          projectIri = SharedTestDataADM.incunabulaProject.id.value.toSmartIri,
           resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
           page = 0,

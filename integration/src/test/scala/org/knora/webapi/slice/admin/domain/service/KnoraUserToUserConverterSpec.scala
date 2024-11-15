@@ -34,7 +34,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
     isInProject: Iterable[IRI],
     isInGroup: Iterable[IRI],
     systemAdmin: SystemAdmin,
-    isInProjectAdminGroup: Iterable[IRI],
+    isInProjectAdminGroup: Iterable[ProjectIri],
   ) = KnoraUser(
     UserIri.unsafeFrom("http://rdfh.ch/users/dummy"),
     Username.unsafeFrom("dummy"),
@@ -47,7 +47,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
     isInProject.map(ProjectIri.unsafeFrom).toChunk,
     isInGroup.map(GroupIri.unsafeFrom).toChunk,
     systemAdmin,
-    isInProjectAdminGroup.map(ProjectIri.unsafeFrom).toChunk,
+    isInProjectAdminGroup.toChunk,
   )
 
   private val knoraUserToUserConverter = ZIO.serviceWithZIO[KnoraUserToUserConverter]

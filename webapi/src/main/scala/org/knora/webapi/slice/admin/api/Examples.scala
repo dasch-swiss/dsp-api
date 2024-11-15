@@ -90,7 +90,7 @@ object Examples {
     )
 
     private val project: Project = Project(
-      id = ProjectExample.projectIri.value,
+      id = ProjectExample.projectIri,
       shortname = Shortname.unsafeFrom("example"),
       shortcode = Shortcode.unsafeFrom("0001"),
       longname = Some(Longname.unsafeFrom("Example Project")),

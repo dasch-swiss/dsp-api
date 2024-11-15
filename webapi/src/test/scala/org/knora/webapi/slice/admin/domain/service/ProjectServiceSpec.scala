@@ -48,7 +48,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
         val shortcode = "0002"
         val shortname = "someOtherProject"
         val p: KnoraProject = KnoraProject(
-          id = ProjectIri.unsafeFrom(IriTestConstants.Project.TestProject),
+          id = IriTestConstants.Project.TestProject,
           shortname = Shortname.unsafeFrom(shortname),
           shortcode = Shortcode.unsafeFrom(shortcode),
           longname = None,

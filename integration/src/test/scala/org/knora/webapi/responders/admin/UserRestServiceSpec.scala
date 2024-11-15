@@ -366,7 +366,7 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // add user to images project (00FF)
         UnsafeZioRun.runOrThrow(
-          userRestService(_.addUserToProject(rootUser, normalUser.userIri, imagesProject.projectIri)),
+          userRestService(_.addUserToProject(rootUser, normalUser.userIri, imagesProject.id)),
         )
 
         val membershipsAfterUpdate =
@@ -375,7 +375,7 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
 
         val received = UnsafeZioRun.runOrThrow(
           projectRestService(
-            _.getProjectMembersById(KnoraSystemInstances.Users.SystemUser, imagesProject.projectIri),
+            _.getProjectMembersById(KnoraSystemInstances.Users.SystemUser, imagesProject.id),
           ),
         )
         received.members.map(_.id) should contain(normalUser.id)
@@ -385,22 +385,22 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         // get current project memberships
         val membershipsBeforeUpdate =
           UnsafeZioRun.runOrThrow(userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri)))
-        membershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
+        membershipsBeforeUpdate.projects.map(_.id).sortBy(_.value) should equal(Seq(imagesProject.id).sortBy(_.value))
 
         // add user to images project (00FF)
         UnsafeZioRun.runOrThrow(
-          userRestService(_.addUserToProject(rootUser, normalUser.userIri, incunabulaProject.projectIri)),
+          userRestService(_.addUserToProject(rootUser, normalUser.userIri, incunabulaProject.id)),
         )
 
         val membershipsAfterUpdate =
           UnsafeZioRun.runOrThrow(userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri)))
-        membershipsAfterUpdate.projects.map(_.id).sorted should equal(
-          Seq(imagesProject.id, incunabulaProject.id).sorted,
+        membershipsAfterUpdate.projects.map(_.id).sortBy(_.value) should equal(
+          Seq(imagesProject.id, incunabulaProject.id).sortBy(_.value),
         )
 
         val received = UnsafeZioRun.runOrThrow(
           projectRestService(
-            _.getProjectMembersById(KnoraSystemInstances.Users.SystemUser, incunabulaProject.projectIri),
+            _.getProjectMembersById(KnoraSystemInstances.Users.SystemUser, incunabulaProject.id),
           ),
         )
         received.members.map(_.id) should contain(normalUser.id)
@@ -410,23 +410,25 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         // check project memberships (user should be member of images and incunabula projects)
         val membershipsBeforeUpdate =
           UnsafeZioRun.runOrThrow(userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri)))
-        membershipsBeforeUpdate.projects.map(_.id).sorted should equal(
-          Seq(imagesProject.id, incunabulaProject.id).sorted,
+        membershipsBeforeUpdate.projects.map(_.id).sortBy(_.value) should equal(
+          Seq(imagesProject.id, incunabulaProject.id).sortBy(_.value),
         )
 
         // add user as project admin to images project
         UnsafeZioRun.runOrThrow(
-          userRestService(_.addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.projectIri)),
+          userRestService(_.addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.id)),
         )
 
         // verify that the user has been added as project admin to the images project
         val projectAdminMembershipsBeforeUpdate =
           UnsafeZioRun.runOrThrow(userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri)))
-        projectAdminMembershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
+        projectAdminMembershipsBeforeUpdate.projects.map(_.id).sortBy(_.value) should equal(
+          Seq(imagesProject.id).sortBy(_.value),
+        )
 
         // remove the user as member of the images project
         UnsafeZioRun.runOrThrow(
-          userRestService(_.removeUserFromProject(rootUser, normalUser.userIri, imagesProject.projectIri)),
+          userRestService(_.removeUserFromProject(rootUser, normalUser.userIri, imagesProject.id)),
         )
 
         // verify that the user has been removed as project member of the images project
@@ -441,7 +443,7 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // also check that the user has been removed from the project's list of users
         val received = UnsafeZioRun.runOrThrow(
-          projectRestService(_.getProjectMembersById(rootUser, imagesProject.projectIri)),
+          projectRestService(_.getProjectMembersById(rootUser, imagesProject.id)),
         )
         received.members should not contain normalUser.ofType(UserInformationType.Restricted)
       }
@@ -456,7 +458,7 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // try to add user as project admin to images project (expected to fail because he is not a member of the project)
         val exit = UnsafeZioRun.run(
-          userRestService(_.addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.projectIri)),
+          userRestService(_.addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.id)),
         )
         assertFailsWithA[BadRequestException](
           exit,
@@ -472,12 +474,12 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // add user as project member to images project
         UnsafeZioRun.runOrThrow(
-          userRestService(_.addUserToProject(rootUser, normalUser.userIri, imagesProject.projectIri)),
+          userRestService(_.addUserToProject(rootUser, normalUser.userIri, imagesProject.id)),
         )
 
         // add user as project admin to images project
         UnsafeZioRun.runOrThrow(
-          userRestService(_.addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.projectIri)),
+          userRestService(_.addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.id)),
         )
 
         // get the updated project admin memberships (should contain images project)
@@ -487,7 +489,7 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // get project admins for images project (should contain normal user)
         val received = UnsafeZioRun.runOrThrow(
-          projectRestService(_.getProjectAdminMembersById(rootUser, imagesProject.projectIri)),
+          projectRestService(_.getProjectAdminMembersById(rootUser, imagesProject.id)),
         )
         received.members.map(_.id) should contain(normalUser.id)
       }
@@ -498,7 +500,7 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsBeforeUpdate.projects.map(_.id) should equal(Seq(imagesProject.id))
 
         UnsafeZioRun.runOrThrow(
-          userRestService(_.removeUserFromProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.projectIri)),
+          userRestService(_.removeUserFromProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.id)),
         )
 
         val membershipsAfterUpdate =
@@ -506,7 +508,7 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate.projects should equal(Seq())
 
         val received = UnsafeZioRun.runOrThrow(
-          projectRestService(_.getProjectAdminMembersById(rootUser, imagesProject.projectIri)),
+          projectRestService(_.getProjectAdminMembersById(rootUser, imagesProject.id)),
         )
         received.members should not contain normalUser.ofType(UserInformationType.Restricted)
       }

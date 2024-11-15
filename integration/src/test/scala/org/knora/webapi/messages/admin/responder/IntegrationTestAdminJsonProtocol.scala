@@ -6,6 +6,7 @@
 package org.knora.webapi.messages.admin.responder
 
 import spray.json.*
+
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionADM
@@ -48,6 +49,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttributi
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
@@ -209,6 +211,10 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
     override def read(json: JsValue): T = json match
       case JsString(str) => self.from(str).fold(err => throw DeserializationException(err), identity)
       case _             => throw DeserializationException("Must be a json String")
+  }
+
+  implicit object ProjectIriFormat extends StringValueFormat[ProjectIri] {
+    override val from: String => Either[String, ProjectIri] = ProjectIri.from
   }
 
   implicit object CopyrightAttributionFormat extends StringValueFormat[CopyrightAttribution] {

@@ -36,10 +36,10 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
     .addOntology(
       ReadOntologyV2Builder
         .builder(IriTestConstants.Biblio.Ontology)
-        .assignToProject(IriTestConstants.Project.TestProject),
+        .assignToProject(IriTestConstants.Project.TestProject.value),
     )
     .build
-  private val projectIri: IRI  = IriTestConstants.Project.TestProject
+  private val projectIri: IRI  = IriTestConstants.Project.TestProject.value
   private val classIri: IRI    = IriTestConstants.Biblio.Class.Article.value
   private val propertyIri: IRI = IriTestConstants.Biblio.Property.hasTitle.value
   private val userWithAccess: User =
