@@ -297,22 +297,22 @@ The IRI of the new property must be given in the request body as:
 }
 ```
 
-All properties of the default object access permission are optional and may be combined.
+All attributes of the default object access permission are optional and may be combined.
 
-[NOTE!] Only certain combinations of properties are allowed. Only exactly one of the following combinations is allowed:
+[NOTE!] Only certain combinations of attributes are allowed. Only exactly one of the following combinations is allowed:
 
 - `forGroup`
 - `forResourceClass`
 - `forProperty`
 - `forResourceClass` and `forProperty` 
 
-If the combination of properties is not allowed, the request will fail with a `400 Bad Request` error.
-Any valid combination of properties will replace the existing values. 
+If the combination of attributes is not allowed, the request will fail with a `400 Bad Request` error.
+Any valid combination of attributes will replace the existing values. 
 
 If present, the `hasPermissions` property must contain the necessary parameters with respect to the type of the permission 
 as described in the [Creating New Default Object Access Permissions](#creating-new-default-object-access-permissions) section.
 
-The response is the updated default object access permission with its new properties and is the same as when 
+The response is the updated default object access permission with its new attributes and is the same as when 
 [creating a new default object access permission](#creating-new-default-object-access-permissions).
 
 ### Deleting a Permission
