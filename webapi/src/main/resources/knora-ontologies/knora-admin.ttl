@@ -377,12 +377,18 @@
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :projectRestrictedViewWatermark ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
-                    [ rdf:type        owl:Restriction ;
-                      owl:onProperty  :status ;
-                      owl:cardinality "1"^^xsd:nonNegativeInteger ],
-                    [ rdf:type        owl:Restriction ;
-                      owl:onProperty  :hasSelfJoinEnabled ;
-                      owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :status ;
+                      owl:cardinality    "1"^^xsd:nonNegativeInteger ],
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :hasSelfJoinEnabled ;
+                      owl:cardinality    "1"^^xsd:nonNegativeInteger ],
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     knora-base:hasCopyrightAttribution ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     knora-base:hasLicense ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ];
     rdfs:comment    "Represents a project that uses Knora."@en .
 
 
