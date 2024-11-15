@@ -47,7 +47,7 @@ final case class ProjectService(
     .map(ontologies =>
       Project(
         knoraProject.id.value,
-        knoraProject.shortname.value,
+        knoraProject.shortname,
         knoraProject.shortcode.value,
         knoraProject.longname.map(_.value),
         knoraProject.description.map(_.value),
@@ -64,7 +64,7 @@ final case class ProjectService(
   private def toKnoraProject(project: Project, restrictedView: RestrictedView): KnoraProject =
     KnoraProject(
       id = ProjectIri.unsafeFrom(project.id),
-      shortname = Shortname.unsafeFrom(project.shortname),
+      shortname = project.shortname,
       shortcode = Shortcode.unsafeFrom(project.shortcode),
       longname = project.longname.map(Longname.unsafeFrom),
       description = NonEmptyChunk
@@ -99,8 +99,7 @@ object ProjectService {
    */
   def projectDataNamedGraphV2(project: Project): InternalIri = {
     val shortcode = Shortcode.unsafeFrom(project.shortcode)
-    val shortname = Shortname.unsafeFrom(project.shortname)
-    projectDataNamedGraphV2(shortcode, shortname)
+    projectDataNamedGraphV2(shortcode, project.shortname)
   }
 
   /**

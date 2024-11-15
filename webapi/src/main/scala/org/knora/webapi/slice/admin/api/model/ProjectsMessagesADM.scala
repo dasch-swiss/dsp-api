@@ -13,6 +13,7 @@ import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.copyrightAttribution
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.license
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.shortname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
@@ -33,7 +34,7 @@ import org.knora.webapi.slice.admin.domain.model.User
  */
 case class Project(
   id: IRI,
-  shortname: String,
+  shortname: Shortname,
   shortcode: String,
   longname: Option[String],
   description: Seq[StringLiteralV2],
@@ -48,7 +49,6 @@ case class Project(
 
   def projectIri: ProjectIri = ProjectIri.unsafeFrom(id)
 
-  def getShortname: Shortname = Shortname.unsafeFrom(shortname)
   def getShortcode: Shortcode = Shortcode.unsafeFrom(shortcode)
 
   /**

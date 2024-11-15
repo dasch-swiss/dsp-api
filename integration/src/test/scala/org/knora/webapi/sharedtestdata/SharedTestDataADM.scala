@@ -16,6 +16,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
@@ -155,7 +156,7 @@ object SharedTestDataADM {
   /* represents the full ProjectADM of the Knora System project */
   def systemProject: Project = Project(
     id = KnoraProjectRepo.builtIn.SystemProject.id.value,
-    shortname = "SystemProject",
+    shortname = Shortname.unsafeFrom("SystemProject"),
     shortcode = "FFFF",
     longname = Some("Knora System Project"),
     description = Seq(StringLiteralV2.from(value = "Knora System Project", language = Some("en"))),
@@ -176,7 +177,7 @@ object SharedTestDataADM {
   /* represents the full ProjectADM of the default shared ontologies project */
   def defaultSharedOntologiesProject: Project = Project(
     id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
-    shortname = "DefaultSharedOntologiesProject",
+    shortname = Shortname.unsafeFrom("DefaultSharedOntologiesProject"),
     shortcode = "0000",
     longname = Some("Default Knora Shared Ontologies Project"),
     description = Seq(StringLiteralV2.from(value = "Default Knora Shared Ontologies Project", language = Some("en"))),
@@ -290,7 +291,7 @@ object SharedTestDataADM {
   /* represents the full ProjectADM of the images project */
   def imagesProject: Project = Project(
     id = imagesProjectIri,
-    shortname = "images",
+    shortname = Shortname.unsafeFrom("images"),
     shortcode = "00FF",
     longname = Some("Image Collection Demo"),
     description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
@@ -306,7 +307,7 @@ object SharedTestDataADM {
   /* represents the full ProjectADM of the images project in the external format */
   def imagesProjectExternal: Project = Project(
     id = imagesProjectIri,
-    shortname = "images",
+    shortname = Shortname.unsafeFrom("images"),
     shortcode = "00FF",
     longname = Some("Image Collection Demo"),
     description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
@@ -450,7 +451,7 @@ object SharedTestDataADM {
   /* represents the ProjectADM of the incunabula project */
   def incunabulaProject: Project = Project(
     id = incunabulaProjectIri,
-    shortname = "incunabula",
+    shortname = Shortname.unsafeFrom("incunabula"),
     shortcode = "0803",
     longname = Some("Bilderfolgen Basler Frühdrucke"),
     description = Seq(
@@ -487,7 +488,7 @@ object SharedTestDataADM {
   /* represents the ProjectADM of the incunabula project in the external format*/
   def incunabulaProjectExternal: Project = Project(
     id = incunabulaProjectIri,
-    shortname = "incunabula",
+    shortname = Shortname.unsafeFrom("incunabula"),
     shortcode = "0803",
     longname = Some("Bilderfolgen Basler Frühdrucke"),
     description = Seq(
@@ -622,7 +623,7 @@ object SharedTestDataADM {
 
   def anythingProject: Project = Project(
     id = anythingProjectIri,
-    shortname = "anything",
+    shortname = Shortname.unsafeFrom("anything"),
     shortcode = "0001",
     longname = Some("Anything Project"),
     description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
@@ -637,7 +638,7 @@ object SharedTestDataADM {
 
   def anythingProjectExternal: Project = Project(
     id = anythingProjectIri,
-    shortname = "anything",
+    shortname = Shortname.unsafeFrom("anything"),
     shortcode = "0001",
     longname = Some("Anything Project"),
     description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
@@ -674,7 +675,7 @@ object SharedTestDataADM {
 
   def beolProject: Project = Project(
     id = beolProjectIri,
-    shortname = "beol",
+    shortname = Shortname.unsafeFrom("beol"),
     shortcode = "0801",
     longname = Some("Bernoulli-Euler Online"),
     description = Seq(StringLiteralV2.from(value = "Bernoulli-Euler Online", language = None)),
@@ -730,7 +731,7 @@ object SharedTestDataADM {
 
   def dokubibProject: Project = Project(
     id = dokubibProjectIri,
-    shortname = "dokubib",
+    shortname = Shortname.unsafeFrom("dokubib"),
     shortcode = "0804",
     longname = Some("Dokubib"),
     description = Seq(StringLiteralV2.from(value = "Dokubib", language = None)),

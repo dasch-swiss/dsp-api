@@ -35,17 +35,17 @@ case class ProjectInfo(
 )
 
 object ProjectInfo {
-  def from(projectADM: Project): ProjectInfo =
+  def from(project: Project): ProjectInfo =
     ProjectInfo(
-      id = projectADM.id,
-      shortname = projectADM.shortname,
-      shortcode = projectADM.shortcode,
-      longname = projectADM.longname,
-      description = projectADM.description.headOption.map(_.value),
-      keywords = projectADM.keywords.headOption.map(_ => projectADM.keywords.mkString(", ")),
-      logo = projectADM.logo,
-      ontologies = projectADM.ontologies,
-      status = projectADM.status,
-      selfjoin = projectADM.selfjoin,
+      id = project.id,
+      shortname = project.shortname.value,
+      shortcode = project.shortcode,
+      longname = project.longname,
+      description = project.description.headOption.map(_.value),
+      keywords = project.keywords.headOption.map(_ => project.keywords.mkString(", ")),
+      logo = project.logo,
+      ontologies = project.ontologies,
+      status = project.status,
+      selfjoin = project.selfjoin,
     )
 }

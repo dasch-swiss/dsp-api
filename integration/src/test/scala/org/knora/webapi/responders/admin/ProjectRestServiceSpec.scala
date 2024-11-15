@@ -66,7 +66,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
 
       "return information about a project identified by shortname" in {
         val actual = UnsafeZioRun.runOrThrow(
-          ProjectRestService(_.findByShortname(SharedTestDataADM.incunabulaProject.getShortname)),
+          ProjectRestService(_.findByShortname(SharedTestDataADM.incunabulaProject.shortname)),
         )
         assert(actual == ProjectGetResponse(toExternal(SharedTestDataADM.incunabulaProject)))
       }
@@ -106,7 +106,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return restricted view settings using project SHORTNAME" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectRestrictedViewSettingsByShortname(SharedTestDataADM.imagesProject.getShortname),
+            _.getProjectRestrictedViewSettingsByShortname(SharedTestDataADM.imagesProject.shortname),
           ),
         )
         actual shouldEqual expectedResult
@@ -451,7 +451,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return all members of a project identified by shortname" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectMembersByShortname(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.getShortname),
+            _.getProjectMembersByShortname(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.shortname),
           ),
         )
 
@@ -527,7 +527,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
           ProjectRestService(
             _.getProjectAdminMembersByShortname(
               SharedTestDataADM.rootUser,
-              SharedTestDataADM.imagesProject.getShortname,
+              SharedTestDataADM.imagesProject.shortname,
             ),
           ),
         )
