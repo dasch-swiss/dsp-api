@@ -362,7 +362,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         result.description should be(
           Seq(StringLiteralV2.from(value = "updated project description", language = Some("en"))),
         )
-        result.keywords.sorted should be(Seq("updated", "keywords").sorted)
+        result.keywords.map(_.value).sorted should be(Seq("updated", "keywords").sorted)
         result.logo should be(Some("/fu/bar/baz-updated.jpg"))
         result.status should be(Status.Active)
         result.selfjoin should be(SelfJoin.CanJoin)

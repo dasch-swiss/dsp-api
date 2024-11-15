@@ -46,6 +46,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
@@ -239,6 +240,10 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
 
   implicit object LogoFormat extends StringValueFormat[Logo] {
     override val from: String => Either[String, Logo] = Logo.from
+  }
+
+  implicit object KeywordFormat extends StringValueFormat[Keyword] {
+    override val from: String => Either[String, Keyword] = Keyword.from
   }
 
   trait BooleanValueFormat[T <: BooleanValue] extends JsonFormat[T] { self =>

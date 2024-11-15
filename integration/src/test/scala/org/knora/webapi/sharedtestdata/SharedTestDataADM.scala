@@ -16,6 +16,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -166,7 +167,7 @@ object SharedTestDataADM {
     shortcode = Shortcode.unsafeFrom("FFFF"),
     longname = Some(Longname.unsafeFrom("Knora System Project")),
     description = Seq(StringLiteralV2.from(value = "Knora System Project", language = Some("en"))),
-    keywords = Seq.empty[String],
+    keywords = List.empty,
     logo = None,
     ontologies = Seq(
       OntologyConstants.KnoraBase.KnoraBaseOntologyIri,
@@ -187,7 +188,7 @@ object SharedTestDataADM {
     shortcode = Shortcode.unsafeFrom("0000"),
     longname = Some(Longname.unsafeFrom("Default Knora Shared Ontologies Project")),
     description = Seq(StringLiteralV2.from(value = "Default Knora Shared Ontologies Project", language = Some("en"))),
-    keywords = Seq.empty[String],
+    keywords = List.empty,
     logo = None,
     ontologies = Seq.empty[IRI],
     status = Status.Active,
@@ -301,7 +302,7 @@ object SharedTestDataADM {
     shortcode = Shortcode.unsafeFrom("00FF"),
     longname = Some(Longname.unsafeFrom("Image Collection Demo")),
     description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
-    keywords = Seq("images", "collection").sorted,
+    keywords = List("images", "collection").map(Keyword.unsafeFrom),
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
     status = Status.Active,
@@ -317,7 +318,7 @@ object SharedTestDataADM {
     shortcode = Shortcode.unsafeFrom("00FF"),
     longname = Some(Longname.unsafeFrom("Image Collection Demo")),
     description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
-    keywords = Seq("images", "collection").sorted,
+    keywords = List("images", "collection").map(Keyword.unsafeFrom),
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI_LocalHost),
     status = Status.Active,
@@ -467,7 +468,7 @@ object SharedTestDataADM {
         language = None,
       ),
     ),
-    keywords = Seq(
+    keywords = List(
       "Basler Frühdrucke",
       "Inkunabel",
       "Narrenschiff",
@@ -482,7 +483,7 @@ object SharedTestDataADM {
       "Letterpress Printing",
       "Basel",
       "Contectualisation of images",
-    ).sorted,
+    ).map(Keyword.unsafeFrom),
     logo = Some(Logo.unsafeFrom("incunabula_logo.png")),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
     status = Status.Active,
@@ -504,7 +505,7 @@ object SharedTestDataADM {
         language = None,
       ),
     ),
-    keywords = Seq(
+    keywords = List(
       "Basler Frühdrucke",
       "Inkunabel",
       "Narrenschiff",
@@ -519,7 +520,7 @@ object SharedTestDataADM {
       "Letterpress Printing",
       "Basel",
       "Contectualisation of images",
-    ).sorted,
+    ).map(Keyword.unsafeFrom),
     logo = Some(Logo.unsafeFrom("incunabula_logo.png")),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI_LocalHost),
     status = Status.Active,
@@ -633,7 +634,7 @@ object SharedTestDataADM {
     shortcode = Shortcode.unsafeFrom("0001"),
     longname = Some(Longname.unsafeFrom("Anything Project")),
     description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
-    keywords = Seq("things", "arbitrary test data").sorted,
+    keywords = List("things", "arbitrary test data").map(Keyword.unsafeFrom),
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI, SharedOntologyTestDataADM.SomethingOntologyIri),
     status = Status.Active,
@@ -648,7 +649,7 @@ object SharedTestDataADM {
     shortcode = Shortcode.unsafeFrom("0001"),
     longname = Some(Longname.unsafeFrom("Anything Project")),
     description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
-    keywords = Seq("things", "arbitrary test data").sorted,
+    keywords = List("things", "arbitrary test data").map(Keyword.unsafeFrom),
     logo = None,
     ontologies = Seq(
       SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost,
@@ -685,7 +686,7 @@ object SharedTestDataADM {
     shortcode = Shortcode.unsafeFrom("0801"),
     longname = Some(Longname.unsafeFrom("Bernoulli-Euler Online")),
     description = Seq(StringLiteralV2.from(value = "Bernoulli-Euler Online", language = None)),
-    keywords = Seq.empty[String],
+    keywords = List.empty,
     logo = None,
     ontologies = Seq(
       "http://www.knora.org/ontology/0801/beol",
@@ -741,7 +742,7 @@ object SharedTestDataADM {
     shortcode = Shortcode.unsafeFrom("0804"),
     longname = Some(Longname.unsafeFrom("Dokubib")),
     description = Seq(StringLiteralV2.from(value = "Dokubib", language = None)),
-    keywords = Seq.empty[String],
+    keywords = List.empty,
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0804/dokubib"),
     status = Status.Inactive,

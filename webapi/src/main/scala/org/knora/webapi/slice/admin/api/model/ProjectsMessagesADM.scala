@@ -36,7 +36,7 @@ case class Project(
   shortcode: Shortcode,
   longname: Option[Longname],
   description: Seq[StringLiteralV2],
-  keywords: Seq[String],
+  keywords: List[Keyword],
   logo: Option[Logo],
   ontologies: Seq[IRI],
   status: Status,
