@@ -49,7 +49,7 @@ final case class ProjectService(
         knoraProject.id.value,
         knoraProject.shortname,
         knoraProject.shortcode,
-        knoraProject.longname.map(_.value),
+        knoraProject.longname,
         knoraProject.description.map(_.value),
         knoraProject.keywords.map(_.value),
         knoraProject.logo.map(_.value),
@@ -66,7 +66,7 @@ final case class ProjectService(
       id = ProjectIri.unsafeFrom(project.id),
       shortname = project.shortname,
       shortcode = project.shortcode,
-      longname = project.longname.map(Longname.unsafeFrom),
+      longname = project.longname,
       description = NonEmptyChunk
         .fromIterable(project.description.head, project.description.tail)
         .map(Description.unsafeFrom),

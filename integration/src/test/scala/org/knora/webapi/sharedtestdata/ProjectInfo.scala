@@ -40,7 +40,7 @@ object ProjectInfo {
       id = project.id,
       shortname = project.shortname.value,
       shortcode = project.shortcode.value,
-      longname = project.longname,
+      longname = project.longname.map(_.value),
       description = project.description.headOption.map(_.value),
       keywords = project.keywords.headOption.map(_ => project.keywords.mkString(", ")),
       logo = project.logo,

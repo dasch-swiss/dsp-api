@@ -46,6 +46,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
@@ -220,6 +221,10 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
 
   implicit object ShortcodeFormat extends StringValueFormat[Shortcode] {
     override val from: String => Either[String, Shortcode] = Shortcode.from
+  }
+
+  implicit object LongnameFormat extends StringValueFormat[Longname] {
+    override val from: String => Either[String, Longname] = Longname.from
   }
 
   implicit val groupFormat: JsonFormat[Group] = jsonFormat6(Group.apply)
