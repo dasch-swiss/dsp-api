@@ -284,8 +284,8 @@ The IRI of the new property must be given in the request body as:
 
 ```json
 {
-  "forProperty" : "http://api.dasch.swiss/ontology/00FF/images/v2#titel",
-  "forResourceClass": "http://api.dasch.swiss/ontology/0803/incunabula/v2#bild",
+  "forProperty" : "http://api.dasch.swiss/ontology/00FF/images/v2#hasTitle",
+  "forResourceClass": "http://api.dasch.swiss/ontology/0803/incunabula/v2#Book",
   "forGroup": null, 
   "hasPermissions": [
     {
