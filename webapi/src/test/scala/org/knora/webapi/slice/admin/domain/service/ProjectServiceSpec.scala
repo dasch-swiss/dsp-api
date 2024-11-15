@@ -29,7 +29,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           shortname = shortname,
           shortcode = shortcode,
           longname = None,
-          description = List(StringLiteralV2.from("description not used in test", None)),
+          description = List(StringLiteralV2.from("description not used in test", None)).map(Description.unsafeFrom),
           keywords = List.empty,
           logo = None,
           ontologies = List.empty,

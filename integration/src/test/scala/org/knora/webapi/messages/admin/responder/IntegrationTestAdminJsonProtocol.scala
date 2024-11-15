@@ -39,6 +39,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.model.ProjectAdminMembersGetResponseADM
@@ -46,6 +47,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
@@ -206,6 +208,13 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
     ),
   )
 
+  implicit object DescriptionFormat extends JsonFormat[Description] with TriplestoreJsonProtocol {
+    val lit                                       = implicitly[JsonFormat[StringLiteralV2]]
+    override def write(obj: Description): JsValue = lit.write(obj.value)
+    override def read(json: JsValue): Description = Description
+      .from(lit.read(json))
+      .fold(err => throw DeserializationException(err), identity)
+  }
   trait StringValueFormat[T <: StringValue] extends JsonFormat[T] { self =>
     def from: String => Either[String, T]
     override def write(v: T): JsValue = JsString(v.value)

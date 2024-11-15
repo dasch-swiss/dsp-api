@@ -41,7 +41,7 @@ object ProjectInfo {
       shortname = project.shortname.value,
       shortcode = project.shortcode.value,
       longname = project.longname.map(_.value),
-      description = project.description.headOption.map(_.value),
+      description = project.description.map(_.value).headOption.map(_.value),
       keywords = project.keywords.headOption.map(_ => project.keywords.mkString(", ")),
       logo = project.logo.map(_.value),
       ontologies = project.ontologies,

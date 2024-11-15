@@ -16,6 +16,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
@@ -166,7 +167,8 @@ object SharedTestDataADM {
     shortname = Shortname.unsafeFrom("SystemProject"),
     shortcode = Shortcode.unsafeFrom("FFFF"),
     longname = Some(Longname.unsafeFrom("Knora System Project")),
-    description = Seq(StringLiteralV2.from(value = "Knora System Project", language = Some("en"))),
+    description =
+      List(StringLiteralV2.from(value = "Knora System Project", language = Some("en"))).map(Description.unsafeFrom),
     keywords = List.empty,
     logo = None,
     ontologies = Seq(
@@ -187,7 +189,8 @@ object SharedTestDataADM {
     shortname = Shortname.unsafeFrom("DefaultSharedOntologiesProject"),
     shortcode = Shortcode.unsafeFrom("0000"),
     longname = Some(Longname.unsafeFrom("Default Knora Shared Ontologies Project")),
-    description = Seq(StringLiteralV2.from(value = "Default Knora Shared Ontologies Project", language = Some("en"))),
+    description = List(StringLiteralV2.from(value = "Default Knora Shared Ontologies Project", language = Some("en")))
+      .map(Description.unsafeFrom),
     keywords = List.empty,
     logo = None,
     ontologies = Seq.empty[IRI],
@@ -301,7 +304,8 @@ object SharedTestDataADM {
     shortname = Shortname.unsafeFrom("images"),
     shortcode = Shortcode.unsafeFrom("00FF"),
     longname = Some(Longname.unsafeFrom("Image Collection Demo")),
-    description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
+    description = List(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en")))
+      .map(Description.unsafeFrom),
     keywords = List("images", "collection").map(Keyword.unsafeFrom),
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
@@ -317,7 +321,8 @@ object SharedTestDataADM {
     shortname = Shortname.unsafeFrom("images"),
     shortcode = Shortcode.unsafeFrom("00FF"),
     longname = Some(Longname.unsafeFrom("Image Collection Demo")),
-    description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
+    description = List(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en")))
+      .map(Description.unsafeFrom),
     keywords = List("images", "collection").map(Keyword.unsafeFrom),
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI_LocalHost),
@@ -461,13 +466,13 @@ object SharedTestDataADM {
     shortname = Shortname.unsafeFrom("incunabula"),
     shortcode = Shortcode.unsafeFrom("0803"),
     longname = Some(Longname.unsafeFrom("Bilderfolgen Basler Frühdrucke")),
-    description = Seq(
+    description = List(
       StringLiteralV2.from(
         value =
           "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
         language = None,
       ),
-    ),
+    ).map(Description.unsafeFrom),
     keywords = List(
       "Basler Frühdrucke",
       "Inkunabel",
@@ -498,13 +503,13 @@ object SharedTestDataADM {
     shortname = Shortname.unsafeFrom("incunabula"),
     shortcode = Shortcode.unsafeFrom("0803"),
     longname = Some(Longname.unsafeFrom("Bilderfolgen Basler Frühdrucke")),
-    description = Seq(
+    description = List(
       StringLiteralV2.from(
         value =
           "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
         language = None,
       ),
-    ),
+    ).map(Description.unsafeFrom),
     keywords = List(
       "Basler Frühdrucke",
       "Inkunabel",
@@ -633,7 +638,7 @@ object SharedTestDataADM {
     shortname = Shortname.unsafeFrom("anything"),
     shortcode = Shortcode.unsafeFrom("0001"),
     longname = Some(Longname.unsafeFrom("Anything Project")),
-    description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
+    description = List(StringLiteralV2.from(value = "Anything Project", language = None)).map(Description.unsafeFrom),
     keywords = List("things", "arbitrary test data").map(Keyword.unsafeFrom),
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI, SharedOntologyTestDataADM.SomethingOntologyIri),
@@ -648,7 +653,7 @@ object SharedTestDataADM {
     shortname = Shortname.unsafeFrom("anything"),
     shortcode = Shortcode.unsafeFrom("0001"),
     longname = Some(Longname.unsafeFrom("Anything Project")),
-    description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
+    description = List(StringLiteralV2.from(value = "Anything Project", language = None)).map(Description.unsafeFrom),
     keywords = List("things", "arbitrary test data").map(Keyword.unsafeFrom),
     logo = None,
     ontologies = Seq(
@@ -685,7 +690,8 @@ object SharedTestDataADM {
     shortname = Shortname.unsafeFrom("beol"),
     shortcode = Shortcode.unsafeFrom("0801"),
     longname = Some(Longname.unsafeFrom("Bernoulli-Euler Online")),
-    description = Seq(StringLiteralV2.from(value = "Bernoulli-Euler Online", language = None)),
+    description =
+      List(StringLiteralV2.from(value = "Bernoulli-Euler Online", language = None)).map(Description.unsafeFrom),
     keywords = List.empty,
     logo = None,
     ontologies = Seq(
@@ -741,7 +747,7 @@ object SharedTestDataADM {
     shortname = Shortname.unsafeFrom("dokubib"),
     shortcode = Shortcode.unsafeFrom("0804"),
     longname = Some(Longname.unsafeFrom("Dokubib")),
-    description = Seq(StringLiteralV2.from(value = "Dokubib", language = None)),
+    description = List(StringLiteralV2.from(value = "Dokubib", language = None)).map(Description.unsafeFrom),
     keywords = List.empty,
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0804/dokubib"),

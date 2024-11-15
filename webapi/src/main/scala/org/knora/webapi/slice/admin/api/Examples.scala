@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
@@ -95,7 +96,7 @@ object Examples {
       shortname = Shortname.unsafeFrom("example"),
       shortcode = Shortcode.unsafeFrom("0001"),
       longname = Some(Longname.unsafeFrom("Example Project")),
-      description = Seq(StringLiteralV2.from("An example project", Some("en"))),
+      description = List(StringLiteralV2.from("An example project", Some("en"))).map(Description.unsafeFrom),
       keywords = List("example", "project").map(Keyword.unsafeFrom),
       logo = None,
       status = Active,

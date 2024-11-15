@@ -10,7 +10,6 @@ import zio.json.JsonCodec
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -35,7 +34,7 @@ case class Project(
   shortname: Shortname,
   shortcode: Shortcode,
   longname: Option[Longname],
-  description: Seq[StringLiteralV2],
+  description: List[Description],
   keywords: List[Keyword],
   logo: Option[Logo],
   ontologies: Seq[IRI],

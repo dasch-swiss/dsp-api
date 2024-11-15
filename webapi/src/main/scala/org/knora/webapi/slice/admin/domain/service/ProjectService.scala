@@ -50,7 +50,7 @@ final case class ProjectService(
         knoraProject.shortname,
         knoraProject.shortcode,
         knoraProject.longname,
-        knoraProject.description.map(_.value),
+        knoraProject.description.toList,
         knoraProject.keywords,
         knoraProject.logo,
         ontologies,
@@ -67,9 +67,7 @@ final case class ProjectService(
       shortname = project.shortname,
       shortcode = project.shortcode,
       longname = project.longname,
-      description = NonEmptyChunk
-        .fromIterable(project.description.head, project.description.tail)
-        .map(Description.unsafeFrom),
+      description = NonEmptyChunk.fromIterable(project.description.head, project.description.tail),
       keywords = project.keywords,
       logo = project.logo,
       status = project.status,
