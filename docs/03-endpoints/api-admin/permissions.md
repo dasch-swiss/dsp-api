@@ -279,7 +279,7 @@ entirely, you can provide a new set of permissions, leaving out the permission s
 ### Updating an existing Default Object Access Permission
 
 - `PUT: /admin/permissions/doap/<doap_permissionIri>` to change the properties of an existing default object 
-access permission, identified by it IRI `<doap_permissionIri>`. 
+access permission, identified by its IRI `<doap_permissionIri>`. 
 The IRI of the new property must be given in the request body as:
 
 ```json
