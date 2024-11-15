@@ -6,7 +6,6 @@
 package org.knora.webapi.messages.admin.responder
 
 import spray.json.*
-
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionADM
@@ -45,7 +44,10 @@ import org.knora.webapi.slice.admin.api.model.ProjectAdminMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.Value.StringValue
 
 /**
  * A spray-json protocol for generating Knora API JSON providing data about projects.
@@ -193,6 +195,22 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
       "license",
     ),
   )
+
+  trait StringValueFormat[T <: StringValue] extends JsonFormat[T] { self =>
+    def from: String => Either[String, T]
+    override def write(v: T): JsValue = JsString(v.value)
+    override def read(json: JsValue): T = json match
+      case JsString(str) => self.from(str).fold(err => throw DeserializationException(err), identity)
+      case _             => throw DeserializationException("Must be a json String")
+  }
+
+  implicit object CopyrightAttributionFormat extends StringValueFormat[CopyrightAttribution] {
+    override val from: String => Either[String, CopyrightAttribution] = CopyrightAttribution.from
+  }
+
+  implicit object LicenseFormat extends StringValueFormat[License] {
+    override val from: String => Either[String, License] = License.from
+  }
 
   implicit val groupFormat: JsonFormat[Group] = jsonFormat6(Group.apply)
 

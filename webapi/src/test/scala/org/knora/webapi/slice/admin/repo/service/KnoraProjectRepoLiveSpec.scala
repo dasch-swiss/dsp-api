@@ -18,8 +18,10 @@ import zio.test.check
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -45,8 +47,8 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
-    Some("2024, Example Project"),
-    Some("Apache-2.0"),
+    Some(CopyrightAttribution.unsafeFrom("2024, Example Project")),
+    Some(License.unsafeFrom("Apache-2.0")),
   )
 
   private val someProjectTrig =

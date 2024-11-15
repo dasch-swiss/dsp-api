@@ -27,8 +27,8 @@ object ProjectsEndpointsRequestsAndResponses {
     logo: Option[Logo] = None,
     status: Status,
     selfjoin: SelfJoin,
-    copyrightAttribution: Option[String],
-    license: Option[String],
+    copyrightAttribution: Option[CopyrightAttribution],
+    license: Option[License],
   )
   object ProjectCreateRequest {
     implicit val codec: JsonCodec[ProjectCreateRequest] = DeriveJsonCodec.gen[ProjectCreateRequest]
@@ -42,8 +42,8 @@ object ProjectsEndpointsRequestsAndResponses {
     logo: Option[Logo] = None,
     status: Option[Status] = None,
     selfjoin: Option[SelfJoin] = None,
-    copyrightAttribution: Option[String] = None,
-    license: Option[String] = None,
+    copyrightAttribution: Option[CopyrightAttribution] = None,
+    license: Option[License] = None,
   )
   object ProjectUpdateRequest {
     implicit val codec: JsonCodec[ProjectUpdateRequest] = DeriveJsonCodec.gen[ProjectUpdateRequest]

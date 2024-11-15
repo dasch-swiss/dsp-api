@@ -162,8 +162,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
                 logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
                 status = Status.Active,
                 selfjoin = SelfJoin.CannotJoin,
-                copyrightAttribution = Some("2024, Example Project"),
-                license = Some("CC-BY-4.0"),
+                copyrightAttribution = Some(CopyrightAttribution.unsafeFrom("2024, Example Project")),
+                license = Some(License.unsafeFrom("CC-BY-4.0")),
               ),
               SharedTestDataADM.rootUser,
             ),
@@ -176,8 +176,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         received.project.description should be(
           Seq(StringLiteralV2.from(value = "project description", language = Some("en"))),
         )
-        received.project.copyrightAttribution should be(Some("2024, Example Project"))
-        received.project.license should be(Some("CC-BY-4.0"))
+        received.project.copyrightAttribution should be(Some(CopyrightAttribution.unsafeFrom("2024, Example Project")))
+        received.project.license should be(Some(License.unsafeFrom("CC-BY-4.0")))
 
         newProjectIri.set(received.project.id)
 

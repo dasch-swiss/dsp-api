@@ -104,8 +104,8 @@ object KnoraProjectRepoLive {
         logo                 <- resource.getStringLiteral[Logo](ProjectLogo)
         status               <- resource.getBooleanLiteralOrFail[Status](StatusProp)
         selfjoin             <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
-        copyrightAttribution <- resource.getStringLiteral[String](HasCopyrightAttribution)(Right(_))
-        license              <- resource.getStringLiteral[String](HasLicense)(Right(_))
+        copyrightAttribution <- resource.getStringLiteral[CopyrightAttribution](HasCopyrightAttribution)
+        license              <- resource.getStringLiteral[License](HasLicense)
         restrictedView       <- getRestrictedView
       } yield KnoraProject(
         id = ProjectIri.unsafeFrom(iri.value),
@@ -145,8 +145,10 @@ object KnoraProjectRepoLive {
           pattern.andHas(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, watermark)
       }
 
-      project.copyrightAttribution.foreach(attr => pattern.andHas(Vocabulary.KnoraBase.hasCopyrightAttribution, attr))
-      project.license.foreach(license => pattern.andHas(Vocabulary.KnoraBase.hasLicense, license))
+      project.copyrightAttribution.foreach(attr =>
+        pattern.andHas(Vocabulary.KnoraBase.hasCopyrightAttribution, attr.value),
+      )
+      project.license.foreach(license => pattern.andHas(Vocabulary.KnoraBase.hasLicense, license.value))
 
       pattern
     }

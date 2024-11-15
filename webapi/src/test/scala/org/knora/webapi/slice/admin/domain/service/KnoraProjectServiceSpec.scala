@@ -12,6 +12,8 @@ import zio.test.Assertion.*
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -25,10 +27,18 @@ object KnoraProjectServiceSpec extends ZIOSpecDefault {
     test("should update the license and copyright attribution") {
       val project = TestDataFactory.someProject
       for {
-        _            <- repo(_.save(project))
-        updateRequest = ProjectUpdateRequest(copyrightAttribution = Some("Foo"), license = Some("bar"))
-        actual       <- projectService(_.updateProject(project, updateRequest))
-      } yield assertTrue(actual == project.copy(copyrightAttribution = Some("Foo"), license = Some("bar")))
+        _ <- repo(_.save(project))
+        updateRequest = ProjectUpdateRequest(
+                          copyrightAttribution = Some(CopyrightAttribution.unsafeFrom("Foo")),
+                          license = Some(License.unsafeFrom("bar")),
+                        )
+        actual <- projectService(_.updateProject(project, updateRequest))
+      } yield assertTrue(
+        actual == project.copy(
+          copyrightAttribution = Some(CopyrightAttribution.unsafeFrom("Foo")),
+          license = Some(License.unsafeFrom("bar")),
+        ),
+      )
     },
   )
   val spec = suite("KnoraProjectService")(updateSuite)
