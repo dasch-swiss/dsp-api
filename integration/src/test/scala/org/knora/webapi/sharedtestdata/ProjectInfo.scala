@@ -46,6 +46,6 @@ object ProjectInfo {
       logo = project.logo.map(_.value),
       ontologies = project.ontologies,
       status = project.status,
-      selfjoin = project.selfjoin,
+      selfjoin = project.selfjoin.value,
     )
 }

@@ -55,7 +55,7 @@ final case class ProjectService(
         knoraProject.logo,
         ontologies,
         knoraProject.status.value,
-        knoraProject.selfjoin.value,
+        knoraProject.selfjoin,
       ),
     )
 
@@ -71,7 +71,7 @@ final case class ProjectService(
       keywords = project.keywords.map(Keyword.unsafeFrom).toList,
       logo = project.logo,
       status = Status.from(project.status),
-      selfjoin = SelfJoin.from(project.selfjoin),
+      selfjoin = project.selfjoin,
       restrictedView,
     )
 
