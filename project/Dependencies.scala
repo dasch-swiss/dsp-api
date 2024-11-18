@@ -23,16 +23,16 @@ object Dependencies {
   // topbraid/shacl is not yet compatible with jena 5 so we need to use jena 4 for now
   // see: https://github.com/TopQuadrant/shacl/pull/177
   val JenaVersion          = "4.10.0"
-  val Rdf4jVersion         = "5.0.2"
+  val Rdf4jVersion         = "5.0.3"
   val TopbraidShaclVersion = "1.4.3"
 
   val ZioConfigVersion            = "4.0.2"
-  val ZioLoggingVersion           = "2.3.1"
+  val ZioLoggingVersion           = "2.3.2"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC34"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.1.11"
+  val ZioVersion                  = "2.1.12"
 
   // ZIO
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
@@ -87,7 +87,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.1"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.3.3" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.3.4" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -113,13 +113,13 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.2"
-  val wiremock       = "org.wiremock"       % "wiremock"       % "3.9.1"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.3"
+  val wiremock       = "org.wiremock"       % "wiremock"       % "3.9.2"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.7"
+  val tapirVersion = "1.11.9"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
