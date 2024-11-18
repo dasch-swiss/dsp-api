@@ -407,6 +407,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   }
 
   "The values responder" should {
+
     "create an integer value" in {
       // Add the value.
 

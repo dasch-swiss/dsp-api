@@ -404,7 +404,7 @@ final case class ValuesResponderV2(
   /**
    * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
    *
-   * @param resourceInfo           information about the the resource in which to create the value.
+   * @param resourceInfo           information about the resource in which to create the value.
    * @param propertyIri            the property that should point to the value.
    * @param value                  an [[ValueContentV2]] describing the value.
    * @param maybeValueIri          the optional custom IRI supplied for the value.
