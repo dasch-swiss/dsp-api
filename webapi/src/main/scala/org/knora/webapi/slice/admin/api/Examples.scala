@@ -23,6 +23,8 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -93,6 +95,8 @@ object Examples {
       status = true,
       ontologies = Seq.empty,
       selfjoin = false,
+      copyrightAttribution = Some(CopyrightAttribution.unsafeFrom("2024, Example Project")),
+      license = Some(License.unsafeFrom("CC-BY-4.0")),
     )
 
     private val group = Group(

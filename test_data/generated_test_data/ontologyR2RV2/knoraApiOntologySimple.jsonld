@@ -902,6 +902,22 @@
         {
             "@id": "knora-api:StillImageAbstractFileValue",
             "@type": "owl:Class",
+            "rdfs:subClassOf": [
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasCopyrightAttribution"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasLicense"
+                    },
+                    "owl:maxCardinality": 1
+                }
+            ],
             "rdfs:comment": "A file containing a two-dimensional still image"
         },
         {
@@ -1268,6 +1284,14 @@
             "@id": "knora-api:hasComment"
         },
         {
+            "@id": "knora-api:hasCopyrightAttribution",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "rdfs:comment": "The copyright statement that gives credit to the original author."
+        },
+        {
             "rdfs:label": "has 3D-file",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasFile"
@@ -1393,6 +1417,14 @@
                 "@id": "xsd:string"
             },
             "@id": "knora-api:hasKeyword"
+        },
+        {
+            "@id": "knora-api:hasLicense",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "rdfs:comment": "Specifies the terms under which a work can be used. This statement may be a reference to a well-known license, such as Creative Commons (e.g. 'CC BY-SA') or a custom license."
         },
         {
             "rdfs:label": "has Link to",
