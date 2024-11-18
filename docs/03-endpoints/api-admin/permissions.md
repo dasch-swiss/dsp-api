@@ -246,12 +246,13 @@ However, the default permissions set for these groups can be modified; see below
 
 All attributes of the default object access permission are optional and may be combined.
 
-[NOTE!] Only certain combinations of attributes are allowed. Only exactly one of the following combinations is allowed:
+!!! note
+    Only certain combinations of attributes are allowed. Only exactly one of the following combinations is allowed:
 
-- `forGroup`
-- `forResourceClass`
-- `forProperty`
-- `forResourceClass` and `forProperty`
+    - `forGroup`
+    - `forResourceClass`
+    - `forProperty`
+    - `forResourceClass` and `forProperty`
 
 If the combination of attributes is not allowed, the request will fail with a `400 Bad Request` error.
 Any valid combination of attributes will replace the existing values.
@@ -264,8 +265,8 @@ The response is the updated default object access permission with its new attrib
 
 ### Updating a Permission's Group
 
-[NOTE!] For Default Object Access Permissions this endpoint is deprecated, 
-use [`PUT: /admin/permissions/doap/<permissionIri>`](#updating-an-existing-default-object-access-permission) instead. 
+!!! note
+    For Default Object Access Permissions this endpoint is deprecated, use [`PUT: /admin/permissions/doap/<permissionIri>`](#updating-an-existing-default-object-access-permission) instead. 
 
 - `PUT: /admin/permissions/<permissionIri>/group` to change the group for which an administrative or a default object 
 access permission, identified by its IRI `<permissionIri>`, is defined. The request body must contain the IRI of the new 
@@ -285,8 +286,8 @@ the combination of both, the permission will be defined for the newly specified 
 
 ### Updating a Permission's Scope
 
-[NOTE!] For Default Object Access Permissions this endpoint is deprecated,
-use [`PUT: /admin/permissions/doap/<permissionIri>`](#updating-an-existing-default-object-access-permission) instead.
+!!! note
+    For Default Object Access Permissions this endpoint is deprecated, use [`PUT: /admin/permissions/doap/<permissionIri>`](#updating-an-existing-default-object-access-permission) instead.
 
 - `PUT: /admin/permissions/<permissionIri>/hasPermissions` to change the scope of permissions assigned to an administrative
   or a default object access permission identified by it IRI, `<permissionIri>`. The request body must contain the new set 
