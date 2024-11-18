@@ -223,6 +223,45 @@ Therefore, it is not possible to create new default object access permissions
 for the ProjectAdmin and ProjectMember groups of a project. 
 However, the default permissions set for these groups can be modified; see below for more information.
 
+### Updating an existing Default Object Access Permission
+
+- `PUT: /admin/permissions/doap/<doap_permissionIri>` to change the attributes of an existing default object
+  access permission, identified by its IRI `<doap_permissionIri>`.
+  The IRI of the new property must be given in the request body as:
+
+```json
+{
+  "forProperty" : "http://api.dasch.swiss/ontology/00FF/images/v2#hasTitle",
+  "forResourceClass": "http://api.dasch.swiss/ontology/0803/incunabula/v2#Book",
+  "forGroup": null, 
+  "hasPermissions": [
+    {
+      "additionalInformation": "http://www.knora.org/ontology/knora-admin#ProjectMember",
+      "name": "D",
+      "permissionCode": 7
+    }
+  ]
+}
+```
+
+All attributes of the default object access permission are optional and may be combined.
+
+[NOTE!] Only certain combinations of attributes are allowed. Only exactly one of the following combinations is allowed:
+
+- `forGroup`
+- `forResourceClass`
+- `forProperty`
+- `forResourceClass` and `forProperty`
+
+If the combination of attributes is not allowed, the request will fail with a `400 Bad Request` error.
+Any valid combination of attributes will replace the existing values.
+
+If present, the `hasPermissions` property must contain the necessary parameters with respect to the type of the permission
+as described in the [Creating New Default Object Access Permissions](#creating-new-default-object-access-permissions) section.
+
+The response is the updated default object access permission with its new attributes and is the same as when
+[creating a new default object access permission](#creating-new-default-object-access-permissions).
+
 ### Updating a Permission's Group
 
 [NOTE!] For Default Object Access Permissions this endpoint is deprecated, 
@@ -274,46 +313,6 @@ Either the `name` or the `permissionCode` must be present; it is not necessary t
 
 The previous permission set is *replaced* by the new permission set. In order to remove a permission for a group
 entirely, you can provide a new set of permissions, leaving out the permission specification for the group.
-
-
-### Updating an existing Default Object Access Permission
-
-- `PUT: /admin/permissions/doap/<doap_permissionIri>` to change the attributes of an existing default object 
-access permission, identified by its IRI `<doap_permissionIri>`. 
-The IRI of the new property must be given in the request body as:
-
-```json
-{
-  "forProperty" : "http://api.dasch.swiss/ontology/00FF/images/v2#hasTitle",
-  "forResourceClass": "http://api.dasch.swiss/ontology/0803/incunabula/v2#Book",
-  "forGroup": null, 
-  "hasPermissions": [
-    {
-      "additionalInformation": "http://www.knora.org/ontology/knora-admin#ProjectMember",
-      "name": "D",
-      "permissionCode": 7
-    }
-  ]
-}
-```
-
-All attributes of the default object access permission are optional and may be combined.
-
-[NOTE!] Only certain combinations of attributes are allowed. Only exactly one of the following combinations is allowed:
-
-- `forGroup`
-- `forResourceClass`
-- `forProperty`
-- `forResourceClass` and `forProperty` 
-
-If the combination of attributes is not allowed, the request will fail with a `400 Bad Request` error.
-Any valid combination of attributes will replace the existing values. 
-
-If present, the `hasPermissions` property must contain the necessary parameters with respect to the type of the permission 
-as described in the [Creating New Default Object Access Permissions](#creating-new-default-object-access-permissions) section.
-
-The response is the updated default object access permission with its new attributes and is the same as when 
-[creating a new default object access permission](#creating-new-default-object-access-permissions).
 
 ### Deleting a Permission
 
