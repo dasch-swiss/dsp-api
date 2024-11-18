@@ -227,7 +227,8 @@ However, the default permissions set for these groups can be modified; see below
 
 - `PUT: /admin/permissions/doap/<doap_permissionIri>` to change the attributes of an existing default object
   access permission, identified by its IRI `<doap_permissionIri>`.
-  The IRI of the new property must be given in the request body as:
+
+This is an example of a request body to update an existing default object access permission:
 
 ```json
 {
