@@ -202,7 +202,7 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
     override def write(v: T): JsValue = JsString(v.value)
     override def read(json: JsValue): T = json match
       case JsString(str) => self.from(str).fold(err => throw DeserializationException(err), identity)
-      case _             => throw DeserializationException("Must be a json String")
+      case _             => throw DeserializationException("Value must be a JSON string.")
   }
 
   implicit object CopyrightAttributionFormat extends StringValueFormat[CopyrightAttribution] {
