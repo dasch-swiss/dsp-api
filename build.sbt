@@ -8,8 +8,8 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck;")
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
-val flywayVersion               = "10.20.1"
-val hikariVersion               = "6.0.0"
+val flywayVersion               = "10.21.0"
+val hikariVersion               = "6.1.0"
 val quillVersion                = "4.8.6"
 val sipiVersion                 = "v30.18.3"
 val sqliteVersion               = "3.47.0.0"
@@ -17,7 +17,7 @@ val tapirVersion                = "1.11.9"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "4.0.2"
 val zioJsonVersion              = "0.7.3"
-val zioLoggingVersion           = "2.3.2"
+val zioLoggingVersion           = "2.4.0"
 val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
