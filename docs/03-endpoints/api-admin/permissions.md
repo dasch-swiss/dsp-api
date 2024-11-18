@@ -250,10 +250,10 @@ All attributes of the default object access permission are optional and may be c
 !!! note
     Only certain combinations of attributes are allowed. Only exactly one of the following combinations is allowed:
 
-    - `forGroup`
-    - `forResourceClass`
-    - `forProperty`
-    - `forResourceClass` and `forProperty`
+- `forGroup`
+- `forResourceClass`
+- `forProperty`
+- `forResourceClass` and `forProperty`
 
 If the combination of attributes is not allowed, the request will fail with a `400 Bad Request` error.
 Any valid combination of attributes will replace the existing values.
