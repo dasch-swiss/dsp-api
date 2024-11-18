@@ -31,6 +31,8 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.models.filemodels.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.MutableTestIri
 
@@ -139,7 +141,14 @@ class KnoraSipiIntegrationV2ITSpec
    * @param width            the image's width in pixels.
    * @param height           the image's height in pixels.
    */
-  case class SavedImage(internalFilename: String, iiifUrl: String, width: Int, height: Int)
+  case class SavedImage(
+    internalFilename: String,
+    iiifUrl: String,
+    width: Int,
+    height: Int,
+    copyrightAttribution: Option[CopyrightAttribution],
+    license: Option[License],
+  )
 
   /**
    * Represents the information that Knora returns about a document file value that was created.
@@ -229,12 +238,22 @@ class KnoraSipiIntegrationV2ITSpec
 
     val width  = savedValue.getRequiredInt(StillImageFileValueHasDimX).fold(e => throw BadRequestException(e), identity)
     val height = savedValue.getRequiredInt(StillImageFileValueHasDimY).fold(e => throw BadRequestException(e), identity)
+    val copyRightAttribution = savedValue
+      .getString(HasCopyrightAttribution)
+      .map(_.map(CopyrightAttribution.unsafeFrom))
+      .fold(e => throw BadRequestException(e), identity)
+    val license = savedValue
+      .getString(HasLicense)
+      .map(_.map(License.unsafeFrom))
+      .fold(e => throw BadRequestException(e), identity)
 
     SavedImage(
       internalFilename = internalFilename,
       iiifUrl = iiifUrl,
       width = width,
       height = height,
+      copyRightAttribution,
+      license,
     )
   }
 
@@ -363,10 +382,20 @@ class KnoraSipiIntegrationV2ITSpec
       uploadedFile.originalFilename should ===(marblesOriginalFilename)
 
       // Create the resource in the API.
+      val copyrightAttribution = CopyrightAttribution.unsafeFrom("2020, Example")
+      val license              = License.unsafeFrom("CC BY-SA 4.0")
 
       val jsonLdEntity = UploadFileRequest
-        .make(FileType.StillImageFile(), uploadedFile.internalFilename)
-        .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
+        .make(
+          FileType.StillImageFile(),
+          uploadedFile.internalFilename,
+          copyrightAttribution = Some(copyrightAttribution),
+          license = Some(license),
+        )
+        .toJsonLd(
+          className = Some("ThingPicture"),
+          ontologyName = "anything",
+        )
 
       val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
       stillImageResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
@@ -388,6 +417,8 @@ class KnoraSipiIntegrationV2ITSpec
       assert(savedImage.internalFilename == uploadedFile.internalFilename)
       assert(savedImage.width == marblesWidth)
       assert(savedImage.height == marblesHeight)
+      assert(savedImage.copyrightAttribution.contains(copyrightAttribution))
+      assert(savedImage.license.contains(license))
     }
 
     "create a resource with a still image file without processing" in {

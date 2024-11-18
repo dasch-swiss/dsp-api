@@ -7,9 +7,10 @@ package org.knora.webapi.slice.resources.repo.model
 
 import java.time.Instant
 import java.util.UUID
-
 import org.knora.webapi.messages.util.CalendarNameV2
 import org.knora.webapi.messages.util.DatePrecisionV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 final case class ResourceReadyToCreate(
@@ -42,6 +43,15 @@ enum FormattedTextValueType {
   case CustomMapping(mappingIri: InternalIri)
 }
 
+sealed trait FileValueTypeSpecificInfo {
+  def internalFilename: String
+  def internalMimeType: String
+  def originalFilename: Option[String]
+  def originalMimeType: Option[String]
+  def copyrightAttribution: Option[CopyrightAttribution]
+  def license: Option[License]
+}
+
 enum TypeSpecificValueInfo {
   case LinkValueInfo(referredResourceIri: InternalIri)
   case UnformattedTextValueInfo(valueHasLanguage: Option[String])
@@ -72,14 +82,18 @@ enum TypeSpecificValueInfo {
     originalMimeType: Option[String],
     dimX: Int,
     dimY: Int,
-  )
+    copyrightAttribution: Option[CopyrightAttribution],
+    license: Option[License],
+  ) extends TypeSpecificValueInfo with FileValueTypeSpecificInfo
   case StillImageExternalFileValueInfo(
     internalFilename: String,
     internalMimeType: String,
     originalFilename: Option[String],
     originalMimeType: Option[String],
     externalUrl: String,
-  )
+    copyrightAttribution: Option[CopyrightAttribution],
+    license: Option[License],
+  ) extends TypeSpecificValueInfo with FileValueTypeSpecificInfo
   case DocumentFileValueInfo(
     internalFilename: String,
     internalMimeType: String,
@@ -88,13 +102,17 @@ enum TypeSpecificValueInfo {
     dimX: Option[Int],
     dimY: Option[Int],
     pageCount: Option[Int],
-  )
+    copyrightAttribution: Option[CopyrightAttribution],
+    license: Option[License],
+  ) extends TypeSpecificValueInfo with FileValueTypeSpecificInfo
   case OtherFileValueInfo(
     internalFilename: String,
     internalMimeType: String,
     originalFilename: Option[String],
     originalMimeType: Option[String],
-  )
+    copyrightAttribution: Option[CopyrightAttribution],
+    license: Option[License],
+  ) extends TypeSpecificValueInfo with FileValueTypeSpecificInfo
   case HierarchicalListValueInfo(valueHasListNode: InternalIri)
   case IntervalValueInfo(valueHasIntervalStart: BigDecimal, valueHasIntervalEnd: BigDecimal)
   case TimeValueInfo(valueHasTimeStamp: Instant)

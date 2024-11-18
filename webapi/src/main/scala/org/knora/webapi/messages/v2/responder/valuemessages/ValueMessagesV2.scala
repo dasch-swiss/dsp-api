@@ -14,7 +14,6 @@ import java.time.Instant
 import java.util.UUID
 import scala.language.implicitConversions
 import scala.util.Try
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -44,8 +43,11 @@ import org.knora.webapi.routing.v2.AssetIngestState
 import org.knora.webapi.routing.v2.AssetIngestState.*
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -2027,6 +2029,8 @@ case class FileValueV2(
   internalMimeType: String,
   originalFilename: Option[String],
   originalMimeType: Option[String],
+  copyrightAttribution: Option[CopyrightAttribution],
+  license: Option[License],
 )
 
 /**
@@ -2048,13 +2052,19 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
     )
   }
 
-  def toJsonLDObjectMapInComplexSchema(fileUrl: String): Map[IRI, JsonLDValue] = Map(
-    FileValueHasFilename -> JsonLDString(fileValue.internalFilename),
-    FileValueAsUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
-      value = fileUrl,
-      datatype = OntologyConstants.Xsd.Uri.toSmartIri,
-    ),
-  )
+  def toJsonLDObjectMapInComplexSchema(fileUrl: String): Map[IRI, JsonLDValue] = {
+    def mkJsonLdString: StringValue => JsonLDString = sv => JsonLDString(sv.value)
+    val knownValues: Map[IRI, JsonLDValue] = Map(
+      FileValueHasFilename -> JsonLDString(fileValue.internalFilename),
+      FileValueAsUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+        value = fileUrl,
+        datatype = OntologyConstants.Xsd.Uri.toSmartIri,
+      ),
+    )
+    val copyrightOption = fileValue.copyrightAttribution.map(mkJsonLdString).map((HasCopyrightAttribution, _))
+    val licenseOption   = fileValue.license.map(mkJsonLdString).map((HasLicense, _))
+    knownValues ++ copyrightOption ++ licenseOption
+  }
 }
 
 /**
@@ -2139,9 +2149,18 @@ case class StillImageFileValueContentV2(
  */
 object StillImageFileValueContentV2 {
   def from(r: Resource, fileInfo: FileInfo): Either[String, StillImageFileValueContentV2] = for {
-    comment  <- objectCommentOption(r)
-    meta      = fileInfo.metadata
-    fileValue = FileValueV2(fileInfo.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
+    comment              <- objectCommentOption(r)
+    meta                  = fileInfo.metadata
+    copyrightAttribution <- getCopyrightAttribution(r)
+    license              <- getLicense(r)
+    fileValue = FileValueV2(
+                  fileInfo.filename,
+                  meta.internalMimeType,
+                  meta.originalFilename,
+                  meta.originalMimeType,
+                  copyrightAttribution,
+                  license,
+                )
   } yield StillImageFileValueContentV2(
     ApiV2Complex,
     fileValue,
@@ -2150,6 +2169,22 @@ object StillImageFileValueContentV2 {
     comment,
   )
 }
+
+def getCopyrightAttribution(resource: Resource): Either[String, Option[CopyrightAttribution]] = for {
+  str <- resource.objectStringOption(HasCopyrightAttribution)
+  copyrightAttribution <- str match {
+                            case Some(str) => CopyrightAttribution.from(str).map(Some(_))
+                            case None      => Right(None)
+                          }
+} yield copyrightAttribution
+
+def getLicense(resource: Resource): Either[String, Option[License]] = for {
+  str <- resource.objectStringOption(HasLicense)
+  copyrightAttribution <- str match {
+                            case Some(str) => License.from(str).map(Some(_))
+                            case None      => Right(None)
+                          }
+} yield copyrightAttribution
 
 /**
  * Represents the external image file metadata.
@@ -2228,10 +2263,19 @@ case class StillImageExternalFileValueContentV2(
  */
 object StillImageExternalFileValueContentV2 {
   def from(r: Resource): Either[String, StillImageExternalFileValueContentV2] = for {
-    externalUrlStr <- r.objectString(StillImageFileValueHasExternalUrl)
-    iifUrl         <- IiifImageRequestUrl.from(externalUrlStr)
-    comment        <- objectCommentOption(r)
-    fileValue       = FileValueV2("internalFilename", "internalMimeType", Some("originalFilename"), Some("originalMimeType"))
+    externalUrlStr       <- r.objectString(StillImageFileValueHasExternalUrl)
+    iifUrl               <- IiifImageRequestUrl.from(externalUrlStr)
+    comment              <- objectCommentOption(r)
+    copyrightAttribution <- getCopyrightAttribution(r)
+    license              <- getLicense(r)
+    fileValue = FileValueV2(
+                  "internalFilename",
+                  "internalMimeType",
+                  Some("originalFilename"),
+                  Some("originalMimeType"),
+                  copyrightAttribution,
+                  license,
+                )
   } yield StillImageExternalFileValueContentV2(ApiV2Complex, fileValue, iifUrl, comment)
 }
 
@@ -2369,9 +2413,18 @@ case class ArchiveFileValueContentV2(
  */
 object DocumentFileValueContentV2 {
   def from(r: Resource, info: FileInfo): Either[String, DocumentFileValueContentV2] = for {
-    comment  <- objectCommentOption(r)
-    meta      = info.metadata
-    fileValue = FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
+    comment              <- objectCommentOption(r)
+    meta                  = info.metadata
+    copyrightAttribution <- getCopyrightAttribution(r)
+    license              <- getLicense(r)
+    fileValue = FileValueV2(
+                  info.filename,
+                  meta.internalMimeType,
+                  meta.originalFilename,
+                  meta.originalMimeType,
+                  copyrightAttribution,
+                  license,
+                )
   } yield DocumentFileValueContentV2(ApiV2Complex, fileValue, meta.numpages, meta.width, meta.height, comment)
 }
 
@@ -2380,9 +2433,18 @@ object DocumentFileValueContentV2 {
  */
 object ArchiveFileValueContentV2 {
   def from(r: Resource, info: FileInfo): Either[String, ArchiveFileValueContentV2] = for {
-    comment  <- objectCommentOption(r)
-    meta      = info.metadata
-    fileValue = FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
+    comment              <- objectCommentOption(r)
+    meta                  = info.metadata
+    copyrightAttribution <- getCopyrightAttribution(r)
+    license              <- getLicense(r)
+    fileValue = FileValueV2(
+                  info.filename,
+                  meta.internalMimeType,
+                  meta.originalFilename,
+                  meta.originalMimeType,
+                  copyrightAttribution,
+                  license,
+                )
   } yield ArchiveFileValueContentV2(ApiV2Complex, fileValue, comment)
 }
 
@@ -2450,9 +2512,18 @@ case class TextFileValueContentV2(
  */
 object TextFileValueContentV2 {
   def from(r: Resource, info: FileInfo): Either[String, TextFileValueContentV2] = for {
-    comment  <- objectCommentOption(r)
-    meta      = info.metadata
-    fileValue = FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
+    comment              <- objectCommentOption(r)
+    meta                  = info.metadata
+    copyrightAttribution <- getCopyrightAttribution(r)
+    license              <- getLicense(r)
+    fileValue = FileValueV2(
+                  info.filename,
+                  meta.internalMimeType,
+                  meta.originalFilename,
+                  meta.originalMimeType,
+                  copyrightAttribution,
+                  license,
+                )
   } yield TextFileValueContentV2(ApiV2Complex, fileValue, comment)
 }
 
@@ -2520,11 +2591,20 @@ case class AudioFileValueContentV2(
  */
 object AudioFileValueContentV2 {
   def from(r: Resource, info: FileInfo): Either[String, AudioFileValueContentV2] = for {
-    comment <- objectCommentOption(r)
-    meta     = info.metadata
+    comment              <- objectCommentOption(r)
+    meta                  = info.metadata
+    copyrightAttribution <- getCopyrightAttribution(r)
+    license              <- getLicense(r)
   } yield AudioFileValueContentV2(
     ApiV2Complex,
-    FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType),
+    FileValueV2(
+      info.filename,
+      meta.internalMimeType,
+      meta.originalFilename,
+      meta.originalMimeType,
+      copyrightAttribution,
+      license,
+    ),
     comment,
   )
 }
@@ -2595,11 +2675,20 @@ case class MovingImageFileValueContentV2(
  */
 object MovingImageFileValueContentV2 {
   def from(r: Resource, info: FileInfo): Either[String, MovingImageFileValueContentV2] = for {
-    comment <- objectCommentOption(r)
-    meta     = info.metadata
+    comment              <- objectCommentOption(r)
+    meta                  = info.metadata
+    copyrightAttribution <- getCopyrightAttribution(r)
+    license              <- getLicense(r)
   } yield MovingImageFileValueContentV2(
     ApiV2Complex,
-    FileValueV2(info.filename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType),
+    FileValueV2(
+      info.filename,
+      meta.internalMimeType,
+      meta.originalFilename,
+      meta.originalMimeType,
+      copyrightAttribution,
+      license,
+    ),
     comment,
   )
 }
