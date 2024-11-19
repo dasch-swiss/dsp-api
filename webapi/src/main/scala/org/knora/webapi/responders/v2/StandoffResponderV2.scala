@@ -56,6 +56,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.store.iiif.impl.SipiServiceLive
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements
@@ -70,11 +71,12 @@ final case class StandoffResponderV2(
   projectService: ProjectService,
   xsltCache: EhCache[String, String],
   mappingCache: EhCache[String, MappingXMLtoStandoff],
+  sipiServiceLive: SipiServiceLive,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
     with LazyLogging {
 
-  private val xmlMimeTypes = Set("text/xml", "application/xml")
+  private val xmlMimeTypes = Set("text/xml", "application/xml", "application/xslt+xml")
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[StandoffResponderRequestV2]
 
@@ -180,9 +182,10 @@ final case class StandoffResponderV2(
           ZIO.attempt(xsltMaybe.get)
         } else {
           for {
+            _ <- zio.Console.printLine(s"###: xsltFileUrl")
             response <-
-              messageRelay
-                .ask[SipiGetTextFileResponse](
+              sipiServiceLive
+                .getTextFileRequest(
                   SipiGetTextFileRequest(
                     fileUrl = xsltFileUrl,
                     requestingUser = KnoraSystemInstances.Users.SystemUser,
@@ -979,7 +982,8 @@ object StandoffResponderV2 {
         xc      <- ZIO.serviceWithZIO[CacheManager](_.createCache[String, String]("xsltCache"))
         mc      <- ZIO.serviceWithZIO[CacheManager](_.createCache[String, MappingXMLtoStandoff]("mappingCache"))
         sf      <- ZIO.service[StringFormatter]
-        handler <- mr.subscribe(StandoffResponderV2(ac, mr, ts, cru, stu, ps, xc, mc)(sf))
+        ssl     <- ZIO.service[SipiServiceLive]
+        handler <- mr.subscribe(StandoffResponderV2(ac, mr, ts, cru, stu, ps, xc, mc, ssl)(sf))
       } yield handler
     }
 }

@@ -84,6 +84,7 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.store.iiif.impl.SipiServiceLive
 
 object LayersTest {
 
@@ -238,6 +239,7 @@ object LayersTest {
       ListsService.layer,
       IIIFRequestMessageHandlerLive.layer,
       IriService.layer,
+      SipiServiceLive.layer,
     )
 
   private val commonLayersForAllIntegrationTests =
