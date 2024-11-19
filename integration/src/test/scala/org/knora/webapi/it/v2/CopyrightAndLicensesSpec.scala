@@ -9,6 +9,7 @@ import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.vocabulary.RDF
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.it.v2.CopyrightAndLicensesSpec.resourceId
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasCopyrightAttribution
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasLicense
@@ -63,6 +64,21 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         actualGetLicense == license.value,
       )
     },
+    test(
+      "when creating a resource with copyright attribution and license " +
+        "the response when getting the created resource should contain the license and copyright attribution",
+    ) {
+      for {
+        createResourceResponseModel <- createImageWithCopyrightAndLicense
+        resourceId                  <- valueId(createResourceResponseModel)
+        getResponseModel            <- getValueFromApi(resourceId)
+        actualGetCopyright          <- copyrightValue(getResponseModel)
+        actualGetLicense            <- licenseValue(getResponseModel)
+      } yield assertTrue(
+        actualGetCopyright == copyrightAttribution.value,
+        actualGetLicense == license.value,
+      )
+    },
   )
 
   private def createImageWithCopyrightAndLicense: ZIO[env, Throwable, Model] = {
@@ -94,6 +110,13 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
 
+  private def getValueFromApi(valueId: String) = for {
+    responseBody <- sendGetRequest(s"/v2/values/${URLEncoder.encode(valueId, "UTF-8")}")
+                      .filterOrFail(_.status.isSuccess)(s"Failed to get resource $valueId")
+                      .flatMap(_.body.asString)
+    model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
+  } yield model
+
   private def resourceId(model: Model): Task[String] =
     ZIO
       .fromEither(
@@ -103,6 +126,19 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         } yield id,
       )
       .mapError(Exception(_))
+
+  private def valueId(model: Model): Task[String] = {
+    val subs = model
+      .listSubjects()
+      .asScala
+      .filter(_.hasProperty(RDF.`type`, StillImageFileValue))
+      .toList
+    val foo = subs match
+      case s :: Nil => ZIO.fromEither(s.uri.toRight("No URI found for value"))
+      case Nil      => ZIO.fail("No value found")
+      case _        => ZIO.fail("Multiple values found")
+    foo.mapError(Exception(_))
+  }
 
   private def copyrightValue(model: Model) = singleStringValue(model, HasCopyrightAttribution)
   private def licenseValue(model: Model)   = singleStringValue(model, HasLicense)
