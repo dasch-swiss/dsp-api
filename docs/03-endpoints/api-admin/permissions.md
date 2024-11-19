@@ -258,7 +258,7 @@ All attributes of the default object access permission are optional and may be c
 If the combination of attributes is not allowed, the request will fail with a `400 Bad Request` error.
 Any valid combination of attributes will replace the existing values.
 
-If present, the `hasPermissions` property must contain all permission types that must be granted. See [a complete description of object access
+If present, the `hasPermissions` attribute must contain all permission types that must be granted. See [a complete description of object access
 permission types](../../05-internals/design/api-admin/administration.md#default-object-access-permissions).
 This is also described in the [Creating New Default Object Access Permissions](#creating-new-default-object-access-permissions) section.
 
