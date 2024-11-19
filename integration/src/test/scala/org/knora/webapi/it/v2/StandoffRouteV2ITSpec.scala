@@ -39,6 +39,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.testservices.FileToUpload
 
 /**
  * Integration test specification for the standoff endpoint.
@@ -50,6 +51,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
   private val anythingUser      = SharedTestDataADM.anythingUser1
   private val anythingUserEmail = anythingUser.email
   private val password          = SharedTestDataADM.testPass
+  private val addAssetIngested  = addHeader("X-Asset-Ingested", "true")
 
   private val pathToXMLWithStandardMapping = "../test_data/test_route/texts/StandardHTML.xml"
   private val pathToLetterMapping          = "../test_data/test_route/texts/mappingForLetter.xml"
@@ -94,7 +96,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
     )
     val mappingRequest = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~> addCredentials(
       BasicHttpCredentials(anythingUserEmail, password),
-    )
+    ) ~> addHeader("X-Asset-Ingested", "true")
     singleAwaitingRequest(mappingRequest)
   }
 
@@ -306,20 +308,15 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       assert(loginResponse.status == StatusCodes.OK, responseToString(loginResponse))
       val loginToken = Await.result(Unmarshal(loginResponse.entity).to[LoginResponse], 1.seconds).token
 
-      // upload XSLT file to SIPI
-      val sipiFormData = Multipart.FormData(
-        Multipart.FormData.BodyPart(
-          "file",
-          HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, Paths.get(pathToFreetestXSLTFile)),
-          Map("filename" -> freetestXSLTFile),
+      val uploadedFile: SipiUploadResponseEntry = uploadToIngest(
+        loginToken = loginToken,
+        filesToUpload = Seq(
+          FileToUpload(
+            path = Paths.get(pathToFreetestXSLTFile),
+            mimeType = org.apache.http.entity.ContentType.create("text/xml"),
+          ),
         ),
-      )
-      val sipiRequest  = Post(s"${baseInternalSipiUrl}/upload?token=$loginToken", sipiFormData)
-      val sipiResponse = singleAwaitingRequest(sipiRequest)
-      val uploadedFile = {
-        import zio.json.*
-        responseToString(sipiResponse).fromJson[SipiUploadResponse].toOption.get.uploadedFiles.head
-      }
+      ).uploadedFiles.head
 
       // create FileRepresentation in API
       val uploadFileJson = UploadFileRequest
@@ -328,13 +325,11 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
           internalFilename = uploadedFile.internalFilename,
           resourceIRI = Some(freetestXSLTIRI),
         )
-        .toJsonLd(
-          className = Some("XSLTransformation"),
-        )
+        .toJsonLd(className = Some("XSLTransformation"))
       val fileRepresentationRequest = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, uploadFileJson),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> addAssetIngested
       val fileRepresentationResponse = singleAwaitingRequest(fileRepresentationRequest)
       assert(StatusCodes.OK == fileRepresentationResponse.status, responseToString(fileRepresentationResponse))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(fileRepresentationResponse)
