@@ -247,7 +247,7 @@ This is an example of a request body to update an existing default object access
 
 All attributes of the default object access permission are optional and may be combined.
 
-!!! note
+!!! warning
     Only certain combinations of attributes are allowed. Only exactly one of the following combinations is allowed:
 
       - `forGroup`  <!-- markdownlint-disable MD046 -->
