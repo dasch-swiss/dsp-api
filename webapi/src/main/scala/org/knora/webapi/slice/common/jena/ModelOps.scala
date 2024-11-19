@@ -9,18 +9,27 @@ import org.apache.jena.rdf.model.*
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
 import zio.Scope
+import zio.Task
 import zio.UIO
 import zio.ZIO
 
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters.*
+import zio.Console
 
 object ModelOps { self =>
 
   extension (model: Model) {
     def printTurtle: UIO[Unit] =
-      ZIO.attempt(RDFDataMgr.write(java.lang.System.out, model, Lang.TURTLE)).logError.ignore
+      asTurtle.flatMap(Console.printLine(_)).logError.ignore
+
+    def asTurtle: Task[String] =
+      ZIO.attempt {
+        val out = new java.io.ByteArrayOutputStream()
+        RDFDataMgr.write(out, model, Lang.TURTLE)
+        out.toString(java.nio.charset.StandardCharsets.UTF_8)
+      }
 
     def resourceOption(uri: String): Option[Resource] = Option(model.getResource(uri))
     def resource(uri: String): Either[String, Resource] =
@@ -38,6 +47,15 @@ object ModelOps { self =>
         case iris if iris.isEmpty   => Left("No root resource found in model")
         case iris                   => Left(s"Multiple root resources found in model: ${iris.mkString(", ")}")
       }
+
+    def singleSubjectWithProperty(property: Property): Either[String, Resource] =
+      val subjects = model.listSubjectsWithProperty(property).asScala.toList
+      subjects match {
+        case s :: Nil => Right(s)
+        case Nil      => Left(s"No resource found with property ${property.getURI}")
+        case _        => Left(s"Multiple resources found with property ${property.getURI}")
+      }
+
   }
 
   def fromJsonLd(str: String): ZIO[Scope, String, Model] = from(str, Lang.JSONLD)
