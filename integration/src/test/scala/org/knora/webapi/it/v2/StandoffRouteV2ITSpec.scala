@@ -37,9 +37,9 @@ import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
+import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.testservices.FileToUpload
 
 /**
  * Integration test specification for the standoff endpoint.

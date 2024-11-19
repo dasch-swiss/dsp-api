@@ -27,7 +27,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.MappingElement
 import org.knora.webapi.messages.twirl.MappingStandoffDatatypeClass
 import org.knora.webapi.messages.twirl.MappingXMLAttribute
@@ -52,11 +51,11 @@ import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.EhCache
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.store.iiif.impl.SipiServiceLive
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements
@@ -182,7 +181,6 @@ final case class StandoffResponderV2(
           ZIO.attempt(xsltMaybe.get)
         } else {
           for {
-            _ <- zio.Console.printLine(s"###: xsltFileUrl")
             response <-
               sipiServiceLive
                 .getTextFileRequest(
