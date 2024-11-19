@@ -8,30 +8,28 @@ import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.vocabulary.RDF
+import zio.*
+import zio.test.*
+
+import java.net.URLEncoder
+import scala.jdk.CollectionConverters.IteratorHasAsScala
+import scala.language.implicitConversions
+
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.it.v2.CopyrightAndLicensesSpec.resourceId
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasCopyrightAttribution
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasLicense
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.StillImageFileValue
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.StillImageRepresentation
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.Value
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
-import zio.test.*
-import zio.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
-import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
-import java.net.URLEncoder
-import scala.jdk.CollectionConverters.IteratorHasAsScala
-import scala.language.implicitConversions
 
 object CopyrightAndLicensesSpec extends E2EZSpec {
 
@@ -135,12 +133,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     val subs = model
       .listSubjectsWithProperty(RDF.`type`)
       .asScala
-      .filter(r =>
-        r.getProperty(RDF.`type`)
-          .getObject
-          .asResource()
-          .hasURI(StillImageFileValue),
-      )
+      .filter(_.getProperty(RDF.`type`).getObject.asResource().hasURI(StillImageFileValue))
       .toList
     subs match
       case s :: Nil =>

@@ -889,10 +889,10 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
             |            knora-base:internalFilename "24159oO1pNg-ByLN1NLlMSJ.jp2" ;
             |            knora-base:internalMimeType "image/jp2" ;
-            |            knora-base:dimX 100 ;
-            |            knora-base:dimY 60 ;
             |            knora-base:originalFilename "foo.png" ;
-            |            knora-base:originalMimeType "image/png" .
+            |            knora-base:originalMimeType "image/png" ;
+            |            knora-base:dimX 100 ;
+            |            knora-base:dimY 60  .
             |    }
             |}
             |""".stripMargin,

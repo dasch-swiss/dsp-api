@@ -8,6 +8,7 @@ package org.knora.webapi.slice.common.jena
 import org.apache.jena.rdf.model.*
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
+import zio.Console
 import zio.Scope
 import zio.Task
 import zio.UIO
@@ -16,7 +17,6 @@ import zio.ZIO
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters.*
-import zio.Console
 
 object ModelOps { self =>
 
