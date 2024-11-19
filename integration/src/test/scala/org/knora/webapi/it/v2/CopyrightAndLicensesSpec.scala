@@ -15,16 +15,19 @@ import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasCopyrigh
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasLicense
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.StillImageFileValue
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.StillImageRepresentation
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.Value
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
+import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import zio.test.*
 import zio.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.JenaConversions.given
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 import java.net.URLEncoder
 import scala.jdk.CollectionConverters.IteratorHasAsScala
@@ -57,26 +60,27 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         createResourceResponseModel <- createImageWithCopyrightAndLicense
         resourceId                  <- resourceId(createResourceResponseModel)
         getResponseModel            <- getResourceFromApi(resourceId)
-        actualGetCopyright          <- copyrightValue(getResponseModel)
-        actualGetLicense            <- licenseValue(getResponseModel)
+        actualCopyright             <- copyrightValue(getResponseModel)
+        actualLicense               <- licenseValue(getResponseModel)
       } yield assertTrue(
-        actualGetCopyright == copyrightAttribution.value,
-        actualGetLicense == license.value,
+        actualCopyright == copyrightAttribution.value,
+        actualLicense == license.value,
       )
     },
     test(
       "when creating a resource with copyright attribution and license " +
-        "the response when getting the created resource should contain the license and copyright attribution",
+        "the response when getting the created value should contain the license and copyright attribution",
     ) {
       for {
         createResourceResponseModel <- createImageWithCopyrightAndLicense
-        resourceId                  <- valueId(createResourceResponseModel)
-        getResponseModel            <- getValueFromApi(resourceId)
-        actualGetCopyright          <- copyrightValue(getResponseModel)
-        actualGetLicense            <- licenseValue(getResponseModel)
+        resourceId                  <- resourceId(createResourceResponseModel)
+        valueId                     <- valueId(createResourceResponseModel)
+        valueResponseModel          <- getValueFromApi(valueId, resourceId)
+        actualCopyright             <- copyrightValue(valueResponseModel)
+        actualLicense               <- licenseValue(valueResponseModel)
       } yield assertTrue(
-        actualGetCopyright == copyrightAttribution.value,
-        actualGetLicense == license.value,
+        actualCopyright == copyrightAttribution.value,
+        actualLicense == license.value,
       )
     },
   )
@@ -110,8 +114,8 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
 
-  private def getValueFromApi(valueId: String) = for {
-    responseBody <- sendGetRequest(s"/v2/values/${URLEncoder.encode(valueId, "UTF-8")}")
+  private def getValueFromApi(valueIri: ValueIri, resourceIri: String) = for {
+    responseBody <- sendGetRequest(s"/v2/values/${URLEncoder.encode(resourceIri, "UTF-8")}/${valueIri.valueId}")
                       .filterOrFail(_.status.isSuccess)(s"Failed to get resource $valueId")
                       .flatMap(_.body.asString)
     model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
@@ -127,17 +131,26 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       )
       .mapError(Exception(_))
 
-  private def valueId(model: Model): Task[String] = {
+  private def valueId(model: Model): ZIO[IriConverter, Throwable, ValueIri] = {
     val subs = model
-      .listSubjects()
+      .listSubjectsWithProperty(RDF.`type`)
       .asScala
-      .filter(_.hasProperty(RDF.`type`, StillImageFileValue))
+      .filter(r =>
+        r.getProperty(RDF.`type`)
+          .getObject
+          .asResource()
+          .hasURI(StillImageFileValue),
+      )
       .toList
-    val foo = subs match
-      case s :: Nil => ZIO.fromEither(s.uri.toRight("No URI found for value"))
-      case Nil      => ZIO.fail("No value found")
-      case _        => ZIO.fail("Multiple values found")
-    foo.mapError(Exception(_))
+    subs match
+      case s :: Nil =>
+        ZIO
+          .fromEither(s.uri.toRight("No URI found for value"))
+          .mapError(Exception(_))
+          .flatMap(str => ZIO.serviceWithZIO[IriConverter](_.asSmartIri(str)))
+          .flatMap(iri => ZIO.fromEither(ValueIri.from(iri)).mapError(Exception(_)))
+      case Nil => ZIO.fail(Exception("No value found"))
+      case _   => ZIO.fail(Exception("Multiple values found"))
   }
 
   private def copyrightValue(model: Model) = singleStringValue(model, HasCopyrightAttribution)
