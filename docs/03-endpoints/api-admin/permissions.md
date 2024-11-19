@@ -267,7 +267,7 @@ The response is the updated default object access permission with its new attrib
 
 ### Updating a Permission's Group
 
-!!! note
+!!! warning
     For Default Object Access Permissions this endpoint is deprecated, use [`PUT: /admin/permissions/doap/<permissionIri>`](#updating-an-existing-default-object-access-permission) instead. 
 
 - `PUT: /admin/permissions/<permissionIri>/group` to change the group for which an administrative or a default object 
