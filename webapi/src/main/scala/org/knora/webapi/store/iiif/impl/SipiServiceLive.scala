@@ -12,7 +12,6 @@ import sttp.client3.SttpBackend
 import sttp.client3.httpclient.zio.HttpClientZioBackend
 import sttp.model.Uri
 import zio.*
-import zio.json.DecoderOps
 import zio.json.ast.Json
 import zio.nio.file.Path
 
@@ -22,7 +21,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.messages.store.sipimessages.*
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -31,7 +29,6 @@ import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
@@ -53,24 +50,6 @@ final case class SipiServiceLive(
     private def assetBase(asset: Asset): String =
       s"${sipiConfig.internalBaseUrl}/${asset.belongsToProject.value}/${asset.internalFilename}"
   }
-
-  /**
-   * Asks Sipi for metadata about a file, served from the 'knora.json' route.
-   *
-   * @param filename the file name
-   * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
-   */
-  override def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse] =
-    for {
-      jwt <- jwtService.createJwt(KnoraSystemInstances.Users.SystemUser.userIri, AuthScope.admin)
-      request = quickRequest
-                  .get(uri"${sipiConfig.internalBaseUrl}/tmp/$filename/knora.json")
-                  .header("Authorization", s"Bearer ${jwt.jwtString}")
-      body <- doSipiRequest(request)
-      res <- ZIO
-               .fromEither(body.fromJson[FileMetadataSipiResponse])
-               .mapError(e => SipiException(s"Invalid response from Sipi: $e, $body"))
-    } yield res
 
   override def getFileMetadataFromDspIngest(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse] =
     for {

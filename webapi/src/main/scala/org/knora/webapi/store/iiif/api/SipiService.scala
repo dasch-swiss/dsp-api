@@ -62,14 +62,6 @@ object FileMetadataSipiResponse {
 trait SipiService {
 
   /**
-   * Asks Sipi for metadata about a file in the tmp folder, served from the 'knora.json' route.
-   *
-   * @param filename the path to the file.
-   * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
-   */
-  def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse]
-
-  /**
    * Asks DSP-Ingest for metadata about a file in permanent location, served from the 'knora.json' route.
    *
    * @param shortcode the shortcode of the project.
@@ -112,5 +104,4 @@ trait SipiService {
    * @return The path to the downloaded asset. If the asset could not be downloaded, [[None]] is returned.
    */
   def downloadAsset(asset: Asset, targetDir: Path, user: User): Task[Option[Path]]
-
 }

@@ -23,8 +23,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
-import org.knora.webapi.routing.v2.AssetIngestState
-import org.knora.webapi.routing.v2.AssetIngestState.*
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.iiif.api.SipiService
@@ -91,17 +89,6 @@ trait ResourceUtilV2 {
     fileValues: Seq[FileValueContentV2],
     requestingUser: User,
   ): Task[T]
-
-  def doSipiPostUpdateIfInTemp[T <: UpdateResultInProject](
-    ingestState: AssetIngestState,
-    updateTask: Task[T],
-    fileValues: Seq[FileValueContentV2],
-    requestingUser: User,
-  ): Task[T] =
-    ingestState match {
-      case AssetIngested => updateTask
-      case AssetInTemp   => doSipiPostUpdate(updateTask, fileValues, requestingUser)
-    }
 }
 
 final case class ResourceUtilV2Live(triplestore: TriplestoreService, sipiService: SipiService)
