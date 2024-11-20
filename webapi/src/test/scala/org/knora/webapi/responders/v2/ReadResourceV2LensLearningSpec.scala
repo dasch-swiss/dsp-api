@@ -7,6 +7,7 @@ package org.knora.webapi.responders.v2
 import org.knora.webapi.messages.SmartIri
 import monocle.macros.*
 import monocle.*
+import monocle.Lens
 import monocle.Optional
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.StringFormatter
@@ -26,10 +27,18 @@ object ReadResourceV2LensLearningSpec extends ZIOSpecDefault {
   val valuesLens: Lens[ReadResourceV2, ReadValues] =
     GenLens[ReadResourceV2](_.values)
 
-  val fileValueContentOptional: Optional[ReadValueV2, FileValueContentV2] =
-    Optional[ReadValueV2, FileValueContentV2](_.valueContent.asOpt[FileValueContentV2])(fc => {
-      case rv: ReadLinkValueV2  => rv
-      case rv: ReadTextValueV2  => rv
+  val fileValueContentLens: Lens[ReadValueV2, ValueContentV2] =
+    Lens[ReadValueV2, ValueContentV2](_.valueContent)(fc => {
+      case rv: ReadLinkValueV2 =>
+        fc match {
+          case lv: LinkValueContentV2 => rv.copy(valueContent = lv)
+          case _                      => rv
+        }
+      case rv: ReadTextValueV2 =>
+        fc match {
+          case tv: TextValueContentV2 => rv.copy(valueContent = tv)
+          case _                      => rv
+        }
       case ov: ReadOtherValueV2 => ov.copy(valueContent = fc)
     })
 
@@ -66,10 +75,11 @@ object ReadResourceV2LensLearningSpec extends ZIOSpecDefault {
   val fileValueWithACopyrightAttribution =
     FileValueV2("internalFilename", "internalMimeType", None, None, Some(aCopyrightAttribution), None)
 
-  val setLicenseIfMissing: Option[License] => ValueContentV2 => ValueContentV2 = newLicense =>
+  val setLicenseIfMissing: Option[License] => ReadValueV2 => ReadValueV2 = newLicense =>
     value => {
-      val composed = fileValueContentPrism.andThen(fileValueLens).andThen(licenseLens)
-      composed.getOption(value).flatten match {
+      val composed = fileValueContentLens.andThen(fileValueContentPrism).andThen(fileValueLens).andThen(licenseLens)
+      val existing: Option[License] =composed.getOption(value).flatten
+      existing match {
         case Some(_) => value
         case None    => composed.replace(newLicense)(value)
       }
