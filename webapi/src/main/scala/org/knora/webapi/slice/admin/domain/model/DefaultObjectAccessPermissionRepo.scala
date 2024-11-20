@@ -82,8 +82,18 @@ object DefaultObjectAccessPermission {
   object DefaultObjectAccessPermissionPart {
     def from(adm: PermissionADM): Either[String, DefaultObjectAccessPermissionPart] =
       for {
-        group <- adm.additionalInformation.toRight("No object access code present").flatMap(GroupIri.from)
-        perm   = adm.permissionCode.flatMap(Permission.ObjectAccess.from).getOrElse(Permission.ObjectAccess.Delete)
+        group <- adm.additionalInformation.toRight("No object access group present").flatMap(GroupIri.from)
+        perm <- (adm.permissionCode, adm.name) match
+                  case (None, name) => Permission.ObjectAccess.fromToken(name)
+                  case (Some(code), name) if name.nonEmpty =>
+                    for {
+                      perm1 <- Permission.ObjectAccess.from(code)
+                      perm2 <- Permission.ObjectAccess.fromToken(name)
+                      p <- if perm1 == perm2 then Right(perm1)
+                           else Left(s"Given permission code '$code' and permission name '$name' are not consistent.")
+                    } yield p
+                  case (Some(code), _) => Permission.ObjectAccess.from(code)
+
       } yield DefaultObjectAccessPermissionPart(perm, NonEmptyChunk(group))
   }
 
