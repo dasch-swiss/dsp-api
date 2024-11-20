@@ -27,6 +27,7 @@ import java.time.Instant
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resources.repo.model.FileValueTypeSpecificInfo
 import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
@@ -194,14 +195,8 @@ object ResourcesRepoLive {
           List(iri(valueIri).has(KB.valueHasColor, literalOf(valueHasColor)))
         case GeomValueInfo(valueHasGeometry) =>
           List(iri(valueIri).has(KB.valueHasGeometry, literalOf(valueHasGeometry)))
-        case v: StillImageFileValueInfo =>
-          buildStillImageFileValuePattern(v, valueIri)
-        case v: StillImageExternalFileValueInfo =>
-          buildStillImageExternalFileValuePattern(v, valueIri)
-        case v: DocumentFileValueInfo =>
-          buildDocumentFileValuePattern(v, valueIri)
-        case v: OtherFileValueInfo =>
-          buildOtherFileValuePattern(v, valueIri)
+        case v: FileValueTypeSpecificInfo =>
+          List(buildFileValuePattern(v, valueIri))
         case HierarchicalListValueInfo(valueHasListNode) =>
           List(iri(valueIri).has(KB.valueHasListNode, iri(valueHasListNode.value)))
         case IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd) =>
@@ -280,51 +275,26 @@ object ResourcesRepoLive {
           .andHas(KB.valueHasCalendar, literalOf(v.valueHasCalendar.toString())),
       )
 
-    private def buildStillImageFileValuePattern(v: StillImageFileValueInfo, valueIri: String): List[TriplePattern] =
-      List(
-        iri(valueIri)
-          .has(KB.internalFilename, literalOf(v.internalFilename))
-          .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
-          .andHas(KB.dimX, literalOf(v.dimX))
-          .andHas(KB.dimY, literalOf(v.dimY))
-          .andHasOptional(KB.originalFilename, v.originalFilename.map(literalOf))
-          .andHasOptional(KB.originalMimeType, v.originalMimeType.map(literalOf)),
-      )
+    private def buildFileValuePattern(v: FileValueTypeSpecificInfo, valueIri: String): TriplePattern = {
+      val result = iri(valueIri)
+        .has(KB.internalFilename, literalOf(v.internalFilename))
+        .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
+        .andHasOptional(KB.originalFilename, v.originalFilename.map(literalOf))
+        .andHasOptional(KB.originalMimeType, v.originalMimeType.map(literalOf))
+        .andHasOptional(KB.hasCopyrightAttribution, v.copyrightAttribution.map(_.value).map(literalOf))
+        .andHasOptional(KB.hasLicense, v.license.map(_.value).map(literalOf))
 
-    private def buildStillImageExternalFileValuePattern(
-      v: StillImageExternalFileValueInfo,
-      valueIri: String,
-    ): List[TriplePattern] =
-      List(
-        iri(valueIri)
-          .has(KB.internalFilename, literalOf(v.internalFilename))
-          .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
-          .andHas(KB.externalUrl, literalOf(v.externalUrl))
-          .andHasOptional(KB.originalFilename, v.originalFilename.map(literalOf))
-          .andHasOptional(KB.originalMimeType, v.originalMimeType.map(literalOf)),
-      )
-
-    private def buildDocumentFileValuePattern(v: DocumentFileValueInfo, valueIri: String): List[TriplePattern] =
-      List(
-        iri(valueIri)
-          .has(KB.internalFilename, literalOf(v.internalFilename))
-          .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
-          .andHasOptional(KB.originalFilename, v.originalFilename.map(literalOf))
-          .andHasOptional(KB.originalMimeType, v.originalMimeType.map(literalOf))
-          .andHasOptional(KB.dimX, v.dimX.map(i => literalOf(i)))
-          .andHasOptional(KB.dimY, v.dimY.map(i => literalOf(i)))
-          .andHasOptional(KB.pageCount, v.pageCount.map(i => literalOf(i))),
-      )
-
-    private def buildOtherFileValuePattern(v: OtherFileValueInfo, valueIri: String): List[TriplePattern] =
-      List(
-        iri(valueIri)
-          .has(KB.internalFilename, literalOf(v.internalFilename))
-          .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
-          .andHasOptional(KB.originalFilename, v.originalFilename.map(literalOf))
-          .andHasOptional(KB.originalMimeType, v.originalMimeType.map(literalOf)),
-      )
-
+      v match {
+        case _: OtherFileValueInfo              => result
+        case v: StillImageFileValueInfo         => result.andHas(KB.dimX, literalOf(v.dimX)).andHas(KB.dimY, literalOf(v.dimY))
+        case v: StillImageExternalFileValueInfo => result.andHas(KB.externalUrl, literalOf(v.externalUrl))
+        case v: DocumentFileValueInfo =>
+          result
+            .andHasOptional(KB.dimX, v.dimX.map(i => literalOf(i)))
+            .andHasOptional(KB.dimY, v.dimY.map(i => literalOf(i)))
+            .andHasOptional(KB.pageCount, v.pageCount.map(i => literalOf(i)))
+      }
+    }
   }
 }
 

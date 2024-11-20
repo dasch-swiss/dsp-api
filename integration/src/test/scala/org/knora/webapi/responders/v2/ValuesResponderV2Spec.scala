@@ -407,6 +407,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   }
 
   "The values responder" should {
+
     "create an integer value" in {
       // Add the value.
 
@@ -4320,6 +4321,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               Some("test.tiff"),
               Some(mimeTypeTIFF),
               None,
+              None,
+              None,
             ),
           ),
           anythingUser1,
@@ -4368,6 +4371,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               Some(internalMimeType),
               originalFilename,
               originalMimeType,
+              None,
+              None,
               None,
             ),
           ),
@@ -4418,6 +4423,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         internalMimeType = mimeTypeJP2,
         originalFilename = Some("test.tiff"),
         originalMimeType = Some(mimeTypeTIFF),
+        None,
+        None,
       ),
       dimX = 512,
       dimY = 256,
@@ -4453,6 +4460,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         internalMimeType = mimeTypeJP2,
         originalFilename = Some("test.tiff"),
         originalMimeType = Some(mimeTypeTIFF),
+        None,
+        None,
       ),
       dimX = 512,
       dimY = 256,

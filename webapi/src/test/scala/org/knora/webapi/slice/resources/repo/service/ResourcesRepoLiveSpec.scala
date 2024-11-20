@@ -274,6 +274,8 @@ object TestData {
         originalMimeType = Some("image/png"),
         dimX = 100,
         dimY = 60,
+        None,
+        None,
       ),
       permissions = valuePermissions,
       creator = valueCreator,
@@ -296,6 +298,8 @@ object TestData {
         originalFilename = None,
         originalMimeType = None,
         externalUrl = "http://example.com/foo.jpg",
+        None,
+        None,
       ),
       permissions = valuePermissions,
       creator = valueCreator,
@@ -320,6 +324,8 @@ object TestData {
         dimX = Some(100),
         dimY = Some(60),
         pageCount = Some(10),
+        None,
+        None,
       ),
       permissions = valuePermissions,
       creator = valueCreator,
@@ -341,6 +347,8 @@ object TestData {
         internalMimeType = "application/zip",
         originalFilename = Some("foo.zip"),
         originalMimeType = Some("application/zip"),
+        None,
+        None,
       ),
       permissions = valuePermissions,
       creator = valueCreator,
@@ -881,10 +889,10 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
             |            knora-base:internalFilename "24159oO1pNg-ByLN1NLlMSJ.jp2" ;
             |            knora-base:internalMimeType "image/jp2" ;
-            |            knora-base:dimX 100 ;
-            |            knora-base:dimY 60 ;
             |            knora-base:originalFilename "foo.png" ;
-            |            knora-base:originalMimeType "image/png" .
+            |            knora-base:originalMimeType "image/png" ;
+            |            knora-base:dimX 100 ;
+            |            knora-base:dimY 60  .
             |    }
             |}
             |""".stripMargin,

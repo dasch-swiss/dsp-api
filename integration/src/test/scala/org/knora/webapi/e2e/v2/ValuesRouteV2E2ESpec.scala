@@ -686,6 +686,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private val customValueIri: IRI = s"http://rdfh.ch/0001/a-thing/values/$customValueUUID"
 
   "The values v2 endpoint" should {
+
     "get the latest versions of values, given their UUIDs" in {
       // The UUIDs of values in TestDing.
       val testDingValues: Map[String, String] = Map(

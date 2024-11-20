@@ -48,6 +48,8 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -1084,6 +1086,10 @@ final case class ConstructResponseUtilV2Live(
       internalFilename = valueObject.requireStringObject(OntologyConstants.KnoraBase.InternalFilename.toSmartIri),
       originalFilename = valueObject.maybeStringObject(OntologyConstants.KnoraBase.OriginalFilename.toSmartIri),
       originalMimeType = valueObject.maybeStringObject(OntologyConstants.KnoraBase.OriginalMimeType.toSmartIri),
+      copyrightAttribution = valueObject
+        .maybeStringObject(OntologyConstants.KnoraBase.HasCopyrightAttribution.toSmartIri)
+        .map(CopyrightAttribution.unsafeFrom),
+      license = valueObject.maybeStringObject(OntologyConstants.KnoraBase.HasLicense.toSmartIri).map(License.unsafeFrom),
     )
 
     valueType match {

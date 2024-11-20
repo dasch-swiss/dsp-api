@@ -82,6 +82,8 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     "internalMimeType",
     Some("originalFilename.orig"),
     Some("originalMimeType"),
+    None,
+    None,
   )
 
   private val configureSipiServiceMock = for {
@@ -484,6 +486,8 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             "internalMimeType",
             Some("originalFilename"),
             Some("originalMimeType"),
+            None,
+            None,
           ),
           IiifImageRequestUrl.unsafeFrom("http://www.example.org/prefix1/abcd1234/full/0/native.jpg"),
           None,
@@ -712,9 +716,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       check(Gen.fromIterable(transformations)) { jsonLdTransform =>
         for {
           sf <- ZIO.service[StringFormatter]
-          value <- service(
-                     _.createValueV2FromJsonLd(
-                       jsonLdTransform("""
+          str = jsonLdTransform("""
                        {
                           "@id": "http://rdfh.ch/0001/a-thing",
                           "@type": "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
@@ -723,10 +725,8 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                             "http://api.knora.org/ontology/knora-api/v2#valueAsString":"This is English",
                             "http://api.knora.org/ontology/knora-api/v2#textValueHasLanguage":"en"
                           }
-                       }""".stripMargin),
-                       AssetIngested,
-                     ),
-                   )
+                       }""".stripMargin)
+          value <- service(_.createValueV2FromJsonLd(str, AssetIngested))
         } yield assertTrue(
           value == CreateValueV2(
             resourceIri = "http://rdfh.ch/0001/a-thing",
