@@ -11,7 +11,6 @@ import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -42,6 +41,8 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
+import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -652,9 +653,72 @@ final case class ResourcesResponderV2(
           }
         }
       responseWithDeletedResourcesReplaced = apiResponse.copy(resources = deletedResourcesReplaced)
-    } yield responseWithDeletedResourcesReplaced
-
+      response                            <- addCopyrightAttributionAndLicense(responseWithDeletedResourcesReplaced)
+    } yield response
   }
+
+  private def addCopyrightAttributionAndLicense(seq: ReadResourcesSequenceV2): Task[ReadResourcesSequenceV2] =
+    ZIO
+      .foreach(seq.resources)(addCopyrightAttributionAndLicense(seq.projectADM.projectIri))
+      .map(newResources => seq.copy(resources = newResources))
+
+  private def addCopyrightAttributionAndLicense(
+    projectIri: ProjectIri,
+  )(resource: ReadResourceV2): Task[ReadResourceV2] =
+    for {
+      project <-
+        knoraProjectService.findById(projectIri).someOrFail(NotFoundException(s"Project $projectIri not found"))
+      newValues <- addCopyrightAttributionAndLicense(resource.values, project)
+    } yield resource.copy(values = newValues)
+
+  private def addCopyrightAttributionAndLicense(
+    valuesMap: Map[SmartIri, Seq[ReadValueV2]],
+    project: KnoraProject,
+  ): UIO[Map[SmartIri, Seq[ReadValueV2]]] =
+    ZIO.foreach(valuesMap)((smartIri, values) =>
+      ZIO
+        .foreach(values)(value => addCopyrightAttributionAndLicense(project, value))
+        .map(newValue => (smartIri, newValue)),
+    )
+
+  private def addCopyrightAttributionAndLicense(project: KnoraProject, value: ReadValueV2): UIO[ReadValueV2] =
+    value match
+      case rov: ReadOtherValueV2 =>
+        ZIO.succeed(rov.copy(valueContent = addCopyrightAttributionAndLicense(project, rov.valueContent)))
+      case lv: ReadLinkValueV2 =>
+        val oldNested = lv.valueContent.nestedResource
+        oldNested match
+          case Some(nested) =>
+            addCopyrightAttributionAndLicense(nested.values, project).map(newNestedValues =>
+              lv.copy(valueContent =
+                lv.valueContent.copy(nestedResource = oldNested.map(_.copy(values = newNestedValues))),
+              ),
+            )
+          case None => ZIO.succeed(lv)
+      case other => ZIO.succeed(other)
+
+  private def addCopyrightAttributionAndLicense(project: KnoraProject, content: ValueContentV2): ValueContentV2 =
+    content match
+      case tfvc: FileValueContentV2 =>
+        val newFv = addCopyrightAttributionAndLicenseFileValue(project, tfvc.fileValue)
+        tfvc match
+          case fvc: MovingImageFileValueContentV2        => fvc.copy(fileValue = newFv)
+          case fvc: StillImageFileValueContentV2         => fvc.copy(fileValue = newFv)
+          case fvc: AudioFileValueContentV2              => fvc.copy(fileValue = newFv)
+          case fvc: DocumentFileValueContentV2           => fvc.copy(fileValue = newFv)
+          case fvc: StillImageExternalFileValueContentV2 => fvc.copy(fileValue = newFv)
+          case fvc: ArchiveFileValueContentV2            => fvc.copy(fileValue = newFv)
+          case fvc: TextFileValueContentV2               => fvc.copy(fileValue = newFv)
+      case other => other
+
+  private def addCopyrightAttributionAndLicenseFileValue(project: KnoraProject, fileValue: FileValueV2): FileValueV2 =
+    fileValue match
+      case fv if fv.copyrightAttribution.isEmpty || fv.license.isEmpty =>
+        fv.copy(
+          copyrightAttribution = fv.copyrightAttribution.orElse(project.copyrightAttribution),
+          license = fv.license.orElse(project.license),
+        )
+      case other => other
 
   /**
    * Get the preview of a resource.
