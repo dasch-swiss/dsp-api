@@ -4,28 +4,20 @@
  */
 
 package org.knora.webapi.responders.v2
-import org.knora.webapi.messages.SmartIri
-import monocle.macros.*
 import monocle.*
 import monocle.Lens
 import monocle.Optional
-import org.knora.webapi.ApiV2Complex
+import monocle.macros.*
+import zio.test.*
+
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
-import org.knora.webapi.slice.admin.domain.model.Permission
-import zio.test.*
-
-import java.time.Instant
-import java.util.UUID
 
 object ReadResourceV2LensLearningSpec extends ZIOSpecDefault {
-
-  type ReadValues = Map[SmartIri, Seq[ReadValueV2]]
-  val valuesLens: Lens[ReadResourceV2, ReadValues] =
-    GenLens[ReadResourceV2](_.values)
 
   val fileValueContentLens: Lens[ReadValueV2, ValueContentV2] =
     Lens[ReadValueV2, ValueContentV2](_.valueContent)(fc => {
@@ -60,6 +52,37 @@ object ReadResourceV2LensLearningSpec extends ZIOSpecDefault {
     GenLens[FileValueV2](_.copyrightAttribution)
   val licenseLens: Lens[FileValueV2, Option[License]] = GenLens[FileValueV2](_.license)
 
+  type ReadResourceValues = Map[SmartIri, Seq[ReadValueV2]]
+
+  private val commonComposed: Optional[ReadValueV2, FileValueV2] =
+    fileValueContentLens.andThen(fileValueContentPrism).andThen(fileValueLens)
+  private val composedLicense   = commonComposed.andThen(licenseLens)
+  private val composedCopyright = commonComposed.andThen(copyrightAttributionLens)
+
+  private def setIfMissing[T](
+    optional: Optional[ReadValueV2, Option[T]],
+  ): Option[T] => ReadResourceV2 => ReadResourceV2 =
+    newValue =>
+      readResource => {
+        val newValues: ReadResourceValues = readResource.values.map((iri: SmartIri, seq: Seq[ReadValueV2]) =>
+          (
+            iri,
+            seq.map { readValue =>
+              optional.getOption(readValue).flatten match {
+                case Some(_) => readValue
+                case None    => optional.replace(newValue)(readValue)
+              }
+            },
+          ),
+        )
+        readResource.copy(values = newValues)
+      }
+
+  val setCopyrightAttributionIfMissing: Option[CopyrightAttribution] => ReadResourceV2 => ReadResourceV2 =
+    setIfMissing(composedCopyright)
+
+  val setLicenseIfMissing: Option[License] => ReadResourceV2 => ReadResourceV2 = setIfMissing(composedLicense)
+
   val sf = StringFormatter.getInitializedTestInstance
 
   val aLicense       = License.unsafeFrom("CC-BY-4.0")
@@ -74,16 +97,6 @@ object ReadResourceV2LensLearningSpec extends ZIOSpecDefault {
     FileValueV2("internalFilename", "internalMimeType", None, None, None, Some(aLicense))
   val fileValueWithACopyrightAttribution =
     FileValueV2("internalFilename", "internalMimeType", None, None, Some(aCopyrightAttribution), None)
-
-  val setLicenseIfMissing: Option[License] => ReadValueV2 => ReadValueV2 = newLicense =>
-    value => {
-      val composed = fileValueContentLens.andThen(fileValueContentPrism).andThen(fileValueLens).andThen(licenseLens)
-      val existing: Option[License] =composed.getOption(value).flatten
-      existing match {
-        case Some(_) => value
-        case None    => composed.replace(newLicense)(value)
-      }
-    }
 
   private val fileValueLensesSuite = suite("FileValueV2 lenses")(
     test("licenseLens should replace an empty license with a new one") {

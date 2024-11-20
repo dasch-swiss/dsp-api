@@ -5,6 +5,12 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
+import monocle.Lens
+import monocle.Optional
+import monocle.Prism
+import monocle.macros.GenLens
+import monocle.macros.GenPrism
+
 import java.time.Instant
 import java.util.UUID
 
@@ -27,6 +33,8 @@ import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -568,6 +576,79 @@ case class ReadResourceV2(
 
 }
 
+object ReadResourceV2 {
+
+  private val fileValueContentLens: Lens[ReadValueV2, ValueContentV2] =
+    Lens[ReadValueV2, ValueContentV2](_.valueContent)(fc => {
+      case rv: ReadLinkValueV2 =>
+        fc match {
+          case lv: LinkValueContentV2 => rv.copy(valueContent = lv)
+          case _                      => rv
+        }
+      case rv: ReadTextValueV2 =>
+        fc match {
+          case tv: TextValueContentV2 => rv.copy(valueContent = tv)
+          case _                      => rv
+        }
+      case ov: ReadOtherValueV2 => ov.copy(valueContent = fc)
+    })
+
+  private val fileValueContentPrism: Prism[ValueContentV2, FileValueContentV2] =
+    GenPrism[ValueContentV2, FileValueContentV2]
+
+  private val fileValueLens: Lens[FileValueContentV2, FileValueV2] =
+    Lens[FileValueContentV2, FileValueV2](_.fileValue)(fv => {
+      case vc: MovingImageFileValueContentV2        => vc.copy(fileValue = fv)
+      case vc: StillImageFileValueContentV2         => vc.copy(fileValue = fv)
+      case vc: AudioFileValueContentV2              => vc.copy(fileValue = fv)
+      case vc: DocumentFileValueContentV2           => vc.copy(fileValue = fv)
+      case vc: StillImageExternalFileValueContentV2 => vc.copy(fileValue = fv)
+      case vc: ArchiveFileValueContentV2            => vc.copy(fileValue = fv)
+      case vc: TextFileValueContentV2               => vc.copy(fileValue = fv)
+    })
+
+  private val copyrightAttributionLens: Lens[FileValueV2, Option[CopyrightAttribution]] =
+    GenLens[FileValueV2](_.copyrightAttribution)
+
+  private val licenseLens: Lens[FileValueV2, Option[License]] =
+    GenLens[FileValueV2](_.license)
+
+  private val commonComposed: Optional[ReadValueV2, FileValueV2] =
+    fileValueContentLens.andThen(fileValueContentPrism).andThen(fileValueLens)
+
+  private def setIfMissing[T](
+    optional: Optional[ReadValueV2, Option[T]],
+  ): Option[T] => ReadResourceV2 => ReadResourceV2 =
+    newValue =>
+      readResource => {
+        val newValues: Map[SmartIri, Seq[ReadValueV2]] =
+          readResource.values.map((iri: SmartIri, seq: Seq[ReadValueV2]) =>
+            (
+              iri,
+              seq.map { readValue =>
+                optional.getOption(readValue).flatten match {
+                  case Some(_) => readValue
+                  case None    => optional.replace(newValue)(readValue)
+                }
+              },
+            ),
+          )
+        readResource.copy(values = newValues)
+      }
+
+  private val setCopyrightAttributionIfMissing: Option[CopyrightAttribution] => ReadResourceV2 => ReadResourceV2 =
+    setIfMissing(commonComposed.andThen(copyrightAttributionLens))
+
+  private val setLicenseIfMissing: Option[License] => ReadResourceV2 => ReadResourceV2 =
+    setIfMissing(commonComposed.andThen(licenseLens))
+
+  def setCopyrightAndLicenceIfMissing(
+    copyright: Option[CopyrightAttribution],
+    license: Option[License],
+  ): ReadResourceV2 => ReadResourceV2 =
+    setCopyrightAttributionIfMissing(copyright).andThen(setLicenseIfMissing(license))
+}
+
 /**
  * The value of a Knora property sent to Knora to be created in a new resource.
  *
@@ -778,7 +859,17 @@ case class ReadResourcesSequenceV2(
   mayHaveMoreResults: Boolean = false,
 ) extends KnoraJsonLDResponseV2
     with KnoraReadV2[ReadResourcesSequenceV2]
-    with UpdateResultInProject {
+    with UpdateResultInProject { self =>
+
+  def updateCopyRightAndLicenseDeep(): ReadResourcesSequenceV2 = {
+    val newResources = self.resources.map { resource =>
+      ReadResourceV2.setCopyrightAndLicenceIfMissing(
+        self.projectADM.copyrightAttribution,
+        self.projectADM.license,
+      )(resource)
+    }
+    self.copy(resources = newResources)
+  }
 
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourcesSequenceV2 =
     copy(
