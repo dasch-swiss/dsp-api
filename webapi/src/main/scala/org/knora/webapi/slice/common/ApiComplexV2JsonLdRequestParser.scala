@@ -28,7 +28,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.DeleteOrEraseReso
 import org.knora.webapi.messages.v2.responder.resourcemessages.UpdateResourceMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
-import org.knora.webapi.routing.v2.AssetIngestState
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -230,7 +229,6 @@ final case class ApiComplexV2JsonLdRequestParser(
 
   def createResourceRequestV2(
     str: String,
-    ingestState: AssetIngestState,
     requestingUser: User,
     uuid: UUID,
   ): IO[String, CreateResourceRequestV2] = ZIO.scoped {
@@ -244,7 +242,7 @@ final case class ApiComplexV2JsonLdRequestParser(
              .fail("Resource IRI and project IRI must reference the same project")
              .when(r.resourceIri.exists(_.shortcode != project.getShortcode))
       attachedToUser <- attachedToUser(r.resource, requestingUser, project.projectIri)
-      values         <- extractValues(r.resource, project.getShortcode, ingestState)
+      values         <- extractValues(r.resource, project.getShortcode)
     } yield CreateResourceRequestV2(
       CreateResourceV2(
         r.resourceIri.map(_.smartIri),
@@ -257,14 +255,12 @@ final case class ApiComplexV2JsonLdRequestParser(
       ),
       attachedToUser,
       uuid,
-      ingestState,
     )
   }
 
   private def extractValues(
     r: Resource,
     shortcode: Shortcode,
-    ingestState: AssetIngestState,
   ): IO[String, Map[SmartIri, Seq[CreateValueInNewResourceV2]]] =
     val filteredProperties = Seq(
       RDF.`type`.toString,
@@ -280,17 +276,16 @@ final case class ApiComplexV2JsonLdRequestParser(
       .filter(p => !filteredProperties.contains(p.getPredicate.toString))
       .toSeq
     ZIO
-      .foreach(valueStatements)(valueStatementAsContent(_, shortcode, ingestState))
+      .foreach(valueStatements)(valueStatementAsContent(_, shortcode))
       .map(_.groupMap(_._1.smartIri)(_._2))
 
   private def valueStatementAsContent(
     statement: Statement,
     shortcode: Shortcode,
-    ingestState: AssetIngestState,
   ): IO[String, (PropertyIri, CreateValueInNewResourceV2)] =
     for {
       v                       <- ValueResource.from(statement)
-      cnt                     <- getValueContent(v, shortcode, ingestState)
+      cnt                     <- getValueContent(v, shortcode)
       customValueUuid         <- v.valueHasUuidOption
       customValueCreationDate <- v.valueCreationDateOption
       permissions             <- v.hasPermissionsOption
@@ -338,7 +333,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       )
       .unsome
 
-  def updateValueV2fromJsonLd(str: String, ingestState: AssetIngestState): IO[String, UpdateValueV2] =
+  def updateValueV2fromJsonLd(str: String): IO[String, UpdateValueV2] =
     ZIO.scoped {
       for {
         r                  <- RootResource.fromJsonLd(str)
@@ -348,7 +343,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueCreationDate  <- v.valueCreationDateOption
         valuePermissions   <- v.hasPermissionsOption
         newValueVersionIri <- newValueVersionIri(v, valueIri)
-        valueContent       <- getValueContent(v, resourceIri.shortcode, ingestState).map(Some(_)).orElse(ZIO.none)
+        valueContent       <- getValueContent(v, resourceIri.shortcode).map(Some(_)).orElse(ZIO.none)
         updateValue <- (valueContent, valuePermissions) match
                          case (Some(valueContentV2), _) =>
                            ZIO.succeed(
@@ -361,7 +356,6 @@ final case class ApiComplexV2JsonLdRequestParser(
                                valuePermissions,
                                valueCreationDate,
                                newValueVersionIri.map(_.smartIri),
-                               ingestState,
                              ),
                            )
                          case (_, Some(permissions)) =>
@@ -381,7 +375,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       } yield updateValue
     }
 
-  def createValueV2FromJsonLd(str: String, ingestState: AssetIngestState): IO[String, CreateValueV2] =
+  def createValueV2FromJsonLd(str: String): IO[String, CreateValueV2] =
     ZIO.scoped {
       for {
         r                 <- RootResource.fromJsonLd(str)
@@ -390,7 +384,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueUuid         <- v.valueHasUuidOption
         valueCreationDate <- v.valueCreationDateOption
         valuePermissions  <- v.hasPermissionsOption
-        valueContent      <- getValueContent(v, resourceIri.shortcode, ingestState)
+        valueContent      <- getValueContent(v, resourceIri.shortcode)
       } yield CreateValueV2(
         resourceIri.smartIri.toString,
         r.resourceClassSmartIri,
@@ -400,14 +394,12 @@ final case class ApiComplexV2JsonLdRequestParser(
         valueUuid,
         valueCreationDate,
         valuePermissions,
-        ingestState,
       )
     }
 
   private def getValueContent(
     v: ValueResource,
     shortcode: Shortcode,
-    ingestState: AssetIngestState,
   ): IO[String, ValueContentV2] =
     def withFileInfo[T](fileInfo: Option[FileInfo], f: FileInfo => Either[String, T]): IO[String, T] =
       fileInfo match
@@ -418,7 +410,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       valueResource  = v.r
       i <-
         ValueContentV2
-          .fileInfoFromExternal(maybeFileName, ingestState, shortcode)
+          .fileInfoFromExternal(maybeFileName, shortcode)
           .provide(ZLayer.succeed(sipiService))
           .mapError(_.getMessage)
       content <-
