@@ -21,6 +21,10 @@ import org.knora.webapi.slice.admin.domain.model.PermissionIri
 final case class DefaultObjectAccessPermissionService(
   private val repo: DefaultObjectAccessPermissionRepo,
 ) {
+
+  def findById(permissionIri: PermissionIri): Task[Option[DefaultObjectAccessPermission]] =
+    repo.findById(permissionIri)
+
   def findByProject(projectIri: ProjectIri): Task[Chunk[DefaultObjectAccessPermission]] =
     repo.findByProject(projectIri)
 
@@ -31,8 +35,7 @@ final case class DefaultObjectAccessPermissionService(
   ): Task[DefaultObjectAccessPermission] =
     repo.save(DefaultObjectAccessPermission(PermissionIri.makeNew(project.shortcode), project.id, forWhat, permission))
 
-  def save(permission: DefaultObjectAccessPermission): Task[DefaultObjectAccessPermission] =
-    repo.save(permission)
+  def save(doap: DefaultObjectAccessPermission): Task[DefaultObjectAccessPermission] = repo.save(doap)
 
   def findByProjectAndForWhat(projectIri: ProjectIri, forWhat: ForWhat): Task[Option[DefaultObjectAccessPermission]] =
     repo.findByProjectAndForWhat(projectIri, forWhat)

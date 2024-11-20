@@ -87,6 +87,7 @@ object RequestRejectedException {
  */
 final case class BadRequestException(message: String) extends RequestRejectedException(message)
 object BadRequestException {
+  def apply(e: Throwable): BadRequestException        = BadRequestException(e.getMessage)
   def apply(e: UserServiceError): BadRequestException = BadRequestException(e.message)
   def invalidQueryParamValue(key: String): BadRequestException =
     BadRequestException(s"Invalid value for query parameter '$key'")

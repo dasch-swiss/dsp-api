@@ -108,7 +108,6 @@ object DefaultObjectAccessPermissionRepoLive {
               val part: Either[String, DefaultObjectAccessPermissionPart] =
                 Permission.ObjectAccess
                   .fromToken(token)
-                  .toRight("No valid Object Access token")
                   .flatMap { permission =>
                     Chunk
                       .fromIterable(groups.split(','))
