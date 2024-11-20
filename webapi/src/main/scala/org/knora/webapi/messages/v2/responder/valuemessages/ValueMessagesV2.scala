@@ -692,48 +692,27 @@ object ValueContentV2 {
     ingestState: AssetIngestState,
     jsonLd: JsonLDObject,
   ): ZIO[SipiService, Throwable, Option[FileInfo]] =
-    val filenameMaybe = jsonLd.getString(FileValueHasFilename).toOption.flatten
-    fileInfoFromExternal(filenameMaybe, ingestState, shortcode)
+    fileInfoFromExternal(jsonLd.getString(FileValueHasFilename).toOption.flatten, shortcode)
 
   def fileInfoFromExternal(
     filenameMaybe: Option[String],
-    state: AssetIngestState,
     shortcode: Shortcode,
   ): ZIO[SipiService, Throwable, Option[FileInfo]] =
-    (filenameMaybe, state) match
-      case (None, _)                       => ZIO.none
-      case (Some(filename), AssetIngested) => fileInfoFromDspIngest(shortcode, filename).asSome
-      case (Some(filename), AssetInTemp)   => fileInfoFromSipi(filename).asSome
-
-  private def fileInfoFromSipi(filename: String) =
-    ZIO.serviceWithZIO[SipiService](
-      _.getFileMetadataFromSipiTemp(filename)
-        .mapBoth(
-          {
-            case NotFoundException(_) =>
-              NotFoundException(
-                s"Asset '$filename' not found in Sipi temp, when ingested with dsp-ingest you want to add the 'X-Asset-Ingested' header.",
-              )
-            case e => e
-          },
-          FileInfo(filename, _),
-        ),
-    )
-
-  private def fileInfoFromDspIngest(shortcode: Shortcode, filename: String) =
-    for {
-      sipiService <- ZIO.service[SipiService]
-      assetId <- ZIO
-                   .fromEither(AssetId.from(filename.substring(0, filename.indexOf('.'))))
-                   .mapError(msg => BadRequestException(s"Invalid value for 'fileValueHasFilename': $msg"))
-      meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
-                case NotFoundException(_) =>
-                  NotFoundException(
-                    s"Asset '$filename' not found in dsp-ingest, when ingested to Sipi temp you want to remove the 'X-Asset-Ingested' header.",
-                  )
-                case e => e
-              }
-    } yield FileInfo(filename, meta)
+    ZIO.foreach(filenameMaybe) { filename =>
+      for {
+        sipiService <- ZIO.service[SipiService]
+        assetId <- ZIO
+                     .fromEither(AssetId.from(filename.substring(0, filename.indexOf('.'))))
+                     .mapError(msg => BadRequestException(s"Invalid value for 'fileValueHasFilename': $msg"))
+        meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
+                  case NotFoundException(_) =>
+                    NotFoundException(
+                      s"Asset '$filename' not found in dsp-ingest, when ingested to Sipi temp you want to remove the 'X-Asset-Ingested' header.",
+                    )
+                  case e => e
+                }
+      } yield FileInfo(filename, meta)
+    }
 }
 
 /**
