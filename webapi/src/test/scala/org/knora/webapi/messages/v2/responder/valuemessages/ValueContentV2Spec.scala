@@ -9,21 +9,16 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.nio.file.Path
-import zio.test.Assertion.failsWithA
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
-import zio.test.assert
 import zio.test.assertTrue
 
-import dsp.errors.AssertionException
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.routing.v2.AssetIngestState
-import org.knora.webapi.routing.v2.AssetIngestState.*
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
@@ -45,7 +40,7 @@ object ValueContentV2Spec extends ZIOSpecDefault {
   override def spec: Spec[Any, Option[Throwable]] =
     suite("ValueContentV2.getFileInfo")(
       suite("Given the asset is ingested")(
-        test("When getting file metadata with AssetIngested from dsp-ingest, then it should succeed") {
+        test("When getting file metadata from dsp-ingest, then it should succeed") {
           for {
             ingested <- ValueContentV2.getFileInfo(shortcode0001, jsonLdObj).some
           } yield assertTrue(ingested.metadata == expected)
