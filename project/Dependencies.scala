@@ -97,15 +97,14 @@ object Dependencies {
   val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
 
   // other
-  val diff        = "com.sksamuel.diff" % "diff"         % "1.1.11"
-  val gwtServlet  = "com.google.gwt"    % "gwt-servlet"  % "2.10.0"
-  val icu4j       = "com.ibm.icu"       % "icu4j"        % "76.1"
-  val jakartaJSON = "org.glassfish"     % "jakarta.json" % "2.0.1"
-  val saxonHE     = "net.sf.saxon"      % "Saxon-HE"     % "12.5"
-  val scalaGraph =
-    "org.scala-graph" %% "graph-core" % "2.0.1" cross CrossVersion.for3Use2_13
-  val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.4.1"
-  val xmlunitCore    = "org.xmlunit"    % "xmlunit-core"     % "2.10.0"
+  val diff           = "com.sksamuel.diff" % "diff"             % "1.1.11"
+  val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
+  val icu4j          = "com.ibm.icu"       % "icu4j"            % "76.1"
+  val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
+  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.5"
+  val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "2.0.2"
+  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.4.1"
+  val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.10.0"
 
   // test
   val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion
