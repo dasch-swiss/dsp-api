@@ -44,44 +44,21 @@ object ValueContentV2Spec extends ZIOSpecDefault {
 
   override def spec: Spec[Any, Option[Throwable]] =
     suite("ValueContentV2.getFileInfo")(
-      suite("Given the asset is present in the tmp folder of Sipi")(
-        test("When getting file metadata with AssetInTemp from Sipi, then it should succeed") {
-          for {
-            temp <- ValueContentV2.getFileInfo(shortcode0001, AssetInTemp, jsonLdObj).some
-          } yield assertTrue(temp.metadata == expected)
-        },
-        test("When getting file metadata with AssetIngested from dsp-ingest, then it should fail") {
-          for {
-            exit <- ValueContentV2.getFileInfo(shortcode0001, AssetIngested, jsonLdObj).exit
-          } yield assert(exit)(failsWithA[AssertionException])
-        },
-      ).provide(mockSipi(AssetInTemp)),
       suite("Given the asset is ingested")(
-        test("When getting file metadata with AssetInTemp from Sipi, then it should fail") {
-          for {
-            exit <- ValueContentV2.getFileInfo(shortcode0001, AssetInTemp, jsonLdObj).exit
-          } yield assert(exit)(failsWithA[AssertionException])
-        },
         test("When getting file metadata with AssetIngested from dsp-ingest, then it should succeed") {
           for {
-            ingested <- ValueContentV2.getFileInfo(shortcode0001, AssetIngested, jsonLdObj).some
+            ingested <- ValueContentV2.getFileInfo(shortcode0001, jsonLdObj).some
           } yield assertTrue(ingested.metadata == expected)
         },
-      ).provide(mockSipi(AssetIngested)),
+      ).provide(mockSipi()),
     )
 
-  private def mockSipi(flag: AssetIngestState) = ZLayer.succeed(new SipiService {
-
-    override def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse] =
-      if (flag == AssetInTemp) { ZIO.succeed(expected) }
-      else { ZIO.fail(AssertionException("fail")) }
-
+  private def mockSipi() = ZLayer.succeed(new SipiService {
     override def getFileMetadataFromDspIngest(
       shortcode: KnoraProject.Shortcode,
       assetId: AssetId,
     ): Task[FileMetadataSipiResponse] =
-      if (flag == AssetIngested) { ZIO.succeed(expected) }
-      else { ZIO.fail(AssertionException("fail")) }
+      ZIO.succeed(expected)
 
     // The following are unsupported operations because they are not used in the test
     def moveTemporaryFileToPermanentStorage(

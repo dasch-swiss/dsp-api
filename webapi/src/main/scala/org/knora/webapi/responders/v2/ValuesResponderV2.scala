@@ -319,8 +319,7 @@ final case class ValuesResponderV2(
 
     // If we were creating a file value, have Sipi move the file to permanent storage if the update
     // was successful, or delete the temporary file if the update failed.
-    resourceUtilV2.doSipiPostUpdateIfInTemp(
-      valueToCreate.ingestState,
+    resourceUtilV2.doSipiPostUpdate(
       triplestoreUpdateFuture,
       valueToCreate.valueContent.asOpt[FileValueContentV2].toSeq,
       requestingUser,
@@ -956,8 +955,7 @@ final case class ValuesResponderV2(
             makeTaskFutureToUpdateValueContent(updateValueContentV2),
           )
 
-          resourceUtilV2.doSipiPostUpdateIfInTemp(
-            updateValueContentV2.ingestState,
+          resourceUtilV2.doSipiPostUpdate(
             triplestoreUpdate,
             updateValueContentV2.valueContent.asOpt[FileValueContentV2].toSeq,
             requestingUser,

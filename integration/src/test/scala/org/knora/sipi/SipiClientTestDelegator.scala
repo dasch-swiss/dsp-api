@@ -46,15 +46,6 @@ case class SipiServiceTestDelegator(
     else { mock }
 
   /**
-   * Asks Sipi for metadata about a file in the tmp folder, served from the 'knora.json' route.
-   *
-   * @param filename the path to the file.
-   * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
-   */
-  override def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse] =
-    sipiService.getFileMetadataFromSipiTemp(filename)
-
-  /**
    * Asks DSP-Ingest for metadata about a file in permanent location, served from the 'knora.json' route.
    *
    * @param shortcode the shortcode of the project.

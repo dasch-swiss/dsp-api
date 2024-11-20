@@ -48,9 +48,6 @@ case class SipiServiceMock(ref: Ref[Map[SipiMockMethodName, Task[Object]]]) exte
     ref.set(SipiMockMethodName.values.map(_ -> fail).toMap)
   }
 
-  override def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse] =
-    getReturnValue(GetFileMetadataFromSipiTemp)
-
   def moveTemporaryFileToPermanentStorage(
     moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
   ): Task[SuccessResponseV2] =
