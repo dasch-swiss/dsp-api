@@ -228,6 +228,20 @@ DELETE {
                     case None => {}
                 }
 
+                @fileValueContentV2.fileValue.copyrightAttribution match {
+                    case Some(copyrightAttribution) => {
+                        <@newValueIri> knora-base:hasCopyrightAttribution """@copyrightAttribution.value""" .
+                    }
+                    case None => {}
+                }
+
+                @fileValueContentV2.fileValue.license match {
+                    case Some(license) => {
+                        <@newValueIri> knora-base:hasLicense """@license.value""" .
+                    }
+                    case None => {}
+                }
+
                 @fileValueContentV2 match {
                     case stillImageFileValue: StillImageFileValueContentV2 => {
                         <@newValueIri> knora-base:dimX @stillImageFileValue.dimX ;
