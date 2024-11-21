@@ -48,14 +48,18 @@ object ModelOps { self =>
         case iris                   => Left(s"Multiple root resources found in model: ${iris.mkString(", ")}")
       }
 
-    def singleSubjectWithProperty(property: Property): Either[String, Resource] =
+    def singleSubjectWithPropertyOption(property: Property): Either[String, Option[Resource]] =
       val subjects = model.listSubjectsWithProperty(property).asScala.toList
       subjects match {
-        case s :: Nil => Right(s)
-        case Nil      => Left(s"No resource found with property ${property.getURI}")
-        case _        => Left(s"Multiple resources found with property ${property.getURI}")
+        case s :: Nil => Right(Some(s))
+        case Nil      => Right(None)
+        case _        => Left(s"Multiple subjects found with property ${property.getURI}")
       }
 
+    def singleSubjectWithProperty(property: Property): Either[String, Resource] =
+      singleSubjectWithPropertyOption(property).flatMap(
+        _.toRight(s"No resource found with property ${property.getURI}"),
+      )
   }
 
   def fromJsonLd(str: String): ZIO[Scope, String, Model] = from(str, Lang.JSONLD)
