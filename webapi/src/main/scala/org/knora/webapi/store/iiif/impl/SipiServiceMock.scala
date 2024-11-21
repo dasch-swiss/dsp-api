@@ -96,7 +96,8 @@ object SipiServiceMock {
     Ref
       .make[Map[SipiMockMethodName, Task[Object]]](
         Map(
-          GetFileMetadataFromSipiTemp -> ZIO.succeed(defaultGetFileMetadataFromSipiTempResponse),
+          GetFileMetadataFromSipiTemp  -> ZIO.succeed(defaultGetFileMetadataFromSipiTempResponse),
+          GetFileMetadataFromDspIngest -> ZIO.succeed(defaultGetFileMetadataFromSipiTempResponse),
         ),
       )
       .map(ref => SipiServiceMock(ref)),
