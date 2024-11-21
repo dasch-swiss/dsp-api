@@ -15,7 +15,6 @@ import zio.test.*
 import java.net.URLEncoder
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
-
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasCopyrightAttribution
@@ -34,6 +33,7 @@ import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import zio.http.Response
 
 object CopyrightAndLicensesSpec extends E2EZSpec {
 
@@ -142,6 +142,9 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       updated        <- projectService.updateProject(prj, change)
     } yield updated
 
+  private def failResponse(msg: String)(response: Response) =
+    response.body.asString.flatMap(bodyStr => ZIO.fail(Exception(s"$msg\nstatus: ${response.status}\nbody: $bodyStr")))
+
   private def createStillImageResource(
     copyrightAttribution: Option[CopyrightAttribution] = None,
     license: Option[License] = None,
@@ -156,8 +159,8 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
     for {
       responseBody <- sendPostRequestAsRoot("/v2/resources", jsonLd)
-                        .filterOrFail(_.status.isSuccess)(s"Failed to create resource")
                         .mapError(Exception(_))
+                        .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create resource"))
                         .flatMap(_.body.asString)
       createResourceResponseModel <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
     } yield createResourceResponseModel
@@ -165,7 +168,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
 
   private def getResourceFromApi(resourceId: String) = for {
     responseBody <- sendGetRequest(s"/v2/resources/${URLEncoder.encode(resourceId, "UTF-8")}")
-                      .filterOrFail(_.status.isSuccess)(s"Failed to get resource $resourceId")
+                      .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to get resource $resourceId."))
                       .flatMap(_.body.asString)
     model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
@@ -174,7 +177,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     valueId    <- valueId(createResourceResponse)
     resourceId <- resourceId(createResourceResponse)
     responseBody <- sendGetRequest(s"/v2/values/${URLEncoder.encode(resourceId, "UTF-8")}/${valueId.valueId}")
-                      .filterOrFail(_.status.isSuccess)(s"Failed to get resource $valueId")
+                      .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to get value $resourceId."))
                       .flatMap(_.body.asString)
     model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
