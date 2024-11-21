@@ -26,7 +26,6 @@ import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
@@ -154,11 +153,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         copyrightAttribution = copyrightAttribution,
         license = license,
       )
-      .toJsonLd(
-        className = Some("ThingPicture"),
-        ontologyName = "anything",
-      )
-
+      .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
     for {
       responseBody <- sendPostRequestAsRoot("/v2/resources", jsonLd)
                         .filterOrFail(_.status.isSuccess)(s"Failed to create resource")
