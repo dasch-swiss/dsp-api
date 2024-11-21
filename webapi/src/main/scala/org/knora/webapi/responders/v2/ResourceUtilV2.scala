@@ -14,15 +14,10 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
-import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
-import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.iiif.api.SipiService
@@ -71,24 +66,6 @@ trait ResourceUtilV2 {
    * @return Task of Either None for nonexistent, true for root and false for child node.
    */
   def checkListNodeExistsAndIsRootNode(nodeIri: IRI): Task[Either[Option[Nothing], Boolean]]
-
-  /**
-   * Given an update task which changes [[FileValueContentV2]] values the related files need to be finalized.
-   * If the update was successful the temporary files are moved to permanent storage.
-   * If the update failed the temporary files are deleted silently.
-   *
-   * @param updateTask     the [[Task]] that updates the triplestore.
-   * @param fileValues     the values which the task updates.
-   * @param requestingUser the user making the request.
-   *
-   * @return The result of the updateTask, unless this task was successful and the subsequent move to permanent storage failed.
-   *         In the latter case the failure from Sipi is returned.
-   */
-  def doSipiPostUpdate[T <: UpdateResultInProject](
-    updateTask: Task[T],
-    fileValues: Seq[FileValueContentV2],
-    requestingUser: User,
-  ): Task[T]
 }
 
 final case class ResourceUtilV2Live(triplestore: TriplestoreService, sipiService: SipiService)
@@ -181,48 +158,6 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, sipiService
         }
 
     } yield maybeList
-  }
-
-  /**
-   * Given a future representing an operation that was supposed to update a value in a triplestore, checks whether
-   * the updated value was a file value. If not, this method returns the same future. If it was a file value, this
-   * method checks whether the update was successful. If so, it asks Sipi to move the file to permanent storage.
-   * If not, it asks Sipi to delete the temporary file.
-   *
-   * @param updateTask     the Task that should have updated the triplestore.
-   * @param valueContents: Seq[FileValueContentV2],   the value that should have been created or updated.
-   * @param requestingUser the user making the request.
-   */
-  override def doSipiPostUpdate[T <: UpdateResultInProject](
-    updateTask: Task[T],
-    valueContents: Seq[FileValueContentV2],
-    requestingUser: User,
-  ): Task[T] = {
-    val temporaryFiles = valueContents.filterNot(_.is[StillImageExternalFileValueContentV2])
-    updateTask.foldZIO(
-      (e: Throwable) => {
-        ZIO
-          .foreachDiscard(temporaryFiles) { file =>
-            sipiService
-              .deleteTemporaryFile(DeleteTemporaryFileRequest(file.fileValue.internalFilename, requestingUser))
-              .logError
-          }
-          .ignore *> ZIO.fail(e)
-      },
-      (updateInProject: T) => {
-        ZIO
-          .foreachDiscard(temporaryFiles) { file =>
-            sipiService.moveTemporaryFileToPermanentStorage(
-              MoveTemporaryFileToPermanentStorageRequest(
-                file.fileValue.internalFilename,
-                updateInProject.projectADM.shortcode,
-                requestingUser,
-              ),
-            )
-          }
-          .as(updateInProject)
-      },
-    )
   }
 }
 

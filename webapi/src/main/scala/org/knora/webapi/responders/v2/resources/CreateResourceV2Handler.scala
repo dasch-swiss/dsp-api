@@ -83,11 +83,7 @@ final case class CreateResourceV2Handler(
    * @return a [[ReadResourcesSequenceV2]] containing a preview of the resource.
    */
   def apply(createResourceRequestV2: CreateResourceRequestV2): Task[ReadResourcesSequenceV2] =
-    resourceUtilV2.doSipiPostUpdate(
-      triplestoreUpdate(createResourceRequestV2),
-      createResourceRequestV2.createResource.flatValues.flatMap(_.valueContent.asOpt[FileValueContentV2]).toSeq,
-      createResourceRequestV2.requestingUser,
-    )
+    triplestoreUpdate(createResourceRequestV2)
 
   private def triplestoreUpdate(
     createResourceRequestV2: CreateResourceRequestV2,
