@@ -578,6 +578,39 @@ case class ReadResourceV2(
 
 object ReadResourceV2 {
 
+  private def setCopyrightAndLicenceIfMissingOnLinkedResources(
+    copyright: Option[CopyrightAttribution],
+    license: Option[License],
+  ): ReadResourceV2 => ReadResourceV2 =
+    rr => {
+      val newValues: Map[SmartIri, Seq[ReadValueV2]] = rr.values.map((iri: SmartIri, seq: Seq[ReadValueV2]) =>
+        (
+          iri,
+          seq.map {
+            case lv: ReadLinkValueV2 =>
+              linkValueFromReadValue
+                .andThen(nestedResourceFromLinkValueContent)
+                .modifyOption(setCopyrightAndLicenceIfMissingResourceValues(copyright, license))(lv)
+                .getOrElse(lv)
+            case other => other
+          },
+        ),
+      )
+      rr.copy(values = newValues)
+    }
+
+  private val linkValueFromReadValue = Optional[ReadValueV2, LinkValueContentV2] {
+    case lv: ReadLinkValueV2 => Some(lv.valueContent)
+    case _                   => None
+  }(lv => {
+    case rv: ReadLinkValueV2  => rv.copy(valueContent = lv)
+    case rv: ReadOtherValueV2 => rv.copy(valueContent = lv)
+    case rv: ReadTextValueV2  => rv
+  })
+
+  private val nestedResourceFromLinkValueContent =
+    Optional[LinkValueContentV2, ReadResourceV2](_.nestedResource)(rr => lv => lv.copy(nestedResource = Some(rr)))
+
   private val fileValueContentLens: Lens[ReadValueV2, ValueContentV2] =
     Lens[ReadValueV2, ValueContentV2](_.valueContent)(fc => {
       case rv: ReadLinkValueV2 =>
@@ -613,7 +646,7 @@ object ReadResourceV2 {
   private val licenseLens: Lens[FileValueV2, Option[License]] =
     GenLens[FileValueV2](_.license)
 
-  private val commonComposed: Optional[ReadValueV2, FileValueV2] =
+  private val fileValueFromReadValue: Optional[ReadValueV2, FileValueV2] =
     fileValueContentLens.andThen(fileValueContentPrism).andThen(fileValueLens)
 
   private def setIfMissing[T](
@@ -636,17 +669,23 @@ object ReadResourceV2 {
         readResource.copy(values = newValues)
       }
 
-  private val setCopyrightAttributionIfMissing: Option[CopyrightAttribution] => ReadResourceV2 => ReadResourceV2 =
-    setIfMissing(commonComposed.andThen(copyrightAttributionLens))
-
-  private val setLicenseIfMissing: Option[License] => ReadResourceV2 => ReadResourceV2 =
-    setIfMissing(commonComposed.andThen(licenseLens))
+  private def setCopyrightAndLicenceIfMissingResourceValues(
+    copyright: Option[CopyrightAttribution],
+    license: Option[License],
+  ): ReadResourceV2 => ReadResourceV2 = {
+    val licenseOptional: Optional[ReadValueV2, Option[License]] =
+      fileValueFromReadValue.andThen(licenseLens)
+    val copyrightAttributionOptional: Optional[ReadValueV2, Option[CopyrightAttribution]] =
+      fileValueFromReadValue.andThen(copyrightAttributionLens)
+    setIfMissing(licenseOptional)(license).andThen(setIfMissing(copyrightAttributionOptional)(copyright))
+  }
 
   def setCopyrightAndLicenceIfMissing(
     copyright: Option[CopyrightAttribution],
     license: Option[License],
   ): ReadResourceV2 => ReadResourceV2 =
-    setCopyrightAttributionIfMissing(copyright).andThen(setLicenseIfMissing(license))
+    setCopyrightAndLicenceIfMissingResourceValues(copyright, license)
+      .andThen(setCopyrightAndLicenceIfMissingOnLinkedResources(copyright, license))
 }
 
 /**
