@@ -69,5 +69,13 @@ object ValueMessagesV2Optics {
     val nestedResourceOfLinkValueContent: Optional[ReadValueV2, ReadResourceV2] =
       ReadValueV2Optics.linkValueContentV2.andThen(LinkValueContentV2Optics.nestedResource)
 
+    def elements(predicate: ReadValueV2 => Boolean): Optional[Seq[ReadValueV2], ReadValueV2] =
+      Optional[Seq[ReadValueV2], ReadValueV2](_.find(predicate))(newValue =>
+        values =>
+          values.map {
+            case v if predicate(v) => newValue
+            case other             => other
+          },
+      )
   }
 }

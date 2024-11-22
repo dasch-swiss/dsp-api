@@ -26,6 +26,7 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceMessagesV2Optics.ReadResourceV2Optics
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optics.*
@@ -585,24 +586,32 @@ object ReadResourceV2 {
   private def setCopyrightAndLicenceIfMissingResourceValues(
     copyright: Option[CopyrightAttribution],
     license: Option[License],
-  ): ReadResourceV2 => ReadResourceV2 =
-    setIfMissing(FileValueV2Optics.licenseOption)(license)
-      .andThen(setIfMissing(FileValueV2Optics.copyrightAttributionOption)(copyright))
+  ): ReadResourceV2 => ReadResourceV2 = { rr =>
 
-  private def ifMissingMapper[T](optional: Optional[ReadValueV2, Option[T]], newValue: Option[T]) =
-    (smartIri: SmartIri, seq: Seq[ReadValueV2]) =>
-      (
-        smartIri,
-        seq.map { readValue =>
-          optional.getOption(readValue).flatten match
-            case Some(_) => readValue
-            case None    => optional.replace(newValue)(readValue)
-        },
-      )
+    def readValueWith(predicate: FileValueV2 => Boolean): ReadValueV2 => Boolean = rv =>
+      ReadValueV2Optics.fileValueV2.getOption(rv).exists(predicate)
 
-  private def setIfMissing[T](opt: Optional[FileValueV2, Option[T]]): Option[T] => ReadResourceV2 => ReadResourceV2 =
-    value =>
-      rr => rr.copy(values = rr.values.map(ifMissingMapper(ReadValueV2Optics.fileValueV2.andThen(opt), value)(_, _)))
+    def readValuesWith(predicate: FileValueV2 => Boolean): Optional[Seq[ReadValueV2], FileValueV2] =
+      ReadValueV2Optics
+        .elements(readValueWith(predicate))
+        .andThen(ReadValueV2Optics.fileValueV2)
+
+    def readValuesWithPred(predicate: FileValueV2 => Boolean): Seq[ReadValueV2] => Boolean =
+      readValuesWith(predicate).getOption(_).isDefined
+
+    def readResourcesWith(predicate: FileValueV2 => Boolean): Optional[ReadResourceV2, Seq[ReadValueV2]] =
+      ReadResourceV2Optics.values(readValuesWithPred(predicate))
+
+    def fileValueWith(predicate: FileValueV2 => Boolean): Optional[ReadResourceV2, FileValueV2] =
+      readResourcesWith(predicate).andThen(readValuesWith(predicate))
+
+    def setIfMissing[T](opt: Optional[FileValueV2, Option[T]], newValue: Option[T]): ReadResourceV2 => ReadResourceV2 =
+      r => fileValueWith(v => opt.getOption(v).flatten.isEmpty).andThen(opt).modifyOption(_ => newValue)(r).getOrElse(r)
+
+    setIfMissing(FileValueV2Optics.licenseOption, license).andThen(
+      setIfMissing(FileValueV2Optics.copyrightAttributionOption, copyright),
+    )(rr)
+  }
 
   private def setCopyrightAndLicenceIfMissingOnLinkedResources(
     copyright: Option[CopyrightAttribution],
