@@ -19,7 +19,6 @@ import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
 
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.it.v2.CopyrightAndLicensesSpec.addCopyrightAttributionAndLicenseToProject
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasCopyrightAttribution
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasLicense

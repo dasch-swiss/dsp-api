@@ -5,8 +5,6 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
-import monocle.Optional
-
 import java.time.Instant
 import java.util.UUID
 
@@ -26,13 +24,10 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceMessagesV2Optics.ReadResourceV2Optics
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optics.*
 import org.knora.webapi.slice.admin.api.model.Project
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -571,65 +566,6 @@ case class ReadResourceV2(
       values = valuesWithDeletedValues,
     )
   }
-
-}
-
-object ReadResourceV2 {
-
-  def setCopyrightAndLicenceIfMissing(
-    copyright: Option[CopyrightAttribution],
-    license: Option[License],
-  ): ReadResourceV2 => ReadResourceV2 =
-    setCopyrightAndLicenceIfMissingResourceValues(copyright, license)
-      .andThen(setCopyrightAndLicenceIfMissingOnLinkedResources(copyright, license))
-
-  private def setCopyrightAndLicenceIfMissingResourceValues(
-    copyright: Option[CopyrightAttribution],
-    license: Option[License],
-  ): ReadResourceV2 => ReadResourceV2 = {
-    def readValueWith(predicate: FileValueV2 => Boolean): ReadValueV2 => Boolean = rv =>
-      ReadValueV2Optics.fileValueV2.getOption(rv).exists(predicate)
-
-    def readValuesWith(predicate: FileValueV2 => Boolean): Optional[Seq[ReadValueV2], FileValueV2] =
-      ReadValueV2Optics
-        .elements(readValueWith(predicate))
-        .andThen(ReadValueV2Optics.fileValueV2)
-
-    def readValuesWithPred(predicate: FileValueV2 => Boolean): Seq[ReadValueV2] => Boolean =
-      readValuesWith(predicate).getOption(_).isDefined
-
-    def readResourcesWith(predicate: FileValueV2 => Boolean): Optional[ReadResourceV2, Seq[ReadValueV2]] =
-      ReadResourceV2Optics.values(readValuesWithPred(predicate))
-
-    def fileValueWith(predicate: FileValueV2 => Boolean): Optional[ReadResourceV2, FileValueV2] =
-      readResourcesWith(predicate).andThen(readValuesWith(predicate))
-
-    def setIfMissing[T](opt: Optional[FileValueV2, Option[T]], newValue: Option[T]): ReadResourceV2 => ReadResourceV2 =
-      r => fileValueWith(v => opt.getOption(v).flatten.isEmpty).andThen(opt).modifyOption(_ => newValue)(r).getOrElse(r)
-
-    setIfMissing(FileValueV2Optics.licenseOption, license).andThen(
-      setIfMissing(FileValueV2Optics.copyrightAttributionOption, copyright),
-    )
-  }
-
-  private def setCopyrightAndLicenceIfMissingOnLinkedResources(
-    copyright: Option[CopyrightAttribution],
-    license: Option[License],
-  ): ReadResourceV2 => ReadResourceV2 =
-    rr => rr.copy(values = rr.values.map(linkValueIfMissingMapper(copyright, license)(_, _)))
-
-  private def linkValueIfMissingMapper(copyright: Option[CopyrightAttribution], license: Option[License]) =
-    (iri: SmartIri, seq: Seq[ReadValueV2]) =>
-      (
-        iri,
-        seq.map {
-          case lv: ReadLinkValueV2 =>
-            ReadValueV2Optics.nestedResourceOfLinkValueContent
-              .modifyOption(setCopyrightAndLicenceIfMissingResourceValues(copyright, license))(lv)
-              .getOrElse(lv)
-          case other => other
-        },
-      )
 }
 
 /**
@@ -844,16 +780,6 @@ case class ReadResourcesSequenceV2(
     with KnoraReadV2[ReadResourcesSequenceV2]
     with UpdateResultInProject { self =>
 
-  private def updateCopyRightAndLicenseDeep(): ReadResourcesSequenceV2 = {
-    val newResources = self.resources.map { resource =>
-      ReadResourceV2.setCopyrightAndLicenceIfMissing(
-        self.projectADM.copyrightAttribution,
-        self.projectADM.license,
-      )(resource)
-    }
-    self.copy(resources = newResources)
-  }
-
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourcesSequenceV2 =
     copy(
       resources = resources.map(_.toOntologySchema(targetSchema)),
@@ -935,8 +861,7 @@ case class ReadResourcesSequenceV2(
     appConfig: AppConfig,
     schemaOptions: Set[Rendering] = Set.empty,
   ): JsonLDDocument =
-    updateCopyRightAndLicenseDeep()
-      .toOntologySchema(targetSchema)
+    toOntologySchema(targetSchema)
       .generateJsonLD(
         targetSchema = targetSchema,
         appConfig = appConfig,
