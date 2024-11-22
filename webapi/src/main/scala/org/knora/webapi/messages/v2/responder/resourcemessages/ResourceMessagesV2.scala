@@ -5,11 +5,7 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
-import monocle.Lens
 import monocle.Optional
-import monocle.Prism
-import monocle.macros.GenLens
-import monocle.macros.GenPrism
 
 import java.time.Instant
 import java.util.UUID
@@ -32,6 +28,7 @@ import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optics.*
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
@@ -589,10 +586,8 @@ object ReadResourceV2 {
     copyright: Option[CopyrightAttribution],
     license: Option[License],
   ): ReadResourceV2 => ReadResourceV2 =
-    setIfMissing(licenseLens)(license).andThen(setIfMissing(copyrightAttributionLens)(copyright))
-
-  private val copyrightAttributionLens = GenLens[FileValueV2](_.copyrightAttribution)
-  private val licenseLens              = GenLens[FileValueV2](_.license)
+    setIfMissing(FileValueV2Optics.licenseLens)(license)
+      .andThen(setIfMissing(FileValueV2Optics.copyrightAttributionLens)(copyright))
 
   private def ifMissingMapper[T](optional: Optional[ReadValueV2, Option[T]], newValue: Option[T]) =
     (smartIri: SmartIri, seq: Seq[ReadValueV2]) =>
@@ -606,39 +601,11 @@ object ReadResourceV2 {
       )
 
   private def setIfMissing[T](opt: Optional[FileValueV2, Option[T]]): Option[T] => ReadResourceV2 => ReadResourceV2 =
-    value => rr => rr.copy(values = rr.values.map(ifMissingMapper(fileValueFromReadValue.andThen(opt), value)(_, _)))
-
-  private val fileValueContentLens: Lens[ReadValueV2, ValueContentV2] =
-    Lens[ReadValueV2, ValueContentV2](_.valueContent)(fc => {
-      case rv: ReadLinkValueV2 =>
-        fc match {
-          case lv: LinkValueContentV2 => rv.copy(valueContent = lv)
-          case _                      => rv
-        }
-      case rv: ReadTextValueV2 =>
-        fc match {
-          case tv: TextValueContentV2 => rv.copy(valueContent = tv)
-          case _                      => rv
-        }
-      case ov: ReadOtherValueV2 => ov.copy(valueContent = fc)
-    })
-
-  private val fileValueContentPrism: Prism[ValueContentV2, FileValueContentV2] =
-    GenPrism[ValueContentV2, FileValueContentV2]
-
-  private val fileValueLens: Lens[FileValueContentV2, FileValueV2] =
-    Lens[FileValueContentV2, FileValueV2](_.fileValue)(fv => {
-      case vc: MovingImageFileValueContentV2        => vc.copy(fileValue = fv)
-      case vc: StillImageFileValueContentV2         => vc.copy(fileValue = fv)
-      case vc: AudioFileValueContentV2              => vc.copy(fileValue = fv)
-      case vc: DocumentFileValueContentV2           => vc.copy(fileValue = fv)
-      case vc: StillImageExternalFileValueContentV2 => vc.copy(fileValue = fv)
-      case vc: ArchiveFileValueContentV2            => vc.copy(fileValue = fv)
-      case vc: TextFileValueContentV2               => vc.copy(fileValue = fv)
-    })
-
-  private val fileValueFromReadValue: Optional[ReadValueV2, FileValueV2] =
-    fileValueContentLens.andThen(fileValueContentPrism).andThen(fileValueLens)
+    value =>
+      rr =>
+        rr.copy(values =
+          rr.values.map(ifMissingMapper(ReadValueV2Optics.fileValueFromReadValue.andThen(opt), value)(_, _)),
+        )
 
   private def setCopyrightAndLicenceIfMissingOnLinkedResources(
     copyright: Option[CopyrightAttribution],
