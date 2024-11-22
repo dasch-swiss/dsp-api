@@ -586,8 +586,8 @@ object ReadResourceV2 {
     copyright: Option[CopyrightAttribution],
     license: Option[License],
   ): ReadResourceV2 => ReadResourceV2 =
-    setIfMissing(FileValueV2Optics.licenseLens)(license)
-      .andThen(setIfMissing(FileValueV2Optics.copyrightAttributionLens)(copyright))
+    setIfMissing(FileValueV2Optics.licenseOption)(license)
+      .andThen(setIfMissing(FileValueV2Optics.copyrightAttributionOption)(copyright))
 
   private def ifMissingMapper[T](optional: Optional[ReadValueV2, Option[T]], newValue: Option[T]) =
     (smartIri: SmartIri, seq: Seq[ReadValueV2]) =>
@@ -602,10 +602,7 @@ object ReadResourceV2 {
 
   private def setIfMissing[T](opt: Optional[FileValueV2, Option[T]]): Option[T] => ReadResourceV2 => ReadResourceV2 =
     value =>
-      rr =>
-        rr.copy(values =
-          rr.values.map(ifMissingMapper(ReadValueV2Optics.fileValueFromReadValue.andThen(opt), value)(_, _)),
-        )
+      rr => rr.copy(values = rr.values.map(ifMissingMapper(ReadValueV2Optics.fileValueV2.andThen(opt), value)(_, _)))
 
   private def setCopyrightAndLicenceIfMissingOnLinkedResources(
     copyright: Option[CopyrightAttribution],
