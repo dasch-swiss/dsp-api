@@ -192,7 +192,7 @@ final case class ResourcesResponderV2(
   }
 
   def createResource(createResource: CreateResourceRequestV2): Task[ReadResourcesSequenceV2] =
-    createHandler(createResource).map(_.updateCopyRightAndLicenseDeep())
+    createHandler(createResource)
 
   /**
    * If resource has already been modified, make sure that its lastModificationDate is given in the request body.
@@ -654,7 +654,7 @@ final case class ResourcesResponderV2(
           }
         }
       responseWithDeletedResourcesReplaced = apiResponse.copy(resources = deletedResourcesReplaced)
-    } yield responseWithDeletedResourcesReplaced.updateCopyRightAndLicenseDeep()
+    } yield responseWithDeletedResourcesReplaced
   }
 
   /**
@@ -722,7 +722,7 @@ final case class ResourcesResponderV2(
                                                  }
                                              }
 
-    } yield responseWithDeletedResourcesReplaced.updateCopyRightAndLicenseDeep()
+    } yield responseWithDeletedResourcesReplaced
   }
 
   /**

@@ -844,7 +844,7 @@ case class ReadResourcesSequenceV2(
     with KnoraReadV2[ReadResourcesSequenceV2]
     with UpdateResultInProject { self =>
 
-  def updateCopyRightAndLicenseDeep(): ReadResourcesSequenceV2 = {
+  private def updateCopyRightAndLicenseDeep(): ReadResourcesSequenceV2 = {
     val newResources = self.resources.map { resource =>
       ReadResourceV2.setCopyrightAndLicenceIfMissing(
         self.projectADM.copyrightAttribution,
@@ -935,11 +935,13 @@ case class ReadResourcesSequenceV2(
     appConfig: AppConfig,
     schemaOptions: Set[Rendering] = Set.empty,
   ): JsonLDDocument =
-    toOntologySchema(targetSchema).generateJsonLD(
-      targetSchema = targetSchema,
-      appConfig = appConfig,
-      schemaOptions = schemaOptions,
-    )
+    updateCopyRightAndLicenseDeep()
+      .toOntologySchema(targetSchema)
+      .generateJsonLD(
+        targetSchema = targetSchema,
+        appConfig = appConfig,
+        schemaOptions = schemaOptions,
+      )
 
   /**
    * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource.
