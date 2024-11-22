@@ -12,19 +12,20 @@ import org.apache.jena.vocabulary.RDF
 import zio.*
 import zio.http.Response
 import zio.test.*
+import zio.test.TestAspect
 
 import java.net.URLEncoder
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
 
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.it.v2.CopyrightAndLicensesSpec.addCopyrightAttributionAndLicenseToProject
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasCopyrightAttribution
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasLicense
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.StillImageFileValue
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -44,10 +45,11 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
   private val projectCopyrightAttribution = CopyrightAttribution.unsafeFrom("2024, On Project")
   private val projectLicense              = License.unsafeFrom("Apache-2.0")
 
-  val e2eSpec: Spec[Scope & env, Any] = suite("Copyright Attribution and Licenses")(
+  private val givenProjectHasNoCopyrightAttributionAndLicenseSuite = suite(
+    "given the project does not have a license and does not have a copyright attribution ",
+  )(
     test(
-      "given the project does neither have a default license nor a default copyright attribution " +
-        "when creating a resource without copyright attribution and license " +
+      "when creating a resource without copyright attribution and license" +
         "the creation response should not contain the license and copyright attribution",
     ) {
       for {
@@ -101,13 +103,16 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         actualLicense == aLicense.value,
       )
     },
+  ) @@ TestAspect.before(removeCopyrightAttributionAndLicenseFromProject())
+
+  private val givenProjectHasCopyrightAttributionAndLicenseSuite = suite(
+    "given the project has a license and has a copyright attribution",
+  )(
     test(
       "when creating a resource without copyright attribution and without license " +
-        "given the project has a default license and default copyright attribution " +
         "then the response when getting the created value should contain the default license and default copyright attribution",
     ) {
       for {
-        _                           <- addCopyrightAttributionAndLicenseToProject(projectCopyrightAttribution, projectLicense)
         createResourceResponseModel <- createStillImageResource()
         valueResponseModel          <- getValueFromApi(createResourceResponseModel)
         actualCopyright             <- copyrightValue(valueResponseModel)
@@ -118,12 +123,36 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       )
     },
     test(
+      "when creating a resource without copyright attribution and without license " +
+        "then the create response contain the license and copyright attribution from resource",
+    ) {
+      for {
+        createResourceResponseModel <- createStillImageResource()
+        actualCopyright             <- copyrightValue(createResourceResponseModel)
+        actualLicense               <- licenseValue(createResourceResponseModel)
+      } yield assertTrue(
+        actualCopyright == projectCopyrightAttribution.value,
+        actualLicense == projectLicense.value,
+      )
+    },
+    test(
+      "when creating a resource with copyright attribution and license " +
+        "then the create response contain the license and copyright attribution from resource",
+    ) {
+      for {
+        createResourceResponseModel <- createStillImageResource(Some(aCopyrightAttribution), Some(aLicense))
+        actualCopyright             <- copyrightValue(createResourceResponseModel)
+        actualLicense               <- licenseValue(createResourceResponseModel)
+      } yield assertTrue(
+        actualCopyright == aCopyrightAttribution.value,
+        actualLicense == aLicense.value,
+      )
+    },
+    test(
       "when creating a resource with copyright attribution and without license " +
-        "given the project has a default license and default copyright attribution " +
         "then the response when getting the created value should contain the license and copyright attribution from resource",
     ) {
       for {
-        _                           <- addCopyrightAttributionAndLicenseToProject(projectCopyrightAttribution, projectLicense)
         createResourceResponseModel <- createStillImageResource(Some(aCopyrightAttribution), Some(aLicense))
         valueResponseModel          <- getValueFromApi(createResourceResponseModel)
         actualCopyright             <- copyrightValue(valueResponseModel)
@@ -133,14 +162,26 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         actualLicense == aLicense.value,
       )
     },
+  ) @@ TestAspect.before(addCopyrightAttributionAndLicenseToProject())
+
+  val e2eSpec: Spec[Scope & env, Any] = suite("Copyright Attribution and Licenses")(
+    givenProjectHasNoCopyrightAttributionAndLicenseSuite,
+    givenProjectHasCopyrightAttributionAndLicenseSuite,
   )
 
-  private def addCopyrightAttributionAndLicenseToProject(copyrightAttribution: CopyrightAttribution, license: License) =
+  private def removeCopyrightAttributionAndLicenseFromProject() =
+    setCopyrightAttributionAndLicenseToProject(None, None)
+  private def addCopyrightAttributionAndLicenseToProject() =
+    setCopyrightAttributionAndLicenseToProject(Some(projectCopyrightAttribution), Some(projectLicense))
+  private def setCopyrightAttributionAndLicenseToProject(
+    copyrightAttribution: Option[CopyrightAttribution],
+    license: Option[License],
+  ) =
     for {
       projectService <- ZIO.service[KnoraProjectService]
       prj            <- projectService.findByShortcode(Shortcode.unsafeFrom("0001")).someOrFail(new Exception("Project not found"))
-      change          = ProjectUpdateRequest(copyrightAttribution = Some(copyrightAttribution), license = Some(license))
-      updated        <- projectService.updateProject(prj, change)
+      change          = prj.copy(copyrightAttribution = copyrightAttribution, license = license)
+      updated        <- projectService.save(change)
     } yield updated
 
   private def failResponse(msg: String)(response: Response) =

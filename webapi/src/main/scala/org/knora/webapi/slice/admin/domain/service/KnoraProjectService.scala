@@ -105,6 +105,8 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
                  )
     } yield updated
 
+  def save(project: KnoraProject): Task[KnoraProject] = knoraProjectRepo.save(project)
+
   def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] = {
     val projectGraph = ProjectService.projectDataNamedGraphV2(project)
     ontologyRepo
