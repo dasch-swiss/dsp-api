@@ -616,26 +616,12 @@ object ReadResourceV2 {
         iri,
         seq.map {
           case lv: ReadLinkValueV2 =>
-            linkValueFromReadValue
-              .andThen(nestedResourceFromLinkValueContent)
+            ReadValueV2Optics.nestedResourceOfLinkValueContent
               .modifyOption(setCopyrightAndLicenceIfMissingResourceValues(copyright, license))(lv)
               .getOrElse(lv)
           case other => other
         },
       )
-
-  private val linkValueFromReadValue = Optional[ReadValueV2, LinkValueContentV2] {
-    case lv: ReadLinkValueV2 => Some(lv.valueContent)
-    case _                   => None
-  }(lv => {
-    case rv: ReadLinkValueV2  => rv.copy(valueContent = lv)
-    case rv: ReadOtherValueV2 => rv.copy(valueContent = lv)
-    case rv: ReadTextValueV2  => rv
-  })
-
-  private val nestedResourceFromLinkValueContent =
-    Optional[LinkValueContentV2, ReadResourceV2](_.nestedResource)(rr => lv => lv.copy(nestedResource = Some(rr)))
-
 }
 
 /**

@@ -9,6 +9,7 @@ import monocle.*
 import monocle.Optional
 import monocle.macros.*
 
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 
@@ -39,6 +40,13 @@ object ValueMessagesV2Optics {
 
   }
 
+  object LinkValueContentV2Optics {
+
+    val nestedResource: Optional[LinkValueContentV2, ReadResourceV2] =
+      Optional[LinkValueContentV2, ReadResourceV2](_.nestedResource)(rr => lv => lv.copy(nestedResource = Some(rr)))
+
+  }
+
   object ReadValueV2Optics {
 
     val fileValueContentV2: Optional[ReadValueV2, FileValueContentV2] =
@@ -50,6 +58,16 @@ object ValueMessagesV2Optics {
 
     val fileValueV2: Optional[ReadValueV2, FileValueV2] =
       ReadValueV2Optics.fileValueContentV2.andThen(FileValueContentV2Optics.fileValueV2)
+
+    val linkValueContentV2: Optional[ReadValueV2, LinkValueContentV2] =
+      Optional[ReadValueV2, LinkValueContentV2](_.valueContent.asOpt[LinkValueContentV2])(lv => {
+        case rv: ReadLinkValueV2  => rv.copy(valueContent = lv)
+        case rv: ReadOtherValueV2 => rv.copy(valueContent = lv)
+        case rv: ReadTextValueV2  => rv
+      })
+
+    val nestedResourceOfLinkValueContent: Optional[ReadValueV2, ReadResourceV2] =
+      ReadValueV2Optics.linkValueContentV2.andThen(LinkValueContentV2Optics.nestedResource)
 
   }
 }
