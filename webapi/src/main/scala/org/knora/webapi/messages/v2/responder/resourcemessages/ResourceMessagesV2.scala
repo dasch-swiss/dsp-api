@@ -586,8 +586,7 @@ object ReadResourceV2 {
   private def setCopyrightAndLicenceIfMissingResourceValues(
     copyright: Option[CopyrightAttribution],
     license: Option[License],
-  ): ReadResourceV2 => ReadResourceV2 = { rr =>
-
+  ): ReadResourceV2 => ReadResourceV2 = {
     def readValueWith(predicate: FileValueV2 => Boolean): ReadValueV2 => Boolean = rv =>
       ReadValueV2Optics.fileValueV2.getOption(rv).exists(predicate)
 
@@ -610,7 +609,7 @@ object ReadResourceV2 {
 
     setIfMissing(FileValueV2Optics.licenseOption, license).andThen(
       setIfMissing(FileValueV2Optics.copyrightAttributionOption, copyright),
-    )(rr)
+    )
   }
 
   private def setCopyrightAndLicenceIfMissingOnLinkedResources(
