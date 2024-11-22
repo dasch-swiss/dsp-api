@@ -6,8 +6,8 @@
 package org.knora.webapi.messages.v2.responder.valuemessages
 
 import monocle.*
+import monocle.Optional
 import monocle.macros.*
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 
@@ -40,31 +40,16 @@ object ValueMessagesV2Optics {
 
   object ReadValueV2Optics {
 
-    val fileValueContentLens: Lens[ReadValueV2, ValueContentV2] =
-      Lens[ReadValueV2, ValueContentV2](_.valueContent)(fc => {
-        case rv: ReadLinkValueV2 =>
-          fc match {
-            case lv: LinkValueContentV2 => rv.copy(valueContent = lv)
-            case _                      => rv
-          }
-        case rv: ReadTextValueV2 =>
-          fc match {
-            case tv: TextValueContentV2 => rv.copy(valueContent = tv)
-            case _                      => rv
-          }
+    val fileValueContentOptional: Optional[ReadValueV2, FileValueContentV2] =
+      Optional[ReadValueV2, FileValueContentV2](_.valueContent.asOpt[FileValueContentV2])(fc => {
+        case rv: ReadLinkValueV2  => rv
+        case rv: ReadTextValueV2  => rv
         case ov: ReadOtherValueV2 => ov.copy(valueContent = fc)
       })
 
     val fileValueFromReadValue: Optional[ReadValueV2, FileValueV2] =
-      ReadValueV2Optics.fileValueContentLens
-        .andThen(ValueContentV2Optics.fileValueContentPrism)
+      ReadValueV2Optics.fileValueContentOptional
         .andThen(FileValueContentV2Optics.fileValueLens)
-
-  }
-
-  object ValueContentV2Optics {
-
-    val fileValueContentPrism: Prism[ValueContentV2, FileValueContentV2] = GenPrism[ValueContentV2, FileValueContentV2]
 
   }
 }
