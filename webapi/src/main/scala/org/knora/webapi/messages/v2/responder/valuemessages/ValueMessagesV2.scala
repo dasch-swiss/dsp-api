@@ -700,7 +700,7 @@ object ValueContentV2 {
         meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
                   case NotFoundException(_) =>
                     NotFoundException(
-                      s"Asset '$filename' not found in dsp-ingest, when ingested to Sipi temp you want to remove the 'X-Asset-Ingested' header.",
+                      s"Asset '$filename' not found in dsp-ingest, make sure the old Sipi upload mechanism is not being used.",
                     )
                   case e => e
                 }

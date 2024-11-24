@@ -64,7 +64,6 @@ class KnoraSipiIntegrationV2ITSpec
 
   private val jsonLdHttpEntity = HttpEntity(RdfMediaTypes.`application/ld+json`, _: String)
   private val addAuthorization = addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-  private val addAssetIngested = addHeader("X-Asset-Ingested", "true")
   private val encodeUTF8       = URLEncoder.encode(_: String, "UTF-8")
 
   private val marblesOriginalFilename = "marbles.tif"
@@ -328,7 +327,7 @@ class KnoraSipiIntegrationV2ITSpec
   }
 
   protected def requestJsonLDWithAuth(request: HttpRequest): JsonLDDocument =
-    getResponseJsonLD(request ~> addAuthorization ~> addAssetIngested)
+    getResponseJsonLD(request ~> addAuthorization)
 
   "The Knora/Sipi integration" should {
     var loginToken: String = ""
