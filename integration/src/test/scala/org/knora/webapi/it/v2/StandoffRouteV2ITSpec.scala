@@ -51,7 +51,6 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
   private val anythingUser      = SharedTestDataADM.anythingUser1
   private val anythingUserEmail = anythingUser.email
   private val password          = SharedTestDataADM.testPass
-  private val addAssetIngested  = addHeader("X-Asset-Ingested", "true")
 
   private val pathToXMLWithStandardMapping = "../test_data/test_route/texts/StandardHTML.xml"
   private val pathToLetterMapping          = "../test_data/test_route/texts/mappingForLetter.xml"
@@ -94,10 +93,11 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
         HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), mappingFile),
       ),
     )
-    val mappingRequest = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~> addCredentials(
-      BasicHttpCredentials(anythingUserEmail, password),
-    ) ~> addHeader("X-Asset-Ingested", "true")
-    singleAwaitingRequest(mappingRequest)
+    singleAwaitingRequest(
+      Post(baseApiUrl + "/v2/mapping", formDataMapping) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password),
+      ),
+    )
   }
 
   def createResourceWithTextValue(xmlContent: String, mappingIRI: String): HttpResponse = {
@@ -329,7 +329,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val fileRepresentationRequest = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, uploadFileJson),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> addAssetIngested
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val fileRepresentationResponse = singleAwaitingRequest(fileRepresentationRequest)
       assert(StatusCodes.OK == fileRepresentationResponse.status, responseToString(fileRepresentationResponse))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(fileRepresentationResponse)

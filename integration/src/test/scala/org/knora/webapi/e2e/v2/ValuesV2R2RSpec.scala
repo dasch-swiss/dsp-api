@@ -129,11 +129,9 @@ class ValuesV2R2RSpec extends ITKnoraLiveSpec {
            |  }
            |}""".stripMargin
 
-      val header = addHeader("X-Asset-Ingested", "true")
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity))
           ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-          ~> header
 
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
