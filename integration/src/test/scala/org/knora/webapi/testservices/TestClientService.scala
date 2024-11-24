@@ -32,7 +32,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseEntry
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol.*
-import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponseJsonProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil

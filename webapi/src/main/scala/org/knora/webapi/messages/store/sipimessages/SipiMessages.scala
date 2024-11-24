@@ -67,19 +67,6 @@ case class SipiUploadResponseEntry(
 )
 
 /**
- * Represents the information that Sipi returns about each file that has been uploaded to the upload_without_processing route.
- *
- * @param filename            the filename that was submitted to Sipi.
- * @param checksum            the checksum of the file
- * @param algorithm           the algorithm that was used to create the checksum of the file
- */
-case class SipiUploadWithoutProcessingResponseEntry(
-  filename: String,
-  checksum: String,
-  algorithm: String,
-)
-
-/**
  * Represents Sipi's response to a file upload request.
  *
  * @param uploadedFiles the information about each file that was uploaded.
@@ -89,18 +76,4 @@ case class SipiUploadResponse(uploadedFiles: List[SipiUploadResponseEntry])
 object SipiUploadResponseJsonProtocol {
   implicit val entry: JsonCodec[SipiUploadResponseEntry] = DeriveJsonCodec.gen[SipiUploadResponseEntry]
   implicit val response: JsonCodec[SipiUploadResponse]   = DeriveJsonCodec.gen[SipiUploadResponse]
-}
-
-/**
- * Represents Sipi's response to a file upload without processing request.
- *
- * @param uploadedFiles the information about each file that was uploaded.
- */
-case class SipiUploadWithoutProcessingResponse(uploadedFiles: List[SipiUploadWithoutProcessingResponseEntry])
-
-object SipiUploadWithoutProcessingResponseJsonProtocol {
-  implicit val withoutResponseEntryCodec: JsonCodec[SipiUploadWithoutProcessingResponseEntry] =
-    DeriveJsonCodec.gen[SipiUploadWithoutProcessingResponseEntry]
-  implicit val withoutResponseCodec: JsonCodec[SipiUploadWithoutProcessingResponse] =
-    DeriveJsonCodec.gen[SipiUploadWithoutProcessingResponse]
 }
