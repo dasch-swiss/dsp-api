@@ -525,6 +525,8 @@ sealed trait UpdateValueV2 {
    * A custom value creation date.
    */
   val valueCreationDate: Option[Instant]
+
+  def valueType: SmartIri
 }
 
 /**
@@ -551,7 +553,9 @@ case class UpdateValueContentV2(
   permissions: Option[String] = None,
   valueCreationDate: Option[Instant] = None,
   newValueVersionIri: Option[SmartIri] = None,
-) extends UpdateValueV2
+) extends UpdateValueV2 {
+  override def valueType: SmartIri = valueContent.valueType
+}
 
 /**
  * New permissions for a value.

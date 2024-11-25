@@ -613,20 +613,18 @@ final case class ValuesResponderV2(
      * Gets information about a resource, a submitted property, and a value of the property, and does
      * some checks to see if the submitted information is correct.
      *
-     * @param resourceIri                       the IRI of the resource.
-     * @param submittedExternalResourceClassIri the submitted external IRI of the resource class.
-     * @param submittedExternalPropertyIri      the submitted external IRI of the property.
-     * @param valueIri                          the IRI of the value.
-     * @param submittedExternalValueType        the submitted external IRI of the value type.
+     * @param updateValue the submitted value update to check
      * @return a [[ResourcePropertyValue]].
      */
     def getResourcePropertyValue(
-      resourceIri: IRI,
-      submittedExternalResourceClassIri: SmartIri,
-      submittedExternalPropertyIri: SmartIri,
-      valueIri: IRI,
-      submittedExternalValueType: SmartIri,
-    ): Task[ResourcePropertyValue] =
+      updateValue: UpdateValueV2,
+    ): Task[ResourcePropertyValue] = {
+
+      val resourceIri                       = updateValue.resourceIri
+      val submittedExternalResourceClassIri = updateValue.resourceClassIri
+      val submittedExternalPropertyIri      = updateValue.propertyIri
+      val valueIri                          = updateValue.valueIri
+      val submittedExternalValueType        = updateValue.valueType
       for {
         submittedInternalPropertyIri <- ZIO.attempt(submittedExternalPropertyIri.toOntologySchema(InternalSchema))
         submittedInternalValueType   <- ZIO.attempt(submittedExternalValueType.toOntologySchema(InternalSchema))
@@ -732,6 +730,7 @@ final case class ValuesResponderV2(
         adjustedInternalPropertyInfo,
         currentValue,
       )
+    }
 
     /**
      * Updates the permissions attached to a value.
@@ -744,14 +743,7 @@ final case class ValuesResponderV2(
     ): Task[UpdateValueResponseV2] =
       for {
         // Do the initial checks, and get information about the resource, the property, and the value.
-        resourcePropertyValue <-
-          getResourcePropertyValue(
-            resourceIri = updateValuePermissionsV2.resourceIri,
-            submittedExternalResourceClassIri = updateValuePermissionsV2.resourceClassIri,
-            submittedExternalPropertyIri = updateValuePermissionsV2.propertyIri,
-            valueIri = updateValuePermissionsV2.valueIri,
-            submittedExternalValueType = updateValuePermissionsV2.valueType,
-          )
+        resourcePropertyValue <- getResourcePropertyValue(updateValuePermissionsV2)
 
         resourceInfo: ReadResourceV2           = resourcePropertyValue.resource
         submittedInternalPropertyIri: SmartIri = resourcePropertyValue.submittedInternalPropertyIri
@@ -821,14 +813,7 @@ final case class ValuesResponderV2(
     ): Task[UpdateValueResponseV2] = {
       for {
         // Do the initial checks, and get information about the resource, the property, and the value.
-        resourcePropertyValue <-
-          getResourcePropertyValue(
-            resourceIri = updateValueContentV2.resourceIri,
-            submittedExternalResourceClassIri = updateValueContentV2.resourceClassIri,
-            submittedExternalPropertyIri = updateValueContentV2.propertyIri,
-            valueIri = updateValueContentV2.valueIri,
-            submittedExternalValueType = updateValueContentV2.valueContent.valueType,
-          )
+        resourcePropertyValue <- getResourcePropertyValue(updateValueContentV2)
 
         resourceInfo: ReadResourceV2                     = resourcePropertyValue.resource
         submittedInternalPropertyIri: SmartIri           = resourcePropertyValue.submittedInternalPropertyIri
