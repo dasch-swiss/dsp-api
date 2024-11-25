@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.14.1...v0.14.2) (2024-11-25)
+
+
+### Maintenances
+
+* Update sipi/dsp-api to v30.22.0 ([#294](https://github.com/dasch-swiss/dsp-ingest/issues/294)) ([892f7dc](https://github.com/dasch-swiss/dsp-ingest/commit/892f7dc3acb0ce8024c80ecd64bd6bda7a09ed81))
+
 ## [0.14.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.14.0...v0.14.1) (2024-11-18)
 
 
