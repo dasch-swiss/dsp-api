@@ -10,7 +10,6 @@ import zio.ULayer
 import zio.ZLayer
 import zio.nio.file.Path
 
-import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
@@ -68,15 +67,6 @@ case class SipiServiceTestDelegator(
     moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
   ): Task[SuccessResponseV2] =
     sipiService.moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequestV2)
-
-  /**
-   * Asks Sipi to delete a temporary file.
-   *
-   * @param deleteTemporaryFileRequestV2 the request.
-   * @return a [[SuccessResponseV2]].
-   */
-  override def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] =
-    sipiService.deleteTemporaryFile(deleteTemporaryFileRequestV2)
 
   /**
    * Asks Sipi for a text file used internally by Knora.
