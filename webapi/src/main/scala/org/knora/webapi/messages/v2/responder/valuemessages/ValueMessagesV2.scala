@@ -14,6 +14,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.language.implicitConversions
 import scala.util.Try
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -682,7 +683,9 @@ object ValueContentV2 {
       FileValueContentV2Optics.licenseOption
         .filter(_.isEmpty)
         .replace(license)
-        .andThen(FileValueContentV2Optics.copyRightAttributionOption.filter(_.isEmpty).replace(copyrightAttribution))(fvc)
+        .andThen(FileValueContentV2Optics.copyRightAttributionOption.filter(_.isEmpty).replace(copyrightAttribution))(
+          fvc,
+        )
     case other => other
   }
 
