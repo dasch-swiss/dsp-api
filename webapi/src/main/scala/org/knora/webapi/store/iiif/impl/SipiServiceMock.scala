@@ -57,13 +57,6 @@ case class SipiServiceMock(ref: Ref[Map[SipiMockMethodName, Task[Object]]]) exte
       ZIO.succeed(SuccessResponseV2("Moved file to permanent storage"))
     }
 
-  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] =
-    if (deleteTemporaryFileRequestV2.internalFilename == FAILURE_FILENAME) {
-      ZIO.fail(SipiException("Sipi failed to delete temporary file"))
-    } else {
-      ZIO.succeed(SuccessResponseV2("Deleted temporary file"))
-    }
-
   override def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
     getReturnValue(GetTextFileRequest)
 

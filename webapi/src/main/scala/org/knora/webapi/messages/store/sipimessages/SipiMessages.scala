@@ -31,14 +31,6 @@ case class MoveTemporaryFileToPermanentStorageRequest(internalFilename: String, 
     extends SipiRequest
 
 /**
- * Asks Sipi to delete a temporary file.
- *
- * @param internalFilename the name of the file.
- * @param requestingUser   the user making the request.
- */
-case class DeleteTemporaryFileRequest(internalFilename: String, requestingUser: User) extends SipiRequest
-
-/**
  * Asks Sipi for a text file. Currently only for UTF8 encoded text files.
  *
  * @param fileUrl        the URL pointing to the file.

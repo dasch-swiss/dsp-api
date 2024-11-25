@@ -10,7 +10,6 @@ import sttp.client3
 import sttp.client3.*
 import sttp.client3.SttpBackend
 import sttp.client3.httpclient.zio.HttpClientZioBackend
-import sttp.model.Uri
 import zio.*
 import zio.json.ast.Json
 import zio.nio.file.Path
@@ -95,32 +94,6 @@ final case class SipiServiceLive(
       url = uri"${sipiConfig.internalBaseUrl}/${sipiConfig.moveFileRoute}?token=${token.jwtString}"
       _  <- doSipiRequest(quickRequest.post(url).body(params))
     } yield SuccessResponseV2("Moved file to permanent storage.")
-  }
-
-  /**
-   * Asks Sipi to delete a temporary file.
-   *
-   * @param deleteTemporaryFileRequestV2 the request.
-   * @return a [[SuccessResponseV2]].
-   */
-  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] = {
-    val deleteRequestContent =
-      Map(
-        "knora-data" -> Json.Obj(
-          "permission" -> Json.Str("DeleteTempFile"),
-          "filename"   -> Json.Str(deleteTemporaryFileRequestV2.internalFilename),
-        ),
-      )
-
-    val url: String => Uri = s =>
-      uri"${sipiConfig.internalBaseUrl}/${sipiConfig.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=${s}"
-
-    val user = deleteTemporaryFileRequestV2.requestingUser
-    for {
-      scope <- scopeResolver.resolve(user)
-      token <- jwtService.createJwt(user.userIri, scope, deleteRequestContent)
-      _     <- doSipiRequest(quickRequest.delete(url(token.jwtString)))
-    } yield SuccessResponseV2("Deleted temporary file.")
   }
 
   /**

@@ -13,7 +13,6 @@ import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
@@ -58,10 +57,6 @@ object ValueContentV2Spec extends ZIOSpecDefault {
     // The following are unsupported operations because they are not used in the test
     def moveTemporaryFileToPermanentStorage(
       moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
-    ): Task[SuccessResponseV2] =
-      ZIO.dieMessage("unsupported operation")
-    def deleteTemporaryFile(
-      deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest,
     ): Task[SuccessResponseV2] =
       ZIO.dieMessage("unsupported operation")
     def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =

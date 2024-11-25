@@ -81,14 +81,6 @@ trait SipiService {
   ): Task[SuccessResponseV2]
 
   /**
-   * Asks Sipi to delete a temporary file.
-   *
-   * @param deleteTemporaryFileRequestV2 the request.
-   * @return a [[SuccessResponseV2]].
-   */
-  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2]
-
-  /**
    * Asks Sipi for a text file used internally by Knora.
    *
    * @param textFileRequest the request message.
