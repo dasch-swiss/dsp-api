@@ -10,10 +10,8 @@ import zio.ULayer
 import zio.ZLayer
 import zio.nio.file.Path
 
-import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
@@ -56,17 +54,6 @@ case class SipiServiceTestDelegator(
     assetId: AssetId,
   ): Task[FileMetadataSipiResponse] =
     sipiService.getFileMetadataFromDspIngest(shortcode, assetId)
-
-  /**
-   * Asks Sipi to move a file from temporary storage to permanent storage.
-   *
-   * @param moveTemporaryFileToPermanentStorageRequestV2 the request.
-   * @return a [[SuccessResponseV2]].
-   */
-  override def moveTemporaryFileToPermanentStorage(
-    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
-  ): Task[SuccessResponseV2] =
-    sipiService.moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequestV2)
 
   /**
    * Asks Sipi for a text file used internally by Knora.

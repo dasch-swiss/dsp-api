@@ -13,11 +13,9 @@ import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
@@ -55,10 +53,6 @@ object ValueContentV2Spec extends ZIOSpecDefault {
       ZIO.succeed(expected)
 
     // The following are unsupported operations because they are not used in the test
-    def moveTemporaryFileToPermanentStorage(
-      moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
-    ): Task[SuccessResponseV2] =
-      ZIO.dieMessage("unsupported operation")
     def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
       ZIO.dieMessage("unsupported operation")
     def downloadAsset(asset: Asset, targetDir: Path, user: User): Task[Option[Path]] =

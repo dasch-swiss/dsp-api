@@ -11,7 +11,6 @@ import zio.json.JsonDecoder
 import zio.nio.file.Path
 
 import org.knora.webapi.messages.store.sipimessages.*
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
@@ -69,16 +68,6 @@ trait SipiService {
    * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
    */
   def getFileMetadataFromDspIngest(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse]
-
-  /**
-   * Asks Sipi to move a file from temporary storage to permanent storage.
-   *
-   * @param moveTemporaryFileToPermanentStorageRequestV2 the request.
-   * @return a [[SuccessResponseV2]].
-   */
-  def moveTemporaryFileToPermanentStorage(
-    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
-  ): Task[SuccessResponseV2]
 
   /**
    * Asks Sipi for a text file used internally by Knora.

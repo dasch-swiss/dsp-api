@@ -21,16 +21,6 @@ sealed trait IIIFRequest extends StoreRequest with RelayedMessage
 sealed trait SipiRequest extends IIIFRequest
 
 /**
- * Asks Sipi to move a file from temporary to permanent storage.
- *
- * @param internalFilename the name of the file.
- * @param prefix           the prefix under which the file should be stored.
- * @param requestingUser   the user making the request.
- */
-case class MoveTemporaryFileToPermanentStorageRequest(internalFilename: String, prefix: String, requestingUser: User)
-    extends SipiRequest
-
-/**
  * Asks Sipi for a text file. Currently only for UTF8 encoded text files.
  *
  * @param fileUrl        the URL pointing to the file.

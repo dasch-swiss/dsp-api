@@ -9,7 +9,6 @@ import zio.*
 import zio.nio.file.Path
 
 import org.knora.webapi.messages.store.sipimessages.*
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -27,11 +26,6 @@ import org.knora.webapi.store.iiif.impl.SipiServiceMock.SipiMockMethodName.*
  */
 case class SipiServiceMock(ref: Ref[Map[SipiMockMethodName, Task[Object]]]) extends SipiService {
 
-  /**
-   * A request with this filename will always cause a Sipi error.
-   */
-  private val FAILURE_FILENAME: String = "failure.jp2"
-
   private def getReturnValue[T](method: SipiMockMethodName): Task[T] =
     ref.get.flatMap(
       _.getOrElse(
@@ -47,15 +41,6 @@ case class SipiServiceMock(ref: Ref[Map[SipiMockMethodName, Task[Object]]]) exte
     val fail = ZIO.fail(SipiException("No interaction expected"))
     ref.set(SipiMockMethodName.values.map(_ -> fail).toMap)
   }
-
-  def moveTemporaryFileToPermanentStorage(
-    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
-  ): Task[SuccessResponseV2] =
-    if (moveTemporaryFileToPermanentStorageRequestV2.internalFilename == FAILURE_FILENAME) {
-      ZIO.fail(SipiException("Sipi failed to move file to permanent storage"))
-    } else {
-      ZIO.succeed(SuccessResponseV2("Moved file to permanent storage"))
-    }
 
   override def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
     getReturnValue(GetTextFileRequest)

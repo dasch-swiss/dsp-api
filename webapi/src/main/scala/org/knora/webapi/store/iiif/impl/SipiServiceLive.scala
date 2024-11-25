@@ -11,7 +11,6 @@ import sttp.client3.*
 import sttp.client3.SttpBackend
 import sttp.client3.httpclient.zio.HttpClientZioBackend
 import zio.*
-import zio.json.ast.Json
 import zio.nio.file.Path
 
 import java.net.URI
@@ -20,7 +19,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.messages.store.sipimessages.*
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
@@ -63,38 +61,6 @@ final case class SipiServiceLive(
       response.duration.map(BigDecimal(_)),
       response.fps.map(BigDecimal(_)),
     )
-
-  /**
-   * Asks Sipi to move a file from temporary storage to permanent storage.
-   *
-   * @param moveTemporaryFileToPermanentStorageRequestV2 the request.
-   * @return a [[SuccessResponseV2]].
-   */
-  def moveTemporaryFileToPermanentStorage(
-    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
-  ): Task[SuccessResponseV2] = {
-    val user = moveTemporaryFileToPermanentStorageRequestV2.requestingUser
-    val params = Map(
-      ("filename" -> moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
-      ("prefix"   -> moveTemporaryFileToPermanentStorageRequestV2.prefix),
-    )
-    for {
-      scope <- scopeResolver.resolve(user)
-      token <- jwtService.createJwt(
-                 user.userIri,
-                 scope,
-                 Map(
-                   "knora-data" -> Json.Obj(
-                     "permission" -> Json.Str("StoreFile"),
-                     "filename"   -> Json.Str(moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
-                     "prefix"     -> Json.Str(moveTemporaryFileToPermanentStorageRequestV2.prefix),
-                   ),
-                 ),
-               )
-      url = uri"${sipiConfig.internalBaseUrl}/${sipiConfig.moveFileRoute}?token=${token.jwtString}"
-      _  <- doSipiRequest(quickRequest.post(url).body(params))
-    } yield SuccessResponseV2("Moved file to permanent storage.")
-  }
 
   /**
    * Asks Sipi for a text file used internally by Knora.
