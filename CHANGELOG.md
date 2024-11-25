@@ -1,5 +1,36 @@
 # Changelog
 
+## [30.22.0](https://github.com/dasch-swiss/dsp-api/compare/v30.21.0...v30.22.0) (2024-11-20)
+
+
+### Maintenances
+
+* Dependency updates ([#3427](https://github.com/dasch-swiss/dsp-api/issues/3427)) ([3330dbf](https://github.com/dasch-swiss/dsp-api/commit/3330dbffe45fcab5ec034f7e2a02c54c686ae0dc))
+* Introduce ValueResource and merge RootResource with RootUriResource ([#3424](https://github.com/dasch-swiss/dsp-api/issues/3424)) ([d2b74f6](https://github.com/dasch-swiss/dsp-api/commit/d2b74f6cfa33ea59bfa6f56102cbaebd12a5b9f9))
+* Patch dependency updates ([#3426](https://github.com/dasch-swiss/dsp-api/issues/3426)) ([69e24fa](https://github.com/dasch-swiss/dsp-api/commit/69e24fab8e96c55cac08e44002641afe6de6c633))
+* Update scala-graph dependency to 2.0.2 ([#3432](https://github.com/dasch-swiss/dsp-api/issues/3432)) ([e1ba77a](https://github.com/dasch-swiss/dsp-api/commit/e1ba77aa14e96cf410e8dc1733827f9e0d628b7c))
+
+
+### Documentation
+
+* DOAP routes operate with external IRIs ([#3419](https://github.com/dasch-swiss/dsp-api/issues/3419)) ([0e45091](https://github.com/dasch-swiss/dsp-api/commit/0e4509171c10de2de2b2bc21f0f9dcf749418ac6))
+
+
+### Enhancements
+
+* Add copyright attribution and license to FileValues and expose on v2 api (DEV-4351) ([#3431](https://github.com/dasch-swiss/dsp-api/issues/3431)) ([f9dcd98](https://github.com/dasch-swiss/dsp-api/commit/f9dcd9868265c80b9030996a8c14a7ad74b96d65))
+* Add license and copyright attribution to ontologies (DEV-4347) ([#3428](https://github.com/dasch-swiss/dsp-api/issues/3428)) ([2d62dcb](https://github.com/dasch-swiss/dsp-api/commit/2d62dcb6900cb2613b58e3412ead4644adf77524))
+* Add license and copyright attribution to project (DEV-4347) ([#3429](https://github.com/dasch-swiss/dsp-api/issues/3429)) ([e51af72](https://github.com/dasch-swiss/dsp-api/commit/e51af723bf8cbeba37c529cd3e434a25f708f9f2))
+* Allow external iris for property and resource class when updating doap (DEV-4341) ([#3425](https://github.com/dasch-swiss/dsp-api/issues/3425)) ([6ecc9ee](https://github.com/dasch-swiss/dsp-api/commit/6ecc9ee351e6b29ad857b29e47bd5563015ed501))
+* Fully support json-ld for delete value and update, delete or erase resource  ([#3422](https://github.com/dasch-swiss/dsp-api/issues/3422)) ([e79a2f9](https://github.com/dasch-swiss/dsp-api/commit/e79a2f9e97c194fb9a1cc0d277284e527b22679f))
+* Support json ld for create resource ([#3420](https://github.com/dasch-swiss/dsp-api/issues/3420)) ([419c74d](https://github.com/dasch-swiss/dsp-api/commit/419c74d5c3f6e7512a441e99f09c1a945c9257af))
+* Support propert json-ld for update value endpoint (DEV-4325) ([#3418](https://github.com/dasch-swiss/dsp-api/issues/3418)) ([039dcb6](https://github.com/dasch-swiss/dsp-api/commit/039dcb655f37811b76b58a6a4bc9b28d47047686))
+
+
+### Bug Fixes
+
+* Verify property is present and allow ApiV2Complex iris for creating a DOAP ([#3416](https://github.com/dasch-swiss/dsp-api/issues/3416)) ([87efadd](https://github.com/dasch-swiss/dsp-api/commit/87efadd1aea93dd8f82eb108b2203a4d3bcf1460))
+
 ## [30.21.0](https://github.com/dasch-swiss/dsp-api/compare/v30.20.0...v30.21.0) (2024-11-07)
 
 
