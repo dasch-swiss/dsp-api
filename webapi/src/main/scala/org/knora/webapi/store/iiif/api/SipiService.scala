@@ -11,7 +11,6 @@ import zio.json.JsonDecoder
 import zio.nio.file.Path
 
 import org.knora.webapi.messages.store.sipimessages.*
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
@@ -62,14 +61,6 @@ object FileMetadataSipiResponse {
 trait SipiService {
 
   /**
-   * Asks Sipi for metadata about a file in the tmp folder, served from the 'knora.json' route.
-   *
-   * @param filename the path to the file.
-   * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
-   */
-  def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse]
-
-  /**
    * Asks DSP-Ingest for metadata about a file in permanent location, served from the 'knora.json' route.
    *
    * @param shortcode the shortcode of the project.
@@ -77,24 +68,6 @@ trait SipiService {
    * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
    */
   def getFileMetadataFromDspIngest(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse]
-
-  /**
-   * Asks Sipi to move a file from temporary storage to permanent storage.
-   *
-   * @param moveTemporaryFileToPermanentStorageRequestV2 the request.
-   * @return a [[SuccessResponseV2]].
-   */
-  def moveTemporaryFileToPermanentStorage(
-    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
-  ): Task[SuccessResponseV2]
-
-  /**
-   * Asks Sipi to delete a temporary file.
-   *
-   * @param deleteTemporaryFileRequestV2 the request.
-   * @return a [[SuccessResponseV2]].
-   */
-  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2]
 
   /**
    * Asks Sipi for a text file used internally by Knora.
@@ -112,5 +85,4 @@ trait SipiService {
    * @return The path to the downloaded asset. If the asset could not be downloaded, [[None]] is returned.
    */
   def downloadAsset(asset: Asset, targetDir: Path, user: User): Task[Option[Path]]
-
 }

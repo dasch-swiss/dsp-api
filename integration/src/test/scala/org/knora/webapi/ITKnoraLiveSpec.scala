@@ -171,28 +171,13 @@ abstract class ITKnoraLiveSpec
         .getOrThrowFiberFailure()
     }
 
-  protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
+  protected def uploadToIngest(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
           for {
             testClient <- ZIO.service[TestClientService]
-            result     <- testClient.uploadToSipi(loginToken, filesToUpload)
-          } yield result,
-        )
-        .getOrThrow()
-    }
-
-  protected def uploadWithoutProcessingToSipi(
-    loginToken: String,
-    filesToUpload: Seq[FileToUpload],
-  ): SipiUploadWithoutProcessingResponse =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            testClient <- ZIO.service[TestClientService]
-            result     <- testClient.uploadWithoutProcessingToSipi(loginToken, filesToUpload)
+            result     <- testClient.uploadToIngest(loginToken, filesToUpload)
           } yield result,
         )
         .getOrThrow()

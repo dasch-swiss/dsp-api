@@ -104,9 +104,8 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
           val requestTask = for {
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             apiRequestId   <- RouteUtilZ.randomUuid()
-            ingestState     = AssetIngestState.headerAssetIngestState(requestContext.request.headers)
             requestMessage <- jsonLdRequestParser(
-                                _.createResourceRequestV2(jsonRequest, ingestState, requestingUser, apiRequestId),
+                                _.createResourceRequestV2(jsonRequest, requestingUser, apiRequestId),
                               ).mapError(BadRequestException.apply)
             // check for each value which represents a file value if the file's MIME type is allowed
             _ <- checkMimeTypesForFileValueContents(requestMessage.createResource.flatValues)

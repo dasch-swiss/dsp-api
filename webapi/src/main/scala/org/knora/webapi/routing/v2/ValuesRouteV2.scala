@@ -86,9 +86,8 @@ final case class ValuesRouteV2()(
             for {
               requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
               apiRequestId   <- Random.nextUUID
-              ingestState     = AssetIngestState.headerAssetIngestState(ctx.request.headers)
               valueToCreate <- jsonLdRequestParser(
-                                 _.createValueV2FromJsonLd(jsonLdString, ingestState).mapError(BadRequestException(_)),
+                                 _.createValueV2FromJsonLd(jsonLdString).mapError(BadRequestException(_)),
                                )
               response <- responder(_.createValueV2(valueToCreate, requestingUser, apiRequestId))
             } yield response,
@@ -107,9 +106,8 @@ final case class ValuesRouteV2()(
             for {
               requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
               apiRequestId   <- Random.nextUUID
-              ingestState     = AssetIngestState.headerAssetIngestState(ctx.request.headers)
               updateValue <- jsonLdRequestParser(
-                               _.updateValueV2fromJsonLd(jsonLdString, ingestState).mapError(BadRequestException(_)),
+                               _.updateValueV2fromJsonLd(jsonLdString).mapError(BadRequestException(_)),
                              )
               response <- responder(_.updateValueV2(updateValue, requestingUser, apiRequestId))
             } yield response,

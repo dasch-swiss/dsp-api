@@ -151,8 +151,8 @@ abstract class E2ESpec
   protected def getResponseAsJsonLD(request: HttpRequest): JsonLDDocument =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseJsonLD(request)))
 
-  protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.uploadToSipi(loginToken, filesToUpload)))
+  protected def uploadToIngest(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.uploadToIngest(loginToken, filesToUpload)))
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] =

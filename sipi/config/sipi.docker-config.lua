@@ -182,24 +182,9 @@ fileserver = {
 --
 routes = {
     {
-        method = 'POST',
-        route = '/upload',
-        script = 'upload.lua'
-    },
-    {
-        method = 'POST',
-        route = '/store',
-        script = 'store.lua'
-    },
-    {
         method = 'DELETE',
         route = '/delete_temp_file',
         script = 'delete_temp_file.lua'
-    },
-    {
-        method = 'POST',
-        route = '/upload_without_processing',
-        script = 'upload_without_processing.lua'
     },
     {
         method = 'GET',

@@ -186,16 +186,6 @@ routes = {
         script = 'admin_upload.lua'
     },
     {
-        method = 'POST',
-        route = '/upload',
-        script = 'upload.lua'
-    },
-    {
-        method = 'POST',
-        route = '/store',
-        script = 'store.lua'
-    },
-    {
         method = 'DELETE',
         route = '/delete_temp_file',
         script = 'delete_temp_file.lua'

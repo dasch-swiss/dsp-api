@@ -32,10 +32,8 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.models.filemodels.FileModelUtil
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.routing.v2.AssetIngestState
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
@@ -461,7 +459,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intVal           = IntegerValueContentV2(ApiV2Complex, 4)
       val duplicateValue =
-        CreateValueV2(resourceIri, resourceClassIri, propertyIri, intVal, ingestState = AssetIngestState.AssetInTemp)
+        CreateValueV2(resourceIri, resourceClassIri, propertyIri, intVal)
 
       val actual = UnsafeZioRun.run(
         ZIO.serviceWithZIO[ValuesResponderV2](_.createValueV2(duplicateValue, anythingUser1, randomUUID)),
@@ -4410,80 +4408,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
     updatedValueFromTriplestore.permissions should equal(previousValueFromTriplestore.permissions)
 
-  }
-
-  "not return a Sipi error if Sipi fails to delete a temporary file when Knora rejects a request" in {
-    val resourceIri: IRI      = aThingPictureIri
-    val propertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
-
-    val valueContent = StillImageFileValueContentV2(
-      ontologySchema = ApiV2Complex,
-      fileValue = FileValueV2(
-        internalFilename = "failure.jp2", // tells the mock Sipi responder to simulate failure
-        internalMimeType = mimeTypeJP2,
-        originalFilename = Some("test.tiff"),
-        originalMimeType = Some(mimeTypeTIFF),
-        None,
-        None,
-      ),
-      dimX = 512,
-      dimY = 256,
-    )
-
-    // Knora will reject this request.
-    val actual = UnsafeZioRun.run(
-      ZIO.serviceWithZIO[ValuesResponderV2](
-        _.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = thingPictureClassIri.toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = stillImageFileValueIri.get,
-            valueContent = valueContent,
-          ),
-          incunabulaUser, // this user doesn't have the necessary permission
-          randomUUID,
-        ),
-      ),
-    )
-    assertFailsWithA[ForbiddenException](actual)
-  }
-
-  "return a Sipi error if Sipi fails to move a file to permanent storage" in {
-    val resourceIri: IRI      = aThingPictureIri
-    val propertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
-
-    val valueContent = StillImageFileValueContentV2(
-      ontologySchema = ApiV2Complex,
-      fileValue = FileValueV2(
-        internalFilename = "failure.jp2", // tells the mock Sipi responder to simulate failure
-        internalMimeType = mimeTypeJP2,
-        originalFilename = Some("test.tiff"),
-        originalMimeType = Some(mimeTypeTIFF),
-        None,
-        None,
-      ),
-      dimX = 512,
-      dimY = 256,
-    )
-
-    // Knora will accept this request, but the mock Sipi responder will say it failed to move the file to permanent storage.
-    val actual = UnsafeZioRun.run(
-      ZIO.serviceWithZIO[ValuesResponderV2](
-        _.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = thingPictureClassIri.toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = stillImageFileValueIri.get,
-            valueContent = valueContent,
-          ),
-          anythingUser1,
-          randomUUID,
-        ),
-      ),
-    )
-    assertFailsWithA[SipiException](actual)
   }
 
   "not delete a value if the requesting user does not have DeletePermission on the value" in {

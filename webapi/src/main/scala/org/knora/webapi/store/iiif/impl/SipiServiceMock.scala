@@ -9,7 +9,6 @@ import zio.*
 import zio.nio.file.Path
 
 import org.knora.webapi.messages.store.sipimessages.*
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -27,11 +26,6 @@ import org.knora.webapi.store.iiif.impl.SipiServiceMock.SipiMockMethodName.*
  */
 case class SipiServiceMock(ref: Ref[Map[SipiMockMethodName, Task[Object]]]) extends SipiService {
 
-  /**
-   * A request with this filename will always cause a Sipi error.
-   */
-  private val FAILURE_FILENAME: String = "failure.jp2"
-
   private def getReturnValue[T](method: SipiMockMethodName): Task[T] =
     ref.get.flatMap(
       _.getOrElse(
@@ -47,25 +41,6 @@ case class SipiServiceMock(ref: Ref[Map[SipiMockMethodName, Task[Object]]]) exte
     val fail = ZIO.fail(SipiException("No interaction expected"))
     ref.set(SipiMockMethodName.values.map(_ -> fail).toMap)
   }
-
-  override def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse] =
-    getReturnValue(GetFileMetadataFromSipiTemp)
-
-  def moveTemporaryFileToPermanentStorage(
-    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
-  ): Task[SuccessResponseV2] =
-    if (moveTemporaryFileToPermanentStorageRequestV2.internalFilename == FAILURE_FILENAME) {
-      ZIO.fail(SipiException("Sipi failed to move file to permanent storage"))
-    } else {
-      ZIO.succeed(SuccessResponseV2("Moved file to permanent storage"))
-    }
-
-  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] =
-    if (deleteTemporaryFileRequestV2.internalFilename == FAILURE_FILENAME) {
-      ZIO.fail(SipiException("Sipi failed to delete temporary file"))
-    } else {
-      ZIO.succeed(SuccessResponseV2("Deleted temporary file"))
-    }
 
   override def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =
     getReturnValue(GetTextFileRequest)
@@ -99,7 +74,8 @@ object SipiServiceMock {
     Ref
       .make[Map[SipiMockMethodName, Task[Object]]](
         Map(
-          GetFileMetadataFromSipiTemp -> ZIO.succeed(defaultGetFileMetadataFromSipiTempResponse),
+          GetFileMetadataFromSipiTemp  -> ZIO.succeed(defaultGetFileMetadataFromSipiTempResponse),
+          GetFileMetadataFromDspIngest -> ZIO.succeed(defaultGetFileMetadataFromSipiTempResponse),
         ),
       )
       .map(ref => SipiServiceMock(ref)),

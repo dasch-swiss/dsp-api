@@ -42,7 +42,6 @@ object PermissionEndpointsRequests {
         forProperty.isDefined
   }
   object ChangeDoapRequest {
-    import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.projectIri
     given JsonCodec[ChangeDoapRequest] = DeriveJsonCodec.gen[ChangeDoapRequest]
   }
 }

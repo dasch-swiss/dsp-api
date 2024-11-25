@@ -10,10 +10,7 @@ import sttp.client3
 import sttp.client3.*
 import sttp.client3.SttpBackend
 import sttp.client3.httpclient.zio.HttpClientZioBackend
-import sttp.model.Uri
 import zio.*
-import zio.json.DecoderOps
-import zio.json.ast.Json
 import zio.nio.file.Path
 
 import java.net.URI
@@ -22,8 +19,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.messages.store.sipimessages.*
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
@@ -31,7 +26,6 @@ import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
@@ -54,24 +48,6 @@ final case class SipiServiceLive(
       s"${sipiConfig.internalBaseUrl}/${asset.belongsToProject.value}/${asset.internalFilename}"
   }
 
-  /**
-   * Asks Sipi for metadata about a file, served from the 'knora.json' route.
-   *
-   * @param filename the file name
-   * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
-   */
-  override def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse] =
-    for {
-      jwt <- jwtService.createJwt(KnoraSystemInstances.Users.SystemUser.userIri, AuthScope.admin)
-      request = quickRequest
-                  .get(uri"${sipiConfig.internalBaseUrl}/tmp/$filename/knora.json")
-                  .header("Authorization", s"Bearer ${jwt.jwtString}")
-      body <- doSipiRequest(request)
-      res <- ZIO
-               .fromEither(body.fromJson[FileMetadataSipiResponse])
-               .mapError(e => SipiException(s"Invalid response from Sipi: $e, $body"))
-    } yield res
-
   override def getFileMetadataFromDspIngest(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse] =
     for {
       response <- dspIngestClient.getAssetInfo(shortcode, assetId)
@@ -85,64 +61,6 @@ final case class SipiServiceLive(
       response.duration.map(BigDecimal(_)),
       response.fps.map(BigDecimal(_)),
     )
-
-  /**
-   * Asks Sipi to move a file from temporary storage to permanent storage.
-   *
-   * @param moveTemporaryFileToPermanentStorageRequestV2 the request.
-   * @return a [[SuccessResponseV2]].
-   */
-  def moveTemporaryFileToPermanentStorage(
-    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
-  ): Task[SuccessResponseV2] = {
-    val user = moveTemporaryFileToPermanentStorageRequestV2.requestingUser
-    val params = Map(
-      ("filename" -> moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
-      ("prefix"   -> moveTemporaryFileToPermanentStorageRequestV2.prefix),
-    )
-    for {
-      scope <- scopeResolver.resolve(user)
-      token <- jwtService.createJwt(
-                 user.userIri,
-                 scope,
-                 Map(
-                   "knora-data" -> Json.Obj(
-                     "permission" -> Json.Str("StoreFile"),
-                     "filename"   -> Json.Str(moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
-                     "prefix"     -> Json.Str(moveTemporaryFileToPermanentStorageRequestV2.prefix),
-                   ),
-                 ),
-               )
-      url = uri"${sipiConfig.internalBaseUrl}/${sipiConfig.moveFileRoute}?token=${token.jwtString}"
-      _  <- doSipiRequest(quickRequest.post(url).body(params))
-    } yield SuccessResponseV2("Moved file to permanent storage.")
-  }
-
-  /**
-   * Asks Sipi to delete a temporary file.
-   *
-   * @param deleteTemporaryFileRequestV2 the request.
-   * @return a [[SuccessResponseV2]].
-   */
-  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] = {
-    val deleteRequestContent =
-      Map(
-        "knora-data" -> Json.Obj(
-          "permission" -> Json.Str("DeleteTempFile"),
-          "filename"   -> Json.Str(deleteTemporaryFileRequestV2.internalFilename),
-        ),
-      )
-
-    val url: String => Uri = s =>
-      uri"${sipiConfig.internalBaseUrl}/${sipiConfig.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=${s}"
-
-    val user = deleteTemporaryFileRequestV2.requestingUser
-    for {
-      scope <- scopeResolver.resolve(user)
-      token <- jwtService.createJwt(user.userIri, scope, deleteRequestContent)
-      _     <- doSipiRequest(quickRequest.delete(url(token.jwtString)))
-    } yield SuccessResponseV2("Deleted temporary file.")
-  }
 
   /**
    * Asks Sipi for a text file used internally by Knora.

@@ -40,8 +40,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
 import org.knora.webapi.routing.RouteUtilZ
-import org.knora.webapi.routing.v2.AssetIngestState
-import org.knora.webapi.routing.v2.AssetIngestState.*
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
@@ -479,7 +477,6 @@ case class ReadOtherValueV2(
 /**
  * Represents a Knora value to be created in an existing resource.
  *
- * @param ingestState indicates the state of the file, either ingested or in temp folder
  * @param resourceIri       the resource the new value should be attached to.
  * @param resourceClassIri  the resource class that the client believes the resource belongs to.
  * @param propertyIri       the property of the new value. If the client wants to create a link, this must be a link value property.
@@ -499,7 +496,6 @@ case class CreateValueV2(
   valueUUID: Option[UUID] = None,
   valueCreationDate: Option[Instant] = None,
   permissions: Option[String] = None,
-  ingestState: AssetIngestState = AssetInTemp,
 )
 
 /** A trait for classes representing information to be updated in a value. */
@@ -555,7 +551,6 @@ case class UpdateValueContentV2(
   permissions: Option[String] = None,
   valueCreationDate: Option[Instant] = None,
   newValueVersionIri: Option[SmartIri] = None,
-  ingestState: AssetIngestState = AssetInTemp,
 ) extends UpdateValueV2
 
 /**
@@ -681,7 +676,6 @@ object ValueContentV2 {
    * Given the jsonLd contains a FileValueHasFilename, it will try to fetch the FileInfo from Sipi or Dsp-Ingest.
    *
    * @param shortcode The shortcode of the project
-   * @param ingestState The state of the file, either ingested already or in Sipi temp folder
    * @param jsonLd the jsonLd object
    * @return Some FileInfo if FileValueHasFilename found and the remote service returned the metadata.
    *         None if FileValueHasFilename is not found in the jsonLd object.
@@ -689,51 +683,29 @@ object ValueContentV2 {
    */
   def getFileInfo(
     shortcode: Shortcode,
-    ingestState: AssetIngestState,
     jsonLd: JsonLDObject,
   ): ZIO[SipiService, Throwable, Option[FileInfo]] =
-    val filenameMaybe = jsonLd.getString(FileValueHasFilename).toOption.flatten
-    fileInfoFromExternal(filenameMaybe, ingestState, shortcode)
+    fileInfoFromExternal(jsonLd.getString(FileValueHasFilename).toOption.flatten, shortcode)
 
   def fileInfoFromExternal(
     filenameMaybe: Option[String],
-    state: AssetIngestState,
     shortcode: Shortcode,
   ): ZIO[SipiService, Throwable, Option[FileInfo]] =
-    (filenameMaybe, state) match
-      case (None, _)                       => ZIO.none
-      case (Some(filename), AssetIngested) => fileInfoFromDspIngest(shortcode, filename).asSome
-      case (Some(filename), AssetInTemp)   => fileInfoFromSipi(filename).asSome
-
-  private def fileInfoFromSipi(filename: String) =
-    ZIO.serviceWithZIO[SipiService](
-      _.getFileMetadataFromSipiTemp(filename)
-        .mapBoth(
-          {
-            case NotFoundException(_) =>
-              NotFoundException(
-                s"Asset '$filename' not found in Sipi temp, when ingested with dsp-ingest you want to add the 'X-Asset-Ingested' header.",
-              )
-            case e => e
-          },
-          FileInfo(filename, _),
-        ),
-    )
-
-  private def fileInfoFromDspIngest(shortcode: Shortcode, filename: String) =
-    for {
-      sipiService <- ZIO.service[SipiService]
-      assetId <- ZIO
-                   .fromEither(AssetId.from(filename.substring(0, filename.indexOf('.'))))
-                   .mapError(msg => BadRequestException(s"Invalid value for 'fileValueHasFilename': $msg"))
-      meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
-                case NotFoundException(_) =>
-                  NotFoundException(
-                    s"Asset '$filename' not found in dsp-ingest, when ingested to Sipi temp you want to remove the 'X-Asset-Ingested' header.",
-                  )
-                case e => e
-              }
-    } yield FileInfo(filename, meta)
+    ZIO.foreach(filenameMaybe) { filename =>
+      for {
+        sipiService <- ZIO.service[SipiService]
+        assetId <- ZIO
+                     .fromEither(AssetId.from(filename.substring(0, filename.indexOf('.'))))
+                     .mapError(msg => BadRequestException(s"Invalid value for 'fileValueHasFilename': $msg"))
+        meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
+                  case NotFoundException(_) =>
+                    NotFoundException(
+                      s"Asset '$filename' not found in dsp-ingest, make sure the old Sipi upload mechanism is not being used.",
+                    )
+                  case e => e
+                }
+      } yield FileInfo(filename, meta)
+    }
 }
 
 /**

@@ -64,19 +64,12 @@ class KnoraSipiIntegrationV2ITSpec
 
   private val jsonLdHttpEntity = HttpEntity(RdfMediaTypes.`application/ld+json`, _: String)
   private val addAuthorization = addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-  private val addAssetIngested = addHeader("X-Asset-Ingested", "true")
   private val encodeUTF8       = URLEncoder.encode(_: String, "UTF-8")
 
   private val marblesOriginalFilename = "marbles.tif"
   private val pathToMarbles           = Paths.get("..", s"test_data/test_route/images/$marblesOriginalFilename")
   private val marblesWidth            = 1419
   private val marblesHeight           = 1001
-
-  private val pathToMarblesWithWrongExtension =
-    Paths.get("..", "test_data/test_route/images/marbles_with_wrong_extension.jpg")
-
-  private val jp2OriginalFilename = "67352ccc-d1b0-11e1-89ae-279075081939.jp2"
-  private val pathToJp2           = Paths.get("..", s"test_data/test_route/images/$jp2OriginalFilename")
 
   private val trp88OriginalFilename = "Trp88.tiff"
   private val pathToTrp88           = Paths.get("..", s"test_data/test_route/images/$trp88OriginalFilename")
@@ -353,7 +346,7 @@ class KnoraSipiIntegrationV2ITSpec
     "create a resource with a still image file" in {
       // Upload the image to Sipi.
       val sipiUploadResponse: SipiUploadResponse =
-        uploadToSipi(
+        uploadToIngest(
           loginToken = loginToken,
           filesToUpload =
             Seq(FileToUpload(path = pathToMarbles, mimeType = org.apache.http.entity.ContentType.IMAGE_TIFF)),
@@ -390,94 +383,23 @@ class KnoraSipiIntegrationV2ITSpec
       assert(savedImage.height == marblesHeight)
     }
 
-    "create a resource with a still image file without processing" in {
-      // Upload the image to Sipi.
-      val sipiUploadResponse: SipiUploadWithoutProcessingResponse =
-        uploadWithoutProcessingToSipi(
-          loginToken = loginToken,
-          filesToUpload = Seq(FileToUpload(path = pathToJp2, mimeType = org.apache.http.entity.ContentType.IMAGE_JPEG)),
-        )
-
-      val uploadedFile: SipiUploadWithoutProcessingResponseEntry = sipiUploadResponse.uploadedFiles.head
-      uploadedFile.filename should ===(jp2OriginalFilename)
-
-      // Create the resource in the API.
-
-      val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.StillImageFile(), internalFilename = uploadedFile.filename)
-        .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
-
-      val responseJsonDoc = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
-      stillImageResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
-
-      val resource = getResponseJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(stillImageResourceIri.get)}"))
-      assert(
-        UnsafeZioRun
-          .runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri)
-          .toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture",
-      )
-
-      // Get the new file value from the resource.
-
-      val savedValues: JsonLDArray    = getValuesFromResource(resource, HasStillImageFileValue.toSmartIri)
-      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
-      stillImageFileValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
-
-      val savedImage = savedValueToSavedImage(savedValueObj)
-      assert(savedImage.internalFilename == uploadedFile.filename)
-    }
-
     "create a resource with a still image file that has already been ingested" in {
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
         .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
       val response = requestJsonLDWithAuth(
-        Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAssetIngested,
+        Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)),
       )
       val resIri     = UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString
       val getRequest = Get(s"$baseApiUrl/v2/resources/${encodeUTF8(resIri)}")
       checkResponseOK(getRequest)
     }
 
-    "not create a resource with a still image file that has already been ingested if the header is not provided" in {
-      // Create the resource in the API.
-      val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
-        .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
-      // no X-Asset-Ingested header
-      val request = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-
-      val response = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest)
-      val body = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
-      assert(
-        body.contains(
-          "Asset 'De6XyNL4H71-D9QxghOuOPJ.jp2' not found in Sipi temp, when ingested with dsp-ingest you want to add the 'X-Asset-Ingested' header.",
-        ),
-      )
-    }
-
-    "reject an image file with the wrong file extension" in {
-      val exception = intercept[BadRequestException] {
-        uploadToSipi(
-          loginToken = loginToken,
-          filesToUpload = Seq(
-            FileToUpload(
-              path = pathToMarblesWithWrongExtension,
-              mimeType = org.apache.http.entity.ContentType.IMAGE_TIFF,
-            ),
-          ),
-        )
-      }
-
-      assert(exception.getMessage.contains("MIME type and/or file extension are inconsistent"))
-    }
-
     "change a still image file value" in {
       // Upload the image to Sipi.
       val sipiUploadResponse: SipiUploadResponse =
-        uploadToSipi(
+        uploadToIngest(
           loginToken = loginToken,
           filesToUpload =
             Seq(FileToUpload(path = pathToTrp88, mimeType = org.apache.http.entity.ContentType.IMAGE_TIFF)),
@@ -517,7 +439,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource with a PDF file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload = Seq(
           FileToUpload(path = pathToMinimalPdf, mimeType = org.apache.http.entity.ContentType.create("application/pdf")),
@@ -558,7 +480,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "change a PDF file value" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload = Seq(
           FileToUpload(path = pathToTestPdf, mimeType = org.apache.http.entity.ContentType.create("application/pdf")),
@@ -594,39 +516,9 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-    "change a PDF file value with X-Asset-Ingested=true" in {
-      // Update the value.
-      val jsonLdEntity = ChangeFileRequest
-        .make(
-          fileType = FileType.DocumentFile(),
-          internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2",
-          resourceIri = pdfResourceIri.get,
-          valueIri = pdfValueIri.get,
-          className = Some("ThingDocument"),
-          ontologyName = "anything",
-        )
-        .toJsonLd
-
-      val response: JsonLDDocument = requestJsonLDWithAuth(
-        Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)) ~> addAssetIngested,
-      )
-
-      val resource = getResponseJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(pdfResourceIri.get)}"))
-
-      // Get the new file value from the resource.
-      val savedDocument: SavedDocument = savedValueToSavedDocument(
-        getValueFromResource(
-          resource = resource,
-          propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri,
-          expectedValueIri = UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString,
-        ),
-      )
-      assert(savedDocument.internalFilename == "De6XyNL4H71-D9QxghOuOPJ.jp2")
-    }
-
     "not create a document resource if the file is actually a zip file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload = Seq(
           FileToUpload(path = pathToMinimalZip, mimeType = org.apache.http.entity.ContentType.create("application/zip")),
@@ -635,7 +527,6 @@ class KnoraSipiIntegrationV2ITSpec
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
-      uploadedFile.fileType should equal("archive")
 
       // Create the resource in the API.
 
@@ -649,7 +540,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource with a CSV file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload =
           Seq(FileToUpload(path = pathToCsv1, mimeType = org.apache.http.entity.ContentType.create("text/csv"))),
@@ -684,7 +575,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "change a CSV file value" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload =
           Seq(FileToUpload(path = pathToCsv2, mimeType = org.apache.http.entity.ContentType.create("text/csv"))),
@@ -720,7 +611,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "not create a resource with a still image file that's actually a text file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload =
           Seq(FileToUpload(path = pathToCsv1, mimeType = org.apache.http.entity.ContentType.create("text/csv"))),
@@ -742,7 +633,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource with an XML file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload = Seq(FileToUpload(path = pathToXml1, mimeType = org.apache.http.entity.ContentType.TEXT_XML)),
       )
@@ -782,7 +673,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "change an XML file value" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload = Seq(FileToUpload(path = pathToXml2, mimeType = org.apache.http.entity.ContentType.TEXT_XML)),
       )
@@ -823,7 +714,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "not create a resource of type TextRepresentation with a Zip file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload = Seq(
           FileToUpload(path = pathToMinimalZip, mimeType = org.apache.http.entity.ContentType.create("application/zip")),
@@ -846,7 +737,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource of type ArchiveRepresentation with a Zip file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload = Seq(
           FileToUpload(path = pathToMinimalZip, mimeType = org.apache.http.entity.ContentType.create("application/zip")),
@@ -891,7 +782,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "change a Zip file value" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload = Seq(
           FileToUpload(path = pathToTestZip, mimeType = org.apache.http.entity.ContentType.create("application/zip")),
@@ -934,7 +825,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource of type ArchiveRepresentation with a 7z file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload = Seq(
           FileToUpload(
@@ -982,7 +873,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource with a WAV file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload =
           Seq(FileToUpload(path = pathToMinimalWav, mimeType = org.apache.http.entity.ContentType.create("audio/wav"))),
@@ -1026,7 +917,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "change a WAV file value" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload =
           Seq(FileToUpload(path = pathToTestWav, mimeType = org.apache.http.entity.ContentType.create("audio/wav"))),
@@ -1068,7 +959,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource with a video file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
         loginToken = loginToken,
         filesToUpload =
           Seq(FileToUpload(path = pathToTestVideo, mimeType = org.apache.http.entity.ContentType.create("video/mp4"))),
@@ -1112,10 +1003,14 @@ class KnoraSipiIntegrationV2ITSpec
 
     "change a video file value" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
-        loginToken = loginToken,
-        filesToUpload =
-          Seq(FileToUpload(path = pathToTestVideo2, mimeType = org.apache.http.entity.ContentType.create("video/mp4"))),
+      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
+        loginToken,
+        Seq(
+          FileToUpload(
+            path = pathToTestVideo2,
+            mimeType = org.apache.http.entity.ContentType.create("video/mp4"),
+          ),
+        ),
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head

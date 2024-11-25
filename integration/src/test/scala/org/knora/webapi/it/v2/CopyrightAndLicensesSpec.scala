@@ -88,7 +88,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     val jsonLd = UploadFileRequest
       .make(
         FileType.StillImageFile(),
-        "internalFilename",
+        "internalFilename.jpg",
         copyrightAttribution = Some(copyrightAttribution),
         license = Some(license),
       )

@@ -6,41 +6,32 @@
 package org.knora.webapi.e2e.v2
 
 import org.apache.pekko.http.scaladsl.model.HttpEntity
+import org.apache.pekko.http.scaladsl.model.HttpResponse
 import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import org.apache.pekko.http.scaladsl.server.RouteConcatenation.*
-import zio.ZIO
 
 import scala.concurrent.ExecutionContextExecutor
 
-import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as OntConsts
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.search.SparqlQueryConstants
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.routing.v2.ValuesRouteV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.util.MutableTestIri
 
 /**
  * Tests creating a still image file value using a mock Sipi.
  */
-class ValuesV2R2RSpec extends R2RSpec {
+class ValuesV2R2RSpec extends ITKnoraLiveSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  private val valuesPath = ValuesRouteV2().makeRoute
-  private val searchPath = UnsafeZioRun
-    .runOrThrow(ZIO.serviceWith[SearchApiRoutes](_.routes))
-    .reduce(_ ~ _)
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -70,14 +61,14 @@ class ValuesV2R2RSpec extends R2RSpec {
       .getResourceWithSpecifiedProperties(resourceIri, propertyIrisForGravsearch)
       .toString()
 
-    // Run the query.
-    Post(
-      "/v2/searchextended",
+    val request = Post(
+      baseApiUrl + "/v2/searchextended",
       HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery),
-    ) ~> addCredentials(BasicHttpCredentials(userEmail, password)) ~> searchPath ~> check {
-      assert(status == StatusCodes.OK, response.toString)
-      responseToJsonLDDocument(response)
-    }
+    ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
+
+    val response: HttpResponse = singleAwaitingRequest(request)
+    assert(response.status == StatusCodes.OK)
+    responseToJsonLDDocument(response)
   }
 
   private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
@@ -88,32 +79,14 @@ class ValuesV2R2RSpec extends R2RSpec {
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI,
   ): JsonLDObject = {
-    val resourceIri: IRI =
-      resource.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-    val propertyValues: JsonLDArray =
-      getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
+    val matchingValues: Seq[JsonLDObject] =
+      getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult).value.collect {
+        case jsonLDObject: JsonLDObject
+            if jsonLDObject.requireStringWithValidation(JsonLDKeywords.ID, validationFun) == expectedValueIri =>
+          jsonLDObject
+      }
 
-    val matchingValues: Seq[JsonLDObject] = propertyValues.value.collect {
-      case jsonLDObject: JsonLDObject
-          if jsonLDObject.requireStringWithValidation(
-            JsonLDKeywords.ID,
-            validationFun,
-          ) == expectedValueIri =>
-        jsonLDObject
-    }
-
-    if (matchingValues.isEmpty) {
-      throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>",
-      )
-    }
-
-    if (matchingValues.size > 1) {
-      throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> has more than one value with the IRI <$expectedValueIri>",
-      )
-    }
-
+    assert(matchingValues.size == 1)
     matchingValues.head
   }
 
@@ -140,8 +113,7 @@ class ValuesV2R2RSpec extends R2RSpec {
   "The values v2 endpoint" should {
     "update a still image file value using a mock Sipi" in {
       val resourceIri: IRI = aThingPictureIri
-      val internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2"
-
+      val internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2"
       val jsonLDEntity =
         s"""{
            |  "@id" : "$resourceIri",
@@ -157,36 +129,31 @@ class ValuesV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      Put("/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
-      ) ~> valuesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
-        val valueIri: IRI =
-          responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-        stillImageFileValueIri.set(valueIri)
-        val valueType: SmartIri =
-          responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-        valueType should ===(OntologyConstants.KnoraApiV2Complex.StillImageFileValue.toSmartIri)
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity))
+          ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
 
-        val savedValue: JsonLDObject = getValue(
-          resourceIri = resourceIri,
-          propertyIriForGravsearch = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
-          propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
-          expectedValueIri = stillImageFileValueIri.get,
-          userEmail = anythingUserEmail,
-        )
+      val response: HttpResponse = singleAwaitingRequest(request)
+      assert(response.status == StatusCodes.OK)
+      val responseJsonDoc = responseToJsonLDDocument(response)
+      val valueIri: IRI =
+        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      stillImageFileValueIri.set(valueIri)
+      val valueType: SmartIri =
+        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
+      valueType should ===(OntConsts.StillImageFileValue.toSmartIri)
 
-        savedValue
-          .getRequiredString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
-          .fold(msg => throw BadRequestException(msg), identity) should ===(internalFilename)
-        savedValue
-          .getRequiredInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX)
-          .fold(e => throw BadRequestException(e), identity) should ===(512)
-        savedValue
-          .getRequiredInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY)
-          .fold(e => throw BadRequestException(e), identity) should ===(256)
-      }
+      val savedValue: JsonLDObject = getValue(
+        resourceIri = resourceIri,
+        propertyIriForGravsearch = OntConsts.HasStillImageFileValue.toSmartIri,
+        propertyIriInResult = OntConsts.HasStillImageFileValue.toSmartIri,
+        expectedValueIri = stillImageFileValueIri.get,
+        userEmail = anythingUserEmail,
+      )
+
+      savedValue.getRequiredString(OntConsts.FileValueHasFilename).toOption should contain(internalFilename)
+      savedValue.getRequiredInt(OntConsts.StillImageFileValueHasDimX).toOption should contain(72)
+      savedValue.getRequiredInt(OntConsts.StillImageFileValueHasDimY).toOption should contain(72)
     }
   }
 }
