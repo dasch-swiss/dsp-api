@@ -42,43 +42,4 @@ object ValueMessagesV2Optics {
     val licenseOption: Lens[FileValueContentV2, Option[License]] =
       fileValueV2.andThen(FileValueV2Optics.licenseOption)
   }
-
-  object LinkValueContentV2Optics {
-
-    val nestedResource: Optional[LinkValueContentV2, ReadResourceV2] =
-      Optional[LinkValueContentV2, ReadResourceV2](_.nestedResource)(rr => lv => lv.copy(nestedResource = Some(rr)))
-
-  }
-
-  object ReadValueV2Optics {
-
-    val fileValueContentV2: Optional[ReadValueV2, FileValueContentV2] =
-      Optional[ReadValueV2, FileValueContentV2](_.valueContent.asOpt[FileValueContentV2])(fc => {
-        case rv: ReadLinkValueV2  => rv
-        case rv: ReadTextValueV2  => rv
-        case ov: ReadOtherValueV2 => ov.copy(valueContent = fc)
-      })
-
-    val fileValueV2: Optional[ReadValueV2, FileValueV2] =
-      ReadValueV2Optics.fileValueContentV2.andThen(FileValueContentV2Optics.fileValueV2)
-
-    val linkValueContentV2: Optional[ReadValueV2, LinkValueContentV2] =
-      Optional[ReadValueV2, LinkValueContentV2](_.valueContent.asOpt[LinkValueContentV2])(lv => {
-        case rv: ReadLinkValueV2  => rv.copy(valueContent = lv)
-        case rv: ReadOtherValueV2 => rv.copy(valueContent = lv)
-        case rv: ReadTextValueV2  => rv
-      })
-
-    val nestedResourceOfLinkValueContent: Optional[ReadValueV2, ReadResourceV2] =
-      ReadValueV2Optics.linkValueContentV2.andThen(LinkValueContentV2Optics.nestedResource)
-
-    def elements(predicate: ReadValueV2 => Boolean): Optional[Seq[ReadValueV2], ReadValueV2] =
-      Optional[Seq[ReadValueV2], ReadValueV2](_.find(predicate))(newValue =>
-        values =>
-          values.map {
-            case v if predicate(v) => newValue
-            case other             => other
-          },
-      )
-  }
 }
