@@ -341,7 +341,6 @@ final case class ValuesResponderV2(
         projectADM = resourceInfo.projectADM,
       )
     }
-
     for {
       // Don't allow anonymous users to create values.
       _ <- ZIO.when(requestingUser.isAnonymousUser)(
@@ -589,396 +588,357 @@ final case class ValuesResponderV2(
     updateValue: UpdateValueV2,
     requestingUser: User,
     apiRequestId: UUID,
-  ): Task[UpdateValueResponseV2] = {
+  ): Task[UpdateValueResponseV2] =
+    ZIO
+      .fail(ForbiddenException("Anonymous users aren't allowed to update values"))
+      .when(requestingUser.isAnonymousUser) *>
+      IriLocker.runWithIriLock(
+        apiRequestId,
+        updateValue.resourceIri,
+        updateValue match {
+          case updateContent: UpdateValueContentV2         => updateValueContent(updateContent, requestingUser)
+          case updatePermissions: UpdateValuePermissionsV2 => updateValuePermissions(updatePermissions, requestingUser)
+        },
+      )
 
-    /**
-     * Information about a resource, a submitted property, and a value of the property.
-     *
-     * @param resource                     the contents of the resource.
-     * @param submittedInternalPropertyIri the internal IRI of the submitted property.
-     * @param adjustedInternalPropertyInfo the internal definition of the submitted property, adjusted
-     *                                     as follows: an adjusted version of the submitted property:
-     *                                     if it's a link value property, substitute the
-     *                                     corresponding link property.
-     * @param value                        the requested value.
-     */
-    case class ResourcePropertyValue(
-      resource: ReadResourceV2,
-      submittedInternalPropertyIri: SmartIri,
-      adjustedInternalPropertyInfo: ReadPropertyInfoV2,
-      value: ReadValueV2,
+  /**
+   * Updates the permissions attached to a value.
+   *
+   * @param updateValue the update request.
+   * @return an [[UpdateValueResponseV2]].
+   */
+  private def updateValuePermissions(updateValue: UpdateValuePermissionsV2, requestingUser: User) =
+    for {
+      // Do the initial checks, and get information about the resource, the property, and the value.
+      resourcePropertyValue <- checkValueAndRetrieveResourceProperties(updateValue, requestingUser)
+
+      resourceInfo: ReadResourceV2 = resourcePropertyValue.resource
+      currentValue: ReadValueV2    = resourcePropertyValue.value
+
+      // Validate and reformat the submitted permissions.
+      newValuePermissionLiteral <- permissionUtilADM.validatePermissions(updateValue.permissions)
+
+      // Check that the user has Permission.ObjectAccess.ChangeRights on the value, and that the new permissions are
+      // different from the current ones.
+      currentPermissionsParsed <- ZIO.attempt(PermissionUtilADM.parsePermissions(currentValue.permissions))
+      newPermissionsParsed <-
+        ZIO.attempt(
+          PermissionUtilADM.parsePermissions(
+            updateValue.permissions,
+            (permissionLiteral: String) => throw AssertionException(s"Invalid permission literal: $permissionLiteral"),
+          ),
+        )
+
+      _ <- ZIO.when(newPermissionsParsed == currentPermissionsParsed)(
+             ZIO.fail(BadRequestException(s"The submitted permissions are the same as the current ones")),
+           )
+
+      _ <- resourceUtilV2.checkValuePermission(
+             resourceInfo = resourceInfo,
+             valueInfo = currentValue,
+             permissionNeeded = Permission.ObjectAccess.ChangeRights,
+             requestingUser = requestingUser,
+           )
+
+      // Do the update.
+      dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
+      newValueIri <-
+        iriService.checkOrCreateEntityIri(
+          updateValue.newValueVersionIri,
+          stringFormatter.makeRandomValueIri(resourceInfo.resourceIri),
+        )
+
+      currentTime = updateValue.valueCreationDate.getOrElse(Instant.now)
+
+      sparqlUpdate = sparql.v2.txt.changeValuePermissions(
+                       dataNamedGraph = dataNamedGraph,
+                       resourceIri = resourceInfo.resourceIri,
+                       propertyIri = updateValue.propertyIri.toInternalSchema,
+                       currentValueIri = currentValue.valueIri,
+                       valueTypeIri = currentValue.valueContent.valueType,
+                       newValueIri = newValueIri,
+                       newPermissions = newValuePermissionLiteral,
+                       currentTime = currentTime,
+                     )
+      _ <- triplestoreService.query(Update(sparqlUpdate))
+    } yield UpdateValueResponseV2(
+      newValueIri,
+      currentValue.valueContent.valueType,
+      currentValue.valueHasUUID,
+      resourceInfo.projectADM,
     )
 
-    /**
-     * Gets information about a resource, a submitted property, and a value of the property, and does
-     * some checks to see if the submitted information is correct.
-     *
-     * @param updateValue the submitted value update to check
-     * @return a [[ResourcePropertyValue]].
-     */
-    def getResourcePropertyValue(
-      updateValue: UpdateValueV2,
-    ): Task[ResourcePropertyValue] = {
+  /**
+   * Updates the contents of a value.
+   *
+   * @param updateValue the update request.
+   * @return an [[UpdateValueResponseV2]].
+   */
+  private def updateValueContent(
+    updateValue: UpdateValueContentV2,
+    requestingUser: User,
+  ): Task[UpdateValueResponseV2] = {
+    for {
+      resourcePropertyValue <- checkValueAndRetrieveResourceProperties(updateValue, requestingUser)
 
-      val resourceIri                       = updateValue.resourceIri
-      val submittedExternalResourceClassIri = updateValue.resourceClassIri
-      val submittedExternalPropertyIri      = updateValue.propertyIri
-      val valueIri                          = updateValue.valueIri
-      val submittedExternalValueType        = updateValue.valueType
-      for {
-        submittedInternalPropertyIri <- ZIO.attempt(submittedExternalPropertyIri.toOntologySchema(InternalSchema))
-        submittedInternalValueType   <- ZIO.attempt(submittedExternalValueType.toOntologySchema(InternalSchema))
+      resourceInfo: ReadResourceV2                     = resourcePropertyValue.resource
+      adjustedInternalPropertyInfo: ReadPropertyInfoV2 = resourcePropertyValue.adjustedInternalPropertyInfo
+      currentValue: ReadValueV2                        = resourcePropertyValue.value
 
-        // Get ontology information about the submitted property.
-        propertyInfoRequestForSubmittedProperty =
-          PropertiesGetRequestV2(
-            propertyIris = Set(submittedInternalPropertyIri),
-            allLanguages = false,
-            requestingUser = requestingUser,
-          )
+      // Did the user submit permissions for the new value?
+      newValueVersionPermissionLiteral <-
+        updateValue.permissions match {
+          case Some(permissions) =>
+            // Yes. Validate them.
+            permissionUtilADM.validatePermissions(permissions)
 
-        propertyInfoResponseForSubmittedProperty <-
-          messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
+          case None =>
+            // No. Use the permissions on the current version of the value.
+            ZIO.succeed(currentValue.permissions)
+        }
 
-        propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
-          propertyInfoResponseForSubmittedProperty.properties(
-            submittedInternalPropertyIri,
-          )
+      // Check that the user has permission to do the update. If they want to change the permissions
+      // on the value, they need Permission.ObjectAccess.ChangeRights, otherwise they need Permission.ObjectAccess.Modify.
+      currentPermissionsParsed <- ZIO.attempt(PermissionUtilADM.parsePermissions(currentValue.permissions))
+      newPermissionsParsed <-
+        ZIO.attempt(
+          PermissionUtilADM.parsePermissions(
+            newValueVersionPermissionLiteral,
+            (permissionLiteral: String) => throw AssertionException(s"Invalid permission literal: $permissionLiteral"),
+          ),
+        )
 
-        // Don't accept link properties.
-        _ <-
-          ZIO.when(propertyInfoForSubmittedProperty.isLinkProp)(
-            ZIO.fail(
-              BadRequestException(
-                s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link.",
-              ),
-            ),
-          )
+      permissionNeeded =
+        if (newPermissionsParsed != currentPermissionsParsed) { Permission.ObjectAccess.ChangeRights }
+        else { Permission.ObjectAccess.Modify }
 
-        // Don't accept knora-api:hasStandoffLinkToValue.
-        _ <- ZIO.when(
-               submittedExternalPropertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue,
-             )(ZIO.fail(BadRequestException(s"Values of <$submittedExternalPropertyIri> cannot be updated directly")))
+      _ <- resourceUtilV2.checkValuePermission(
+             resourceInfo = resourceInfo,
+             valueInfo = currentValue,
+             permissionNeeded = permissionNeeded,
+             requestingUser = requestingUser,
+           )
 
-        // Make an adjusted version of the submitted property: if it's a link value property, substitute the
-        // corresponding link property, whose objects we will need to query. Get ontology information about the
-        // adjusted property.
-        adjustedInternalPropertyInfo <-
-          getAdjustedInternalPropertyInfo(
-            submittedPropertyIri = submittedExternalPropertyIri,
-            maybeSubmittedValueType = Some(submittedExternalValueType),
-            propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
-            requestingUser = requestingUser,
-          )
+      // Convert the submitted value content to the internal schema.
+      project = resourceInfo.projectADM
+      submittedInternalValueContent: ValueContentV2 =
+        (updateValue.valueContent match
+          case fv: FileValueContentV2 =>
+            setCopyrightAndLicenceIfMissing(project.license, project.copyrightAttribution)(fv)
+          case other => other
+        ).toOntologySchema(InternalSchema)
 
-        // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
-        // so we can see objects that the user doesn't have permission to see.
-        resourceInfo <-
-          getResourceWithPropertyValues(
-            resourceIri = resourceIri,
-            propertyInfo = adjustedInternalPropertyInfo,
-            requestingUser = KnoraSystemInstances.Users.SystemUser,
-          )
+      // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
+      // the correct type for the adjusted property's knora-base:objectClassConstraint.
+      _ <- checkPropertyObjectClassConstraint(
+             propertyInfo = adjustedInternalPropertyInfo,
+             valueContent = submittedInternalValueContent,
+             requestingUser = requestingUser,
+           )
 
-        _ <-
-          ZIO.when(resourceInfo.resourceClassIri != submittedExternalResourceClassIri.toOntologySchema(InternalSchema))(
-            ZIO.fail(
-              BadRequestException(
-                s"The rdf:type of resource <$resourceIri> is not <$submittedExternalResourceClassIri>",
-              ),
-            ),
-          )
+      _ <- ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(submittedInternalValueContent)
 
-        // Check that the resource has the value that the user wants to update, as an object of the submitted property.
-        currentValue <-
-          ZIO
-            .fromOption(for {
-              values <- resourceInfo.values.get(submittedInternalPropertyIri)
-              curVal <- values.find(_.valueIri == valueIri)
-            } yield curVal)
-            .orElseFail(
-              NotFoundException(
-                s"Resource <$resourceIri> does not have value <$valueIri> as an object of property <$submittedExternalPropertyIri>",
-              ),
+      // Check that the updated value would not duplicate the current value version.
+      unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
+
+      _ <- ZIO.when(unescapedSubmittedInternalValueContent.wouldDuplicateCurrentVersion(currentValue.valueContent))(
+             ZIO.fail(DuplicateValueException("The submitted value is the same as the current version")),
+           )
+
+      // Check that the updated value would not duplicate another existing value of the resource.
+      currentValuesForProp: Seq[ReadValueV2] =
+        resourceInfo.values
+          .getOrElse(updateValue.propertyIri.toInternalSchema, Seq.empty[ReadValueV2])
+          .filter(_.valueIri != updateValue.valueIri)
+
+      _ <- ZIO.when(
+             currentValuesForProp.exists(currentVal =>
+               unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent),
+             ),
+           )(ZIO.fail(DuplicateValueException()))
+
+      _ <- submittedInternalValueContent match {
+             case textValueContent: TextValueContentV2 =>
+               // This is a text value. Check that the resources pointed to by any standoff link tags exist
+               // and that the user has permission to see them.
+               checkResourceIris(
+                 textValueContent.standoffLinkTagTargetResourceIris,
+                 requestingUser,
+               )
+
+             case _: LinkValueContentV2 =>
+               // We're updating a link. This means deleting an existing link and creating a new one, so
+               // check that the user has permission to modify the resource.
+               resourceUtilV2.checkResourcePermission(
+                 resourceInfo = resourceInfo,
+                 permissionNeeded = Permission.ObjectAccess.Modify,
+                 requestingUser = requestingUser,
+               )
+
+             case _ => ZIO.unit
+           }
+
+      dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
+
+      // Create the new value version.
+      newValueVersion <-
+        (currentValue, submittedInternalValueContent) match {
+          case (
+                currentLinkValue: ReadLinkValueV2,
+                newLinkValue: LinkValueContentV2,
+              ) =>
+            updateLinkValueV2AfterChecks(
+              dataNamedGraph = dataNamedGraph,
+              resourceInfo = resourceInfo,
+              linkPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
+              currentLinkValue = currentLinkValue,
+              newLinkValue = newLinkValue,
+              valueCreator = requestingUser.id,
+              valuePermissions = newValueVersionPermissionLiteral,
+              valueCreationDate = updateValue.valueCreationDate,
+              newValueVersionIri = updateValue.newValueVersionIri,
+              requestingUser = requestingUser,
             )
-        isSameType = currentValue.valueContent.valueType == submittedInternalValueType
-        isStillImageTypes =
-          Set(
-            submittedInternalValueType.toInternalIri.value,
-            currentValue.valueContent.valueType.toInternalIri.value,
-          ).subsetOf(Set(StillImageExternalFileValue, StillImageFileValue))
-        _ <-
-          ZIO.unless(isSameType || isStillImageTypes)(
-            ZIO.fail(
-              BadRequestException(
-                s"Value <$valueIri> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, but the submitted type was <$submittedExternalValueType>",
-              ),
-            ),
-          )
 
-        // If a custom value creation date was submitted, make sure it's later than the date of the current version.
-        _ <- ZIO.when(updateValue.valueCreationDate.exists(!_.isAfter(currentValue.valueCreationDate)))(
-               ZIO.fail(
-                 BadRequestException(
-                   "A custom value creation date must be later than the date of the current version",
-                 ),
-               ),
-             )
-      } yield ResourcePropertyValue(
-        resourceInfo,
-        submittedInternalPropertyIri,
-        adjustedInternalPropertyInfo,
-        currentValue,
-      )
-    }
-
-    /**
-     * Updates the permissions attached to a value.
-     *
-     * @param updateValuePermissionsV2 the update request.
-     * @return an [[UpdateValueResponseV2]].
-     */
-    def makeTaskFutureToUpdateValuePermissions(
-      updateValuePermissionsV2: UpdateValuePermissionsV2,
-    ): Task[UpdateValueResponseV2] =
-      for {
-        // Do the initial checks, and get information about the resource, the property, and the value.
-        resourcePropertyValue <- getResourcePropertyValue(updateValuePermissionsV2)
-
-        resourceInfo: ReadResourceV2           = resourcePropertyValue.resource
-        submittedInternalPropertyIri: SmartIri = resourcePropertyValue.submittedInternalPropertyIri
-        currentValue: ReadValueV2              = resourcePropertyValue.value
-
-        // Validate and reformat the submitted permissions.
-        newValuePermissionLiteral <- permissionUtilADM.validatePermissions(updateValuePermissionsV2.permissions)
-
-        // Check that the user has Permission.ObjectAccess.ChangeRights on the value, and that the new permissions are
-        // different from the current ones.
-        currentPermissionsParsed <- ZIO.attempt(PermissionUtilADM.parsePermissions(currentValue.permissions))
-        newPermissionsParsed <-
-          ZIO.attempt(
-            PermissionUtilADM.parsePermissions(
-              updateValuePermissionsV2.permissions,
-              (permissionLiteral: String) => throw AssertionException(s"Invalid permission literal: $permissionLiteral"),
-            ),
-          )
-
-        _ <- ZIO.when(newPermissionsParsed == currentPermissionsParsed)(
-               ZIO.fail(BadRequestException(s"The submitted permissions are the same as the current ones")),
-             )
-
-        _ <- resourceUtilV2.checkValuePermission(
-               resourceInfo = resourceInfo,
-               valueInfo = currentValue,
-               permissionNeeded = Permission.ObjectAccess.ChangeRights,
-               requestingUser = requestingUser,
-             )
-
-        // Do the update.
-        dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
-        newValueIri <-
-          iriService.checkOrCreateEntityIri(
-            updateValuePermissionsV2.newValueVersionIri,
-            stringFormatter.makeRandomValueIri(resourceInfo.resourceIri),
-          )
-
-        currentTime = updateValuePermissionsV2.valueCreationDate.getOrElse(Instant.now)
-
-        sparqlUpdate = sparql.v2.txt.changeValuePermissions(
-                         dataNamedGraph = dataNamedGraph,
-                         resourceIri = resourceInfo.resourceIri,
-                         propertyIri = submittedInternalPropertyIri,
-                         currentValueIri = currentValue.valueIri,
-                         valueTypeIri = currentValue.valueContent.valueType,
-                         newValueIri = newValueIri,
-                         newPermissions = newValuePermissionLiteral,
-                         currentTime = currentTime,
-                       )
-        _ <- triplestoreService.query(Update(sparqlUpdate))
-      } yield UpdateValueResponseV2(
-        newValueIri,
-        currentValue.valueContent.valueType,
-        currentValue.valueHasUUID,
-        resourceInfo.projectADM,
-      )
-
-    /**
-     * Updates the contents of a value.
-     *
-     * @param updateValueContentV2 the update request.
-     * @return an [[UpdateValueResponseV2]].
-     */
-    def makeTaskFutureToUpdateValueContent(
-      updateValueContentV2: UpdateValueContentV2,
-    ): Task[UpdateValueResponseV2] = {
-      for {
-        // Do the initial checks, and get information about the resource, the property, and the value.
-        resourcePropertyValue <- getResourcePropertyValue(updateValueContentV2)
-
-        resourceInfo: ReadResourceV2                     = resourcePropertyValue.resource
-        submittedInternalPropertyIri: SmartIri           = resourcePropertyValue.submittedInternalPropertyIri
-        adjustedInternalPropertyInfo: ReadPropertyInfoV2 = resourcePropertyValue.adjustedInternalPropertyInfo
-        currentValue: ReadValueV2                        = resourcePropertyValue.value
-
-        // Did the user submit permissions for the new value?
-        newValueVersionPermissionLiteral <-
-          updateValueContentV2.permissions match {
-            case Some(permissions) =>
-              // Yes. Validate them.
-              permissionUtilADM.validatePermissions(permissions)
-
-            case None =>
-              // No. Use the permissions on the current version of the value.
-              ZIO.succeed(currentValue.permissions)
-          }
-
-        // Check that the user has permission to do the update. If they want to change the permissions
-        // on the value, they need Permission.ObjectAccess.ChangeRights, otherwise they need Permission.ObjectAccess.Modify.
-        currentPermissionsParsed <- ZIO.attempt(PermissionUtilADM.parsePermissions(currentValue.permissions))
-        newPermissionsParsed <-
-          ZIO.attempt(
-            PermissionUtilADM.parsePermissions(
-              newValueVersionPermissionLiteral,
-              (permissionLiteral: String) => throw AssertionException(s"Invalid permission literal: $permissionLiteral"),
-            ),
-          )
-
-        permissionNeeded =
-          if (newPermissionsParsed != currentPermissionsParsed) { Permission.ObjectAccess.ChangeRights }
-          else { Permission.ObjectAccess.Modify }
-
-        _ <- resourceUtilV2.checkValuePermission(
-               resourceInfo = resourceInfo,
-               valueInfo = currentValue,
-               permissionNeeded = permissionNeeded,
-               requestingUser = requestingUser,
-             )
-
-        // Convert the submitted value content to the internal schema.
-        project = resourceInfo.projectADM
-        submittedInternalValueContent: ValueContentV2 =
-          (updateValueContentV2.valueContent match
-            case fv: FileValueContentV2 =>
-              setCopyrightAndLicenceIfMissing(project.license, project.copyrightAttribution)(fv)
-            case other => other
-          ).toOntologySchema(InternalSchema)
-
-        // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
-        // the correct type for the adjusted property's knora-base:objectClassConstraint.
-        _ <- checkPropertyObjectClassConstraint(
-               propertyInfo = adjustedInternalPropertyInfo,
-               valueContent = submittedInternalValueContent,
-               requestingUser = requestingUser,
-             )
-
-        _ <- ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(submittedInternalValueContent)
-
-        // Check that the updated value would not duplicate the current value version.
-        unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
-
-        _ <- ZIO.when(unescapedSubmittedInternalValueContent.wouldDuplicateCurrentVersion(currentValue.valueContent))(
-               ZIO.fail(DuplicateValueException("The submitted value is the same as the current version")),
-             )
-
-        // Check that the updated value would not duplicate another existing value of the resource.
-        currentValuesForProp: Seq[ReadValueV2] =
-          resourceInfo.values
-            .getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
-            .filter(_.valueIri != updateValueContentV2.valueIri)
-
-        _ <- ZIO.when(
-               currentValuesForProp.exists(currentVal =>
-                 unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent),
-               ),
-             )(ZIO.fail(DuplicateValueException()))
-
-        _ <- submittedInternalValueContent match {
-               case textValueContent: TextValueContentV2 =>
-                 // This is a text value. Check that the resources pointed to by any standoff link tags exist
-                 // and that the user has permission to see them.
-                 checkResourceIris(
-                   textValueContent.standoffLinkTagTargetResourceIris,
-                   requestingUser,
-                 )
-
-               case _: LinkValueContentV2 =>
-                 // We're updating a link. This means deleting an existing link and creating a new one, so
-                 // check that the user has permission to modify the resource.
-                 resourceUtilV2.checkResourcePermission(
-                   resourceInfo = resourceInfo,
-                   permissionNeeded = Permission.ObjectAccess.Modify,
-                   requestingUser = requestingUser,
-                 )
-
-               case _ => ZIO.unit
-             }
-
-        dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
-
-        // Create the new value version.
-        newValueVersion <-
-          (currentValue, submittedInternalValueContent) match {
-            case (
-                  currentLinkValue: ReadLinkValueV2,
-                  newLinkValue: LinkValueContentV2,
-                ) =>
-              updateLinkValueV2AfterChecks(
-                dataNamedGraph = dataNamedGraph,
-                resourceInfo = resourceInfo,
-                linkPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
-                currentLinkValue = currentLinkValue,
-                newLinkValue = newLinkValue,
-                valueCreator = requestingUser.id,
-                valuePermissions = newValueVersionPermissionLiteral,
-                valueCreationDate = updateValueContentV2.valueCreationDate,
-                newValueVersionIri = updateValueContentV2.newValueVersionIri,
-                requestingUser = requestingUser,
-              )
-
-            case _ =>
-              updateOrdinaryValueV2AfterChecks(
-                dataNamedGraph = dataNamedGraph,
-                resourceInfo = resourceInfo,
-                propertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
-                currentValue = currentValue,
-                newValueVersion = submittedInternalValueContent,
-                valueCreator = requestingUser.id,
-                valuePermissions = newValueVersionPermissionLiteral,
-                valueCreationDate = updateValueContentV2.valueCreationDate,
-                newValueVersionIri = updateValueContentV2.newValueVersionIri,
-                requestingUser = requestingUser,
-              )
-          }
-      } yield UpdateValueResponseV2(
-        valueIri = newValueVersion.newValueIri,
-        valueType = newValueVersion.valueContent.valueType,
-        valueUUID = newValueVersion.newValueUUID,
-        projectADM = resourceInfo.projectADM,
-      )
-    }
-
-    if (requestingUser.isAnonymousUser) {
-      ZIO.fail(ForbiddenException("Anonymous users aren't allowed to update values"))
-    } else {
-      updateValue match {
-        case updateValueContentV2: UpdateValueContentV2 =>
-          // This is a request to update the content of a value.
-          IriLocker.runWithIriLock(
-            apiRequestId,
-            updateValueContentV2.resourceIri,
-            makeTaskFutureToUpdateValueContent(updateValueContentV2),
-          )
-
-        case updateValuePermissionsV2: UpdateValuePermissionsV2 =>
-          // This is a request to update the permissions attached to a value.
-          IriLocker.runWithIriLock(
-            apiRequestId,
-            updateValuePermissionsV2.resourceIri,
-            makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2),
-          )
-      }
-    }
+          case _ =>
+            updateOrdinaryValueV2AfterChecks(
+              dataNamedGraph = dataNamedGraph,
+              resourceInfo = resourceInfo,
+              propertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
+              currentValue = currentValue,
+              newValueVersion = submittedInternalValueContent,
+              valueCreator = requestingUser.id,
+              valuePermissions = newValueVersionPermissionLiteral,
+              valueCreationDate = updateValue.valueCreationDate,
+              newValueVersionIri = updateValue.newValueVersionIri,
+              requestingUser = requestingUser,
+            )
+        }
+    } yield UpdateValueResponseV2(
+      valueIri = newValueVersion.newValueIri,
+      valueType = newValueVersion.valueContent.valueType,
+      valueUUID = newValueVersion.newValueUUID,
+      projectADM = resourceInfo.projectADM,
+    )
   }
+
+  /**
+   * Information about a resource, a submitted property, and a value of the property.
+   *
+   * @param resource                     the contents of the resource.
+   * @param adjustedInternalPropertyInfo the internal definition of the submitted property, adjusted
+   *                                     as follows: an adjusted version of the submitted property:
+   *                                     if it's a link value property, substitute the
+   *                                     corresponding link property.
+   * @param value                        the requested value.
+   */
+  private case class ResourcePropertyValue(
+    resource: ReadResourceV2,
+    adjustedInternalPropertyInfo: ReadPropertyInfoV2,
+    value: ReadValueV2,
+  )
+
+  /**
+   * Gets information about a resource, a submitted property, and a value of the property, and does
+   * some checks to see if the submitted information is correct.
+   *
+   * @param updateValue the submitted value update to check
+   * @return a [[ResourcePropertyValue]].
+   */
+  private def checkValueAndRetrieveResourceProperties(updateValue: UpdateValueV2, requestingUser: User) =
+    for {
+      submittedInternalPropertyIri <- ZIO.attempt(updateValue.propertyIri.toInternalSchema)
+      submittedInternalValueType   <- ZIO.attempt(updateValue.valueType.toInternalSchema)
+
+      // Get ontology information about the submitted property.
+      propertyInfoRequestForSubmittedProperty =
+        PropertiesGetRequestV2(
+          propertyIris = Set(submittedInternalPropertyIri),
+          allLanguages = false,
+          requestingUser = requestingUser,
+        )
+
+      propertyInfoResponseForSubmittedProperty <-
+        messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
+
+      propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
+        propertyInfoResponseForSubmittedProperty.properties(submittedInternalPropertyIri)
+
+      _ <- {
+        val msg =
+          s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toComplexSchema}>." +
+            s" Use a link value property to submit a link."
+        ZIO.fail(BadRequestException(msg)).when(propertyInfoForSubmittedProperty.isLinkProp)
+      }
+
+      // Don't accept knora-api:hasStandoffLinkToValue.
+      _ <- ZIO.when(
+             updateValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue,
+           )(ZIO.fail(BadRequestException(s"Values of <${updateValue.propertyIri}> cannot be updated directly")))
+
+      // Make an adjusted version of the submitted property: if it's a link value property, substitute the
+      // corresponding link property, whose objects we will need to query. Get ontology information about the
+      // adjusted property.
+      adjustedInternalPropertyInfo <- getAdjustedInternalPropertyInfo(
+                                        updateValue.propertyIri,
+                                        Some(updateValue.valueType),
+                                        propertyInfoForSubmittedProperty,
+                                        requestingUser,
+                                      )
+
+      // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
+      // so we can see objects that the user doesn't have permission to see.
+      resourceInfo <-
+        getResourceWithPropertyValues(
+          resourceIri = updateValue.resourceIri,
+          propertyInfo = adjustedInternalPropertyInfo,
+          requestingUser = KnoraSystemInstances.Users.SystemUser,
+        )
+
+      _ <- {
+        val msg = s"The rdf:type of resource <${updateValue.resourceIri}> is not <${updateValue.resourceClassIri}>"
+        ZIO
+          .fail(BadRequestException(msg))
+          .when(resourceInfo.resourceClassIri != updateValue.resourceClassIri.toInternalSchema)
+      }
+
+      // Check that the resource has the value that the user wants to update, as an object of the submitted property.
+      currentValue <-
+        ZIO
+          .fromOption(for {
+            values <- resourceInfo.values.get(submittedInternalPropertyIri)
+            curVal <- values.find(_.valueIri == updateValue.valueIri)
+          } yield curVal)
+          .orElseFail(
+            NotFoundException(
+              s"Resource <${updateValue.resourceIri}> does not have value <${updateValue.valueIri}> as an object of property <${updateValue.propertyIri}>",
+            ),
+          )
+      isSameType = currentValue.valueContent.valueType == submittedInternalValueType
+      isStillImageTypes =
+        Set(
+          submittedInternalValueType.toInternalIri.value,
+          currentValue.valueContent.valueType.toInternalIri.value,
+        ).subsetOf(Set(StillImageExternalFileValue, StillImageFileValue))
+
+      _ <-
+        ZIO.unless(isSameType || isStillImageTypes)(
+          ZIO.fail(
+            BadRequestException(
+              s"Value <${updateValue.valueIri}> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, but the submitted type was <${updateValue.valueType}>",
+            ),
+          ),
+        )
+
+      // If a custom value creation date was submitted, make sure it's later than the date of the current version.
+      _ <- ZIO.when(updateValue.valueCreationDate.exists(!_.isAfter(currentValue.valueCreationDate)))(
+             ZIO.fail(
+               BadRequestException(
+                 "A custom value creation date must be later than the date of the current version",
+               ),
+             ),
+           )
+    } yield ResourcePropertyValue(resourceInfo, adjustedInternalPropertyInfo, currentValue)
 
   /**
    * Changes an ordinary value (i.e. not a link), assuming that pre-update checks have already been done.
