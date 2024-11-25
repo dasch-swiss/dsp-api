@@ -14,7 +14,6 @@ import java.time.Instant
 import java.util.UUID
 import scala.language.implicitConversions
 import scala.util.Try
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -39,6 +38,7 @@ import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optics.FileValueContentV2Optics
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.api.model.Project
@@ -673,6 +673,18 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] with WithAsIs
  * Generates instances of value content classes (subclasses of [[ValueContentV2]]) from JSON-LD input.
  */
 object ValueContentV2 {
+  def replaceCopyrightAndLicenceIfMissing(
+    license: Option[License],
+    copyrightAttribution: Option[CopyrightAttribution],
+    vc: ValueContentV2,
+  ): ValueContentV2 = vc match {
+    case fvc: FileValueContentV2 =>
+      FileValueContentV2Optics.licenseOption
+        .filter(_.isEmpty)
+        .replace(license)
+        .andThen(FileValueContentV2Optics.copyRightAttributionOption.filter(_.isEmpty).replace(copyrightAttribution))(fvc)
+    case other => other
+  }
 
   final case class FileInfo(filename: IRI, metadata: FileMetadataSipiResponse)
 

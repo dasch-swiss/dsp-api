@@ -5,12 +5,10 @@
 
 package org.knora.webapi.responders.v2
 
-import monocle.PLens
 import zio.*
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
@@ -34,13 +32,10 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optics.FileValueContentV2Optics
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optics.FileValueContentV2Optics.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
@@ -69,19 +64,6 @@ final case class ValuesResponderV2(
   permissionsResponder: PermissionsResponder,
 )(implicit val stringFormatter: StringFormatter) {
 
-  private def setCopyrightAndLicenceIfMissing(
-    license: Option[License],
-    copyrightAttribution: Option[CopyrightAttribution],
-  ): FileValueContentV2 => FileValueContentV2 =
-    FileValueContentV2Optics.licenseOption
-      .filter(_.isEmpty)
-      .replace(license)
-      .andThen(
-        FileValueContentV2Optics.copyRightAttributionOption
-          .filter(_.isEmpty)
-          .replace(copyrightAttribution),
-      )
-
   /**
    * Creates a new value in an existing resource.
    *
@@ -109,11 +91,13 @@ final case class ValuesResponderV2(
         submittedInternalPropertyIri <-
           ZIO.attempt(valueToCreate.propertyIri.toOntologySchema(InternalSchema))
 
-        submittedInternalValueContent: ValueContentV2 =
-          valueToCreate.valueContent.toOntologySchema(InternalSchema) match
-            case fileValueContent: FileValueContentV2 =>
-              setCopyrightAndLicenceIfMissing(project.license, project.copyrightAttribution)(fileValueContent)
-            case other => other
+        submittedInternalValueContent = ValueContentV2
+                                          .replaceCopyrightAndLicenceIfMissing(
+                                            project.license,
+                                            project.copyrightAttribution,
+                                            valueToCreate.valueContent,
+                                          )
+                                          .toOntologySchema(InternalSchema)
 
         // Get ontology information about the submitted property.
         propertyInfoRequestForSubmittedProperty =
@@ -721,12 +705,10 @@ final case class ValuesResponderV2(
 
       // Convert the submitted value content to the internal schema.
       project = resourceInfo.projectADM
-      submittedInternalValueContent: ValueContentV2 =
-        (updateValue.valueContent match
-          case fv: FileValueContentV2 =>
-            setCopyrightAndLicenceIfMissing(project.license, project.copyrightAttribution)(fv)
-          case other => other
-        ).toOntologySchema(InternalSchema)
+      submittedInternalValueContent =
+        ValueContentV2
+          .replaceCopyrightAndLicenceIfMissing(project.license, project.copyrightAttribution, updateValue.valueContent)
+          .toOntologySchema(InternalSchema)
 
       // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
       // the correct type for the adjusted property's knora-base:objectClassConstraint.
@@ -1036,6 +1018,11 @@ final case class ValuesResponderV2(
       currentTime: Instant = valueCreationDate.getOrElse(Instant.now)
 
       // Generate a SPARQL update.
+      newValue: ValueContentV2 = ValueContentV2.replaceCopyrightAndLicenceIfMissing(
+                                   resourceInfo.projectADM.license,
+                                   resourceInfo.projectADM.copyrightAttribution,
+                                   newValueVersion,
+                                 )
       sparqlUpdate = sparql.v2.txt.addValueVersion(
                        dataNamedGraph = dataNamedGraph,
                        resourceIri = resourceInfo.resourceIri,
@@ -1043,10 +1030,10 @@ final case class ValuesResponderV2(
                        currentValueIri = currentValue.valueIri,
                        newValueIri = newValueIri,
                        valueTypeIri = currentValue.valueContent.valueType,
-                       value = newValueVersion,
+                       value = newValue,
                        valueCreator = valueCreator,
                        valuePermissions = valuePermissions,
-                       maybeComment = newValueVersion.comment,
+                       maybeComment = newValue.comment,
                        linkUpdates = standoffLinkUpdates,
                        currentTime = currentTime,
                        requestingUser = requestingUser.id,

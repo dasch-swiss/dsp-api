@@ -6,10 +6,8 @@
 package org.knora.webapi.messages.v2.responder.valuemessages
 
 import monocle.*
-import monocle.Optional
 import monocle.macros.*
 
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 
