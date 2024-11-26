@@ -45,9 +45,14 @@ object Permission {
 
     val maxPermission: ObjectAccess = ChangeRights
 
-    def from(code: Int): Option[ObjectAccess] = all.find(_.code == code)
+    def from(code: Int): Either[String, ObjectAccess] =
+      all
+        .find(_.code == code)
+        .toRight(s"Invalid permission code '$code', it should be one of ${allCodes.mkString(", ")}")
 
-    def fromToken(token: String): Option[ObjectAccess] = all.find(_.token == token)
+    def fromToken(token: String): Either[String, ObjectAccess] = all
+      .find(_.token == token)
+      .toRight(s"Invalid permission token '$token', it should be one of ${allTokens.mkString(", ")}")
 
     val all: Set[ObjectAccess] = Set(
       ObjectAccess.ChangeRights,

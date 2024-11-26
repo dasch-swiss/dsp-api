@@ -93,6 +93,7 @@ object LayersLive {
     AuthenticationApiModule.Provided &
     CardinalityHandler &
     ConstructResponseUtilV2 &
+    DefaultObjectAccessPermissionService &
     GroupRestService &
     HttpServer &
     IIIFRequestMessageHandler &

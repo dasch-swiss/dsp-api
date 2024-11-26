@@ -10,8 +10,10 @@ import zio.Task
 
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.repo.service.Repository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
@@ -45,4 +47,6 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
   def findDirectSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
 
   def findAllSubclassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
+
+  def findProperty(propertyIri: PropertyIri): Task[Option[ReadPropertyInfoV2]]
 }

@@ -76,6 +76,7 @@ import org.knora.webapi.slice.shacl.api.ShaclApiModule
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
+import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -238,6 +239,7 @@ object LayersTest {
       ListsService.layer,
       IIIFRequestMessageHandlerLive.layer,
       IriService.layer,
+      SipiServiceLive.layer,
     )
 
   private val commonLayersForAllIntegrationTests =

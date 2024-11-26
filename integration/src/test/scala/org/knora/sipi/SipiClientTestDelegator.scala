@@ -10,11 +10,8 @@ import zio.ULayer
 import zio.ZLayer
 import zio.nio.file.Path
 
-import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
-import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
@@ -46,15 +43,6 @@ case class SipiServiceTestDelegator(
     else { mock }
 
   /**
-   * Asks Sipi for metadata about a file in the tmp folder, served from the 'knora.json' route.
-   *
-   * @param filename the path to the file.
-   * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
-   */
-  override def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse] =
-    sipiService.getFileMetadataFromSipiTemp(filename)
-
-  /**
    * Asks DSP-Ingest for metadata about a file in permanent location, served from the 'knora.json' route.
    *
    * @param shortcode the shortcode of the project.
@@ -66,26 +54,6 @@ case class SipiServiceTestDelegator(
     assetId: AssetId,
   ): Task[FileMetadataSipiResponse] =
     sipiService.getFileMetadataFromDspIngest(shortcode, assetId)
-
-  /**
-   * Asks Sipi to move a file from temporary storage to permanent storage.
-   *
-   * @param moveTemporaryFileToPermanentStorageRequestV2 the request.
-   * @return a [[SuccessResponseV2]].
-   */
-  override def moveTemporaryFileToPermanentStorage(
-    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
-  ): Task[SuccessResponseV2] =
-    sipiService.moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequestV2)
-
-  /**
-   * Asks Sipi to delete a temporary file.
-   *
-   * @param deleteTemporaryFileRequestV2 the request.
-   * @return a [[SuccessResponseV2]].
-   */
-  override def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] =
-    sipiService.deleteTemporaryFile(deleteTemporaryFileRequestV2)
 
   /**
    * Asks Sipi for a text file used internally by Knora.

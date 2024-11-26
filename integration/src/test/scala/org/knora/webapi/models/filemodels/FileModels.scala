@@ -15,20 +15,24 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
 
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
   internalFilename: String,
   label: String,
   resourceIRI: Option[String] = None,
+  copyrightAttribution: Option[CopyrightAttribution] = None,
+  license: Option[License] = None,
 ) {
 
   /**
    * Create a JSON-LD serialization of the request. This can be used for e2e and integration tests.
    *
-   * @param className    the class name of the resource. Optional.
+   * @param shortcode    the project's shortcode. Optional.
    * @param ontologyName the name of the ontology to be prefixed to the class name. Defaults to `"knora-api"`
-   * @param uuid         the uuid of the project to which the resource should be added. Defaults to `"0001"`
+   * @param className    the class name of the resource. Optional.
    * @param ontologyIRI  IRI of the ontology, to which the prefix should resolve. Optional.
    * @return JSON-LD serialization of the request.
    */
@@ -55,6 +59,8 @@ sealed abstract case class UploadFileRequest private (
        |  "$fileValuePropertyName" : {
        |    "@type" : "$fileValueType",
        |    "knora-api:fileValueHasFilename" : "$internalFilename"
+       |    ${copyrightAttribution.map(ca => s""","knora-api:hasCopyrightAttribution" : "${ca.value}"""").getOrElse("")}
+       |    ${license.map(l => s""","knora-api:hasLicense" : "${l.value}"""").getOrElse("")}
        |  },
        |  "knora-api:attachedToProject" : {
        |    "@id" : "http://rdfh.ch/projects/$shortcode"
@@ -104,6 +110,8 @@ sealed abstract case class UploadFileRequest private (
     resourceClassIRI: Option[SmartIri] = None,
     valuePropertyIRI: Option[SmartIri] = None,
     project: Option[Project] = None,
+    copyrightAttribution: Option[CopyrightAttribution] = None,
+    license: Option[License] = None,
   ): CreateResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -122,6 +130,8 @@ sealed abstract case class UploadFileRequest private (
       originalFilename = originalFilename,
       originalMimeType = originalMimeType,
       comment = comment,
+      copyrightAttribution,
+      license,
     )
 
     val values = List(
@@ -172,13 +182,10 @@ object UploadFileRequest {
     internalFilename: String,
     label: String = "test label",
     resourceIRI: Option[String] = None,
+    copyrightAttribution: Option[CopyrightAttribution] = None,
+    license: Option[License] = None,
   ): UploadFileRequest =
-    new UploadFileRequest(
-      fileType = fileType,
-      internalFilename = internalFilename,
-      label = label,
-      resourceIRI = resourceIRI,
-    ) {}
+    new UploadFileRequest(fileType, internalFilename, label, resourceIRI, copyrightAttribution, license) {}
 }
 
 sealed abstract case class ChangeFileRequest private (

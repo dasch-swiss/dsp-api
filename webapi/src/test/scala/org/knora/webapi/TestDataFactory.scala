@@ -99,5 +99,7 @@ object TestDataFactory {
     Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
+    Some(CopyrightAttribution.unsafeFrom("2024, Example Project")),
+    Some(License.unsafeFrom("CC-BY-4.0")),
   )
 }

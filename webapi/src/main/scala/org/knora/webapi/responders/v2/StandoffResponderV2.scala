@@ -26,7 +26,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.MappingElement
 import org.knora.webapi.messages.twirl.MappingStandoffDatatypeClass
 import org.knora.webapi.messages.twirl.MappingXMLAttribute
@@ -51,6 +50,7 @@ import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.EhCache
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -69,11 +69,12 @@ final case class StandoffResponderV2(
   projectService: ProjectService,
   xsltCache: EhCache[String, String],
   mappingCache: EhCache[String, MappingXMLtoStandoff],
+  sipiServiceLive: SipiServiceLive,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
     with LazyLogging {
 
-  private val xmlMimeTypes = Set("text/xml", "application/xml")
+  private val xmlMimeTypes = Set("text/xml", "application/xml", "application/xslt+xml")
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[StandoffResponderRequestV2]
 
@@ -181,8 +182,8 @@ final case class StandoffResponderV2(
         } else {
           for {
             response <-
-              messageRelay
-                .ask[SipiGetTextFileResponse](
+              sipiServiceLive
+                .getTextFileRequest(
                   SipiGetTextFileRequest(
                     fileUrl = xsltFileUrl,
                     requestingUser = KnoraSystemInstances.Users.SystemUser,
@@ -978,7 +979,8 @@ object StandoffResponderV2 {
         xc      <- ZIO.serviceWithZIO[CacheManager](_.createCache[String, String]("xsltCache"))
         mc      <- ZIO.serviceWithZIO[CacheManager](_.createCache[String, MappingXMLtoStandoff]("mappingCache"))
         sf      <- ZIO.service[StringFormatter]
-        handler <- mr.subscribe(StandoffResponderV2(ac, mr, ts, cru, stu, ps, xc, mc)(sf))
+        ssl     <- ZIO.service[SipiServiceLive]
+        handler <- mr.subscribe(StandoffResponderV2(ac, mr, ts, cru, stu, ps, xc, mc, ssl)(sf))
       } yield handler
     }
 }

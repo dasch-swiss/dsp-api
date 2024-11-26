@@ -686,6 +686,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private val customValueIri: IRI = s"http://rdfh.ch/0001/a-thing/values/$customValueUUID"
 
   "The values v2 endpoint" should {
+
     "get the latest versions of values, given their UUIDs" in {
       // The UUIDs of values in TestDing.
       val testDingValues: Map[String, String] = Map(
@@ -3066,7 +3067,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "not update an integer value with an invalid custom new value version IRI" in {
       val resourceIri: IRI        = AThing.iri
       val intValue: Int           = 8
-      val newValueVersionIri: IRI = "foo"
+      val newValueVersionIri: IRI = "http://example.com/foo"
 
       val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,

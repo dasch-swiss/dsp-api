@@ -302,10 +302,7 @@ For example, to get a JPG thumbnail image that is 150 pixels wide, you would add
 
 ### Upload Files to DSP-INGEST
 
-Support for DSP-INGEST is in its early stage and currently mainly intended for ingesting large amounts of data.
-When a file has been ingested through DSP-INGEST,
-it is necessary to send the header `X-Asset-Ingested`
-along with the request to create the file value resource in DSP-API.
+Support for uploads with DSP-INGEST is now the preferred method of uploading files (and also for ingesting large amounts of data internally).
 
 ### Submit A File Value to DSP-API
 

@@ -1344,7 +1344,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingUser2.email, password))
       val response = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.Forbidden, "should be forbidden")
+      assert(response.status == StatusCodes.BadRequest)
     }
 
     "create a resource containing escaped text" in {

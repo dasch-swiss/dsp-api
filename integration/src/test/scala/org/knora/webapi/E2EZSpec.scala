@@ -71,6 +71,9 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       result   <- ZIO.fromEither(response.fromJson[B])
     } yield result
 
+  def sendPostRequestAsRoot(url: String, data: String): ZIO[env, String, Response] =
+    getRootToken.flatMap(token => sendPostRequest(url, data, Some(token)))
+
   def sendPostRequest(url: String, data: String, token: Option[String] = None): ZIO[env, String, Response] =
     for {
       client   <- ZIO.service[Client]

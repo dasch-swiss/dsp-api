@@ -17,6 +17,7 @@ import sttp.client3.httpclient.zio.HttpClientZioBackend
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
+import zio.nio.file.Files
 
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
@@ -29,9 +30,8 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseEntry
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol.*
-import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponse
-import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponseJsonProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
@@ -47,7 +47,11 @@ import pekko.http.scaladsl.unmarshalling.Unmarshal
  * @param path     the path of the file.
  * @param mimeType the MIME type of the file.
  */
-final case class FileToUpload(path: Path, mimeType: ContentType)
+final case class FileToUpload(
+  path: Path,
+  mimeType: ContentType,
+  shortcode: String = "0001",
+)
 
 /**
  * Represents an image file to be uploaded to the IIF Service.
@@ -65,7 +69,7 @@ final case class TestClientService(
     extends TriplestoreJsonProtocol
     with RequestBuilding {
 
-  private val targetHostUri = uri"${config.sipi.internalBaseUrl}"
+  private val ingestUrl = uri"${config.dspIngest.baseUrl}"
 
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 
@@ -155,52 +159,30 @@ final case class TestClientService(
     } yield json
 
   /**
-   * Uploads a file to the IIIF Service's "upload" route and returns the information in Sipi's response.
-   * The upload creates a multipart/form-data request which can contain multiple files.
+   * Uploads a file to the Ingest service's "/projects/$shortcode/assets/ingest/$filename" route.
    *
    * @param loginToken    the login token to be included in the request to Sipi.
    * @param files the files to be uploaded.
    * @return a [[SipiUploadResponse]] representing Sipi's response.
    */
-  def uploadToSipi(loginToken: String, files: Seq[FileToUpload]): Task[SipiUploadResponse] =
-    for {
-      url <- ZIO.succeed(targetHostUri.addPath("upload"))
-      multiparts = files.map { file =>
-                     multipartFile("file", file.path.toFile)
-                       .fileName(file.path.getFileName.toString)
-                       .contentType(file.mimeType.toString)
-                   }
-      response <- doSipiRequest(
-                    quickRequest
-                      .post(url)
-                      .header("Authorization", s"Bearer $loginToken")
-                      .multipartBody(multiparts),
-                  )
-      json <- ZIO.fromEither(response.fromJson[SipiUploadResponse]).mapError(Throwable(_))
-    } yield json
-
-  /**
-   * Uploads a file to the IIIF Service's "upload_without_processing" route and returns the information in Sipi's response.
-   * The upload creates a multipart/form-data request which can contain multiple files.
-   *
-   * @param loginToken    the login token to be included in the request to Sipi.
-   * @param files the files to be uploaded.
-   * @return a [[SipiUploadWithoutProcessingResponse]] representing Sipi's response.
-   */
-  def uploadWithoutProcessingToSipi(
-    loginToken: String,
-    files: Seq[FileToUpload],
-  ): Task[SipiUploadWithoutProcessingResponse] =
-    for {
-      url <- ZIO.succeed(targetHostUri.addPath("upload_without_processing").addParam("token", loginToken))
-      multiparts = files.map { file =>
-                     multipartFile("file", file.path.toFile)
-                       .fileName(file.path.getFileName.toString)
-                       .contentType(file.mimeType.toString)
-                   }
-      response <- doSipiRequest(quickRequest.post(url).multipartBody(multiparts))
-      json     <- ZIO.fromEither(response.fromJson[SipiUploadWithoutProcessingResponse]).mapError(Throwable(_))
-    } yield json
+  def uploadToIngest(loginToken: String, filesToUpload: Seq[FileToUpload]): Task[SipiUploadResponse] =
+    ZIO
+      .foreach(filesToUpload) { file =>
+        for {
+          contents <- Files.readAllBytes(zio.nio.file.Path.apply(file.path.toUri()))
+          url       = ingestUrl.addPath("projects", file.shortcode, "assets", "ingest", file.path.getFileName.toString)
+          response <-
+            doSipiRequest(
+              quickRequest
+                .post(url)
+                .header("Content-Type", file.mimeType.toString)
+                .header("Authorization", s"Bearer $loginToken")
+                .body(contents.toArray),
+            )
+          json <- ZIO.fromEither(response.fromJson[SipiUploadResponseEntry]).mapError(Throwable(_))
+        } yield json
+      }
+      .map(responses => SipiUploadResponse(responses.toList))
 
   private def doSipiRequest[T](request: Request[String, Any]): Task[String] =
     sttp.send(request).flatMap { response =>

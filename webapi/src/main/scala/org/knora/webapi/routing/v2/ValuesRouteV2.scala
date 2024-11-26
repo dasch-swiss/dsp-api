@@ -17,7 +17,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
-import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
@@ -36,6 +35,8 @@ final case class ValuesRouteV2()(
   ],
 ) {
 
+  private val jsonLdRequestParser               = ZIO.serviceWithZIO[ApiComplexV2JsonLdRequestParser]
+  private val responder                         = ZIO.serviceWithZIO[ValuesResponderV2]
   private val valuesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "values")
 
   def makeRoute: Route = getValue() ~ createValue() ~ updateValue() ~ deleteValue()
@@ -85,12 +86,10 @@ final case class ValuesRouteV2()(
             for {
               requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
               apiRequestId   <- Random.nextUUID
-              ingestState     = AssetIngestState.headerAssetIngestState(ctx.request.headers)
-              valueToCreate <- ZIO.serviceWithZIO[ApiComplexV2JsonLdRequestParser](
-                                 _.createValueV2FromJsonLd(jsonLdString, ingestState).mapError(BadRequestException(_)),
+              valueToCreate <- jsonLdRequestParser(
+                                 _.createValueV2FromJsonLd(jsonLdString).mapError(BadRequestException(_)),
                                )
-              response <-
-                ZIO.serviceWithZIO[ValuesResponderV2](_.createValueV2(valueToCreate, requestingUser, apiRequestId))
+              response <- responder(_.createValueV2(valueToCreate, requestingUser, apiRequestId))
             } yield response,
             ctx,
           )
@@ -107,10 +106,10 @@ final case class ValuesRouteV2()(
             for {
               requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
               apiRequestId   <- Random.nextUUID
-              ingestState     = AssetIngestState.headerAssetIngestState(ctx.request.headers)
-              updateValue    <- UpdateValueV2.fromJsonLd(ingestState, jsonLdString, requestingUser)
-              response <-
-                ZIO.serviceWithZIO[ValuesResponderV2](_.updateValueV2(updateValue, requestingUser, apiRequestId))
+              updateValue <- jsonLdRequestParser(
+                               _.updateValueV2fromJsonLd(jsonLdString).mapError(BadRequestException(_)),
+                             )
+              response <- responder(_.updateValueV2(updateValue, requestingUser, apiRequestId))
             } yield response,
             ctx,
           )
@@ -127,9 +126,9 @@ final case class ValuesRouteV2()(
             for {
               requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               apiRequestId   <- RouteUtilZ.randomUuid()
-              deleteValue    <- DeleteValueV2.fromJsonLd(jsonLdString)
-              response <-
-                ZIO.serviceWithZIO[ValuesResponderV2](_.deleteValueV2(deleteValue, requestingUser, apiRequestId))
+              deleteValue <-
+                jsonLdRequestParser(_.deleteValueV2FromJsonLd(jsonLdString).mapError(BadRequestException(_)))
+              response <- responder(_.deleteValueV2(deleteValue, requestingUser, apiRequestId))
             } yield response,
             requestContext,
           )

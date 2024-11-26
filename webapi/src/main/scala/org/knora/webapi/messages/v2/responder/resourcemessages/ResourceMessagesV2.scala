@@ -5,8 +5,6 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
-import zio.*
-
 import java.time.Instant
 import java.util.UUID
 
@@ -15,14 +13,12 @@ import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.*
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -30,17 +26,10 @@ import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
-import org.knora.webapi.routing.v2.AssetIngestState
-import org.knora.webapi.routing.v2.AssetIngestState.*
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.admin.domain.service.UserService
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.store.iiif.api.SipiService
-import org.knora.webapi.util.*
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -648,203 +637,7 @@ case class CreateResourceRequestV2(
   createResource: CreateResourceV2,
   requestingUser: User,
   apiRequestID: UUID,
-  ingestState: AssetIngestState = AssetInTemp,
 ) extends ResourcesResponderRequestV2
-
-object CreateResourceRequestV2 {
-
-  /**
-   * Converts JSON-LD input to a [[CreateResourceRequestV2]].
-   *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @param ingestState indicates the state of the file, either ingested or in temp folder
-   * @return a case class instance representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-    ingestState: AssetIngestState = AssetInTemp,
-  ): ZIO[
-    IriConverter & MessageRelay & ProjectService & SipiService & StringFormatter & UserService,
-    Throwable,
-    CreateResourceRequestV2,
-  ] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      val validationFun: (String, => Nothing) => String =
-        (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-      for {
-        // Get the resource class.
-        resourceClassIri <-
-          jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
-
-        // Get the custom resource IRI if provided.
-        maybeCustomResourceIri <- jsonLDDocument.body.getIdValueAsKnoraDataIri.mapError(BadRequestException(_))
-
-        // Get the resource's rdfs:label.
-        label <-
-          ZIO.attempt(jsonLDDocument.body.requireStringWithValidation(Rdfs.Label, (s, _) => s))
-
-        // Get information about the project that the resource should be created in.
-        projectIri <- ZIO.attempt(
-                        jsonLDDocument.body.requireIriInObject(
-                          KnoraApiV2Complex.AttachedToProject,
-                          stringFormatter.toSmartIriWithErr,
-                        ),
-                      )
-        projectId <- ZIO.fromEither(ProjectIri.from(projectIri.toString)).mapError(BadRequestException.apply)
-        project <- ZIO
-                     .serviceWithZIO[ProjectService](_.findById(projectId))
-                     .someOrFail(NotFoundException(s"Project '$projectIri' not found"))
-
-        _ <- ZIO.attempt(maybeCustomResourceIri.foreach { iri =>
-               if (!iri.isKnoraResourceIri) {
-                 throw BadRequestException(s"<$iri> is not a Knora resource IRI")
-               }
-
-               if (!iri.getProjectCode.contains(project.shortcode)) {
-                 throw BadRequestException(s"The provided resource IRI does not contain the correct project code")
-               }
-             })
-
-        // Get the resource's permissions.
-        permissions <- ZIO.attempt(
-                         jsonLDDocument.body
-                           .maybeStringWithValidation(KnoraApiV2Complex.HasPermissions, validationFun),
-                       )
-
-        // Get the user who should be indicated as the creator of the resource, if specified.
-
-        maybeAttachedToUserIri <- ZIO.attempt(
-                                    jsonLDDocument.body.maybeIriInObject(
-                                      KnoraApiV2Complex.AttachedToUser,
-                                      stringFormatter.toSmartIriWithErr,
-                                    ),
-                                  )
-
-        maybeAttachedToUser <- ZIO.foreach(maybeAttachedToUserIri) { attachedToUserIri =>
-                                 UserUtilADM.switchToUser(
-                                   requestingUser,
-                                   attachedToUserIri.toString,
-                                   projectIri.toString,
-                                 )
-                               }
-
-        creationDate <- ZIO.attempt(
-                          jsonLDDocument.body.maybeDatatypeValueInObject(
-                            key = KnoraApiV2Complex.CreationDate,
-                            expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
-                            validationFun = (s, errorFun) => xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-                          ),
-                        )
-        // Get the resource's values.
-
-        propertyIriStrs <- ZIO.attempt(
-                             jsonLDDocument.body.value.keySet --
-                               Set(
-                                 JsonLDKeywords.ID,
-                                 JsonLDKeywords.TYPE,
-                                 Rdfs.Label,
-                                 KnoraApiV2Complex.AttachedToProject,
-                                 KnoraApiV2Complex.AttachedToUser,
-                                 KnoraApiV2Complex.HasPermissions,
-                                 KnoraApiV2Complex.CreationDate,
-                               ),
-                           )
-
-        propertyValueFuturesMap <-
-          ZIO.attempt(
-            propertyIriStrs.map { propertyIriStr =>
-              val propertyIri: SmartIri =
-                propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propertyIriStr>"))
-              val valuesArray: JsonLDArray = jsonLDDocument.body
-                .getRequiredArray(propertyIriStr)
-                .fold(e => throw BadRequestException(e), identity)
-
-              val valueFuturesSeq = ZIO.foreach(valuesArray.value) { valueJsonLD =>
-                for {
-                  valueJsonLDObject <- valueJsonLD match {
-                                         case jsonLDObject: JsonLDObject => ZIO.succeed(jsonLDObject)
-                                         case _ =>
-                                           ZIO.fail(
-                                             BadRequestException(
-                                               s"Invalid JSON-LD as object of property <$propertyIriStr>",
-                                             ),
-                                           )
-                                       }
-                  fileInfo     <- ValueContentV2.getFileInfo(project.getShortcode, ingestState, valueJsonLDObject)
-                  valueContent <- ValueContentV2.fromJsonLdObject(valueJsonLDObject, requestingUser, fileInfo)
-
-                  maybeCustomValueIri <- valueJsonLDObject.getIdValueAsKnoraDataIri
-                                           .mapError(BadRequestException(_))
-                  maybeCustomValueUUID <- valueJsonLDObject
-                                            .getUuid(KnoraApiV2Complex.ValueHasUUID)
-                                            .mapError(BadRequestException(_))
-
-                  // Get the value's creation date.
-                  // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
-                  maybeCustomValueCreationDate <- ZIO
-                                                    .attempt(
-                                                      valueJsonLDObject
-                                                        .maybeDatatypeValueInObject(
-                                                          key = KnoraApiV2Complex.ValueCreationDate,
-                                                          expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
-                                                          validationFun = (s, errorFun) =>
-                                                            xsdDateTimeStampToInstant(s)
-                                                              .getOrElse(errorFun),
-                                                        ),
-                                                    )
-                                                    .flatMap(it =>
-                                                      if (it.isEmpty) {
-                                                        ZIO.attempt(
-                                                          valueJsonLDObject.maybeDatatypeValueInObject(
-                                                            key = KnoraApiV2Complex.CreationDate,
-                                                            expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
-                                                            validationFun = (s, errorFun) =>
-                                                              xsdDateTimeStampToInstant(s)
-                                                                .getOrElse(errorFun),
-                                                          ),
-                                                        )
-                                                      } else ZIO.succeed(it),
-                                                    )
-
-                  maybePermissions <- ZIO.attempt(
-                                        valueJsonLDObject.maybeStringWithValidation(
-                                          KnoraApiV2Complex.HasPermissions,
-                                          validationFun,
-                                        ),
-                                      )
-                } yield CreateValueInNewResourceV2(
-                  valueContent = valueContent,
-                  customValueIri = maybeCustomValueIri,
-                  customValueUUID = maybeCustomValueUUID,
-                  customValueCreationDate = maybeCustomValueCreationDate,
-                  permissions = maybePermissions,
-                )
-              }
-
-              propertyIri -> valueFuturesSeq
-            }.toMap,
-          )
-        propertyValuesMap <- ZioHelper.sequence(propertyValueFuturesMap)
-      } yield CreateResourceRequestV2(
-        createResource = CreateResourceV2(
-          resourceIri = maybeCustomResourceIri,
-          resourceClassIri = resourceClassIri,
-          label = label,
-          values = propertyValuesMap,
-          projectADM = project,
-          permissions = permissions,
-          creationDate = creationDate,
-        ),
-        requestingUser = maybeAttachedToUser.getOrElse(requestingUser),
-        apiRequestID = apiRequestID,
-        ingestState = ingestState,
-      )
-    }
-}
 
 /**
  * Represents a request to update a resource's metadata.
@@ -866,97 +659,6 @@ case class UpdateResourceMetadataRequestV2(
   requestingUser: User,
   apiRequestID: UUID,
 ) extends ResourcesResponderRequestV2
-
-object UpdateResourceMetadataRequestV2 {
-
-  /**
-   * Converts JSON-LD input into an instance of [[UpdateResourceMetadataRequestV2]].
-   *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @return a case class instance representing the input.
-   */
-  def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    requestingUser: User,
-    apiRequestID: UUID,
-  ): ZIO[StringFormatter & IriConverter, Throwable, UpdateResourceMetadataRequestV2] = {
-    val body = jsonLDDocument.body
-    for {
-      resourceIri               <- getResourceIri(body)
-      resourceClassIri          <- getResourceClassIri(body)
-      maybeLastModificationDate <- getModificationTimestamp(KnoraApiV2Complex.LastModificationDate, body)
-      maybeLabel                <- getLabel(body)
-      maybePermissions          <- getPermissions(body)
-      maybeNewModificationDate  <- getModificationTimestamp(KnoraApiV2Complex.NewModificationDate, body)
-      _ <- ZIO
-             .fail(BadRequestException(s"No updated resource metadata provided"))
-             .when(areAllOptionsEmpty(maybeLabel, maybePermissions, maybeNewModificationDate))
-    } yield UpdateResourceMetadataRequestV2(
-      resourceIri.toString,
-      resourceClassIri,
-      maybeLastModificationDate,
-      maybeLabel,
-      maybePermissions,
-      maybeNewModificationDate,
-      requestingUser,
-      apiRequestID,
-    )
-  }
-
-  private def getResourceIri(obj: JsonLDObject): ZIO[StringFormatter & IriConverter, Throwable, SmartIri] =
-    for {
-      resourceIri <- obj.getRequiredIdValueAsKnoraDataIri
-                       .filterOrElseWith(_.isKnoraResourceIri)(it => ZIO.fail(s"Invalid resource IRI: <$it>"))
-                       .mapError(BadRequestException(_))
-    } yield resourceIri
-
-  private def getResourceClassIri(body: JsonLDObject) =
-    body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
-
-  private def getLabel(obj: JsonLDObject): IO[BadRequestException, Option[IRI]] = {
-    val getLabel = for {
-      labelStr <- ZIO.fromEither(obj.getString(Rdfs.Label))
-      label <- ZIO.foreach(labelStr)(it =>
-                 ZIO
-                   .fromOption(Iri.toSparqlEncodedString(it))
-                   .orElseFail(s"Invalid label: $it"),
-               )
-    } yield label
-    getLabel.mapError(BadRequestException(_))
-  }
-
-  private def getPermissions(obj: JsonLDObject): IO[BadRequestException, Option[String]] = {
-    val key = KnoraApiV2Complex.HasPermissions
-    val getPerms = for {
-      permsMaybe <- ZIO.fromEither(obj.getString(KnoraApiV2Complex.HasPermissions))
-      perms <- ZIO.foreach(permsMaybe)(it =>
-                 ZIO
-                   .fromOption(Iri.toSparqlEncodedString(it))
-                   .orElseFail(s"Invalid $key: $it"),
-               )
-    } yield perms
-    getPerms.mapError(BadRequestException(_))
-  }
-  private def getModificationTimestamp(
-    key: IRI,
-    obj: JsonLDObject,
-  ): ZIO[IriConverter, BadRequestException, Option[Instant]] = {
-    val getTimeStamp = for {
-      tsDataType <- ZIO.serviceWithZIO[IriConverter](_.asSmartIri(Xsd.DateTimeStamp)).orDie
-      tsString   <- obj.getDataTypeValueInObject(key, tsDataType)
-      tsDate <- ZIO.foreach(tsString)(tsStr =>
-                  ZIO
-                    .fromOption(xsdDateTimeStampToInstant(tsStr))
-                    .orElseFail(s"Invalid datatype value literal: $tsStr"),
-                )
-    } yield tsDate
-    getTimeStamp.mapError(BadRequestException(_))
-  }
-
-  private def areAllOptionsEmpty(options: Option[?]*): Boolean = options.forall(_.isEmpty)
-}
 
 /**
  * Represents a response after updating a resource's metadata.
@@ -1062,63 +764,6 @@ case class DeleteOrEraseResourceRequestV2(
   requestingUser: User,
   apiRequestID: UUID,
 ) extends ResourcesResponderRequestV2
-
-object DeleteOrEraseResourceRequestV2 {
-
-  /**
-   * Converts JSON-LD input into an instance of [[DeleteOrEraseResourceRequestV2]].
-   *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @return a case class instance representing the input.
-   */
-  def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    requestingUser: User,
-    apiRequestID: UUID,
-  ): ZIO[StringFormatter & IriConverter, Throwable, DeleteOrEraseResourceRequestV2] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
-      for {
-        resourceIri <-
-          jsonLDDocument.body.getRequiredIdValueAsKnoraDataIri
-            .mapError(BadRequestException(_))
-            .tap(iri =>
-              ZIO.when(!iri.isKnoraResourceIri)(ZIO.fail(BadRequestException(s"Invalid resource IRI: <$iri>"))),
-            )
-
-        resourceClassIri <-
-          jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
-
-        maybeLastModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
-                                                       key = KnoraApiV2Complex.LastModificationDate,
-                                                       expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
-                                                       validationFun = (s, errorFun) =>
-                                                         xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-                                                     )
-
-        maybeDeleteComment: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
-                                               KnoraApiV2Complex.DeleteComment,
-                                               (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun),
-                                             )
-
-        maybeDeleteDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
-                                             KnoraApiV2Complex.DeleteDate,
-                                             Xsd.DateTimeStamp.toSmartIri,
-                                             (s, errorFun) => xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-                                           )
-
-      } yield DeleteOrEraseResourceRequestV2(
-        resourceIri = resourceIri.toString,
-        resourceClassIri = resourceClassIri,
-        maybeDeleteComment = maybeDeleteComment,
-        maybeDeleteDate = maybeDeleteDate,
-        maybeLastModificationDate = maybeLastModificationDate,
-        requestingUser = requestingUser,
-        apiRequestID = apiRequestID,
-      )
-    }
-}
 
 /**
  * Represents a sequence of resources read back from Knora.

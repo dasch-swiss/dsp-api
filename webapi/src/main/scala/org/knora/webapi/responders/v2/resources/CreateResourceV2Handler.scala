@@ -83,12 +83,7 @@ final case class CreateResourceV2Handler(
    * @return a [[ReadResourcesSequenceV2]] containing a preview of the resource.
    */
   def apply(createResourceRequestV2: CreateResourceRequestV2): Task[ReadResourcesSequenceV2] =
-    resourceUtilV2.doSipiPostUpdateIfInTemp(
-      createResourceRequestV2.ingestState,
-      triplestoreUpdate(createResourceRequestV2),
-      createResourceRequestV2.createResource.flatValues.flatMap(_.valueContent.asOpt[FileValueContentV2]).toSeq,
-      createResourceRequestV2.requestingUser,
-    )
+    triplestoreUpdate(createResourceRequestV2)
 
   private def triplestoreUpdate(
     createResourceRequestV2: CreateResourceRequestV2,
@@ -501,6 +496,8 @@ final case class CreateResourceV2Handler(
                       originalMimeType = fileValue.originalMimeType,
                       dimX = dimX,
                       dimY = dimY,
+                      fileValue.copyrightAttribution,
+                      fileValue.license,
                     ),
                   )
                 case StillImageExternalFileValueContentV2(_, fileValue, externalUrl, _) =>
@@ -511,6 +508,8 @@ final case class CreateResourceV2Handler(
                       originalFilename = fileValue.originalFilename,
                       originalMimeType = fileValue.originalMimeType,
                       externalUrl = externalUrl.value.toString(),
+                      fileValue.copyrightAttribution,
+                      fileValue.license,
                     ),
                   )
                 case DocumentFileValueContentV2(_, fileValue, pageCount, dimX, dimY, _) =>
@@ -523,6 +522,8 @@ final case class CreateResourceV2Handler(
                       dimX = dimX,
                       dimY = dimY,
                       pageCount = pageCount,
+                      fileValue.copyrightAttribution,
+                      fileValue.license,
                     ),
                   )
                 case ArchiveFileValueContentV2(_, fileValue, _) =>
@@ -532,6 +533,8 @@ final case class CreateResourceV2Handler(
                       internalMimeType = fileValue.internalMimeType,
                       originalFilename = fileValue.originalFilename,
                       originalMimeType = fileValue.originalMimeType,
+                      fileValue.copyrightAttribution,
+                      fileValue.license,
                     ),
                   )
                 case TextFileValueContentV2(_, fileValue, _) =>
@@ -541,6 +544,8 @@ final case class CreateResourceV2Handler(
                       internalMimeType = fileValue.internalMimeType,
                       originalFilename = fileValue.originalFilename,
                       originalMimeType = fileValue.originalMimeType,
+                      fileValue.copyrightAttribution,
+                      fileValue.license,
                     ),
                   )
                 case AudioFileValueContentV2(_, fileValue, _) =>
@@ -550,6 +555,8 @@ final case class CreateResourceV2Handler(
                       internalMimeType = fileValue.internalMimeType,
                       originalFilename = fileValue.originalFilename,
                       originalMimeType = fileValue.originalMimeType,
+                      fileValue.copyrightAttribution,
+                      fileValue.license,
                     ),
                   )
                 case MovingImageFileValueContentV2(_, fileValue, _) =>
@@ -559,6 +566,8 @@ final case class CreateResourceV2Handler(
                       internalMimeType = fileValue.internalMimeType,
                       originalFilename = fileValue.originalFilename,
                       originalMimeType = fileValue.originalMimeType,
+                      fileValue.copyrightAttribution,
+                      fileValue.license,
                     ),
                   )
                 case LinkValueContentV2(

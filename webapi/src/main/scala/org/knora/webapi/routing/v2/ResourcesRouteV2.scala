@@ -26,7 +26,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.ValuesValidator.arkTimestampToInstant
 import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.v2.SearchResponderV2
@@ -34,6 +33,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
+import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.ApiV2.Headers.xKnoraAcceptProject
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.security.Authenticator
@@ -44,10 +44,13 @@ import org.knora.webapi.store.iiif.api.SipiService
  */
 final case class ResourcesRouteV2(appConfig: AppConfig)(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & ProjectService & MessageRelay & SearchResponderV2 & SipiService &
-      StringFormatter & UserService,
+    ApiComplexV2JsonLdRequestParser & AppConfig & Authenticator & IriConverter & ProjectService & MessageRelay &
+      SearchResponderV2 & SipiService & StringFormatter & UserService,
   ],
 ) extends LazyLogging {
+
+  private val jsonLdRequestParser = ZIO.serviceWithZIO[ApiComplexV2JsonLdRequestParser]
+
   private val sipiConfig: Sipi             = appConfig.sipi
   private val resultsPerPage: Int          = appConfig.v2.resourcesSequence.resultsPerPage
   private val graphRouteConfig: GraphRoute = appConfig.v2.graphRoute
@@ -99,11 +102,11 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestTask = for {
-            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             apiRequestId   <- RouteUtilZ.randomUuid()
-            ingestState     = AssetIngestState.headerAssetIngestState(requestContext.request.headers)
-            requestMessage <- CreateResourceRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser, ingestState)
+            requestMessage <- jsonLdRequestParser(
+                                _.createResourceRequestV2(jsonRequest, requestingUser, apiRequestId),
+                              ).mapError(BadRequestException.apply)
             // check for each value which represents a file value if the file's MIME type is allowed
             _ <- checkMimeTypesForFileValueContents(requestMessage.createResource.flatValues)
           } yield requestMessage
@@ -118,10 +121,11 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestMessageFuture = for {
-            requestDoc     <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <- UpdateResourceMetadataRequestV2.fromJsonLD(requestDoc, requestingUser, apiRequestId)
+            requestMessage <-
+              jsonLdRequestParser(_.updateResourceMetadataRequestV2(jsonRequest, requestingUser, apiRequestId))
+                .mapError(BadRequestException.apply)
           } yield requestMessage
           RouteUtilV2.runRdfRouteZ(requestMessageFuture, requestContext)
         }
@@ -378,10 +382,10 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestTask = for {
-            requestDoc     <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            msg            <- DeleteOrEraseResourceRequestV2.fromJsonLD(requestDoc, requestingUser, apiRequestId)
+            msg <- jsonLdRequestParser(_.deleteOrEraseResourceRequestV2(jsonRequest, requestingUser, apiRequestId))
+                     .mapError(BadRequestException.apply)
           } yield msg
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }
@@ -394,10 +398,11 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestTask = for {
-            requestDoc     <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            requestMessage <- DeleteOrEraseResourceRequestV2.fromJsonLD(requestDoc, requestingUser, apiRequestId)
+            requestMessage <-
+              jsonLdRequestParser(_.deleteOrEraseResourceRequestV2(jsonRequest, requestingUser, apiRequestId))
+                .mapError(BadRequestException.apply)
           } yield requestMessage.copy(erase = true)
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }

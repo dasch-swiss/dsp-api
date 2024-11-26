@@ -162,7 +162,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.imagesUser01,
         ),
       )
-      assertFailsWithA[BadRequestException](exit, s"Invalid group IRI $groupIri")
+      assertFailsWithA[BadRequestException](exit, s"Group IRI is invalid: $groupIri")
     }
 
     "return 'BadRequest' if the supplied custom permission IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
@@ -180,7 +180,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.imagesUser01,
         ),
       )
-      assertFailsWithA[BadRequestException](exit, s"Invalid permission IRI: $permissionIri.")
+      assertFailsWithA[BadRequestException](exit, s"Couldn't parse IRI: $permissionIri")
     }
 
     "return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
@@ -317,7 +317,11 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.rootUser,
         ),
       )
-      assertFailsWithA[BadRequestException](exit, "Not allowed to supply groupIri and resourceClassIri together.")
+      assertFailsWithA[BadRequestException](
+        exit,
+        "DOAP restrictions must be either for a group, a resource class, a property, " +
+          "or a combination of a resource class and a property. ",
+      )
     }
 
     "return 'BadRequest' if the both group and property are supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
@@ -334,7 +338,11 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.rootUser,
         ),
       )
-      assertFailsWithA[BadRequestException](exit, "Not allowed to supply groupIri and propertyIri together.")
+      assertFailsWithA[BadRequestException](
+        exit,
+        "DOAP restrictions must be either for a group, a resource class, a property, " +
+          "or a combination of a resource class and a property. ",
+      )
     }
 
     "return 'BadRequest' if propertyIri supplied for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
@@ -350,25 +358,9 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           SharedTestDataADM.rootUser,
         ),
       )
-      assertFailsWithA[BadRequestException](exit, s"Invalid property IRI: ${SharedTestDataADM.customValueIRI}")
-    }
-
-    "return 'BadRequest' if resourceClassIri supplied for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
-      val exit = UnsafeZioRun.run(
-        PermissionRestService.createDefaultObjectAccessPermission(
-          CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = anythingProjectIri,
-            forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
-            hasPermissions = Set(
-              PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
-            ),
-          ),
-          SharedTestDataADM.rootUser,
-        ),
-      )
       assertFailsWithA[BadRequestException](
         exit,
-        s"Invalid resource class IRI: $ANYTHING_THING_RESOURCE_CLASS_LocalHost",
+        "<http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw/values/tdWAtnWK2qUC6tr4uQLAHA> is not a Knora property IRI",
       )
     }
 
@@ -386,7 +378,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       )
       assertFailsWithA[BadRequestException](
         exit,
-        "Either a group, a resource class, a property, or a combination of resource class and property must be given.",
+        "DOAP restrictions must be either for a group, a resource class, a property, " +
+          "or a combination of a resource class and a property. ",
       )
     }
   }

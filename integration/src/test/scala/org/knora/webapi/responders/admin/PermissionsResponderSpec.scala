@@ -28,8 +28,7 @@ import org.knora.webapi.sharedtestdata.SharedPermissionsTestData.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesProjectIri
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesUser02
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.incunabulaMemberUser
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.normalUser
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -43,7 +42,6 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
  * This spec is used to test the [[PermissionsResponder]] actor.
  */
 class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
-  private val rootUser = SharedTestDataADM.rootUser
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
@@ -195,7 +193,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
                   PermissionADM.from(Permission.ObjectAccess.RestrictedView, SharedTestDataADM.thingSearcherGroup.id),
                 ),
               ),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
@@ -224,7 +221,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
                     .from(Permission.ObjectAccess.RestrictedView, KnoraGroupRepo.builtIn.UnknownUser.id.value),
                 ),
               ),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
@@ -250,7 +246,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
                 hasPermissions =
                   Set(PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.KnownUser.id.value)),
               ),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
@@ -277,7 +272,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
                   PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
                 ),
               ),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
@@ -305,7 +299,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
                     .from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
                 ),
               ),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
@@ -332,7 +325,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
                   PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
                 ),
               ),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
@@ -358,7 +350,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
                   PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.KnownUser.id.value),
                 ),
               ),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
@@ -386,7 +377,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
                   PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
                 ),
               ),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
@@ -418,7 +408,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
                 forGroup = Some(KnoraGroupRepo.builtIn.UnknownUser.id.value),
                 hasPermissions = hasPermissions,
               ),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
@@ -455,7 +444,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
                 forGroup = Some(KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
                 hasPermissions = hasPermissions,
               ),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
@@ -942,7 +930,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"Given permission code $code and permission name $name are not consistent.",
+          s"Given permission code '$code' and permission name '$name' are not consistent.",
         )
       }
 
@@ -969,7 +957,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"Invalid value for name parameter of hasPermissions: $name, it should be one of " +
+          s"Invalid permission token '$name', it should be one of " +
             s"${Permission.ObjectAccess.allTokens.mkString(", ")}",
         )
       }
@@ -997,8 +985,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"Invalid value for permissionCode parameter of hasPermissions: $code, it should be one of " +
-            s"${Permission.ObjectAccess.allCodes.mkString(", ")}",
+          s"Invalid permission code '$code', it should be one of " + s"${Permission.ObjectAccess.allCodes.mkString(", ")}",
         )
       }
 
@@ -1024,31 +1011,12 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"One of permission code or permission name must be provided for a default object access permission.",
+          s"Invalid permission token '', it should be one of RV, M, V, CR, D",
         )
       }
     }
     "ask to update resource class of a permission" should {
-      "throw ForbiddenException for PermissionChangeResourceClassRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri    = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA"
-        val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
-        val exit = UnsafeZioRun.run(
-          permissionsResponder(
-            _.updatePermissionResourceClass(
-              PermissionIri.unsafeFrom(permissionIri),
-              ChangePermissionResourceClassApiRequestADM(resourceClassIri),
-              incunabulaMemberUser,
-              UUID.randomUUID(),
-            ),
-          ),
-        )
-
-        assertFailsWithA[ForbiddenException](
-          exit,
-          s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.",
-        )
-      }
       "update resource class of a default object access permission" in {
         val permissionIri    = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
@@ -1058,12 +1026,11 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
             _.updatePermissionResourceClass(
               PermissionIri.unsafeFrom(permissionIri),
               ChangePermissionResourceClassApiRequestADM(resourceClassIri),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
         )
-        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
+        val doap = actual.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
         assert(doap.forResourceClass.contains(resourceClassIri))
       }
@@ -1076,12 +1043,11 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
             _.updatePermissionResourceClass(
               PermissionIri.unsafeFrom(permissionIri),
               ChangePermissionResourceClassApiRequestADM(resourceClassIri),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
         )
-        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
+        val doap = actual.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
         assert(doap.forResourceClass.contains(resourceClassIri))
         assert(doap.forGroup.isEmpty)
@@ -1095,16 +1061,11 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
             _.updatePermissionResourceClass(
               PermissionIri.unsafeFrom(permissionIri),
               ChangePermissionResourceClassApiRequestADM(resourceClassIri),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
         )
-        assertFailsWithA[ForbiddenException](
-          exit,
-          s"Permission $permissionIri is of type administrative permission. " +
-            s"Only a default object access permission defined for a resource class can be updated.",
-        )
+        assertFailsWithA[NotFoundException](exit, s"DOAP $permissionIri not found.")
       }
     }
     "ask to update property of a permission" should {
@@ -1117,35 +1078,11 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
             _.updatePermissionProperty(
               PermissionIri.unsafeFrom(permissionIri),
               ChangePermissionPropertyApiRequestADM(propertyIri),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
         )
-        assertFailsWithA[ForbiddenException](
-          exit,
-          s"Permission $permissionIri is of type administrative permission. " +
-            s"Only a default object access permission defined for a property can be updated.",
-        )
-      }
-      "throw ForbiddenException for PermissionChangePropertyRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/T12XnPXxQ42jBMIf6RK1pg"
-        val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
-
-        val exit = UnsafeZioRun.run(
-          permissionsResponder(
-            _.updatePermissionProperty(
-              PermissionIri.unsafeFrom(permissionIri),
-              ChangePermissionPropertyApiRequestADM(propertyIri),
-              normalUser,
-              UUID.randomUUID(),
-            ),
-          ),
-        )
-        assertFailsWithA[ForbiddenException](
-          exit,
-          s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.",
-        )
+        assertFailsWithA[NotFoundException](exit, s"DOAP $permissionIri not found.")
       }
       "update property of a default object access permission" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/T12XnPXxQ42jBMIf6RK1pg"
@@ -1156,12 +1093,11 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
             _.updatePermissionProperty(
               PermissionIri.unsafeFrom(permissionIri),
               ChangePermissionPropertyApiRequestADM(propertyIri),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
         )
-        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
+        val doap = actual.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
         assert(doap.forProperty.contains(propertyIri))
       }
@@ -1175,12 +1111,11 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
             _.updatePermissionProperty(
               PermissionIri.unsafeFrom(permissionIri),
               ChangePermissionPropertyApiRequestADM(propertyIri),
-              rootUser,
               UUID.randomUUID(),
             ),
           ),
         )
-        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
+        val doap = actual.defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
         assert(doap.forProperty.contains(propertyIri))
         assert(doap.forGroup.isEmpty)

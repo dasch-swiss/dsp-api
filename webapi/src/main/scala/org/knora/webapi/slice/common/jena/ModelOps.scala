@@ -8,7 +8,9 @@ package org.knora.webapi.slice.common.jena
 import org.apache.jena.rdf.model.*
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
+import zio.Console
 import zio.Scope
+import zio.Task
 import zio.UIO
 import zio.ZIO
 
@@ -20,7 +22,14 @@ object ModelOps { self =>
 
   extension (model: Model) {
     def printTurtle: UIO[Unit] =
-      ZIO.attempt(RDFDataMgr.write(java.lang.System.out, model, Lang.TURTLE)).logError.ignore
+      asTurtle.flatMap(Console.printLine(_)).logError.ignore
+
+    def asTurtle: Task[String] =
+      ZIO.attempt {
+        val out = new java.io.ByteArrayOutputStream()
+        RDFDataMgr.write(out, model, Lang.TURTLE)
+        out.toString(java.nio.charset.StandardCharsets.UTF_8)
+      }
 
     def resourceOption(uri: String): Option[Resource] = Option(model.getResource(uri))
     def resource(uri: String): Either[String, Resource] =
@@ -31,13 +40,22 @@ object ModelOps { self =>
       statementOption(s, p).toRight(s"Statement not found '${s.getURI} ${p.getURI} ?o .'")
 
     def singleRootResource: Either[String, Resource] =
-      val objSeen = model.listObjects().asScala.collect { case r: Resource => Option(r.getURI) }.toSet.flatten
-      val subSeen = model.listSubjects().asScala.collect { case r: Resource => Option(r.getURI) }.toSet.flatten
-      (subSeen -- objSeen) match {
-        case iris if iris.size == 1 => model.resource(iris.head)
+      val subs = model.listSubjects().asScala.toSet
+      val objs = model.listObjects().asScala.collect { case r: Resource => r }.toSet
+      (subs -- objs) match {
+        case iris if iris.size == 1 => Right(iris.head)
         case iris if iris.isEmpty   => Left("No root resource found in model")
         case iris                   => Left(s"Multiple root resources found in model: ${iris.mkString(", ")}")
       }
+
+    def singleSubjectWithProperty(property: Property): Either[String, Resource] =
+      val subjects = model.listSubjectsWithProperty(property).asScala.toList
+      subjects match {
+        case s :: Nil => Right(s)
+        case Nil      => Left(s"No resource found with property ${property.getURI}")
+        case _        => Left(s"Multiple resources found with property ${property.getURI}")
+      }
+
   }
 
   def fromJsonLd(str: String): ZIO[Scope, String, Model] = from(str, Lang.JSONLD)

@@ -14,6 +14,7 @@ import zio.test.*
 import java.time.Instant
 
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelayLive
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
@@ -41,9 +42,14 @@ import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType.UnformattedText
 import org.knora.webapi.messages.v2.responder.valuemessages.TimeValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.UriValueContentV2
-import org.knora.webapi.routing.v2.AssetIngestState.AssetIngested
+import org.knora.webapi.responders.IriService
+import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.repo.*
+import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.admin.repo.service.*
 import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.KnoraIris.*
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
@@ -51,6 +57,7 @@ import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.iiif.impl.SipiServiceMock.SipiMockMethodName.GetFileMetadataFromDspIngest
 import org.knora.webapi.store.iiif.impl.SipiServiceMock.SipiMockMethodName.GetFileMetadataFromSipiTemp
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
   private val sf = StringFormatter.getInitializedTestInstance
@@ -74,6 +81,8 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     "internalMimeType",
     Some("originalFilename.orig"),
     Some("originalMimeType"),
+    None,
+    None,
   )
 
   private val configureSipiServiceMock = for {
@@ -124,20 +133,20 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     test("getResourceIri should get the id") {
       check(Gen.fromIterable(Seq(createIntegerValue, createLinkValue).map(_.toJsonPretty))) { json =>
         for {
-          actual <- service(_.createValueV2FromJsonLd(json, AssetIngested))
+          actual <- service(_.createValueV2FromJsonLd(json))
         } yield assertTrue(actual.resourceIri == "http://rdfh.ch/0001/a-thing")
       }
     },
     test("rootResourceClassIri should get the rdfs:type") {
       check(Gen.fromIterable(Seq(createIntegerValue, createLinkValue).map(_.toJsonPretty))) { json =>
         for {
-          actual <- service(_.createValueV2FromJsonLd(json, AssetIngested))
+          actual <- service(_.createValueV2FromJsonLd(json))
         } yield assertTrue(actual.resourceClassIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing")
       }
     },
     test("value property should be present") {
       for {
-        actual <- service(_.createValueV2FromJsonLd(createIntegerValue.toJsonPretty, AssetIngested))
+        actual <- service(_.createValueV2FromJsonLd(createIntegerValue.toJsonPretty))
       } yield assertTrue(
         actual.propertyIri == sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"),
       )
@@ -158,11 +167,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                         |  },
                         |  "@context": {
                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                         |  }
                         |}""".stripMargin,
-                      AssetIngested,
                     ),
                   )
       } yield assertTrue(actual.valueContent == IntegerValueContentV2(ApiV2Complex, 4, None))
@@ -183,11 +191,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                         |  },
                         |  "@context": {
                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                         |  }
                         |}""".stripMargin,
-                      AssetIngested,
                     ),
                   )
       } yield assertTrue(actual.valueContent == DecimalValueContentV2(ApiV2Complex, BigDecimal(4), None))
@@ -208,11 +215,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                         |  },
                         |  "@context": {
                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                         |  }
                         |}""".stripMargin,
-                      AssetIngested,
                     ),
                   )
       } yield assertTrue(actual.valueContent == BooleanValueContentV2(ApiV2Complex, true, None))
@@ -230,11 +236,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                         |  },
                         |  "@context": {
                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                         |  }
                         |}""".stripMargin,
-                      AssetIngested,
                     ),
                   )
       } yield assertTrue(actual.valueContent == GeomValueContentV2(ApiV2Complex, "{}", None))
@@ -259,11 +264,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                         |  },
                         |  "@context": {
                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                         |  }
                         |}""".stripMargin,
-                      AssetIngested,
                     ),
                   )
       } yield assertTrue(
@@ -286,11 +290,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                         |  },
                         |  "@context": {
                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                        |    "ex": "https://example.com/test#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                         |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                         |  }
                         |}""".stripMargin,
-                      AssetIngested,
                     ),
                   )
       } yield assertTrue(
@@ -315,11 +318,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |  },
                  |  "@context": {
                  |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                 |    "ex": "https://example.com/test#",
+                 |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                  |  }
                  |}""".stripMargin,
-              AssetIngested,
             ),
           )
       } yield assertTrue(
@@ -349,11 +351,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |  },
                  |  "@context": {
                  |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                 |    "ex": "https://example.com/test#",
+                 |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                  |  }
                  |}""".stripMargin,
-              AssetIngested,
             ),
           )
       } yield assertTrue(
@@ -376,11 +377,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |  },
                  |  "@context": {
                  |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                 |    "ex": "https://example.com/test#",
+                 |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                  |  }
                  |}""".stripMargin,
-              AssetIngested,
             ),
           )
       } yield assertTrue(actual.valueContent == GeonameValueContentV2(ApiV2Complex, "foo", None))
@@ -401,11 +401,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |  },
                  |  "@context": {
                  |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                 |    "ex": "https://example.com/test#",
+                 |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                  |  }
                  |}""".stripMargin,
-              AssetIngested,
             ),
           )
       } yield assertTrue(actual.valueContent == ColorValueContentV2(ApiV2Complex, "red", None))
@@ -427,11 +426,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |  },
                  |  "@context": {
                  |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                 |    "ex": "https://example.com/test#",
+                 |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                  |  }
                  |}""".stripMargin,
-              AssetIngested,
             ),
           )
       } yield assertTrue(
@@ -461,11 +459,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |  },
                  |  "@context": {
                  |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                 |    "ex": "https://example.com/test#",
+                 |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                  |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                  |  }
                  |}""".stripMargin,
-              AssetIngested,
             ),
           )
       } yield assertTrue(
@@ -476,6 +473,8 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             "internalMimeType",
             Some("originalFilename"),
             Some("originalMimeType"),
+            None,
+            None,
           ),
           IiifImageRequestUrl.unsafeFrom("http://www.example.org/prefix1/abcd1234/full/0/native.jpg"),
           None,
@@ -498,11 +497,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
-                      AssetIngested,
                     ),
                   )
       } yield assertTrue(
@@ -532,11 +530,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
-                      AssetIngested,
                     ),
                   )
       } yield assertTrue(
@@ -559,11 +556,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
-                      AssetIngested,
                     ),
                   )
       } yield assertTrue(
@@ -586,11 +582,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
-                      AssetIngested,
                     ),
                   )
       } yield assertTrue(
@@ -613,11 +608,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
-                      AssetIngested,
                     ),
                   )
       } yield assertTrue(
@@ -641,11 +635,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
-                      AssetIngested,
                     ),
                   )
       } yield assertTrue(
@@ -680,11 +673,10 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                          |  },
                          |  "@context": {
                          |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                         |    "ex": "https://example.com/test#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
                          |    "xsd": "http://www.w3.org/2001/XMLSchema#"
                          |  }
                          |}""".stripMargin,
-                      AssetIngested,
                     ),
                   )
       } yield assertTrue(
@@ -704,9 +696,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       check(Gen.fromIterable(transformations)) { jsonLdTransform =>
         for {
           sf <- ZIO.service[StringFormatter]
-          value <- service(
-                     _.createValueV2FromJsonLd(
-                       jsonLdTransform("""
+          str = jsonLdTransform("""
                        {
                           "@id": "http://rdfh.ch/0001/a-thing",
                           "@type": "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
@@ -715,10 +705,8 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                             "http://api.knora.org/ontology/knora-api/v2#valueAsString":"This is English",
                             "http://api.knora.org/ontology/knora-api/v2#textValueHasLanguage":"en"
                           }
-                       }""".stripMargin),
-                       AssetIngested,
-                     ),
-                   )
+                       }""".stripMargin)
+          value <- service(_.createValueV2FromJsonLd(str))
         } yield assertTrue(
           value == CreateValueV2(
             resourceIri = "http://rdfh.ch/0001/a-thing",
@@ -739,16 +727,32 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             valueUUID = None,
             valueCreationDate = None,
             permissions = None,
-            ingestState = AssetIngested,
           ),
         )
       }
     },
   ).provideSome[Scope](
-    IriConverter.layer,
-    MessageRelayLive.layer,
-    StringFormatter.test,
+    AdministrativePermissionRepoInMemory.layer,
+    AdministrativePermissionService.layer,
     ApiComplexV2JsonLdRequestParser.layer,
+    GroupService.layer,
+    IriConverter.layer,
+    IriService.layer,
+    KnoraGroupRepoInMemory.layer,
+    KnoraGroupService.layer,
+    KnoraProjectRepoInMemory.layer,
+    KnoraProjectService.layer,
+    KnoraUserRepoInMemory.layer,
+    KnoraUserService.layer,
+    KnoraUserToUserConverter.layer,
+    MessageRelayLive.layer,
+    OntologyRepoInMemory.emptyLayer,
+    PasswordService.layer,
+    ProjectService.layer,
     SipiServiceMock.layer,
+    StringFormatter.test,
+    TriplestoreServiceInMemory.emptyLayer,
+    UserService.layer,
+    AppConfig.layer,
   )
 }

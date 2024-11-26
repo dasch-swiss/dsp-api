@@ -10,7 +10,6 @@ import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import zio.ZIO
 
-import java.nio.file.Files
 import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration.*
@@ -36,7 +35,6 @@ class KnoraSipiAuthenticationITSpec
   private val password          = SharedTestDataADM.testPass
 
   private val marblesOriginalFilename = "marbles.tif"
-  private val pathToMarbles           = Paths.get("..", s"test_data/test_route/images/$marblesOriginalFilename")
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
@@ -75,47 +73,6 @@ class KnoraSipiAuthenticationITSpec
         Get(s"$baseInternalSipiUrl/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/max/0/default.jpg") ~> addHeader(cookieHeader)
       val response = singleAwaitingRequest(sipiGetImageRequest)
       assert(response.status === StatusCodes.OK)
-    }
-
-    "accept a token in Sipi that has been signed by Knora" in {
-
-      // The image to be uploaded.
-      assert(Files.exists(pathToMarbles), s"File $pathToMarbles does not exist")
-
-      // A multipart/form-data request containing the image.
-      val sipiFormData = Multipart.FormData(
-        Multipart.FormData.BodyPart(
-          "file",
-          HttpEntity.fromPath(MediaTypes.`image/tiff`, pathToMarbles),
-          Map("filename" -> pathToMarbles.getFileName.toString),
-        ),
-      )
-
-      // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
-      val sipiRequest  = Post(s"$baseInternalSipiUrl/upload?token=$loginToken", sipiFormData)
-      val sipiResponse = singleAwaitingRequest(sipiRequest)
-      assert(sipiResponse.status == StatusCodes.OK)
-    }
-
-    "not accept a token in Sipi that hasn't been signed by Knora" in {
-      val invalidToken = "a_invalid_token"
-
-      // The image to be uploaded.
-      assert(Files.exists(pathToMarbles), s"File $pathToMarbles does not exist")
-
-      // A multipart/form-data request containing the image.
-      val sipiFormData = Multipart.FormData(
-        Multipart.FormData.BodyPart(
-          "file",
-          HttpEntity.fromPath(MediaTypes.`image/tiff`, pathToMarbles),
-          Map("filename" -> pathToMarbles.getFileName.toString),
-        ),
-      )
-
-      // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
-      val sipiRequest  = Post(s"$baseInternalSipiUrl/upload?token=$invalidToken", sipiFormData)
-      val sipiResponse = singleAwaitingRequest(sipiRequest)
-      assert(sipiResponse.status == StatusCodes.Unauthorized)
     }
 
     "accept a request with valid credentials to clean_temp_dir route which requires basic auth" in {

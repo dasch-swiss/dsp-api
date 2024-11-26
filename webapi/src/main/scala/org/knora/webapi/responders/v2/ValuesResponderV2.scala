@@ -308,7 +308,7 @@ final case class ValuesResponderV2(
       )
     }
 
-    val triplestoreUpdateFuture: Task[CreateValueResponseV2] = for {
+    for {
       // Don't allow anonymous users to create values.
       _ <- ZIO.when(requestingUser.isAnonymousUser)(
              ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create values")),
@@ -316,15 +316,6 @@ final case class ValuesResponderV2(
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(apiRequestID, valueToCreate.resourceIri, taskZio)
     } yield taskResult
-
-    // If we were creating a file value, have Sipi move the file to permanent storage if the update
-    // was successful, or delete the temporary file if the update failed.
-    resourceUtilV2.doSipiPostUpdateIfInTemp(
-      valueToCreate.ingestState,
-      triplestoreUpdateFuture,
-      valueToCreate.valueContent.asOpt[FileValueContentV2].toSeq,
-      requestingUser,
-    )
   }
 
   private def ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(valueContent: ValueContentV2) =
@@ -404,7 +395,7 @@ final case class ValuesResponderV2(
   /**
    * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
    *
-   * @param resourceInfo           information about the the resource in which to create the value.
+   * @param resourceInfo           information about the resource in which to create the value.
    * @param propertyIri            the property that should point to the value.
    * @param value                  an [[ValueContentV2]] describing the value.
    * @param maybeValueIri          the optional custom IRI supplied for the value.
@@ -950,17 +941,10 @@ final case class ValuesResponderV2(
       updateValue match {
         case updateValueContentV2: UpdateValueContentV2 =>
           // This is a request to update the content of a value.
-          val triplestoreUpdate = IriLocker.runWithIriLock(
+          IriLocker.runWithIriLock(
             apiRequestId,
             updateValueContentV2.resourceIri,
             makeTaskFutureToUpdateValueContent(updateValueContentV2),
-          )
-
-          resourceUtilV2.doSipiPostUpdateIfInTemp(
-            updateValueContentV2.ingestState,
-            triplestoreUpdate,
-            updateValueContentV2.valueContent.asOpt[FileValueContentV2].toSeq,
-            requestingUser,
           )
 
         case updateValuePermissionsV2: UpdateValuePermissionsV2 =>
