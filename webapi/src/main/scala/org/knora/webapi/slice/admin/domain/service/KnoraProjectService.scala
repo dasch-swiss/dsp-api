@@ -53,7 +53,8 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
                 req.selfjoin,
                 RestrictedView.default,
                 req.copyrightAttribution,
-                req.license,
+                req.licenseText,
+                req.licenseUri,
               )
     project <- knoraProjectRepo.save(project)
   } yield project
@@ -100,7 +101,8 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
                      status = updateReq.status.getOrElse(project.status),
                      selfjoin = updateReq.selfjoin.getOrElse(project.selfjoin),
                      copyrightAttribution = updateReq.copyrightAttribution.orElse(project.copyrightAttribution),
-                     license = updateReq.license.orElse(project.license),
+                     licenseText = updateReq.licenseText.orElse(project.licenseText),
+                     licenseUri = updateReq.licenseUri.orElse(project.licenseUri),
                    ),
                  )
     } yield updated

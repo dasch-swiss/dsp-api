@@ -7,6 +7,8 @@ package org.knora.webapi.slice.admin.domain.model
 
 import zio.NonEmptyChunk
 
+import java.net.URI
+import scala.util.Try
 import scala.util.matching.Regex
 
 import dsp.valueobjects.Iri.isIri
@@ -35,7 +37,8 @@ case class KnoraProject(
   selfjoin: SelfJoin,
   restrictedView: RestrictedView,
   copyrightAttribution: Option[CopyrightAttribution],
-  license: Option[License],
+  licenseText: Option[LicenseText],
+  licenseUri: Option[LicenseUri],
 ) extends EntityWithId[ProjectIri]
 
 object KnoraProject {
@@ -186,12 +189,18 @@ object KnoraProject {
       else Right(CopyrightAttribution(str))
   }
 
-  final case class License private (override val value: String) extends StringValue
-  object License extends StringValueCompanion[License] {
+  final case class LicenseText private (override val value: String) extends StringValue
+  object LicenseText extends StringValueCompanion[LicenseText] {
     private val maxLength = 10_000
-    def from(str: String): Either[String, License] =
+    def from(str: String): Either[String, LicenseText] =
       if (str.isEmpty) Left("License cannot be empty.")
       else if (str.length >= maxLength) Left(s"License may only be ${maxLength} characters long.")
-      else Right(License(str))
+      else Right(LicenseText(str))
+  }
+
+  final case class LicenseUri private (override val value: String) extends StringValue
+  object LicenseUri extends StringValueCompanion[LicenseUri] {
+    def from(str: String): Either[String, LicenseUri] =
+      Try(URI.create(str)).toEither.left.map(_ => s"License URI '$str' is not a valid URI.").map(_ => LicenseUri(str))
   }
 }

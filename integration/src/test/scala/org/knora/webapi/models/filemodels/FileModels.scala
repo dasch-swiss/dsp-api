@@ -16,7 +16,8 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewR
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseText
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseUri
 
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
@@ -24,7 +25,8 @@ sealed abstract case class UploadFileRequest private (
   label: String,
   resourceIRI: Option[String] = None,
   copyrightAttribution: Option[CopyrightAttribution] = None,
-  license: Option[License] = None,
+  licenseText: Option[LicenseText] = None,
+  licenseUri: Option[LicenseUri] = None,
 ) {
 
   /**
@@ -60,7 +62,10 @@ sealed abstract case class UploadFileRequest private (
        |    "@type" : "$fileValueType",
        |    "knora-api:fileValueHasFilename" : "$internalFilename"
        |    ${copyrightAttribution.map(ca => s""","knora-api:hasCopyrightAttribution" : "${ca.value}"""").getOrElse("")}
-       |    ${license.map(l => s""","knora-api:hasLicense" : "${l.value}"""").getOrElse("")}
+       |    ${licenseText.map(l => s""","knora-api:hasLicenseText" : "${l.value}"""").getOrElse("")}
+       |    ${licenseUri
+        .map(u => s""", "knora-api:hasLicenseUri" : { "@type" : "xsd:anyURI", "@value":"${u.value}" }""")
+        .getOrElse("")}
        |  },
        |  "knora-api:attachedToProject" : {
        |    "@id" : "http://rdfh.ch/projects/$shortcode"
@@ -111,7 +116,8 @@ sealed abstract case class UploadFileRequest private (
     valuePropertyIRI: Option[SmartIri] = None,
     project: Option[Project] = None,
     copyrightAttribution: Option[CopyrightAttribution] = None,
-    license: Option[License] = None,
+    licenseText: Option[LicenseText] = None,
+    licenseUri: Option[LicenseUri] = None,
   ): CreateResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -131,7 +137,8 @@ sealed abstract case class UploadFileRequest private (
       originalMimeType = originalMimeType,
       comment = comment,
       copyrightAttribution,
-      license,
+      licenseText,
+      licenseUri,
     )
 
     val values = List(
@@ -183,9 +190,18 @@ object UploadFileRequest {
     label: String = "test label",
     resourceIRI: Option[String] = None,
     copyrightAttribution: Option[CopyrightAttribution] = None,
-    license: Option[License] = None,
+    licenseText: Option[LicenseText] = None,
+    licenseUri: Option[LicenseUri] = None,
   ): UploadFileRequest =
-    new UploadFileRequest(fileType, internalFilename, label, resourceIRI, copyrightAttribution, license) {}
+    new UploadFileRequest(
+      fileType,
+      internalFilename,
+      label,
+      resourceIRI,
+      copyrightAttribution,
+      licenseText,
+      licenseUri,
+    ) {}
 }
 
 sealed abstract case class ChangeFileRequest private (

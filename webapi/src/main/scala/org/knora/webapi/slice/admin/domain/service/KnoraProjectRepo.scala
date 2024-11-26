@@ -49,6 +49,7 @@ object KnoraProjectRepo {
       RestrictedView.default,
       None,
       None,
+      None,
     )
 
     val SystemProject: KnoraProject = makeBuiltIn(

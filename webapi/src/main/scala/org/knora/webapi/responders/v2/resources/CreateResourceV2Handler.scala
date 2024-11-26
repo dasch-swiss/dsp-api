@@ -107,7 +107,8 @@ final case class CreateResourceV2Handler(
     def replaceIfEmpty[T](newValue: Option[T], opt: Optional[FileValueV2, Option[T]]) =
       fileValueWith(opt.getOption(_).flatten.isEmpty).andThen(opt).replace(newValue)
 
-    replaceIfEmpty(project.license, FileValueV2Optics.licenseOption)
+    replaceIfEmpty(project.licenseText, FileValueV2Optics.licenseTextOption)
+      .andThen(replaceIfEmpty(project.licenseUri, FileValueV2Optics.licenseUriOption))
       .andThen(replaceIfEmpty(project.copyrightAttribution, FileValueV2Optics.copyrightAttributionOption))
   }
 
@@ -528,7 +529,8 @@ final case class CreateResourceV2Handler(
                       dimX = dimX,
                       dimY = dimY,
                       fileValue.copyrightAttribution,
-                      fileValue.license,
+                      fileValue.licenseText,
+                      fileValue.licenseUri,
                     ),
                   )
                 case StillImageExternalFileValueContentV2(_, fileValue, externalUrl, _) =>
@@ -540,7 +542,8 @@ final case class CreateResourceV2Handler(
                       originalMimeType = fileValue.originalMimeType,
                       externalUrl = externalUrl.value.toString(),
                       fileValue.copyrightAttribution,
-                      fileValue.license,
+                      fileValue.licenseText,
+                      fileValue.licenseUri,
                     ),
                   )
                 case DocumentFileValueContentV2(_, fileValue, pageCount, dimX, dimY, _) =>
@@ -554,7 +557,8 @@ final case class CreateResourceV2Handler(
                       dimY = dimY,
                       pageCount = pageCount,
                       fileValue.copyrightAttribution,
-                      fileValue.license,
+                      fileValue.licenseText,
+                      fileValue.licenseUri,
                     ),
                   )
                 case ArchiveFileValueContentV2(_, fileValue, _) =>
@@ -565,7 +569,8 @@ final case class CreateResourceV2Handler(
                       originalFilename = fileValue.originalFilename,
                       originalMimeType = fileValue.originalMimeType,
                       fileValue.copyrightAttribution,
-                      fileValue.license,
+                      fileValue.licenseText,
+                      fileValue.licenseUri,
                     ),
                   )
                 case TextFileValueContentV2(_, fileValue, _) =>
@@ -576,7 +581,8 @@ final case class CreateResourceV2Handler(
                       originalFilename = fileValue.originalFilename,
                       originalMimeType = fileValue.originalMimeType,
                       fileValue.copyrightAttribution,
-                      fileValue.license,
+                      fileValue.licenseText,
+                      fileValue.licenseUri,
                     ),
                   )
                 case AudioFileValueContentV2(_, fileValue, _) =>
@@ -587,7 +593,8 @@ final case class CreateResourceV2Handler(
                       originalFilename = fileValue.originalFilename,
                       originalMimeType = fileValue.originalMimeType,
                       fileValue.copyrightAttribution,
-                      fileValue.license,
+                      fileValue.licenseText,
+                      fileValue.licenseUri,
                     ),
                   )
                 case MovingImageFileValueContentV2(_, fileValue, _) =>
@@ -598,7 +605,8 @@ final case class CreateResourceV2Handler(
                       originalFilename = fileValue.originalFilename,
                       originalMimeType = fileValue.originalMimeType,
                       fileValue.copyrightAttribution,
-                      fileValue.license,
+                      fileValue.licenseText,
+                      fileValue.licenseUri,
                     ),
                   )
                 case LinkValueContentV2(

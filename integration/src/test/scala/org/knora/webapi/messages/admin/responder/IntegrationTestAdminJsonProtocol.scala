@@ -46,7 +46,8 @@ import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseText
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseUri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.Value.StringValue
 
@@ -193,7 +194,8 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
       "status",
       "selfjoin",
       "copyrightAttribution",
-      "license",
+      "licenseText",
+      "licenseUri",
     ),
   )
 
@@ -209,8 +211,12 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
     override val from: String => Either[String, CopyrightAttribution] = CopyrightAttribution.from
   }
 
-  implicit object LicenseFormat extends StringValueFormat[License] {
-    override val from: String => Either[String, License] = License.from
+  implicit object LicenseTextFormat extends StringValueFormat[LicenseText] {
+    override val from: String => Either[String, LicenseText] = LicenseText.from
+  }
+
+  implicit object LicenseUriFormat extends StringValueFormat[LicenseUri] {
+    override val from: String => Either[String, LicenseUri] = LicenseUri.from
   }
 
   implicit val groupFormat: JsonFormat[Group] = jsonFormat6(Group.apply)

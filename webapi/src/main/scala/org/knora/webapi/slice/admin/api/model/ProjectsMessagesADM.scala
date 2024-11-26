@@ -12,7 +12,8 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.copyrightAttribution
-import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.license
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.licenseText
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.licenseUri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
@@ -43,7 +44,8 @@ case class Project(
   status: Boolean,
   selfjoin: Boolean,
   copyrightAttribution: Option[CopyrightAttribution],
-  license: Option[License],
+  licenseText: Option[LicenseText],
+  licenseUri: Option[LicenseUri],
 ) extends Ordered[Project] {
 
   def projectIri: ProjectIri = ProjectIri.unsafeFrom(id)
