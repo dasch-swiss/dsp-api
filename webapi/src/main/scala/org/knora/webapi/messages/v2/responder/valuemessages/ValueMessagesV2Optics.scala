@@ -37,7 +37,7 @@ object ValueMessagesV2Optics {
         case vc: ArchiveFileValueContentV2            => vc.copy(fileValue = fv)
         case vc: TextFileValueContentV2               => vc.copy(fileValue = fv)
       })
-    val copyRightAttributionOption: Lens[FileValueContentV2, Option[CopyrightAttribution]] =
+    val copyrightAttributionOption: Lens[FileValueContentV2, Option[CopyrightAttribution]] =
       fileValueV2.andThen(FileValueV2Optics.copyrightAttributionOption)
     val licenseTextOption: Lens[FileValueContentV2, Option[LicenseText]] =
       fileValueV2.andThen(FileValueV2Optics.licenseTextOption)

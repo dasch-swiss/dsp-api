@@ -685,7 +685,7 @@ object ValueContentV2 {
     case fvc: FileValueContentV2 => {
       val lt = FileValueContentV2Optics.licenseTextOption.filter(_.isEmpty).replace(licenseText)
       val lu = FileValueContentV2Optics.licenseUriOption.filter(_.isEmpty).replace(licenseUri)
-      val cp = FileValueContentV2Optics.copyRightAttributionOption.filter(_.isEmpty).replace(copyrightAttribution)
+      val cp = FileValueContentV2Optics.copyrightAttributionOption.filter(_.isEmpty).replace(copyrightAttribution)
       lt.andThen(lu).andThen(cp)(fvc)
     }
     case other => other
