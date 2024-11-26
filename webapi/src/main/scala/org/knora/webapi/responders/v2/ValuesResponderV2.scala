@@ -1045,7 +1045,7 @@ final case class ValuesResponderV2(
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
       newValueUUID = currentValue.valueHasUUID,
-      valueContent = newValueVersion.unescape,
+      valueContent = newValue.unescape,
       permissions = valuePermissions,
       creationDate = currentTime,
     )

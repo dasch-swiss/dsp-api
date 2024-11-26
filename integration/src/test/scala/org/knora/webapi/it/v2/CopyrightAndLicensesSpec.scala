@@ -10,6 +10,7 @@ import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.vocabulary.RDF
 import zio.*
+import zio.http.Body
 import zio.http.Response
 import zio.test.*
 import zio.test.TestAspect
@@ -100,6 +101,26 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       } yield assertTrue(
         actualCopyright == aCopyrightAttribution.value,
         actualLicense == aLicense.value,
+      )
+    },
+    test(
+      "when creating a resource without copyright attribution and license " +
+        "and when providing the project with copyright attribution and license " +
+        "and then updating the value" +
+        "the response when getting the updated value should contain the license and copyright attribution of the project",
+    ) {
+      for {
+        createResourceResponseModel <- createStillImageResource(None, None)
+        _                           <- addCopyrightAttributionAndLicenseToProject()
+        resourceId                  <- resourceId(createResourceResponseModel)
+        valueId                     <- valueId(createResourceResponseModel)
+        _                           <- updateValue(resourceId, valueId)
+        valueGetResponse            <- getValueFromApi(createResourceResponseModel)
+        actualCopyright             <- copyrightValue(valueGetResponse)
+        actualLicense               <- licenseValue(valueGetResponse)
+      } yield assertTrue(
+        actualCopyright == projectCopyrightAttribution.value,
+        actualLicense == projectLicense.value,
       )
     },
   ) @@ TestAspect.before(removeCopyrightAttributionAndLicenseFromProject())
@@ -205,6 +226,34 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
                         .flatMap(_.body.asString)
       createResourceResponseModel <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
     } yield createResourceResponseModel
+  }
+
+  private def updateValue(resourceIri: String, valueId: ValueIri) = {
+    val jsonLd =
+      s"""
+         |{
+         |  "@id": "${resourceIri}",
+         |  "@type": "anything:ThingPicture",
+         |  "knora-api:hasStillImageFileValue": {
+         |    "@id" : "${valueId.smartIri.toComplexSchema.toIri}",
+         |    "@type": "knora-api:StillImageFileValue",
+         |    "knora-api:fileValueHasFilename": "test.jpg"
+         |  },
+         |  "@context": {
+         |    "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+         |    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+         |  }
+         |}
+         |""".stripMargin
+    for {
+      _ <- Console.printLine(jsonLd)
+      _ <- ModelOps.fromJsonLd(jsonLd).mapError(Exception(_))
+      responseBody <-
+        sendPutRequestAsRoot("/v2/values", Body.fromString(jsonLd))
+          .filterOrElseWith(_.status.isSuccess)(failResponse(s"Value update failed $valueId resource $resourceIri."))
+          .flatMap(_.body.asString)
+      model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
+    } yield model
   }
 
   private def getResourceFromApi(resourceId: String) = for {
