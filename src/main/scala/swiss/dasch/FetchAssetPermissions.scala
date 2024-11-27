@@ -19,7 +19,7 @@ import scala.concurrent.duration.*
 
 trait FetchAssetPermissions {
   def getPermissionCode(
-    jwt: String,
+    jwt: Option[String],
     assetInfo: AssetInfo,
   ): Task[Int]
 }
@@ -29,7 +29,7 @@ class FetchAssetPermissionsLive(
   apiConfig: Configuration.DspApiConfig,
 ) extends FetchAssetPermissions {
   def getPermissionCode(
-    jwt: String,
+    jwt: Option[String],
     assetInfo: AssetInfo,
   ): Task[Int] =
     (for {
@@ -37,7 +37,7 @@ class FetchAssetPermissionsLive(
         ZIO.succeed(
           uri"${apiConfig.url}/admin/files/${assetInfo.assetRef.belongsToProject}/${assetInfo.derivative.filename}",
         )
-      response    <- sttp.send(basicRequest.get(uri).header("Authorization", s"Bearer ${jwt}"))
+      response    <- sttp.send(basicRequest.get(uri).header("Authorization", jwt.map(jwt => s"Bearer ${jwt}")))
       successBody <- ZIO.fromEither(response.body).mapError(httpError(uri.toString, response.code.code, _))
       permissionCode <-
         ZIO.fromEither(successBody.fromJson[PermissionResponse].bimap(e => new Exception(e), _.permissionCode))

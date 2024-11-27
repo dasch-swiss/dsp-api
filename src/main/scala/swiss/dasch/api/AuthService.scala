@@ -52,7 +52,10 @@ final case class AuthServiceLive(jwtConfig: JwtConfig) extends AuthService {
 
   def authenticate(jwtString: String): IO[NonEmptyChunk[AuthenticationError], Principal] =
     if (jwtConfig.disableAuth) {
-      ZIO.succeed(Principal("developer", AuthScope(Set(AuthScope.ScopeValue.Admin)), "fake jwt claim"))
+      if (jwtString == "intentionallyInvalid")
+        ZIO.fail(NonEmptyChunk(AuthenticationError.JwtProblem("refused")))
+      else
+        ZIO.succeed(Principal("developer", AuthScope(Set(AuthScope.ScopeValue.Admin)), "fake jwt claim"))
     } else {
       ZIO
         .fromTry(JwtZIOJson.decode(jwtString, secret, alg))

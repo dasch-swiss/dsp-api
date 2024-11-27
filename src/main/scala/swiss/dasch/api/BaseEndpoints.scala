@@ -19,14 +19,22 @@ case class BaseEndpoints(authService: AuthService) {
   val publicEndpoint: PublicEndpoint[Unit, ApiProblem, Unit, Any] = endpoint
     .errorOut(defaultErrorOutputs)
 
+  val withUserEndpoint: ZPartialServerEndpoint[Any, Option[String], Option[Principal], Unit, ApiProblem, Unit, Any] =
+    endpoint
+      .errorOut(defaultErrorOutputs)
+      .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
+      .zServerSecurityLogic[Any, Option[Principal]](handleAuthOpt)
+
   val secureEndpoint: ZPartialServerEndpoint[Any, String, Principal, Unit, ApiProblem, Unit, Any] = endpoint
     .errorOut(defaultErrorOutputs)
     .securityIn(auth.bearer[String](WWWAuthenticateChallenge.bearer))
     .zServerSecurityLogic[Any, Principal](handleAuth)
 
-  private def handleAuth(token: String): IO[Unauthorized, Principal] = authService
-    .authenticate(token)
-    .mapError(e => ApiProblem.Unauthorized(e.map(_.message).mkString(", ")))
+  private def handleAuthOpt(token: Option[String]): IO[Nothing, Option[Principal]] =
+    ZIO.foreach(token)(authService.authenticate(_)).catchAll(_ => ZIO.succeed(None: Option[Principal]))
+
+  private def handleAuth(token: String): IO[ApiProblem, Principal] =
+    authService.authenticate(token).mapError(e => ApiProblem.Unauthorized(e.map(_.message).mkString(", ")))
 }
 
 object BaseEndpoints {

@@ -203,9 +203,8 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           contents   <- ZIO.succeed("123".toList.map(_.toByte))
           contentType = Some(""""originalMimeType": "text/plain"""")
           ref        <- AssetInfoFileTestHelper.createInfoFile("txt", "txt", contentType, Some(contents)).map(_.assetRef)
-          req = Request
-                  .get(URL(Path.root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value / "original"))
-                  .addHeader("Authorization", "Bearer fakeToken")
+          req =
+            Request.get(URL(Path.root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value / "original"))
           response <- executeRequest(req)
           body     <- response.body.asString
         } yield assertTrue(
@@ -361,6 +360,15 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           .post(URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "sample.mp3"), Body.empty)
           .addHeader("Authorization", "Bearer fakeToken")
         executeRequest(req).map(response => assertTrue(response.status.isClientError))
+      },
+      test("should consult AuthService") {
+        executeRequest(
+          Request
+            .post(URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "sample.mp3"), Body.empty)
+            .addHeader("Authorization", "Bearer intentionallyInvalid"),
+        ).map { response =>
+          assertTrue(response.status == Status.Unauthorized)
+        }
       },
     )
 

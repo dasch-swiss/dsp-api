@@ -10,7 +10,7 @@ import zio.*
 
 class FetchAssetPermissionsMock(permissionCode: Int) extends FetchAssetPermissions {
   def getPermissionCode(
-    jwt: String,
+    jwt: Option[String],
     assetInfo: AssetInfo,
   ): Task[Int] =
     ZIO.succeed(permissionCode)
