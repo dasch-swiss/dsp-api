@@ -6,9 +6,11 @@
 package org.knora.webapi.responders.v2.resources
 
 import com.typesafe.scalalogging.LazyLogging
+import monocle.Optional
 import zio.*
 
 import java.time.Instant
+import scala.language.postfixOps
 
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
@@ -28,8 +30,11 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResp
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceMessagesV2Optics.CreateResourceV2Optics
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceMessagesV2Optics.CreateValueInNewResourceV2Optics
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optics.FileValueV2Optics
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
@@ -84,6 +89,27 @@ final case class CreateResourceV2Handler(
    */
   def apply(createResourceRequestV2: CreateResourceRequestV2): Task[ReadResourcesSequenceV2] =
     triplestoreUpdate(createResourceRequestV2)
+
+  private def replaceCopyrightAttributionAndLicenseIfMissing(project: Project): CreateResourceV2 => CreateResourceV2 = {
+    def createValuesWith(
+      pred: FileValueV2 => Boolean,
+    ): Optional[Seq[CreateValueInNewResourceV2], CreateValueInNewResourceV2] =
+      CreateValueInNewResourceV2Optics.elements(cv =>
+        CreateValueInNewResourceV2Optics.fileValue.getOption(cv).exists(pred),
+      )
+
+    def fileValueWith(pred: FileValueV2 => Boolean): Optional[CreateResourceV2, FileValueV2] =
+      CreateResourceV2Optics
+        .values(createValuesWith(pred).getOption(_).isDefined)
+        .andThen(createValuesWith(pred))
+        .andThen(CreateValueInNewResourceV2Optics.fileValue)
+
+    def replaceIfEmpty[T](newValue: Option[T], opt: Optional[FileValueV2, Option[T]]) =
+      fileValueWith(opt.getOption(_).flatten.isEmpty).andThen(opt).replace(newValue)
+
+    replaceIfEmpty(project.license, FileValueV2Optics.licenseOption)
+      .andThen(replaceIfEmpty(project.copyrightAttribution, FileValueV2Optics.copyrightAttributionOption))
+  }
 
   private def triplestoreUpdate(
     createResourceRequestV2: CreateResourceRequestV2,
@@ -166,9 +192,14 @@ final case class CreateResourceV2Handler(
         ZIO
           .fail(DuplicateValueException(s"Resource IRI: '$resourceIri' already exists."))
           .whenZIO(iriService.checkIriExists(resourceIri))
+      project = createResourceRequestV2.createResource.projectADM
 
       // Convert the resource to the internal ontology schema.
-      internalCreateResource <- ZIO.attempt(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
+      internalCreateResource <-
+        ZIO.attempt(
+          replaceCopyrightAttributionAndLicenseIfMissing(project)(createResourceRequestV2.createResource)
+            .toOntologySchema(InternalSchema),
+        )
 
       // Check link targets and list nodes that should exist.
       _ <- checkStandoffLinkTargets(

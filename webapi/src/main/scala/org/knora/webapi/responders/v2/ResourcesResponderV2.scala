@@ -653,7 +653,6 @@ final case class ResourcesResponderV2(
         }
       responseWithDeletedResourcesReplaced = apiResponse.copy(resources = deletedResourcesReplaced)
     } yield responseWithDeletedResourcesReplaced
-
   }
 
   /**

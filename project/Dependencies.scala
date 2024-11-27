@@ -19,6 +19,8 @@ object Dependencies {
   val PekkoActorVersion = "1.1.2"
   val PekkoHttpVersion  = "1.1.0"
 
+  val MonocleVersion = "3.3.0"
+
   // rdf and graph libraries
   // topbraid/shacl is not yet compatible with jena 5 so we need to use jena 4 for now
   // see: https://github.com/TopQuadrant/shacl/pull/177
@@ -51,6 +53,13 @@ object Dependencies {
   val refined = Seq(
     "eu.timepit" %% "refined"                  % "0.11.2",
     "dev.zio"    %% "zio-json-interop-refined" % "0.7.3",
+  )
+
+  // monocle
+  val monocle = Seq(
+    "dev.optics" %% "monocle-core"    % MonocleVersion,
+    "dev.optics" %% "monocle-macro"   % MonocleVersion,
+    "dev.optics" %% "monocle-refined" % MonocleVersion,
   )
 
   // zio-test and friends
@@ -149,7 +158,7 @@ object Dependencies {
 
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
-  val webapiDependencies = refined ++ Seq(
+  val webapiDependencies = monocle ++ refined ++ Seq(
     pekkoActor,
     pekkoHttp,
     pekkoHttpCors,

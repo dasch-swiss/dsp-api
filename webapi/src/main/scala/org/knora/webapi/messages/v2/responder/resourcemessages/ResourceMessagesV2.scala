@@ -26,6 +26,7 @@ import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optics.*
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -565,7 +566,6 @@ case class ReadResourceV2(
       values = valuesWithDeletedValues,
     )
   }
-
 }
 
 /**
@@ -778,7 +778,7 @@ case class ReadResourcesSequenceV2(
   mayHaveMoreResults: Boolean = false,
 ) extends KnoraJsonLDResponseV2
     with KnoraReadV2[ReadResourcesSequenceV2]
-    with UpdateResultInProject {
+    with UpdateResultInProject { self =>
 
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourcesSequenceV2 =
     copy(
@@ -861,11 +861,12 @@ case class ReadResourcesSequenceV2(
     appConfig: AppConfig,
     schemaOptions: Set[Rendering] = Set.empty,
   ): JsonLDDocument =
-    toOntologySchema(targetSchema).generateJsonLD(
-      targetSchema = targetSchema,
-      appConfig = appConfig,
-      schemaOptions = schemaOptions,
-    )
+    toOntologySchema(targetSchema)
+      .generateJsonLD(
+        targetSchema = targetSchema,
+        appConfig = appConfig,
+        schemaOptions = schemaOptions,
+      )
 
   /**
    * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource.
