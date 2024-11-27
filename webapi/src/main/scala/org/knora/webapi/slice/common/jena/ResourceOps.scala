@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.common.jena
 
+import cats.instances.option.*
+import cats.syntax.traverse.*
 import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.rdf.model.Statement
@@ -39,8 +41,14 @@ object ResourceOps {
     def objectInt(p: Property): Either[String, Int]               = statement(p).flatMap(_.objectAsInt)
     def objectIntOption(p: Property): Either[String, Option[Int]] = fromStatement(p, _.objectAsInt)
 
-    def objectString(p: Property): Either[String, String]               = statement(p).flatMap(_.objectAsString)
-    def objectStringOption(p: Property): Either[String, Option[String]] = fromStatement(p, _.objectAsString)
+    def objectString(p: Property): Either[String, String] =
+      statement(p).flatMap(_.objectAsString)
+    def objectString[A](p: Property, mapper: String => Either[String, A]): Either[String, A] =
+      objectString(p).flatMap(mapper)
+    def objectStringOption(p: Property): Either[String, Option[String]] =
+      fromStatement(p, _.objectAsString)
+    def objectStringOption[A](p: Property, mapper: String => Either[String, A]): Either[String, Option[A]] =
+      objectStringOption(p).flatMap(_.traverse(mapper))
 
     def objectUri(p: Property): Either[String, String]               = statement(p).flatMap(stmt => stmt.objectAsUri)
     def objectUriOption(p: Property): Either[String, Option[String]] = fromStatement(p, _.objectAsUri)
@@ -52,6 +60,8 @@ object ResourceOps {
       statement(p).flatMap(stmt => stmt.objectAsDataType(dt))
     def objectDataTypeOption(p: Property, dt: String): Either[String, Option[String]] =
       fromStatement(p, _.objectAsDataType(dt))
+    def objectDataTypeOption[A](p: Property, dt: String, f: String => Either[String, A]): Either[String, Option[A]] =
+      objectDataTypeOption(p, dt).flatMap(_.traverse(f))
 
     def rdfsType: Option[String] = Option(res.getPropertyResourceValue(RDF.`type`)).flatMap(_.uri)
     def uri: Option[String]      = Option(res.getURI)
