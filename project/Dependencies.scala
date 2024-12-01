@@ -25,7 +25,7 @@ object Dependencies {
   // topbraid/shacl is not yet compatible with jena 5 so we need to use jena 4 for now
   // see: https://github.com/TopQuadrant/shacl/pull/177
   val JenaVersion          = "4.10.0"
-  val Rdf4jVersion         = "5.0.3"
+  val Rdf4jVersion         = "5.1.0"
   val TopbraidShaclVersion = "1.4.3"
 
   val ZioConfigVersion            = "4.0.2"
