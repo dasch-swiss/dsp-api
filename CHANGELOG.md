@@ -1,5 +1,23 @@
 # Changelog
 
+## [31.0.0](https://github.com/dasch-swiss/dsp-api/compare/v30.22.0...v31.0.0) (2024-12-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove legacy Sipi upload mechanism (DEV-4260) ([#3414](https://github.com/dasch-swiss/dsp-api/issues/3414))
+
+### Maintenances
+
+* Dependency updates ([#3439](https://github.com/dasch-swiss/dsp-api/issues/3439)) ([43fe16a](https://github.com/dasch-swiss/dsp-api/commit/43fe16a2efea49f917d7c1d62e78edfe4f050a06))
+* Patch dependency updates ([#3437](https://github.com/dasch-swiss/dsp-api/issues/3437)) ([40f37ed](https://github.com/dasch-swiss/dsp-api/commit/40f37ed0c47215879a89390ddba101e3bd64f97b))
+
+
+### Enhancements
+
+* Add license and copyright attribution fallback (DEV-4352) ([#3433](https://github.com/dasch-swiss/dsp-api/issues/3433)) ([0a726e9](https://github.com/dasch-swiss/dsp-api/commit/0a726e9a20540840c3c4138ebb810044f71fbcab))
+* Remove legacy Sipi upload mechanism (DEV-4260) ([#3414](https://github.com/dasch-swiss/dsp-api/issues/3414)) ([b74a33c](https://github.com/dasch-swiss/dsp-api/commit/b74a33c5d368711250b7e3df3c323ef48acd1459))
+
 ## [30.22.0](https://github.com/dasch-swiss/dsp-api/compare/v30.21.0...v30.22.0) (2024-11-20)
 
 
