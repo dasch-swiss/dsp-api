@@ -34,7 +34,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC34"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.1.12"
+  val ZioVersion                  = "2.1.13"
 
   // ZIO
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
@@ -96,7 +96,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.1"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.3.4" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.3.5" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -121,7 +121,7 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.3"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.4"
   val wiremock       = "org.wiremock"       % "wiremock"       % "3.9.2"
 
   // found/added by the plugin but deleted anyway
