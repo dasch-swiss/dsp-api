@@ -129,11 +129,6 @@ final case class ProjectsEndpointsHandler(
             s"attachment; filename*=UTF-8''${filenameEncoded}", // Content-Disposition
             assetInfo.metadata.originalMimeType.map(m => m.stringValue).getOrElse("application/octet-stream"),
             ZStream.fromFile(assetInfo.original.file.toFile),
-            // CORS headers
-            "*",
-            "true",
-            "GET",
-            "Authorization",
           )
         },
       )

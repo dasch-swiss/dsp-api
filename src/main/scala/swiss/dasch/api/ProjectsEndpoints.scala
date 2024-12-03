@@ -187,10 +187,6 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .out(header[String]("Content-Disposition"))
     .out(header[String]("Content-Type"))
     .out(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
-    .out(header[String]("Access-Control-Request-Origin"))
-    .out(header[String]("Access-Control-Request-Credentials"))
-    .out(header[String]("Access-Control-Request-Methods"))
-    .out(header[String]("Access-Control-Request-Headers"))
     .tag("assets")
     .description(
       """|Offers the original file for download, provided the API permisisons allow.
