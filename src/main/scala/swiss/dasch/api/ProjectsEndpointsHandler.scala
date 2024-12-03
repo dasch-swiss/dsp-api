@@ -126,9 +126,14 @@ final case class ProjectsEndpointsHandler(
                                 .mapError(_ => InternalServerError("error fetching permissions"))
             _ <- ZIO.fail(Forbidden("permission denied")).unless(permissionCode >= 2)
           } yield (
-            s"attachment; filename*=\"${filenameEncoded}\"",
+            s"attachment; filename*=UTF-8''${filenameEncoded}", // Content-Disposition
             assetInfo.metadata.originalMimeType.map(m => m.stringValue).getOrElse("application/octet-stream"),
             ZStream.fromFile(assetInfo.original.file.toFile),
+            // CORS headers
+            "*",
+            "true",
+            "GET",
+            "Authorization",
           )
         },
       )
