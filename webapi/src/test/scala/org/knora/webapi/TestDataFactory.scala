@@ -100,6 +100,7 @@ object TestDataFactory {
     SelfJoin.CannotJoin,
     RestrictedView.default,
     Some(CopyrightAttribution.unsafeFrom("2024, Example Project")),
-    Some(License.unsafeFrom("CC-BY-4.0")),
+    Some(LicenseText.unsafeFrom("CC-BY-4.0")),
+    Some(LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by/4.0/")),
   )
 }

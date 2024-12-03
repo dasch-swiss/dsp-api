@@ -12,7 +12,8 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseText
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseUri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 
 object FileModelUtil {
@@ -87,7 +88,8 @@ object FileModelUtil {
     originalMimeType: Option[String],
     comment: Option[String],
     copyrightAttribution: Option[CopyrightAttribution],
-    license: Option[License],
+    licenseText: Option[LicenseText],
+    licenseUri: Option[LicenseUri],
   ): FileValueContentV2 =
     fileType match {
       case FileType.DocumentFile(pageCount, dimX, dimY) =>
@@ -99,7 +101,8 @@ object FileModelUtil {
             originalFilename = originalFilename,
             originalMimeType = Some(originalMimeType.getOrElse("application/pdf")),
             copyrightAttribution,
-            license,
+            licenseText,
+            licenseUri,
           ),
           pageCount = pageCount,
           dimX = dimX,
@@ -115,7 +118,8 @@ object FileModelUtil {
             originalFilename = originalFilename,
             originalMimeType = originalMimeType,
             copyrightAttribution,
-            license,
+            licenseText,
+            licenseUri,
           ),
           dimX = dimX,
           dimY = dimY,
@@ -130,7 +134,8 @@ object FileModelUtil {
             originalFilename = originalFilename,
             originalMimeType = originalMimeType,
             copyrightAttribution,
-            license,
+            licenseText,
+            licenseUri,
           ),
           externalUrl = externalUrl,
           comment = comment,
@@ -144,7 +149,8 @@ object FileModelUtil {
             originalFilename = originalFilename,
             originalMimeType = internalMimeType,
             copyrightAttribution,
-            license,
+            licenseText,
+            licenseUri,
           ),
         )
       case FileType.TextFile =>
@@ -156,7 +162,8 @@ object FileModelUtil {
             originalFilename = originalFilename,
             originalMimeType = internalMimeType,
             copyrightAttribution,
-            license,
+            licenseText,
+            licenseUri,
           ),
         )
       case FileType.AudioFile =>
@@ -168,7 +175,8 @@ object FileModelUtil {
             originalFilename = originalFilename,
             originalMimeType = internalMimeType,
             copyrightAttribution,
-            license,
+            licenseText,
+            licenseUri,
           ),
         )
       case FileType.ArchiveFile =>
@@ -180,7 +188,8 @@ object FileModelUtil {
             originalFilename = originalFilename,
             originalMimeType = internalMimeType,
             copyrightAttribution,
-            license,
+            licenseText,
+            licenseUri,
           ),
           comment = comment,
         )

@@ -21,7 +21,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseText
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseUri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -48,13 +49,15 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     SelfJoin.CannotJoin,
     RestrictedView.default,
     Some(CopyrightAttribution.unsafeFrom("2024, Example Project")),
-    Some(License.unsafeFrom("Apache-2.0")),
+    Some(LicenseText.unsafeFrom("Apache-2.0")),
+    Some(LicenseUri.unsafeFrom("https://www.apache.org/licenses/LICENSE-2.0.html")),
   )
 
   private val someProjectTrig =
     s"""|@prefix owl: <http://www.w3.org/2002/07/owl#> .
         |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
         |@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+        |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
         |
         |<${AdminConstants.adminDataNamedGraph.value}> {
         |  <http://rdfh.ch/projects/1234> a knora-admin:knoraProject ;
@@ -68,7 +71,8 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |    knora-admin:hasSelfJoinEnabled false ;
         |    knora-admin:projectRestrictedViewSize "!128,128" ;
         |    knora-base:hasCopyrightAttribution "2024, Example Project" ;
-        |    knora-base:hasLicense "Apache-2.0" .
+        |    knora-base:hasLicenseText "Apache-2.0" ;
+        |    knora-base:hasLicenseUri "https://www.apache.org/licenses/LICENSE-2.0.html"^^xsd:anyURI .
         |}
         |""".stripMargin
 
@@ -80,8 +84,8 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
       test("save a project") {
         for {
           saved   <- KnoraProjectRepo(_.save(someProject))
-          project <- KnoraProjectRepo(_.findById(someProject.id))
-        } yield assertTrue(project.contains(someProject), saved == someProject)
+          project <- KnoraProjectRepo(_.findById(someProject.id)).someOrFail(Exception("Project not found"))
+        } yield assertTrue(project == someProject, saved == someProject)
       },
       test("die for built in projects") {
         check(Gen.fromIterable(builtInProjects)) { project =>
@@ -110,9 +114,10 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
       suite("findById")(
         test("return project if it exists") {
           for {
-            _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-            project <- KnoraProjectRepo(_.findById(ProjectIri.unsafeFrom("http://rdfh.ch/projects/1234")))
-          } yield assertTrue(project == Some(someProject))
+            _ <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
+            actual <- KnoraProjectRepo(_.findById(ProjectIri.unsafeFrom("http://rdfh.ch/projects/1234")))
+                        .someOrFail(Exception("Project not found"))
+          } yield assertTrue(actual == someProject)
         },
         test("return None if project does not exist") {
           for {
@@ -122,17 +127,18 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         test("should find all built in projects") {
           check(Gen.fromIterable(builtInProjects)) { project =>
             for {
-              found <- KnoraProjectRepo(_.findById(project.id))
-            } yield assertTrue(found.contains(project))
+              actual <- KnoraProjectRepo(_.findById(project.id)).someOrFail(Exception("Project not found"))
+            } yield assertTrue(actual == project)
           }
         },
       ),
       suite("find by Shortcode")(
         test("return project if it exists") {
           for {
-            _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-            project <- KnoraProjectRepo(_.findByShortcode(Shortcode.unsafeFrom("1234")))
-          } yield assertTrue(project.contains(someProject))
+            _ <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
+            actual <- KnoraProjectRepo(_.findByShortcode(Shortcode.unsafeFrom("1234")))
+                        .someOrFail(Exception("Project not found"))
+          } yield assertTrue(actual == someProject)
         },
         test("return None if project does not exist") {
           for {
@@ -142,17 +148,19 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         test("should find all built in projects") {
           check(Gen.fromIterable(builtInProjects)) { project =>
             for {
-              found <- KnoraProjectRepo(_.findByShortcode(project.shortcode))
-            } yield assertTrue(found.contains(project))
+              actual <- KnoraProjectRepo(_.findByShortcode(project.shortcode))
+                          .someOrFail(Exception("Project not found"))
+            } yield assertTrue(actual == project)
           }
         },
       ),
       suite("find by Shortname")(
         test("return project if it exists") {
           for {
-            _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-            project <- KnoraProjectRepo(_.findByShortname(Shortname.unsafeFrom("project1")))
-          } yield assertTrue(project.contains(someProject))
+            _ <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
+            actual <- KnoraProjectRepo(_.findByShortname(Shortname.unsafeFrom("project1")))
+                        .someOrFail(Exception("Project not found"))
+          } yield assertTrue(actual == someProject)
         },
         test("return None if project does not exist") {
           for {
@@ -162,8 +170,9 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         test("should find all built in projects") {
           check(Gen.fromIterable(builtInProjects)) { project =>
             for {
-              found <- KnoraProjectRepo(_.findByShortname(project.shortname))
-            } yield assertTrue(found.contains(project))
+              actual <-
+                KnoraProjectRepo(_.findByShortname(project.shortname)).someOrFail(Exception("Project not found"))
+            } yield assertTrue(actual == project)
           }
         },
       ),

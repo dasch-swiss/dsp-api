@@ -913,7 +913,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicense"
+                        "@id": "knora-api:hasLicenseText"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasLicenseUri"
                     },
                     "owl:maxCardinality": 1
                 }
@@ -1419,12 +1426,20 @@
             "@id": "knora-api:hasKeyword"
         },
         {
-            "@id": "knora-api:hasLicense",
+            "@id": "knora-api:hasLicenseText",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
             "rdfs:comment": "Specifies the terms under which a work can be used. This statement may be a reference to a well-known license, such as Creative Commons (e.g. 'CC BY-SA') or a custom license."
+        },
+        {
+            "@id": "knora-api:hasLicenseUri",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:anyUri"
+            },
+            "rdfs:comment": "Canonical link to license."
         },
         {
             "rdfs:label": "has Link to",

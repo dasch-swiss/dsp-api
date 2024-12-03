@@ -13,7 +13,8 @@ import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseText
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseUri
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -30,13 +31,15 @@ object KnoraProjectServiceSpec extends ZIOSpecDefault {
         _ <- repo(_.save(project))
         updateRequest = ProjectUpdateRequest(
                           copyrightAttribution = Some(CopyrightAttribution.unsafeFrom("Foo")),
-                          license = Some(License.unsafeFrom("bar")),
+                          licenseText = Some(LicenseText.unsafeFrom("CC BY 4.0")),
+                          licenseUri = Some(LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by/4.0/")),
                         )
         actual <- projectService(_.updateProject(project, updateRequest))
       } yield assertTrue(
         actual == project.copy(
           copyrightAttribution = Some(CopyrightAttribution.unsafeFrom("Foo")),
-          license = Some(License.unsafeFrom("bar")),
+          licenseText = Some(LicenseText.unsafeFrom("CC BY 4.0")),
+          licenseUri = Some(LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by/4.0/")),
         ),
       )
     },

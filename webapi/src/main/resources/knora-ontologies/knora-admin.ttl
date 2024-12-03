@@ -387,7 +387,10 @@
                       owl:onProperty     knora-base:hasCopyrightAttribution ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
-                      owl:onProperty     knora-base:hasLicense ;
+                      owl:onProperty     knora-base:hasLicenseText  ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     knora-base:hasLicenseUri ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ];
     rdfs:comment    "Represents a project that uses Knora."@en .
 
