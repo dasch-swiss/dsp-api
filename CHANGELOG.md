@@ -1,5 +1,12 @@
 # Changelog
 
+## [31.1.0](https://github.com/dasch-swiss/dsp-api/compare/v31.0.0...v31.1.0) (2024-12-03)
+
+
+### Enhancements
+
+* Split license into licenseText and licenseUri (DEV-4398) ([#3436](https://github.com/dasch-swiss/dsp-api/issues/3436)) ([76d2db2](https://github.com/dasch-swiss/dsp-api/commit/76d2db25a75ffd43294e2d1d25e98f53f5d0e275))
+
 ## [31.0.0](https://github.com/dasch-swiss/dsp-api/compare/v30.22.0...v31.0.0) (2024-12-02)
 
 
