@@ -22,12 +22,14 @@ import scala.language.implicitConversions
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasCopyrightAttribution
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasLicense
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasLicenseText
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasLicenseUri
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.StillImageFileValue
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.License
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseText
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseUri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
@@ -40,10 +42,12 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 object CopyrightAndLicensesSpec extends E2EZSpec {
 
   private val aCopyrightAttribution = CopyrightAttribution.unsafeFrom("2020, On FileValue")
-  private val aLicense              = License.unsafeFrom("CC BY-SA 4.0")
+  private val aLicenseText          = LicenseText.unsafeFrom("CC BY-SA 4.0")
+  private val aLicenseUri           = LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by-sa/4.0/")
 
   private val projectCopyrightAttribution = CopyrightAttribution.unsafeFrom("2024, On Project")
-  private val projectLicense              = License.unsafeFrom("Apache-2.0")
+  private val projectLicenseText          = LicenseText.unsafeFrom("Apache-2.0")
+  private val projectLicenseUri           = LicenseUri.unsafeFrom("https://www.apache.org/licenses/LICENSE-2.0")
 
   private val givenProjectHasNoCopyrightAttributionAndLicenseSuite = suite(
     "given the project does not have a license and does not have a copyright attribution ",
@@ -55,10 +59,12 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       for {
         createResourceResponseModel <- createStillImageResource()
         actualCreatedCopyright      <- copyrightValueOption(createResourceResponseModel)
-        actualCreatedLicense        <- licenseValueOption(createResourceResponseModel)
+        actualCreatedLicenseText    <- licenseTextValueOption(createResourceResponseModel)
+        actualCreatedLicenseUri     <- licenseUriValueOption(createResourceResponseModel)
       } yield assertTrue(
         actualCreatedCopyright.isEmpty,
-        actualCreatedLicense.isEmpty,
+        actualCreatedLicenseText.isEmpty,
+        actualCreatedLicenseUri.isEmpty,
       )
     },
     test(
@@ -66,12 +72,15 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         "the creation response should contain the license and copyright attribution",
     ) {
       for {
-        createResourceResponseModel <- createStillImageResource(Some(aCopyrightAttribution), Some(aLicense))
-        actualCreatedCopyright      <- copyrightValue(createResourceResponseModel)
-        actualCreatedLicense        <- licenseValue(createResourceResponseModel)
+        createResourceResponseModel <-
+          createStillImageResource(Some(aCopyrightAttribution), Some(aLicenseText), Some(aLicenseUri))
+        actualCreatedCopyright   <- copyrightValue(createResourceResponseModel)
+        actualCreatedLicenseText <- licenseTextValue(createResourceResponseModel)
+        actualCreatedLicenseUri  <- licenseUriValue(createResourceResponseModel)
       } yield assertTrue(
         actualCreatedCopyright == aCopyrightAttribution.value,
-        actualCreatedLicense == aLicense.value,
+        actualCreatedLicenseText == aLicenseText.value,
+        actualCreatedLicenseUri == aLicenseUri.value,
       )
     },
     test(
@@ -79,14 +88,17 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         "the response when getting the created resource should contain the license and copyright attribution",
     ) {
       for {
-        createResourceResponseModel <- createStillImageResource(Some(aCopyrightAttribution), Some(aLicense))
-        resourceId                  <- resourceId(createResourceResponseModel)
-        getResponseModel            <- getResourceFromApi(resourceId)
-        actualCopyright             <- copyrightValue(getResponseModel)
-        actualLicense               <- licenseValue(getResponseModel)
+        createResourceResponseModel <-
+          createStillImageResource(Some(aCopyrightAttribution), Some(aLicenseText), Some(aLicenseUri))
+        resourceId        <- resourceId(createResourceResponseModel)
+        getResponseModel  <- getResourceFromApi(resourceId)
+        actualCopyright   <- copyrightValue(getResponseModel)
+        actualLicenseText <- licenseTextValue(getResponseModel)
+        actualLicenseUri  <- licenseUriValue(getResponseModel)
       } yield assertTrue(
         actualCopyright == aCopyrightAttribution.value,
-        actualLicense == aLicense.value,
+        actualLicenseText == aLicenseText.value,
+        actualLicenseUri == aLicenseUri.value,
       )
     },
     test(
@@ -94,13 +106,16 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         "the response when getting the created value should contain the license and copyright attribution",
     ) {
       for {
-        createResourceResponseModel <- createStillImageResource(Some(aCopyrightAttribution), Some(aLicense))
-        valueResponseModel          <- getValueFromApi(createResourceResponseModel)
-        actualCopyright             <- copyrightValue(valueResponseModel)
-        actualLicense               <- licenseValue(valueResponseModel)
+        createResourceResponseModel <-
+          createStillImageResource(Some(aCopyrightAttribution), Some(aLicenseText), Some(aLicenseUri))
+        valueResponseModel <- getValueFromApi(createResourceResponseModel)
+        actualCopyright    <- copyrightValue(valueResponseModel)
+        actualLicenseText  <- licenseTextValue(valueResponseModel)
+        actualLicenseUri   <- licenseUriValue(valueResponseModel)
       } yield assertTrue(
         actualCopyright == aCopyrightAttribution.value,
-        actualLicense == aLicense.value,
+        actualLicenseText == aLicenseText.value,
+        actualLicenseUri == aLicenseUri.value,
       )
     },
     test(
@@ -110,17 +125,19 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         "the response when getting the updated value should contain the license and copyright attribution of the project",
     ) {
       for {
-        createResourceResponseModel <- createStillImageResource(None, None)
+        createResourceResponseModel <- createStillImageResource()
         _                           <- addCopyrightAttributionAndLicenseToProject()
         resourceId                  <- resourceId(createResourceResponseModel)
         valueId                     <- valueId(createResourceResponseModel)
         _                           <- updateValue(resourceId, valueId)
         valueGetResponse            <- getValueFromApi(createResourceResponseModel)
         actualCopyright             <- copyrightValue(valueGetResponse)
-        actualLicense               <- licenseValue(valueGetResponse)
+        actualLicenseText           <- licenseTextValue(valueGetResponse)
+        actualLicenseUri            <- licenseUriValue(valueGetResponse)
       } yield assertTrue(
         actualCopyright == projectCopyrightAttribution.value,
-        actualLicense == projectLicense.value,
+        actualLicenseText == projectLicenseText.value,
+        actualLicenseUri == projectLicenseUri.value,
       )
     },
   ) @@ TestAspect.before(removeCopyrightAttributionAndLicenseFromProject())
@@ -136,10 +153,12 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         createResourceResponseModel <- createStillImageResource()
         valueResponseModel          <- getValueFromApi(createResourceResponseModel)
         actualCopyright             <- copyrightValue(valueResponseModel)
-        actualLicense               <- licenseValue(valueResponseModel)
+        actualLicenseText           <- licenseTextValue(valueResponseModel)
+        actualLicenseUri            <- licenseUriValue(valueResponseModel)
       } yield assertTrue(
         actualCopyright == projectCopyrightAttribution.value,
-        actualLicense == projectLicense.value,
+        actualLicenseText == projectLicenseText.value,
+        actualLicenseUri == projectLicenseUri.value,
       )
     },
     test(
@@ -149,10 +168,12 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       for {
         createResourceResponseModel <- createStillImageResource()
         actualCopyright             <- copyrightValue(createResourceResponseModel)
-        actualLicense               <- licenseValue(createResourceResponseModel)
+        actualLicenseText           <- licenseTextValue(createResourceResponseModel)
+        actualLicenseUri            <- licenseUriValue(createResourceResponseModel)
       } yield assertTrue(
         actualCopyright == projectCopyrightAttribution.value,
-        actualLicense == projectLicense.value,
+        actualLicenseText == projectLicenseText.value,
+        actualLicenseUri == projectLicenseUri.value,
       )
     },
     test(
@@ -160,12 +181,15 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         "then the create response contain the license and copyright attribution from resource",
     ) {
       for {
-        createResourceResponseModel <- createStillImageResource(Some(aCopyrightAttribution), Some(aLicense))
-        actualCopyright             <- copyrightValue(createResourceResponseModel)
-        actualLicense               <- licenseValue(createResourceResponseModel)
+        createResourceResponseModel <-
+          createStillImageResource(Some(aCopyrightAttribution), Some(aLicenseText), Some(aLicenseUri))
+        actualCopyright   <- copyrightValue(createResourceResponseModel)
+        actualLicenseText <- licenseTextValue(createResourceResponseModel)
+        actualLicenseUri  <- licenseUriValue(createResourceResponseModel)
       } yield assertTrue(
         actualCopyright == aCopyrightAttribution.value,
-        actualLicense == aLicense.value,
+        actualLicenseText == aLicenseText.value,
+        actualLicenseUri == aLicenseUri.value,
       )
     },
     test(
@@ -173,13 +197,16 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         "then the response when getting the created value should contain the license and copyright attribution from resource",
     ) {
       for {
-        createResourceResponseModel <- createStillImageResource(Some(aCopyrightAttribution), Some(aLicense))
-        valueResponseModel          <- getValueFromApi(createResourceResponseModel)
-        actualCopyright             <- copyrightValue(valueResponseModel)
-        actualLicense               <- licenseValue(valueResponseModel)
+        createResourceResponseModel <-
+          createStillImageResource(Some(aCopyrightAttribution), Some(aLicenseText), Some(aLicenseUri))
+        valueResponseModel <- getValueFromApi(createResourceResponseModel)
+        actualCopyright    <- copyrightValue(valueResponseModel)
+        actualLicenseText  <- licenseTextValue(valueResponseModel)
+        actualLicenseUri   <- licenseUriValue(valueResponseModel)
       } yield assertTrue(
         actualCopyright == aCopyrightAttribution.value,
-        actualLicense == aLicense.value,
+        actualLicenseText == aLicenseText.value,
+        actualLicenseUri == aLicenseUri.value,
       )
     },
   ) @@ TestAspect.before(addCopyrightAttributionAndLicenseToProject())
@@ -190,17 +217,22 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
   )
 
   private def removeCopyrightAttributionAndLicenseFromProject() =
-    setCopyrightAttributionAndLicenseToProject(None, None)
+    setCopyrightAttributionAndLicenseToProject(None, None, None)
   private def addCopyrightAttributionAndLicenseToProject() =
-    setCopyrightAttributionAndLicenseToProject(Some(projectCopyrightAttribution), Some(projectLicense))
+    setCopyrightAttributionAndLicenseToProject(
+      Some(projectCopyrightAttribution),
+      Some(projectLicenseText),
+      Some(projectLicenseUri),
+    )
   private def setCopyrightAttributionAndLicenseToProject(
     copyrightAttribution: Option[CopyrightAttribution],
-    license: Option[License],
+    licenseText: Option[LicenseText],
+    licenseUri: Option[LicenseUri],
   ) =
     for {
       projectService <- ZIO.service[KnoraProjectService]
       prj            <- projectService.findByShortcode(Shortcode.unsafeFrom("0001")).someOrFail(new Exception("Project not found"))
-      change          = prj.copy(copyrightAttribution = copyrightAttribution, license = license)
+      change          = prj.copy(copyrightAttribution = copyrightAttribution, licenseText = licenseText, licenseUri = licenseUri)
       updated        <- projectService.save(change)
     } yield updated
 
@@ -209,14 +241,16 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
 
   private def createStillImageResource(
     copyrightAttribution: Option[CopyrightAttribution] = None,
-    license: Option[License] = None,
+    licenseText: Option[LicenseText] = None,
+    licenseUri: Option[LicenseUri] = None,
   ): ZIO[env, Throwable, Model] = {
     val jsonLd = UploadFileRequest
       .make(
         FileType.StillImageFile(),
         "internalFilename.jpg",
         copyrightAttribution = copyrightAttribution,
-        license = license,
+        licenseText = licenseText,
+        licenseUri = licenseUri,
       )
       .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
     for {
@@ -303,10 +337,14 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     singleStringValueOption(model, HasCopyrightAttribution).someOrFail(new Exception("No copyright found"))
   private def copyrightValueOption(model: Model) =
     singleStringValueOption(model, HasCopyrightAttribution)
-  private def licenseValue(model: Model) =
-    singleStringValueOption(model, HasLicense).someOrFail(new Exception("No license found"))
-  private def licenseValueOption(model: Model) =
-    singleStringValueOption(model, HasLicense)
+  private def licenseTextValue(model: Model) =
+    singleStringValueOption(model, HasLicenseText).someOrFail(new Exception("No license text found"))
+  private def licenseTextValueOption(model: Model) =
+    singleStringValueOption(model, HasLicenseText)
+  private def licenseUriValue(model: Model) =
+    singleStringValueOption(model, HasLicenseUri).someOrFail(new Exception("No license uri found"))
+  private def licenseUriValueOption(model: Model) =
+    singleStringValueOption(model, HasLicenseUri)
   private def singleStringValueOption(model: Model, property: Property): Task[Option[String]] =
     ZIO
       .fromEither(

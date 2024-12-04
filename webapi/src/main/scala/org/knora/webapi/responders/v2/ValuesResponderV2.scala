@@ -93,7 +93,8 @@ final case class ValuesResponderV2(
 
         submittedInternalValueContent = ValueContentV2
                                           .replaceCopyrightAndLicenceIfMissing(
-                                            project.license,
+                                            project.licenseText,
+                                            project.licenseUri,
                                             project.copyrightAttribution,
                                             valueToCreate.valueContent,
                                           )
@@ -707,7 +708,12 @@ final case class ValuesResponderV2(
       project = resourceInfo.projectADM
       submittedInternalValueContent =
         ValueContentV2
-          .replaceCopyrightAndLicenceIfMissing(project.license, project.copyrightAttribution, updateValue.valueContent)
+          .replaceCopyrightAndLicenceIfMissing(
+            project.licenseText,
+            project.licenseUri,
+            project.copyrightAttribution,
+            updateValue.valueContent,
+          )
           .toOntologySchema(InternalSchema)
 
       // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
@@ -1019,7 +1025,8 @@ final case class ValuesResponderV2(
 
       // Generate a SPARQL update.
       newValue: ValueContentV2 = ValueContentV2.replaceCopyrightAndLicenceIfMissing(
-                                   resourceInfo.projectADM.license,
+                                   resourceInfo.projectADM.licenseText,
+                                   resourceInfo.projectADM.licenseUri,
                                    resourceInfo.projectADM.copyrightAttribution,
                                    newValueVersion,
                                  )

@@ -163,7 +163,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
                 status = Status.Active,
                 selfjoin = SelfJoin.CannotJoin,
                 copyrightAttribution = Some(CopyrightAttribution.unsafeFrom("2024, Example Project")),
-                license = Some(License.unsafeFrom("CC-BY-4.0")),
+                licenseText = Some(LicenseText.unsafeFrom("CC-BY-4.0")),
+                licenseUri = Some(LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by/4.0/")),
               ),
               SharedTestDataADM.rootUser,
             ),
@@ -177,7 +178,10 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
           Seq(StringLiteralV2.from(value = "project description", language = Some("en"))),
         )
         received.project.copyrightAttribution should be(Some(CopyrightAttribution.unsafeFrom("2024, Example Project")))
-        received.project.license should be(Some(License.unsafeFrom("CC-BY-4.0")))
+        received.project.licenseText should be(Some(LicenseText.unsafeFrom("CC-BY-4.0")))
+        received.project.licenseUri should be(
+          Some(LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by/4.0/")),
+        )
 
         newProjectIri.set(received.project.id)
 
@@ -263,6 +267,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
                 selfjoin = SelfJoin.CannotJoin,
                 None,
                 None,
+                None,
               ),
               SharedTestDataADM.rootUser,
             ),
@@ -276,7 +281,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
           Seq(StringLiteralV2.from(value = "project description", language = Some("en"))),
         )
         received.project.copyrightAttribution should be(None)
-        received.project.license should be(None)
+        received.project.licenseText should be(None)
+        received.project.licenseUri should be(None)
       }
 
       "CREATE a project that its info has special characters" in {
@@ -299,6 +305,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
                 logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
                 status = Status.Active,
                 selfjoin = SelfJoin.CannotJoin,
+                None,
                 None,
                 None,
               ),
@@ -334,7 +341,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
                 status = Status.Active,
                 selfjoin = SelfJoin.CannotJoin,
                 copyrightAttribution = None,
-                license = None,
+                licenseText = None,
+                licenseUri = None,
               ),
               SharedTestDataADM.rootUser,
             ),
@@ -358,7 +366,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
                 status = Status.Active,
                 selfjoin = SelfJoin.CannotJoin,
                 copyrightAttribution = None,
-                license = None,
+                licenseText = None,
+                licenseUri = None,
               ),
               SharedTestDataADM.rootUser,
             ),

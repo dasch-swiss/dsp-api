@@ -7,6 +7,7 @@ package org.knora.webapi.slice.common.repo.rdf
 
 import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.RDF
+import org.eclipse.rdf4j.model.vocabulary.XSD
 import zio.*
 
 import java.io.StringReader
@@ -113,6 +114,15 @@ final case class RdfResource(private val res: Resource) {
       literal      <- getLiteral(propertyIri).unsome
       string       <- ZIO.foreach(literal)(stringFromLiteral)
       domainObject <- ZIO.foreach(string)(str => ZIO.fromEither(mapper(str)).mapError(ConversionError.apply))
+    } yield domainObject
+
+  def getUriLiteral[A](propertyIri: String)(implicit mapper: String => Either[String, A]): IO[RdfError, Option[A]] =
+    import org.knora.webapi.slice.common.jena.ResourceOps.*
+    import org.knora.webapi.slice.common.jena.JenaConversions.given
+    import scala.language.implicitConversions
+    for {
+      prop         <- ZIO.fromEither(res.objectDataTypeOption(propertyIri, XSD.ANYURI.toString)).mapError(ConversionError.apply)
+      domainObject <- ZIO.foreach(prop)(str => ZIO.fromEither(mapper(str)).mapError(ConversionError.apply))
     } yield domainObject
 
   /**

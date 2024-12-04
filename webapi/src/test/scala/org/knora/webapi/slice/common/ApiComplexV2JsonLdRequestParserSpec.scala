@@ -83,6 +83,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     Some("originalMimeType"),
     None,
     None,
+    None,
   )
 
   private val configureSipiServiceMock = for {
@@ -473,6 +474,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             "internalMimeType",
             Some("originalFilename"),
             Some("originalMimeType"),
+            None,
             None,
             None,
           ),

@@ -7,15 +7,18 @@ package org.knora.webapi.slice.admin.repo.service
 
 import org.eclipse.rdf4j.common.net.ParsedIRI
 import org.eclipse.rdf4j.model.vocabulary.RDF
+import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfType
 import zio.*
 
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.HasCopyrightAttribution
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.HasLicense
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.HasLicenseText
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.HasLicenseUri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -51,7 +54,8 @@ final case class KnoraProjectRepoLive(
       Vocabulary.KnoraAdmin.projectRestrictedViewSize,
       Vocabulary.KnoraAdmin.projectRestrictedViewWatermark,
       Vocabulary.KnoraBase.hasCopyrightAttribution,
-      Vocabulary.KnoraBase.hasLicense,
+      Vocabulary.KnoraBase.hasLicenseText,
+      Vocabulary.KnoraBase.hasLicenseUri,
     ),
   )
 
@@ -105,7 +109,8 @@ object KnoraProjectRepoLive {
         status               <- resource.getBooleanLiteralOrFail[Status](StatusProp)
         selfjoin             <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
         copyrightAttribution <- resource.getStringLiteral[CopyrightAttribution](HasCopyrightAttribution)
-        license              <- resource.getStringLiteral[License](HasLicense)
+        licenseText          <- resource.getStringLiteral[LicenseText](HasLicenseText)
+        licenseUri           <- resource.getUriLiteral[LicenseUri](HasLicenseUri)
         restrictedView       <- getRestrictedView
       } yield KnoraProject(
         id = ProjectIri.unsafeFrom(iri.value),
@@ -119,7 +124,8 @@ object KnoraProjectRepoLive {
         selfjoin = selfjoin,
         restrictedView = restrictedView,
         copyrightAttribution = copyrightAttribution,
-        license = license,
+        licenseText = licenseText,
+        licenseUri = licenseUri,
       )
     }
 
@@ -148,7 +154,10 @@ object KnoraProjectRepoLive {
       project.copyrightAttribution.foreach(attr =>
         pattern.andHas(Vocabulary.KnoraBase.hasCopyrightAttribution, attr.value),
       )
-      project.license.foreach(license => pattern.andHas(Vocabulary.KnoraBase.hasLicense, license.value))
+      project.licenseText.foreach(text => pattern.andHas(Vocabulary.KnoraBase.hasLicenseText, text.value))
+      project.licenseUri.foreach(uri =>
+        pattern.andHas(Vocabulary.KnoraBase.hasLicenseUri, literalOfType(uri.value, XSD.ANYURI)),
+      )
 
       pattern
     }

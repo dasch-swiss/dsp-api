@@ -241,9 +241,16 @@ DELETE {
                     case None => {}
                 }
 
-                @fileValueContentV2.fileValue.license match {
-                    case Some(license) => {
-                        <@newValueIri> knora-base:hasLicense """@license.value""" .
+                @fileValueContentV2.fileValue.licenseText match {
+                    case Some(text) => {
+                        <@newValueIri> knora-base:hasLicenseText """@text.value""" .
+                    }
+                    case None => {}
+                }
+
+                @fileValueContentV2.fileValue.licenseUri match {
+                    case Some(uri) => {
+                        <@newValueIri> knora-base:hasLicenseUri """@uri.value"""^^xsd:anyURI .
                     }
                     case None => {}
                 }
