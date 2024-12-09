@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.15.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.15.0...v0.15.1) (2024-12-03)
+
+
+### Maintenances
+
+* Update sipiVersion to v31.0.0 ([#302](https://github.com/dasch-swiss/dsp-ingest/issues/302)) ([153b766](https://github.com/dasch-swiss/dsp-ingest/commit/153b766831383a566dee407c2b5436c2ae894d08))
+
+
+### Bug Fixes
+
+* Fix Content-Disposition, allow CORS for original downloads (DEV-4371) ([#304](https://github.com/dasch-swiss/dsp-ingest/issues/304)) ([eefa0ea](https://github.com/dasch-swiss/dsp-ingest/commit/eefa0ea612395c06d4fb3eb3aae9d4e487164a98))
+* Remove redundant (DEV-4371) ([#305](https://github.com/dasch-swiss/dsp-ingest/issues/305)) ([fa33662](https://github.com/dasch-swiss/dsp-ingest/commit/fa3366216ea18a678a3212e97b818a166561b858))
+
 ## [0.15.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.14.2...v0.15.0) (2024-12-02)
 
 
