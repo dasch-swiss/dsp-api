@@ -600,7 +600,7 @@
     rdf:type                owl:Class ;
     rdfs:subClassOf         knora-base:TextRepresentation,
                             [ rdf:type           owl:Restriction ;
-                              owl:onProperty     :hasArchiveTitle ;
+                              owl:onProperty     :hasTextTitle ;
                               owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     knora-base:resourceIcon "thing.png" ;
     rdfs:label              "Text"@en ;
