@@ -593,7 +593,7 @@
                               owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     knora-base:resourceIcon "thing.png" ;
     rdfs:label              "Archive"@en ;
-    rdfs:comment            """A archive about a thing"""@en .
+    rdfs:comment            """An archive about a thing"""@en .
 
 
 :ThingText
