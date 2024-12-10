@@ -427,6 +427,67 @@
             "@id": "anything:Thing"
         },
         {
+            "rdfs:label": "Archive",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:ArchiveRepresentation"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasArchiveTitle"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasArchiveFile"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "An archive about a thing",
+            "@type": "owl:Class",
+            "knora-api:resourceIcon": "thing.png",
+            "@id": "anything:ThingArchive"
+        },
+        {
             "rdfs:label": "Document",
             "rdfs:subClassOf": [
                 {
@@ -547,6 +608,67 @@
             "@type": "owl:Class",
             "knora-api:resourceIcon": "thing.png",
             "@id": "anything:ThingPicture"
+        },
+        {
+            "rdfs:label": "Text",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:TextRepresentation"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasTextTitle"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasTextFile"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "A text about a thing",
+            "@type": "owl:Class",
+            "knora-api:resourceIcon": "thing.png",
+            "@id": "anything:ThingText"
         },
         {
             "rdfs:label": "Thing with region",
@@ -941,6 +1063,20 @@
             "@id": "anything:VideoThing"
         },
         {
+            "rdfs:label": "archive title",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:ThingArchive"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "anything:hasArchiveTitle"
+        },
+        {
             "rdfs:label": "A blue thing",
             "rdfs:subPropertyOf": {
                 "@id": "anything:hasOtherThing"
@@ -1174,6 +1310,20 @@
                 "@id": "xsd:string"
             },
             "@id": "anything:hasText"
+        },
+        {
+            "rdfs:label": "text title",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:ThingText"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "anything:hasTextTitle"
         },
         {
             "rdfs:label": "document about a thing",
