@@ -512,6 +512,29 @@
     salsah-gui:guiAttribute           "size=80",
                                       "maxlength=255" .
 
+
+:hasArchiveTitle
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:subPropertyOf                knora-base:hasValue ;
+    rdfs:label                        "archive title"@en ;
+    knora-base:subjectClassConstraint :ThingArchive ;
+    knora-base:objectClassConstraint  knora-base:TextValue ;
+    salsah-gui:guiElement             salsah-gui:SimpleText ;
+    salsah-gui:guiAttribute           "size=80",
+                                      "maxlength=255" .
+
+
+:hasTextTitle
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:subPropertyOf                knora-base:hasValue ;
+    rdfs:label                        "text title"@en ;
+    knora-base:subjectClassConstraint :ThingText ;
+    knora-base:objectClassConstraint  knora-base:TextValue ;
+    salsah-gui:guiElement             salsah-gui:SimpleText ;
+    salsah-gui:guiAttribute           "size=80",
+                                      "maxlength=255" .
+
+
 :ThingWithSeqnum
     rdf:type        owl:Class ;
     rdfs:subClassOf :Thing,
@@ -560,6 +583,28 @@
     knora-base:resourceIcon "thing.png" ;
     rdfs:label              "Document"@en ;
     rdfs:comment            """A document about a thing"""@en .
+
+
+:ThingArchive
+    rdf:type                owl:Class ;
+    rdfs:subClassOf         knora-base:ArchiveRepresentation,
+                            [ rdf:type           owl:Restriction ;
+                              owl:onProperty     :hasArchiveTitle ;
+                              owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
+    knora-base:resourceIcon "thing.png" ;
+    rdfs:label              "Archive"@en ;
+    rdfs:comment            """A archive about a thing"""@en .
+
+
+:ThingText
+    rdf:type                owl:Class ;
+    rdfs:subClassOf         knora-base:TextRepresentation,
+                            [ rdf:type           owl:Restriction ;
+                              owl:onProperty     :hasArchiveTitle ;
+                              owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
+    knora-base:resourceIcon "thing.png" ;
+    rdfs:label              "Text"@en ;
+    rdfs:comment            """A text about a thing"""@en .
 
 
 :ThingWithRepresentation
