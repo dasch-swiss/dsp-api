@@ -5,6 +5,9 @@
 
 package swiss.dasch.domain
 
+import swiss.dasch.api.ApiProblem
+import swiss.dasch.api.ApiProblem.BadRequest
+import swiss.dasch.api.ProjectsEndpointsResponses.UploadResponse
 import swiss.dasch.config.Configuration.IngestConfig
 import swiss.dasch.domain.BulkIngestError.*
 import zio.*
@@ -168,16 +171,23 @@ final case class BulkIngestService(
 
   def uploadSingleFile(
     shortcode: ProjectShortcode,
-    path: Path,
+    filename: String,
     stream: ZStream[Any, Throwable, Byte],
-  ): IO[Option[Throwable], Unit] =
-    withSemaphore(shortcode) {
-      for {
-        file <- storage.getImportFolder(shortcode).map(_ / path)
-        _    <- ZIO.foreachDiscard(file.parent)(Files.createDirectories(_))
-        _    <- stream.run(ZSink.fromFile(file.toFile))
-      } yield ()
-    }
+  ): IO[Option[ApiProblem], UploadResponse] = withSemaphore(shortcode) {
+    for {
+      path <-
+        ZIO
+          .fromEither(PathOps.fromString(filename))
+          .map(_.normalize)
+          .filterOrFail(!_.toString.startsWith(".."))("Cannot traverse out of the upload directory")
+          .filterOrFail(_.elements.nonEmpty)("Is empty")
+          .tap(p => ZIO.fromEither(AssetFilename.fromPath(p)))
+          .mapError(msg => BadRequest.invalidPathVariable("filename", filename, msg))
+      file <- storage.getImportFolder(shortcode).map(_ / path)
+      _    <- ZIO.foreachDiscard(file.parent)(Files.createDirectories(_)).orDie
+      _    <- (stream >>> ZSink.fromFile(file.toFile)).orDie
+    } yield UploadResponse()
+  }
 }
 
 object BulkIngestService {

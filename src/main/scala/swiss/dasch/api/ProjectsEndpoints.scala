@@ -172,7 +172,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .tag(projects)
     .description(
       """|!ATTENTION! Erase a project with the given shortcode.
-         |This will permanently and irrecoveraly remove the project and all of its assets.
+         |This will permanently and irrecoverably remove the project and all of its assets.
          |Authorization: admin scope required.""".stripMargin,
     )
 
@@ -241,6 +241,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
   val postBulkIngestUpload = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "bulk-ingest" / "ingest" / path[String]("file"))
     .in(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
+    .out(jsonBody[UploadResponse])
     .description(
       "Uploads a file for consumption with the bulk-ingest route." +
         "Will return 409 Conflict if a bulk-ingest is currently running for the project." +

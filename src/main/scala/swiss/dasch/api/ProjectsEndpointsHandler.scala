@@ -198,18 +198,10 @@ final case class ProjectsEndpointsHandler(
     .serverLogic(principal => { case (shortcode, filename, stream) =>
       for {
         _ <- authorizationHandler.ensureAdminScope(principal)
-        path <-
-          ZIO
-            .fromEither(PathOps.fromString(filename))
-            .map(_.normalize)
-            .filterOrFail(!_.toString.startsWith(".."))("Cannot traverse out of the upload directory")
-            .filterOrFail(_.elements.nonEmpty)("Is empty")
-            .tap(p => ZIO.fromEither(AssetFilename.fromPath(p)))
-            .mapError(msg => BadRequest.invalidPathVariable("filename", filename, msg))
-        _ <- bulkIngestService.uploadSingleFile(shortcode, path, stream).mapError { e =>
-               e.map(InternalServerError(_)).getOrElse(failBulkIngestInProgress(shortcode))
+        s <- bulkIngestService.uploadSingleFile(shortcode, filename, stream).mapError {
+               _.getOrElse(failBulkIngestInProgress(shortcode))
              }
-      } yield ()
+      } yield s
     })
 
   private def failBulkIngestInProgress(code: ProjectShortcode) =

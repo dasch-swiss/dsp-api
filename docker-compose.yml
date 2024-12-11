@@ -22,3 +22,7 @@ services:
       - SIPI_USE_LOCAL_DEV=false
       - DB_JDBC_URL=jdbc:sqlite:/opt/db/ingest.sqlite
       - DSP_API_URL=http://localhost:3333
+    deploy:
+      resources:
+        limits:
+          memory: 180MB

@@ -1,12 +1,14 @@
 import com.typesafe.sbt.packager.docker.Cmd
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
+import sbt.Keys.testFrameworks
 
+import scala.collection.Seq
 import scala.sys.process.*
 
-addCommandAlias("fmt", "scalafmt; Test / scalafmt;")
-addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck;")
-addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
-addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
+addCommandAlias("fmt", "scalafmt; Test / scalafmt; integration/Test/scalafmt;")
+addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck; integration/Test/ scalafmtCheck;")
+addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate; integration/Test/headerCreate")
+addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck; integration/Test/headerCheck")
 
 val flywayVersion               = "10.22.0"
 val hikariVersion               = "6.2.1"
@@ -14,7 +16,7 @@ val quillVersion                = "4.8.6"
 val sipiVersion                 = "v31.0.0"
 val sqliteVersion               = "3.47.1.0"
 val tapirVersion                = "1.11.9"
-val testContainersVersion       = "0.40.15"
+val testContainersVersion       = "1.20.4"
 val zioConfigVersion            = "4.0.2"
 val zioJsonVersion              = "0.7.3"
 val zioLoggingVersion           = "2.4.0"
@@ -22,6 +24,7 @@ val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
 val zioPreludeVersion           = "1.0.0-RC35"
+val zioSchemaVersion            = "1.5.0"
 val zioVersion                  = "2.1.13"
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
@@ -39,7 +42,8 @@ val tapir = Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-refined"           % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
+  "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % tapirVersion,
+  "org.http4s"                  %%  "http4s-netty-server"    % "0.5.21",
   "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"      % tapirVersion,
 )
 
@@ -54,6 +58,38 @@ val db = Seq(
   "org.flywaydb" % "flyway-core"    % flywayVersion,
   "com.zaxxer"   % "HikariCP"       % hikariVersion,
   "io.getquill" %% "quill-jdbc-zio" % quillVersion,
+)
+
+val zio = Seq(
+  "dev.zio" %% "zio"                   % zioVersion,
+  "dev.zio" %% "zio-streams"           % zioVersion,
+  "dev.zio" %% "zio-schema"            % zioSchemaVersion,
+  "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion,
+  "dev.zio" %% "zio-nio"               % zioNioVersion,
+  "dev.zio" %% "zio-prelude"           % zioPreludeVersion,
+)
+
+val test = Seq(
+  "dev.zio"           %% "zio-mock"               % zioMockVersion % Test,
+  "dev.zio"           %% "zio-http"               % "3.0.1"        % Test,
+  "dev.zio"           %% "zio-test"               % zioVersion     % Test,
+  "dev.zio"           %% "zio-test-junit"         % zioVersion     % Test,
+  "dev.zio"           %% "zio-test-magnolia"      % zioVersion     % Test,
+  "dev.zio"           %% "zio-test-sbt"           % zioVersion     % Test,
+  "org.scoverage"      % "sbt-scoverage_2.12_1.0" % "2.2.2"        % Test,
+  "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
+)
+
+val integrationTest = Seq(
+  "org.testcontainers" % "testcontainers" % testContainersVersion % Test,
+)
+
+val projectLicense = Some(
+  HeaderLicense.Custom(
+    """|Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+       |SPDX-License-Identifier: Apache-2.0
+       |""".stripMargin,
+  ),
 )
 
 lazy val root = (project in file("."))
@@ -73,17 +109,10 @@ lazy val root = (project in file("."))
   )
   .settings(
     name := "dsp-ingest",
-    headerLicense := Some(
-      HeaderLicense.Custom(
-        """|Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
-           |SPDX-License-Identifier: Apache-2.0
-           |""".stripMargin,
-      ),
-    ),
-    libraryDependencies ++= db ++ tapir ++ metrics ++ Seq(
+    headerLicense := projectLicense,
+    libraryDependencies ++= db ++ tapir ++ metrics ++ zio ++ Seq(
       "com.github.jwt-scala"          %% "jwt-zio-json"                      % "10.0.1",
       "commons-io"                     % "commons-io"                        % "2.18.0",
-      "dev.zio"                       %% "zio"                               % zioVersion,
       "dev.zio"                       %% "zio-config"                        % zioConfigVersion,
       "dev.zio"                       %% "zio-config-magnolia"               % zioConfigVersion,
       "dev.zio"                       %% "zio-config-typesafe"               % zioConfigVersion,
@@ -91,9 +120,6 @@ lazy val root = (project in file("."))
       "dev.zio"                       %% "zio-json-interop-refined"          % zioJsonVersion,
       "dev.zio"                       %% "zio-metrics-connectors"            % zioMetricsConnectorsVersion,
       "dev.zio"                       %% "zio-metrics-connectors-prometheus" % zioMetricsConnectorsVersion,
-      "dev.zio"                       %% "zio-nio"                           % zioNioVersion,
-      "dev.zio"                       %% "zio-prelude"                       % zioPreludeVersion,
-      "dev.zio"                       %% "zio-streams"                       % zioVersion,
       "eu.timepit"                    %% "refined"                           % "0.11.2",
       "com.softwaremill.sttp.client3" %% "zio"                               % "3.10.1",
 
@@ -103,15 +129,7 @@ lazy val root = (project in file("."))
       // logging
       "dev.zio" %% "zio-logging"               % zioLoggingVersion,
       "dev.zio" %% "zio-logging-slf4j2-bridge" % zioLoggingVersion,
-
-      // test
-      "dev.zio"      %% "zio-mock"               % zioMockVersion % Test,
-      "dev.zio"      %% "zio-test"               % zioVersion     % Test,
-      "dev.zio"      %% "zio-test-junit"         % zioVersion     % Test,
-      "dev.zio"      %% "zio-test-magnolia"      % zioVersion     % Test,
-      "dev.zio"      %% "zio-test-sbt"           % zioVersion     % Test,
-      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.2.2"        % Test,
-    ),
+    ) ++ test,
     testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     Docker / dockerRepository            := Some("daschswiss"),
     Docker / packageName                 := "dsp-ingest",
@@ -137,4 +155,13 @@ lazy val root = (project in file("."))
       case Cmd("USER", args @ _*) => true
       case cmd                    => false
     },
+  )
+
+lazy val integration = (project in file("integration"))
+  .dependsOn(root)
+  .settings(
+    publish / skip := true,
+    headerLicense := projectLicense,
+    libraryDependencies ++=  test ++ integrationTest,
+    testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   )

@@ -9,7 +9,6 @@ import swiss.dasch.api.ApiProblem.BadRequest.Argument
 import swiss.dasch.domain.ProjectShortcode
 import swiss.dasch.infrastructure.Health.Status
 import swiss.dasch.infrastructure.{AggregatedHealth, Health}
-import zio.http.Header.ContentType
 import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.schema.{DeriveSchema, Schema}
 
@@ -48,9 +47,6 @@ object ApiProblem {
     }
 
     def invalidBody(reason: String): BadRequest = BadRequest.apply("Body", reason)
-
-    def invalidHeaderContentType(actual: ContentType, expected: ContentType): BadRequest =
-      invalidHeader("Content-Type", actual.toString, s"expected '$expected'")
 
     def invalidHeader(
       key: String,

@@ -6,7 +6,7 @@ on:
     branches:
       - "main"
   release:
-    types: [published]
+    types: [ published ]
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -16,7 +16,7 @@ jobs:
     name: Build and Run Tests
     strategy:
       matrix:
-        java-version: [21]
+        java-version: [ 21 ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout current branch
@@ -62,6 +62,22 @@ jobs:
       - name: Build docs with just
         run: just docs-build
 
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: sbt
+      - name: Run integration tests
+        run: export DOCKER_BUILDKIT=1;sbt Docker/publishLocal;sbt integration/test
+
   publish-docker-image:
     if: (github.ref == 'refs/heads/main' && github.event_name != 'release') || startsWith(github.ref, 'refs/tags/')
     name: Publish docker images to Docker Hub
@@ -71,7 +87,7 @@ jobs:
       tag: ${{ steps.docker_image_tag.outputs.tag }}
     strategy:
       matrix:
-        java-version: [21]
+        java-version: [ 21 ]
     steps:
       - name: Checkout current branch
         uses: actions/checkout@v4
@@ -118,7 +134,7 @@ jobs:
 
   send-chat-notification:
     name: Send google chat notification
-    needs: [publish-docker-image]
+    needs: [ publish-docker-image ]
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:

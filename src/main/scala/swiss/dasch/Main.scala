@@ -12,7 +12,6 @@ import swiss.dasch.db.{Db, DbMigrator}
 import swiss.dasch.domain.*
 import swiss.dasch.infrastructure.*
 import zio.*
-import zio.http.*
 
 object Main extends ZIOAppDefault {
 
@@ -43,7 +42,6 @@ object Main extends ZIOAppDefault {
         FileSystemHealthIndicatorLive.layer,
         HealthCheckServiceLive.layer,
         ImportServiceLive.layer,
-        IngestApiServer.layer,
         IngestService.layer,
         MaintenanceActionsLive.layer,
         MaintenanceEndpoints.layer,
