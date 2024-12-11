@@ -2249,9 +2249,9 @@ object StillImageExternalFileValueContentV2 {
     licenseText          <- r.objectStringOption(HasLicenseText, LicenseText.from)
     licenseUri           <- r.objectDataTypeOption(HasLicenseUri, XSD.anyURI.toString, LicenseUri.from)
     fileValue = FileValueV2(
-                  "dummy.foo",
+                  "internalFilename",
                   "internalMimeType",
-                  Some("dummy.foo"),
+                  Some("originalFilename"),
                   Some("originalMimeType"),
                   copyrightAttribution,
                   licenseText,
