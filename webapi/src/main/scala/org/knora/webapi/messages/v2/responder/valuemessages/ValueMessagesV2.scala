@@ -712,10 +712,8 @@ object ValueContentV2 {
     ZIO.foreach(filenameMaybe) { filename =>
       for {
         sipiService <- ZIO.service[SipiService]
-        assetIdStr = // remove the file extension if it exists
-          if filename.contains(".") then filename.substring(0, filename.indexOf('.')) else filename
         assetId <- ZIO
-                     .fromEither(AssetId.from(assetIdStr))
+                     .fromEither(AssetId.fromFilename(filename))
                      .mapError(msg => BadRequestException(s"Invalid value for 'fileValueHasFilename': $msg"))
         meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
                   case NotFoundException(_) =>
@@ -2251,9 +2249,9 @@ object StillImageExternalFileValueContentV2 {
     licenseText          <- r.objectStringOption(HasLicenseText, LicenseText.from)
     licenseUri           <- r.objectDataTypeOption(HasLicenseUri, XSD.anyURI.toString, LicenseUri.from)
     fileValue = FileValueV2(
-                  "internalFilename",
+                  "dummy.foo",
                   "internalMimeType",
-                  Some("originalFilename"),
+                  Some("dummy.foo"),
                   Some("originalMimeType"),
                   copyrightAttribution,
                   licenseText,
