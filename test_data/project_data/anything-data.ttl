@@ -2312,3 +2312,124 @@
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
     knora-base:valueCreationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
     knora-base:isDeleted         false .
+
+
+# Archive Resource
+<http://rdfh.ch/0001/RRJBJz_yR72pljmCF40Rrw>
+    rdf:type                        anything:ThingArchive;
+    rdfs:label                      "Archive Representation";
+    anything:hasArchiveTitle        <http://rdfh.ch/0001/RRJBJz_yR72pljmCF40Rrw/values/8_nsV2hRS8W9sFDpzhrzTw>;
+    knora-base:attachedToProject    <http://rdfh.ch/projects/0001>;
+    knora-base:attachedToUser       <http://rdfh.ch/users/root>;
+    knora-base:creationDate         "2024-12-10T08:39:27.140070091Z"^^xsd:dateTime;
+    knora-base:hasArchiveFileValue  <http://rdfh.ch/0001/RRJBJz_yR72pljmCF40Rrw/values/2pLJLbhxTw-C6399l2THEA>;
+    knora-base:hasPermissions       "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+    knora-base:isDeleted            false .
+
+# Archive File Value
+<http://rdfh.ch/0001/RRJBJz_yR72pljmCF40Rrw/values/2pLJLbhxTw-C6399l2THEA>
+    rdf:type                      knora-base:ArchiveFileValue;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root>;
+    knora-base:hasPermissions     "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+    knora-base:internalFilename   "7mdeoFJ48dI-YCKeZrXK3Rr.7z";
+    knora-base:internalMimeType   "application/x-7z-compressed";
+    knora-base:isDeleted          false;
+    knora-base:originalFilename   "test.7z";
+    knora-base:originalMimeType   "application/x-7z-compressed";
+    knora-base:valueCreationDate  "2024-12-10T08:39:27.140070091Z"^^xsd:dateTime;
+    knora-base:valueHasOrder      0;
+    knora-base:valueHasString     "7mdeoFJ48dI-YCKeZrXK3Rr.7z";
+    knora-base:valueHasUUID       "2pLJLbhxTw-C6399l2THEA" .
+
+# Archive Title Value
+<http://rdfh.ch/0001/RRJBJz_yR72pljmCF40Rrw/values/8_nsV2hRS8W9sFDpzhrzTw>
+    rdf:type                      knora-base:TextValue;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root>;
+    knora-base:hasPermissions     "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+    knora-base:hasTextValueType   knora-base:UnformattedText;
+    knora-base:isDeleted          false;
+    knora-base:valueCreationDate  "2024-12-10T08:39:27.140070091Z"^^xsd:dateTime;
+    knora-base:valueHasOrder      0;
+    knora-base:valueHasString     "Archive Representation Title";
+    knora-base:valueHasUUID       "8_nsV2hRS8W9sFDpzhrzTw" .
+
+
+# Document Resource
+<http://rdfh.ch/0001/wupKH6LDTQODT1LyWKVdBg>
+    rdf:type                      anything:ThingDocument;
+    rdfs:label                    "Document Representation";
+    anything:hasDocumentTitle     <http://rdfh.ch/0001/wupKH6LDTQODT1LyWKVdBg/values/sGelTEhoTu2-KAG_i5rRIg>;
+    knora-base:attachedToProject  <http://rdfh.ch/projects/0001>;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root>;
+    knora-base:creationDate       "2024-12-10T08:39:59.608189134Z"^^xsd:dateTime;
+    knora-base:hasDocumentFileValue
+                                  <http://rdfh.ch/0001/wupKH6LDTQODT1LyWKVdBg/values/UCOapFgNQHqTTo9YQ592sA>;
+    knora-base:hasPermissions     "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+    knora-base:isDeleted          false .
+
+# Document File Value
+<http://rdfh.ch/0001/wupKH6LDTQODT1LyWKVdBg/values/UCOapFgNQHqTTo9YQ592sA>
+    rdf:type                      knora-base:DocumentFileValue;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root>;
+    knora-base:hasPermissions     "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+    knora-base:internalFilename   "0TH7hVGe5PM-Kuya3ywgcwc.docx";
+    knora-base:internalMimeType   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    knora-base:isDeleted          false;
+    knora-base:originalFilename   "test.docx";
+    knora-base:originalMimeType   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    knora-base:valueCreationDate  "2024-12-10T08:39:59.608189134Z"^^xsd:dateTime;
+    knora-base:valueHasOrder      0;
+    knora-base:valueHasString     "0TH7hVGe5PM-Kuya3ywgcwc.docx";
+    knora-base:valueHasUUID       "UCOapFgNQHqTTo9YQ592sA" .
+
+# Document Title Value
+<http://rdfh.ch/0001/wupKH6LDTQODT1LyWKVdBg/values/sGelTEhoTu2-KAG_i5rRIg>
+    rdf:type                      knora-base:TextValue;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root>;
+    knora-base:hasPermissions     "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+    knora-base:hasTextValueType   knora-base:UnformattedText;
+    knora-base:isDeleted          false;
+    knora-base:valueCreationDate  "2024-12-10T08:39:59.608189134Z"^^xsd:dateTime;
+    knora-base:valueHasOrder      0;
+    knora-base:valueHasString     "Document Representation Title";
+    knora-base:valueHasUUID       "sGelTEhoTu2-KAG_i5rRIg" .
+
+
+# Text Resource
+<http://rdfh.ch/0001/MAiNrOB1Q--rzAzdkqbHOw>
+    rdf:type                      anything:ThingText;
+    rdfs:label                    "Text Representation";
+    anything:hasTextTitle         <http://rdfh.ch/0001/MAiNrOB1Q--rzAzdkqbHOw/values/uVBZBMP3QYaF-gy00q0UXA>;
+    knora-base:attachedToProject  <http://rdfh.ch/projects/0001>;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root>;
+    knora-base:creationDate       "2024-12-10T08:40:27.941261633Z"^^xsd:dateTime;
+    knora-base:hasPermissions     "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+    knora-base:hasTextFileValue   <http://rdfh.ch/0001/MAiNrOB1Q--rzAzdkqbHOw/values/xPudKXnITOWQVWghBbg0tA>;
+    knora-base:isDeleted          false .
+
+# Text File Value
+<http://rdfh.ch/0001/MAiNrOB1Q--rzAzdkqbHOw/values/xPudKXnITOWQVWghBbg0tA>
+    rdf:type                      knora-base:TextFileValue;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root>;
+    knora-base:hasPermissions     "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+    knora-base:internalFilename   "01yOfm8a7bI-wlUBek9G60F.xml";
+    knora-base:internalMimeType   "application/xml";
+    knora-base:isDeleted          false;
+    knora-base:originalFilename   "test.xml";
+    knora-base:originalMimeType   "application/xml";
+    knora-base:valueCreationDate  "2024-12-10T08:40:27.941261633Z"^^xsd:dateTime;
+    knora-base:valueHasOrder      0;
+    knora-base:valueHasString     "01yOfm8a7bI-wlUBek9G60F.xml";
+    knora-base:valueHasUUID       "xPudKXnITOWQVWghBbg0tA" .
+
+# Text Title Value
+<http://rdfh.ch/0001/MAiNrOB1Q--rzAzdkqbHOw/values/uVBZBMP3QYaF-gy00q0UXA>
+    rdf:type                      knora-base:TextValue;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root>;
+    knora-base:hasPermissions     "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+    knora-base:hasTextValueType   knora-base:UnformattedText;
+    knora-base:isDeleted          false;
+    knora-base:valueCreationDate  "2024-12-10T08:40:27.941261633Z"^^xsd:dateTime;
+    knora-base:valueHasOrder      0;
+    knora-base:valueHasString     "Text Representation Title";
+    knora-base:valueHasUUID       "uVBZBMP3QYaF-gy00q0UXA" .
