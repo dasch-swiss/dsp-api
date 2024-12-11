@@ -712,8 +712,10 @@ object ValueContentV2 {
     ZIO.foreach(filenameMaybe) { filename =>
       for {
         sipiService <- ZIO.service[SipiService]
+        assetIdStr = // remove the file extension if it exists
+          if filename.contains(".") then filename.substring(0, filename.indexOf('.')) else filename
         assetId <- ZIO
-                     .fromEither(AssetId.from(filename.substring(0, filename.indexOf('.'))))
+                     .fromEither(AssetId.from(assetIdStr))
                      .mapError(msg => BadRequestException(s"Invalid value for 'fileValueHasFilename': $msg"))
         meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
                   case NotFoundException(_) =>
