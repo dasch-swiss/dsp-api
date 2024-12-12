@@ -713,7 +713,7 @@ object ValueContentV2 {
       for {
         sipiService <- ZIO.service[SipiService]
         assetId <- ZIO
-                     .fromEither(AssetId.from(filename.substring(0, filename.indexOf('.'))))
+                     .fromEither(AssetId.fromFilename(filename))
                      .mapError(msg => BadRequestException(s"Invalid value for 'fileValueHasFilename': $msg"))
         meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
                   case NotFoundException(_) =>
