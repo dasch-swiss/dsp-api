@@ -21,7 +21,14 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 object MaintenanceRequests {
 
   type AssetId = String Refined MatchesRegex["^[a-zA-Z0-9-_]{4,}$"]
-  object AssetId extends RefinedTypeOps[AssetId, String]
+  object AssetId extends RefinedTypeOps[AssetId, String] {
+
+    def fromFilename(filename: String): Either[String, AssetId] = {
+      val withoutFileExtension =
+        if filename.contains(".") then filename.substring(0, filename.indexOf('.')) else filename
+      AssetId.from(withoutFileExtension)
+    }
+  }
 
   final case class Dimensions(width: Int Refined Positive, height: Int Refined Positive)
 
