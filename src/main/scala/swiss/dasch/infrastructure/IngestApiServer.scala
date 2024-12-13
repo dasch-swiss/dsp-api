@@ -4,10 +4,9 @@
  */
 
 package swiss.dasch.infrastructure
-import org.http4s.netty.server.NettyServerBuilder
-import org.http4s.server.Router
-import sttp.tapir.server.http4s.Http4sServerOptions
-import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
+
+import sttp.tapir.server.ziohttp
+import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import sttp.tapir.server.interceptor.cors.CORSConfig.AllowedOrigin
 import sttp.tapir.server.interceptor.cors.{CORSConfig, CORSInterceptor}
 import sttp.tapir.server.metrics.zio.ZioMetrics
@@ -15,27 +14,28 @@ import swiss.dasch.Endpoints
 import swiss.dasch.config.Configuration.ServiceConfig
 import swiss.dasch.version.BuildInfo
 import zio.*
-import zio.interop.catz.*
+import zio.http.Server
 
 object IngestApiServer {
 
-  private val serverOptions = Http4sServerOptions.customiseInterceptors
+  private val serverOptions = ZioHttpServerOptions.customiseInterceptors
     .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
     .corsInterceptor(
       CORSInterceptor.customOrThrow(CORSConfig.default.copy(allowedOrigin = AllowedOrigin.All).exposeAllHeaders),
     )
     .options
 
-  def startup() = for {
-    _      <- ZIO.logInfo(s"Starting ${BuildInfo.name}")
-    routes <- ZIO.serviceWith[Endpoints](e => ZHttp4sServerInterpreter(serverOptions).from(e.endpoints).toRoutes)
-    c      <- ZIO.service[ServiceConfig]
-    _      <- ZIO.logInfo(s"Started ${BuildInfo.name}/${BuildInfo.version}, see http://${c.host}:${c.port}/docs")
-    server <-
-      NettyServerBuilder[Task]
-        .bindHttp(c.port, c.host)
-        .withHttpApp(Router("/" -> routes).orNotFound)
-        .resource
-        .useForever
-  } yield server
+  def startup(): ZIO[ServiceConfig with Server with Endpoints, Nothing, Unit] = for {
+    _   <- ZIO.logInfo(s"Starting ${BuildInfo.name}")
+    app <- ZIO.serviceWith[Endpoints](_.endpoints).map(ZioHttpInterpreter(serverOptions).toHttp(_))
+    c   <- ZIO.service[ServiceConfig]
+    _   <- Server.install(app)
+    _   <- ZIO.logInfo(s"Started ${BuildInfo.name}/${BuildInfo.version}, see http://${c.host}:${c.port}/docs")
+  } yield ()
+
+  val layer: URLayer[ServiceConfig, Server] = ZLayer
+    .service[ServiceConfig]
+    .flatMap(cfg => Server.defaultWith(_.binding(cfg.get.host, cfg.get.port).enableRequestStreaming))
+    .orDie
+
 }

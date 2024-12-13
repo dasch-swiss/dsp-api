@@ -42,6 +42,7 @@ object Main extends ZIOAppDefault {
         FileSystemHealthIndicatorLive.layer,
         HealthCheckServiceLive.layer,
         ImportServiceLive.layer,
+        IngestApiServer.layer,
         IngestService.layer,
         MaintenanceActionsLive.layer,
         MaintenanceEndpoints.layer,

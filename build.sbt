@@ -42,8 +42,7 @@ val tapir = Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-refined"           % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % tapirVersion,
-  "org.http4s"                  %%  "http4s-netty-server"    % "0.5.21",
+  "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"      % tapirVersion,
 )
 
@@ -77,7 +76,6 @@ val test = Seq(
   "dev.zio"           %% "zio-test-magnolia"      % zioVersion     % Test,
   "dev.zio"           %% "zio-test-sbt"           % zioVersion     % Test,
   "org.scoverage"      % "sbt-scoverage_2.12_1.0" % "2.2.2"        % Test,
-  "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
 )
 
 val integrationTest = Seq(

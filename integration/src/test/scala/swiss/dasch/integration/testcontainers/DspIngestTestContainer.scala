@@ -8,11 +8,13 @@ package swiss.dasch.integration.testcontainers
 import com.github.dockerjava.api.command.CreateContainerCmd
 import org.testcontainers.containers.{BindMode, GenericContainer}
 import swiss.dasch.integration.testcontainers.TestContainerOps.toZio
+import swiss.dasch.version.BuildInfo
 import zio.{URLayer, ZIO, ZLayer}
 
 import java.util.function.Consumer
 
-final class DspIngestTestContainer extends GenericContainer[DspIngestTestContainer](s"daschswiss/dsp-ingest:latest")
+final class DspIngestTestContainer
+    extends GenericContainer[DspIngestTestContainer](s"daschswiss/dsp-ingest:${BuildInfo.version}")
 
 object DspIngestTestContainer {
 
