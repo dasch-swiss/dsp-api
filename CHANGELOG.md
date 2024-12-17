@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.16.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.15.1...v0.16.0) (2024-12-16)
+
+
+### Maintenances
+
+* Major dependency updates ([#311](https://github.com/dasch-swiss/dsp-ingest/issues/311)) ([2977ee6](https://github.com/dasch-swiss/dsp-ingest/commit/2977ee69c00d8f9da4a6e03c2eea8513d4c8ab37))
+* Patch dependency updates ([#310](https://github.com/dasch-swiss/dsp-ingest/issues/310)) ([e4403fb](https://github.com/dasch-swiss/dsp-ingest/commit/e4403fb4cceefef64acd54b0d18edafe603ebc96))
+
+
+### Enhancements
+
+* Revert changing http server (DEV-4405) ([#309](https://github.com/dasch-swiss/dsp-ingest/issues/309)) ([e3c9244](https://github.com/dasch-swiss/dsp-ingest/commit/e3c9244a209eaff2d6f6b8cd1ade20e3590e60f9))
+
+
+### Bug Fixes
+
+* Replace http-server in order to prevent OOM exception (DEV-4405) ([#306](https://github.com/dasch-swiss/dsp-ingest/issues/306)) ([fa6f125](https://github.com/dasch-swiss/dsp-ingest/commit/fa6f1252f20cb0c45a50e7f275c571de8cd573b9))
+
 ## [0.15.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.15.0...v0.15.1) (2024-12-03)
 
 
