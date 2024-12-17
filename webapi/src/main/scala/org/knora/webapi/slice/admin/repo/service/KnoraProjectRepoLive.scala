@@ -7,18 +7,13 @@ package org.knora.webapi.slice.admin.repo.service
 
 import org.eclipse.rdf4j.common.net.ParsedIRI
 import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfType
 import zio.*
 
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.HasCopyrightAttribution
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.HasLicenseText
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.HasLicenseUri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -53,9 +48,6 @@ final case class KnoraProjectRepoLive(
       Vocabulary.KnoraAdmin.projectLongname,
       Vocabulary.KnoraAdmin.projectRestrictedViewSize,
       Vocabulary.KnoraAdmin.projectRestrictedViewWatermark,
-      Vocabulary.KnoraBase.hasCopyrightAttribution,
-      Vocabulary.KnoraBase.hasLicenseText,
-      Vocabulary.KnoraBase.hasLicenseUri,
     ),
   )
 
@@ -99,19 +91,16 @@ object KnoraProjectRepoLive {
         } yield size.orElse(watermark).getOrElse(RestrictedView.default)
 
       for {
-        iri                  <- resource.getSubjectIri
-        shortcode            <- resource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
-        shortname            <- resource.getStringLiteralOrFail[Shortname](ProjectShortname)
-        longname             <- resource.getStringLiteral[Longname](ProjectLongname)
-        description          <- resource.getLangStringLiteralsOrFail[Description](ProjectDescription)
-        keywords             <- resource.getStringLiterals[Keyword](ProjectKeyword)
-        logo                 <- resource.getStringLiteral[Logo](ProjectLogo)
-        status               <- resource.getBooleanLiteralOrFail[Status](StatusProp)
-        selfjoin             <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
-        copyrightAttribution <- resource.getStringLiteral[CopyrightAttribution](HasCopyrightAttribution)
-        licenseText          <- resource.getStringLiteral[LicenseText](HasLicenseText)
-        licenseUri           <- resource.getUriLiteral[LicenseUri](HasLicenseUri)
-        restrictedView       <- getRestrictedView
+        iri            <- resource.getSubjectIri
+        shortcode      <- resource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
+        shortname      <- resource.getStringLiteralOrFail[Shortname](ProjectShortname)
+        longname       <- resource.getStringLiteral[Longname](ProjectLongname)
+        description    <- resource.getLangStringLiteralsOrFail[Description](ProjectDescription)
+        keywords       <- resource.getStringLiterals[Keyword](ProjectKeyword)
+        logo           <- resource.getStringLiteral[Logo](ProjectLogo)
+        status         <- resource.getBooleanLiteralOrFail[Status](StatusProp)
+        selfjoin       <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
+        restrictedView <- getRestrictedView
       } yield KnoraProject(
         id = ProjectIri.unsafeFrom(iri.value),
         shortcode = shortcode,
@@ -123,9 +112,6 @@ object KnoraProjectRepoLive {
         status = status,
         selfjoin = selfjoin,
         restrictedView = restrictedView,
-        copyrightAttribution = copyrightAttribution,
-        licenseText = licenseText,
-        licenseUri = licenseUri,
       )
     }
 
@@ -150,14 +136,6 @@ object KnoraProjectRepoLive {
         case RestrictedView.Watermark(watermark) =>
           pattern.andHas(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, watermark)
       }
-
-      project.copyrightAttribution.foreach(attr =>
-        pattern.andHas(Vocabulary.KnoraBase.hasCopyrightAttribution, attr.value),
-      )
-      project.licenseText.foreach(text => pattern.andHas(Vocabulary.KnoraBase.hasLicenseText, text.value))
-      project.licenseUri.foreach(uri =>
-        pattern.andHas(Vocabulary.KnoraBase.hasLicenseUri, literalOfType(uri.value, XSD.ANYURI)),
-      )
 
       pattern
     }

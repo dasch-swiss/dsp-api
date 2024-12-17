@@ -169,9 +169,6 @@ object SharedTestDataADM {
     ),
     status = true,
     selfjoin = false,
-    copyrightAttribution = None,
-    licenseText = None,
-    licenseUri = None,
   )
 
   /* represents the full ProjectADM of the default shared ontologies project */
@@ -186,9 +183,6 @@ object SharedTestDataADM {
     ontologies = Seq.empty[IRI],
     status = true,
     selfjoin = false,
-    copyrightAttribution = None,
-    licenseText = None,
-    licenseUri = None,
   )
 
   /**
@@ -301,9 +295,6 @@ object SharedTestDataADM {
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
     status = true,
     selfjoin = false,
-    copyrightAttribution = None,
-    licenseText = None,
-    licenseUri = None,
   )
 
   /* represents the full ProjectADM of the images project in the external format */
@@ -318,9 +309,6 @@ object SharedTestDataADM {
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI_LocalHost),
     status = true,
     selfjoin = false,
-    copyrightAttribution = None,
-    licenseText = None,
-    licenseUri = None,
   )
 
   /* represents the full GroupADM of the images ProjectAdmin group */
@@ -484,9 +472,6 @@ object SharedTestDataADM {
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
     status = true,
     selfjoin = false,
-    copyrightAttribution = None,
-    licenseText = None,
-    licenseUri = None,
   )
 
   /* represents the ProjectADM of the incunabula project in the external format*/
@@ -522,9 +507,6 @@ object SharedTestDataADM {
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI_LocalHost),
     status = true,
     selfjoin = false,
-    copyrightAttribution = None,
-    licenseText = None,
-    licenseUri = None,
   )
 
   /**
@@ -637,9 +619,6 @@ object SharedTestDataADM {
     ontologies = Seq(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI, SharedOntologyTestDataADM.SomethingOntologyIri),
     status = true,
     selfjoin = false,
-    copyrightAttribution = None,
-    licenseText = None,
-    licenseUri = None,
   )
 
   def anythingProjectExternal: Project = Project(
@@ -656,9 +635,6 @@ object SharedTestDataADM {
     ),
     status = true,
     selfjoin = false,
-    copyrightAttribution = None,
-    licenseText = None,
-    licenseUri = None,
   )
 
   /* represents the full GroupADM of the Thing searcher group */
@@ -696,9 +672,6 @@ object SharedTestDataADM {
     ),
     status = true,
     selfjoin = false,
-    copyrightAttribution = None,
-    licenseText = None,
-    licenseUri = None,
   )
 
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
@@ -748,8 +721,5 @@ object SharedTestDataADM {
     ontologies = Seq("http://www.knora.org/ontology/0804/dokubib"),
     status = false,
     selfjoin = false,
-    copyrightAttribution = None,
-    licenseText = None,
-    licenseUri = None,
   )
 }

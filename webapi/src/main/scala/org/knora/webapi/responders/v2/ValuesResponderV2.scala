@@ -91,14 +91,7 @@ final case class ValuesResponderV2(
         submittedInternalPropertyIri <-
           ZIO.attempt(valueToCreate.propertyIri.toOntologySchema(InternalSchema))
 
-        submittedInternalValueContent = ValueContentV2
-                                          .replaceCopyrightAndLicenceIfMissing(
-                                            project.licenseText,
-                                            project.licenseUri,
-                                            project.copyrightAttribution,
-                                            valueToCreate.valueContent,
-                                          )
-                                          .toOntologySchema(InternalSchema)
+        submittedInternalValueContent = valueToCreate.valueContent.toOntologySchema(InternalSchema)
 
         // Get ontology information about the submitted property.
         propertyInfoRequestForSubmittedProperty =
@@ -705,16 +698,8 @@ final case class ValuesResponderV2(
            )
 
       // Convert the submitted value content to the internal schema.
-      project = resourceInfo.projectADM
-      submittedInternalValueContent =
-        ValueContentV2
-          .replaceCopyrightAndLicenceIfMissing(
-            project.licenseText,
-            project.licenseUri,
-            project.copyrightAttribution,
-            updateValue.valueContent,
-          )
-          .toOntologySchema(InternalSchema)
+      project                       = resourceInfo.projectADM
+      submittedInternalValueContent = updateValue.valueContent.toOntologySchema(InternalSchema)
 
       // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
       // the correct type for the adjusted property's knora-base:objectClassConstraint.
@@ -1024,12 +1009,6 @@ final case class ValuesResponderV2(
       currentTime: Instant = valueCreationDate.getOrElse(Instant.now)
 
       // Generate a SPARQL update.
-      newValue: ValueContentV2 = ValueContentV2.replaceCopyrightAndLicenceIfMissing(
-                                   resourceInfo.projectADM.licenseText,
-                                   resourceInfo.projectADM.licenseUri,
-                                   resourceInfo.projectADM.copyrightAttribution,
-                                   newValueVersion,
-                                 )
       sparqlUpdate = sparql.v2.txt.addValueVersion(
                        dataNamedGraph = dataNamedGraph,
                        resourceIri = resourceInfo.resourceIri,
@@ -1037,10 +1016,10 @@ final case class ValuesResponderV2(
                        currentValueIri = currentValue.valueIri,
                        newValueIri = newValueIri,
                        valueTypeIri = currentValue.valueContent.valueType,
-                       value = newValue,
+                       value = newValueVersion,
                        valueCreator = valueCreator,
                        valuePermissions = valuePermissions,
-                       maybeComment = newValue.comment,
+                       maybeComment = newValueVersion.comment,
                        linkUpdates = standoffLinkUpdates,
                        currentTime = currentTime,
                        requestingUser = requestingUser.id,
@@ -1052,7 +1031,7 @@ final case class ValuesResponderV2(
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
       newValueUUID = currentValue.valueHasUUID,
-      valueContent = newValue.unescape,
+      valueContent = newValueVersion.unescape,
       permissions = valuePermissions,
       creationDate = currentTime,
     )
