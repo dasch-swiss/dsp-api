@@ -40,7 +40,6 @@ import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
-import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optics.FileValueContentV2Optics
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.api.model.Project
@@ -673,20 +672,6 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] with WithAsIs
  * Generates instances of value content classes (subclasses of [[ValueContentV2]]) from JSON-LD input.
  */
 object ValueContentV2 {
-  def replaceCopyrightAndLicenceIfMissing(
-    licenseText: Option[LicenseText],
-    licenseUri: Option[LicenseUri],
-    copyrightAttribution: Option[CopyrightAttribution],
-    vc: ValueContentV2,
-  ): ValueContentV2 = vc match {
-    case fvc: FileValueContentV2 => {
-      val lt = FileValueContentV2Optics.licenseTextOption.filter(_.isEmpty).replace(licenseText)
-      val lu = FileValueContentV2Optics.licenseUriOption.filter(_.isEmpty).replace(licenseUri)
-      val cp = FileValueContentV2Optics.copyrightAttributionOption.filter(_.isEmpty).replace(copyrightAttribution)
-      lt.andThen(lu).andThen(cp)(fvc)
-    }
-    case other => other
-  }
 
   final case class FileInfo(filename: IRI, metadata: FileMetadataSipiResponse)
 
@@ -713,7 +698,7 @@ object ValueContentV2 {
       for {
         sipiService <- ZIO.service[SipiService]
         assetId <- ZIO
-                     .fromEither(AssetId.from(filename.substring(0, filename.indexOf('.'))))
+                     .fromEither(AssetId.fromFilename(filename))
                      .mapError(msg => BadRequestException(s"Invalid value for 'fileValueHasFilename': $msg"))
         meta <- sipiService.getFileMetadataFromDspIngest(shortcode, assetId).mapError {
                   case NotFoundException(_) =>

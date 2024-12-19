@@ -47,9 +47,6 @@ object KnoraProjectRepo {
       KnoraProject.Status.Active,
       KnoraProject.SelfJoin.CannotJoin,
       RestrictedView.default,
-      None,
-      None,
-      None,
     )
 
     val SystemProject: KnoraProject = makeBuiltIn(
