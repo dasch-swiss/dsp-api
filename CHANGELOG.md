@@ -1,5 +1,17 @@
 # Changelog
 
+## [31.2.0](https://github.com/dasch-swiss/dsp-api/compare/v31.1.0...v31.2.0) (2024-12-19)
+
+
+### Maintenances
+
+* Minor dependency updates ([#3438](https://github.com/dasch-swiss/dsp-api/issues/3438)) ([d31a55f](https://github.com/dasch-swiss/dsp-api/commit/d31a55fc9d67052119879ad9807e2f0a9528fc0e))
+
+
+### Enhancements
+
+* Remove license and copyright from Project (DEV-4479) ([#3445](https://github.com/dasch-swiss/dsp-api/issues/3445)) ([c87233b](https://github.com/dasch-swiss/dsp-api/commit/c87233b382035a34704cc4bb9c16f59601dbe525))
+
 ## [31.1.0](https://github.com/dasch-swiss/dsp-api/compare/v31.0.0...v31.1.0) (2024-12-16)
 
 
