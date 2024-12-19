@@ -189,17 +189,12 @@ object HttpMockServer {
     val random: ULayer[TestPort] = ZLayer.fromZIO(Random.nextIntBetween(1000, 10_000).map(TestPort.apply))
   }
 
-  private def acquireWireMockServer: ZIO[TestPort, Throwable, WireMockServer] =
-    ZIO.serviceWith[TestPort](_.value).flatMap { port =>
+  val layer: ZLayer[Scope & TestPort, Throwable, WireMockServer] =
+    ZLayer.fromZIO(ZIO.acquireRelease(ZIO.serviceWithZIO[TestPort] { port =>
       ZIO.attempt {
-        val server = new WireMockServer(options().port(port)); // No-args constructor will start on port 8080, no HTTPS
+        val server = new WireMockServer(options().port(port.value))
         server.start()
         server
       }
-    }
-
-  private def releaseWireMockServer(server: WireMockServer) = ZIO.attempt(server.stop()).logError.ignore
-
-  val layer: ZLayer[Scope & TestPort, Throwable, WireMockServer] =
-    ZLayer.fromZIO(ZIO.acquireRelease(acquireWireMockServer)(releaseWireMockServer))
+    })(server => ZIO.attempt(server.stop()).logError.orDie))
 }
