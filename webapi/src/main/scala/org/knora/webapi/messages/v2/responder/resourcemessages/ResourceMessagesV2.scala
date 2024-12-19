@@ -5,8 +5,6 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
-import monocle.Optional
-
 import java.time.Instant
 import java.util.UUID
 
@@ -26,15 +24,10 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceMessagesV2Optics.CreateResourceV2Optics
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceMessagesV2Optics.CreateValueInNewResourceV2Optics
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optics.*
 import org.knora.webapi.slice.admin.api.model.Project
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseText
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseUri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -631,35 +624,6 @@ case class CreateResourceV2(
         }
       },
     )
-}
-
-object CreateResourceV2 {
-  def replaceCopyrightAndLicenceIfMissing(
-    licenseText: Option[LicenseText],
-    licenseUri: Option[LicenseUri],
-    copyrightAttribution: Option[CopyrightAttribution],
-    cr: CreateResourceV2,
-  ): CreateResourceV2 = {
-    def createValuesWith(
-      pred: FileValueV2 => Boolean,
-    ): Optional[Seq[CreateValueInNewResourceV2], CreateValueInNewResourceV2] =
-      CreateValueInNewResourceV2Optics.elements(cv =>
-        CreateValueInNewResourceV2Optics.fileValue.getOption(cv).exists(pred),
-      )
-
-    def fileValueWith(pred: FileValueV2 => Boolean): Optional[CreateResourceV2, FileValueV2] =
-      CreateResourceV2Optics
-        .values(createValuesWith(pred).getOption(_).isDefined)
-        .andThen(createValuesWith(pred))
-        .andThen(CreateValueInNewResourceV2Optics.fileValue)
-
-    def replaceIfEmpty[T](newValue: Option[T], opt: Optional[FileValueV2, Option[T]]) =
-      fileValueWith(opt.getOption(_).flatten.isEmpty).andThen(opt).replace(newValue)
-
-    replaceIfEmpty(licenseText, FileValueV2Optics.licenseTextOption)
-      .andThen(replaceIfEmpty(licenseUri, FileValueV2Optics.licenseUriOption))
-      .andThen(replaceIfEmpty(copyrightAttribution, FileValueV2Optics.copyrightAttributionOption))(cr)
-  }
 }
 
 /**
