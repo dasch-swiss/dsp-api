@@ -10,7 +10,6 @@ import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.domain.AppState
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -66,9 +65,7 @@ final case class AppServer(
   private def populateOntologyCaches(requiresRepository: Boolean): Task[Unit] =
     for {
       _ <- state.set(AppState.LoadingOntologies)
-      _ <- ontologyCache
-             .loadOntologies(KnoraSystemInstances.Users.SystemUser)
-             .when(requiresRepository)
+      _ <- ontologyCache.loadOntologies().when(requiresRepository)
       _ <- state.set(AppState.OntologiesReady)
     } yield ()
 

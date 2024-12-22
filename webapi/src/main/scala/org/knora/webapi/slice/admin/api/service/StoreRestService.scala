@@ -10,7 +10,6 @@ import zio.*
 import dsp.errors.ForbiddenException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.admin.api.MessageResponse
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -42,7 +41,7 @@ final case class StoreRestService(
            }
       _ <- ZIO.logWarning(s"Resetting triplestore content with ${rdfDataObjects.map(_.name).mkString(", ")}")
       _ <- triplestoreService.resetTripleStoreContent(rdfDataObjects, prependDefaults).logError
-      _ <- ontologyCache.loadOntologies(SystemUser).logError
+      _ <- ontologyCache.loadOntologies().logError
       _  = cacheManager.clearAll()
     } yield MessageResponse("success")
 }

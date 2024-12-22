@@ -9,7 +9,6 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
@@ -32,7 +31,7 @@ trait TestStartupUtils extends LazyLogging {
       tss <- ZIO.service[TriplestoreService]
       _   <- tss.resetTripleStoreContent(rdfDataObjects).timeout(480.seconds)
       _   <- ZIO.logInfo("... loading test data done.")
-      _   <- ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)).orDie
+      _   <- ZIO.serviceWithZIO[OntologyCache](_.loadOntologies()).orDie
     } yield ()
 
 }
