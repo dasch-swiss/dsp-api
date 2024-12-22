@@ -30,7 +30,7 @@ case class OntologyCacheData(
   superPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
   classDefinedInOntology: Map[SmartIri, SmartIri],
   propertyDefinedInOntology: Map[SmartIri, SmartIri],
-  entityDefinedInOntology: Map[SmartIri, SmartIri],
+  private val entityDefinedInOntology: Map[SmartIri, SmartIri],
   private val standoffProperties: Set[SmartIri],
 ) {
   lazy val allPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = ontologies.values
@@ -43,6 +43,8 @@ case class OntologyCacheData(
 
   def getAllStandoffPropertyEntities: Map[SmartIri, ReadPropertyInfoV2] =
     ontologies.values.flatMap(_.properties.view.filterKeys(standoffProperties)).toMap
+
+  def entityDefinedInOntology(propertyIri: SmartIri): Option[SmartIri] = entityDefinedInOntology.get(propertyIri)
 }
 object OntologyCacheData {
   val Empty = OntologyCacheData(
