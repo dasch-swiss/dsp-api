@@ -48,8 +48,8 @@ case class OntologyCacheData(
   def classDefinedInOntology(classIri: SmartIri): Option[SmartIri]       = classDefinedInOntology.get(classIri)
   def propertyDefinedInOntology(propertyIri: SmartIri): Option[SmartIri] = propertyDefinedInOntology.get(propertyIri)
 
-  def getSubPropertiesOf(propertyIri: SmartIri): Option[Set[SmartIri]]   = subPropertyOfRelations.get(propertyIri)
-  def getSuperPropertiesOf(propertyIri: SmartIri): Option[Set[SmartIri]] = superPropertyOfRelations.get(propertyIri)
+  def getSubPropertiesOf(propertyIri: SmartIri): Option[Set[SmartIri]]   = superPropertyOfRelations.get(propertyIri)
+  def getSuperPropertiesOf(propertyIri: SmartIri): Option[Set[SmartIri]] = subPropertyOfRelations.get(propertyIri)
 
   def getSubClassesOf(classIri: SmartIri): Option[Set[SmartIri]]   = classToSubclassLookup.get(classIri)
   def getSuperClassesOf(classIri: SmartIri): Option[Seq[SmartIri]] = classToSuperClassLookup.get(classIri)
