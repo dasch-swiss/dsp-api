@@ -7,6 +7,7 @@ package org.knora.webapi.slice.ontology.repo.model
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 
 /**
  * The in-memory cache of ontologies.
@@ -30,13 +31,18 @@ case class OntologyCacheData(
   classDefinedInOntology: Map[SmartIri, SmartIri],
   propertyDefinedInOntology: Map[SmartIri, SmartIri],
   entityDefinedInOntology: Map[SmartIri, SmartIri],
-  standoffProperties: Set[SmartIri],
+  private val standoffProperties: Set[SmartIri],
 ) {
   lazy val allPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = ontologies.values
     .flatMap(_.properties.map { case (propertyIri, readPropertyInfo) =>
       propertyIri -> readPropertyInfo.entityInfoContent
     })
     .toMap
+
+  def containsStandoffProperty(propertyIri: SmartIri): Boolean = standoffProperties.contains(propertyIri)
+
+  def getAllStandoffPropertyEntities: Map[SmartIri, ReadPropertyInfoV2] =
+    ontologies.values.flatMap(_.properties.view.filterKeys(standoffProperties)).toMap
 }
 object OntologyCacheData {
   val Empty = OntologyCacheData(

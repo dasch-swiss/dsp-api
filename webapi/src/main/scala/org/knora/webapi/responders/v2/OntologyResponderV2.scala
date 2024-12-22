@@ -198,13 +198,12 @@ final case class OntologyResponderV2(
                              }
                            }.toMap
 
-      propertyDefsAvailable = propertyOntologies.flatMap { ontology =>
-                                ontology.properties.filter { case (propertyIri, _) =>
-                                  standoffPropertyIris.contains(propertyIri) && cacheData.standoffProperties.contains(
-                                    propertyIri,
-                                  )
-                                }
-                              }.toMap
+      propertyDefsAvailable =
+        propertyOntologies.flatMap { ontology =>
+          ontology.properties.filter { case (propertyIri, _) =>
+            standoffPropertyIris.contains(propertyIri) && cacheData.containsStandoffProperty(propertyIri)
+          }
+        }.toMap
 
       missingClassDefs    = classIrisForCache -- classDefsAvailable.keySet
       missingPropertyDefs = propertyIrisForCache -- propertyDefsAvailable.keySet
@@ -248,10 +247,9 @@ final case class OntologyResponderV2(
    * @return a [[StandoffAllPropertyEntitiesGetResponseV2]].
    */
   private def getAllStandoffPropertyEntitiesV2: Task[StandoffAllPropertyEntitiesGetResponseV2] =
-    ontologyCache.getCacheData.map { data =>
-      val ontologies: Iterable[ReadOntologyV2] = data.ontologies.values
-      ontologies.flatMap(_.properties.view.filterKeys(data.standoffProperties)).toMap
-    }.map(StandoffAllPropertyEntitiesGetResponseV2.apply)
+    ontologyCache.getCacheData
+      .map(_.getAllStandoffPropertyEntities)
+      .map(StandoffAllPropertyEntitiesGetResponseV2.apply)
 
   /**
    * Checks whether a certain Knora resource or value class is a subclass of another class.
