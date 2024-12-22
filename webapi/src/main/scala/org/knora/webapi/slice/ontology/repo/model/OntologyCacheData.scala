@@ -26,8 +26,8 @@ case class OntologyCacheData(
   ontologies: Map[SmartIri, ReadOntologyV2],
   classToSuperClassLookup: Map[SmartIri, Seq[SmartIri]],
   classToSubclassLookup: Map[SmartIri, Set[SmartIri]],
-  subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
-  superPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
+  private val subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
+  private val superPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
   private val classDefinedInOntology: Map[SmartIri, SmartIri],
   private val propertyDefinedInOntology: Map[SmartIri, SmartIri],
   private val entityDefinedInOntology: Map[SmartIri, SmartIri],
@@ -47,6 +47,9 @@ case class OntologyCacheData(
   def entityDefinedInOntology(propertyIri: SmartIri): Option[SmartIri]   = entityDefinedInOntology.get(propertyIri)
   def classDefinedInOntology(classIri: SmartIri): Option[SmartIri]       = classDefinedInOntology.get(classIri)
   def propertyDefinedInOntology(propertyIri: SmartIri): Option[SmartIri] = propertyDefinedInOntology.get(propertyIri)
+
+  def getSubPropertiesOf(propertyIri: SmartIri): Option[Set[SmartIri]]   = subPropertyOfRelations.get(propertyIri)
+  def getSuperPropertiesOf(propertyIri: SmartIri): Option[Set[SmartIri]] = superPropertyOfRelations.get(propertyIri)
 }
 object OntologyCacheData {
   val Empty = OntologyCacheData(

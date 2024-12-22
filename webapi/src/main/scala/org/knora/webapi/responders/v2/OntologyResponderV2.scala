@@ -1974,10 +1974,11 @@ final case class OntologyResponderV2(
         // Check for rdfs:subPropertyOf cycles.
 
         allKnoraSuperPropertyIrisWithoutSelf: Set[SmartIri] = knoraSuperProperties.flatMap { superPropertyIri =>
-                                                                cacheData.subPropertyOfRelations.getOrElse(
-                                                                  superPropertyIri,
-                                                                  Set.empty[SmartIri],
-                                                                )
+                                                                cacheData
+                                                                  .getSuperPropertiesOf(superPropertyIri)
+                                                                  .getOrElse(
+                                                                    Set.empty[SmartIri],
+                                                                  )
                                                               }
 
         _ <- ZIO.when(allKnoraSuperPropertyIrisWithoutSelf.contains(internalPropertyIri)) {

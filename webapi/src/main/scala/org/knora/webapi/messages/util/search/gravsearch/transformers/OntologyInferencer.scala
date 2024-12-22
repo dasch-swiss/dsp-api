@@ -63,7 +63,7 @@ final case class OntologyInferencer(
     queryVariableSuffix: Option[String],
   ): Seq[QueryPattern] = {
     // look up subproperties from ontology cache
-    val knownSubProps = cache.superPropertyOfRelations.get(predIri).getOrElse(Set(predIri)).toSeq
+    val knownSubProps = cache.getSubPropertiesOf(predIri).getOrElse(Set(predIri)).toSeq
 
     // if provided, limit the child properties to those that belong to relevant ontologies
     val subProps = limitInferenceToOntologies match {

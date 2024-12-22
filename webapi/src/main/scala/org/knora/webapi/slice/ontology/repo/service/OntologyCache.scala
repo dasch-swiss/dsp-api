@@ -679,7 +679,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
           OntologyHelpers.inheritCardinalitiesInLoadedClass(
             classIri = resourceClassIri,
             directSubClassOfRelations = directSubClassOfRelations,
-            allSubPropertyOfRelations = allSubPropertyOfRelations,
+            superPropertyLookup = allSubPropertyOfRelations.get,
             directClassCardinalities = directClassCardinalities,
           )
 
@@ -692,7 +692,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
       directClassCardinalities = directClassCardinalities,
       classCardinalitiesWithInheritance = classCardinalitiesWithInheritance,
       allSubClassOfRelations = allSubClassOfRelations,
-      allSubPropertyOfRelations = allSubPropertyOfRelations,
+      superPropertyLookup = allSubPropertyOfRelations.get,
       allPropertyDefs = allPropertyDefs,
       allKnoraResourceProps = allKnoraResourceProps,
       allLinkProps = allLinkProps,
@@ -914,7 +914,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
           classIri = directSubClassIri,
           thisClassCardinalities = directSubClass.entityInfoContent.directCardinalities,
           inheritableCardinalities = inheritableCardinalities,
-          allSubPropertyOfRelations = cacheData.subPropertyOfRelations,
+          superPropertyLookup = cacheData.getSuperPropertiesOf,
           errorSchema = ApiV2Complex,
           errorFun = { (msg: String) =>
             throw BadRequestException(msg)
