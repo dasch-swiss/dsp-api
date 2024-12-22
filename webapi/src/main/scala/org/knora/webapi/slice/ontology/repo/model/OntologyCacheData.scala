@@ -24,8 +24,8 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
  */
 case class OntologyCacheData(
   ontologies: Map[SmartIri, ReadOntologyV2],
-  classToSuperClassLookup: Map[SmartIri, Seq[SmartIri]],
-  classToSubclassLookup: Map[SmartIri, Set[SmartIri]],
+  private val classToSuperClassLookup: Map[SmartIri, Seq[SmartIri]],
+  private val classToSubclassLookup: Map[SmartIri, Set[SmartIri]],
   private val subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
   private val superPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
   private val classDefinedInOntology: Map[SmartIri, SmartIri],
@@ -50,6 +50,9 @@ case class OntologyCacheData(
 
   def getSubPropertiesOf(propertyIri: SmartIri): Option[Set[SmartIri]]   = subPropertyOfRelations.get(propertyIri)
   def getSuperPropertiesOf(propertyIri: SmartIri): Option[Set[SmartIri]] = superPropertyOfRelations.get(propertyIri)
+
+  def getSubClassesOf(classIri: SmartIri): Option[Set[SmartIri]]   = classToSubclassLookup.get(classIri)
+  def getSuperClassesOf(classIri: SmartIri): Option[Seq[SmartIri]] = classToSuperClassLookup.get(classIri)
 }
 object OntologyCacheData {
   val Empty = OntologyCacheData(

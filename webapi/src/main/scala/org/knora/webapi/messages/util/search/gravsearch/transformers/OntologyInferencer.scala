@@ -36,7 +36,7 @@ final case class OntologyInferencer(
       }
   } yield {
     // look up subclasses from ontology cache
-    val knownSubClasses = cache.classToSubclassLookup.get(baseClassIri.iri).getOrElse(Set(baseClassIri.iri)).toSeq
+    val knownSubClasses = cache.getSubClassesOf(baseClassIri.iri).getOrElse(Set(baseClassIri.iri)).toSeq
 
     // if provided, limit the child classes to those that belong to relevant ontologies
     val subClasses = limitInferenceToOntologies match {

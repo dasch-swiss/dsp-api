@@ -352,9 +352,9 @@ object OntologyCache {
       if (OntologyConstants.Owl.ClassesThatCanBeKnoraClassConstraints.contains(constraintValueToBeChecked.toString)) {
         Set(constraintValueToBeChecked)
       } else {
-        cacheData.classToSuperClassLookup
+        cacheData
+          .getSuperClassesOf(constraintValueToBeChecked)
           .getOrElse(
-            constraintValueToBeChecked,
             errorFun(
               s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} cannot have a ${constraintPredicateIri
                   .toOntologySchema(errorSchema)} of " +
@@ -881,7 +881,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
   private def updateSubClasses(baseClassIri: SmartIri, cacheData: OntologyCacheData): OntologyCacheData = {
     // Get the class definitions of all the subclasses of the base class.
 
-    val allSubClassIris: Set[SmartIri] = cacheData.classToSubclassLookup(baseClassIri)
+    val allSubClassIris: Set[SmartIri] = cacheData.getSubClassesOf(baseClassIri).get
 
     val allSubClasses: Set[ReadClassInfoV2] = allSubClassIris.map { subClassIri =>
       cacheData.ontologies(subClassIri.getOntologyFromEntity).classes(subClassIri)
