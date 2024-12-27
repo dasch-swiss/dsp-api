@@ -25,11 +25,11 @@ object Dependencies {
   // topbraid/shacl is not yet compatible with jena 5 so we need to use jena 4 for now
   // see: https://github.com/TopQuadrant/shacl/pull/177
   val JenaVersion          = "4.10.0"
-  val Rdf4jVersion         = "5.0.3"
+  val Rdf4jVersion         = "5.1.0"
   val TopbraidShaclVersion = "1.4.3"
 
   val ZioConfigVersion            = "4.0.2"
-  val ZioLoggingVersion           = "2.3.2"
+  val ZioLoggingVersion           = "2.4.0"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC35"
@@ -122,12 +122,14 @@ object Dependencies {
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.4"
-  val wiremock       = "org.wiremock"       % "wiremock"       % "3.9.2"
+
+  // use version 3.9.2 until https://github.com/wiremock/wiremock/issues/2911 is fixed
+  val wiremock = "org.wiremock" % "wiremock" % "3.9.2"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.9"
+  val tapirVersion = "1.11.10"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,

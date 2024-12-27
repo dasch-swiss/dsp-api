@@ -170,17 +170,7 @@ final case class CreateResourceV2Handler(
       project = createResourceRequestV2.createResource.projectADM
 
       // Convert the resource to the internal ontology schema.
-      internalCreateResource <-
-        ZIO.attempt(
-          CreateResourceV2
-            .replaceCopyrightAndLicenceIfMissing(
-              project.licenseText,
-              project.licenseUri,
-              project.copyrightAttribution,
-              createResourceRequestV2.createResource,
-            )
-            .toOntologySchema(InternalSchema),
-        )
+      internalCreateResource <- ZIO.attempt(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
 
       // Check link targets and list nodes that should exist.
       _ <- checkStandoffLinkTargets(

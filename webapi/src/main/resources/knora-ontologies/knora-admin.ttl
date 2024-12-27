@@ -1,4 +1,4 @@
-    ###
+###
 # * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 # * SPDX-License-Identifier: Apache-2.0
 ###
@@ -382,16 +382,7 @@
                       owl:cardinality    "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :hasSelfJoinEnabled ;
-                      owl:cardinality    "1"^^xsd:nonNegativeInteger ],
-                    [ rdf:type           owl:Restriction ;
-                      owl:onProperty     knora-base:hasCopyrightAttribution ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
-                    [ rdf:type           owl:Restriction ;
-                      owl:onProperty     knora-base:hasLicenseText  ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
-                    [ rdf:type           owl:Restriction ;
-                      owl:onProperty     knora-base:hasLicenseUri ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ];
+                      owl:cardinality    "1"^^xsd:nonNegativeInteger ] ;
     rdfs:comment    "Represents a project that uses Knora."@en .
 
 
