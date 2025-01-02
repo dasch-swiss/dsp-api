@@ -10,7 +10,6 @@ import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import zio.ZIO
 
-import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration.*
 
@@ -33,8 +32,6 @@ class KnoraSipiAuthenticationITSpec
 
   private val anythingUserEmail = SharedTestDataADM.anythingAdminUser.email
   private val password          = SharedTestDataADM.testPass
-
-  private val marblesOriginalFilename = "marbles.tif"
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
