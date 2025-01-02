@@ -1,7 +1,8 @@
 package org.knora.webapi.slice.ontology.api
+import zio.*
+
 import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import zio.*
 
 object OntologyApiModule extends URModule[IriConverter, OntologyV2RequestParser] { self =>
 

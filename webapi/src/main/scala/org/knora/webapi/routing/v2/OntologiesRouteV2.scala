@@ -13,7 +13,6 @@ import zio.*
 import zio.prelude.Validation
 
 import java.time.Instant
-
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
@@ -36,6 +35,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.completeResponse
 import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.security.Authenticator
@@ -45,11 +45,13 @@ import org.knora.webapi.slice.security.Authenticator
  */
 final case class OntologiesRouteV2()(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & MessageRelay & RestCardinalityService & StringFormatter,
+    AppConfig & Authenticator & IriConverter & MessageRelay & OntologyV2RequestParser & RestCardinalityService &
+      StringFormatter,
   ],
 ) {
 
   private val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
+  private val requestParser                         = ZIO.serviceWithZIO[OntologyV2RequestParser]
 
   private val allLanguagesKey         = "allLanguages"
   private val lastModificationDateKey = "lastModificationDate"
@@ -151,11 +153,11 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestTask = for {
-              requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               apiRequestId   <- RouteUtilZ.randomUuid()
               requestMessage <-
-                ZIO.attempt(ChangeOntologyMetadataRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
+                requestParser(_.changeOntologyMetadataRequestV2(jsonRequest, apiRequestId, requestingUser))
+                  .mapError(BadRequestException.apply)
             } yield requestMessage
             RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
           }
