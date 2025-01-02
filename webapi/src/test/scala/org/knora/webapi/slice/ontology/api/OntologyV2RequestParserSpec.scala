@@ -1,14 +1,20 @@
+/*
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.ontology.api
 import zio.*
 import zio.test.*
+import zio.test.check
 
 import java.time.Instant
+
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import zio.test.check
 
 object OntologyV2RequestParserSpec extends ZIOSpecDefault {
   private val sf = StringFormatter.getInitializedTestInstance
