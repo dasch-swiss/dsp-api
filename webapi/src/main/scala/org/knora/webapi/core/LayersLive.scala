@@ -9,6 +9,7 @@ import org.apache.pekko.actor.ActorSystem
 import zio.*
 import zio.ULayer
 import zio.ZLayer
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.InstrumentationServerConfig

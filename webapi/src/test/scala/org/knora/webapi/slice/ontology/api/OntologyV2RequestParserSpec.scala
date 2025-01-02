@@ -5,6 +5,7 @@ import zio.test.assertTrue
 
 import java.time.Instant
 
+import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -13,6 +14,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
   private val sf = StringFormatter.getInitializedTestInstance
 
   private val parser = ZIO.serviceWithZIO[OntologyV2RequestParser]
+  private val user   = TestDataFactory.User.rootUser
 
   private val changeOntologyMetadataRequestV2Suite =
     suite("ChangeOntologyMetadataRequestV2") {
@@ -47,7 +49,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
             |""".stripMargin
         for {
           uuid <- Random.nextUUID
-          req  <- parser(_.changeOntologyMetadataRequestV2(jsonLd, uuid, null))
+          req  <- parser(_.changeOntologyMetadataRequestV2(jsonLd, uuid, user))
         } yield assertTrue(
           req == ChangeOntologyMetadataRequestV2(
             sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2"),
@@ -55,7 +57,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
             Some("Some Comment"),
             instant,
             uuid,
-            null,
+            user,
           ),
         )
       }
