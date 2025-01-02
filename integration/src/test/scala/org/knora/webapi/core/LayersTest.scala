@@ -66,6 +66,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.search.api.SearchApiRoutes
+import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.slice.security.SecurityModule
@@ -123,6 +124,7 @@ object LayersTest {
     ListsApiModule.Provided &
     ListsResponder &
     MessageRelay &
+    OntologyApiModule.Provided &
     OntologyCache &
     OntologyCacheHelpers &
     OntologyInferencer &
@@ -193,6 +195,7 @@ object LayersTest {
       ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
+      OntologyApiModule.layer,
       OntologyCacheLive.layer,
       OntologyCacheHelpersLive.layer,
       OntologyRepoLive.layer,
