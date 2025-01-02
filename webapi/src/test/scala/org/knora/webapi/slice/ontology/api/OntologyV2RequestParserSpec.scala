@@ -1,14 +1,14 @@
 package org.knora.webapi.slice.ontology.api
 import zio.*
-import zio.test.ZIOSpecDefault
-import zio.test.assertTrue
+import zio.test.*
 
 import java.time.Instant
-
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
+import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import zio.test.check
 
 object OntologyV2RequestParserSpec extends ZIOSpecDefault {
   private val sf = StringFormatter.getInitializedTestInstance
@@ -20,7 +20,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
     suite("ChangeOntologyMetadataRequestV2") {
       test("should parse correct jsonLd") {
         val instant = Instant.parse("2017-12-19T15:23:42.166Z")
-        val jsonLd =
+        val jsonLd: String =
           """
             |{
             |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
@@ -47,19 +47,22 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
             |  }
             |}
             |""".stripMargin
-        for {
-          uuid <- Random.nextUUID
-          req  <- parser(_.changeOntologyMetadataRequestV2(jsonLd, uuid, user))
-        } yield assertTrue(
-          req == ChangeOntologyMetadataRequestV2(
-            sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2"),
-            Some("Some Label"),
-            Some("Some Comment"),
-            instant,
-            uuid,
-            user,
-          ),
-        )
+
+        check(JsonLdTransformations.allGen) { t =>
+          for {
+            uuid <- Random.nextUUID
+            req  <- parser(_.changeOntologyMetadataRequestV2(t(jsonLd), uuid, user))
+          } yield assertTrue(
+            req == ChangeOntologyMetadataRequestV2(
+              sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2"),
+              Some("Some Label"),
+              Some("Some Comment"),
+              instant,
+              uuid,
+              user,
+            ),
+          )
+        }
       }
     }
 
