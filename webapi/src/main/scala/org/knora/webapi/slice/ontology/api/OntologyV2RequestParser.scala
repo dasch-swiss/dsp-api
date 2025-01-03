@@ -23,7 +23,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMet
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.owlCardinality2KnoraCardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris
@@ -35,6 +34,7 @@ import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_Strin
 import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
+import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
@@ -109,39 +109,22 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     ZIO.fromOption(r.uri).orElseFail("No class IRI found").flatMap(str => iriConverter.asResourceClassIri(str))
 
   private def extractSubClasses(r: Resource): ZIO[Scope, String, Set[ResourceClassIri]] = {
-    val iter       = r.listProperties(RDFS.subClassOf).asScala
-    val subclasses = iter.filter(stmt => !stmt.getSubject.isAnon).map(_.getSubject.uri).toSet.flatten
+    val subclasses: Set[String] = r.listProperties(RDFS.subClassOf).asScala.flatMap(_.objectAsUri.toOption).toSet
     iriConverter.asResourceClassIris(subclasses)
   }
 
   private def extractCardinalities(r: Resource): ZIO[Scope, String, Map[SmartIri, KnoraCardinalityInfo]] = {
-    val iter                                                    = r.listProperties(RDFS.subClassOf).asScala
-    val zero: Either[String, Map[String, KnoraCardinalityInfo]] = Right(Map.empty)
     val cardinalities: Either[String, Map[String, KnoraCardinalityInfo]] =
-      iter.flatMap { stmt =>
-        val obj = stmt.getObject
-        if (obj.isAnon && obj.asResource().hasProperty(OWL.onProperty)) { Some(obj.asResource()) }
-        else { None }
-      }.map { res =>
-        val minMax: Either[String, (Option[Int], Option[Int])] = for {
-          max  <- res.objectIntOption(OWL.maxCardinality)
-          min  <- res.objectIntOption(OWL.minCardinality)
-          card <- res.objectIntOption(OWL.cardinality)
-        } yield (min.orElse(card), max.orElse(card))
-        val cardinality: Either[String, Cardinality] = minMax.flatMap { case (min, max) =>
-          Cardinality.from(min, max).toRight(s"Invalid cardinality for ${r.uri}")
+      r.listProperties(RDFS.subClassOf)
+        .asScala
+        .flatMap(asKnoraCardinalityResource)
+        .map { res =>
+          for {
+            prop <- res.objectUri(OWL.onProperty)
+            card <- asKnoraCardinalityInfo(res)
+          } yield (prop, card)
         }
-        val guiOrder: Either[String, Option[RuntimeFlags]] = res.objectIntOption(SalsahGui.External.GuiOrder)
-        val onProperty                                     = res.objectUri(OWL.onProperty)
-
-        val foo: Either[String, (String, KnoraCardinalityInfo)] = for {
-          prop <- onProperty
-          card <- cardinality
-          gui  <- guiOrder
-        } yield (prop, KnoraCardinalityInfo(card, gui))
-        foo
-      }
-        .foldLeft(zero)(
+        .foldLeft(Right(Map.empty))(
           (
             acc: Either[String, Map[String, KnoraCardinalityInfo]],
             elem: Either[String, (String, KnoraCardinalityInfo)],
@@ -158,6 +141,26 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       .flatMap(ZIO.foreach(_) { case (key, value) => iriConverter.asPropertyIri(key).map(p => (p.smartIri, value)) })
   }
 
+  private def asKnoraCardinalityResource(stmt: Statement): Option[Resource] =
+    def isKnoraCardinality(res: Resource): Boolean =
+      res.isAnon && res.hasProperty(OWL.onProperty) && res.objectRdfClass().contains(OWL.Restriction.toString)
+    stmt.getObject match
+      case res: Resource if isKnoraCardinality(res) => Some(res)
+      case _                                        => None
+
+  private def asKnoraCardinalityInfo(bNode: Resource): Either[String, KnoraCardinalityInfo] = {
+    val minMaxEither: Either[String, (Int, Option[Int])] = for {
+      max  <- bNode.objectIntOption(OWL.maxCardinality)
+      min  <- bNode.objectIntOption(OWL.minCardinality)
+      card <- bNode.objectIntOption(OWL.cardinality)
+    } yield (card.orElse(min).getOrElse(0), card.orElse(max))
+
+    for {
+      minMax      <- minMaxEither
+      cardinality <- Cardinality.from.tupled.apply(minMax)
+      guiOrder    <- bNode.objectIntOption(SalsahGui.External.GuiOrder)
+    } yield KnoraCardinalityInfo(cardinality, guiOrder)
+  }
 }
 
 object OntologyV2RequestParser {

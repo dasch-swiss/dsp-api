@@ -115,6 +115,8 @@ object Cardinality {
 
   def fromString(str: String): Option[Cardinality] = allCardinalities.find(_.toString == str)
 
-  def from(min: Option[Int], max: Option[Int]) =
-    allCardinalities.find(it => min.getOrElse(0) == it.min && max == it.max)
+  def from(min: Int, max: Option[Int]): Either[String, Cardinality] =
+    allCardinalities
+      .find(it => min == it.min && max == it.max)
+      .toRight(s"Invalid cardinality $min-${max.getOrElse("n")}, expected one of ${allCardinalities.mkString(", ")}")
 }
