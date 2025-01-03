@@ -32,6 +32,7 @@ import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiV2Routes
+import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -100,8 +101,9 @@ object ApiRoutes {
 
   private type ApiRoutesRuntime =
     ApiComplexV2JsonLdRequestParser & AppConfig & AuthenticationApiRoutes & AuthorizationRestService & core.State &
-      IriConverter & MessageRelay & ProjectService & RestCardinalityService & WebApiAuthenticator & SearchApiRoutes &
-      SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2 & ListsApiV2Routes
+      IriConverter & ListsApiV2Routes & MessageRelay & OntologyV2RequestParser & ProjectService &
+      RestCardinalityService & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UserService &
+      ValuesResponderV2 & WebApiAuthenticator
 
   /**
    * All routes composed together.

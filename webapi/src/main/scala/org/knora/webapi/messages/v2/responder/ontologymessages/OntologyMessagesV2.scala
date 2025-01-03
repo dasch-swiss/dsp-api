@@ -1041,44 +1041,6 @@ case class ChangeOntologyMetadataRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[ChangeOntologyMetadataRequestV2]] based on JSON-LD requests.
- */
-object ChangeOntologyMetadataRequestV2 {
-
-  /**
-   * Converts a JSON-LD request to a [[ChangeOntologyMetadataRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): ChangeOntologyMetadataRequestV2 = {
-    val inputOntologyV2         = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val inputMetadata           = inputOntologyV2.ontologyMetadata
-    val ontologyIri             = inputMetadata.ontologyIri
-    val label: Option[String]   = inputMetadata.label
-    val comment: Option[String] = inputMetadata.comment
-    val lastModificationDate = inputMetadata.lastModificationDate.getOrElse(
-      throw BadRequestException("No knora-api:lastModificationDate submitted"),
-    )
-
-    ChangeOntologyMetadataRequestV2(
-      ontologyIri = ontologyIri,
-      label = label,
-      comment = comment,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
-
-/**
  * Deletes the comment from an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
  *
  * @param ontologyIri          the external ontology IRI.

@@ -50,6 +50,7 @@ import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.lists.domain.ListsService
+import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -123,6 +124,7 @@ object LayersTest {
     ListsApiModule.Provided &
     ListsResponder &
     MessageRelay &
+    OntologyApiModule.Provided &
     OntologyCache &
     OntologyCacheHelpers &
     OntologyInferencer &
@@ -193,6 +195,7 @@ object LayersTest {
       ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
+      OntologyApiModule.layer,
       OntologyCacheLive.layer,
       OntologyCacheHelpersLive.layer,
       OntologyRepoLive.layer,

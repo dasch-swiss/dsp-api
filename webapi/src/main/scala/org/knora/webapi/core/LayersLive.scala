@@ -46,6 +46,7 @@ import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.lists.domain.ListsService
+import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -107,6 +108,7 @@ object LayersLive {
     OntologyCache &
     OntologyCacheHelpers &
     OntologyInferencer &
+    OntologyApiModule.Provided &
     OntologyResponderV2 &
     OntologyTriplestoreHelpers &
     PermissionRestService &
@@ -168,8 +170,9 @@ object LayersLive {
       ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
-      OntologyCacheLive.layer,
+      OntologyApiModule.layer,
       OntologyCacheHelpersLive.layer,
+      OntologyCacheLive.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2.layer,
       OntologyServiceLive.layer,
