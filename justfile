@@ -10,11 +10,11 @@ localdev-cleandb:
 
 # Start the service locally with sbt
 localdev-run:
-    export JWT_DISABLE_AUTH=true; sbt "~run"
+    export JWT_DISABLE_AUTH=true; ./sbtx "~run"
 
 # Build a docker image locally
 build-docker:
-    export DOCKER_BUILDKIT=1; sbt Docker/publishLocal
+    export DOCKER_BUILDKIT=1; ./sbtx Docker/publishLocal
 
 # Build a docker image locally and run it with docker-compose up
 build-and-run-docker: build-docker
@@ -23,12 +23,12 @@ build-and-run-docker: build-docker
 
 # Run the integration tests
 run-integration-tests: build-docker
-    sbt integration/test
+    ./sbtx integration/test
 
 # Updates the OpenApi yml files by generating these from the tAPIr specs
 docs-openapi-generate:
     rm -f ./docs/openapi/openapi-*.yml
-    sbt "runMain swiss.dasch.DocsGenerator ./docs/openapi"
+    ./sbtx "runMain swiss.dasch.DocsGenerator ./docs/openapi"
 
 # Installs the necessary Python dependencies for building the documentation
 docs-install:

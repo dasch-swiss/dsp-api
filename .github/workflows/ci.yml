@@ -30,7 +30,7 @@ jobs:
           java-version: ${{ matrix.java-version }}
           cache: sbt
       - name: Build and Test
-        run: sbt -v clean coverage test headerCheckAll fmtCheck coverageAggregate
+        run: ./sbtx -v clean coverage test headerCheckAll fmtCheck coverageAggregate
       - name: Unit Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
@@ -76,7 +76,7 @@ jobs:
           java-version: 21
           cache: sbt
       - name: Run integration tests
-        run: export DOCKER_BUILDKIT=1;sbt Docker/publishLocal;sbt integration/test
+        run: export DOCKER_BUILDKIT=1;./sbtx Docker/publishLocal;./sbtx integration/test
 
   publish-docker-image:
     if: (github.ref == 'refs/heads/main' && github.event_name != 'release') || startsWith(github.ref, 'refs/tags/')
@@ -109,7 +109,7 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
       - name: Build and push image
-        run: export DOCKER_BUILDKIT=1; sbt Docker/publish
+        run: export DOCKER_BUILDKIT=1; ./sbtx Docker/publish
       - name: Output docker image tag
         id: docker_image_tag
         run: echo "tag=$(git describe --tag --dirty --abbrev=7 --always | tr -d '\n')" >> "$GITHUB_OUTPUT"
