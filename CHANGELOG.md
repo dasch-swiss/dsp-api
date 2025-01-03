@@ -1,5 +1,24 @@
 # Changelog
 
+## [31.2.0](https://github.com/dasch-swiss/dsp-api/compare/v31.1.0...v31.2.0) (2025-01-03)
+
+
+### Maintenances
+
+* Minor dependency updates ([#3438](https://github.com/dasch-swiss/dsp-api/issues/3438)) ([d31a55f](https://github.com/dasch-swiss/dsp-api/commit/d31a55fc9d67052119879ad9807e2f0a9528fc0e))
+* Update copyright ([#3450](https://github.com/dasch-swiss/dsp-api/issues/3450)) ([23c3c6e](https://github.com/dasch-swiss/dsp-api/commit/23c3c6e7cc0b868e6bffbc9e0ab800f7b13506b1))
+
+
+### Enhancements
+
+* Remove license and copyright from Project (DEV-4479) ([#3445](https://github.com/dasch-swiss/dsp-api/issues/3445)) ([c87233b](https://github.com/dasch-swiss/dsp-api/commit/c87233b382035a34704cc4bb9c16f59601dbe525))
+* Support JSON-LD ontology v2 change requests ([#3451](https://github.com/dasch-swiss/dsp-api/issues/3451)) ([a8b4bab](https://github.com/dasch-swiss/dsp-api/commit/a8b4bab882ba36809169c76ff83060032b53aa1c))
+
+
+### Tests
+
+* Migrate InputOntologyV2Spec to become a simple unit zio-test in the test source set ([#3449](https://github.com/dasch-swiss/dsp-api/issues/3449)) ([63aed0f](https://github.com/dasch-swiss/dsp-api/commit/63aed0f3b324bf0d43c8d772358ec3e06e8f22bd))
+
 ## [31.1.0](https://github.com/dasch-swiss/dsp-api/compare/v31.0.0...v31.1.0) (2024-12-16)
 
 
