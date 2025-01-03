@@ -10,21 +10,13 @@ import sttp.tapir.Codec
 import sttp.tapir.CodecFormat.TextPlain
 import sttp.tapir.ztapir.*
 import swiss.dasch.domain.ProjectShortcode
+import zio.ZLayer
 import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.schema.{DeriveSchema, Schema}
-import zio.ZLayer
-
-final case class MappingEntry(internalFilename: String, originalFilename: String)
-
-object MappingEntry {
-  given codec: JsonCodec[MappingEntry] = DeriveJsonCodec.gen[MappingEntry]
-  given schema: Schema[MappingEntry]   = DeriveSchema.gen[MappingEntry]
-}
 
 enum ActionName {
-  case ApplyTopLeftCorrection extends ActionName
-  case UpdateAssetMetadata    extends ActionName
-  case ImportProjectsToDb     extends ActionName
+  case UpdateAssetMetadata extends ActionName
+  case ImportProjectsToDb  extends ActionName
 }
 
 object ActionName {
@@ -67,33 +59,7 @@ final case class MaintenanceEndpoints(base: BaseEndpoints) {
     .tag(maintenance)
     .description("Authorization: admin scope required.")
 
-  val needsTopLeftCorrectionEndpoint = base.secureEndpoint.get
-    .in(maintenance / "needs-top-left-correction")
-    .out(stringBody)
-    .out(statusCode(StatusCode.Accepted))
-    .tag(maintenance)
-    .description("Authorization: admin scope required.")
-
-  val wasTopLeftCorrectionAppliedEndpoint = base.secureEndpoint.get
-    .in(maintenance / "was-top-left-correction-applied")
-    .out(stringBody)
-    .out(statusCode(StatusCode.Accepted))
-    .tag(maintenance)
-    .description("Authorization: admin scope required.")
-
-  val needsOriginalsEndpoint = base.secureEndpoint.get
-    .in(maintenance / "needs-originals")
-    .in(query[Option[Boolean]]("imagesOnly"))
-    .out(stringBody)
-    .out(statusCode(StatusCode.Accepted))
-    .tag(maintenance)
-    .description("Authorization: admin scope required.")
-
-  val endpoints = List(
-    postMaintenanceActionEndpoint,
-    needsTopLeftCorrectionEndpoint,
-    needsOriginalsEndpoint,
-  )
+  val endpoints = List(postMaintenanceActionEndpoint)
 }
 
 object MaintenanceEndpoints {
