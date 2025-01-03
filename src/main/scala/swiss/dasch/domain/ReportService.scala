@@ -4,9 +4,8 @@
  */
 
 package swiss.dasch.domain
-import swiss.dasch.domain.SizeInBytesPerType.{SizeInBytesMovingImages, SizeInBytesOther}
+import swiss.dasch.domain.SupportedFileType.MovingImage
 import zio.*
-import zio.json.JsonEncoder
 import zio.nio.file.Path
 
 final case class ChecksumReport(results: Map[AssetInfo, Chunk[ChecksumResult]], nrOfAssets: Int)
@@ -40,9 +39,11 @@ final case class SizeInBytesReport(sizes: Map[SupportedFileType, SizeInBytesPerT
 
 final case class FileSize(sizeInBytes: BigDecimal) extends AnyVal {
   def +(other: FileSize): FileSize = FileSize(sizeInBytes + other.sizeInBytes)
-
 }
+
 object FileSize {
+
+  val zero: FileSize = FileSize(0)
 
   def apply(sizeInBytes: Long): FileSize = FileSize(BigDecimal.exact(sizeInBytes))
 
@@ -60,42 +61,24 @@ object FileSize {
   }
 
 }
-sealed trait SizeInBytesPerType {
-  def fileType: SupportedFileType
-  def add(other: SizeInBytesPerType): SizeInBytesPerType
-}
-object SizeInBytesPerType {
 
-  final case class SizeInBytesOther(fileType: SupportedFileType, sizeOrig: FileSize, sizeDerivative: FileSize)
-      extends SizeInBytesPerType { self =>
-    override def add(other: SizeInBytesPerType): SizeInBytesOther =
-      other match {
-        case otherSize: SizeInBytesOther =>
-          self.copy(
-            sizeOrig = sizeOrig + otherSize.sizeOrig,
-            sizeDerivative = sizeDerivative + otherSize.sizeDerivative,
-          )
-        case _ => self
-      }
+final case class SizeInBytesPerType(
+  fileType: SupportedFileType,
+  sizeOrig: FileSize,
+  sizeDerivative: FileSize,
+  sizeKeyframes: FileSize,
+) {
+  self =>
+  def add(other: SizeInBytesPerType): SizeInBytesPerType = {
+    if (fileType != other.fileType) throw new IllegalArgumentException("Cannot add sizes of different file types")
+    self.copy(
+      sizeOrig = self.sizeOrig + other.sizeOrig,
+      sizeDerivative = self.sizeDerivative + other.sizeDerivative,
+      sizeKeyframes = self.sizeKeyframes + other.sizeKeyframes,
+    )
   }
 
-  final case class SizeInBytesMovingImages(
-    sizeOrig: FileSize,
-    sizeDerivative: FileSize,
-    sizeKeyframes: FileSize,
-  ) extends SizeInBytesPerType { self =>
-    val fileType: SupportedFileType = SupportedFileType.MovingImage
-    def add(other: SizeInBytesPerType): SizeInBytesMovingImages =
-      other match {
-        case otherSize: SizeInBytesMovingImages =>
-          self.copy(
-            sizeOrig = sizeOrig + otherSize.sizeOrig,
-            sizeDerivative = sizeDerivative + otherSize.sizeDerivative,
-            sizeKeyframes = sizeKeyframes + otherSize.sizeKeyframes,
-          )
-        case _ => this
-      }
-  }
+  val sum: FileSize = self.sizeOrig + self.sizeDerivative + self.sizeKeyframes
 }
 
 final case class ReportService(
@@ -150,13 +133,6 @@ final case class ReportService(
   private def timedReportName(filename: String, fileExtension: String): UIO[String] =
     Clock.instant.map(now => s"${filename}_$now.$fileExtension")
 
-  def saveJsonReport[A](name: String, report: A)(using encoder: JsonEncoder[A]): Task[Path] = for {
-    reportsDir <- getReportsPath
-    now        <- Clock.instant
-    reportFile  = reportsDir / s"${name}_$now.json"
-    _          <- storageService.saveJsonFile(reportFile, report)
-  } yield reportFile
-
   private def updateAssetOverviewReport(
     report: AssetOverviewReport,
     info: AssetInfo,
@@ -184,26 +160,17 @@ final case class ReportService(
         )
 
   private def calculateSizeInBytes(fileType: SupportedFileType, info: AssetInfo): Task[SizeInBytesPerType] =
-    fileType match {
-      case SupportedFileType.MovingImage => calculateSizeInBytesMovingImages(info)
-      case _                             => calculateSizeInBytesOther(fileType, info)
-    }
-
-  private def calculateSizeInBytesMovingImages(info: AssetInfo): Task[SizeInBytesMovingImages] =
     for {
       assetFolder    <- storageService.getAssetFolder(info.assetRef)
       sizeOrig       <- storageService.calculateSizeInBytes(assetFolder / info.original.file.filename)
       sizeDerivative <- storageService.calculateSizeInBytes(assetFolder / info.derivative.file.filename)
-      sizeKeyframes  <- storageService.calculateSizeInBytes(assetFolder / info.assetRef.id.toString)
+      sizeKeyframes <-
+        fileType match {
+          case MovingImage => storageService.calculateSizeInBytes(assetFolder / info.assetRef.id.toString)
+          case _           => ZIO.succeed(FileSize.zero)
+        }
+    } yield SizeInBytesPerType(fileType, sizeOrig, sizeDerivative, sizeKeyframes)
 
-    } yield SizeInBytesMovingImages(sizeOrig, sizeDerivative, sizeKeyframes)
-
-  private def calculateSizeInBytesOther(fileType: SupportedFileType, info: AssetInfo): Task[SizeInBytesOther] =
-    for {
-      assetFolder    <- storageService.getAssetFolder(info.assetRef)
-      sizeOrig       <- storageService.calculateSizeInBytes(assetFolder / info.original.file.filename)
-      sizeDerivative <- storageService.calculateSizeInBytes(assetFolder / info.derivative.file.filename)
-    } yield SizeInBytesOther(fileType, sizeOrig, sizeDerivative)
 }
 object ReportService {
   val layer = ZLayer.derive[ReportService]

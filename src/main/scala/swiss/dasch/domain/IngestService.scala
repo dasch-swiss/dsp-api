@@ -10,8 +10,9 @@ import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FilenameUtils
 import swiss.dasch.domain.Asset.{MovingImageAsset, StillImageAsset}
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
-import swiss.dasch.domain.AugmentedPath.{AssetFolder, OrigFile, OtherDerivativeFile}
+import swiss.dasch.domain.AugmentedPath.{AssetFolder, AudioDerivativeFile, OrigFile, OtherDerivativeFile}
 import swiss.dasch.domain.PathOps.fileExtension
+import swiss.dasch.domain.SupportedFileType.{Audio, MovingImage, OtherFiles, StillImage}
 import zio.nio.file.{Files, Path}
 import zio.{IO, Task, ZIO, ZLayer}
 
@@ -50,9 +51,10 @@ class IngestServiceLive(
                  .fromOption(SupportedFileType.fromPath(fileToIngest))
                  .orElseFail(new IllegalArgumentException("Unsupported file type."))
                  .flatMap {
-                   case SupportedFileType.StillImage  => handleImageFile(original, assetDir)
-                   case SupportedFileType.OtherFiles  => handleOtherFile(original, assetDir)
-                   case SupportedFileType.MovingImage => handleMovingImageFile(original, assetDir)
+                   case StillImage  => handleImageFile(original, assetDir)
+                   case MovingImage => handleMovingImageFile(original, assetDir)
+                   case Audio       => handleAudioFile(original, assetDir)
+                   case OtherFiles  => handleOtherFile(original, assetDir)
                  }
       _ <- assetInfo.createAssetInfo(asset).tap(assetInfo.save).logError
       _ <- storage.delete(fileToIngest)
@@ -76,15 +78,29 @@ class IngestServiceLive(
       } yield Asset.makeStillImage(assetDir.assetRef, original, derivative, metadata)
     }
 
+  private def handleAudioFile(original: Original, assetDir: AssetFolder) =
+    ZIO.logInfo(s"Creating derivative for audio $original, ${assetDir.assetRef}") *> {
+      val fileExtension = FilenameUtils.getExtension(original.originalFilename.toString)
+      val derivative    = AudioDerivativeFile.unsafeFrom(assetDir / s"${assetDir.assetId}.$fileExtension")
+      handleAudioAndOtherFile(original, assetDir, derivative)
+    }
+
   private def handleOtherFile(original: Original, assetDir: AssetFolder) =
     ZIO.logInfo(s"Creating derivative for other $original, ${assetDir.assetRef}") *> {
       val fileExtension = FilenameUtils.getExtension(original.originalFilename.toString)
       val derivative    = OtherDerivativeFile.unsafeFrom(assetDir / s"${assetDir.assetId}.$fileExtension")
-      for {
-        _        <- storage.copyFile(original.file, derivative)
-        metadata <- otherFilesService.extractMetadata(original, derivative)
-      } yield Asset.makeOther(assetDir.assetRef, original, derivative, metadata)
+      handleAudioAndOtherFile(original, assetDir, derivative)
     }
+
+  private def handleAudioAndOtherFile(
+    original: Original,
+    assetDir: AssetFolder,
+    derivative: AudioDerivativeFile | OtherDerivativeFile,
+  ) =
+    for {
+      _        <- storage.copyFile(original.file, derivative)
+      metadata <- otherFilesService.extractMetadata(original, derivative)
+    } yield Asset.makeOther(assetDir.assetRef, original, derivative, metadata)
 
   private def handleMovingImageFile(original: Original, assetDir: AssetFolder): Task[MovingImageAsset] =
     ZIO.logInfo(s"Creating derivative for moving image $original, ${assetDir.assetRef}") *> {

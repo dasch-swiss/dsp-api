@@ -5,16 +5,17 @@
 
 package swiss.dasch.domain
 
-import swiss.dasch.domain.AugmentedPath.OtherDerivativeFile
+import swiss.dasch.domain.AugmentedPath.{AudioDerivativeFile, OtherDerivativeFile}
 import zio.{UIO, ZIO, ZLayer}
 
 final case class OtherFilesService(mimeTypeGuesser: MimeTypeGuesser) {
-  def extractMetadata(original: Original, derivative: OtherDerivativeFile): UIO[OtherMetadata] = for {
-    _               <- ZIO.when(original.assetId != derivative.assetId)(ZIO.die(new Exception("Asset IDs do not match")))
-    originalMimeType = mimeTypeGuesser.guess(original.originalFilename)
-    internalMimeType = mimeTypeGuesser.guess(derivative.path)
-    _               <- ZIO.logInfo(s"Extracting metadata for ${derivative.assetId}")
-  } yield (OtherMetadata(internalMimeType, originalMimeType))
+  def extractMetadata(original: Original, derivative: OtherDerivativeFile | AudioDerivativeFile): UIO[OtherMetadata] =
+    for {
+      _               <- ZIO.when(original.assetId != derivative.assetId)(ZIO.die(new Exception("Asset IDs do not match")))
+      originalMimeType = mimeTypeGuesser.guess(original.originalFilename)
+      internalMimeType = mimeTypeGuesser.guess(derivative.path)
+      _               <- ZIO.logInfo(s"Extracting metadata for ${derivative.assetId}")
+    } yield (OtherMetadata(internalMimeType, originalMimeType))
 }
 
 object OtherFilesService {

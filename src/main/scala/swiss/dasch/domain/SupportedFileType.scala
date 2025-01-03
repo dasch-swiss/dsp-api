@@ -51,7 +51,7 @@ private val text =
     "xsl" -> MimeType.unsafeFrom("application/xslt+xml"),
   )
 
-private val other = archive ++ audio ++ office ++ tables ++ text
+private val other = archive ++ office ++ tables ++ text
 
 private val movingImages = Map("mp4" -> MimeType.unsafeFrom("video/mp4"))
 
@@ -74,6 +74,7 @@ private val stillImages = Map(
 enum SupportedFileType(val mappings: Map[String, MimeType]) derives JsonCodec {
   case StillImage  extends SupportedFileType(stillImages)
   case MovingImage extends SupportedFileType(movingImages)
+  case Audio       extends SupportedFileType(audio)
   case OtherFiles  extends SupportedFileType(other)
 
   val extensions: Seq[String]                      = mappings.keys.toSeq

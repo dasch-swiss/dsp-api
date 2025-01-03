@@ -190,11 +190,11 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
       .filterZIO(p => FileFilters.isNonHiddenRegularFile(p))
       .mapZIO(Files.size)
       .map(FileSize.apply)
-      .runFold(FileSize(0L))(_ + _)
+      .runFold(FileSize.zero)(_ + _)
 
   private def calculateFileSize(path: Path): ZIO[Any, IOException, FileSize] =
     FileFilters.isNonHiddenRegularFile.apply(path).flatMap {
-      case false => ZIO.succeed(FileSize(0))
+      case false => ZIO.succeed(FileSize.zero)
       case true  => Files.size(path).map(FileSize.apply)
     }
 }

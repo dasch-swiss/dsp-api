@@ -9,7 +9,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.PathOps.{fileExtension, isHidden}
 import swiss.dasch.domain.SipiImageFormat.Jpx
-import swiss.dasch.domain.SupportedFileType.{MovingImage, OtherFiles}
+import swiss.dasch.domain.SupportedFileType.{Audio, MovingImage, OtherFiles}
 import zio.IO
 import zio.nio.file.Path
 
@@ -142,6 +142,14 @@ object AugmentedPath {
     given AugmentedPathBuilder[MovingImageDerivativeFile] with {
       def from(path: Path): Either[String, MovingImageDerivativeFile] =
         AugmentedPath.from(path, MovingImage.acceptsExtension, MovingImageDerivativeFile.apply)
+    }
+  }
+
+  final case class AudioDerivativeFile private (path: Path, assetId: AssetId) extends DerivativeFile
+  object AudioDerivativeFile extends WithSmartConstructors[AudioDerivativeFile] {
+    given AugmentedPathBuilder[AudioDerivativeFile] with {
+      def from(path: Path): Either[String, AudioDerivativeFile] =
+        AugmentedPath.from(path, Audio.acceptsExtension, AudioDerivativeFile.apply)
     }
   }
 

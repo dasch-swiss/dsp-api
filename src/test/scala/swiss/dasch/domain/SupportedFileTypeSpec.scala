@@ -15,14 +15,19 @@ object SupportedFileTypeSpec extends ZIOSpecDefault {
     test("All valid extensions for Other are supported") {
 
       val archive = Seq("7z", "gz", "gzip", "tar", "tar.gz", "tgz", "z", "zip")
-      val audio   = Seq("mp3", "mpeg", "wav")
       val office  = Seq("doc", "docx", "pdf", "ppt", "pptx")
       val tables  = Seq("csv", "xls", "xlsx")
       val text    = Seq("odd", "rng", "txt", "json", "xml", "xsd", "xsl")
 
-      val otherFileTypeExtensions = text ++ tables ++ audio ++ office ++ archive
+      val otherFileTypeExtensions = text ++ tables ++ office ++ archive
       check(Gen.fromIterable(withUpperCase(otherFileTypeExtensions))) { ext =>
         assertTrue(SupportedFileType.fromPath(Path(s"test.$ext")).contains(SupportedFileType.OtherFiles))
+      }
+    },
+    test("All valid extensions for Audio are supported") {
+      val audio = Seq("mp3", "mpeg", "wav")
+      check(Gen.fromIterable(withUpperCase(audio))) { ext =>
+        assertTrue(SupportedFileType.fromPath(Path(s"test.$ext")).contains(SupportedFileType.Audio))
       }
     },
     test("All valid extensions for StillImage are supported") {
