@@ -114,4 +114,7 @@ object Cardinality {
   val allCardinalities: Array[Cardinality] = Array(AtLeastOne, ExactlyOne, Unbounded, ZeroOrOne)
 
   def fromString(str: String): Option[Cardinality] = allCardinalities.find(_.toString == str)
+
+  def from(min: Option[Int], max: Option[Int]) =
+    allCardinalities.find(it => min.getOrElse(0) == it.min && max == it.max)
 }

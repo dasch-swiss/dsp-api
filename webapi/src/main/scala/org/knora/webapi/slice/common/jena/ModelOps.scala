@@ -24,10 +24,15 @@ object ModelOps { self =>
     def printTurtle: UIO[Unit] =
       asTurtle.flatMap(Console.printLine(_)).logError.ignore
 
-    def asTurtle: Task[String] =
+    def printTriG: UIO[Unit] =
+      asTriG.flatMap(Console.printLine(_)).logError.ignore
+
+    def asTurtle: Task[String] = as(Lang.TURTLE)
+    def asTriG: Task[String]   = as(Lang.TRIG)
+    def as(lang: Lang): Task[String] =
       ZIO.attempt {
         val out = new java.io.ByteArrayOutputStream()
-        RDFDataMgr.write(out, model, Lang.TURTLE)
+        RDFDataMgr.write(out, model, lang)
         out.toString(java.nio.charset.StandardCharsets.UTF_8)
       }
 

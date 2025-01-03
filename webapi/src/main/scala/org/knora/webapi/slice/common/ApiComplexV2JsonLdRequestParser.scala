@@ -97,8 +97,7 @@ final case class ApiComplexV2JsonLdRequestParser(
     private def resourceClassIri(r: Resource): IO[String, ResourceClassIri] = ZIO
       .fromOption(r.rdfsType)
       .orElseFail("No root resource class IRI found")
-      .flatMap(converter.asSmartIri(_).mapError(_.getMessage))
-      .flatMap(iri => ZIO.fromEither(KResourceClassIri.fromApiV2Complex(iri)))
+      .flatMap(str => converter.asResourceClassIri(str))
   }
 
   def updateResourceMetadataRequestV2(
