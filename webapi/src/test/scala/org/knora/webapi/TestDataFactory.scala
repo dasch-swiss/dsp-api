@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -9,7 +9,11 @@ import zio.Chunk
 import zio.NonEmptyChunk
 
 import dsp.valueobjects.LanguageCode
+import org.knora.webapi.TestDataFactory.Project.systemProjectIri
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
@@ -23,13 +27,39 @@ import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 
 /**
  * Helps in creating value objects for tests.
  */
 object TestDataFactory {
+  object Project {
+    val systemProjectIri: IRI = KnoraProjectRepo.builtIn.SystemProject.id.value // built-in project
+  }
 
   object User {
+    /* represents the user profile of 'root' as found in admin-data.ttl */
+    val rootUser: User =
+      org.knora.webapi.slice.admin.domain.model.User(
+        id = "http://rdfh.ch/users/root",
+        username = "root",
+        email = "root@example.com",
+        givenName = "System",
+        familyName = "Administrator",
+        status = true,
+        lang = "de",
+        password = Option("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+        groups = Seq.empty[Group],
+        projects = Seq.empty[Project],
+        permissions = PermissionsDataADM(
+          groupsPerProject = Map(
+            systemProjectIri -> List(KnoraGroupRepo.builtIn.SystemAdmin.id.value),
+          ),
+          administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionADM]],
+        ),
+      )
+
     val testUser: KnoraUser = KnoraUser(
       UserIri.unsafeFrom("http://rdfh.ch/users/exists"),
       Username.unsafeFrom("testuser"),

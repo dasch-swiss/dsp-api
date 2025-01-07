@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -24,7 +24,6 @@ import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.*
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -452,9 +451,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(!cachedMetadataResponse.ontologies.exists(_.ontologyIri == fooIri.get.toSmartIri))
 
       // Reload the ontologies from the triplestore and check again.
-      UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)),
-      )
+      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[OntologyCache](_.loadOntologies()))
 
       appActor ! OntologyMetadataGetByProjectRequestV2()
 
@@ -795,7 +792,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Reload the ontology cache and see if we get the same result.
       UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)),
+        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies()),
       )
 
       appActor ! PropertiesGetRequestV2(
@@ -899,7 +896,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Reload the ontology cache and see if we get the same result.
       UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)),
+        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies()),
       )
 
       appActor ! PropertiesGetRequestV2(
@@ -3738,7 +3735,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Reload the ontology cache and see if we get the same result.
       UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)),
+        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies()),
       )
 
       appActor ! linkPropGetRequest

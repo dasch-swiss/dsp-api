@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,7 +10,6 @@ import zio.ZIO
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -42,7 +41,7 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
     )
 
     UnsafeZioRun
-      .run(ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)))
+      .run(ZIO.serviceWithZIO[OntologyCache](_.loadOntologies()))
       .toEither
       .map(_ => SuccessResponseV2("OK"))
       .left

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,7 +10,6 @@ import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import zio.ZIO
 
-import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration.*
 
@@ -33,8 +32,6 @@ class KnoraSipiAuthenticationITSpec
 
   private val anythingUserEmail = SharedTestDataADM.anythingAdminUser.email
   private val password          = SharedTestDataADM.testPass
-
-  private val marblesOriginalFilename = "marbles.tif"
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(

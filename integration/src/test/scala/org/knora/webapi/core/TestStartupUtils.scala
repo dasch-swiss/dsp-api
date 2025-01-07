@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -9,7 +9,6 @@ import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
@@ -32,7 +31,7 @@ trait TestStartupUtils extends LazyLogging {
       tss <- ZIO.service[TriplestoreService]
       _   <- tss.resetTripleStoreContent(rdfDataObjects).timeout(480.seconds)
       _   <- ZIO.logInfo("... loading test data done.")
-      _   <- ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)).orDie
+      _   <- ZIO.serviceWithZIO[OntologyCache](_.loadOntologies()).orDie
     } yield ()
 
 }

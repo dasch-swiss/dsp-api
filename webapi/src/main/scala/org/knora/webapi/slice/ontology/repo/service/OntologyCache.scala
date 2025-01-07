@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -21,13 +21,11 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.OntologyUtil
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -419,11 +417,8 @@ trait OntologyCache {
 
   /**
    * Loads and caches all ontology information.
-   *
-   * @param requestingUser the user making the request.
-   * @return [[Unit]]
    */
-  def loadOntologies(requestingUser: User): Task[Unit]
+  def loadOntologies(): Task[Unit]
 
   /**
    * Gets the ontology data from the cache.
@@ -475,12 +470,6 @@ trait OntologyCache {
     updatedClassIri: SmartIri,
   ): Task[OntologyCacheData]
 
-  /**
-   * Loads and caches all ontology information.
-   *
-   * @return [[Unit]]
-   */
-  final def loadOntologies(): Task[Unit] = loadOntologies(KnoraSystemInstances.Users.SystemUser)
 }
 
 final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef: Ref[OntologyCacheData])(implicit
@@ -490,19 +479,9 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
 
   /**
    * Loads and caches all ontology information.
-   *
-   * @param requestingUser the user making the request.
-   * @return [[Unit]]
    */
-  override def loadOntologies(requestingUser: User): Task[Unit] =
+  override def loadOntologies(): Task[Unit] =
     for {
-      _ <-
-        ZIO
-          .fail(ForbiddenException(s"Only a system administrator can reload ontologies"))
-          .when(
-            !(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin),
-          )
-
       // Get all ontology metadata.
       _                           <- ZIO.logInfo(s"Loading ontologies into cache")
       allOntologyMetadataResponse <- triplestore.query(Select(sparql.v2.txt.getAllOntologyMetadata()))
