@@ -82,9 +82,14 @@
     knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
     knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-    knora-base:mappingHasXMLTagname            "footnote"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "footnote"^^xsd:string ;
+    knora-base:mappingHasXMLAttribute          <http://rdfh.ch/standoff/mappings/StandardMapping/elements/PvcDhnV4TCWRCPXsMasMZA> .
 
-
+<http://rdfh.ch/standoff/mappings/StandardMapping/elements/PvcDhnV4TCWRCPXsMasMZA>
+    a                                     knora-base:MappingXMLAttribute ;
+    knora-base:mappingHasStandoffProperty standoff:standoffFootnoteTagHasContent ;
+    knora-base:mappingHasXMLAttributename "content"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace     "noNamespace"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/4XIn2zgbSN-swe5PdPjogg>
     a                                          knora-base:MappingElement ;
