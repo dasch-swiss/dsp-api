@@ -695,7 +695,7 @@ end positions of a substring in the text that has a particular attribute. The OW
   represents the end of a virtual (non syntactical) hierarchy.
 
 The `StandoffTag` class is not used directly in RDF data; instead, its subclasses are used. A few subclasses are
-currently provided in `standoff-onto.ttl`, and more will be added to support TEI semantics.
+currently provided in `standoff-onto.ttl`.
 Projects are able to define their own custom standoff tag classes (direct subclasses of `StandoffTag`
 or one of the standoff data type classes or subclasses of one of the standoff classes defined in `standoff-onto.ttl`).
 
