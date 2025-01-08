@@ -541,6 +541,13 @@
                     },
                     "owl:cardinality": 1,
                     "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "standoff:standoffFootnoteTagHasContent"
+                    },
+                    "owl:cardinality": 1
                 }
             ],
             "rdfs:comment": "Represents a footnote in a TextValue",
@@ -3025,6 +3032,17 @@
             "rdfs:comment": "Represents visual markup information in a TextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffVisualTag"
+        },
+        {
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "standoff:standoffFootnoteTagHasContent",
+            "knora-api:subjectType": {
+                "@id": "standoff:StandoffFootnoteTag"
+            },
+            "rdfs:comment": "describes the content of a footnote"
         },
         {
             "@type": "owl:DatatypeProperty",
