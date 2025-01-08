@@ -19,6 +19,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration.*
+import scala.xml.XML
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -38,7 +39,6 @@ import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.*
-import scala.xml.XML
 
 class ValuesRouteV2E2ESpec extends E2ESpec {
 
