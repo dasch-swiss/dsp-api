@@ -35,6 +35,7 @@ This allows for the following markup:
     - horizontal rules
     - code blocks
     - block quotes
+    - footnotes
 - typographical markup
     - italics
     - bold

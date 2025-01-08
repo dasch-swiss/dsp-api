@@ -541,6 +541,104 @@
                     },
                     "owl:cardinality": 1,
                     "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "standoff:standoffFootnoteTagHasContent"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "Represents a footnote in a TextValue",
+            "@type": "owl:Class",
+            "@id": "standoff:StandoffFootnoteTag"
+        },
+        {
+            "knora-api:isStandoffClass": true,
+            "rdfs:subClassOf": [
+                {
+                    "@id": "standoff:StandoffStructuralTag"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:standoffTagHasEnd"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:standoffTagHasEndIndex"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:standoffTagHasEndParent"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:standoffTagHasEndParentIndex"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:standoffTagHasOriginalXMLID"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:standoffTagHasStart"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:standoffTagHasStartIndex"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:standoffTagHasStartParent"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:standoffTagHasStartParentIndex"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:standoffTagHasUUID"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
                 }
             ],
             "rdfs:comment": "Represents a header of level 1 in a TextValue",
@@ -2934,6 +3032,17 @@
             "rdfs:comment": "Represents visual markup information in a TextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffVisualTag"
+        },
+        {
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "standoff:standoffFootnoteTagHasContent",
+            "knora-api:subjectType": {
+                "@id": "standoff:StandoffFootnoteTag"
+            },
+            "rdfs:comment": "describes the content of a footnote"
         },
         {
             "@type": "owl:DatatypeProperty",
