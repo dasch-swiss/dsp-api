@@ -15,12 +15,12 @@ import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.WithFrom
 
-final case class CopyrightAttribution private (override val value: String) extends StringValue
-object CopyrightAttribution extends StringValueCompanion[CopyrightAttribution] {
-  def from(str: String): Either[String, CopyrightAttribution] =
+final case class CopyrightHolder private (override val value: String) extends StringValue
+object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
+  def from(str: String): Either[String, CopyrightHolder] =
     fromValidations(
-      "Copyright Attribution",
-      CopyrightAttribution.apply,
+      "Copyright Holder",
+      CopyrightHolder.apply,
       List(nonEmpty, noLineBreaks, maxLength(1_000)),
     )(str)
 }

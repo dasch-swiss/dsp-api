@@ -527,11 +527,11 @@
     :subjectClassConstraint :Resource ;
     :objectClassConstraint  :Value .
 
-###  http://www.knora.org/ontology/knora-base#hasCopyrightAttribution
+###  http://www.knora.org/ontology/knora-base#hasCopyrightHolder
 
-:hasCopyrightAttribution
+:hasCopyrightHolder
     rdf:type                  owl:DatatypeProperty ;
-    rdfs:comment              "The copyright statement that gives credit to the original author."@en ;
+    rdfs:comment              "The copyright holder."@en ;
     :objectDatatypeConstraint xsd:string .
 
 ###  http://www.knora.org/ontology/knora-base#hasLicense
@@ -1500,7 +1500,7 @@
                       owl:onProperty     :originalMimeType ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
-                      owl:onProperty     :hasCopyrightAttribution ;
+                      owl:onProperty     :hasCopyrightHolder ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :hasLicenseText  ;

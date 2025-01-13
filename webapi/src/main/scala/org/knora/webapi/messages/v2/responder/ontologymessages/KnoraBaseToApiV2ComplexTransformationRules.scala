@@ -152,8 +152,8 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withIsResourceProp()
     .withIsLinkValueProp()
 
-  private val HasCopyrightAttribution = makeOwlDatatypeProperty(KA.HasCopyrightAttribution, XSD.STRING)
-    .withRdfLabelEn("has copyright attribution")
+  private val HasCopyrightHolder = makeOwlDatatypeProperty(KA.HasCopyrightHolder, XSD.STRING)
+    .withRdfLabelEn("has copyright holder")
     .withRdfCommentEn("The copyright statement that gives credit to the original author.")
 
   private val HasLicenseText = makeOwlDatatypeProperty(KA.HasLicenseText, XSD.STRING)
@@ -659,7 +659,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     FileValueHasFilename,
     GeometryValueAsGeometry,
     GeonameValueAsGeonameCode,
-    HasCopyrightAttribution,
+    HasCopyrightHolder,
     HasIncomingLinkValue,
     HasLicenseText,
     HasLicenseUri,

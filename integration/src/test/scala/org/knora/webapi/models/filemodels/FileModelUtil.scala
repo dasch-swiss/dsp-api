@@ -11,7 +11,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.valuemessages.*
-import org.knora.webapi.slice.admin.domain.model.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.LicenseText
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
@@ -87,7 +87,7 @@ object FileModelUtil {
     originalFilename: Option[String],
     originalMimeType: Option[String],
     comment: Option[String],
-    copyrightAttribution: Option[CopyrightAttribution],
+    copyrightHolder: Option[CopyrightHolder],
     licenseText: Option[LicenseText],
     licenseUri: Option[LicenseUri],
   ): FileValueContentV2 =
@@ -100,7 +100,7 @@ object FileModelUtil {
             internalMimeType = internalMimeType.getOrElse("application/pdf"),
             originalFilename = originalFilename,
             originalMimeType = Some(originalMimeType.getOrElse("application/pdf")),
-            copyrightAttribution,
+            copyrightHolder,
             licenseText,
             licenseUri,
           ),
@@ -117,7 +117,7 @@ object FileModelUtil {
             internalMimeType = internalMimeType.getOrElse("image/jp2"),
             originalFilename = originalFilename,
             originalMimeType = originalMimeType,
-            copyrightAttribution,
+            copyrightHolder,
             licenseText,
             licenseUri,
           ),
@@ -133,7 +133,7 @@ object FileModelUtil {
             internalMimeType = internalMimeType.getOrElse("image/jp2"),
             originalFilename = originalFilename,
             originalMimeType = originalMimeType,
-            copyrightAttribution,
+            copyrightHolder,
             licenseText,
             licenseUri,
           ),
@@ -148,7 +148,7 @@ object FileModelUtil {
             internalMimeType = internalMimeType.get,
             originalFilename = originalFilename,
             originalMimeType = internalMimeType,
-            copyrightAttribution,
+            copyrightHolder,
             licenseText,
             licenseUri,
           ),
@@ -161,7 +161,7 @@ object FileModelUtil {
             internalMimeType = internalMimeType.get,
             originalFilename = originalFilename,
             originalMimeType = internalMimeType,
-            copyrightAttribution,
+            copyrightHolder,
             licenseText,
             licenseUri,
           ),
@@ -174,7 +174,7 @@ object FileModelUtil {
             internalMimeType = internalMimeType.get,
             originalFilename = originalFilename,
             originalMimeType = internalMimeType,
-            copyrightAttribution,
+            copyrightHolder,
             licenseText,
             licenseUri,
           ),
@@ -187,7 +187,7 @@ object FileModelUtil {
             internalMimeType = internalMimeType.getOrElse("application/zip"),
             originalFilename = originalFilename,
             originalMimeType = internalMimeType,
-            copyrightAttribution,
+            copyrightHolder,
             licenseText,
             licenseUri,
           ),

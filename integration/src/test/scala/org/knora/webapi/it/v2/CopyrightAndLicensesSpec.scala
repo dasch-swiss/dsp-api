@@ -20,13 +20,13 @@ import scala.language.implicitConversions
 
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasCopyrightAttribution
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasCopyrightHolder
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasLicenseText
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasLicenseUri
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.StillImageFileValue
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
-import org.knora.webapi.slice.admin.domain.model.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.LicenseText
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -39,14 +39,14 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 object CopyrightAndLicensesSpec extends E2EZSpec {
 
-  private val aCopyrightAttribution = CopyrightAttribution.unsafeFrom("2020, On FileValue")
-  private val aLicenseText          = LicenseText.unsafeFrom("CC BY-SA 4.0")
-  private val aLicenseUri           = LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by-sa/4.0/")
+  private val aCopyrightHolder = CopyrightHolder.unsafeFrom("2020, On FileValue")
+  private val aLicenseText     = LicenseText.unsafeFrom("CC BY-SA 4.0")
+  private val aLicenseUri      = LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by-sa/4.0/")
 
-  private val givenProjectHasNoCopyrightAttributionAndLicenseSuite = suite("Creating Resources")(
+  private val givenProjectHasNoCopyrightHolderAndLicenseSuite = suite("Creating Resources")(
     test(
-      "when creating a resource without copyright attribution and license" +
-        "the creation response should not contain the license and copyright attribution",
+      "when creating a resource without copyright holder and license" +
+        "the creation response should not contain the license and copyright holder",
     ) {
       for {
         createResourceResponseModel <- createStillImageResource()
@@ -60,52 +60,52 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       )
     },
     test(
-      "when creating a resource with copyright attribution and license " +
-        "the creation response should contain the license and copyright attribution",
+      "when creating a resource with copyright holder and license " +
+        "the creation response should contain the license and copyright holder",
     ) {
       for {
         createResourceResponseModel <-
-          createStillImageResource(Some(aCopyrightAttribution), Some(aLicenseText), Some(aLicenseUri))
+          createStillImageResource(Some(aCopyrightHolder), Some(aLicenseText), Some(aLicenseUri))
         actualCreatedCopyright   <- copyrightValue(createResourceResponseModel)
         actualCreatedLicenseText <- licenseTextValue(createResourceResponseModel)
         actualCreatedLicenseUri  <- licenseUriValue(createResourceResponseModel)
       } yield assertTrue(
-        actualCreatedCopyright == aCopyrightAttribution.value,
+        actualCreatedCopyright == aCopyrightHolder.value,
         actualCreatedLicenseText == aLicenseText.value,
         actualCreatedLicenseUri == aLicenseUri.value,
       )
     },
     test(
-      "when creating a resource with copyright attribution and license " +
-        "the response when getting the created resource should contain the license and copyright attribution",
+      "when creating a resource with copyright holder and license " +
+        "the response when getting the created resource should contain the license and copyright holder",
     ) {
       for {
         createResourceResponseModel <-
-          createStillImageResource(Some(aCopyrightAttribution), Some(aLicenseText), Some(aLicenseUri))
+          createStillImageResource(Some(aCopyrightHolder), Some(aLicenseText), Some(aLicenseUri))
         resourceId        <- resourceId(createResourceResponseModel)
         getResponseModel  <- getResourceFromApi(resourceId)
         actualCopyright   <- copyrightValue(getResponseModel)
         actualLicenseText <- licenseTextValue(getResponseModel)
         actualLicenseUri  <- licenseUriValue(getResponseModel)
       } yield assertTrue(
-        actualCopyright == aCopyrightAttribution.value,
+        actualCopyright == aCopyrightHolder.value,
         actualLicenseText == aLicenseText.value,
         actualLicenseUri == aLicenseUri.value,
       )
     },
     test(
-      "when creating a resource with copyright attribution and license " +
-        "the response when getting the created value should contain the license and copyright attribution",
+      "when creating a resource with copyright holder and license " +
+        "the response when getting the created value should contain the license and copyright holder",
     ) {
       for {
         createResourceResponseModel <-
-          createStillImageResource(Some(aCopyrightAttribution), Some(aLicenseText), Some(aLicenseUri))
+          createStillImageResource(Some(aCopyrightHolder), Some(aLicenseText), Some(aLicenseUri))
         valueResponseModel <- getValueFromApi(createResourceResponseModel)
         actualCopyright    <- copyrightValue(valueResponseModel)
         actualLicenseText  <- licenseTextValue(valueResponseModel)
         actualLicenseUri   <- licenseUriValue(valueResponseModel)
       } yield assertTrue(
-        actualCopyright == aCopyrightAttribution.value,
+        actualCopyright == aCopyrightHolder.value,
         actualLicenseText == aLicenseText.value,
         actualLicenseUri == aLicenseUri.value,
       )
@@ -113,14 +113,14 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
   )
 
   val e2eSpec: Spec[Scope & env, Any] = suite("Copyright Attribution and Licenses")(
-    givenProjectHasNoCopyrightAttributionAndLicenseSuite,
+    givenProjectHasNoCopyrightHolderAndLicenseSuite,
   )
 
   private def failResponse(msg: String)(response: Response) =
     response.body.asString.flatMap(bodyStr => ZIO.fail(Exception(s"$msg\nstatus: ${response.status}\nbody: $bodyStr")))
 
   private def createStillImageResource(
-    copyrightAttribution: Option[CopyrightAttribution] = None,
+    copyrightHolder: Option[CopyrightHolder] = None,
     licenseText: Option[LicenseText] = None,
     licenseUri: Option[LicenseUri] = None,
   ): ZIO[env, Throwable, Model] = {
@@ -128,7 +128,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       .make(
         FileType.StillImageFile(),
         "internalFilename.jpg",
-        copyrightAttribution = copyrightAttribution,
+        copyrightHolder = copyrightHolder,
         licenseText = licenseText,
         licenseUri = licenseUri,
       )
@@ -186,9 +186,9 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
   }
 
   private def copyrightValue(model: Model) =
-    singleStringValueOption(model, HasCopyrightAttribution).someOrFail(new Exception("No copyright found"))
+    singleStringValueOption(model, HasCopyrightHolder).someOrFail(new Exception("No copyright found"))
   private def copyrightValueOption(model: Model) =
-    singleStringValueOption(model, HasCopyrightAttribution)
+    singleStringValueOption(model, HasCopyrightHolder)
   private def licenseTextValue(model: Model) =
     singleStringValueOption(model, HasLicenseText).someOrFail(new Exception("No license text found"))
   private def licenseTextValueOption(model: Model) =

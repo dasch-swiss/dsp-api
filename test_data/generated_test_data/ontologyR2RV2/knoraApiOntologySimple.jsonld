@@ -906,7 +906,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasCopyrightAttribution"
+                        "@id": "knora-api:hasCopyrightHolder"
                     },
                     "owl:maxCardinality": 1
                 },
@@ -1291,7 +1291,7 @@
             "@id": "knora-api:hasComment"
         },
         {
-            "@id": "knora-api:hasCopyrightAttribution",
+            "@id": "knora-api:hasCopyrightHolder",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"

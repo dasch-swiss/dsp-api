@@ -48,7 +48,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
-import org.knora.webapi.slice.admin.domain.model.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.LicenseText
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
@@ -1087,9 +1087,9 @@ final case class ConstructResponseUtilV2Live(
       internalFilename = valueObject.requireStringObject(OntologyConstants.KnoraBase.InternalFilename.toSmartIri),
       originalFilename = valueObject.maybeStringObject(OntologyConstants.KnoraBase.OriginalFilename.toSmartIri),
       originalMimeType = valueObject.maybeStringObject(OntologyConstants.KnoraBase.OriginalMimeType.toSmartIri),
-      copyrightAttribution = valueObject
-        .maybeStringObject(OntologyConstants.KnoraBase.HasCopyrightAttribution.toSmartIri)
-        .map(CopyrightAttribution.unsafeFrom),
+      copyrightHolder = valueObject
+        .maybeStringObject(OntologyConstants.KnoraBase.HasCopyrightHolder.toSmartIri)
+        .map(CopyrightHolder.unsafeFrom),
       licenseText = valueObject
         .maybeStringObject(OntologyConstants.KnoraBase.HasLicenseText.toSmartIri)
         .map(LicenseText.unsafeFrom),

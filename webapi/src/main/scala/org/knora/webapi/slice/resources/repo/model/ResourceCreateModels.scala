@@ -10,7 +10,7 @@ import java.util.UUID
 
 import org.knora.webapi.messages.util.CalendarNameV2
 import org.knora.webapi.messages.util.DatePrecisionV2
-import org.knora.webapi.slice.admin.domain.model.CopyrightAttribution
+import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.LicenseText
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -50,7 +50,7 @@ sealed trait FileValueTypeSpecificInfo {
   def internalMimeType: String
   def originalFilename: Option[String]
   def originalMimeType: Option[String]
-  def copyrightAttribution: Option[CopyrightAttribution]
+  def copyrightHolder: Option[CopyrightHolder]
   def licenseText: Option[LicenseText]
   def licenseUri: Option[LicenseUri]
 }
@@ -85,7 +85,7 @@ enum TypeSpecificValueInfo {
     originalMimeType: Option[String],
     dimX: Int,
     dimY: Int,
-    copyrightAttribution: Option[CopyrightAttribution],
+    copyrightHolder: Option[CopyrightHolder],
     licenseText: Option[LicenseText],
     licenseUri: Option[LicenseUri],
   ) extends TypeSpecificValueInfo with FileValueTypeSpecificInfo
@@ -95,7 +95,7 @@ enum TypeSpecificValueInfo {
     originalFilename: Option[String],
     originalMimeType: Option[String],
     externalUrl: String,
-    copyrightAttribution: Option[CopyrightAttribution],
+    copyrightHolder: Option[CopyrightHolder],
     licenseText: Option[LicenseText],
     licenseUri: Option[LicenseUri],
   ) extends TypeSpecificValueInfo with FileValueTypeSpecificInfo
@@ -107,7 +107,7 @@ enum TypeSpecificValueInfo {
     dimX: Option[Int],
     dimY: Option[Int],
     pageCount: Option[Int],
-    copyrightAttribution: Option[CopyrightAttribution],
+    copyrightHolder: Option[CopyrightHolder],
     licenseText: Option[LicenseText],
     licenseUri: Option[LicenseUri],
   ) extends TypeSpecificValueInfo with FileValueTypeSpecificInfo
@@ -116,7 +116,7 @@ enum TypeSpecificValueInfo {
     internalMimeType: String,
     originalFilename: Option[String],
     originalMimeType: Option[String],
-    copyrightAttribution: Option[CopyrightAttribution],
+    copyrightHolder: Option[CopyrightHolder],
     licenseText: Option[LicenseText],
     licenseUri: Option[LicenseUri],
   ) extends TypeSpecificValueInfo with FileValueTypeSpecificInfo

@@ -234,9 +234,9 @@ DELETE {
                     case None => {}
                 }
 
-                @fileValueContentV2.fileValue.copyrightAttribution match {
-                    case Some(copyrightAttribution) => {
-                        <@newValueIri> knora-base:hasCopyrightAttribution """@copyrightAttribution.value""" .
+                @fileValueContentV2.fileValue.copyrightHolder match {
+                    case Some(copyrightHolder) => {
+                        <@newValueIri> knora-base:hasCopyrightHolder """@copyrightHolder.value""" .
                     }
                     case None => {}
                 }
