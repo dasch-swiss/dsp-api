@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.17.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.16.0...v0.17.0) (2025-01-07)
+
+
+### Maintenances
+
+* Remove deprecated maintenance actions from API ([#314](https://github.com/dasch-swiss/dsp-ingest/issues/314)) ([1150048](https://github.com/dasch-swiss/dsp-ingest/commit/11500484fd88fc4bf3665d97df1fa2c40f21910c))
+* Update copyright 2025 ([#312](https://github.com/dasch-swiss/dsp-ingest/issues/312)) ([c372a2b](https://github.com/dasch-swiss/dsp-ingest/commit/c372a2b1395dffa49b19fa0e0f64c7dea889823b))
+
+
+### Enhancements
+
+* Show audio files in asset-overview-report seperately (DEV-4490) ([#313](https://github.com/dasch-swiss/dsp-ingest/issues/313)) ([12ea2aa](https://github.com/dasch-swiss/dsp-ingest/commit/12ea2aaf34f59d67fedeb304a57e1d5f994ecf2a))
+
+
+### Bug Fixes
+
+* Fix filename regex ([#316](https://github.com/dasch-swiss/dsp-ingest/issues/316)) ([679c79e](https://github.com/dasch-swiss/dsp-ingest/commit/679c79e76605f120df029d3ea2fc67b1354eb08e))
+
 ## [0.16.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.15.1...v0.16.0) (2024-12-16)
 
 
