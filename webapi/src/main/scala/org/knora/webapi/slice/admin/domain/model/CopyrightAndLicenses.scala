@@ -20,6 +20,12 @@ object CopyrightAttribution extends StringValueCompanion[CopyrightAttribution] {
     )(str)
 }
 
+final case class Authorship private (override val value: String) extends StringValue
+object Authorship extends StringValueCompanion[Authorship] {
+  def from(str: String): Either[String, Authorship] =
+    fromValidations("Authorship", Authorship.apply, List(nonEmpty, noLineBreaks, maxLength(1_000)))(str)
+}
+
 final case class LicenseText private (override val value: String) extends StringValue
 object LicenseText extends StringValueCompanion[LicenseText] {
   def from(str: String): Either[String, LicenseText] =

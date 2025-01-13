@@ -9,7 +9,26 @@ import zio.test.*
 
 object CopyrightAndLicensesModelSpec extends ZIOSpecDefault {
 
-  private val licenseUriTest = suite("LicenseUri")(
+  private val authorshipSuite = suite("Authorship")(
+    test("pass a valid object and successfully create value object") {
+      val validAuthorship = "Jane Doe"
+      assertTrue(Authorship.from(validAuthorship).map(_.value).contains(validAuthorship))
+    },
+    test("pass an invalid object and return an error") {
+      val invalidAuthorship = "Jane \n Doe"
+      assertTrue(Authorship.from(invalidAuthorship) == Left("Authorship must not contain line breaks."))
+    },
+    test("pass an invalid object and return an error") {
+      val invalidAuthorship = "a" * 1001
+      assertTrue(Authorship.from(invalidAuthorship) == Left("Authorship must be maximum 1000 characters long."))
+    },
+    test("pass an invalid object and return an error") {
+      val invalidAuthorship = ""
+      assertTrue(Authorship.from(invalidAuthorship) == Left("Authorship cannot be empty."))
+    },
+  )
+
+  private val licenseUriSuite = suite("LicenseUri")(
     test("pass a valid object and successfully create value object") {
       val validUri = "https://www.apache.org/licenses/LICENSE-2.0.html"
       assertTrue(LicenseUri.from(validUri).map(_.value).contains(validUri))
@@ -21,6 +40,7 @@ object CopyrightAndLicensesModelSpec extends ZIOSpecDefault {
   )
 
   val spec = suite("Copyright And Licenses Model")(
-    licenseUriTest,
+    authorshipSuite,
+    licenseUriSuite,
   )
 }
