@@ -7,11 +7,12 @@ package org.knora.webapi.slice.common
 
 import zio.prelude.Validation
 import zio.prelude.ZValidation
-import org.knora.webapi.slice.common.Value.IntValue
-import org.knora.webapi.slice.common.Value.StringValue
 
 import java.net.URI
 import scala.util.Try
+
+import org.knora.webapi.slice.common.Value.IntValue
+import org.knora.webapi.slice.common.Value.StringValue
 
 trait Value[A] extends Any {
   def value: A

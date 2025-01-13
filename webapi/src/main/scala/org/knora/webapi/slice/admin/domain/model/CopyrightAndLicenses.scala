@@ -5,10 +5,15 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import java.time.LocalDate
+import scala.util.Try
+
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion.*
 import org.knora.webapi.slice.common.StringValueCompanion.maxLength
+import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.WithFrom
 
 final case class CopyrightAttribution private (override val value: String) extends StringValue
 object CopyrightAttribution extends StringValueCompanion[CopyrightAttribution] {
@@ -36,4 +41,12 @@ final case class LicenseUri private (override val value: String) extends StringV
 object LicenseUri extends StringValueCompanion[LicenseUri] {
   def from(str: String): Either[String, LicenseUri] =
     fromValidations("License URI", LicenseUri.apply, List(nonEmpty, isUri))(str)
+}
+
+final case class LicenseDate private (override val value: LocalDate) extends Value[LocalDate]
+object LicenseDate extends WithFrom[String, LicenseDate] {
+  def from(str: String): Either[String, LicenseDate] =
+    Try(LocalDate.parse(str)).toEither.left
+      .map(_ => "License Date must be in format 'YYYY-MM-DD'.")
+      .map(LicenseDate.apply)
 }
