@@ -34,6 +34,7 @@
 
 :ontologyVersion
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "ontology version"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     rdfs:comment              "Indicates the version of the Knora built-in ontologies in a repository."@en ;
     :subjectClassConstraint   owl:Ontology ;
@@ -46,6 +47,7 @@
 
 :isMainResource
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "is main resource"@en ;
     rdfs:comment              "Indicates if the given resource is the main resource of a request or a resource referred to by a link property."@en ;
     :subjectClassConstraint   :Resource ;
     :objectDatatypeConstraint xsd:boolean .
@@ -55,6 +57,7 @@
 
 :objectCannotBeMarkedAsDeleted
     rdf:type     rdf:Property ;
+    rdfs:label   "object cannot be marked as deleted"@en ;
     rdfs:comment "The base property of properties whose objects can't be marked as deleted"@en .
 
 
@@ -62,6 +65,7 @@
 
 :objectDatatypeConstraint
     rdf:type     owl:DatatypeProperty ;
+    rdfs:label   "object datatype constraint"@en ;
     rdfs:comment "Specifies the type required as the object of a datatype property"@en .
 
 
@@ -69,6 +73,7 @@
 
 :resourceIcon
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "resource icon"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :subjectClassConstraint   owl:Class ;
     :objectDatatypeConstraint xsd:string .
@@ -78,6 +83,7 @@
 
 :resourceProperty
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "resource property"@en ;
     rdfs:comment            "The base property of properties that point from Knora resources to Knora resources or values. These properties are required to have cardinalities in the resource classes in which they are used."@en ;
     :subjectClassConstraint :Resource .
 
@@ -86,6 +92,7 @@
 
 :subjectClassConstraint
     rdf:type     owl:ObjectProperty ;
+    rdfs:label   "subject class constraint"@en ;
     rdfs:comment "Specifies the OWL class that the subject of a property must belong to"@en .
 
 
@@ -93,6 +100,7 @@
 
 :objectClassConstraint
     rdf:type     owl:ObjectProperty ;
+    rdfs:label   "object class constraint"@en ;
     rdfs:comment "Specifies the OWL class that the object of a property must belong to"@en .
 
 
@@ -374,6 +382,7 @@
 
 :hasRepresentationValue
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "has Representation Value"@en;
     :objectClassConstraint  :LinkValue ;
     :subjectClassConstraint :Resource ;
     :isEditable             true ;
@@ -414,6 +423,7 @@
 
 :standoffTagHasLink
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "standoff tag has link"@en ;
     rdfs:subPropertyOf      :objectCannotBeMarkedAsDeleted ;
     :objectClassConstraint  :Resource ;
     :subjectClassConstraint :StandoffLinkTag .
@@ -423,6 +433,7 @@
 
 :standoffTagHasInternalReference
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "standoff tag has internal reference"@en ;
     rdfs:subPropertyOf      :objectCannotBeMarkedAsDeleted ;
     :objectClassConstraint  :StandoffTag ;
     :subjectClassConstraint :StandoffInternalReferenceTag .
@@ -432,6 +443,7 @@
 
 :standoffTagHasStart
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "standoff tag has start"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :subjectClassConstraint   :StandoffTag ;
     :objectDatatypeConstraint xsd:integer .
@@ -441,6 +453,7 @@
 
 :standoffTagHasEnd
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "standoff tag has end"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :subjectClassConstraint   :StandoffTag ;
     :objectDatatypeConstraint xsd:integer .
@@ -450,6 +463,7 @@
 
 :standoffTagHasStartIndex
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "standoff tag has start index"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :subjectClassConstraint   :StandoffTag ;
     :objectDatatypeConstraint xsd:integer .
@@ -459,6 +473,7 @@
 
 :standoffTagHasEndIndex
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "standoff tag has end index"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :subjectClassConstraint   :StandoffTag ;
     :objectDatatypeConstraint xsd:integer .
@@ -469,6 +484,7 @@
 :standoffTagHasStartAncestor
     rdf:type                owl:ObjectProperty,
                             owl:TransitiveProperty ;
+    rdfs:label              "standoff tag has start ancestor"@en ;
     rdfs:subPropertyOf      :objectCannotBeMarkedAsDeleted ;
     :subjectClassConstraint :StandoffTag ;
     :objectClassConstraint  :StandoffTag .
@@ -478,6 +494,7 @@
 
 :standoffTagHasStartParent
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "standoff tag has start parent"@en ;
     rdfs:subPropertyOf      :objectCannotBeMarkedAsDeleted,
                             :standoffTagHasStartAncestor ;
     :subjectClassConstraint :StandoffTag ;
@@ -488,6 +505,7 @@
 
 :standoffTagHasEndParent
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "standoff tag has end parent"@en ;
     rdfs:subPropertyOf      :objectCannotBeMarkedAsDeleted ;
     :subjectClassConstraint :StandoffTag ;
     :objectClassConstraint  :StandoffTag .
@@ -497,13 +515,16 @@
 
 :standoffTagHasUUID
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "standoff tag has UUID"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :subjectClassConstraint   :StandoffTag ;
     :objectDatatypeConstraint xsd:string .
 
+### http://www.knora.org/ontology/knora-base#standoffTagHasMaxStandoffStartIndex
 
 :valueHasMaxStandoffStartIndex
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has max standoff start index"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :Value ;
     :objectDatatypeConstraint xsd:integer .
@@ -513,6 +534,7 @@
 
 :hasSubListNode
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "has sub-list-node"@en ;
     rdfs:comment            "A hierarchical list is formed using the \"hasSubListNode\"-property"@en ;
     rdfs:subPropertyOf      :objectCannotBeMarkedAsDeleted ;
     :objectClassConstraint  :ListNode ;
@@ -523,6 +545,7 @@
 
 :hasValue
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "has value"@en ;
     rdfs:subPropertyOf      :resourceProperty ;
     :subjectClassConstraint :Resource ;
     :objectClassConstraint  :Value .
@@ -531,6 +554,7 @@
 
 :hasCopyrightAttribution
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "copyright attribution"@en; 
     rdfs:comment              "The copyright statement that gives credit to the original author."@en ;
     :objectDatatypeConstraint xsd:string .
 
@@ -538,12 +562,15 @@
 
 :hasLicenseText
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "license text"@en;
     rdfs:comment              "Specifies the terms under which a work can be used. This statement may be a reference to a well-known license, such as Creative Commons (e.g. 'CC BY-SA') or a custom license."@en ;
     :objectDatatypeConstraint xsd:string .
 
+###  http://www.knora.org/ontology/knora-base#hasLicenseUri
 
 :hasLicenseUri
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "license URI"@en;
     rdfs:comment              "Canonical link to license."@en ;
     :objectDatatypeConstraint xsd:anyUri .
 
@@ -565,6 +592,10 @@
 
 :isAnnotationOfValue
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "ist Annotation von"@de,
+                            "is Annotation of"@en,
+                            "est Annotation de"@fr,
+                            "è Annotation di"@it ;
     :objectClassConstraint  :LinkValue ;
     :subjectClassConstraint :Annotation ;
     :isEditable             true ;
@@ -590,6 +621,10 @@
 
 :isPartOfValue
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "ist Teil von"@de,
+                            "is part of"@en,
+                            "fait partie de"@fr,
+                            "fa parte di"@it ;
     :objectClassConstraint  :LinkValue ;
     :subjectClassConstraint :Resource ;
     :isEditable             true ;
@@ -630,6 +665,7 @@
 
 :previousValue
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "previous value"@en ;
     rdfs:subPropertyOf      :valueHas ;
     rdfs:comment            "Points to the previous verson of a value"@en ;
     :subjectClassConstraint :Value ;
@@ -654,6 +690,7 @@
 
 :standoffTagHasOriginalXMLID
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "standoff tag has original XML ID"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :objectDatatypeConstraint xsd:string ;
     :subjectClassConstraint   :StandoffTag .
@@ -665,6 +702,7 @@
 
 :targetHasOriginalXMLID
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "target has original XML ID"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :objectDatatypeConstraint xsd:string ;
     :subjectClassConstraint   :StandoffTag .
@@ -674,6 +712,7 @@
 
 :valueHasStandoff
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "value has standoff"@en ;
     rdfs:subPropertyOf      :valueHas ;
     :objectClassConstraint  :StandoffTag ;
     :subjectClassConstraint :TextValue .
@@ -683,6 +722,7 @@
 
 :valueHasLanguage
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has language"@en ;
     :objectDatatypeConstraint xsd:string ;
     :subjectClassConstraint   :TextValue .
 
@@ -691,6 +731,7 @@
 
 :valueHasMapping
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "value has mapping"@en ;
     rdfs:subPropertyOf      :valueHas ;
     :objectClassConstraint  :XMLToStandoffMapping ;
     :subjectClassConstraint :TextValue .
@@ -820,11 +861,10 @@
 
 :deletedBy
     rdf:type               owl:ObjectProperty ;
+    rdfs:label             "deleted by"@en ;
     rdfs:subPropertyOf     :objectCannotBeMarkedAsDeleted ;
     rdfs:comment           "Indicates who deleted a resource or value"@en ;
-
     # No :subjectClassConstraint, because this can be used with :Resource or :Value.
-
     :objectClassConstraint knora-admin:User .
 
 
@@ -840,6 +880,7 @@
 :creationDate
     rdf:type                  owl:DatatypeProperty ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
+    rdfs:label                "creation date"@en ;
     rdfs:comment              "Indicates when a resource was created"@en ;
     :subjectClassConstraint   :Resource ;
     :objectDatatypeConstraint xsd:dateTime .
@@ -849,11 +890,10 @@
 
 :deleteDate
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "delete date"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     rdfs:comment              "Indicates when a resource or value was deleted"@en ;
-
     # No :subjectClassConstraint, because this can be used with :Resource or :Value.
-
     :objectDatatypeConstraint xsd:dateTime .
 
 
@@ -861,6 +901,7 @@
 
 :dimX
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "dimX / width"@en ;
     :subjectClassConstraint   :FileValue ;
     rdfs:subPropertyOf        :valueHas ;
     :objectDatatypeConstraint xsd:integer .
@@ -870,6 +911,7 @@
 
 :dimY
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "dimY / height"@en ;
     :subjectClassConstraint   :FileValue ;
     rdfs:subPropertyOf        :valueHas ;
     :objectDatatypeConstraint xsd:integer .
@@ -879,6 +921,7 @@
 
 :pageCount
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "page count"@en ;
     :subjectClassConstraint   :FileValue ;
     rdfs:subPropertyOf        :valueHas ;
     :objectDatatypeConstraint xsd:integer .
@@ -888,6 +931,7 @@
 
 :duration
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label               "duration"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :FileValue ;
     :objectDatatypeConstraint xsd:decimal .
@@ -897,6 +941,7 @@
 
 :extResAccessInfo
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label               "external resource access info"@en ;
     rdfs:comment              "Information (URL etc.) for accessing an external resource"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :ExternalResValue ;
@@ -907,6 +952,7 @@
 
 :extResId
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label               "external resource ID"@en ;
     rdfs:comment              "The ID of the external resource. The form of the ID is dependent on the provider."@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :ExternalResValue ;
@@ -917,6 +963,7 @@
 
 :extResProvider
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label               "external resource provider"@en ;
     rdfs:comment              "The name of the external provider of the resource"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :ExternalResValue ;
@@ -927,6 +974,7 @@
 
 :fps
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label               "frames per second"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :FileValue ;
     :objectDatatypeConstraint xsd:decimal .
@@ -936,6 +984,7 @@
 
 :internalFilename
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label               "internal filename"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :FileValue ;
     :objectDatatypeConstraint xsd:string .
@@ -945,6 +994,7 @@
 
 :internalMimeType
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label              "internal MIME type"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :FileValue ;
     :objectDatatypeConstraint xsd:string .
@@ -954,11 +1004,10 @@
 
 :isDeleted
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "is deleted"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     rdfs:comment              "Exists and is true if the resource has been deleted"@en ;
-
     # No :subjectClassConstraint, because this can be used with :Resource or :Value.
-
     :objectDatatypeConstraint xsd:boolean .
 
 
@@ -966,6 +1015,7 @@
 
 :isRootNode
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "is root node"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :subjectClassConstraint   :ListNode ;
     :objectDatatypeConstraint xsd:boolean .
@@ -975,6 +1025,7 @@
 
 :hasRootNode
     rdf:type                  owl:ObjectProperty ;
+    rdfs:label                "has root node"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :subjectClassConstraint   :ListNode ;
     :objectDatatypeConstraint :ListNode .
@@ -984,6 +1035,7 @@
 
 :lastModificationDate
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "last modification date"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :objectDatatypeConstraint xsd:dateTime .
 
@@ -992,6 +1044,7 @@
 
 :listNodePosition
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "list node position"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :subjectClassConstraint   :ListNode ;
     :objectDatatypeConstraint xsd:integer .
@@ -1001,6 +1054,7 @@
 
 :listNodeName
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "list node name"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :subjectClassConstraint   :ListNode ;
     :objectDatatypeConstraint xsd:string .
@@ -1010,6 +1064,7 @@
 
 :originalFilename
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "original filename"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :FileValue ;
     :objectDatatypeConstraint xsd:string .
@@ -1019,6 +1074,7 @@
 
 :externalUrl
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "external URL"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :StillImageExternalFileValue ;
     :objectDatatypeConstraint xsd:anyURI.
@@ -1028,6 +1084,7 @@
 
 :originalMimeType
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "original MIME type"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :FileValue ;
     :objectDatatypeConstraint xsd:string .
@@ -1037,6 +1094,7 @@
 
 :valueHasComment
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has comment"@en ;
     rdfs:comment              "A comment on a value"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :Value ;
@@ -1047,11 +1105,10 @@
 
 :deleteComment
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "delete comment"@en ;
     rdfs:comment              "A comment explaining why a resource or value was marked as deleted"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
-
     # No :subjectClassConstraint, because this can be used with :Resource or :Value.
-
     :objectDatatypeConstraint xsd:string .
 
 
@@ -1059,6 +1116,7 @@
 
 :valueCreationDate
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value creation date"@en ;
     :subjectClassConstraint   :Value ;
     rdfs:subPropertyOf        :valueHas ;
     :objectDatatypeConstraint xsd:dateTime .
@@ -1068,6 +1126,7 @@
 
 :valueHas
     rdf:type                rdf:Property ;
+    rdfs:label              "value has"@en ;
     :subjectClassConstraint :ValueBase ;
     rdfs:subPropertyOf      :objectCannotBeMarkedAsDeleted .
 
@@ -1077,6 +1136,7 @@
 :valueHasUUID
     rdf:type                  owl:DatatypeProperty ;
     rdfs:subPropertyOf        :valueHas ;
+    rdfs:label                "value has UUID"@en ;
     rdfs:comment              "The UUID of a value"@en ;
     :subjectClassConstraint   :Value ;
     :objectDatatypeConstraint xsd:string .
@@ -1086,6 +1146,7 @@
 
 :valueHasCalendar
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has calendar"@en ;
     rdfs:comment              "Name of the calendar to be used, such as \"GREGORIAN\" or \"JULIAN\"."@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :DateBase ;
@@ -1096,6 +1157,7 @@
 
 :valueHasColor
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has color"@en ;
     rdfs:comment              "Color in the form of #rrggbb (as defining web colors)"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :ColorBase ;
@@ -1106,6 +1168,7 @@
 
 :valueHasEndJDN
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has end JDN"@en ;
     rdfs:comment              "Contains the end of a date as a Julian Day Number (JDN)"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :DateBase ;
@@ -1116,6 +1179,7 @@
 
 :valueHasEndPrecision
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has end precision"@en ;
     rdfs:comment              "Precision of knowledge about the end of the date. Allowed are \"DAY\", \"MONTH\" or \"YEAR\"."@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :DateBase ;
@@ -1126,6 +1190,7 @@
 
 :valueHasDecimal
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has decimal"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :DecimalBase ;
     :objectDatatypeConstraint xsd:decimal .
@@ -1135,6 +1200,7 @@
 
 :valueHasGeometry
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has geometry"@en ;
     rdfs:comment              "JSON string describing a geometry (e.g. a region). Currently geometries are limited to 2D unions of primitive objects like circles, squares and polygons."@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :GeomValue ;
@@ -1145,6 +1211,7 @@
 
 :valueHasGeonameCode
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has geoname code"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :GeonameValue ;
     :objectDatatypeConstraint xsd:string .
@@ -1154,6 +1221,7 @@
 
 :valueHasInteger
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has integer"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :IntBase ;
     :objectDatatypeConstraint xsd:integer .
@@ -1163,6 +1231,7 @@
 
 :valueHasBoolean
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has boolean"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :BooleanBase ;
     :objectDatatypeConstraint xsd:boolean .
@@ -1172,6 +1241,7 @@
 
 :valueHasUri
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has URI"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :UriBase ;
     :objectDatatypeConstraint xsd:anyURI .
@@ -1181,6 +1251,7 @@
 
 :valueHasIntervalEnd
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has interval end"@en ;
     rdfs:subPropertyOf        :valueHas ,
                               schema:endOffset ;
     :subjectClassConstraint   :IntervalBase ;
@@ -1191,6 +1262,7 @@
 
 :valueHasIntervalStart
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has interval start"@en ;
     rdfs:subPropertyOf        :valueHas ,
                               schema:startOffset ;
     :subjectClassConstraint   :IntervalBase ;
@@ -1201,6 +1273,7 @@
 
 :valueHasTimeStamp
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has timestamp"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :TimeBase ;
     :objectDatatypeConstraint xsd:dateTime .
@@ -1210,6 +1283,7 @@
 
 :valueHasListNode
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "value has list node"@en ;
     rdfs:subPropertyOf      :valueHas ;
     :subjectClassConstraint :ListValue ;
     :objectClassConstraint  :ListNode .
@@ -1219,6 +1293,7 @@
 
 :valueHasOrder
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has order"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :Value ;
     :objectDatatypeConstraint xsd:integer .
@@ -1228,6 +1303,7 @@
 
 :valueHasRefCount
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has reference count"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :LinkValue ;
     :objectDatatypeConstraint xsd:integer .
@@ -1237,6 +1313,7 @@
 
 :valueHasStartJDN
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has start JDN"@en ;
     rdfs:comment              "Contains the start of a date as a Julian Day Number (JDN)"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :DateBase ;
@@ -1247,6 +1324,7 @@
 
 :valueHasStartPrecision
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has start precision"@en ;
     rdfs:comment              "The precision the start of a date. Allowed values are \"DAY\", \"MONTH\", or \"YEAR\"."@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :DateBase ;
@@ -1258,6 +1336,7 @@
 :valueHasString
     rdf:type                  owl:DatatypeProperty ;
     rdfs:subPropertyOf        :valueHas ;
+    rdfs:label                "value has string"@en ;
     rdfs:comment              "A string representation of a value, required for full-text searches and search results."@en ;
     :subjectClassConstraint   :Value ;
     :objectDatatypeConstraint xsd:string .
@@ -1267,6 +1346,7 @@
 
 :hasPermissions
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "has permissions"@en ;
     rdfs:subPropertyOf        :objectCannotBeMarkedAsDeleted ;
     :objectDatatypeConstraint xsd:string .
 
@@ -1308,6 +1388,7 @@
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :duration ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "audio file value"@en;
     rdfs:comment    "Represents an audio file"@en .
 
 
@@ -1331,6 +1412,7 @@
 
 :ColorBase
     rdf:type        owl:Class ;
+    rdfs:label      "color base"@en ;
     rdfs:subClassOf :ValueBase,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :valueHasColor ;
@@ -1343,6 +1425,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :Value,
                     :ColorBase ;
+    rdfs:label      "color value"@en ;
     rdfs:comment    "Represents a color in HTML format, e.g. \"#33eeff\""@en .
 
 
@@ -1351,6 +1434,7 @@
 :DDDFileValue
     rdf:type        owl:Class ;
     rdfs:subClassOf :FileValue ;
+    rdfs:label      "3D file value"@en ;
     rdfs:comment    "This represents some 3D-object with mesh data, point cloud, etc."@en .
 
 
@@ -1373,6 +1457,7 @@
 
 :DateBase
     rdf:type        owl:Class ;
+    rdfs:label      "date base"@en ;
     rdfs:subClassOf :ValueBase,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :valueHasCalendar ;
@@ -1397,6 +1482,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :Value,
                     :DateBase ;
+    rdfs:label      "date value"@en ;
     rdfs:comment    "Represents a Knora date value"@en .
 
 
@@ -1404,6 +1490,7 @@
 
 :DocumentFileValue
     rdf:type        owl:Class ;
+    rdfs:label      "document file value"@en ;
     rdfs:subClassOf :FileValue,
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :pageCount ;
@@ -1434,6 +1521,7 @@
 
 :ArchiveFileValue
     rdf:type        owl:Class ;
+    rdfs:label      "archive file value"@en ;
     rdfs:subClassOf :FileValue .
 
 
@@ -1455,6 +1543,7 @@
 
 :ExternalResValue
     rdf:type        owl:Class ;
+    rdfs:label      "external resource value"@en ;
     rdfs:subClassOf :Value,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :extResId ;
@@ -1486,6 +1575,7 @@
 
 :FileValue
     rdf:type        owl:Class ;
+    rdfs:label      "file value"@en ;
     rdfs:subClassOf :Value,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :internalFilename ;
@@ -1514,6 +1604,7 @@
 
 :DecimalBase
     rdf:type        owl:Class ;
+    rdfs:label      "decimal base"@en ;
     rdfs:subClassOf :ValueBase,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :valueHasDecimal ;
@@ -1526,6 +1617,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :Value,
                     :DecimalBase ;
+    rdfs:label      "decimal value"@en ;
     rdfs:comment    "Represents an arbitrary-precision decimal value"@en .
 
 
@@ -1537,6 +1629,7 @@
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :valueHasGeometry ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "geometry value"@en ;
     rdfs:comment    "Represents a geometrical objects as JSON string"@en .
 
 
@@ -1544,6 +1637,7 @@
 
 :GeonameValue
     rdf:type        owl:Class ;
+    rdfs:label      "geoname value"@en ;
     rdfs:subClassOf :Value,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :valueHasGeonameCode ;
@@ -1554,6 +1648,7 @@
 
 :IntBase
     rdf:type        owl:Class ;
+    rdfs:label      "integer base"@en ;
     rdfs:subClassOf :ValueBase,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :valueHasInteger ;
@@ -1566,6 +1661,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :Value,
                     :IntBase ;
+    rdfs:label      "integer value"@en ;
     rdfs:comment    "Represents an integer value"@en .
 
 ###  http://www.knora.org/ontology/knora-base#BooleanBase
@@ -1584,6 +1680,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :Value,
                     :BooleanBase ;
+    rdfs:label      "boolean value"@en ;
     rdfs:comment    "Represents a boolean value"@en .
 
 
@@ -1591,6 +1688,7 @@
 
 :UriBase
     rdf:type        owl:Class ;
+    rdfs:label      "URI base"@en ;
     rdfs:subClassOf :ValueBase,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :valueHasUri ;
@@ -1602,12 +1700,14 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :Value,
                     :UriBase ;
+    rdfs:label      "URI value"@en ;
     rdfs:comment    "Represents a URI"@en .
 
 ###  http://www.knora.org/ontology/knora-base#IntervalBase
 
 :IntervalBase
     rdf:type        owl:Class ;
+    rdfs:label      "interval base"@en ;
     rdfs:subClassOf :ValueBase,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :valueHasIntervalEnd ;
@@ -1623,6 +1723,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :Value,
                     :IntervalBase ;
+    rdfs:label      "interval value"@en ;
     rdfs:comment    "Represents a time interval, e.g. in an audio recording"@en .
 
 
@@ -1630,6 +1731,7 @@
 
 :TimeBase
     rdf:type        owl:Class ;
+    rdfs:label      "time base"@en ;
     rdfs:subClassOf :ValueBase,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :valueHasTimeStamp ;
@@ -1642,6 +1744,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :Value,
                     :TimeBase ;
+    rdfs:label      "time value"@en ;
     rdfs:comment    "Represents a timestamp"@en .
 
 
@@ -1673,6 +1776,7 @@
 
 :LinkValue
     rdf:type        owl:Class ;
+    rdfs:label      "link value"@en ;
     rdfs:subClassOf :Value,
                     rdf:Statement,
                     [ rdf:type        owl:Restriction ;
@@ -1694,6 +1798,7 @@
 
 :ListNode
     rdf:type        owl:Class ;
+    rdfs:label      "list node"@en ;
     rdfs:subClassOf [ rdf:type           owl:Restriction ;
                       owl:onProperty     :hasSubListNode ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger ],
@@ -1722,6 +1827,7 @@
 
 :ListValue
     rdf:type        owl:Class ;
+    rdfs:label      "list value"@en ;
     rdfs:subClassOf :Value,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :valueHasListNode ;
@@ -1733,6 +1839,7 @@
 :MovingImageFileValue
     rdf:type        owl:Class ;
     rdfs:subClassOf :FileValue ;
+    rdfs:label      "moving image file value"@en ;
     rdfs:comment    "Represents a moving image file"@en .
 
 
@@ -1851,13 +1958,15 @@
 
 
 :standoffParentClassConstraint
-    rdf:type owl:ObjectProperty .
+    rdf:type owl:ObjectProperty ;
+    rdfs:label "standoff parent class constraint"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffTag
 
 :StandoffTag
     rdf:type        owl:Class ;
+    rdfs:label      "standoff tag"@en ;
     rdfs:subClassOf [ rdf:type        owl:Restriction ;
                       owl:onProperty  :standoffTagHasStart ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ],
@@ -1899,6 +2008,7 @@
 :StandoffDataTypeTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffTag ;
+    rdfs:label      "standoff data type tag"@en ;
     rdfs:comment    "Represents a knora-base value type in a TextValue"@en .
 
 
@@ -1917,6 +2027,7 @@
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :standoffTagHasLink ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "standoff link tag"@en ;
     rdfs:comment    "Represents a reference to a Knora resource in a TextValue"@en .
 
 
@@ -1926,6 +2037,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :UriBase ;
+    rdfs:label      "standoff URI tag"@en ;
     rdfs:comment    "Represents an arbitrary URI in a TextValue"@en .
 
 
@@ -1935,6 +2047,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :DateBase ;
+    rdfs:label      "standoff date tag"@en ;
     rdfs:comment    "Represents a date in a TextValue"@en .
 
 
@@ -1944,6 +2057,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :ColorBase ;
+    rdfs:label      "standoff color tag"@en ;
     rdfs:comment    "Represents a color in a TextValue"@en .
 
 
@@ -1953,6 +2067,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :IntBase ;
+    rdfs:label      "standoff integer tag"@en ;
     rdfs:comment    "Represents an integer value in a TextValue"@en .
 
 
@@ -1962,6 +2077,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :DecimalBase ;
+    rdfs:label      "standoff decimal tag"@en ;
     rdfs:comment    "Represents a decimal (floating point) value in a TextValue"@en .
 
 
@@ -1971,6 +2087,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :IntervalBase ;
+    rdfs:label      "standoff interval tag"@en ;
     rdfs:comment    "Represents an interval in a TextValue"@en .
 
 
@@ -1980,6 +2097,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :TimeBase ;
+    rdfs:label      "standoff time tag"@en ;
     rdfs:comment    "Represents a timestamp in a TextValue"@en .
 
 
@@ -1989,6 +2107,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :BooleanBase ;
+    rdfs:label      "standoff boolean tag"@en ;
     rdfs:comment    "Represents a boolean in a TextValue"@en .
 
 
@@ -2001,6 +2120,7 @@
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :standoffTagHasInternalReference ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "standoff internal reference tag"@en ;
     rdfs:comment    "Represents an internal reference in a TextValue"@en .
 
 
@@ -2015,6 +2135,7 @@
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :dimX ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "still image file value"@en ;
     rdfs:comment    "A file containing a two-dimensional still image"@en .
 
 
@@ -2026,6 +2147,7 @@
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :externalUrl ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "still image external file value"@en ;
     rdfs:comment    "A file containing a two-dimensional still image"@en .
 
 
@@ -2034,6 +2156,7 @@
 :StillImageAbstractFileValue
     rdf:type        owl:Class ;
     rdfs:subClassOf :FileValue ;
+    rdfs:label      "still image abstract file value"@en ;
     rdfs:comment    "A file containing a two-dimensional still image"@en .
 
 
@@ -2057,6 +2180,7 @@
 
 :TextFileValue
     rdf:type        owl:Class ;
+    rdfs:label      "Text file value"@en ;
     rdfs:subClassOf :FileValue ;
     rdfs:comment    "A text file such as plain Unicode text, LaTeX, TEI/XML, etc."@en .
 
@@ -2175,6 +2299,7 @@
 
 :TextValue
     rdf:type        owl:Class ;
+    rdfs:label      "Text Value"@en ;
     rdfs:subClassOf :Value,
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :valueHasStandoff ;
@@ -2240,6 +2365,7 @@
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :valueHasUUID ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "Value"@en ;
     rdfs:comment    "The base class of classes representing Knora values"@en .
 
 
@@ -2554,6 +2680,10 @@
 
 :isSequenceOfValue
     rdf:type                owl:ObjectProperty ;
+    rdfs:label              "ist Sequenz von"@de,
+                            "is sequence of"@en,
+                            "fait partie de"@fr,
+                            "fa parte di"@it ;
     :objectClassConstraint  :LinkValue ;
     :subjectClassConstraint :Resource ;
     :isEditable             true ;
