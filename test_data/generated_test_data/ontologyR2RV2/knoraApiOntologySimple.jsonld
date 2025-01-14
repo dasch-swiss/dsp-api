@@ -900,8 +900,7 @@
             "@id": "knora-api:Segment"
         },
         {
-            "@id": "knora-api:StillImageAbstractFileValue",
-            "@type": "owl:Class",
+            "rdfs:label": "still image abstract file value",
             "rdfs:subClassOf": [
                 {
                     "@type": "owl:Restriction",
@@ -925,7 +924,9 @@
                     "owl:maxCardinality": 1
                 }
             ],
-            "rdfs:comment": "A file containing a two-dimensional still image"
+            "rdfs:comment": "A file containing a two-dimensional still image",
+            "@type": "owl:Class",
+            "@id": "knora-api:StillImageAbstractFileValue"
         },
         {
             "rdfs:label": "Representation (Image)",
@@ -1221,14 +1222,15 @@
             "@id": "knora-api:error"
         },
         {
-            "@id": "knora-api:externalUrl",
+            "rdfs:label": "external URL",
             "@type": "owl:DatatypeProperty",
             "knora-api:subjectType": {
                 "@id": "knora-api:File"
             },
             "knora-api:objectType": {
                 "@id": "xsd:anyURI"
-            }
+            },
+            "@id": "knora-api:externalUrl"
         },
         {
             "rdfs:label": "has zip",
@@ -1291,12 +1293,13 @@
             "@id": "knora-api:hasComment"
         },
         {
-            "@id": "knora-api:hasCopyrightAttribution",
+            "rdfs:label": "copyright attribution",
+            "rdfs:comment": "The copyright statement that gives credit to the original author.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "rdfs:comment": "The copyright statement that gives credit to the original author."
+            "@id": "knora-api:hasCopyrightAttribution"
         },
         {
             "rdfs:label": "has 3D-file",
@@ -1426,20 +1429,22 @@
             "@id": "knora-api:hasKeyword"
         },
         {
-            "@id": "knora-api:hasLicenseText",
+            "rdfs:label": "license text",
+            "rdfs:comment": "Specifies the terms under which a work can be used. This statement may be a reference to a well-known license, such as Creative Commons (e.g. 'CC BY-SA') or a custom license.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "rdfs:comment": "Specifies the terms under which a work can be used. This statement may be a reference to a well-known license, such as Creative Commons (e.g. 'CC BY-SA') or a custom license."
+            "@id": "knora-api:hasLicenseText"
         },
         {
-            "@id": "knora-api:hasLicenseUri",
+            "rdfs:label": "license URI",
+            "rdfs:comment": "Canonical link to license.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:anyUri"
             },
-            "rdfs:comment": "Canonical link to license."
+            "@id": "knora-api:hasLicenseUri"
         },
         {
             "rdfs:label": "has Link to",
@@ -1650,6 +1655,7 @@
             "@id": "knora-api:isAudioSegmentOf"
         },
         {
+            "rdfs:label": "is main resource",
             "rdfs:comment": "Indicates if the given resource is the main resource of a request or a resource referred to by a link property.",
             "@type": "owl:DatatypeProperty",
             "knora-api:subjectType": {
@@ -1782,14 +1788,15 @@
             "@id": "knora-api:relatesTo"
         },
         {
-            "@id": "knora-api:resourceIcon",
+            "rdfs:label": "resource icon",
             "@type": "owl:DatatypeProperty",
             "knora-api:subjectType": {
                 "@id": "owl:Class"
             },
             "knora-api:objectType": {
                 "@id": "xsd:string"
-            }
+            },
+            "@id": "knora-api:resourceIcon"
         },
         {
             "rdfs:label": "Resource property",
