@@ -154,7 +154,11 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
   private val HasCopyrightHolder = makeOwlDatatypeProperty(KA.HasCopyrightHolder, XSD.STRING)
     .withRdfLabelEn("has copyright holder")
-    .withRdfCommentEn("The copyright statement that gives credit to the original author.")
+    .withRdfCommentEn("The copyright holder.")
+
+  private val HasAuthorship = makeOwlDatatypeProperty(KA.HasAuthorship, XSD.STRING)
+    .withRdfLabelEn("has authorship")
+    .withRdfCommentEn("Credit, Moral Rights, Author(s)")
 
   private val HasLicenseText = makeOwlDatatypeProperty(KA.HasLicenseText, XSD.STRING)
     .withRdfLabelEn("has license text")
@@ -165,6 +169,10 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
   private val HasLicenseUri = makeOwlDatatypeProperty(KA.HasLicenseUri, XSD.STRING)
     .withRdfLabelEn("has license URI")
     .withRdfCommentEn("Canonical link to license.")
+
+  private val HasLicenseDate = makeOwlDatatypeProperty(KA.HasLicenseDate, XSD.DATE)
+    .withRdfLabelEn("has license date")
+    .withRdfCommentEn("Date of creation on platform.")
 
   private val ValueAsString = makeOwlDatatypeProperty(KA.ValueAsString, XSD.STRING)
     .withSubjectType(KA.Value)
@@ -660,9 +668,11 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     GeometryValueAsGeometry,
     GeonameValueAsGeonameCode,
     HasCopyrightHolder,
+    HasAuthorship,
     HasIncomingLinkValue,
     HasLicenseText,
     HasLicenseUri,
+    HasLicenseDate,
     IntValueAsInt,
     IntervalValueHasEnd,
     IntervalValueHasStart,

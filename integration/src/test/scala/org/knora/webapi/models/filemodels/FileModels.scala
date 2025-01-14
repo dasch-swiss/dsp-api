@@ -15,7 +15,9 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
+import org.knora.webapi.slice.admin.domain.model.LicenseDate
 import org.knora.webapi.slice.admin.domain.model.LicenseText
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 
@@ -116,8 +118,10 @@ sealed abstract case class UploadFileRequest private (
     valuePropertyIRI: Option[SmartIri] = None,
     project: Option[Project] = None,
     copyrightHolder: Option[CopyrightHolder] = None,
+    authorship: Option[List[Authorship]] = None,
     licenseText: Option[LicenseText] = None,
     licenseUri: Option[LicenseUri] = None,
+    licenseDate: Option[LicenseDate] = None,
   ): CreateResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -136,9 +140,11 @@ sealed abstract case class UploadFileRequest private (
       originalFilename = originalFilename,
       originalMimeType = originalMimeType,
       comment = comment,
-      copyrightHolder,
-      licenseText,
-      licenseUri,
+      copyrightHolder = copyrightHolder,
+      authorship = authorship,
+      licenseText = licenseText,
+      licenseUri = licenseUri,
+      licenseDate = licenseDate,
     )
 
     val values = List(

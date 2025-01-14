@@ -379,6 +379,11 @@ final case class ApiComplexV2JsonLdRequestParser(
     ZIO.scoped {
       for {
         r                 <- RootResource.fromJsonLd(str)
+        _                 <- Console.printLine("RootResource: " + r.resource).orDie
+        _                 <- r.resource.getModel.printTurtle
+        _                 <- Console.printLine("Model:\n").orDie
+        _                 <- ModelOps.fromJsonLd(str).flatMap(_.printTurtle)
+        _                 <- Console.printLine("jsonLd:\n" + str).orDie
         resourceIri       <- r.resourceIriOrFail
         v                 <- ValueResource.from(r)
         valueUuid         <- v.valueHasUuidOption

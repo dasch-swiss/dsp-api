@@ -264,8 +264,10 @@ object OntologyConstants {
     val HasDocumentFileValue: IRI    = KnoraBasePrefixExpansion + "hasDocumentFileValue"
     val HasArchiveFileValue: IRI     = KnoraBasePrefixExpansion + "hasArchiveFileValue"
     val HasCopyrightHolder: IRI      = KnoraBasePrefixExpansion + "hasCopyrightHolder"
+    val HasAuthorship: IRI           = KnoraBasePrefixExpansion + "hasAuthorship"
     val HasLicenseText: IRI          = KnoraBasePrefixExpansion + "hasLicenseText"
     val HasLicenseUri: IRI           = KnoraBasePrefixExpansion + "hasLicenseUri"
+    val HasLicenseDate: IRI          = KnoraBasePrefixExpansion + "hasLicenseDate"
 
     val ResourceIcon: IRI = KnoraBasePrefixExpansion + "resourceIcon"
 
@@ -627,8 +629,10 @@ object OntologyConstants {
     val HasStandoffLinkToValue: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkToValue"
     val HasPermissions: IRI         = KnoraApiV2PrefixExpansion + "hasPermissions"
     val HasCopyrightHolder: IRI     = KnoraApiV2PrefixExpansion + "hasCopyrightHolder"
+    val HasAuthorship: IRI          = KnoraApiV2PrefixExpansion + "hasAuthorship"
     val HasLicenseText: IRI         = KnoraApiV2PrefixExpansion + "hasLicenseText"
     val HasLicenseUri: IRI          = KnoraApiV2PrefixExpansion + "hasLicenseUri"
+    val HasLicenseDate: IRI         = KnoraApiV2PrefixExpansion + "hasLicenseDate"
     val UserHasPermission: String   = KnoraApiV2PrefixExpansion + "userHasPermission"
     val CreationDate: IRI           = KnoraApiV2PrefixExpansion + "creationDate"
     val LastModificationDate: IRI   = KnoraApiV2PrefixExpansion + "lastModificationDate"

@@ -11,7 +11,9 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
+import org.knora.webapi.slice.admin.domain.model.LicenseDate
 import org.knora.webapi.slice.admin.domain.model.LicenseText
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
@@ -86,10 +88,12 @@ object FileModelUtil {
     internalMimeType: Option[String],
     originalFilename: Option[String],
     originalMimeType: Option[String],
-    comment: Option[String],
-    copyrightHolder: Option[CopyrightHolder],
-    licenseText: Option[LicenseText],
-    licenseUri: Option[LicenseUri],
+    copyrightHolder: Option[CopyrightHolder] = None,
+    authorship: Option[List[Authorship]] = None,
+    licenseText: Option[LicenseText] = None,
+    licenseUri: Option[LicenseUri] = None,
+    licenseDate: Option[LicenseDate] = None,
+    comment: Option[String] = None,
   ): FileValueContentV2 =
     fileType match {
       case FileType.DocumentFile(pageCount, dimX, dimY) =>
@@ -100,9 +104,11 @@ object FileModelUtil {
             internalMimeType = internalMimeType.getOrElse("application/pdf"),
             originalFilename = originalFilename,
             originalMimeType = Some(originalMimeType.getOrElse("application/pdf")),
-            copyrightHolder,
-            licenseText,
-            licenseUri,
+            copyrightHolder = copyrightHolder,
+            authorship = authorship,
+            licenseText = licenseText,
+            licenseUri = licenseUri,
+            licenseDate = licenseDate,
           ),
           pageCount = pageCount,
           dimX = dimX,
@@ -117,9 +123,11 @@ object FileModelUtil {
             internalMimeType = internalMimeType.getOrElse("image/jp2"),
             originalFilename = originalFilename,
             originalMimeType = originalMimeType,
-            copyrightHolder,
-            licenseText,
-            licenseUri,
+            copyrightHolder = copyrightHolder,
+            authorship = authorship,
+            licenseText = licenseText,
+            licenseUri = licenseUri,
+            licenseDate = licenseDate,
           ),
           dimX = dimX,
           dimY = dimY,
@@ -133,9 +141,11 @@ object FileModelUtil {
             internalMimeType = internalMimeType.getOrElse("image/jp2"),
             originalFilename = originalFilename,
             originalMimeType = originalMimeType,
-            copyrightHolder,
-            licenseText,
-            licenseUri,
+            copyrightHolder = copyrightHolder,
+            authorship = authorship,
+            licenseText = licenseText,
+            licenseUri = licenseUri,
+            licenseDate = licenseDate,
           ),
           externalUrl = externalUrl,
           comment = comment,
@@ -148,9 +158,11 @@ object FileModelUtil {
             internalMimeType = internalMimeType.get,
             originalFilename = originalFilename,
             originalMimeType = internalMimeType,
-            copyrightHolder,
-            licenseText,
-            licenseUri,
+            copyrightHolder = copyrightHolder,
+            authorship = authorship,
+            licenseText = licenseText,
+            licenseUri = licenseUri,
+            licenseDate = licenseDate,
           ),
         )
       case FileType.TextFile =>
@@ -161,9 +173,11 @@ object FileModelUtil {
             internalMimeType = internalMimeType.get,
             originalFilename = originalFilename,
             originalMimeType = internalMimeType,
-            copyrightHolder,
-            licenseText,
-            licenseUri,
+            copyrightHolder = copyrightHolder,
+            authorship = authorship,
+            licenseText = licenseText,
+            licenseUri = licenseUri,
+            licenseDate = licenseDate,
           ),
         )
       case FileType.AudioFile =>
@@ -174,9 +188,11 @@ object FileModelUtil {
             internalMimeType = internalMimeType.get,
             originalFilename = originalFilename,
             originalMimeType = internalMimeType,
-            copyrightHolder,
-            licenseText,
-            licenseUri,
+            copyrightHolder = copyrightHolder,
+            authorship = authorship,
+            licenseText = licenseText,
+            licenseUri = licenseUri,
+            licenseDate = licenseDate,
           ),
         )
       case FileType.ArchiveFile =>
@@ -187,9 +203,11 @@ object FileModelUtil {
             internalMimeType = internalMimeType.getOrElse("application/zip"),
             originalFilename = originalFilename,
             originalMimeType = internalMimeType,
-            copyrightHolder,
-            licenseText,
-            licenseUri,
+            copyrightHolder = copyrightHolder,
+            authorship = authorship,
+            licenseText = licenseText,
+            licenseUri = licenseUri,
+            licenseDate = licenseDate,
           ),
           comment = comment,
         )

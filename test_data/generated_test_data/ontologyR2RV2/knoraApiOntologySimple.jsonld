@@ -906,7 +906,21 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasAuthorship"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasCopyrightHolder"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasLicenseDate"
                     },
                     "owl:maxCardinality": 1
                 },
@@ -1261,6 +1275,14 @@
             "@id": "knora-api:hasAudioFile"
         },
         {
+            "@id": "knora-api:hasAuthorship",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "rdfs:comment": "Credit, Moral Rights, Author(s)"
+        },
+        {
             "rdfs:label": "Color",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasValue"
@@ -1296,7 +1318,7 @@
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "rdfs:comment": "The copyright statement that gives credit to the original author."
+            "rdfs:comment": "The copyright holder."
         },
         {
             "rdfs:label": "has 3D-file",
@@ -1424,6 +1446,14 @@
                 "@id": "xsd:string"
             },
             "@id": "knora-api:hasKeyword"
+        },
+        {
+            "@id": "knora-api:hasLicenseDate",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:date"
+            },
+            "rdfs:comment": "Date of creation on platform."
         },
         {
             "@id": "knora-api:hasLicenseText",

@@ -45,8 +45,10 @@ object LicenseUri extends StringValueCompanion[LicenseUri] {
 
 final case class LicenseDate private (override val value: LocalDate) extends Value[LocalDate]
 object LicenseDate extends WithFrom[String, LicenseDate] {
+  def makeNew: LicenseDate = LicenseDate(LocalDate.now())
   def from(str: String): Either[String, LicenseDate] =
     Try(LocalDate.parse(str)).toEither.left
       .map(_ => "License Date must be in format 'YYYY-MM-DD'.")
       .map(LicenseDate.apply)
+  def from(date: LocalDate): LicenseDate = LicenseDate(date)
 }

@@ -527,6 +527,7 @@
     :subjectClassConstraint :Resource ;
     :objectClassConstraint  :Value .
 
+
 ###  http://www.knora.org/ontology/knora-base#hasCopyrightHolder
 
 :hasCopyrightHolder
@@ -534,7 +535,16 @@
     rdfs:comment              "The copyright holder."@en ;
     :objectDatatypeConstraint xsd:string .
 
-###  http://www.knora.org/ontology/knora-base#hasLicense
+
+###  http://www.knora.org/ontology/knora-base#hasAuthorship
+
+:hasAuthorship
+    rdf:type                  owl:DatatypeProperty ;
+    rdfs:comment              "Credit, Moral Rights, Author(s)"@en ;
+    :objectDatatypeConstraint xsd:string .
+
+
+###  http://www.knora.org/ontology/knora-base#hasLicenseText
 
 :hasLicenseText
     rdf:type                  owl:DatatypeProperty ;
@@ -542,10 +552,21 @@
     :objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/knora-base#hasLicenseUri
+
 :hasLicenseUri
     rdf:type                  owl:DatatypeProperty ;
     rdfs:comment              "Canonical link to license."@en ;
     :objectDatatypeConstraint xsd:anyUri .
+
+
+###  http://www.knora.org/ontology/knora-base#hasLicenseDate
+
+:hasLicenseDate
+    rdf:type                  owl:DatatypeProperty ;
+    rdfs:comment              "Date of creation on platform."@en ;
+    :objectDatatypeConstraint xsd:date.
+
 
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOf
 
@@ -1503,11 +1524,18 @@
                       owl:onProperty     :hasCopyrightHolder ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :hasAuthorship ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ],
+                    [ rdf:type           owl:Restriction ;
                       owl:onProperty     :hasLicenseText  ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :hasLicenseDate;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :hasLicenseUri ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ].
+
 
 
 ###  http://www.knora.org/ontology/knora-base#DecimalBase
