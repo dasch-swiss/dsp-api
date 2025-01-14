@@ -1185,8 +1185,8 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(fileValue.copyrightHolder.contains(copyrightHolder))
       assert(fileValue.licenseText.contains(licenseText))
       assert(fileValue.licenseUri.contains(licenseUri))
-      // not (yet) working:
-      // assert(fileValue.licenseDate.contains(licenseDate))
+      assert(fileValue.licenseDate.contains(licenseDate))
+      // TODO: not (yet) working:
       // assert(fileValue.authorship.contains(authorship))
     }
 

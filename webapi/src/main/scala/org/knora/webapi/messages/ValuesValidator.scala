@@ -8,6 +8,7 @@ package org.knora.webapi.messages
 import spray.json.JsonParser
 
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -85,6 +86,9 @@ object ValuesValidator {
     Try(Instant.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s))).toEither.left.map(e =>
       s"Invalid xsd:dateTimeStamp value '$s': ${e.getMessage}",
     )
+
+  def xsdDateToLocalDate(s: String): Option[LocalDate] =
+    Try(LocalDate.parse(s)).toOption
 
   /**
    * Parses a DSP ARK timestamp.

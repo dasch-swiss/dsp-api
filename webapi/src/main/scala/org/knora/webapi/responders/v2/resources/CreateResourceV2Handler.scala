@@ -499,8 +499,10 @@ final case class CreateResourceV2Handler(
                       dimX = dimX,
                       dimY = dimY,
                       fileValue.copyrightHolder,
+                      fileValue.authorship,
                       fileValue.licenseText,
                       fileValue.licenseUri,
+                      fileValue.licenseDate,
                     ),
                   )
                 case StillImageExternalFileValueContentV2(_, fileValue, externalUrl, _) =>
@@ -512,8 +514,10 @@ final case class CreateResourceV2Handler(
                       originalMimeType = fileValue.originalMimeType,
                       externalUrl = externalUrl.value.toString(),
                       fileValue.copyrightHolder,
+                      fileValue.authorship,
                       fileValue.licenseText,
                       fileValue.licenseUri,
+                      fileValue.licenseDate,
                     ),
                   )
                 case DocumentFileValueContentV2(_, fileValue, pageCount, dimX, dimY, _) =>
@@ -527,8 +531,10 @@ final case class CreateResourceV2Handler(
                       dimY = dimY,
                       pageCount = pageCount,
                       fileValue.copyrightHolder,
+                      fileValue.authorship,
                       fileValue.licenseText,
                       fileValue.licenseUri,
+                      fileValue.licenseDate,
                     ),
                   )
                 case ArchiveFileValueContentV2(_, fileValue, _) =>
@@ -539,8 +545,10 @@ final case class CreateResourceV2Handler(
                       originalFilename = fileValue.originalFilename,
                       originalMimeType = fileValue.originalMimeType,
                       fileValue.copyrightHolder,
+                      fileValue.authorship,
                       fileValue.licenseText,
                       fileValue.licenseUri,
+                      fileValue.licenseDate,
                     ),
                   )
                 case TextFileValueContentV2(_, fileValue, _) =>
@@ -551,8 +559,10 @@ final case class CreateResourceV2Handler(
                       originalFilename = fileValue.originalFilename,
                       originalMimeType = fileValue.originalMimeType,
                       fileValue.copyrightHolder,
+                      fileValue.authorship,
                       fileValue.licenseText,
                       fileValue.licenseUri,
+                      fileValue.licenseDate,
                     ),
                   )
                 case AudioFileValueContentV2(_, fileValue, _) =>
@@ -563,8 +573,10 @@ final case class CreateResourceV2Handler(
                       originalFilename = fileValue.originalFilename,
                       originalMimeType = fileValue.originalMimeType,
                       fileValue.copyrightHolder,
+                      fileValue.authorship,
                       fileValue.licenseText,
                       fileValue.licenseUri,
+                      fileValue.licenseDate,
                     ),
                   )
                 case MovingImageFileValueContentV2(_, fileValue, _) =>
@@ -575,8 +587,10 @@ final case class CreateResourceV2Handler(
                       originalFilename = fileValue.originalFilename,
                       originalMimeType = fileValue.originalMimeType,
                       fileValue.copyrightHolder,
+                      fileValue.authorship,
                       fileValue.licenseText,
                       fileValue.licenseUri,
+                      fileValue.licenseDate,
                     ),
                   )
                 case LinkValueContentV2(

@@ -15,13 +15,15 @@ import zio.json.JsonCodec
 
 import java.time.Instant
 import scala.collection.mutable
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.*
+
+import java.time.LocalDate
+import scala.reflect.ClassTag
 
 /**
  * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.
@@ -101,6 +103,15 @@ object SparqlExtendedConstructResponse {
                         ),
                     )
 
+                  case OntologyConstants.Xsd.Date =>
+                    DateLiteralV2(
+                      ValuesValidator
+                        .xsdDateToLocalDate(datatypeLiteral.value)
+                        .getOrElse(
+                          throw InconsistentRepositoryDataException(s"Invalid xsd:date: ${datatypeLiteral.value}"),
+                        ),
+                    )
+
                   case OntologyConstants.Xsd.Boolean =>
                     BooleanLiteralV2(
                       datatypeLiteral.booleanValue(
@@ -139,7 +150,7 @@ object SparqlExtendedConstructResponse {
 
       SparqlExtendedConstructResponse(statementMap.toMap)
     }.foldZIO(
-      _ => ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
+      err => ZIO.fail(DataConversionException(s"Couldn't parse Turtle document ${err.getMessage}")),
       ZIO.succeed(_),
     )
 }
@@ -190,7 +201,7 @@ case class BlankNodeSubjectV2(value: String) extends SubjectV2 {
  * Represents a literal read from the triplestore. There are different subclasses
  * representing literals with the extended type information stored in the triplestore.
  */
-sealed trait LiteralV2 {
+sealed trait LiteralV2 { self =>
 
   /**
    * Returns this [[LiteralV2]] as an [[IriLiteralV2]].
@@ -200,10 +211,7 @@ sealed trait LiteralV2 {
    * @return an [[IriLiteralV2]].
    */
   def asIriLiteral(errorFun: => Nothing): IriLiteralV2 =
-    this match {
-      case iriLiteral: IriLiteralV2 => iriLiteral
-      case _                        => errorFun
-    }
+    as[IriLiteralV2]().getOrElse(errorFun)
 
   /**
    * Returns this [[LiteralV2]] as a [[StringLiteralV2]].
@@ -213,10 +221,7 @@ sealed trait LiteralV2 {
    * @return a [[StringLiteralV2]].
    */
   def asStringLiteral(errorFun: => Nothing): StringLiteralV2 =
-    this match {
-      case stringLiteral: StringLiteralV2 => stringLiteral
-      case _                              => errorFun
-    }
+    as[StringLiteralV2]().getOrElse(errorFun)
 
   /**
    * Returns this [[LiteralV2]] as a [[BooleanLiteralV2]].
@@ -226,10 +231,7 @@ sealed trait LiteralV2 {
    * @return a [[BooleanLiteralV2]].
    */
   def asBooleanLiteral(errorFun: => Nothing): BooleanLiteralV2 =
-    this match {
-      case booleanLiteral: BooleanLiteralV2 => booleanLiteral
-      case _                                => errorFun
-    }
+    as[BooleanLiteralV2]().getOrElse(errorFun)
 
   /**
    * Returns this [[LiteralV2]] as an [[IntLiteralV2]].
@@ -239,10 +241,7 @@ sealed trait LiteralV2 {
    * @return an [[IntLiteralV2]].
    */
   def asIntLiteral(errorFun: => Nothing): IntLiteralV2 =
-    this match {
-      case intLiteral: IntLiteralV2 => intLiteral
-      case _                        => errorFun
-    }
+    as[IntLiteralV2]().getOrElse(errorFun)
 
   /**
    * Returns this [[LiteralV2]] as a [[DecimalLiteralV2]].
@@ -252,10 +251,7 @@ sealed trait LiteralV2 {
    * @return a [[DecimalLiteralV2]].
    */
   def asDecimalLiteral(errorFun: => Nothing): DecimalLiteralV2 =
-    this match {
-      case decimalLiteral: DecimalLiteralV2 => decimalLiteral
-      case _                                => errorFun
-    }
+    as[DecimalLiteralV2]().getOrElse(errorFun)
 
   /**
    * Returns this [[LiteralV2]] as a [[DateTimeLiteralV2]].
@@ -265,9 +261,12 @@ sealed trait LiteralV2 {
    * @return a [[DateTimeLiteralV2]].
    */
   def asDateTimeLiteral(errorFun: => Nothing): DateTimeLiteralV2 =
+    as[DateTimeLiteralV2]().getOrElse(errorFun)
+
+  def as[A <: LiteralV2]()(implicit tag: ClassTag[A]): Option[A] =
     this match {
-      case dateTimeLiteral: DateTimeLiteralV2 => dateTimeLiteral
-      case _                                  => errorFun
+      case a: A => Some(a)
+      case _    => None
     }
 }
 
@@ -447,6 +446,15 @@ case class DecimalLiteralV2(value: BigDecimal) extends LiteralV2 {
  * @param value the timestamp value.
  */
 case class DateTimeLiteralV2(value: Instant) extends LiteralV2 {
+  override def toString: String = value.toString
+}
+
+/**
+ * Represents a local date.
+ *
+ * @param value the date.
+ */
+case class DateLiteralV2(value: LocalDate) extends LiteralV2 {
   override def toString: String = value.toString
 }
 

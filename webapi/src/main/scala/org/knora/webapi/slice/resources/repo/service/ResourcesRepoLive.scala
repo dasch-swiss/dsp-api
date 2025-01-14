@@ -284,6 +284,7 @@ object ResourcesRepoLive {
         .andHasOptional(KB.hasCopyrightHolder, v.copyrightHolder.map(_.value).map(literalOf))
         .andHasOptional(KB.hasLicenseText, v.licenseText.map(_.value).map(literalOf))
         .andHasOptional(KB.hasLicenseUri, v.licenseUri.map(_.value).map(literalOfType(_, XSD.ANYURI)))
+        .andHasOptional(KB.hasLicenseDate, v.licenseDate.map(_.value.toString).map(literalOfType(_, XSD.DATE)))
 
       v match {
         case _: OtherFileValueInfo              => result

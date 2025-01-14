@@ -111,6 +111,7 @@ object Vocabulary {
     val hasCopyrightHolder: Iri            = iri(kb + "hasCopyrightHolder")
     val hasLicenseText: Iri                = iri(kb + "hasLicenseText")
     val hasLicenseUri: Iri                 = iri(kb + "hasLicenseUri")
+    val hasLicenseDate: Iri                = iri(kb + "hasLicenseDate")
 
     val internalFilename: Iri = iri(kb + "internalFilename")
     val internalMimeType: Iri = iri(kb + "internalMimeType")

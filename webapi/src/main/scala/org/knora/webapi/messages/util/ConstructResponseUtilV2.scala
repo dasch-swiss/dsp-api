@@ -9,7 +9,6 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
@@ -50,6 +49,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStand
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.LicenseDate
 import org.knora.webapi.slice.admin.domain.model.LicenseText
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
@@ -61,6 +61,8 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
+
+import java.time.LocalDate
 
 trait ConstructResponseUtilV2 {
 
@@ -333,6 +335,22 @@ object ConstructResponseUtilV2 {
             throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
           )
           .value
+      }
+
+    /**
+     * Returns the optional timestamp object of the specified predicate. Throws an exception if the object is not a timestamp.
+     *
+     * @param predicateIri the predicate.
+     * @return the timestamp object of the predicate.
+     */
+    def maybeDateObject(predicateIri: SmartIri): Option[LocalDate] =
+      assertions.get(predicateIri).map { literal =>
+        literal
+          .as[DateLiteralV2]()
+          .map(_.value)
+          .getOrElse(
+            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
+          )
       }
 
     /**
@@ -1095,6 +1113,8 @@ final case class ConstructResponseUtilV2Live(
         .map(LicenseText.unsafeFrom),
       licenseUri =
         valueObject.maybeIriObject(OntologyConstants.KnoraBase.HasLicenseUri.toSmartIri).map(LicenseUri.unsafeFrom),
+      licenseDate =
+        valueObject.maybeDateObject(OntologyConstants.KnoraBase.HasLicenseDate.toSmartIri).map(LicenseDate.from),
     )
 
     valueType match {

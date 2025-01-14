@@ -7,10 +7,11 @@ package org.knora.webapi.slice.resources.repo.model
 
 import java.time.Instant
 import java.util.UUID
-
 import org.knora.webapi.messages.util.CalendarNameV2
 import org.knora.webapi.messages.util.DatePrecisionV2
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
+import org.knora.webapi.slice.admin.domain.model.LicenseDate
 import org.knora.webapi.slice.admin.domain.model.LicenseText
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -51,8 +52,10 @@ sealed trait FileValueTypeSpecificInfo {
   def originalFilename: Option[String]
   def originalMimeType: Option[String]
   def copyrightHolder: Option[CopyrightHolder]
+  def authorship: Option[List[Authorship]]
   def licenseText: Option[LicenseText]
   def licenseUri: Option[LicenseUri]
+  def licenseDate: Option[LicenseDate]
 }
 
 enum TypeSpecificValueInfo {
@@ -86,8 +89,10 @@ enum TypeSpecificValueInfo {
     dimX: Int,
     dimY: Int,
     copyrightHolder: Option[CopyrightHolder],
+    authorship: Option[List[Authorship]],
     licenseText: Option[LicenseText],
     licenseUri: Option[LicenseUri],
+    licenseDate: Option[LicenseDate],
   ) extends TypeSpecificValueInfo with FileValueTypeSpecificInfo
   case StillImageExternalFileValueInfo(
     internalFilename: String,
@@ -96,8 +101,10 @@ enum TypeSpecificValueInfo {
     originalMimeType: Option[String],
     externalUrl: String,
     copyrightHolder: Option[CopyrightHolder],
+    authorship: Option[List[Authorship]],
     licenseText: Option[LicenseText],
     licenseUri: Option[LicenseUri],
+    licenseDate: Option[LicenseDate],
   ) extends TypeSpecificValueInfo with FileValueTypeSpecificInfo
   case DocumentFileValueInfo(
     internalFilename: String,
@@ -108,8 +115,10 @@ enum TypeSpecificValueInfo {
     dimY: Option[Int],
     pageCount: Option[Int],
     copyrightHolder: Option[CopyrightHolder],
+    authorship: Option[List[Authorship]],
     licenseText: Option[LicenseText],
     licenseUri: Option[LicenseUri],
+    licenseDate: Option[LicenseDate],
   ) extends TypeSpecificValueInfo with FileValueTypeSpecificInfo
   case OtherFileValueInfo(
     internalFilename: String,
@@ -117,8 +126,10 @@ enum TypeSpecificValueInfo {
     originalFilename: Option[String],
     originalMimeType: Option[String],
     copyrightHolder: Option[CopyrightHolder],
+    authorship: Option[List[Authorship]],
     licenseText: Option[LicenseText],
     licenseUri: Option[LicenseUri],
+    licenseDate: Option[LicenseDate],
   ) extends TypeSpecificValueInfo with FileValueTypeSpecificInfo
   case HierarchicalListValueInfo(valueHasListNode: InternalIri)
   case IntervalValueInfo(valueHasIntervalStart: BigDecimal, valueHasIntervalEnd: BigDecimal)
