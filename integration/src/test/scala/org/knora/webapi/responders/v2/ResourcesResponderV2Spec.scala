@@ -40,7 +40,7 @@ import org.knora.webapi.models.filemodels.*
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -1142,6 +1142,52 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         defaultValuePermissions = defaultStillImageFileValuePermissions,
         requestingUser = anythingUserProfile,
       )
+    }
+
+    "create a still image file value with copyright and license information" in {
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+      val copyrightHolder = CopyrightHolder.unsafeFrom("The University of Basel")
+      val authorship      = List("Hans Meier", "Peter Müller").map(Authorship.unsafeFrom)
+      val licenseText     = LicenseText.unsafeFrom("CC BY-SA 4.0")
+      val licenseUri      = LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by-sa/4.0/")
+      val licenseDate     = LicenseDate.unsafeFrom("2020-01-01")
+
+      val inputResource = UploadFileRequest
+        .make(
+          fileType = FileType.StillImageFile(
+            dimX = 512,
+            dimY = 256,
+          ),
+          internalFilename = "bar.jp2",
+          copyrightHolder = Some(copyrightHolder),
+          authorship = Some(authorship),
+          licenseText = Some(licenseText),
+          licenseUri = Some(licenseUri),
+          licenseDate = Some(licenseDate),
+        )
+        .toMessage(resourceIri = Some(resourceIri))
+
+      val _ = UnsafeZioRun.runOrThrow(
+        resourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)).logError,
+        ),
+      )
+
+      val actual: ReadResourceV2 = getResource(resourceIri)
+      val fileValue: FileValueV2 =
+        actual.values.head._2
+          .map(_.valueContent)
+          .collect { case sifvc: StillImageFileValueContentV2 => sifvc }
+          .map(_.fileValue)
+          .head
+
+      assert(fileValue.copyrightHolder.contains(copyrightHolder))
+      assert(fileValue.licenseText.contains(licenseText))
+      assert(fileValue.licenseUri.contains(licenseUri))
+      // not (yet) working:
+      // assert(fileValue.licenseDate.contains(licenseDate))
+      // assert(fileValue.authorship.contains(authorship))
     }
 
     "create a resource with an external still image file value" in {

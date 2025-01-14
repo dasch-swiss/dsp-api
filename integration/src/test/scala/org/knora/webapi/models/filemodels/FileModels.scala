@@ -27,9 +27,11 @@ sealed abstract case class UploadFileRequest private (
   label: String,
   resourceIRI: Option[String] = None,
   copyrightHolder: Option[CopyrightHolder] = None,
+  authorship: Option[List[Authorship]] = None,
   licenseText: Option[LicenseText] = None,
   licenseUri: Option[LicenseUri] = None,
-) {
+  licenseDate: Option[LicenseDate] = None,
+) { self =>
 
   /**
    * Create a JSON-LD serialization of the request. This can be used for e2e and integration tests.
@@ -64,9 +66,16 @@ sealed abstract case class UploadFileRequest private (
        |    "@type" : "$fileValueType",
        |    "knora-api:fileValueHasFilename" : "$internalFilename"
        |    ${copyrightHolder.map(ca => s""","knora-api:hasCopyrightHolder" : "${ca.value}"""").getOrElse("")}
+       |    ${authorship
+        .filter(_.nonEmpty)
+        .map(a => s""","knora-api:hasAuthorship" : [ ${a.map(_.value).mkString("\"", ",", " \"")} ]""")
+        .getOrElse("")}
        |    ${licenseText.map(l => s""","knora-api:hasLicenseText" : "${l.value}"""").getOrElse("")}
        |    ${licenseUri
         .map(u => s""", "knora-api:hasLicenseUri" : { "@type" : "xsd:anyURI", "@value":"${u.value}" }""")
+        .getOrElse("")}
+       |    ${licenseDate
+        .map(d => s""", "knora-api:hasLicenseDate" : { "@type" : "xsd:date", "@value":"${d.value.toString}" }""")
         .getOrElse("")}
        |  },
        |  "knora-api:attachedToProject" : {
@@ -117,11 +126,6 @@ sealed abstract case class UploadFileRequest private (
     resourceClassIRI: Option[SmartIri] = None,
     valuePropertyIRI: Option[SmartIri] = None,
     project: Option[Project] = None,
-    copyrightHolder: Option[CopyrightHolder] = None,
-    authorship: Option[List[Authorship]] = None,
-    licenseText: Option[LicenseText] = None,
-    licenseUri: Option[LicenseUri] = None,
-    licenseDate: Option[LicenseDate] = None,
   ): CreateResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -140,11 +144,11 @@ sealed abstract case class UploadFileRequest private (
       originalFilename = originalFilename,
       originalMimeType = originalMimeType,
       comment = comment,
-      copyrightHolder = copyrightHolder,
-      authorship = authorship,
-      licenseText = licenseText,
-      licenseUri = licenseUri,
-      licenseDate = licenseDate,
+      copyrightHolder = self.copyrightHolder,
+      authorship = self.authorship,
+      licenseText = self.licenseText,
+      licenseUri = self.licenseUri,
+      licenseDate = self.licenseDate,
     )
 
     val values = List(
@@ -196,8 +200,10 @@ object UploadFileRequest {
     label: String = "test label",
     resourceIRI: Option[String] = None,
     copyrightHolder: Option[CopyrightHolder] = None,
+    authorship: Option[List[Authorship]] = None,
     licenseText: Option[LicenseText] = None,
     licenseUri: Option[LicenseUri] = None,
+    licenseDate: Option[LicenseDate] = None,
   ): UploadFileRequest =
     new UploadFileRequest(
       fileType,
@@ -205,8 +211,10 @@ object UploadFileRequest {
       label,
       resourceIRI,
       copyrightHolder,
+      authorship,
       licenseText,
       licenseUri,
+      licenseDate,
     ) {}
 }
 
