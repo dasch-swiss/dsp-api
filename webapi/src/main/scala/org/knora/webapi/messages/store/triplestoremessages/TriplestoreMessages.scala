@@ -14,16 +14,16 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import java.time.Instant
+import java.time.LocalDate
 import scala.collection.mutable
+import scala.reflect.ClassTag
+
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.*
-
-import java.time.LocalDate
-import scala.reflect.ClassTag
 
 /**
  * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.
@@ -202,67 +202,6 @@ case class BlankNodeSubjectV2(value: String) extends SubjectV2 {
  * representing literals with the extended type information stored in the triplestore.
  */
 sealed trait LiteralV2 { self =>
-
-  /**
-   * Returns this [[LiteralV2]] as an [[IriLiteralV2]].
-   *
-   * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-   *                 an [[IriLiteralV2]].
-   * @return an [[IriLiteralV2]].
-   */
-  def asIriLiteral(errorFun: => Nothing): IriLiteralV2 =
-    as[IriLiteralV2]().getOrElse(errorFun)
-
-  /**
-   * Returns this [[LiteralV2]] as a [[StringLiteralV2]].
-   *
-   * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-   *                 a [[StringLiteralV2]].
-   * @return a [[StringLiteralV2]].
-   */
-  def asStringLiteral(errorFun: => Nothing): StringLiteralV2 =
-    as[StringLiteralV2]().getOrElse(errorFun)
-
-  /**
-   * Returns this [[LiteralV2]] as a [[BooleanLiteralV2]].
-   *
-   * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-   *                 a [[BooleanLiteralV2]].
-   * @return a [[BooleanLiteralV2]].
-   */
-  def asBooleanLiteral(errorFun: => Nothing): BooleanLiteralV2 =
-    as[BooleanLiteralV2]().getOrElse(errorFun)
-
-  /**
-   * Returns this [[LiteralV2]] as an [[IntLiteralV2]].
-   *
-   * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-   *                 an [[IntLiteralV2]].
-   * @return an [[IntLiteralV2]].
-   */
-  def asIntLiteral(errorFun: => Nothing): IntLiteralV2 =
-    as[IntLiteralV2]().getOrElse(errorFun)
-
-  /**
-   * Returns this [[LiteralV2]] as a [[DecimalLiteralV2]].
-   *
-   * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-   *                 a [[DecimalLiteralV2]].
-   * @return a [[DecimalLiteralV2]].
-   */
-  def asDecimalLiteral(errorFun: => Nothing): DecimalLiteralV2 =
-    as[DecimalLiteralV2]().getOrElse(errorFun)
-
-  /**
-   * Returns this [[LiteralV2]] as a [[DateTimeLiteralV2]].
-   *
-   * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-   *                 a [[DateTimeLiteralV2]].
-   * @return a [[DateTimeLiteralV2]].
-   */
-  def asDateTimeLiteral(errorFun: => Nothing): DateTimeLiteralV2 =
-    as[DateTimeLiteralV2]().getOrElse(errorFun)
-
   def as[A <: LiteralV2]()(implicit tag: ClassTag[A]): Option[A] =
     this match {
       case a: A => Some(a)

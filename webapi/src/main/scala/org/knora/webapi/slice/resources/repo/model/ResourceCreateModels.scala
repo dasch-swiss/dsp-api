@@ -7,6 +7,7 @@ package org.knora.webapi.slice.resources.repo.model
 
 import java.time.Instant
 import java.util.UUID
+
 import org.knora.webapi.messages.util.CalendarNameV2
 import org.knora.webapi.messages.util.DatePrecisionV2
 import org.knora.webapi.slice.admin.domain.model.Authorship

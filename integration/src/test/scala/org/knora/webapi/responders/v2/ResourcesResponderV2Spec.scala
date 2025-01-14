@@ -1186,8 +1186,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(fileValue.licenseText.contains(licenseText))
       assert(fileValue.licenseUri.contains(licenseUri))
       assert(fileValue.licenseDate.contains(licenseDate))
-      // TODO: not (yet) working:
-      // assert(fileValue.authorship.contains(authorship))
+      assert(fileValue.authorship.contains(authorship))
     }
 
     "create a resource with an external still image file value" in {

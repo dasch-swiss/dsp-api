@@ -8,7 +8,10 @@ package org.knora.webapi.messages.util
 import zio.*
 
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
+import scala.reflect.ClassTag
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
@@ -23,10 +26,10 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatPredicateObjects
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatStatements
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MainResourcesAndValueRdfData
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.PredicateObjects
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfData
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfPropertyValues
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfResources
@@ -47,6 +50,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.LicenseDate
@@ -61,8 +65,6 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
-
-import java.time.LocalDate
 
 trait ConstructResponseUtilV2 {
 
@@ -99,7 +101,7 @@ trait ConstructResponseUtilV2 {
    * @param mappings                     the mappings to convert standoff to XML, if any.
    * @param queryStandoff                if `true`, make separate queries to get the standoff for text values.
    * @param calculateMayHaveMoreResults  if `true`, calculate whether there may be more results for the query.
-   * @param versionDate                  if defined, represents the requested time in the the resources' version history.
+   * @param versionDate                  if defined, represents the requested time in the resources' version history.
    * @param targetSchema                 the schema of response.
    * @param requestingUser               the user making the request.
    * @return a collection of [[ReadResourceV2]] representing the search results.
@@ -145,7 +147,7 @@ object ConstructResponseUtilV2 {
    * A flattened map of predicates to objects. This assumes that each predicate has
    * * only one object.
    */
-  type FlatPredicateObjects = Map[SmartIri, LiteralV2]
+  type PredicateObjects = Map[SmartIri, Seq[LiteralV2]]
 
   /**
    * A map of subject IRIs to flattened maps of predicates to objects.
@@ -185,7 +187,28 @@ object ConstructResponseUtilV2 {
     /**
      * Assertions about the subject.
      */
-    val assertions: FlatPredicateObjects
+    val assertions: PredicateObjects
+
+    private def maybeSingleAs[A <: LiteralV2](predicateIri: SmartIri)(implicit tag: ClassTag[A]): Option[A] =
+      maybeAs[A](predicateIri).flatMap(_.headOption)
+
+    private def requireSingleAs[A <: LiteralV2](predicateIri: SmartIri)(implicit tag: ClassTag[A]): A =
+      maybeSingleAs(predicateIri).getOrElse(
+        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
+      )
+
+    private def maybeAs[A <: LiteralV2](predicateIri: SmartIri)(implicit tag: ClassTag[A]): Option[Seq[A]] =
+      assertions
+        .get(predicateIri)
+        .map(
+          _.map(literal =>
+            literal
+              .as[A]()
+              .getOrElse(
+                throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
+              ),
+          ),
+        )
 
     /**
      * Returns the optional string object of the specified predicate. Throws an exception if the object is not a string.
@@ -194,13 +217,10 @@ object ConstructResponseUtilV2 {
      * @return the string object of the predicate.
      */
     def maybeStringObject(predicateIri: SmartIri): Option[String] =
-      assertions.get(predicateIri).map { literal =>
-        literal
-          .asStringLiteral(
-            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
-          )
-          .value
-      }
+      maybeSingleAs[StringLiteralV2](predicateIri).map(_.value)
+
+    def maybeStringListObject(predicateIri: SmartIri): Option[Seq[String]] =
+      maybeAs[StringLiteralV2](predicateIri).map(_.map(_.value))
 
     /**
      * Returns the required string object of the specified predicate. Throws an exception if the object is not found or
@@ -210,9 +230,7 @@ object ConstructResponseUtilV2 {
      * @return the string object of the predicate.
      */
     def requireStringObject(predicateIri: SmartIri): String =
-      maybeStringObject(predicateIri).getOrElse(
-        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
-      )
+      requireSingleAs[StringLiteralV2](predicateIri).value
 
     /**
      * Returns the optional IRI object of the specified predicate. Throws an exception if the object is not an IRI.
@@ -221,13 +239,7 @@ object ConstructResponseUtilV2 {
      * @return the IRI object of the predicate.
      */
     def maybeIriObject(predicateIri: SmartIri): Option[IRI] =
-      assertions.get(predicateIri).map { literal =>
-        literal
-          .asIriLiteral(
-            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
-          )
-          .value
-      }
+      maybeSingleAs[IriLiteralV2](predicateIri).map(_.value)
 
     /**
      * Returns the required IRI object of the specified predicate. Throws an exception if the object is not found or
@@ -237,9 +249,7 @@ object ConstructResponseUtilV2 {
      * @return the IRI object of the predicate.
      */
     def requireIriObject(predicateIri: SmartIri): IRI =
-      maybeIriObject(predicateIri).getOrElse(
-        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
-      )
+      requireSingleAs[IriLiteralV2](predicateIri).value
 
     /**
      * Returns the optional integer object of the specified predicate. Throws an exception if the object is not an integer.
@@ -248,13 +258,7 @@ object ConstructResponseUtilV2 {
      * @return the integer object of the predicate.
      */
     def maybeIntObject(predicateIri: SmartIri): Option[Int] =
-      assertions.get(predicateIri).map { literal =>
-        literal
-          .asIntLiteral(
-            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
-          )
-          .value
-      }
+      maybeSingleAs[IntLiteralV2](predicateIri).map(_.value)
 
     /**
      * Returns the required integer object of the specified predicate. Throws an exception if the object is not found or
@@ -264,9 +268,7 @@ object ConstructResponseUtilV2 {
      * @return the integer object of the predicate.
      */
     def requireIntObject(predicateIri: SmartIri): Int =
-      maybeIntObject(predicateIri).getOrElse(
-        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
-      )
+      requireSingleAs[IntLiteralV2](predicateIri).value
 
     /**
      * Returns the optional boolean object of the specified predicate. Throws an exception if the object is not a boolean.
@@ -275,25 +277,17 @@ object ConstructResponseUtilV2 {
      * @return the boolean object of the predicate.
      */
     def maybeBooleanObject(predicateIri: SmartIri): Option[Boolean] =
-      assertions.get(predicateIri).map { literal =>
-        literal
-          .asBooleanLiteral(
-            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
-          )
-          .value
-      }
+      maybeSingleAs[BooleanLiteralV2](predicateIri).map(_.value)
 
     /**
      * Returns the required boolean object of the specified predicate. Throws an exception if the object is not found or
-     * is not an boolean value.
+     * is not a boolean value.
      *
      * @param predicateIri the predicate.
      * @return the boolean object of the predicate.
      */
     def requireBooleanObject(predicateIri: SmartIri): Boolean =
-      maybeBooleanObject(predicateIri).getOrElse(
-        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
-      )
+      requireSingleAs[BooleanLiteralV2](predicateIri).value
 
     /**
      * Returns the optional decimal object of the specified predicate. Throws an exception if the object is not a decimal.
@@ -301,26 +295,18 @@ object ConstructResponseUtilV2 {
      * @param predicateIri the predicate.
      * @return the decimal object of the predicate.
      */
-    private def maybeDecimalObject(predicateIri: SmartIri): Option[BigDecimal] =
-      assertions.get(predicateIri).map { literal =>
-        literal
-          .asDecimalLiteral(
-            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
-          )
-          .value
-      }
+    def maybeDecimalObject(predicateIri: SmartIri): Option[BigDecimal] =
+      maybeSingleAs[DecimalLiteralV2](predicateIri).map(_.value)
 
     /**
      * Returns the required decimal object of the specified predicate. Throws an exception if the object is not found or
-     * is not an decimal value.
+     * is not a decimal value.
      *
      * @param predicateIri the predicate.
      * @return the decimal object of the predicate.
      */
     def requireDecimalObject(predicateIri: SmartIri): BigDecimal =
-      maybeDecimalObject(predicateIri).getOrElse(
-        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
-      )
+      requireSingleAs[DecimalLiteralV2](predicateIri).value
 
     /**
      * Returns the optional timestamp object of the specified predicate. Throws an exception if the object is not a timestamp.
@@ -329,41 +315,26 @@ object ConstructResponseUtilV2 {
      * @return the timestamp object of the predicate.
      */
     def maybeDateTimeObject(predicateIri: SmartIri): Option[Instant] =
-      assertions.get(predicateIri).map { literal =>
-        literal
-          .asDateTimeLiteral(
-            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
-          )
-          .value
-      }
-
-    /**
-     * Returns the optional timestamp object of the specified predicate. Throws an exception if the object is not a timestamp.
-     *
-     * @param predicateIri the predicate.
-     * @return the timestamp object of the predicate.
-     */
-    def maybeDateObject(predicateIri: SmartIri): Option[LocalDate] =
-      assertions.get(predicateIri).map { literal =>
-        literal
-          .as[DateLiteralV2]()
-          .map(_.value)
-          .getOrElse(
-            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
-          )
-      }
+      maybeSingleAs[DateTimeLiteralV2](predicateIri).map(_.value)
 
     /**
      * Returns the required timestamp object of the specified predicate. Throws an exception if the object is not found or
-     * is not an timestamp value.
+     * is not a timestamp value.
      *
      * @param predicateIri the predicate.
      * @return the timestamp object of the predicate.
      */
     def requireDateTimeObject(predicateIri: SmartIri): Instant =
-      maybeDateTimeObject(predicateIri).getOrElse(
-        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
-      )
+      requireSingleAs[DateTimeLiteralV2](predicateIri).value
+
+    /**
+     * Returns the optional date object of the specified predicate. Throws an exception if the object is not a date.
+     *
+     * @param predicateIri the predicate.
+     * @return the date object of the predicate.
+     */
+    def maybeDateObject(predicateIri: SmartIri): Option[LocalDate] =
+      maybeSingleAs[DateLiteralV2](predicateIri).map(_.value)
   }
 
   /**
@@ -383,7 +354,7 @@ object ConstructResponseUtilV2 {
     nestedResource: Option[ResourceWithValueRdfData] = None,
     isIncomingLink: Boolean = false,
     userPermission: Permission.ObjectAccess,
-    assertions: FlatPredicateObjects,
+    assertions: PredicateObjects,
     standoff: FlatStatements,
   ) extends RdfData
 
@@ -398,7 +369,7 @@ object ConstructResponseUtilV2 {
    */
   case class ResourceWithValueRdfData(
     subjectIri: IRI,
-    assertions: FlatPredicateObjects,
+    assertions: PredicateObjects,
     isMainResource: Boolean,
     userPermission: Option[Permission.ObjectAccess],
     valuePropertyAssertions: RdfPropertyValues,
@@ -538,18 +509,13 @@ final case class ConstructResponseUtilV2Live(
           nonResourceStatements = nonResourceStatements,
         )
 
-        // Flatten the resource assertions.
-        val resourceAssertions: FlatPredicateObjects = assertionsExplicit.map {
-          case (pred: SmartIri, objs: Seq[LiteralV2]) => pred -> objs.head
-        }
-
         val userPermission: Option[Permission.ObjectAccess] =
           PermissionUtilADM.getUserPermissionFromConstructAssertionsADM(resourceIri, assertions, requestingUser)
 
         // Make a ResourceWithValueRdfData for each resource IRI.
         resourceIri -> ResourceWithValueRdfData(
           subjectIri = resourceIri,
-          assertions = resourceAssertions,
+          assertions = assertionsExplicit,
           isMainResource = isMainResource,
           userPermission = userPermission,
           valuePropertyAssertions = valuePropertyToValueObject,
@@ -701,22 +667,17 @@ final case class ConstructResponseUtilV2Live(
               }
           }
 
-          // Flatten the value's statements.
-          val valueStatements: FlatPredicateObjects = valueRdfWithUserPermission.assertions.flatMap {
-            case (pred: SmartIri, objs: Seq[LiteralV2]) =>
-              objs.map { obj =>
-                pred -> obj
-              }
-          }
-
           // Get the rdf:type of the value.
-          val rdfTypeLiteral: LiteralV2 = valueStatements.getOrElse(
-            OntologyConstants.Rdf.Type.toSmartIri,
-            throw InconsistentRepositoryDataException(s"Value $valObjIri has no rdf:type"),
-          )
+          val rdfTypeLiteral: LiteralV2 = valueRdfWithUserPermission.assertions
+            .getOrElse(
+              OntologyConstants.Rdf.Type.toSmartIri,
+              throw InconsistentRepositoryDataException(s"Value $valObjIri has no rdf:type"),
+            )
+            .head
 
           val valueObjectClass: SmartIri = rdfTypeLiteral
-            .asIriLiteral(
+            .as[IriLiteralV2]()
+            .getOrElse(
               throw InconsistentRepositoryDataException(s"Unexpected object of $valObjIri rdf:type: $rdfTypeLiteral"),
             )
             .value
@@ -730,7 +691,7 @@ final case class ConstructResponseUtilV2Live(
                 subjectIri = valObjIri,
                 valueObjectClass = valueObjectClass,
                 userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
-                assertions = valueStatements,
+                assertions = valueRdfWithUserPermission.assertions,
                 standoff = emptyFlatStatements, // link value does not contain standoff
               ),
             )
@@ -742,7 +703,7 @@ final case class ConstructResponseUtilV2Live(
                 subjectIri = valObjIri,
                 valueObjectClass = valueObjectClass,
                 userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
-                assertions = valueStatements,
+                assertions = valueRdfWithUserPermission.assertions,
                 standoff = standoffAssertions,
               ),
             )
@@ -1108,6 +1069,9 @@ final case class ConstructResponseUtilV2Live(
       copyrightHolder = valueObject
         .maybeStringObject(OntologyConstants.KnoraBase.HasCopyrightHolder.toSmartIri)
         .map(CopyrightHolder.unsafeFrom),
+      authorship = valueObject
+        .maybeStringListObject(OntologyConstants.KnoraBase.HasAuthorship.toSmartIri)
+        .map(_.map(Authorship.unsafeFrom).toList),
       licenseText = valueObject
         .maybeStringObject(OntologyConstants.KnoraBase.HasLicenseText.toSmartIri)
         .map(LicenseText.unsafeFrom),
