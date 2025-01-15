@@ -1,5 +1,18 @@
 # Changelog
 
+## [31.2.1](https://github.com/dasch-swiss/dsp-api/compare/v31.2.0...v31.2.1) (2025-01-15)
+
+
+### Maintenances
+
+* Dependency updates ([#3458](https://github.com/dasch-swiss/dsp-api/issues/3458)) ([f96d579](https://github.com/dasch-swiss/dsp-api/commit/f96d5798929501ba06e16cdb1d7e49579fb492de))
+* Update dsp-app to v11.22.5 ([#3453](https://github.com/dasch-swiss/dsp-api/issues/3453)) ([c984b8c](https://github.com/dasch-swiss/dsp-api/commit/c984b8c09be500ed5b63a440ac08b26c9e536864))
+
+
+### Bug Fixes
+
+* Add rdfs:label to knora-base resources to ensure this is present for  isSegmentOfValue properties (DEV-4505) ([#3455](https://github.com/dasch-swiss/dsp-api/issues/3455)) ([bc06166](https://github.com/dasch-swiss/dsp-api/commit/bc06166d6fba1f07ec168246a5f8bbe1aa1f16af))
+
 ## [31.2.0](https://github.com/dasch-swiss/dsp-api/compare/v31.1.0...v31.2.0) (2025-01-08)
 
 
