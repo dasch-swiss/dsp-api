@@ -26,7 +26,7 @@ object Dependencies {
   // see: https://github.com/TopQuadrant/shacl/pull/177
   val JenaVersion          = "4.10.0"
   val Rdf4jVersion         = "5.1.0"
-  val TopbraidShaclVersion = "1.4.3"
+  val TopbraidShaclVersion = "1.4.4"
 
   val ZioConfigVersion            = "4.0.3"
   val ZioLoggingVersion           = "2.4.0"
