@@ -60,29 +60,35 @@ sealed abstract case class UploadFileRequest private (
       case None    => ""
     }
 
-    s"""{
-       |  $resorceIRIOrEmptyString"@type" : "$ontologyName:$classNameWithDefaults",
-       |  "$fileValuePropertyName" : {
-       |    "@type" : "$fileValueType",
-       |    "knora-api:fileValueHasFilename" : "$internalFilename"
-       |    ${copyrightHolder.map(ca => s""","knora-api:hasCopyrightHolder" : "${ca.value}"""").getOrElse("")}
-       |    ${authorship
-        .filter(_.nonEmpty)
-        .map(a => s""","knora-api:hasAuthorship" : [ ${a.map(_.value).mkString("\"", ",", " \"")} ]""")
-        .getOrElse("")}
-       |    ${licenseText.map(l => s""","knora-api:hasLicenseText" : "${l.value}"""").getOrElse("")}
-       |    ${licenseUri
-        .map(u => s""", "knora-api:hasLicenseUri" : { "@type" : "xsd:anyURI", "@value":"${u.value}" }""")
-        .getOrElse("")}
-       |    ${licenseDate
-        .map(d => s""", "knora-api:hasLicenseDate" : { "@type" : "xsd:date", "@value":"${d.value.toString}" }""")
-        .getOrElse("")}
-       |  },
-       |  "knora-api:attachedToProject" : {
-       |    "@id" : "http://rdfh.ch/projects/$shortcode"
-       |  },
-       |  "rdfs:label" : "$label",
-       |  $context}""".stripMargin
+    val copyrightHolderJson =
+      copyrightHolder.map(ca => s""","knora-api:hasCopyrightHolder" : "${ca.value}"""").getOrElse("")
+    val authorshipJson = authorship
+      .filter(_.nonEmpty)
+      .map(a => s""","knora-api:hasAuthorship" : [ ${a.map(_.value).mkString("\"", "\",\"", "\"")} ]""")
+      .getOrElse("")
+
+    val jsonLd =
+      s"""{
+         |  $resorceIRIOrEmptyString"@type" : "$ontologyName:$classNameWithDefaults",
+         |  "$fileValuePropertyName" : {
+         |    "@type" : "$fileValueType",
+         |    "knora-api:fileValueHasFilename" : "$internalFilename"
+         |    $copyrightHolderJson
+         |    $authorshipJson
+         |    ${licenseText.map(l => s""","knora-api:hasLicenseText" : "${l.value}"""").getOrElse("")}
+         |    ${licenseUri
+          .map(u => s""", "knora-api:hasLicenseUri" : { "@type" : "xsd:anyURI", "@value":"${u.value}" }""")
+          .getOrElse("")}
+         |    ${licenseDate
+          .map(d => s""", "knora-api:hasLicenseDate" : { "@type" : "xsd:date", "@value":"${d.value.toString}" }""")
+          .getOrElse("")}
+         |  },
+         |  "knora-api:attachedToProject" : {
+         |    "@id" : "http://rdfh.ch/projects/$shortcode"
+         |  },
+         |  "rdfs:label" : "$label",
+         |  $context}""".stripMargin
+    jsonLd
   }
 
   /**

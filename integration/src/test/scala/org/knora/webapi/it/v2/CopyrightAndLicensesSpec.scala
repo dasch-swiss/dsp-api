@@ -5,6 +5,8 @@
 
 package org.knora.webapi.it.v2
 
+import cats.syntax.traverse.*
+
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.Resource
@@ -13,22 +15,17 @@ import zio.*
 import zio.http.Body
 import zio.http.Response
 import zio.test.*
+import zio.test.Assertion.*
 
 import java.net.URLEncoder
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
-
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasCopyrightHolder
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasLicenseText
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasLicenseUri
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.StillImageFileValue
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
-import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
-import org.knora.webapi.slice.admin.domain.model.LicenseText
-import org.knora.webapi.slice.admin.domain.model.LicenseUri
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given
@@ -39,98 +36,117 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 object CopyrightAndLicensesSpec extends E2EZSpec {
 
-  private val aCopyrightHolder = CopyrightHolder.unsafeFrom("2020, On FileValue")
+  private val aCopyrightHolder = CopyrightHolder.unsafeFrom("Universität Basel")
+  private val someAuthorship   = List("Hans Müller", "Gigi DAgostino").map(Authorship.unsafeFrom)
   private val aLicenseText     = LicenseText.unsafeFrom("CC BY-SA 4.0")
   private val aLicenseUri      = LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by-sa/4.0/")
+  private val aLicenseDate     = LicenseDate.unsafeFrom("2022-01-01")
 
-  private val givenProjectHasNoCopyrightHolderAndLicenseSuite = suite("Creating Resources")(
+  private val copyrightAndLicenseInformationSpec = suite("Creating Resources")(
     test(
-      "when creating a resource without copyright holder and license" +
-        "the creation response should not contain the license and copyright holder",
+      "when creating a resource without copyright and license information" +
+        "the creation response should not contain it",
     ) {
       for {
         createResourceResponseModel <- createStillImageResource()
-        actualCreatedCopyright      <- copyrightValueOption(createResourceResponseModel)
-        actualCreatedLicenseText    <- licenseTextValueOption(createResourceResponseModel)
-        actualCreatedLicenseUri     <- licenseUriValueOption(createResourceResponseModel)
+        info                        <- copyrightAndLicenseInfo(createResourceResponseModel)
       } yield assertTrue(
-        actualCreatedCopyright.isEmpty,
-        actualCreatedLicenseText.isEmpty,
-        actualCreatedLicenseUri.isEmpty,
+        info.copyrightHolder.isEmpty,
+        info.authorship.isEmpty,
+        info.licenseText.isEmpty,
+        info.licenseUri.isEmpty,
+        info.licenseDate.isEmpty,
       )
     },
     test(
-      "when creating a resource with copyright holder and license " +
-        "the creation response should contain the license and copyright holder",
+      "when creating a resource with copyright and license information" +
+        "the creation response should not contain it",
     ) {
       for {
         createResourceResponseModel <-
-          createStillImageResource(Some(aCopyrightHolder), Some(aLicenseText), Some(aLicenseUri))
-        actualCreatedCopyright   <- copyrightValue(createResourceResponseModel)
-        actualCreatedLicenseText <- licenseTextValue(createResourceResponseModel)
-        actualCreatedLicenseUri  <- licenseUriValue(createResourceResponseModel)
+          createStillImageResource(
+            Some(aCopyrightHolder),
+            Some(someAuthorship),
+            Some(aLicenseText),
+            Some(aLicenseUri),
+            Some(aLicenseDate),
+          )
+        info <- copyrightAndLicenseInfo(createResourceResponseModel)
       } yield assertTrue(
-        actualCreatedCopyright == aCopyrightHolder.value,
-        actualCreatedLicenseText == aLicenseText.value,
-        actualCreatedLicenseUri == aLicenseUri.value,
-      )
+        info.copyrightHolder.contains(aCopyrightHolder),
+        info.licenseText.contains(aLicenseText),
+        info.licenseUri.contains(aLicenseUri),
+        info.licenseDate.contains(aLicenseDate),
+      ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     },
     test(
-      "when creating a resource with copyright holder and license " +
-        "the response when getting the created resource should contain the license and copyright holder",
+      "when creating a resource with copyright and license information " +
+        "the response when getting the created resource should contain it",
     ) {
       for {
         createResourceResponseModel <-
-          createStillImageResource(Some(aCopyrightHolder), Some(aLicenseText), Some(aLicenseUri))
-        resourceId        <- resourceId(createResourceResponseModel)
-        getResponseModel  <- getResourceFromApi(resourceId)
-        actualCopyright   <- copyrightValue(getResponseModel)
-        actualLicenseText <- licenseTextValue(getResponseModel)
-        actualLicenseUri  <- licenseUriValue(getResponseModel)
+          createStillImageResource(
+            Some(aCopyrightHolder),
+            Some(someAuthorship),
+            Some(aLicenseText),
+            Some(aLicenseUri),
+            Some(aLicenseDate),
+          )
+        resourceId       <- resourceId(createResourceResponseModel)
+        getResponseModel <- getResourceFromApi(resourceId)
+        info             <- copyrightAndLicenseInfo(getResponseModel)
       } yield assertTrue(
-        actualCopyright == aCopyrightHolder.value,
-        actualLicenseText == aLicenseText.value,
-        actualLicenseUri == aLicenseUri.value,
-      )
+        info.copyrightHolder.contains(aCopyrightHolder),
+        info.licenseText.contains(aLicenseText),
+        info.licenseUri.contains(aLicenseUri),
+        info.licenseDate.contains(aLicenseDate),
+      ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     },
     test(
-      "when creating a resource with copyright holder and license " +
-        "the response when getting the created value should contain the license and copyright holder",
+      "when creating a resource with copyright and license information " +
+        "the response when getting the created value should contain it",
     ) {
       for {
         createResourceResponseModel <-
-          createStillImageResource(Some(aCopyrightHolder), Some(aLicenseText), Some(aLicenseUri))
+          createStillImageResource(
+            Some(aCopyrightHolder),
+            Some(someAuthorship),
+            Some(aLicenseText),
+            Some(aLicenseUri),
+            Some(aLicenseDate),
+          )
         valueResponseModel <- getValueFromApi(createResourceResponseModel)
-        actualCopyright    <- copyrightValue(valueResponseModel)
-        actualLicenseText  <- licenseTextValue(valueResponseModel)
-        actualLicenseUri   <- licenseUriValue(valueResponseModel)
+        info               <- copyrightAndLicenseInfo(valueResponseModel)
       } yield assertTrue(
-        actualCopyright == aCopyrightHolder.value,
-        actualLicenseText == aLicenseText.value,
-        actualLicenseUri == aLicenseUri.value,
-      )
+        info.copyrightHolder.contains(aCopyrightHolder),
+        info.licenseText.contains(aLicenseText),
+        info.licenseUri.contains(aLicenseUri),
+        info.licenseDate.contains(aLicenseDate),
+      ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     },
   )
 
-  val e2eSpec: Spec[Scope & env, Any] = suite("Copyright Attribution and Licenses")(
-    givenProjectHasNoCopyrightHolderAndLicenseSuite,
-  )
+  val e2eSpec: Spec[Scope & env, Any] = suite("Copyright Attribution and Licenses")(copyrightAndLicenseInformationSpec)
 
   private def failResponse(msg: String)(response: Response) =
     response.body.asString.flatMap(bodyStr => ZIO.fail(Exception(s"$msg\nstatus: ${response.status}\nbody: $bodyStr")))
 
   private def createStillImageResource(
     copyrightHolder: Option[CopyrightHolder] = None,
+    authorship: Option[List[Authorship]] = None,
     licenseText: Option[LicenseText] = None,
     licenseUri: Option[LicenseUri] = None,
+    licenseDate: Option[LicenseDate] = None,
   ): ZIO[env, Throwable, Model] = {
     val jsonLd = UploadFileRequest
       .make(
         FileType.StillImageFile(),
         "internalFilename.jpg",
         copyrightHolder = copyrightHolder,
+        authorship = authorship,
         licenseText = licenseText,
         licenseUri = licenseUri,
+        licenseDate = licenseDate,
       )
       .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
     for {
@@ -172,7 +188,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     val subs = model
       .listSubjectsWithProperty(RDF.`type`)
       .asScala
-      .filter(_.getProperty(RDF.`type`).getObject.asResource().hasURI(StillImageFileValue))
+      .filter(_.getProperty(RDF.`type`).getObject.asResource().hasURI(KA.StillImageFileValue))
       .toList
     subs match
       case s :: Nil =>
@@ -185,18 +201,44 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       case _   => ZIO.fail(Exception("Multiple values found"))
   }
 
-  private def copyrightValue(model: Model) =
-    singleStringValueOption(model, HasCopyrightHolder).someOrFail(new Exception("No copyright found"))
+  final case class CopyrightAndLicenseInfo(
+    copyrightHolder: Option[CopyrightHolder],
+    authorship: Option[List[Authorship]],
+    licenseText: Option[LicenseText],
+    licenseUri: Option[LicenseUri],
+    licenseDate: Option[LicenseDate],
+  )
+
+  private def copyrightAndLicenseInfo(model: Model) =
+    for {
+      copyright   <- copyrightValueOption(model).map(_.map(CopyrightHolder.unsafeFrom))
+      authorship  <- authorshipValuesOption(model).map(_.map(_.map(Authorship.unsafeFrom)))
+      licenseText <- licenseTextValueOption(model).map(_.map(LicenseText.unsafeFrom))
+      licenseUri  <- licenseUriValueOption(model).map(_.map(LicenseUri.unsafeFrom))
+      licenseDate <- licenseDateValueOption(model).map(_.map(LicenseDate.unsafeFrom))
+    } yield CopyrightAndLicenseInfo(copyright, authorship, licenseText, licenseUri, licenseDate)
+
   private def copyrightValueOption(model: Model) =
-    singleStringValueOption(model, HasCopyrightHolder)
-  private def licenseTextValue(model: Model) =
-    singleStringValueOption(model, HasLicenseText).someOrFail(new Exception("No license text found"))
+    singleStringValueOption(model, KA.HasCopyrightHolder)
+
+  private def authorshipValuesOption(model: Model): Task[Option[List[String]]] =
+    ZIO
+      .fromEither(
+        model
+          .singleSubjectWithPropertyOption(KA.HasAuthorship)
+          .flatMap(_.traverse(_.objectStringList(KA.HasAuthorship))),
+      )
+      .mapError(Exception(_))
+
   private def licenseTextValueOption(model: Model) =
-    singleStringValueOption(model, HasLicenseText)
-  private def licenseUriValue(model: Model) =
-    singleStringValueOption(model, HasLicenseUri).someOrFail(new Exception("No license uri found"))
+    singleStringValueOption(model, KA.HasLicenseText)
+
   private def licenseUriValueOption(model: Model) =
-    singleStringValueOption(model, HasLicenseUri)
+    singleStringValueOption(model, KA.HasLicenseUri)
+
+  private def licenseDateValueOption(model: Model) =
+    singleStringValueOption(model, KA.HasLicenseDate)
+
   private def singleStringValueOption(model: Model, property: Property): Task[Option[String]] =
     ZIO
       .fromEither(
