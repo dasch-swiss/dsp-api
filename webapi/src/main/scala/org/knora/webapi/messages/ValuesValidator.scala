@@ -8,7 +8,6 @@ package org.knora.webapi.messages
 import spray.json.JsonParser
 
 import java.time.Instant
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
