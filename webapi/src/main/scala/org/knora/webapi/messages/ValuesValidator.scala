@@ -87,9 +87,6 @@ object ValuesValidator {
       s"Invalid xsd:dateTimeStamp value '$s': ${e.getMessage}",
     )
 
-  def xsdDateToLocalDate(s: String): Option[LocalDate] =
-    Try(LocalDate.parse(s)).toOption
-
   /**
    * Parses a DSP ARK timestamp.
    *
