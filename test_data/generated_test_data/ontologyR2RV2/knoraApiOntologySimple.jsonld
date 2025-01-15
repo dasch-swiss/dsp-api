@@ -905,7 +905,21 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasCopyrightAttribution"
+                        "@id": "knora-api:hasAuthorship"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasCopyrightHolder"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasLicenseDate"
                     },
                     "owl:maxCardinality": 1
                 },
@@ -1263,6 +1277,15 @@
             "@id": "knora-api:hasAudioFile"
         },
         {
+            "rdfs:label": "has authorship",
+            "rdfs:comment": "Credit, Moral Rights, Author(s)",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:hasAuthorship"
+        },
+        {
             "rdfs:label": "Color",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasValue"
@@ -1293,13 +1316,13 @@
             "@id": "knora-api:hasComment"
         },
         {
-            "rdfs:label": "copyright attribution",
-            "rdfs:comment": "The copyright statement that gives credit to the original author.",
+            "rdfs:label": "has copyright holder",
+            "rdfs:comment": "The copyright holder.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:hasCopyrightAttribution"
+            "@id": "knora-api:hasCopyrightHolder"
         },
         {
             "rdfs:label": "has 3D-file",
@@ -1429,7 +1452,16 @@
             "@id": "knora-api:hasKeyword"
         },
         {
-            "rdfs:label": "license text",
+            "rdfs:label": "has license date",
+            "rdfs:comment": "Date of creation on platform.",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:date"
+            },
+            "@id": "knora-api:hasLicenseDate"
+        },
+        {
+            "rdfs:label": "has license text",
             "rdfs:comment": "Specifies the terms under which a work can be used. This statement may be a reference to a well-known license, such as Creative Commons (e.g. 'CC BY-SA') or a custom license.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
@@ -1438,7 +1470,7 @@
             "@id": "knora-api:hasLicenseText"
         },
         {
-            "rdfs:label": "license URI",
+            "rdfs:label": "has license URI",
             "rdfs:comment": "Canonical link to license.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {

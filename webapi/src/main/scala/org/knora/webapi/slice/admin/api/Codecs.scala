@@ -102,14 +102,14 @@ object Codecs {
     implicit val restrictedViewWatermark: StringCodec[RestrictedView.Watermark] = booleanCodec(
       RestrictedView.Watermark.from,
     )
-    implicit val selfJoin: StringCodec[SelfJoin]                         = booleanCodec(SelfJoin.from)
-    implicit val shortcode: StringCodec[Shortcode]                       = stringCodec(Shortcode.from)
-    implicit val shortname: StringCodec[Shortname]                       = stringCodec(Shortname.from)
-    implicit val sparqlEncodedString: StringCodec[SparqlEncodedString]   = stringCodec(SparqlEncodedString.from)
-    implicit val status: StringCodec[Status]                             = booleanCodec(Status.from)
-    implicit val copyrightAttribution: StringCodec[CopyrightAttribution] = stringCodec(CopyrightAttribution.from)
-    implicit val licenseText: StringCodec[LicenseText]                   = stringCodec(LicenseText.from)
-    implicit val licenseUri: StringCodec[LicenseUri]                     = stringCodec(LicenseUri.from)
+    implicit val selfJoin: StringCodec[SelfJoin]                       = booleanCodec(SelfJoin.from)
+    implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)
+    implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
+    implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
+    implicit val status: StringCodec[Status]                           = booleanCodec(Status.from)
+    implicit val copyrightHolder: StringCodec[CopyrightHolder]         = stringCodec(CopyrightHolder.from)
+    implicit val licenseText: StringCodec[LicenseText]                 = stringCodec(LicenseText.from)
+    implicit val licenseUri: StringCodec[LicenseUri]                   = stringCodec(LicenseUri.from)
 
     // user
     implicit val userIri: StringCodec[UserIri]         = stringCodec(UserIri.from)

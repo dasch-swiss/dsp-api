@@ -44,10 +44,10 @@ import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.model.ProjectAdminMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
+import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.Group
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseText
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseUri
+import org.knora.webapi.slice.admin.domain.model.LicenseText
+import org.knora.webapi.slice.admin.domain.model.LicenseUri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.Value.StringValue
 
@@ -204,8 +204,8 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
       case _             => throw DeserializationException("Value must be a JSON string.")
   }
 
-  implicit object CopyrightAttributionFormat extends StringValueFormat[CopyrightAttribution] {
-    override val from: String => Either[String, CopyrightAttribution] = CopyrightAttribution.from
+  implicit object CopyrightHolderFormat extends StringValueFormat[CopyrightHolder] {
+    override val from: String => Either[String, CopyrightHolder] = CopyrightHolder.from
   }
 
   implicit object LicenseTextFormat extends StringValueFormat[LicenseText] {
