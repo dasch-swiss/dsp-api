@@ -19,8 +19,8 @@ import zio.test.Assertion.*
 import java.net.URLEncoder
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
-
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.it.v2.CopyrightAndLicensesSpec.valueId
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.models.filemodels.FileType
@@ -41,7 +41,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
   private val aLicenseText     = LicenseText.unsafeFrom("CC BY-SA 4.0")
   private val aLicenseUri      = LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by-sa/4.0/")
 
-  private val copyrightAndLicenseInformationSpec = suite("Creating Resources")(
+  private val createResourceSuite = suite("Creating Resources")(
     test(
       "when creating a resource without copyright and license information" +
         "the creation response should not contain it",
@@ -104,7 +104,48 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     },
   )
 
-  val e2eSpec: Spec[Scope & env, Any] = suite("Copyright Attribution and Licenses")(copyrightAndLicenseInformationSpec)
+  private val createValueSuite = suite("Values with Copyright and License Information") {
+    test("when updating a value with copyright and license information, the created value should contain it") {
+      for {
+        resourceCreated <- createStillImageResource()
+        resourceId      <- resourceId(resourceCreated)
+        valueIdOld      <- valueId(resourceCreated)
+        authorshipArray  = someAuthorship.map(_.value).mkString("[ \"", "\", \"", "\" ]")
+        body = s"""|{
+                   |  "@type": "anything:ThingPicture",
+                   |  "@id": "$resourceId",
+                   |  "ka:hasStillImageFileValue": {
+                   |    "@type": "ka:StillImageFileValue",
+                   |    "@id": "$valueIdOld",
+                   |    "ka:fileValueHasFilename": "filename.jpx",
+                   |    "ka:hasCopyrightHolder" : "${aCopyrightHolder.value}",
+                   |    "ka:hasAuthorship" : $authorshipArray,
+                   |    "ka:hasLicenseText" : "${aLicenseText.value}",
+                   |    "ka:hasLicenseUri" : {
+                   |      "@value" : "${aLicenseUri.value}",
+                   |      "@type" : "http://www.w3.org/2001/XMLSchema#anyURI"
+                   |    }
+                   |  },
+                   |  "@context": {
+                   |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+        _ <- sendPutRequestAsRoot(s"/v2/values", body)
+               .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create value"))
+               .flatMap(_.body.asString)
+        createdResourceModel <- getResourceFromApi(resourceId)
+        info                 <- copyrightAndLicenseInfo(createdResourceModel)
+      } yield assertTrue(
+        info.licenseText.contains(aLicenseText),
+        info.licenseUri.contains(aLicenseUri),
+        info.licenseDate.isDefined,
+      ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
+    }
+  }
+
+  val e2eSpec: Spec[Scope & env, Any] =
+    suite("Copyright Attribution and Licenses")(createResourceSuite, createValueSuite)
 
   private def failResponse(msg: String)(response: Response) =
     response.body.asString.flatMap(bodyStr => ZIO.fail(Exception(s"$msg\nstatus: ${response.status}\nbody: $bodyStr")))
@@ -149,9 +190,13 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
 
-  private def getValueFromApi(createResourceResponse: Model) = for {
+  private def getValueFromApi(createResourceResponse: Model): ZIO[env, Throwable, Model] = for {
     valueId    <- valueId(createResourceResponse)
     resourceId <- resourceId(createResourceResponse)
+    model      <- getValueFromApi(valueId, resourceId)
+  } yield model
+
+  private def getValueFromApi(valueId: ValueIri, resourceId: String): ZIO[env, Throwable, Model] = for {
     responseBody <- sendGetRequest(s"/v2/values/${URLEncoder.encode(resourceId, "UTF-8")}/${valueId.valueId}")
                       .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to get value $resourceId."))
                       .flatMap(_.body.asString)

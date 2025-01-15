@@ -236,8 +236,10 @@ DELETE {
                 }
 
                 @fileValueContentV2.fileValue.authorship match {
-                    case Some(authors) if authors.nonEmpty => {
-                        <@newValueIri> knora-base:hasAuthorship @authors.map(_.value).mkString("\"", ",", "\"") .
+                    case Some(authors) => {
+                        @authors.map { author =>
+                            <@newValueIri> knora-base:hasAuthorship """@author.value""" .
+                        }
                     }
                     case None => {}
                 }
