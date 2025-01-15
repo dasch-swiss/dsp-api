@@ -12,7 +12,6 @@ import zio.json.ast.Json
 import zio.test.*
 
 import java.time.Instant
-import java.time.LocalDate
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.config.AppConfig
