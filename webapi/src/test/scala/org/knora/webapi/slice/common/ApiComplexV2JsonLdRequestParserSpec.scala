@@ -81,6 +81,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     "internalMimeType",
     Some("originalFilename.orig"),
     Some("originalMimeType"),
+    licenseDate = Some(LicenseDate.makeNew),
   )
 
   private val configureSipiServiceMock = for {
@@ -517,6 +518,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             "internalMimeType",
             Some("originalFilename"),
             Some("originalMimeType"),
+            licenseDate = Some(LicenseDate.makeNew),
           ),
           IiifImageRequestUrl.unsafeFrom("http://www.example.org/prefix1/abcd1234/full/0/native.jpg"),
           None,
