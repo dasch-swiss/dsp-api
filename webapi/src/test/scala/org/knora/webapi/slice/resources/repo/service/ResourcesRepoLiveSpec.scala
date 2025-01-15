@@ -11,12 +11,12 @@ import zio.test.*
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
+import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
@@ -268,17 +268,14 @@ object TestData {
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.StillImageFileValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.StillImageFileValueInfo(
-        internalFilename = "24159oO1pNg-ByLN1NLlMSJ.jp2",
-        internalMimeType = "image/jp2",
-        originalFilename = Some("foo.png"),
-        originalMimeType = Some("image/png"),
+        FileValueV2(
+          internalFilename = "24159oO1pNg-ByLN1NLlMSJ.jp2",
+          internalMimeType = "image/jp2",
+          originalFilename = Some("foo.png"),
+          originalMimeType = Some("image/png"),
+        ),
         dimX = 100,
         dimY = 60,
-        None,
-        None,
-        None,
-        None,
-        None,
       ),
       permissions = valuePermissions,
       creator = valueCreator,
@@ -296,16 +293,11 @@ object TestData {
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.StillImageFileValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.StillImageExternalFileValueInfo(
-        internalFilename = "24159oO1pNg-ByLN1NLlMSJ.jp2",
-        internalMimeType = "image/jp2",
-        originalFilename = None,
-        originalMimeType = None,
+        FileValueV2(
+          internalFilename = "24159oO1pNg-ByLN1NLlMSJ.jp2",
+          internalMimeType = "image/jp2",
+        ),
         externalUrl = "http://example.com/foo.jpg",
-        None,
-        None,
-        None,
-        None,
-        None,
       ),
       permissions = valuePermissions,
       creator = valueCreator,
@@ -323,18 +315,15 @@ object TestData {
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.DocumentFileValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.DocumentFileValueInfo(
-        internalFilename = "24159oO1pNg-ByLN1NLlMSJ.pdf",
-        internalMimeType = "application/pdf",
-        originalFilename = Some("foo.pdf"),
-        originalMimeType = Some("application/pdf"),
+        FileValueV2(
+          internalFilename = "24159oO1pNg-ByLN1NLlMSJ.pdf",
+          internalMimeType = "application/pdf",
+          originalFilename = Some("foo.pdf"),
+          originalMimeType = Some("application/pdf"),
+        ),
         dimX = Some(100),
         dimY = Some(60),
         pageCount = Some(10),
-        None,
-        None,
-        None,
-        None,
-        None,
       ),
       permissions = valuePermissions,
       creator = valueCreator,
@@ -352,15 +341,12 @@ object TestData {
       valueTypeIri = InternalIri(OntologyConstants.KnoraBase.ArchiveFileValue),
       valueUUID = UUID.randomUUID(),
       value = TypeSpecificValueInfo.OtherFileValueInfo(
-        internalFilename = "24159oO1pNg-ByLN1NLlMSJ.zip",
-        internalMimeType = "application/zip",
-        originalFilename = Some("foo.zip"),
-        originalMimeType = Some("application/zip"),
-        None,
-        None,
-        None,
-        None,
-        None,
+        FileValueV2(
+          internalFilename = "24159oO1pNg-ByLN1NLlMSJ.zip",
+          internalMimeType = "application/zip",
+          originalFilename = Some("foo.zip"),
+          originalMimeType = Some("application/zip"),
+        ),
       ),
       permissions = valuePermissions,
       creator = valueCreator,

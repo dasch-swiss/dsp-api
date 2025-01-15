@@ -277,15 +277,18 @@ object ResourcesRepoLive {
 
     private def buildFileValuePattern(v: FileValueTypeSpecificInfo, valueIri: String): TriplePattern = {
       val result = iri(valueIri)
-        .has(KB.internalFilename, literalOf(v.internalFilename))
-        .andHas(KB.internalMimeType, literalOf(v.internalMimeType))
-        .andHasOptional(KB.originalFilename, v.originalFilename.map(literalOf))
-        .andHasOptional(KB.originalMimeType, v.originalMimeType.map(literalOf))
-        .andHasOptional(KB.hasCopyrightHolder, v.copyrightHolder.map(_.value).map(literalOf))
-        .andHasOptional(KB.hasLicenseText, v.licenseText.map(_.value).map(literalOf))
-        .andHasOptional(KB.hasLicenseUri, v.licenseUri.map(_.value).map(literalOfType(_, XSD.ANYURI)))
-        .andHasOptional(KB.hasLicenseDate, v.licenseDate.map(_.value.toString).map(literalOfType(_, XSD.DATE)))
-      v.authorship.foreach(_.map(_.value).foreach(result.andHas(KB.hasAuthorship, _)))
+        .has(KB.internalFilename, literalOf(v.fileValue.internalFilename))
+        .andHas(KB.internalMimeType, literalOf(v.fileValue.internalMimeType))
+        .andHasOptional(KB.originalFilename, v.fileValue.originalFilename.map(literalOf))
+        .andHasOptional(KB.originalMimeType, v.fileValue.originalMimeType.map(literalOf))
+        .andHasOptional(KB.hasCopyrightHolder, v.fileValue.copyrightHolder.map(_.value).map(literalOf))
+        .andHasOptional(KB.hasLicenseText, v.fileValue.licenseText.map(_.value).map(literalOf))
+        .andHasOptional(KB.hasLicenseUri, v.fileValue.licenseUri.map(_.value).map(literalOfType(_, XSD.ANYURI)))
+        .andHasOptional(
+          KB.hasLicenseDate,
+          v.fileValue.licenseDate.map(_.value.toString).map(literalOfType(_, XSD.DATE)),
+        )
+      v.fileValue.authorship.foreach(_.map(_.value).foreach(result.andHas(KB.hasAuthorship, _)))
 
       v match {
         case _: OtherFileValueInfo              => result
