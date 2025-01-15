@@ -6,7 +6,6 @@
 package org.knora.webapi.it.v2
 
 import cats.syntax.traverse.*
-
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.Resource
@@ -20,6 +19,7 @@ import zio.test.Assertion.*
 import java.net.URLEncoder
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA

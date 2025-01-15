@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.domain.model
 
 import java.time.LocalDate
 import scala.util.Try
+
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion.*
 import org.knora.webapi.slice.common.StringValueCompanion.maxLength

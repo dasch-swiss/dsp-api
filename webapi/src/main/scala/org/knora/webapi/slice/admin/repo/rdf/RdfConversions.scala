@@ -35,9 +35,6 @@ object RdfConversions {
   implicit val selfjoinConverter: Boolean => Either[String, SelfJoin]    = value => Right(SelfJoin.from(value))
   implicit val descriptionConverter: LangString => Either[String, Description] = langString =>
     Description.from(StringLiteralV2.from(langString.value, langString.lang))
-  implicit val copyrightHolderConverter: String => Either[String, CopyrightHolder] = CopyrightHolder.from
-  implicit val licenseTextConverter: String => Either[String, LicenseText]         = LicenseText.from
-  implicit val licenseUriConverter: String => Either[String, LicenseUri]           = LicenseUri.from
 
   // User properties
   implicit val usernameConverter: String => Either[String, Username]         = Username.from

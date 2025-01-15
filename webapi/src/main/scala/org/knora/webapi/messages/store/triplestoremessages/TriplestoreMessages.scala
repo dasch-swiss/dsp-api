@@ -17,14 +17,14 @@ import java.time.Instant
 import java.time.LocalDate
 import scala.collection.mutable
 import scala.reflect.ClassTag
+import scala.util.Try
+
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.*
-
-import scala.util.Try
 
 /**
  * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.
