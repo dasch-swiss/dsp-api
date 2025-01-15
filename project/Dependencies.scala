@@ -32,7 +32,7 @@ object Dependencies {
   val ZioLoggingVersion           = "2.4.0"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC35"
+  val ZioPreludeVersion           = "1.0.0-RC36"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.1.13"
 
@@ -100,7 +100,7 @@ object Dependencies {
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.79"
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.80"
 
   // caching
   val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
