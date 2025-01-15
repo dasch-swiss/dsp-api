@@ -2018,15 +2018,9 @@ object FileValueV2 {
     for {
       copyrightHolder <- r.objectStringOption(HasCopyrightHolder, CopyrightHolder.from)
       authorship      <- r.objectStringListOption(HasAuthorship, Authorship.from)
-      _ = {
-        val out = new java.io.ByteArrayOutputStream()
-        RDFDataMgr.write(out, r.getModel, Lang.TURTLE)
-        println("FileValueV2.from: model:")
-        print(out.toString(java.nio.charset.StandardCharsets.UTF_8))
-      }
-      licenseText <- r.objectStringOption(HasLicenseText, LicenseText.from)
-      licenseUri  <- r.objectDataTypeOption(HasLicenseUri, XSD.anyURI.toString, LicenseUri.from)
-      licenseDate <- r.objectLocalDateOption(HasLicenseDate).map(_.map(LicenseDate.from))
+      licenseText     <- r.objectStringOption(HasLicenseText, LicenseText.from)
+      licenseUri      <- r.objectDataTypeOption(HasLicenseUri, XSD.anyURI.toString, LicenseUri.from)
+      licenseDate     <- r.objectLocalDateOption(HasLicenseDate).map(_.map(LicenseDate.from))
     } yield FileValueV2(
       info.filename,
       meta.internalMimeType,
