@@ -63,15 +63,8 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         "the creation response should not contain it",
     ) {
       for {
-        createResourceResponseModel <-
-          createStillImageResource(
-            Some(aCopyrightHolder),
-            Some(someAuthorship),
-            Some(aLicenseText),
-            Some(aLicenseUri),
-            Some(aLicenseDate),
-          )
-        info <- copyrightAndLicenseInfo(createResourceResponseModel)
+        createResourceResponseModel <- createStillImageResourceWithInfos
+        info                        <- copyrightAndLicenseInfo(createResourceResponseModel)
       } yield assertTrue(
         info.copyrightHolder.contains(aCopyrightHolder),
         info.licenseText.contains(aLicenseText),
@@ -84,17 +77,10 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         "the response when getting the created resource should contain it",
     ) {
       for {
-        createResourceResponseModel <-
-          createStillImageResource(
-            Some(aCopyrightHolder),
-            Some(someAuthorship),
-            Some(aLicenseText),
-            Some(aLicenseUri),
-            Some(aLicenseDate),
-          )
-        resourceId       <- resourceId(createResourceResponseModel)
-        getResponseModel <- getResourceFromApi(resourceId)
-        info             <- copyrightAndLicenseInfo(getResponseModel)
+        createResourceResponseModel <- createStillImageResourceWithInfos
+        resourceId                  <- resourceId(createResourceResponseModel)
+        getResponseModel            <- getResourceFromApi(resourceId)
+        info                        <- copyrightAndLicenseInfo(getResponseModel)
       } yield assertTrue(
         info.copyrightHolder.contains(aCopyrightHolder),
         info.licenseText.contains(aLicenseText),
@@ -107,16 +93,9 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         "the response when getting the created value should contain it",
     ) {
       for {
-        createResourceResponseModel <-
-          createStillImageResource(
-            Some(aCopyrightHolder),
-            Some(someAuthorship),
-            Some(aLicenseText),
-            Some(aLicenseUri),
-            Some(aLicenseDate),
-          )
-        valueResponseModel <- getValueFromApi(createResourceResponseModel)
-        info               <- copyrightAndLicenseInfo(valueResponseModel)
+        createResourceResponseModel <- createStillImageResourceWithInfos
+        valueResponseModel          <- getValueFromApi(createResourceResponseModel)
+        info                        <- copyrightAndLicenseInfo(valueResponseModel)
       } yield assertTrue(
         info.copyrightHolder.contains(aCopyrightHolder),
         info.licenseText.contains(aLicenseText),
@@ -130,6 +109,15 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
 
   private def failResponse(msg: String)(response: Response) =
     response.body.asString.flatMap(bodyStr => ZIO.fail(Exception(s"$msg\nstatus: ${response.status}\nbody: $bodyStr")))
+
+  private def createStillImageResourceWithInfos =
+    createStillImageResource(
+      Some(aCopyrightHolder),
+      Some(someAuthorship),
+      Some(aLicenseText),
+      Some(aLicenseUri),
+      Some(aLicenseDate),
+    )
 
   private def createStillImageResource(
     copyrightHolder: Option[CopyrightHolder] = None,

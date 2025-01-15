@@ -3,6 +3,7 @@
     "@graph": [
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "date value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:DateBase"
