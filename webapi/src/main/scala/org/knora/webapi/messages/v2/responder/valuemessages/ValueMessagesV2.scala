@@ -6,8 +6,6 @@
 package org.knora.webapi.messages.v2.responder.valuemessages
 
 import org.apache.jena.rdf.model.Resource
-import org.apache.jena.riot.Lang
-import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.vocabulary.XSD
 import zio.IO
 import zio.ZIO

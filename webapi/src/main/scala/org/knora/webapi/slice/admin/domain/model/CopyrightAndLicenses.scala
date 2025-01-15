@@ -13,8 +13,6 @@ import org.knora.webapi.slice.common.StringValueCompanion.maxLength
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.WithFrom
-import zio.Clock
-import zio.UIO
 
 final case class CopyrightHolder private (override val value: String) extends StringValue
 object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
