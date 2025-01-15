@@ -48,7 +48,7 @@ final case class HandlerMapper()(implicit val r: zio.Runtime[Any]) {
   def mapSecuredEndpointHandler[INPUT, OUTPUT](
     handlerAndEndpoint: SecuredEndpointHandler[INPUT, OUTPUT],
   ): Full[SecurityIn, User, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
-    handlerAndEndpoint.endpoint.serverLogic(user => in => { runToFuture(handlerAndEndpoint.handler(user)(in)) })
+    handlerAndEndpoint.endpoint.serverLogic(user => in => runToFuture(handlerAndEndpoint.handler(user)(in)))
 
   def mapPublicEndpointHandler[INPUT, OUTPUT](
     handlerAndEndpoint: PublicEndpointHandler[INPUT, OUTPUT],

@@ -96,41 +96,40 @@ object CreateOntologyRequestV2 {
     apiRequestID: UUID,
     requestingUser: User,
   ): ZIO[StringFormatter, Throwable, CreateOntologyRequestV2] = ZIO.serviceWithZIO[StringFormatter] {
-    implicit sf: StringFormatter =>
-      for {
-        isShared <- ZIO
-                      .fromEither(jsonLDDocument.body.getBoolean(KnoraApiV2Complex.IsShared))
-                      .mapBoth(BadRequestException(_), _.exists(identity))
-        ontologyName <-
-          ZIO.attempt {
-            jsonLDDocument.body.requireStringWithValidation(
-              KnoraApiV2Complex.OntologyName,
-              ValuesValidator.validateProjectSpecificOntologyName(_).getOrElse(_),
-            )
-          }
-        label <-
-          ZIO.attempt(
-            jsonLDDocument.body.requireStringWithValidation(Rdfs.Label, Iri.toSparqlEncodedString(_).getOrElse(_)),
+    implicit sf: StringFormatter => for {
+      isShared <- ZIO
+                    .fromEither(jsonLDDocument.body.getBoolean(KnoraApiV2Complex.IsShared))
+                    .mapBoth(BadRequestException(_), _.exists(identity))
+      ontologyName <-
+        ZIO.attempt {
+          jsonLDDocument.body.requireStringWithValidation(
+            KnoraApiV2Complex.OntologyName,
+            ValuesValidator.validateProjectSpecificOntologyName(_).getOrElse(_),
           )
-        comment <-
-          ZIO.attempt(
-            jsonLDDocument.body.maybeStringWithValidation(Rdfs.Comment, Iri.toSparqlEncodedString(_).getOrElse(_)),
-          )
-        projectIri <- ZIO.attempt {
-                        jsonLDDocument.body.requireIriInObject(
-                          KnoraApiV2Complex.AttachedToProject,
-                          sf.toSmartIriWithErr,
-                        )
-                      }
-      } yield CreateOntologyRequestV2(
-        ontologyName = ontologyName,
-        projectIri = projectIri,
-        isShared = isShared,
-        label = label,
-        comment = comment,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser,
-      )
+        }
+      label <-
+        ZIO.attempt(
+          jsonLDDocument.body.requireStringWithValidation(Rdfs.Label, Iri.toSparqlEncodedString(_).getOrElse(_)),
+        )
+      comment <-
+        ZIO.attempt(
+          jsonLDDocument.body.maybeStringWithValidation(Rdfs.Comment, Iri.toSparqlEncodedString(_).getOrElse(_)),
+        )
+      projectIri <- ZIO.attempt {
+                      jsonLDDocument.body.requireIriInObject(
+                        KnoraApiV2Complex.AttachedToProject,
+                        sf.toSmartIriWithErr,
+                      )
+                    }
+    } yield CreateOntologyRequestV2(
+      ontologyName = ontologyName,
+      projectIri = projectIri,
+      isShared = isShared,
+      label = label,
+      comment = comment,
+      apiRequestID = apiRequestID,
+      requestingUser = requestingUser,
+    )
   }
 }
 

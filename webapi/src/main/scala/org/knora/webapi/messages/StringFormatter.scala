@@ -260,7 +260,7 @@ object StringFormatter {
   private def getOrCacheSmartIri(iriStr: IRI, creationFun: () => SmartIri): SmartIri =
     smartIriCache.computeIfAbsent(
       iriStr,
-      JavaUtil.function({ (_: Object) => creationFun() }),
+      JavaUtil.function((_: Object) => creationFun()),
     )
 
   val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { (appConfig: AppConfig) =>

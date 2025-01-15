@@ -1628,14 +1628,13 @@ final case class ResourcesResponderV2(
                                                                  )
 
       // If there is a version history for deletion of the event, create a delete resource event for it.
-      (deletionRep, resourceAtValueChanges) = fullReps.tail.partition { case (resHist, resource) =>
-                                                resource
-                                                  .asInstanceOf[ReadResourceV2]
-                                                  .deletionInfo
-                                                  .exists(deletionInfo =>
-                                                    deletionInfo.deleteDate == resHist.versionDate,
-                                                  )
-                                              }
+      (deletionRep, resourceAtValueChanges) =
+        fullReps.tail.partition { case (resHist, resource) =>
+          resource
+            .asInstanceOf[ReadResourceV2]
+            .deletionInfo
+            .exists(deletionInfo => deletionInfo.deleteDate == resHist.versionDate)
+        }
       resourceDeleteEvent = getResourceDeletionEvents(deletionRep)
 
       // For each value version, form an event
