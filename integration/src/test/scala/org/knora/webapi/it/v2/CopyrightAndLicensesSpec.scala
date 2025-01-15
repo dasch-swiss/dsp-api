@@ -54,7 +54,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.authorship.isEmpty,
         info.licenseText.isEmpty,
         info.licenseUri.isEmpty,
-        info.licenseDate.isDefined,
+        info.licenseDate.contains(LicenseDate.makeNew),
       )
     },
     test(
@@ -68,7 +68,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.copyrightHolder.contains(aCopyrightHolder),
         info.licenseText.contains(aLicenseText),
         info.licenseUri.contains(aLicenseUri),
-        info.licenseDate.isDefined,
+        info.licenseDate.contains(LicenseDate.makeNew),
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     },
     test(
@@ -84,7 +84,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.copyrightHolder.contains(aCopyrightHolder),
         info.licenseText.contains(aLicenseText),
         info.licenseUri.contains(aLicenseUri),
-        info.licenseDate.isDefined,
+        info.licenseDate.contains(LicenseDate.makeNew),
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     },
     test(
@@ -99,7 +99,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.copyrightHolder.contains(aCopyrightHolder),
         info.licenseText.contains(aLicenseText),
         info.licenseUri.contains(aLicenseUri),
-        info.licenseDate.isDefined,
+        info.licenseDate.contains(LicenseDate.makeNew),
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     },
   )
@@ -139,7 +139,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       } yield assertTrue(
         info.licenseText.contains(aLicenseText),
         info.licenseUri.contains(aLicenseUri),
-        info.licenseDate.isDefined,
+        info.licenseDate.contains(LicenseDate.makeNew),
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     }
   }
