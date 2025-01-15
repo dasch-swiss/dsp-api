@@ -458,10 +458,6 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |    "ka:hasCopyrightHolder" : "Jane Doe",
                  |    "ka:hasAuthorship" : [ "Mr. Smith", "Author McAuthorface" ],
                  |    "ka:hasLicenseText" : "CC-BY-4.0",
-                 |    "ka:hasLicenseDate" : {
-                 |        "@type" : "xsd:date",
-                 |        "@value" : "1999-12-24"
-                 |    },
                  |    "ka:hasLicenseUri" : {
                  |      "@value" : "http://creativecommons.org/licenses/by/4.0/",
                  |      "@type" : "xsd:anyURI"
@@ -483,7 +479,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             authorship = Some(List(Authorship.unsafeFrom("Author McAuthorface"), Authorship.unsafeFrom("Mr. Smith"))),
             licenseText = Some(LicenseText.unsafeFrom("CC-BY-4.0")),
             licenseUri = Some(LicenseUri.unsafeFrom("http://creativecommons.org/licenses/by/4.0/")),
-            licenseDate = Some(LicenseDate.unsafeFrom("1999-12-24")),
+            licenseDate = Some(LicenseDate.makeNew),
           ),
           givenFileInfo.width.getOrElse(throw new Exception("width is missing")),
           givenFileInfo.height.getOrElse(throw new Exception("height is missing")),
