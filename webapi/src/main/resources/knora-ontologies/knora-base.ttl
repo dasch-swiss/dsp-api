@@ -555,14 +555,8 @@
 
 :hasCopyrightHolder
     rdf:type                  owl:DatatypeProperty ;
-<<<<<<< HEAD
+    rdfs:label                "has copyright holder"@en;
     rdfs:comment              "The copyright holder."@en ;
-||||||| c984b8c09
-    rdfs:comment              "The copyright statement that gives credit to the original author."@en ;
-=======
-    rdfs:label                "copyright attribution"@en; 
-    rdfs:comment              "The copyright statement that gives credit to the original author."@en ;
->>>>>>> main
     :objectDatatypeConstraint xsd:string .
 
 
@@ -570,6 +564,7 @@
 
 :hasAuthorship
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "has authorship"@en;
     rdfs:comment              "Credit, Moral Rights, Author(s)"@en ;
     :objectDatatypeConstraint xsd:string .
 
@@ -578,17 +573,16 @@
 
 :hasLicenseText
     rdf:type                  owl:DatatypeProperty ;
-    rdfs:label                "license text"@en;
+    rdfs:label                "has license text"@en;
     rdfs:comment              "Specifies the terms under which a work can be used. This statement may be a reference to a well-known license, such as Creative Commons (e.g. 'CC BY-SA') or a custom license."@en ;
     :objectDatatypeConstraint xsd:string .
 
-###  http://www.knora.org/ontology/knora-base#hasLicenseUri
 
 ###  http://www.knora.org/ontology/knora-base#hasLicenseUri
 
 :hasLicenseUri
     rdf:type                  owl:DatatypeProperty ;
-    rdfs:label                "license URI"@en;
+    rdfs:label                "has license URI"@en;
     rdfs:comment              "Canonical link to license."@en ;
     :objectDatatypeConstraint xsd:anyUri .
 
@@ -597,6 +591,7 @@
 
 :hasLicenseDate
     rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "has license date"@en;
     rdfs:comment              "Date of creation on platform."@en ;
     :objectDatatypeConstraint xsd:date.
 
