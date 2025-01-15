@@ -19,8 +19,8 @@ import zio.test.Assertion.*
 import java.net.URLEncoder
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
+
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.it.v2.CopyrightAndLicensesSpec.valueId
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.models.filemodels.FileType
