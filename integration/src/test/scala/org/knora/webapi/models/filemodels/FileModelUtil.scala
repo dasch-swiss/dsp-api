@@ -92,7 +92,6 @@ object FileModelUtil {
     authorship: Option[List[Authorship]] = None,
     licenseText: Option[LicenseText] = None,
     licenseUri: Option[LicenseUri] = None,
-    licenseDate: Option[LicenseDate] = None,
     comment: Option[String] = None,
   ): FileValueContentV2 =
     fileType match {
@@ -108,7 +107,6 @@ object FileModelUtil {
             authorship = authorship,
             licenseText = licenseText,
             licenseUri = licenseUri,
-            licenseDate = licenseDate,
           ),
           pageCount = pageCount,
           dimX = dimX,
@@ -127,7 +125,6 @@ object FileModelUtil {
             authorship = authorship,
             licenseText = licenseText,
             licenseUri = licenseUri,
-            licenseDate = licenseDate,
           ),
           dimX = dimX,
           dimY = dimY,
@@ -145,7 +142,6 @@ object FileModelUtil {
             authorship = authorship,
             licenseText = licenseText,
             licenseUri = licenseUri,
-            licenseDate = licenseDate,
           ),
           externalUrl = externalUrl,
           comment = comment,
@@ -162,7 +158,6 @@ object FileModelUtil {
             authorship = authorship,
             licenseText = licenseText,
             licenseUri = licenseUri,
-            licenseDate = licenseDate,
           ),
         )
       case FileType.TextFile =>
@@ -177,7 +172,6 @@ object FileModelUtil {
             authorship = authorship,
             licenseText = licenseText,
             licenseUri = licenseUri,
-            licenseDate = licenseDate,
           ),
         )
       case FileType.AudioFile =>
@@ -192,7 +186,6 @@ object FileModelUtil {
             authorship = authorship,
             licenseText = licenseText,
             licenseUri = licenseUri,
-            licenseDate = licenseDate,
           ),
         )
       case FileType.ArchiveFile =>
@@ -207,7 +200,6 @@ object FileModelUtil {
             authorship = authorship,
             licenseText = licenseText,
             licenseUri = licenseUri,
-            licenseDate = licenseDate,
           ),
           comment = comment,
         )

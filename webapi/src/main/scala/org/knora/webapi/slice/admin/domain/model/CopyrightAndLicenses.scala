@@ -7,13 +7,14 @@ package org.knora.webapi.slice.admin.domain.model
 
 import java.time.LocalDate
 import scala.util.Try
-
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion.*
 import org.knora.webapi.slice.common.StringValueCompanion.maxLength
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.WithFrom
+import zio.Clock
+import zio.UIO
 
 final case class CopyrightHolder private (override val value: String) extends StringValue
 object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
@@ -45,7 +46,8 @@ object LicenseUri extends StringValueCompanion[LicenseUri] {
 
 final case class LicenseDate private (override val value: LocalDate) extends Value[LocalDate]
 object LicenseDate extends WithFrom[String, LicenseDate] {
-  def makeNew: LicenseDate = LicenseDate(LocalDate.now())
+  def makeNew: LicenseDate = LicenseDate(LocalDate.now)
+
   def from(str: String): Either[String, LicenseDate] =
     Try(LocalDate.parse(str)).toEither.left
       .map(_ => "License Date must be in format 'YYYY-MM-DD'.")

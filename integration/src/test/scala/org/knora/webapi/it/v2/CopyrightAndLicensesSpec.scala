@@ -40,7 +40,6 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
   private val someAuthorship   = List("Hans Müller", "Gigi DAgostino").map(Authorship.unsafeFrom)
   private val aLicenseText     = LicenseText.unsafeFrom("CC BY-SA 4.0")
   private val aLicenseUri      = LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by-sa/4.0/")
-  private val aLicenseDate     = LicenseDate.unsafeFrom("2022-01-01")
 
   private val copyrightAndLicenseInformationSpec = suite("Creating Resources")(
     test(
@@ -55,7 +54,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.authorship.isEmpty,
         info.licenseText.isEmpty,
         info.licenseUri.isEmpty,
-        info.licenseDate.isEmpty,
+        info.licenseDate.isDefined,
       )
     },
     test(
@@ -69,7 +68,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.copyrightHolder.contains(aCopyrightHolder),
         info.licenseText.contains(aLicenseText),
         info.licenseUri.contains(aLicenseUri),
-        info.licenseDate.contains(aLicenseDate),
+        info.licenseDate.isDefined,
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     },
     test(
@@ -85,7 +84,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.copyrightHolder.contains(aCopyrightHolder),
         info.licenseText.contains(aLicenseText),
         info.licenseUri.contains(aLicenseUri),
-        info.licenseDate.contains(aLicenseDate),
+        info.licenseDate.isDefined,
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     },
     test(
@@ -100,7 +99,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.copyrightHolder.contains(aCopyrightHolder),
         info.licenseText.contains(aLicenseText),
         info.licenseUri.contains(aLicenseUri),
-        info.licenseDate.contains(aLicenseDate),
+        info.licenseDate.isDefined,
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     },
   )
@@ -116,7 +115,6 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       Some(someAuthorship),
       Some(aLicenseText),
       Some(aLicenseUri),
-      Some(aLicenseDate),
     )
 
   private def createStillImageResource(
@@ -124,7 +122,6 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     authorship: Option[List[Authorship]] = None,
     licenseText: Option[LicenseText] = None,
     licenseUri: Option[LicenseUri] = None,
-    licenseDate: Option[LicenseDate] = None,
   ): ZIO[env, Throwable, Model] = {
     val jsonLd = UploadFileRequest
       .make(
@@ -134,7 +131,6 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         authorship = authorship,
         licenseText = licenseText,
         licenseUri = licenseUri,
-        licenseDate = licenseDate,
       )
       .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
     for {

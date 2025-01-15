@@ -30,7 +30,6 @@ sealed abstract case class UploadFileRequest private (
   authorship: Option[List[Authorship]] = None,
   licenseText: Option[LicenseText] = None,
   licenseUri: Option[LicenseUri] = None,
-  licenseDate: Option[LicenseDate] = None,
 ) { self =>
 
   /**
@@ -78,9 +77,6 @@ sealed abstract case class UploadFileRequest private (
          |    ${licenseText.map(l => s""","knora-api:hasLicenseText" : "${l.value}"""").getOrElse("")}
          |    ${licenseUri
           .map(u => s""", "knora-api:hasLicenseUri" : { "@type" : "xsd:anyURI", "@value":"${u.value}" }""")
-          .getOrElse("")}
-         |    ${licenseDate
-          .map(d => s""", "knora-api:hasLicenseDate" : { "@type" : "xsd:date", "@value":"${d.value.toString}" }""")
           .getOrElse("")}
          |  },
          |  "knora-api:attachedToProject" : {
@@ -154,7 +150,6 @@ sealed abstract case class UploadFileRequest private (
       authorship = self.authorship,
       licenseText = self.licenseText,
       licenseUri = self.licenseUri,
-      licenseDate = self.licenseDate,
     )
 
     val values = List(
@@ -209,7 +204,6 @@ object UploadFileRequest {
     authorship: Option[List[Authorship]] = None,
     licenseText: Option[LicenseText] = None,
     licenseUri: Option[LicenseUri] = None,
-    licenseDate: Option[LicenseDate] = None,
   ): UploadFileRequest =
     new UploadFileRequest(
       fileType,
@@ -220,7 +214,6 @@ object UploadFileRequest {
       authorship,
       licenseText,
       licenseUri,
-      licenseDate,
     ) {}
 }
 

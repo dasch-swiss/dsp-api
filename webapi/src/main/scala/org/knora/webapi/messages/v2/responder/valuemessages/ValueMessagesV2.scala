@@ -2013,14 +2013,14 @@ case class FileValueV2(
 )
 object FileValueV2 {
 
-  def from(r: Resource, info: FileInfo): Either[String, FileValueV2] = {
+  def makeNew(r: Resource, info: FileInfo): Either[String, FileValueV2] = {
     val meta = info.metadata
     for {
       copyrightHolder <- r.objectStringOption(HasCopyrightHolder, CopyrightHolder.from)
       authorship      <- r.objectStringListOption(HasAuthorship, Authorship.from)
       licenseText     <- r.objectStringOption(HasLicenseText, LicenseText.from)
       licenseUri      <- r.objectDataTypeOption(HasLicenseUri, XSD.anyURI.toString, LicenseUri.from)
-      licenseDate     <- r.objectLocalDateOption(HasLicenseDate).map(_.map(LicenseDate.from))
+      licenseDate      = Some(LicenseDate.makeNew)
     } yield FileValueV2(
       info.filename,
       meta.internalMimeType,
@@ -2171,7 +2171,7 @@ object StillImageFileValueContentV2 {
   def from(r: Resource, fileInfo: FileInfo): Either[String, StillImageFileValueContentV2] = for {
     comment   <- objectCommentOption(r)
     meta       = fileInfo.metadata
-    fileValue <- FileValueV2.from(r, fileInfo)
+    fileValue <- FileValueV2.makeNew(r, fileInfo)
   } yield StillImageFileValueContentV2(
     ApiV2Complex,
     fileValue,
@@ -2274,7 +2274,7 @@ object StillImageExternalFileValueContentV2 {
     externalUrlStr <- r.objectString(StillImageFileValueHasExternalUrl)
     iifUrl         <- IiifImageRequestUrl.from(externalUrlStr)
     comment        <- objectCommentOption(r)
-    fileValue      <- FileValueV2.from(r, fakeInfo)
+    fileValue      <- FileValueV2.makeNew(r, fakeInfo)
   } yield StillImageExternalFileValueContentV2(ApiV2Complex, fileValue, iifUrl, comment)
 }
 
@@ -2413,7 +2413,7 @@ case class ArchiveFileValueContentV2(
 object DocumentFileValueContentV2 {
   def from(r: Resource, info: FileInfo): Either[String, DocumentFileValueContentV2] = for {
     comment   <- objectCommentOption(r)
-    fileValue <- FileValueV2.from(r, info)
+    fileValue <- FileValueV2.makeNew(r, info)
     meta       = info.metadata
   } yield DocumentFileValueContentV2(ApiV2Complex, fileValue, meta.numpages, meta.width, meta.height, comment)
 }
@@ -2424,7 +2424,7 @@ object DocumentFileValueContentV2 {
 object ArchiveFileValueContentV2 {
   def from(r: Resource, info: FileInfo): Either[String, ArchiveFileValueContentV2] = for {
     comment   <- objectCommentOption(r)
-    fileValue <- FileValueV2.from(r, info)
+    fileValue <- FileValueV2.makeNew(r, info)
   } yield ArchiveFileValueContentV2(ApiV2Complex, fileValue, comment)
 }
 
@@ -2493,7 +2493,7 @@ case class TextFileValueContentV2(
 object TextFileValueContentV2 {
   def from(r: Resource, info: FileInfo): Either[String, TextFileValueContentV2] = for {
     comment   <- objectCommentOption(r)
-    fileValue <- FileValueV2.from(r, info)
+    fileValue <- FileValueV2.makeNew(r, info)
   } yield TextFileValueContentV2(ApiV2Complex, fileValue, comment)
 }
 
@@ -2562,7 +2562,7 @@ case class AudioFileValueContentV2(
 object AudioFileValueContentV2 {
   def from(r: Resource, info: FileInfo): Either[String, AudioFileValueContentV2] = for {
     comment   <- objectCommentOption(r)
-    fileValue <- FileValueV2.from(r, info)
+    fileValue <- FileValueV2.makeNew(r, info)
   } yield AudioFileValueContentV2(ApiV2Complex, fileValue, comment)
 }
 
@@ -2633,7 +2633,7 @@ case class MovingImageFileValueContentV2(
 object MovingImageFileValueContentV2 {
   def from(r: Resource, info: FileInfo): Either[String, MovingImageFileValueContentV2] = for {
     comment   <- objectCommentOption(r)
-    fileValue <- FileValueV2.from(r, info)
+    fileValue <- FileValueV2.makeNew(r, info)
   } yield MovingImageFileValueContentV2(ApiV2Complex, fileValue, comment)
 }
 
