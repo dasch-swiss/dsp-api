@@ -6,27 +6,36 @@
 package org.knora.webapi.it.v2
 
 import cats.syntax.traverse.*
+import com.apicatalog.jsonld.JsonLd
+import com.apicatalog.jsonld.document.JsonDocument
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.vocabulary.RDF
+import org.apache.jena.vocabulary.XSD
 import zio.*
 import zio.http.Body
 import zio.http.Response
+import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*
 
+import java.io.ByteArrayInputStream
 import java.net.URLEncoder
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
 
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
@@ -36,10 +45,11 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 object CopyrightAndLicensesSpec extends E2EZSpec {
 
-  private val aCopyrightHolder = CopyrightHolder.unsafeFrom("Universität Basel")
-  private val someAuthorship   = List("Hans Müller", "Gigi DAgostino").map(Authorship.unsafeFrom)
-  private val aLicenseText     = LicenseText.unsafeFrom("CC BY-SA 4.0")
-  private val aLicenseUri      = LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by-sa/4.0/")
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+  private val aCopyrightHolder             = CopyrightHolder.unsafeFrom("Universität Basel")
+  private val someAuthorship               = List("Hans Müller", "Gigi DAgostino").map(Authorship.unsafeFrom)
+  private val aLicenseText                 = LicenseText.unsafeFrom("CC BY-SA 4.0")
+  private val aLicenseUri                  = LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by-sa/4.0/")
 
   private val createResourceSuite = suite("Creating Resources")(
     test(
@@ -110,30 +120,18 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         resourceCreated <- createStillImageResource()
         resourceId      <- resourceId(resourceCreated)
         valueIdOld      <- valueId(resourceCreated)
-        authorshipArray  = someAuthorship.map(_.value).mkString("[ \"", "\", \"", "\" ]")
-        body = s"""|{
-                   |  "@type": "anything:ThingPicture",
-                   |  "@id": "$resourceId",
-                   |  "ka:hasStillImageFileValue": {
-                   |    "@type": "ka:StillImageFileValue",
-                   |    "@id": "$valueIdOld",
-                   |    "ka:fileValueHasFilename": "filename.jpx",
-                   |    "ka:hasCopyrightHolder" : "${aCopyrightHolder.value}",
-                   |    "ka:hasAuthorship" : $authorshipArray,
-                   |    "ka:hasLicenseText" : "${aLicenseText.value}",
-                   |    "ka:hasLicenseUri" : {
-                   |      "@value" : "${aLicenseUri.value}",
-                   |      "@type" : "http://www.w3.org/2001/XMLSchema#anyURI"
-                   |    }
-                   |  },
-                   |  "@context": {
-                   |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
-        _ <- sendPutRequestAsRoot(s"/v2/values", body)
-               .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create value"))
-               .flatMap(_.body.asString)
+        _ <- sendPutRequestAsRoot(
+               s"/v2/values",
+               UpdateStillImageFileValueRequest(
+                 resourceId,
+                 valueIdOld,
+                 ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri),
+                 aCopyrightHolder,
+                 someAuthorship,
+                 aLicenseText,
+                 aLicenseUri,
+               ).jsonLd,
+             ).filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create value"))
         createdResourceModel <- getResourceFromApi(resourceId)
         info                 <- copyrightAndLicenseInfo(createdResourceModel)
       } yield assertTrue(
@@ -141,6 +139,41 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.licenseUri.contains(aLicenseUri),
         info.licenseDate.contains(LicenseDate.makeNew),
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
+    }
+  }
+
+  final case class UpdateStillImageFileValueRequest(
+    resourceId: ResourceIri,
+    valueId: ValueIri,
+    resourceClass: ResourceClassIri,
+    copyrightHolder: CopyrightHolder,
+    authorship: List[Authorship],
+    licenseText: LicenseText,
+    licenseUri: LicenseUri,
+  ) {
+    def jsonLd: String =
+      JsonLd.expand(JsonDocument.of(new ByteArrayInputStream(toJson.toString().getBytes))).get.toString
+
+    private def toJson: Json = {
+      def ldType(typ: Any)                   = ("@type", Json.Str(typ.toString))
+      def ldId(id: Any)                      = ("@id", Json.Str(id.toString))
+      def ldValue(value: Any, typ: Resource) = Json.Obj(("@value", Json.Str(value.toString)), ldType(typ.toString))
+      Json.Obj(
+        ldId(resourceId),
+        ldType(resourceClass),
+        (
+          KA.HasStillImageFileValue,
+          Json.Obj(
+            ldId(valueId),
+            ldType(KA.StillImageFileValue),
+            (KA.FileValueHasFilename, Json.Str("test.jpx")),
+            (KA.HasCopyrightHolder, Json.Str(copyrightHolder.value)),
+            (KA.HasAuthorship, Json.Arr(authorship.map(_.value).map(Json.Str.apply): _*)),
+            (KA.HasLicenseText, Json.Str(licenseText.value)),
+            (KA.HasLicenseUri, ldValue(licenseUri.value, XSD.anyURI)),
+          ),
+        ),
+      )
     }
   }
 
@@ -183,8 +216,8 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     } yield createResourceResponseModel
   }
 
-  private def getResourceFromApi(resourceId: String) = for {
-    responseBody <- sendGetRequest(s"/v2/resources/${URLEncoder.encode(resourceId, "UTF-8")}")
+  private def getResourceFromApi(resourceId: ResourceIri) = for {
+    responseBody <- sendGetRequest(s"/v2/resources/${URLEncoder.encode(resourceId.toString, "UTF-8")}")
                       .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to get resource $resourceId."))
                       .flatMap(_.body.asString)
     model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
@@ -196,14 +229,14 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     model      <- getValueFromApi(valueId, resourceId)
   } yield model
 
-  private def getValueFromApi(valueId: ValueIri, resourceId: String): ZIO[env, Throwable, Model] = for {
-    responseBody <- sendGetRequest(s"/v2/values/${URLEncoder.encode(resourceId, "UTF-8")}/${valueId.valueId}")
+  private def getValueFromApi(valueId: ValueIri, resourceId: ResourceIri): ZIO[env, Throwable, Model] = for {
+    responseBody <- sendGetRequest(s"/v2/values/${URLEncoder.encode(resourceId.toString, "UTF-8")}/${valueId.valueId}")
                       .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to get value $resourceId."))
                       .flatMap(_.body.asString)
     model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
 
-  private def resourceId(model: Model): Task[String] =
+  private def resourceId(model: Model): Task[ResourceIri] =
     ZIO
       .fromEither(
         for {
@@ -211,7 +244,8 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
           id   <- root.uri.toRight("No URI found for root resource")
         } yield id,
       )
-      .mapError(Exception(_))
+      .map(_.toSmartIri)
+      .mapBoth(Exception(_), ResourceIri.unsafeFrom)
 
   private def valueId(model: Model): ZIO[IriConverter, Throwable, ValueIri] = {
     val subs = model
