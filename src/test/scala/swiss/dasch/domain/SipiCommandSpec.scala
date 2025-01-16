@@ -18,7 +18,7 @@ object SipiCommandSpec extends ZIOSpecDefault {
         check(Gen.fromIterable(SipiImageFormat.all)) { format =>
           for {
             cmd <- FormatArgument(format, Path("/tmp/example"), Path("/tmp/example2")).render()
-          } yield assertTrue(cmd == List("--format", format.toCliString, "/tmp/example", "/tmp/example2"))
+          } yield assertTrue(cmd == List("--format", "--topleft", format.toCliString, "/tmp/example", "/tmp/example2"))
         }
       },
       test("should assemble query command") {
