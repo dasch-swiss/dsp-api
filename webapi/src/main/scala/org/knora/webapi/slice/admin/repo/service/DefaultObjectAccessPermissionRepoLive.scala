@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.admin.repo.service
 
 import org.eclipse.rdf4j.common.net.ParsedIRI
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
@@ -36,7 +37,6 @@ import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class DefaultObjectAccessPermissionRepoLive(
