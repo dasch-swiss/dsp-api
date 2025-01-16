@@ -21,12 +21,9 @@ object Dependencies {
 
   val MonocleVersion = "3.3.0"
 
-  // rdf and graph libraries
-  // topbraid/shacl is not yet compatible with jena 5 so we need to use jena 4 for now
-  // see: https://github.com/TopQuadrant/shacl/pull/177
-  val JenaVersion          = "4.10.0"
   val Rdf4jVersion         = "5.1.0"
   val TopbraidShaclVersion = "1.4.4"
+  val JenaVersion          = "5.2.0"
 
   val ZioConfigVersion            = "4.0.3"
   val ZioLoggingVersion           = "2.4.0"
@@ -75,6 +72,7 @@ object Dependencies {
   val pekkoStream        = "org.apache.pekko" %% "pekko-stream"          % PekkoActorVersion
 
   // rdf and graph libraries
+  val jenaCore      = "org.apache.jena"   % "jena-core"           % JenaVersion
   val jenaText      = "org.apache.jena"   % "jena-text"           % JenaVersion
   val rdf4jClient   = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
   val rdf4jShacl    = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
