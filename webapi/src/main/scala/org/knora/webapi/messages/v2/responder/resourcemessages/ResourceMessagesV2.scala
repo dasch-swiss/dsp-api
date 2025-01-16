@@ -43,6 +43,8 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 with RelayedMess
   def requestingUser: User
 }
 
+final case class ResourceJsonGetRequestV3(resourceIri: IRI, requestingUser: User) extends ResourcesResponderRequestV2
+
 /**
  * Requests a description of a resource. A successful response will be a [[ReadResourcesSequenceV2]].
  *
