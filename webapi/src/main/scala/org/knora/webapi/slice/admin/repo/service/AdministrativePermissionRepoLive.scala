@@ -60,13 +60,13 @@ final case class AdministrativePermissionRepoLive(
     groupIri: GroupIri,
     projectIri: ProjectIri,
   ): Task[Option[AdministrativePermission]] =
-    findOneByTriplePattern(
+    findOneByPattern(
       _.has(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(groupIri.value))
         .andHas(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)),
     )
 
   override def findByProject(projectIri: ProjectIri): Task[Chunk[AdministrativePermission]] =
-    findAllByTriplePattern(_.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)))
+    findAllByPattern(_.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)))
 }
 
 object AdministrativePermissionRepoLive {
