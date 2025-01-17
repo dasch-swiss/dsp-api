@@ -36,7 +36,7 @@ object SipiCommand {
       (for {
         abs1 <- fileIn.toAbsolutePath
         abs2 <- fileOut.toAbsolutePath
-      } yield List(flag(), "--topleft", outputFormat.toCliString, abs1.toString, abs2.toString)).orDie
+      } yield List(flag(), outputFormat.toCliString, "--topleft", abs1.toString, abs2.toString)).orDie
   }
 
   /**
