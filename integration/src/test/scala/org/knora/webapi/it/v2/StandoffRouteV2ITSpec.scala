@@ -9,7 +9,6 @@ import org.apache.pekko
 import org.apache.pekko.http.javadsl.model.StatusCodes
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -17,18 +16,13 @@ import spray.json.*
 
 import java.net.URLEncoder
 import java.nio.file.Paths
-import scala.concurrent.Await
-import scala.concurrent.duration.*
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.e2e.v2.AuthenticationV2JsonProtocol
-import org.knora.webapi.e2e.v2.LoginResponse
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.store.sipimessages.*
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
@@ -37,7 +31,6 @@ import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
-import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
@@ -298,25 +291,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
     }
 
     "create a custom mapping with an XSL transformation" in {
-      // get authentication token
-      val params = Map(
-        "email"    -> "root@example.com",
-        "password" -> "test",
-      ).toJson.compactPrint
-      val loginRequest                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
-      val loginResponse: HttpResponse = singleAwaitingRequest(loginRequest)
-      assert(loginResponse.status == StatusCodes.OK, responseToString(loginResponse))
-      val loginToken = Await.result(Unmarshal(loginResponse.entity).to[LoginResponse], 1.seconds).token
-
-      val uploadedFile: SipiUploadResponseEntry = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload = Seq(
-          FileToUpload(
-            path = Paths.get(pathToFreetestXSLTFile),
-            mimeType = org.apache.http.entity.ContentType.create("text/xml"),
-          ),
-        ),
-      ).uploadedFiles.head
+      val uploadedFile = uploadToIngest(Paths.get(pathToFreetestXSLTFile))
 
       // create FileRepresentation in API
       val uploadFileJson = UploadFileRequest
