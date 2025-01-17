@@ -94,24 +94,24 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
     }
   }
 
-  protected def findOneByTriplePattern(pattern: RdfSubject => TriplePattern): Task[Option[E]] =
-    findOneByQuery(findByTriplePatternQuery(pattern))
+  protected def findOneByPattern(pattern: RdfSubject => GraphPattern): Task[Option[E]] =
+    findOneByQuery(findByPatternQuery(pattern))
 
-  protected def findAllByTriplePattern(pattern: RdfSubject => TriplePattern): Task[Chunk[E]] =
-    findAllByQuery(findByTriplePatternQuery(pattern))
+  protected def findAllByPattern(pattern: RdfSubject => GraphPattern): Task[Chunk[E]] =
+    findAllByQuery(findByPatternQuery(pattern))
 
-  private def findByTriplePatternQuery(pattern: RdfSubject => TriplePattern) = {
+  private def findByPatternQuery(pattern: RdfSubject => GraphPattern) = {
     val s             = variable("s")
     val query: String = entityQuery(tripleP(s), graphP(s).and(pattern(s))).getQueryString
     Construct(query)
   }
 
-  protected def findOneByQuery(construct: Construct): Task[Option[E]] =
+  private def findOneByQuery(construct: Construct): Task[Option[E]] =
     runQuery(construct)
       .map(_.nextOption())
       .flatMap(ZIO.foreach(_)(mapper.toEntity(_).mapError(TriplestoreResponseException.apply)))
 
-  protected def findAllByQuery(construct: Construct): Task[Chunk[E]] =
+  private def findAllByQuery(construct: Construct): Task[Chunk[E]] =
     runQuery(construct).flatMap(
       ZStream.fromIterator(_).mapZIO(mapper.toEntity(_).mapError(TriplestoreResponseException.apply)).runCollect,
     )
