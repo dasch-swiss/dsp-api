@@ -171,9 +171,6 @@ abstract class ITKnoraLiveSpec
         .getOrThrowFiberFailure()
     }
 
-  protected def uploadToIngest(filesToUpload: Seq[java.nio.file.Path]): Seq[UploadedFile] =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFiles(filesToUpload)))
-
   protected def uploadToIngest(fileToUpload: java.nio.file.Path): UploadedFile =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(fileToUpload)))
 

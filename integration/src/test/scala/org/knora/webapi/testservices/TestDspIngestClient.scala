@@ -27,12 +27,6 @@ final case class TestDspIngestClient(
 
   private val ingestUrl = uri"${config.baseUrl}"
 
-  def uploadFiles(
-    filesToUpload: Seq[java.nio.file.Path],
-    shortcode: Shortcode = Shortcode.unsafeFrom("0001"),
-  ): Task[Seq[UploadedFile]] =
-    ZIO.foreach(filesToUpload)(file => uploadFile(file, shortcode))
-
   def uploadFile(file: java.nio.file.Path, shortcode: Shortcode = Shortcode.unsafeFrom("0001")): Task[UploadedFile] =
     for {
       contents   <- Files.readAllBytes(Path.fromJava(file))

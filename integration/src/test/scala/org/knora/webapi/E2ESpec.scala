@@ -22,7 +22,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
-import scala.collection.immutable.Seq
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -39,8 +38,6 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.PekkoRoutesData
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.TestClientService
-import org.knora.webapi.testservices.TestDspIngestClient
-import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.LogAspect
 
@@ -151,9 +148,6 @@ abstract class E2ESpec
 
   protected def getResponseAsJsonLD(request: HttpRequest): JsonLDDocument =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseJsonLD(request)))
-
-  protected def uploadToIngest(filesToUpload: Seq[java.nio.file.Path]): Seq[UploadedFile] =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFiles(filesToUpload)))
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] =
