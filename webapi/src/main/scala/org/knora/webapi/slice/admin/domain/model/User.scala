@@ -203,7 +203,7 @@ object Username extends StringValueCompanion[Username] {
       "[a-zA-Z0-9._-]+" +
       // Only contains alphanumeric characters, underscore, hyphen and dot.
       "(?<![_.-])$"
-        // Underscore, hyphen and dot can't be at the end of a username
+      // Underscore, hyphen and dot can't be at the end of a username
   ).r
 
   def from(value: String): Either[String, Username] =
