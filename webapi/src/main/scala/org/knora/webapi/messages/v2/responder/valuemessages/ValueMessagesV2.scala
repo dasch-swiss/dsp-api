@@ -2186,14 +2186,11 @@ case class StillImageExternalFileValueContentV2(
       case ApiV2Complex =>
         JsonLDObject(
           toJsonLDObjectMapInComplexSchema(makeFileUrl) ++ Map(
-            StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil
-              .makeUriObject(
-                {
-                  val uri = externalUrl.value.toURI
-                  if (uri.getPort == -1) URI.create(s"${uri.getScheme}://${uri.getHost}").toURL
-                  else URI.create(s"${uri.getScheme}://${uri.getHost}:${uri.getPort}").toURL
-                },
-              ),
+            StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil.makeUriObject {
+              val uri = externalUrl.value.toURI
+              if (uri.getPort == -1) URI.create(s"${uri.getScheme}://${uri.getHost}").toURL
+              else URI.create(s"${uri.getScheme}://${uri.getHost}:${uri.getPort}").toURL
+            },
             StillImageFileValueHasExternalUrl -> JsonLDUtil.makeUriObject(externalUrl.value),
           ),
         )

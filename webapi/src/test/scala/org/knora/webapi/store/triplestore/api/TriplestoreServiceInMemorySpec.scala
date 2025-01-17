@@ -303,7 +303,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                      TriG,
                    ),
                  )
-          } yield assertTrue({ val fileExists = Files.exists(testFile.toFile.toPath); fileExists })
+          } yield assertTrue { val fileExists = Files.exists(testFile.toFile.toPath); fileExists }
         }
       }),
     ).provide(TriplestoreServiceInMemory.layer, datasetLayerFromTurtle(testDataSet), StringFormatter.test)

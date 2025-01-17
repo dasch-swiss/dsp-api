@@ -81,19 +81,17 @@ final case class ValuesRouteV2()(
   private def createValue(): Route = path(valuesBasePath) {
     post {
       entity(as[String]) { jsonLdString => ctx =>
-        {
-          RouteUtilV2.completeResponse(
-            for {
-              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
-              apiRequestId   <- Random.nextUUID
-              valueToCreate <- jsonLdRequestParser(
-                                 _.createValueV2FromJsonLd(jsonLdString).mapError(BadRequestException(_)),
-                               )
-              response <- responder(_.createValueV2(valueToCreate, requestingUser, apiRequestId))
-            } yield response,
-            ctx,
-          )
-        }
+        RouteUtilV2.completeResponse(
+          for {
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
+            apiRequestId   <- Random.nextUUID
+            valueToCreate <- jsonLdRequestParser(
+                               _.createValueV2FromJsonLd(jsonLdString).mapError(BadRequestException(_)),
+                             )
+            response <- responder(_.createValueV2(valueToCreate, requestingUser, apiRequestId))
+          } yield response,
+          ctx,
+        )
       }
     }
   }
@@ -101,19 +99,17 @@ final case class ValuesRouteV2()(
   private def updateValue(): Route = path(valuesBasePath) {
     put {
       entity(as[String]) { jsonLdString => ctx =>
-        {
-          RouteUtilV2.completeResponse(
-            for {
-              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
-              apiRequestId   <- Random.nextUUID
-              updateValue <- jsonLdRequestParser(
-                               _.updateValueV2fromJsonLd(jsonLdString).mapError(BadRequestException(_)),
-                             )
-              response <- responder(_.updateValueV2(updateValue, requestingUser, apiRequestId))
-            } yield response,
-            ctx,
-          )
-        }
+        RouteUtilV2.completeResponse(
+          for {
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
+            apiRequestId   <- Random.nextUUID
+            updateValue <- jsonLdRequestParser(
+                             _.updateValueV2fromJsonLd(jsonLdString).mapError(BadRequestException(_)),
+                           )
+            response <- responder(_.updateValueV2(updateValue, requestingUser, apiRequestId))
+          } yield response,
+          ctx,
+        )
       }
     }
   }
@@ -121,18 +117,16 @@ final case class ValuesRouteV2()(
   private def deleteValue(): Route = path(valuesBasePath / "delete") {
     post {
       entity(as[String]) { jsonLdString => requestContext =>
-        {
-          RouteUtilV2.completeResponse(
-            for {
-              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-              apiRequestId   <- RouteUtilZ.randomUuid()
-              deleteValue <-
-                jsonLdRequestParser(_.deleteValueV2FromJsonLd(jsonLdString).mapError(BadRequestException(_)))
-              response <- responder(_.deleteValueV2(deleteValue, requestingUser, apiRequestId))
-            } yield response,
-            requestContext,
-          )
-        }
+        RouteUtilV2.completeResponse(
+          for {
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
+            apiRequestId   <- RouteUtilZ.randomUuid()
+            deleteValue <-
+              jsonLdRequestParser(_.deleteValueV2FromJsonLd(jsonLdString).mapError(BadRequestException(_)))
+            response <- responder(_.deleteValueV2(deleteValue, requestingUser, apiRequestId))
+          } yield response,
+          requestContext,
+        )
       }
     }
   }
