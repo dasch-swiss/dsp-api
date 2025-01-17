@@ -55,11 +55,11 @@ final case class KnoraProjectRepoLive(
     super.findById(id).map(_.orElse(KnoraProjectRepo.builtIn.findOneBy(_.id == id)))
 
   override def findByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]] =
-    findOneByTriplePattern(_.has(Vocabulary.KnoraAdmin.projectShortcode, shortcode.value))
+    findOneByPattern(_.has(Vocabulary.KnoraAdmin.projectShortcode, shortcode.value))
       .map(_.orElse(KnoraProjectRepo.builtIn.findOneBy(_.shortcode == shortcode)))
 
   override def findByShortname(shortname: Shortname): Task[Option[KnoraProject]] =
-    findOneByTriplePattern(_.has(Vocabulary.KnoraAdmin.projectShortname, shortname.value))
+    findOneByPattern(_.has(Vocabulary.KnoraAdmin.projectShortname, shortname.value))
       .map(_.orElse(KnoraProjectRepo.builtIn.findOneBy(_.shortname == shortname)))
 
   override def findAll(): Task[Chunk[KnoraProject]] = super.findAll().map(_ ++ KnoraProjectRepo.builtIn.all)

@@ -216,7 +216,7 @@ object FileModelUtil {
     }
     val lines = ontologies.toList
       .map(x => s"""    "${x._1}": "${x._2}\"""")
-      .reduce({ (a, b) => a + ",\n" + b })
+      .reduce((a, b) => a + ",\n" + b)
     s"""|"@context" : {
         |$lines
         |  }

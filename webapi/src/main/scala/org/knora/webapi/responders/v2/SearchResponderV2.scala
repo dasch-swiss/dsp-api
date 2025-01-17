@@ -997,10 +997,9 @@ final case class SearchResponderV2Live(
     mainResourceVar: QueryVariable,
   ): SparqlSelectResult = {
     // Make a Map of merged results per main resource IRI.
-    val prequeryRowsMergedMap: Map[IRI, VariableResultsRow] = prequeryResponseNotMerged.results.bindings.groupBy {
-      row =>
-        // Get the rows for each main resource IRI.
-        row.rowMap(mainResourceVar.variableName)
+    val prequeryRowsMergedMap: Map[IRI, VariableResultsRow] = prequeryResponseNotMerged.results.bindings.groupBy { row =>
+      // Get the rows for each main resource IRI.
+      row.rowMap(mainResourceVar.variableName)
     }.map { case (resourceIri: IRI, rows: Seq[VariableResultsRow]) =>
       // Make a Set of all the column names in the rows to be merged.
       val columnNamesToMerge: Set[String] = rows.flatMap(_.rowMap.keySet).toSet
