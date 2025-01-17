@@ -21,7 +21,7 @@ sealed trait JenaNode extends RdfNode {
 }
 
 case class JenaBlankNode(node: jena.graph.Node) extends JenaNode with BlankNode {
-  override def id: String = node.getBlankNodeId.getLabelString
+  override def id: String = node.getBlankNodeLabel
 
   override def stringValue: String = id
 }
@@ -126,7 +126,7 @@ object JenaContextFactory {
   /**
    * Converts a named graph IRI to a [[jena.graph.Node]].
    */
-  def contextIriToNode(context: IRI): jena.graph.Node =
+  private def contextIriToNode(context: IRI): jena.graph.Node =
     jena.graph.NodeFactory.createURI(context)
 
   /**
@@ -359,7 +359,7 @@ object JenaNodeFactory {
    * @return a [[DatatypeLiteral]].
    */
   def makeDatatypeLiteral(value: String, datatype: IRI): DatatypeLiteral =
-    JenaDatatypeLiteral(jena.graph.NodeFactory.createLiteral(value, typeMapper.getTypeByName(datatype)))
+    JenaDatatypeLiteral(jena.graph.NodeFactory.createLiteralDT(value, typeMapper.getTypeByName(datatype)))
 
   /**
    * Constructs a string with a language tag.
@@ -368,7 +368,7 @@ object JenaNodeFactory {
    * @param language the language tag.
    */
   def makeStringWithLanguage(value: String, language: String): StringWithLanguage =
-    JenaStringWithLanguage(jena.graph.NodeFactory.createLiteral(value, language))
+    JenaStringWithLanguage(jena.graph.NodeFactory.createLiteralLang(value, language))
 
   /**
    * Constructs a statement.
