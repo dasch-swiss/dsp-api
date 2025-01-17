@@ -36,6 +36,7 @@ object DspIngestTestContainer {
       .withEnv("DB_JDBC_URL", "jdbc:sqlite:/tmp/ingest.sqlite")
       .withFileSystemBind(imagesVolume.hostPath, assetDir, BindMode.READ_WRITE)
       .withFileSystemBind(tempVolume.hostPath, tempDir, BindMode.READ_WRITE)
+      .withLogConsumer(frame => print("DSP-INGEST:" + frame.getUtf8String))
   }
 
   val layer: URLayer[SharedVolumes.Volumes, DspIngestTestContainer] =
