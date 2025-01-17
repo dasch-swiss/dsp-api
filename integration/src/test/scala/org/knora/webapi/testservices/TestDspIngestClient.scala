@@ -36,6 +36,7 @@ final case class TestDspIngestClient(
   def uploadFile(file: java.nio.file.Path, shortcode: Shortcode = Shortcode.unsafeFrom("0001")): Task[UploadedFile] =
     for {
       contents   <- Files.readAllBytes(Path.fromJava(file))
+      filename    = file.getFileName.toString
       loginToken <- jwtService.createJwtForDspIngest().map(_.jwtString)
       url         = ingestUrl.addPath("projects", shortcode.value, "assets", "ingest", file.getFileName.toString)
       request     = quickRequest.post(url).header("Authorization", s"Bearer $loginToken").body(contents.toArray)
@@ -43,7 +44,7 @@ final case class TestDspIngestClient(
         sttp
           .send(request)
           .filterOrElseWith(_.is200)(response =>
-            ZIO.fail(Exception(s"Sipi responded with HTTP status code ${response.code.code}: ${response.body}")),
+            ZIO.fail(Exception(s"Upload failed: $filename, ${response.code.code}: ${response.body}")),
           )
           .map(_.body)
       json <- ZIO.fromEither(responseBody.fromJson[UploadedFile]).mapError(Throwable(_))
