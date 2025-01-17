@@ -10,7 +10,6 @@ import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
-import scala.annotation.nowarn
 import scala.reflect.ClassTag
 
 import org.knora.webapi.slice.common.Value.StringValue
@@ -24,8 +23,6 @@ final case class EntityCache[I <: StringValue, E <: EntityWithId[I]](cache: EhCa
 }
 
 object EntityCache {
-
-  @nowarn // suppresses warnings about unused type parameters Tag
   def layer[I <: StringValue: ClassTag: Tag, E <: EntityWithId[I]: ClassTag: Tag](
     cacheName: String,
   ): URLayer[CacheManager, EntityCache[I, E]] =
