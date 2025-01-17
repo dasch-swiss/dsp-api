@@ -28,14 +28,14 @@ import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithSipi
 import org.knora.webapi.core.TestStartupUtils
-import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.testservices.TestDspIngestClient
+import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
 import org.knora.webapi.util.LogAspect
 
 /**
@@ -171,17 +171,11 @@ abstract class ITKnoraLiveSpec
         .getOrThrowFiberFailure()
     }
 
-  protected def uploadToIngest(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            testClient <- ZIO.service[TestClientService]
-            result     <- testClient.uploadToIngest(loginToken, filesToUpload)
-          } yield result,
-        )
-        .getOrThrow()
-    }
+  protected def uploadToIngest(filesToUpload: Seq[java.nio.file.Path]): Seq[UploadedFile] =
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFiles(filesToUpload)))
+
+  protected def uploadToIngest(fileToUpload: java.nio.file.Path): UploadedFile =
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(fileToUpload)))
 
   protected def responseToString(httpResponse: HttpResponse): String = {
     val responseBodyFuture: Future[String] =
