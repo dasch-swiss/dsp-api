@@ -174,21 +174,21 @@ final case class ProjectExportServiceLive(
    * @return A [[NamedGraphTrigFile]] containing the named graph and location of the file.
    */
   private def downloadProjectAdminData(projectId: ProjectIri, targetDir: Path): Task[NamedGraphTrigFile] = {
-    val projectIri              = Rdf.iri(projectId.value)
-    val (projectP, projectO)    = (`var`("pP"), `var`("pO"))
-    val (user, userP, userO)    = (`var`("u"), `var`("uP"), `var`("uO"))
-    val (group, groupP, groupO) = (`var`("g"), `var`("gP"), `var`("gO"))
+    val projectIri                   = Rdf.iri(projectId.value)
+    val (projectPred, projectObj)    = (`var`("projectPred"), `var`("projectObj"))
+    val (user, userPred, userObj)    = (`var`("user"), `var`("userPred"), `var`("userObj"))
+    val (group, groupPred, groupObj) = (`var`("group"), `var`("groupPred"), `var`("groupObj"))
     val q = Queries
       .CONSTRUCT(
-        projectIri.has(projectP, projectO),
-        user.has(userP, userO),
-        group.has(groupP, groupO),
+        projectIri.has(projectPred, projectObj),
+        user.has(userPred, userObj),
+        group.has(groupPred, groupObj),
       )
       .where(
         projectIri
-          .has(projectP, projectO)
-          .union(user.has(userP, userO).andHas(KA.isInProject, projectIri))
-          .union(group.has(groupP, groupO).andHas(KA.belongsToProject, projectIri)),
+          .has(projectPred, projectObj)
+          .union(user.has(userPred, userObj).andHas(KA.isInProject, projectIri))
+          .union(group.has(groupPred, groupObj).andHas(KA.belongsToProject, projectIri)),
       )
       .prefix(KA.NS)
 
