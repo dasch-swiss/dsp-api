@@ -12,6 +12,10 @@ import org.apache.jena.riot.system.StreamRDF
 import org.apache.jena.riot.system.StreamRDFBase
 import org.apache.jena.riot.system.StreamRDFWriter
 import org.apache.jena.sparql.core.Quad
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.*
+import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
+import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+import org.eclipse.rdf4j.sparqlbuilder.rdf.*
 import zio.Chunk
 import zio.Scope
 import zio.Task
@@ -29,6 +33,8 @@ import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -140,7 +146,7 @@ final case class ProjectExportServiceLive(
     for {
       tempDir         <- Files.createTempDirectoryScoped(Some(project.shortname.value), fileAttributes = Nil)
       ontologyAndData <- downloadOntologyAndData(project, tempDir)
-      adminData       <- downloadProjectAdminData(project, tempDir)
+      adminData       <- downloadProjectAdminData(project.id, tempDir)
       permissionData  <- downloadPermissionData(project, tempDir)
       resultFile      <- mergeDataToFile(ontologyAndData :+ adminData :+ permissionData, targetFile)
     } yield resultFile
@@ -163,15 +169,32 @@ final case class ProjectExportServiceLive(
    * * the project itself
    * * the users which are members of the project
    * * the groups which belong to the project
-   * @param project The project to be exported.
+   * @param projectId The IRI of the project to be exported.
    * @param targetDir The folder in which the file is to be saved.
    * @return A [[NamedGraphTrigFile]] containing the named graph and location of the file.
    */
-  private def downloadProjectAdminData(project: KnoraProject, targetDir: Path): Task[NamedGraphTrigFile] = {
-    val graphIri = adminDataNamedGraph
-    val file     = NamedGraphTrigFile(graphIri, targetDir)
-    val query    = Construct(sparql.admin.txt.getProjectAdminData(project.id.value))
-    triplestore.queryToFile(query, graphIri, file.dataFile, TriG).as(file)
+  private def downloadProjectAdminData(projectId: ProjectIri, targetDir: Path): Task[NamedGraphTrigFile] = {
+    val projectIri              = Rdf.iri(projectId.value)
+    val (projectP, projectO)    = (`var`("pP"), `var`("pO"))
+    val (user, userP, userO)    = (`var`("u"), `var`("uP"), `var`("uO"))
+    val (group, groupP, groupO) = (`var`("g"), `var`("gP"), `var`("gO"))
+    val q = Queries
+      .CONSTRUCT(
+        projectIri.has(projectP, projectO),
+        user.has(userP, userO),
+        group.has(groupP, groupO),
+      )
+      .where(
+        projectIri
+          .has(projectP, projectO)
+          .union(user.has(userP, userO).andHas(KA.isInProject, projectIri))
+          .union(group.has(groupP, groupO).andHas(KA.belongsToProject, projectIri)),
+      )
+      .prefix(KA.NS)
+
+    triplestore
+      .queryToFile(Construct(q), adminDataNamedGraph, NamedGraphTrigFile(adminDataNamedGraph, targetDir).dataFile, TriG)
+      .as(NamedGraphTrigFile(adminDataNamedGraph, targetDir))
   }
 
   private def downloadPermissionData(project: KnoraProject, tempDir: Path) = {
