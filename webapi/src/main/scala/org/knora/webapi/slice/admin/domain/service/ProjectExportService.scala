@@ -13,7 +13,6 @@ import org.apache.jena.riot.system.StreamRDFBase
 import org.apache.jena.riot.system.StreamRDFWriter
 import org.apache.jena.sparql.core.Quad
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.*
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.rdf.*
 import zio.Chunk
