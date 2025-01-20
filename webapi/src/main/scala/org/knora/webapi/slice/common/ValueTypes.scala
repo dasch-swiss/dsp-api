@@ -32,7 +32,7 @@ trait WithFrom[-I, +A] {
     from(in).fold(e => throw new IllegalArgumentException(e), identity)
 }
 
-trait StringValueCompanion[A <: StringValue] extends WithFrom[String, A] {}
+trait StringValueCompanion[A <: StringValue] extends WithFrom[String, A]
 object StringValueCompanion {
 
   def nonEmpty: String => Validation[String, String] =
