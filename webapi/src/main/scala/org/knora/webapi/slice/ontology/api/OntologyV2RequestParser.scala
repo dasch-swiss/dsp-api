@@ -138,9 +138,9 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       case res: Resource => iriConverter.asSmartIri(res.getURI).mapBoth(_.getMessage, SmartIriLiteralV2.apply)
       case literal: Literal => {
         literal.getValue match
-          case b: Boolean  => ZIO.succeed(BooleanLiteralV2(b))
-          case str: String => ZIO.succeed(StringLiteralV2.from(str, Option(literal.getLanguage)))
-          case _           => ZIO.fail(s"Unsupported literal type: ${literal.getValue.getClass}")
+          case str: String          => ZIO.succeed(StringLiteralV2.from(str, Option(literal.getLanguage)))
+          case b: java.lang.Boolean => ZIO.succeed(BooleanLiteralV2(b))
+          case _                    => ZIO.fail(s"Unsupported literal type: ${literal.getValue.getClass}")
       }
 
   private def extractSubClasses(r: Resource): ZIO[Scope, String, Set[ResourceClassIri]] = {
