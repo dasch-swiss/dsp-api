@@ -9,15 +9,17 @@ import zio.test.*
 import zio.test.check
 
 import java.time.Instant
-
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.jena.DatasetOps.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
@@ -120,21 +122,20 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
     )
 
   private val classDef = ClassInfoContentV2(
-    predicates = Map.empty,
-//      Map(
-//      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-//        predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-//        objects = Seq(SmartIriLiteralV2("http://www.w3.org/2002/07/owl#Class".toSmartIri)),
-//      ),
-//      "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
-//        predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-//        objects = Seq(StringLiteralV2.from("wild thing", Some("en"))),
-//      ),
-//      "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
-//        predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-//        objects = Seq(StringLiteralV2.from("A thing that is wild", Some("en"))),
-//      ),
-//    ),
+    predicates = Map(
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+        predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+        objects = Seq(SmartIriLiteralV2("http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+      ),
+      "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+        predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+        objects = Seq(StringLiteralV2.from("wild thing", Some("en"))),
+      ),
+      "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+        predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+        objects = Seq(StringLiteralV2.from("A thing that is wild", Some("en"))),
+      ),
+    ),
     classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,
     ontologySchema = ApiV2Complex,
     directCardinalities = Map(

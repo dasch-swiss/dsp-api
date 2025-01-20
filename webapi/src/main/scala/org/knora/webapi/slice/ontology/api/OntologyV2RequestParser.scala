@@ -7,6 +7,7 @@ package org.knora.webapi.slice.ontology.api
 
 import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.OWL
+import org.apache.jena.vocabulary.RDF
 import org.apache.jena.vocabulary.RDFS
 import zio.*
 
@@ -14,11 +15,14 @@ import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
-
 import dsp.constants.SalsahGui
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
@@ -95,11 +99,11 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       )
     }
 
-  private def extractClassInfo(model: Model): ZIO[Scope, String, ClassInfoContentV2] =
+  private def extractClassInfo(classModel: Model): ZIO[Scope, String, ClassInfoContentV2] =
     for {
-      r             <- ZIO.fromEither(model.singleRootResource)
+      r             <- ZIO.fromEither(classModel.singleRootResource)
       classIri      <- extractClassIri(r)
-      predicates     = Map.empty[SmartIri, PredicateInfoV2]
+      predicates    <- extractPredicates(r)
       cardinalities <- extractCardinalities(r)
       datatypeInfo   = None
       subClasses    <- extractSubClasses(r).map(_.map(_.smartIri))
@@ -107,6 +111,32 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private def extractClassIri(r: Resource): ZIO[Scope, String, ResourceClassIri] =
     ZIO.fromOption(r.uri).orElseFail("No class IRI found").flatMap(str => iriConverter.asResourceClassIri(str))
+
+  private def extractPredicates(r: Resource): ZIO[Scope, String, Map[SmartIri, PredicateInfoV2]] =
+    val propertyIter = r
+      .listProperties()
+      .asScala
+      .filterNot(_.predicateUri == null)
+      .filterNot(_.predicateUri == RDFS.subPropertyOf.toString)
+      .filterNot(_.predicateUri == RDFS.subClassOf.toString)
+      .toList
+    ZIO.foreach(propertyIter)(extractPredicateInfo).map(_.toMap).logError
+
+  private def extractPredicateInfo(stmt: Statement): ZIO[Scope, String, (SmartIri, PredicateInfoV2)] =
+    for {
+      propertyIri <- iriConverter.asSmartIri(stmt.predicateUri).mapError(_.getMessage + "DOHH")
+      objects     <- asPredicateInfoV2(stmt.getObject)
+    } yield (propertyIri, PredicateInfoV2(propertyIri, List(objects)))
+
+  private def asPredicateInfoV2(node: RDFNode): ZIO[Scope, String, OntologyLiteralV2] =
+    node match
+      case res: Resource => iriConverter.asSmartIri(res.getURI).mapBoth(_.getMessage, SmartIriLiteralV2.apply)
+      case literal: Literal => {
+        literal.getValue match
+          case b: Boolean  => ZIO.succeed(BooleanLiteralV2(b))
+          case str: String => ZIO.succeed(StringLiteralV2.from(str, Option(literal.getLanguage)))
+          case _           => ZIO.fail(s"Unsupported literal type: ${literal.getValue.getClass}")
+      }
 
   private def extractSubClasses(r: Resource): ZIO[Scope, String, Set[ResourceClassIri]] = {
     val subclasses: Set[String] = r.listProperties(RDFS.subClassOf).asScala.flatMap(_.objectAsUri.toOption).toSet
