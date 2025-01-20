@@ -98,25 +98,23 @@ final case class ProjectsEndpointsHandler(
           },
     )
 
-  private val getProjectsAssetsInfoEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectsAssetsInfo
-    .serverLogic(userSession =>
-      (shortcode, assetId) => {
-        val ref = AssetRef(assetId, shortcode)
-        authorizationHandler.ensureProjectReadable(userSession, shortcode) *>
-          assetInfoService
-            .findByAssetRef(ref)
-            .some
-            .mapBoth(
-              assetRefNotFoundOrServerError(_, ref),
-              AssetInfoResponse.from,
-            )
-      },
-    )
+  private val getProjectsAssetsInfoEndpoint: ZServerEndpoint[Any, Any] =
+    projectEndpoints.getProjectsAssetsInfo.serverLogic { userSession => (shortcode, assetId) =>
+      val ref = AssetRef(assetId, shortcode)
+      authorizationHandler.ensureProjectReadable(userSession, shortcode) *>
+        assetInfoService
+          .findByAssetRef(ref)
+          .some
+          .mapBoth(
+            assetRefNotFoundOrServerError(_, ref),
+            AssetInfoResponse.from,
+          )
+    }
 
   private val getProjectsAssetsOriginalEndpoint: ZServerEndpoint[Any, ZioStreams] =
     projectEndpoints.getProjectsAssetsOriginal
       .serverLogic(userSession =>
-        (shortcode, assetId) => {
+        (shortcode, assetId) =>
           for {
             ref            <- ZIO.succeed(AssetRef(assetId, shortcode))
             assetInfo      <- assetInfoService.findByAssetRef(ref).some.mapError(assetRefNotFoundOrServerError(_, ref))
@@ -129,8 +127,7 @@ final case class ProjectsEndpointsHandler(
             s"attachment; filename*=UTF-8''${filenameEncoded}", // Content-Disposition
             assetInfo.metadata.originalMimeType.map(m => m.stringValue).getOrElse("application/octet-stream"),
             ZStream.fromFile(assetInfo.original.file.toFile),
-          )
-        },
+          ),
       )
 
   private val postProjectAssetEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postProjectAsset
