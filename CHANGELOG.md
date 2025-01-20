@@ -1,5 +1,52 @@
 # Changelog
 
+## [31.2.1](https://github.com/dasch-swiss/dsp-api/compare/v31.2.0...v31.2.1) (2025-01-20)
+
+
+### Maintenances
+
+* Add missing sbt setup (DEV-4494) ([#3463](https://github.com/dasch-swiss/dsp-api/issues/3463)) ([e73b358](https://github.com/dasch-swiss/dsp-api/commit/e73b358b735a7cafd011fe3861d82634e8ada192))
+* Dependency updates ([#3458](https://github.com/dasch-swiss/dsp-api/issues/3458)) ([f96d579](https://github.com/dasch-swiss/dsp-api/commit/f96d5798929501ba06e16cdb1d7e49579fb492de))
+* Extract TestDspIngestClient ([#3462](https://github.com/dasch-swiss/dsp-api/issues/3462)) ([05c58a7](https://github.com/dasch-swiss/dsp-api/commit/05c58a70cbec1ea79663ea9641ae42bed978f9c4))
+* Minor dependency updates ([#3457](https://github.com/dasch-swiss/dsp-api/issues/3457)) ([cf84f2d](https://github.com/dasch-swiss/dsp-api/commit/cf84f2de7936f76b7697903780f50ebce4687146))
+* Patch dependency updates ([#3456](https://github.com/dasch-swiss/dsp-api/issues/3456)) ([2340dc1](https://github.com/dasch-swiss/dsp-api/commit/2340dc1d456f60bd75ad7ccd569693fb0aeddbbe))
+* Remove unused twirl templates ([#3465](https://github.com/dasch-swiss/dsp-api/issues/3465)) ([ba04c8b](https://github.com/dasch-swiss/dsp-api/commit/ba04c8b437c673c7876a75d728bd8a98c9782364))
+* Replace query twirl template 'getProjectAdminData' with SparqlQueryBuilder ([#3466](https://github.com/dasch-swiss/dsp-api/issues/3466)) ([10ebd2f](https://github.com/dasch-swiss/dsp-api/commit/10ebd2f085c18b9366de1d655a59621b77de67dd))
+* Update dsp-app to v11.22.5 ([#3453](https://github.com/dasch-swiss/dsp-api/issues/3453)) ([c984b8c](https://github.com/dasch-swiss/dsp-api/commit/c984b8c09be500ed5b63a440ac08b26c9e536864))
+* Update scalafix to 0.14.0 and enable remove unused imports (DEFV-4296) ([#3464](https://github.com/dasch-swiss/dsp-api/issues/3464)) ([f7cf483](https://github.com/dasch-swiss/dsp-api/commit/f7cf483bc60f1ca7bb34d293e502dd81bc078d54))
+
+
+### Bug Fixes
+
+* Add rdfs:label to knora-base resources to ensure this is present for  isSegmentOfValue properties (DEV-4505) ([#3455](https://github.com/dasch-swiss/dsp-api/issues/3455)) ([bc06166](https://github.com/dasch-swiss/dsp-api/commit/bc06166d6fba1f07ec168246a5f8bbe1aa1f16af))
+* Find the right doap when looking for by ForWhat ([#3460](https://github.com/dasch-swiss/dsp-api/issues/3460)) ([265cb99](https://github.com/dasch-swiss/dsp-api/commit/265cb998a93a6ea465200c12e1eb27440458156b))
+
+## [31.2.0](https://github.com/dasch-swiss/dsp-api/compare/v31.1.0...v31.2.0) (2025-01-08)
+
+
+### Maintenances
+
+* Minor dependency updates ([#3438](https://github.com/dasch-swiss/dsp-api/issues/3438)) ([d31a55f](https://github.com/dasch-swiss/dsp-api/commit/d31a55fc9d67052119879ad9807e2f0a9528fc0e))
+* Remove unused user argument from reloading ontology cache command ([#3447](https://github.com/dasch-swiss/dsp-api/issues/3447)) ([54033bd](https://github.com/dasch-swiss/dsp-api/commit/54033bdbfe62fd95a208052335e63c0dcddc3889))
+* Update copyright ([#3450](https://github.com/dasch-swiss/dsp-api/issues/3450)) ([23c3c6e](https://github.com/dasch-swiss/dsp-api/commit/23c3c6e7cc0b868e6bffbc9e0ab800f7b13506b1))
+
+
+### Documentation
+
+* Remove outdated statement on TEI in Standoff support ([#3452](https://github.com/dasch-swiss/dsp-api/issues/3452)) ([76f9077](https://github.com/dasch-swiss/dsp-api/commit/76f90770f214d48389bf8ba0faf7cc70aefbc16a))
+
+
+### Enhancements
+
+* Add StandoffFootnoteTag (DEV-4306, DEV-4491) ([#3443](https://github.com/dasch-swiss/dsp-api/issues/3443)) ([ed78393](https://github.com/dasch-swiss/dsp-api/commit/ed783934720bcf6e8a333e73a469551cbcbd3837))
+* Remove license and copyright from Project (DEV-4479) ([#3445](https://github.com/dasch-swiss/dsp-api/issues/3445)) ([c87233b](https://github.com/dasch-swiss/dsp-api/commit/c87233b382035a34704cc4bb9c16f59601dbe525))
+* Support JSON-LD ontology v2 change requests ([#3451](https://github.com/dasch-swiss/dsp-api/issues/3451)) ([a8b4bab](https://github.com/dasch-swiss/dsp-api/commit/a8b4bab882ba36809169c76ff83060032b53aa1c))
+
+
+### Tests
+
+* Migrate InputOntologyV2Spec to become a simple unit zio-test in the test source set ([#3449](https://github.com/dasch-swiss/dsp-api/issues/3449)) ([63aed0f](https://github.com/dasch-swiss/dsp-api/commit/63aed0f3b324bf0d43c8d772358ec3e06e8f22bd))
+
 ## [31.1.0](https://github.com/dasch-swiss/dsp-api/compare/v31.0.0...v31.1.0) (2024-12-16)
 
 

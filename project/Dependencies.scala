@@ -16,43 +16,40 @@ object Dependencies {
 
   val ScalaVersion = "3.3.4"
 
-  val PekkoActorVersion = "1.1.2"
+  val PekkoActorVersion = "1.1.3"
   val PekkoHttpVersion  = "1.1.0"
 
   val MonocleVersion = "3.3.0"
 
-  // rdf and graph libraries
-  // topbraid/shacl is not yet compatible with jena 5 so we need to use jena 4 for now
-  // see: https://github.com/TopQuadrant/shacl/pull/177
-  val JenaVersion          = "4.10.0"
   val Rdf4jVersion         = "5.1.0"
-  val TopbraidShaclVersion = "1.4.3"
+  val TopbraidShaclVersion = "1.4.4"
+  val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
-  val ZioConfigVersion            = "4.0.2"
+  val ZioConfigVersion            = "4.0.3"
   val ZioLoggingVersion           = "2.4.0"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC35"
+  val ZioPreludeVersion           = "1.0.0-RC36"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.1.13"
+  val ZioVersion                  = "2.1.14"
 
   // ZIO
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
   val zioConfig             = "dev.zio"                       %% "zio-config"                % ZioConfigVersion
   val zioConfigMagnolia     = "dev.zio"                       %% "zio-config-magnolia"       % ZioConfigVersion
   val zioConfigTypesafe     = "dev.zio"                       %% "zio-config-typesafe"       % ZioConfigVersion
-  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.3"
+  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.4"
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
   val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
-  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.10.1"
+  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.10.2"
 
   // refined
   val refined = Seq(
-    "eu.timepit" %% "refined"                  % "0.11.2",
-    "dev.zio"    %% "zio-json-interop-refined" % "0.7.3",
+    "eu.timepit" %% "refined"                  % "0.11.3",
+    "dev.zio"    %% "zio-json-interop-refined" % "0.7.4",
   )
 
   // monocle
@@ -75,6 +72,7 @@ object Dependencies {
   val pekkoStream        = "org.apache.pekko" %% "pekko-stream"          % PekkoActorVersion
 
   // rdf and graph libraries
+  val jenaCore      = "org.apache.jena"   % "jena-core"           % JenaVersion
   val jenaText      = "org.apache.jena"   % "jena-text"           % JenaVersion
   val rdf4jClient   = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
   val rdf4jShacl    = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
@@ -96,11 +94,11 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.1"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.3.5" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.3.6" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.79"
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.80"
 
   // caching
   val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
@@ -129,7 +127,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.10"
+  val tapirVersion = "1.11.12"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,

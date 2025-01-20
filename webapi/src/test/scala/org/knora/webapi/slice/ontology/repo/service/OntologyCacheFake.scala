@@ -12,7 +12,6 @@ import zio.ZLayer
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 
 case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache {
@@ -23,11 +22,8 @@ case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache 
 
   /**
    * Loads and caches all ontology information.
-   *
-   * @param requestingUser the user making the request.
-   * @return a [[Unit]].
    */
-  override def loadOntologies(requestingUser: User): Task[Unit] =
+  override def loadOntologies(): Task[Unit] =
     throw new UnsupportedOperationException("Not possible in tests. Provide the respective test data as Ref.")
 
   /**

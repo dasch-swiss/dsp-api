@@ -50,7 +50,8 @@
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/a05L2z3NT3iMWMn7nFqIOA>,
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/vncrL3zVRxiUzHyK6EE6Cw>,
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/niV5iI8DTVK3on2ySXvXRQ>,
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/5b548e03-7ece-4ed7-858> .
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/5b548e03-7ece-4ed7-858>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/YcVF70rEMveEub0QCRKhIl>.
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/4b-Cx4qYQOyy9mUswmvW7g>
     a                                          knora-base:MappingElement ;
@@ -74,6 +75,21 @@
     knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
     knora-base:mappingHasXMLTagname            "p"^^xsd:string .
+
+<http://rdfh.ch/standoff/mappings/StandardMapping/elements/YcVF70rEMveEub0QCRKhIl>
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffFootnoteTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
+    knora-base:mappingElementRequiresSeparator true ;
+    knora-base:mappingHasXMLTagname            "footnote"^^xsd:string ;
+    knora-base:mappingHasXMLAttribute          <http://rdfh.ch/standoff/mappings/StandardMapping/elements/PvcDhnV4TCWRCPXsMasMZA> .
+
+<http://rdfh.ch/standoff/mappings/StandardMapping/elements/PvcDhnV4TCWRCPXsMasMZA>
+    a                                     knora-base:MappingXMLAttribute ;
+    knora-base:mappingHasStandoffProperty standoff:standoffFootnoteTagHasContent ;
+    knora-base:mappingHasXMLAttributename "content"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace     "noNamespace"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/4XIn2zgbSN-swe5PdPjogg>
     a                                          knora-base:MappingElement ;

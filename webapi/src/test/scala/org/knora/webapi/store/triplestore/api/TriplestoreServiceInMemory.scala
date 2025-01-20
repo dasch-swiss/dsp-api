@@ -99,8 +99,9 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
 
   private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Scope, Dataset] = {
     val acquire = getDataset.tap(ds => ZIO.succeed(ds.begin(readWrite)))
-    def release(ds: Dataset) = ZIO.succeed(try { ds.commit() }
-    finally { ds.end() })
+    def release(ds: Dataset) = ZIO.succeed(try {
+      ds.commit()
+    } finally { ds.end() })
     ZIO.acquireRelease(acquire)(release)
   }
 
