@@ -1,5 +1,26 @@
 # Changelog
 
+## [31.2.1](https://github.com/dasch-swiss/dsp-api/compare/v31.2.0...v31.2.1) (2025-01-20)
+
+
+### Maintenances
+
+* Add missing sbt setup (DEV-4494) ([#3463](https://github.com/dasch-swiss/dsp-api/issues/3463)) ([e73b358](https://github.com/dasch-swiss/dsp-api/commit/e73b358b735a7cafd011fe3861d82634e8ada192))
+* Dependency updates ([#3458](https://github.com/dasch-swiss/dsp-api/issues/3458)) ([f96d579](https://github.com/dasch-swiss/dsp-api/commit/f96d5798929501ba06e16cdb1d7e49579fb492de))
+* Extract TestDspIngestClient ([#3462](https://github.com/dasch-swiss/dsp-api/issues/3462)) ([05c58a7](https://github.com/dasch-swiss/dsp-api/commit/05c58a70cbec1ea79663ea9641ae42bed978f9c4))
+* Minor dependency updates ([#3457](https://github.com/dasch-swiss/dsp-api/issues/3457)) ([cf84f2d](https://github.com/dasch-swiss/dsp-api/commit/cf84f2de7936f76b7697903780f50ebce4687146))
+* Patch dependency updates ([#3456](https://github.com/dasch-swiss/dsp-api/issues/3456)) ([2340dc1](https://github.com/dasch-swiss/dsp-api/commit/2340dc1d456f60bd75ad7ccd569693fb0aeddbbe))
+* Remove unused twirl templates ([#3465](https://github.com/dasch-swiss/dsp-api/issues/3465)) ([ba04c8b](https://github.com/dasch-swiss/dsp-api/commit/ba04c8b437c673c7876a75d728bd8a98c9782364))
+* Replace query twirl template 'getProjectAdminData' with SparqlQueryBuilder ([#3466](https://github.com/dasch-swiss/dsp-api/issues/3466)) ([10ebd2f](https://github.com/dasch-swiss/dsp-api/commit/10ebd2f085c18b9366de1d655a59621b77de67dd))
+* Update dsp-app to v11.22.5 ([#3453](https://github.com/dasch-swiss/dsp-api/issues/3453)) ([c984b8c](https://github.com/dasch-swiss/dsp-api/commit/c984b8c09be500ed5b63a440ac08b26c9e536864))
+* Update scalafix to 0.14.0 and enable remove unused imports (DEFV-4296) ([#3464](https://github.com/dasch-swiss/dsp-api/issues/3464)) ([f7cf483](https://github.com/dasch-swiss/dsp-api/commit/f7cf483bc60f1ca7bb34d293e502dd81bc078d54))
+
+
+### Bug Fixes
+
+* Add rdfs:label to knora-base resources to ensure this is present for  isSegmentOfValue properties (DEV-4505) ([#3455](https://github.com/dasch-swiss/dsp-api/issues/3455)) ([bc06166](https://github.com/dasch-swiss/dsp-api/commit/bc06166d6fba1f07ec168246a5f8bbe1aa1f16af))
+* Find the right doap when looking for by ForWhat ([#3460](https://github.com/dasch-swiss/dsp-api/issues/3460)) ([265cb99](https://github.com/dasch-swiss/dsp-api/commit/265cb998a93a6ea465200c12e1eb27440458156b))
+
 ## [31.2.0](https://github.com/dasch-swiss/dsp-api/compare/v31.1.0...v31.2.0) (2025-01-08)
 
 
