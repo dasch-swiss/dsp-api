@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.ontology.api
 import zio.*
 import zio.test.*
+import zio.test.Assertion.*
 import zio.test.check
 
 import java.time.Instant
@@ -195,6 +196,59 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
           req  <- parser(_.createClassRequestV2(t(jsonLd), uuid, user))
         } yield assertTrue(
           req == CreateClassRequestV2(classDef, lastModified, uuid, user),
+        )
+      }
+    },
+    test("reject a definition with an invalid class iri") {
+      val jsonLd =
+        s"""
+           |{
+           |  "@id" : "http://0.0.0.0:3333/ontology/0001/incunabula/v2",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "2017-12-19T15:23:42.166Z"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:WildThing",
+           |    "@type" : "owl:Class",
+           |    "rdfs:label" : {
+           |      "@language" : "en",
+           |      "@value" : "wild thing"
+           |    },
+           |    "rdfs:comment" : {
+           |      "@language" : "en",
+           |      "@value" : "A thing that is wild"
+           |    },
+           |    "rdfs:subClassOf" : [ {
+           |      "@id" : "anything:Thing"
+           |    }, {
+           |      "@type": "owl:Restriction",
+           |      "owl:maxCardinality": 1,
+           |      "owl:onProperty": {
+           |        "@id" : "anything:hasName"
+           |      }
+           |    } ]
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}
+               """.stripMargin
+      check(JsonLdTransformations.allGen) { t =>
+        for {
+          uuid <- Random.nextUUID
+          exit <- parser(_.createClassRequestV2(t(jsonLd), uuid, user)).exit
+        } yield assertTrue(
+          exit == Exit.fail(
+            "Ontology for class 'http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing' does not match " +
+              "ontology http://0.0.0.0:3333/ontology/0001/incunabula/v2",
+          ),
         )
       }
     },

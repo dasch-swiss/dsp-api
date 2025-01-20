@@ -91,6 +91,12 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
         meta       <- extractOntologyMetadata(ds.defaultModel)
         classModel <- ZIO.fromOption(ds.namedModel(meta.ontologyIri.toString)).orElseFail("No class definition found")
         classInfo  <- extractClassInfo(classModel)
+        _ <-
+          ZIO
+            .fail(
+              s"Ontology for class '${classInfo.classIri.toString}' does not match ontology ${meta.ontologyIri.toString}",
+            )
+            .unless(meta.ontologyIri.smartIri == classInfo.classIri.getOntologyFromEntity)
       } yield CreateClassRequestV2(
         classInfo,
         meta.lastModificationDate,
