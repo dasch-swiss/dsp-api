@@ -457,7 +457,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                  |    "ka:fileValueHasFilename": "internalFilename.ext",
                  |    "ka:hasCopyrightHolder" : "Jane Doe",
                  |    "ka:hasAuthorship" : [ "Mr. Smith", "Author McAuthorface" ],
-                 |    "ka:hasLicenseText" : "CC-BY-4.0",
+                 |    "ka:hasLicenseIdentifier" : "CC-BY-4.0",
                  |    "ka:hasLicenseUri" : {
                  |      "@value" : "http://creativecommons.org/licenses/by/4.0/",
                  |      "@type" : "xsd:anyURI"
@@ -477,7 +477,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
           expectedFileValue.copy(
             copyrightHolder = Some(CopyrightHolder.unsafeFrom("Jane Doe")),
             authorship = Some(List(Authorship.unsafeFrom("Author McAuthorface"), Authorship.unsafeFrom("Mr. Smith"))),
-            licenseText = Some(LicenseText.unsafeFrom("CC-BY-4.0")),
+            licenseIdentifier = Some(LicenseIdentifier.unsafeFrom("CC-BY-4.0")),
             licenseUri = Some(LicenseUri.unsafeFrom("http://creativecommons.org/licenses/by/4.0/")),
             licenseDate = Some(LicenseDate.makeNew),
           ),

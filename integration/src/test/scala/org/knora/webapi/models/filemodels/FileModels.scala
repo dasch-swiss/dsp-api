@@ -17,7 +17,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
-import org.knora.webapi.slice.admin.domain.model.LicenseText
+import org.knora.webapi.slice.admin.domain.model.LicenseIdentifier
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 
 sealed abstract case class UploadFileRequest private (
@@ -27,7 +27,7 @@ sealed abstract case class UploadFileRequest private (
   resourceIRI: Option[String] = None,
   copyrightHolder: Option[CopyrightHolder] = None,
   authorship: Option[List[Authorship]] = None,
-  licenseText: Option[LicenseText] = None,
+  licenseIdentifier: Option[LicenseIdentifier] = None,
   licenseUri: Option[LicenseUri] = None,
 ) { self =>
 
@@ -73,7 +73,7 @@ sealed abstract case class UploadFileRequest private (
          |    "knora-api:fileValueHasFilename" : "$internalFilename"
          |    $copyrightHolderJson
          |    $authorshipJson
-         |    ${licenseText.map(l => s""","knora-api:hasLicenseText" : "${l.value}"""").getOrElse("")}
+         |    ${licenseIdentifier.map(l => s""","knora-api:hasLicenseIdentifier" : "${l.value}"""").getOrElse("")}
          |    ${licenseUri
           .map(u => s""", "knora-api:hasLicenseUri" : { "@type" : "xsd:anyURI", "@value":"${u.value}" }""")
           .getOrElse("")}
@@ -147,7 +147,7 @@ sealed abstract case class UploadFileRequest private (
       comment = comment,
       copyrightHolder = self.copyrightHolder,
       authorship = self.authorship,
-      licenseText = self.licenseText,
+      licenseIdentifier = self.licenseIdentifier,
       licenseUri = self.licenseUri,
     )
 
@@ -201,7 +201,7 @@ object UploadFileRequest {
     resourceIRI: Option[String] = None,
     copyrightHolder: Option[CopyrightHolder] = None,
     authorship: Option[List[Authorship]] = None,
-    licenseText: Option[LicenseText] = None,
+    licenseIdentifier: Option[LicenseIdentifier] = None,
     licenseUri: Option[LicenseUri] = None,
   ): UploadFileRequest =
     new UploadFileRequest(
@@ -211,7 +211,7 @@ object UploadFileRequest {
       resourceIRI,
       copyrightHolder,
       authorship,
-      licenseText,
+      licenseIdentifier,
       licenseUri,
     ) {}
 }

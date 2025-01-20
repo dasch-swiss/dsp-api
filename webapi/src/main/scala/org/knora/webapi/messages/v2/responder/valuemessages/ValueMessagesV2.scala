@@ -48,7 +48,7 @@ import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.LicenseDate
-import org.knora.webapi.slice.admin.domain.model.LicenseText
+import org.knora.webapi.slice.admin.domain.model.LicenseIdentifier
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.common.Value
@@ -2005,7 +2005,7 @@ case class FileValueV2(
   originalMimeType: Option[String] = None,
   copyrightHolder: Option[CopyrightHolder] = None,
   authorship: Option[List[Authorship]] = None,
-  licenseText: Option[LicenseText] = None,
+  licenseIdentifier: Option[LicenseIdentifier] = None,
   licenseUri: Option[LicenseUri] = None,
   licenseDate: Option[LicenseDate] = None,
 )
@@ -2014,11 +2014,11 @@ object FileValueV2 {
   def makeNew(r: Resource, info: FileInfo): Either[String, FileValueV2] = {
     val meta = info.metadata
     for {
-      copyrightHolder <- r.objectStringOption(HasCopyrightHolder, CopyrightHolder.from)
-      authorship      <- r.objectStringListOption(HasAuthorship, Authorship.from)
-      licenseText     <- r.objectStringOption(HasLicenseText, LicenseText.from)
-      licenseUri      <- r.objectDataTypeOption(HasLicenseUri, XSD.anyURI.toString, LicenseUri.from)
-      licenseDate      = Some(LicenseDate.makeNew)
+      copyrightHolder   <- r.objectStringOption(HasCopyrightHolder, CopyrightHolder.from)
+      authorship        <- r.objectStringListOption(HasAuthorship, Authorship.from)
+      licenseIdentifier <- r.objectStringOption(HasLicenseIdentifier, LicenseIdentifier.from)
+      licenseUri        <- r.objectDataTypeOption(HasLicenseUri, XSD.anyURI.toString, LicenseUri.from)
+      licenseDate        = Some(LicenseDate.makeNew)
     } yield FileValueV2(
       info.filename,
       meta.internalMimeType,
@@ -2026,7 +2026,7 @@ object FileValueV2 {
       meta.originalMimeType,
       copyrightHolder,
       authorship,
-      licenseText,
+      licenseIdentifier,
       licenseUri,
       licenseDate,
     )
@@ -2076,12 +2076,12 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
         datatype = OntologyConstants.Xsd.Uri.toSmartIri,
       ),
     )
-    val copyrightHolder = fileValue.copyrightHolder.map(mkJsonLdString).map((HasCopyrightHolder, _))
-    val authorship      = fileValue.authorship.map(mkJsonLdStringArray).map((HasAuthorship, _))
-    val licenseText     = fileValue.licenseText.map(mkJsonLdString).map((HasLicenseText, _))
-    val licenseUri      = fileValue.licenseUri.map(mkJsonLdUri).map((HasLicenseUri, _))
-    val licenseDate     = fileValue.licenseDate.map(mkJsonLdDate).map((HasLicenseDate, _))
-    knownValues ++ copyrightHolder ++ authorship ++ licenseText ++ licenseUri ++ licenseDate
+    val copyrightHolder   = fileValue.copyrightHolder.map(mkJsonLdString).map((HasCopyrightHolder, _))
+    val authorship        = fileValue.authorship.map(mkJsonLdStringArray).map((HasAuthorship, _))
+    val licenseIdentifier = fileValue.licenseIdentifier.map(mkJsonLdString).map((HasLicenseIdentifier, _))
+    val licenseUri        = fileValue.licenseUri.map(mkJsonLdUri).map((HasLicenseUri, _))
+    val licenseDate       = fileValue.licenseDate.map(mkJsonLdDate).map((HasLicenseDate, _))
+    knownValues ++ copyrightHolder ++ authorship ++ licenseIdentifier ++ licenseUri ++ licenseDate
   }
 }
 

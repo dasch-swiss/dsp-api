@@ -54,7 +54,7 @@ import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.LicenseDate
-import org.knora.webapi.slice.admin.domain.model.LicenseText
+import org.knora.webapi.slice.admin.domain.model.LicenseIdentifier
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -1072,9 +1072,9 @@ final case class ConstructResponseUtilV2Live(
       authorship = valueObject
         .maybeStringListObject(OntologyConstants.KnoraBase.HasAuthorship.toSmartIri)
         .map(_.map(Authorship.unsafeFrom).toList),
-      licenseText = valueObject
-        .maybeStringObject(OntologyConstants.KnoraBase.HasLicenseText.toSmartIri)
-        .map(LicenseText.unsafeFrom),
+      licenseIdentifier = valueObject
+        .maybeStringObject(OntologyConstants.KnoraBase.HasLicenseIdentifier.toSmartIri)
+        .map(LicenseIdentifier.unsafeFrom),
       licenseUri =
         valueObject.maybeIriObject(OntologyConstants.KnoraBase.HasLicenseUri.toSmartIri).map(LicenseUri.unsafeFrom),
       licenseDate =

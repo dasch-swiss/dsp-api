@@ -110,7 +110,7 @@ object Vocabulary {
     val valueHasStandoff: Iri              = iri(kb + "valueHasStandoff")
     val hasCopyrightHolder: Iri            = iri(kb + "hasCopyrightHolder")
     val hasAuthorship: Iri                 = iri(kb + "hasAuthorship")
-    val hasLicenseText: Iri                = iri(kb + "hasLicenseText")
+    val hasLicenseIdentifier: Iri          = iri(kb + "hasLicenseIdentifier")
     val hasLicenseUri: Iri                 = iri(kb + "hasLicenseUri")
     val hasLicenseDate: Iri                = iri(kb + "hasLicenseDate")
 

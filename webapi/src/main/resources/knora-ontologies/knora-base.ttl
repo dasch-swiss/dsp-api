@@ -569,11 +569,11 @@
     :objectDatatypeConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/knora-base#hasLicenseText
+###  http://www.knora.org/ontology/knora-base#hasLicenseIdentifier
 
-:hasLicenseText
+:hasLicenseIdentifier
     rdf:type                  owl:DatatypeProperty ;
-    rdfs:label                "has license text"@en;
+    rdfs:label                "has license identifier"@en;
     rdfs:comment              "Specifies the terms under which a work can be used. This statement may be a reference to a well-known license, such as Creative Commons (e.g. 'CC BY-SA') or a custom license."@en ;
     :objectDatatypeConstraint xsd:string .
 
@@ -1618,7 +1618,7 @@
                       owl:onProperty     :hasAuthorship ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
-                      owl:onProperty     :hasLicenseText  ;
+                      owl:onProperty     :hasLicenseIdentifier  ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :hasLicenseDate;

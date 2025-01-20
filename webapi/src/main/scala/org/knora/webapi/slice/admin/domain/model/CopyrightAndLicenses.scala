@@ -31,10 +31,10 @@ object Authorship extends StringValueCompanion[Authorship] {
     fromValidations("Authorship", Authorship.apply, List(nonEmpty, noLineBreaks, maxLength(1_000)))(str)
 }
 
-final case class LicenseText private (override val value: String) extends StringValue
-object LicenseText extends StringValueCompanion[LicenseText] {
-  def from(str: String): Either[String, LicenseText] =
-    fromValidations("License text", LicenseText.apply, List(nonEmpty, maxLength(100_000)))(str)
+final case class LicenseIdentifier private (override val value: String) extends StringValue
+object LicenseIdentifier extends StringValueCompanion[LicenseIdentifier] {
+  def from(str: String): Either[String, LicenseIdentifier] =
+    fromValidations("License Identifier", LicenseIdentifier.apply, List(nonEmpty, noLineBreaks, maxLength(100_000)))(str)
 }
 
 final case class LicenseUri private (override val value: String) extends StringValue

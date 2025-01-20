@@ -48,7 +48,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
   private val aCopyrightHolder             = CopyrightHolder.unsafeFrom("Universität Basel")
   private val someAuthorship               = List("Hans Müller", "Gigi DAgostino").map(Authorship.unsafeFrom)
-  private val aLicenseText                 = LicenseText.unsafeFrom("CC BY-SA 4.0")
+  private val aLicenseIdentifier           = LicenseIdentifier.unsafeFrom("CC BY-SA 4.0")
   private val aLicenseUri                  = LicenseUri.unsafeFrom("https://creativecommons.org/licenses/by-sa/4.0/")
 
   private val createResourceSuite = suite("Creating Resources")(
@@ -62,7 +62,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       } yield assertTrue(
         info.copyrightHolder.isEmpty,
         info.authorship.isEmpty,
-        info.licenseText.isEmpty,
+        info.licenseIdentifier.isEmpty,
         info.licenseUri.isEmpty,
         info.licenseDate.contains(LicenseDate.makeNew),
       )
@@ -76,7 +76,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info                        <- copyrightAndLicenseInfo(createResourceResponseModel)
       } yield assertTrue(
         info.copyrightHolder.contains(aCopyrightHolder),
-        info.licenseText.contains(aLicenseText),
+        info.licenseIdentifier.contains(aLicenseIdentifier),
         info.licenseUri.contains(aLicenseUri),
         info.licenseDate.contains(LicenseDate.makeNew),
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
@@ -92,7 +92,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info                        <- copyrightAndLicenseInfo(getResponseModel)
       } yield assertTrue(
         info.copyrightHolder.contains(aCopyrightHolder),
-        info.licenseText.contains(aLicenseText),
+        info.licenseIdentifier.contains(aLicenseIdentifier),
         info.licenseUri.contains(aLicenseUri),
         info.licenseDate.contains(LicenseDate.makeNew),
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
@@ -107,7 +107,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info                        <- copyrightAndLicenseInfo(valueResponseModel)
       } yield assertTrue(
         info.copyrightHolder.contains(aCopyrightHolder),
-        info.licenseText.contains(aLicenseText),
+        info.licenseIdentifier.contains(aLicenseIdentifier),
         info.licenseUri.contains(aLicenseUri),
         info.licenseDate.contains(LicenseDate.makeNew),
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
@@ -128,14 +128,14 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
                  ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri),
                  aCopyrightHolder,
                  someAuthorship,
-                 aLicenseText,
+                 aLicenseIdentifier,
                  aLicenseUri,
                ).jsonLd,
              ).filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create value"))
         createdResourceModel <- getResourceFromApi(resourceId)
         info                 <- copyrightAndLicenseInfo(createdResourceModel)
       } yield assertTrue(
-        info.licenseText.contains(aLicenseText),
+        info.licenseIdentifier.contains(aLicenseIdentifier),
         info.licenseUri.contains(aLicenseUri),
         info.licenseDate.contains(LicenseDate.makeNew),
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
@@ -148,7 +148,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     resourceClass: ResourceClassIri,
     copyrightHolder: CopyrightHolder,
     authorship: List[Authorship],
-    licenseText: LicenseText,
+    licenseIdentifier: LicenseIdentifier,
     licenseUri: LicenseUri,
   ) {
     def jsonLd: String =
@@ -169,7 +169,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
             (KA.FileValueHasFilename, Json.Str("test.jpx")),
             (KA.HasCopyrightHolder, Json.Str(copyrightHolder.value)),
             (KA.HasAuthorship, Json.Arr(authorship.map(_.value).map(Json.Str.apply): _*)),
-            (KA.HasLicenseText, Json.Str(licenseText.value)),
+            (KA.HasLicenseIdentifier, Json.Str(licenseIdentifier.value)),
             (KA.HasLicenseUri, ldValue(licenseUri.value, XSD.anyURI)),
           ),
         ),
@@ -187,14 +187,14 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     createStillImageResource(
       Some(aCopyrightHolder),
       Some(someAuthorship),
-      Some(aLicenseText),
+      Some(aLicenseIdentifier),
       Some(aLicenseUri),
     )
 
   private def createStillImageResource(
     copyrightHolder: Option[CopyrightHolder] = None,
     authorship: Option[List[Authorship]] = None,
-    licenseText: Option[LicenseText] = None,
+    licenseIdentifier: Option[LicenseIdentifier] = None,
     licenseUri: Option[LicenseUri] = None,
   ): ZIO[env, Throwable, Model] = {
     val jsonLd = UploadFileRequest
@@ -203,7 +203,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         "internalFilename.jpg",
         copyrightHolder = copyrightHolder,
         authorship = authorship,
-        licenseText = licenseText,
+        licenseIdentifier = licenseIdentifier,
         licenseUri = licenseUri,
       )
       .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
@@ -267,19 +267,19 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
   final case class CopyrightAndLicenseInfo(
     copyrightHolder: Option[CopyrightHolder],
     authorship: Option[List[Authorship]],
-    licenseText: Option[LicenseText],
+    licenseIdentifier: Option[LicenseIdentifier],
     licenseUri: Option[LicenseUri],
     licenseDate: Option[LicenseDate],
   )
 
   private def copyrightAndLicenseInfo(model: Model) =
     for {
-      copyright   <- copyrightValueOption(model).map(_.map(CopyrightHolder.unsafeFrom))
-      authorship  <- authorshipValuesOption(model).map(_.map(_.map(Authorship.unsafeFrom)))
-      licenseText <- licenseTextValueOption(model).map(_.map(LicenseText.unsafeFrom))
-      licenseUri  <- licenseUriValueOption(model).map(_.map(LicenseUri.unsafeFrom))
-      licenseDate <- licenseDateValueOption(model).map(_.map(LicenseDate.unsafeFrom))
-    } yield CopyrightAndLicenseInfo(copyright, authorship, licenseText, licenseUri, licenseDate)
+      copyright         <- copyrightValueOption(model).map(_.map(CopyrightHolder.unsafeFrom))
+      authorship        <- authorshipValuesOption(model).map(_.map(_.map(Authorship.unsafeFrom)))
+      licenseIdentifier <- licenseIdentifierValueOption(model).map(_.map(LicenseIdentifier.unsafeFrom))
+      licenseUri        <- licenseUriValueOption(model).map(_.map(LicenseUri.unsafeFrom))
+      licenseDate       <- licenseDateValueOption(model).map(_.map(LicenseDate.unsafeFrom))
+    } yield CopyrightAndLicenseInfo(copyright, authorship, licenseIdentifier, licenseUri, licenseDate)
 
   private def copyrightValueOption(model: Model) =
     singleStringValueOption(model, KA.HasCopyrightHolder)
@@ -293,8 +293,8 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       )
       .mapError(Exception(_))
 
-  private def licenseTextValueOption(model: Model) =
-    singleStringValueOption(model, KA.HasLicenseText)
+  private def licenseIdentifierValueOption(model: Model) =
+    singleStringValueOption(model, KA.HasLicenseIdentifier)
 
   private def licenseUriValueOption(model: Model) =
     singleStringValueOption(model, KA.HasLicenseUri)

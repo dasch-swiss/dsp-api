@@ -9,7 +9,7 @@ import monocle.*
 import monocle.macros.*
 
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
-import org.knora.webapi.slice.admin.domain.model.LicenseText
+import org.knora.webapi.slice.admin.domain.model.LicenseIdentifier
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 
 object ValueMessagesV2Optics {
@@ -19,7 +19,8 @@ object ValueMessagesV2Optics {
     val copyrightHolderOption: Lens[FileValueV2, Option[CopyrightHolder]] =
       GenLens[FileValueV2](_.copyrightHolder)
 
-    val licenseTextOption: Lens[FileValueV2, Option[LicenseText]] = GenLens[FileValueV2](_.licenseText)
+    val licenseIdentifierOption: Lens[FileValueV2, Option[LicenseIdentifier]] =
+      GenLens[FileValueV2](_.licenseIdentifier)
 
     val licenseUriOption: Lens[FileValueV2, Option[LicenseUri]] = GenLens[FileValueV2](_.licenseUri)
 
@@ -39,8 +40,8 @@ object ValueMessagesV2Optics {
       })
     val copyrightHolderOption: Lens[FileValueContentV2, Option[CopyrightHolder]] =
       fileValueV2.andThen(FileValueV2Optics.copyrightHolderOption)
-    val licenseTextOption: Lens[FileValueContentV2, Option[LicenseText]] =
-      fileValueV2.andThen(FileValueV2Optics.licenseTextOption)
+    val licenseIdentifierOption: Lens[FileValueContentV2, Option[LicenseIdentifier]] =
+      fileValueV2.andThen(FileValueV2Optics.licenseIdentifierOption)
     val licenseUriOption: Lens[FileValueContentV2, Option[LicenseUri]] =
       fileValueV2.andThen(FileValueV2Optics.licenseUriOption)
   }

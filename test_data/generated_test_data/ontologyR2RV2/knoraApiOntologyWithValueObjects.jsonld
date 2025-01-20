@@ -261,7 +261,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseText"
+                        "@id": "knora-api:hasLicenseIdentifier"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -586,7 +586,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseText"
+                        "@id": "knora-api:hasLicenseIdentifier"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -1428,7 +1428,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseText"
+                        "@id": "knora-api:hasLicenseIdentifier"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -2427,7 +2427,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseText"
+                        "@id": "knora-api:hasLicenseIdentifier"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -2754,7 +2754,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseText"
+                        "@id": "knora-api:hasLicenseIdentifier"
                     },
                     "owl:maxCardinality": 1
                 },
@@ -3939,7 +3939,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseText"
+                        "@id": "knora-api:hasLicenseIdentifier"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -6222,7 +6222,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseText"
+                        "@id": "knora-api:hasLicenseIdentifier"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -6401,7 +6401,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseText"
+                        "@id": "knora-api:hasLicenseIdentifier"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -6587,7 +6587,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseText"
+                        "@id": "knora-api:hasLicenseIdentifier"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -6938,7 +6938,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseText"
+                        "@id": "knora-api:hasLicenseIdentifier"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -8759,13 +8759,13 @@
             "@id": "knora-api:hasLicenseDate"
         },
         {
-            "rdfs:label": "has license text",
+            "rdfs:label": "has license identifier",
             "rdfs:comment": "Specifies the terms under which a work can be used. This statement may be a reference to a well-known license, such as Creative Commons (e.g. CC BY-SA) or a custom license.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:hasLicenseText"
+            "@id": "knora-api:hasLicenseIdentifier"
         },
         {
             "rdfs:label": "has license URI",

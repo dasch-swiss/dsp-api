@@ -282,7 +282,7 @@ object ResourcesRepoLive {
         .andHasOptional(KB.originalFilename, v.fileValue.originalFilename.map(literalOf))
         .andHasOptional(KB.originalMimeType, v.fileValue.originalMimeType.map(literalOf))
         .andHasOptional(KB.hasCopyrightHolder, v.fileValue.copyrightHolder.map(_.value).map(literalOf))
-        .andHasOptional(KB.hasLicenseText, v.fileValue.licenseText.map(_.value).map(literalOf))
+        .andHasOptional(KB.hasLicenseIdentifier, v.fileValue.licenseIdentifier.map(_.value).map(literalOf))
         .andHasOptional(KB.hasLicenseUri, v.fileValue.licenseUri.map(_.value).map(literalOfType(_, XSD.ANYURI)))
         .andHasOptional(
           KB.hasLicenseDate,

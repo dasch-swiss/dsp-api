@@ -57,7 +57,7 @@
 
 ### Enhancements
 
-* Split license into licenseText and licenseUri (DEV-4398) ([#3436](https://github.com/dasch-swiss/dsp-api/issues/3436)) ([76d2db2](https://github.com/dasch-swiss/dsp-api/commit/76d2db25a75ffd43294e2d1d25e98f53f5d0e275))
+* Split license into licenseIdentifier and licenseUri (DEV-4398) ([#3436](https://github.com/dasch-swiss/dsp-api/issues/3436)) ([76d2db2](https://github.com/dasch-swiss/dsp-api/commit/76d2db25a75ffd43294e2d1d25e98f53f5d0e275))
 
 
 ### Bug Fixes

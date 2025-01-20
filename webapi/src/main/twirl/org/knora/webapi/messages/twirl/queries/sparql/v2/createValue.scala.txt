@@ -244,9 +244,9 @@ DELETE {
                     case None => {}
                 }
 
-                @fileValueContentV2.fileValue.licenseText match {
+                @fileValueContentV2.fileValue.licenseIdentifier match {
                     case Some(text) => {
-                        <@newValueIri> knora-base:hasLicenseText """@text.value""" .
+                        <@newValueIri> knora-base:hasLicenseIdentifier """@text.value""" .
                     }
                     case None => {}
                 }

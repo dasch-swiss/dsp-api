@@ -46,7 +46,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.Group
-import org.knora.webapi.slice.admin.domain.model.LicenseText
+import org.knora.webapi.slice.admin.domain.model.LicenseIdentifier
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.Value.StringValue
@@ -208,8 +208,8 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
     override val from: String => Either[String, CopyrightHolder] = CopyrightHolder.from
   }
 
-  implicit object LicenseTextFormat extends StringValueFormat[LicenseText] {
-    override val from: String => Either[String, LicenseText] = LicenseText.from
+  implicit object LicenseIdentifierFormat extends StringValueFormat[LicenseIdentifier] {
+    override val from: String => Either[String, LicenseIdentifier] = LicenseIdentifier.from
   }
 
   implicit object LicenseUriFormat extends StringValueFormat[LicenseUri] {

@@ -13,7 +13,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
-import org.knora.webapi.slice.admin.domain.model.LicenseText
+import org.knora.webapi.slice.admin.domain.model.LicenseIdentifier
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 
@@ -89,7 +89,7 @@ object FileModelUtil {
     originalMimeType: Option[String],
     copyrightHolder: Option[CopyrightHolder] = None,
     authorship: Option[List[Authorship]] = None,
-    licenseText: Option[LicenseText] = None,
+    licenseIdentifier: Option[LicenseIdentifier] = None,
     licenseUri: Option[LicenseUri] = None,
     comment: Option[String] = None,
   ): FileValueContentV2 =
@@ -104,7 +104,7 @@ object FileModelUtil {
             originalMimeType = Some(originalMimeType.getOrElse("application/pdf")),
             copyrightHolder = copyrightHolder,
             authorship = authorship,
-            licenseText = licenseText,
+            licenseIdentifier = licenseIdentifier,
             licenseUri = licenseUri,
           ),
           pageCount = pageCount,
@@ -122,7 +122,7 @@ object FileModelUtil {
             originalMimeType = originalMimeType,
             copyrightHolder = copyrightHolder,
             authorship = authorship,
-            licenseText = licenseText,
+            licenseIdentifier = licenseIdentifier,
             licenseUri = licenseUri,
           ),
           dimX = dimX,
@@ -139,7 +139,7 @@ object FileModelUtil {
             originalMimeType = originalMimeType,
             copyrightHolder = copyrightHolder,
             authorship = authorship,
-            licenseText = licenseText,
+            licenseIdentifier = licenseIdentifier,
             licenseUri = licenseUri,
           ),
           externalUrl = externalUrl,
@@ -155,7 +155,7 @@ object FileModelUtil {
             originalMimeType = internalMimeType,
             copyrightHolder = copyrightHolder,
             authorship = authorship,
-            licenseText = licenseText,
+            licenseIdentifier = licenseIdentifier,
             licenseUri = licenseUri,
           ),
         )
@@ -169,7 +169,7 @@ object FileModelUtil {
             originalMimeType = internalMimeType,
             copyrightHolder = copyrightHolder,
             authorship = authorship,
-            licenseText = licenseText,
+            licenseIdentifier = licenseIdentifier,
             licenseUri = licenseUri,
           ),
         )
@@ -183,7 +183,7 @@ object FileModelUtil {
             originalMimeType = internalMimeType,
             copyrightHolder = copyrightHolder,
             authorship = authorship,
-            licenseText = licenseText,
+            licenseIdentifier = licenseIdentifier,
             licenseUri = licenseUri,
           ),
         )
@@ -197,7 +197,7 @@ object FileModelUtil {
             originalMimeType = internalMimeType,
             copyrightHolder = copyrightHolder,
             authorship = authorship,
-            licenseText = licenseText,
+            licenseIdentifier = licenseIdentifier,
             licenseUri = licenseUri,
           ),
           comment = comment,
