@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.ontology.api
 import zio.*
 import zio.test.*
-import zio.test.Assertion.*
 import zio.test.check
 
 import java.time.Instant
