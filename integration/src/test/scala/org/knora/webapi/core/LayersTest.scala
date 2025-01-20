@@ -86,6 +86,7 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.testservices.TestDspIngestClient
 
 object LayersTest {
 
@@ -93,7 +94,7 @@ object LayersTest {
    * The `Environment`s that we require for the tests to run - with or without Sipi
    */
   type DefaultTestEnvironmentWithoutSipi =
-    LayersLive.DspEnvironmentLive & FusekiTestContainer & TestClientService
+    LayersLive.DspEnvironmentLive & FusekiTestContainer & TestClientService & TestDspIngestClient
 
   type DefaultTestEnvironmentWithSipi =
     DefaultTestEnvironmentWithoutSipi & SipiTestContainer & DspIngestTestContainer & SharedVolumes.Volumes
@@ -153,6 +154,7 @@ object LayersTest {
     State &
     StringFormatter &
     TestClientService &
+    TestDspIngestClient &
     TriplestoreService &
     UserRestService &
     ValuesResponderV2
@@ -224,6 +226,7 @@ object LayersTest {
       StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
+      TestDspIngestClient.layer,
       TriplestoreServiceLive.layer,
       ValuesResponderV2.layer,
     )

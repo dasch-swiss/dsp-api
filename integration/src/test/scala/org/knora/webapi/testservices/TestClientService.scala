@@ -5,8 +5,6 @@
 
 package org.knora.webapi.testservices
 
-import org.apache.http
-import org.apache.http.entity.ContentType
 import org.apache.pekko
 import org.apache.pekko.actor.ActorSystem
 import sttp.capabilities.zio.ZioStreams
@@ -17,50 +15,21 @@ import sttp.client3.httpclient.zio.HttpClientZioBackend
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
-import zio.nio.file.Files
 
-import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
 import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
-import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseEntry
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.store.iiif.errors.SipiException
 
 import pekko.http.scaladsl.client.RequestBuilding
 import pekko.http.scaladsl.unmarshalling.Unmarshal
-
-/**
- * Represents a file to be uploaded to the IIF Service.
- *
- * @param path     the path of the file.
- * @param mimeType the MIME type of the file.
- */
-final case class FileToUpload(
-  path: Path,
-  mimeType: ContentType,
-  shortcode: String = "0001",
-)
-
-/**
- * Represents an image file to be uploaded to the IIF Service.
- *
- * @param fileToUpload the file to be uploaded.
- * @param width        the image's width in pixels.
- * @param height       the image's height in pixels.
- */
-final case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
 
 final case class TestClientService(
   config: AppConfig,
@@ -68,8 +37,6 @@ final case class TestClientService(
 )(implicit system: ActorSystem)
     extends TriplestoreJsonProtocol
     with RequestBuilding {
-
-  private val ingestUrl = uri"${config.dspIngest.baseUrl}"
 
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 
@@ -83,7 +50,7 @@ final case class TestClientService(
    * @param printFailure If true, the response body will be printed if the request fails.
    *                     This flag is intended to be used for debugging purposes only.
    *                     Since this is unsafe, it is false by default.
-   *                     It is unsafe because the the response body can only be unmarshalled (i.e. printed) to a string once.
+   *                     It is unsafe because the response body can only be unmarshalled (i.e. printed) to a string once.
    *                     It will fail if the test code is also unmarshalling the response.
    * @return the response.
    */
@@ -136,7 +103,7 @@ final case class TestClientService(
     } yield body
 
   /**
-   * Performs a http request and dosn't return the string (only error channel).
+   * Performs a http request and does not return the string (only error channel).
    */
   def checkResponseOK(request: pekko.http.scaladsl.model.HttpRequest): Task[Unit] = getResponseString(request).unit
 
@@ -157,47 +124,6 @@ final case class TestClientService(
       body <- getResponseString(request)
       json <- ZIO.succeed(JsonLDUtil.parseJsonLD(body))
     } yield json
-
-  /**
-   * Uploads a file to the Ingest service's "/projects/$shortcode/assets/ingest/$filename" route.
-   *
-   * @param loginToken    the login token to be included in the request to Sipi.
-   * @param files the files to be uploaded.
-   * @return a [[SipiUploadResponse]] representing Sipi's response.
-   */
-  def uploadToIngest(loginToken: String, filesToUpload: Seq[FileToUpload]): Task[SipiUploadResponse] =
-    ZIO
-      .foreach(filesToUpload) { file =>
-        for {
-          contents <- Files.readAllBytes(zio.nio.file.Path.apply(file.path.toUri()))
-          url       = ingestUrl.addPath("projects", file.shortcode, "assets", "ingest", file.path.getFileName.toString)
-          response <-
-            doSipiRequest(
-              quickRequest
-                .post(url)
-                .header("Content-Type", file.mimeType.toString)
-                .header("Authorization", s"Bearer $loginToken")
-                .body(contents.toArray),
-            )
-          json <- ZIO.fromEither(response.fromJson[SipiUploadResponseEntry]).mapError(Throwable(_))
-        } yield json
-      }
-      .map(responses => SipiUploadResponse(responses.toList))
-
-  private def doSipiRequest[T](request: Request[String, Any]): Task[String] =
-    sttp.send(request).flatMap { response =>
-      if (response.isSuccess) {
-        ZIO.succeed(response.body)
-      } else {
-        if (response.code.code == 404) {
-          ZIO.fail(NotFoundException(response.body))
-        } else if (response.isClientError) {
-          ZIO.fail(BadRequestException(s"Sipi responded with HTTP status code ${response.code.code}: ${response.body}"))
-        } else {
-          ZIO.fail(SipiException(s"Sipi responded with HTTP status code ${response.code.code}: ${response.body}"))
-        }
-      }
-    }
 }
 
 object TestClientService {
