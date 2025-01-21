@@ -28,7 +28,6 @@ import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpers
-import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpersLive
 import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
 import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
@@ -198,7 +197,7 @@ object LayersTest {
       MessageRelayLive.layer,
       OntologyApiModule.layer,
       OntologyCacheLive.layer,
-      OntologyCacheHelpersLive.layer,
+      OntologyCacheHelpers.layer,
       OntologyRepoLive.layer,
       OntologyServiceLive.layer,
       OntologyTriplestoreHelpers.layer,

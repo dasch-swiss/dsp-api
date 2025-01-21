@@ -18,7 +18,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
-trait OntologyCacheHelpers {
+final case class OntologyCacheHelpers(ontologyCache: OntologyCache) {
 
   /**
    * Requests information about OWL classes in a single ontology.
@@ -28,71 +28,6 @@ trait OntologyCacheHelpers {
    * @return a [[ReadOntologyV2]].
    */
   def getClassDefinitionsFromOntologyV2(
-    classIris: Set[SmartIri],
-    allLanguages: Boolean,
-    requestingUser: User,
-  ): Task[ReadOntologyV2]
-
-  /**
-   * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV2]] describing both resource and property entities.
-   *
-   * @param classIris      the IRIs of the resource entities to be queried.
-   * @param propertyIris   the IRIs of the property entities to be queried.
-   * @param requestingUser the user making the request.
-   * @return an [[EntityInfoGetResponseV2]].
-   */
-  def getEntityInfoResponseV2(
-    classIris: Set[SmartIri] = Set.empty[SmartIri],
-    propertyIris: Set[SmartIri] = Set.empty[SmartIri],
-    requestingUser: User,
-  ): Task[EntityInfoGetResponseV2]
-
-  /**
-   * Before an update of an ontology entity, checks that the entity's external IRI, and that of its ontology,
-   * are valid, and checks that the user has permission to update the ontology.
-   *
-   * @param externalOntologyIri the external IRI of the ontology.
-   * @param externalEntityIri   the external IRI of the entity.
-   * @param requestingUser      the user making the request.
-   */
-  final def checkOntologyAndEntityIrisForUpdate(
-    externalOntologyIri: SmartIri,
-    externalEntityIri: SmartIri,
-    requestingUser: User,
-  ): Task[Unit] =
-    for {
-      _ <- OntologyHelpers.checkExternalOntologyIriForUpdate(externalOntologyIri)
-      _ <- OntologyHelpers.checkExternalEntityIriForUpdate(externalEntityIri)
-      _ <- checkPermissionsForOntologyUpdate(
-             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema),
-             requestingUser = requestingUser,
-           )
-    } yield ()
-
-  /**
-   * Throws an exception if the requesting user does not have permission to update an ontology.
-   *
-   * @param internalOntologyIri the internal IRI of the ontology.
-   * @param requestingUser      the user making the request.
-   * @return the project IRI.
-   */
-  def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, requestingUser: User): Task[SmartIri]
-
-  /**
-   * Checks whether the requesting user has permission to update an ontology.
-   *
-   * @param internalOntologyIri the internal IRI of the ontology.
-   * @param requestingUser      the user making the request.
-   * @return `true` if the user has permission to update the ontology
-   */
-  def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: User): Task[Boolean]
-}
-
-final case class OntologyCacheHelpersLive(
-  ontologyCache: OntologyCache,
-) extends OntologyCacheHelpers {
-
-  override def getClassDefinitionsFromOntologyV2(
     classIris: Set[SmartIri],
     allLanguages: Boolean,
     requestingUser: User,
@@ -124,7 +59,15 @@ final case class OntologyCacheHelpersLive(
       userLang = userLang,
     )
 
-  override def getEntityInfoResponseV2(
+  /**
+   * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV2]] describing both resource and property entities.
+   *
+   * @param classIris      the IRIs of the resource entities to be queried.
+   * @param propertyIris   the IRIs of the property entities to be queried.
+   * @param requestingUser the user making the request.
+   * @return an [[EntityInfoGetResponseV2]].
+   */
+  def getEntityInfoResponseV2(
     classIris: Set[SmartIri] = Set.empty[SmartIri],
     propertyIris: Set[SmartIri] = Set.empty[SmartIri],
     requestingUser: User,
@@ -322,7 +265,36 @@ final case class OntologyCacheHelpersLive(
     } yield response
   }
 
-  override def checkPermissionsForOntologyUpdate(
+  /**
+   * Before an update of an ontology entity, checks that the entity's external IRI, and that of its ontology,
+   * are valid, and checks that the user has permission to update the ontology.
+   *
+   * @param externalOntologyIri the external IRI of the ontology.
+   * @param externalEntityIri   the external IRI of the entity.
+   * @param requestingUser      the user making the request.
+   */
+  def checkOntologyAndEntityIrisForUpdate(
+    externalOntologyIri: SmartIri,
+    externalEntityIri: SmartIri,
+    requestingUser: User,
+  ): Task[Unit] =
+    for {
+      _ <- OntologyHelpers.checkExternalOntologyIriForUpdate(externalOntologyIri)
+      _ <- OntologyHelpers.checkExternalEntityIriForUpdate(externalEntityIri)
+      _ <- checkPermissionsForOntologyUpdate(
+             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema),
+             requestingUser = requestingUser,
+           )
+    } yield ()
+
+  /**
+   * Throws an exception if the requesting user does not have permission to update an ontology.
+   *
+   * @param internalOntologyIri the internal IRI of the ontology.
+   * @param requestingUser      the user making the request.
+   * @return the project IRI.
+   */
+  def checkPermissionsForOntologyUpdate(
     internalOntologyIri: SmartIri,
     requestingUser: User,
   ): Task[SmartIri] =
@@ -348,7 +320,14 @@ final case class OntologyCacheHelpersLive(
 
     } yield projectIri
 
-  override def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: User): Task[Boolean] =
+  /**
+   * Checks whether the requesting user has permission to update an ontology.
+   *
+   * @param internalOntologyIri the internal IRI of the ontology.
+   * @param requestingUser      the user making the request.
+   * @return `true` if the user has permission to update the ontology
+   */
+  def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: User): Task[Boolean] =
     for {
       cacheData <- ontologyCache.getCacheData
 
@@ -364,4 +343,4 @@ final case class OntologyCacheHelpersLive(
     } yield requestingUser.permissions.isProjectAdmin(projectIri.toString) || requestingUser.permissions.isSystemAdmin
 }
 
-object OntologyCacheHelpersLive { val layer = ZLayer.derive[OntologyCacheHelpersLive] }
+object OntologyCacheHelpers { val layer = ZLayer.derive[OntologyCacheHelpers] }
