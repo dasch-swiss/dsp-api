@@ -1854,9 +1854,8 @@ final case class OntologyResponderV2(
              }
 
         // Delete everything in the ontology's named graph.
-        _ <- triplestoreService.query(Update(sparql.v2.txt.deleteOntology(internalOntologyIri)))
-        // Remove the ontology from the cache.
-        _ <- ontologyCache.deleteOntology(internalOntologyIri)
+        _ <- triplestoreService.query(Update(sparql.v2.txt.deleteOntology(internalOntologyIri))) *> ontologyCache
+               .refreshCache()
 
         // Check that the ontology has been deleted.
         maybeOntologyMetadata <- ontologyTriplestoreHelpers.loadOntologyMetadata(internalOntologyIri)

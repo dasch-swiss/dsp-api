@@ -425,7 +425,7 @@ trait OntologyCache {
    *
    * @return an [[OntologyCacheData]]
    */
-  def getCacheData: Task[OntologyCacheData]
+  def getCacheData: UIO[OntologyCacheData]
 
   /**
    * Updates an existing ontology in the cache without updating the cache lookup maps. This should only be used if only the ontology metadata has changed.
@@ -438,14 +438,6 @@ trait OntologyCache {
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2,
   ): Task[OntologyCacheData]
-
-  /**
-   * Deletes an ontology from the cache.
-   *
-   * @param ontologyIri the IRI of the ontology to delete
-   * @return the updated cache data
-   */
-  def deleteOntology(ontologyIri: SmartIri): Task[OntologyCacheData]
 
   /**
    * Updates an existing ontology in the cache and ensures that the sub- and superclasses of a (presumably changed) class get updated correctly.
@@ -860,7 +852,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
    *
    * @return an [[OntologyCacheData]]
    */
-  override def getCacheData: Task[OntologyCacheData] = cacheDataRef.get
+  override def getCacheData: UIO[OntologyCacheData] = cacheDataRef.get
 
   /**
    * Given the IRI of a base class, updates inherited cardinalities in subclasses.
@@ -973,15 +965,6 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
     updatedOntologyData: ReadOntologyV2,
   ): Task[OntologyCacheData] =
     cacheDataRef.updateAndGet(data => data.copy(data.ontologies + (updatedOntologyIri -> updatedOntologyData)))
-
-  /**
-   * Deletes an ontology from the cache.
-   *
-   * @param ontologyIri the IRI of the ontology to delete
-   * @return the updated cache data
-   */
-  override def deleteOntology(ontologyIri: SmartIri): Task[OntologyCacheData] =
-    cacheDataRef.updateAndGet(data => OntologyCache.make(data.ontologies - ontologyIri))
 }
 
 object OntologyCacheLive {

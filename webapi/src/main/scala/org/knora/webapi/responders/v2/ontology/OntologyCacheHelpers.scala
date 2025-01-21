@@ -300,23 +300,17 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache) {
   ): Task[SmartIri] =
     for {
       cacheData <- ontologyCache.getCacheData
-
-      projectIri =
-        cacheData.ontologies
-          .getOrElse(
-            internalOntologyIri,
-            throw NotFoundException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} not found"),
+      projectIri <-
+        ZIO
+          .succeed(cacheData.ontologies.get(internalOntologyIri).flatMap(_.ontologyMetadata.projectIri))
+          .someOrFail(NotFoundException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} not found"))
+      _ <-
+        ZIO
+          .fail(ForbiddenException("Ontologies can be modified only by a project or system admin."))
+          .unless(
+            requestingUser.permissions.isProjectAdmin(projectIri.toString) ||
+              requestingUser.permissions.isSystemAdmin,
           )
-          .ontologyMetadata
-          .projectIri
-          .get
-
-      _ = if (
-            !requestingUser.permissions.isProjectAdmin(projectIri.toString) && !requestingUser.permissions.isSystemAdmin
-          ) {
-            // not a project or system admin
-            throw ForbiddenException("Ontologies can be modified only by a project or system admin.")
-          }
 
     } yield projectIri
 

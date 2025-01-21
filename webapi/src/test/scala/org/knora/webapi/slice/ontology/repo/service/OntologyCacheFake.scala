@@ -16,7 +16,7 @@ import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 
 case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache {
 
-  override def getCacheData: Task[OntologyCacheData] = ref.get
+  override def getCacheData: UIO[OntologyCacheData] = ref.get
 
   def set(data: OntologyCacheData): UIO[Unit] = ref.set(data)
 
@@ -39,14 +39,6 @@ case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache 
   ): Task[OntologyCacheData] = ???
 
   /**
-   * Deletes an ontology from the cache.
-   *
-   * @param ontologyIri the IRI of the ontology to delete
-   * @return the updated cache data
-   */
-  override def deleteOntology(ontologyIri: SmartIri): Task[OntologyCacheData] = ???
-
-  /**
    * Updates an existing ontology in the cache and ensures that the sub- and superclasses of a (presumably changed) class get updated correctly.
    *
    * @param updatedOntologyIri  the IRI of the updated ontology
@@ -64,7 +56,7 @@ case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache 
 object OntologyCacheFake {
 
   def set(data: OntologyCacheData): ZIO[OntologyCacheFake, Nothing, Unit] =
-    ZIO.service[OntologyCacheFake].flatMap(_.set(data))
+    ZIO.serviceWithZIO[OntologyCacheFake](_.set(data))
 
   def withCache(data: OntologyCacheData): ZLayer[Any, Nothing, OntologyCacheFake] = ZLayer.fromZIO {
     for {
