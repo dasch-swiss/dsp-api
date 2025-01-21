@@ -426,17 +426,6 @@ trait OntologyCache {
    */
   def getCacheData: UIO[OntologyCacheData]
 
-  /**
-   * Updates an existing ontology in the cache without updating the cache lookup maps. This should only be used if only the ontology metadata has changed.
-   *
-   * @param updatedOntologyIri  the IRI of the updated ontology
-   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
-   * @return the updated cache data
-   */
-  def cacheUpdatedOntologyWithoutUpdatingMaps(
-    updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2,
-  ): Task[OntologyCacheData]
 }
 
 final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef: Ref[OntologyCacheData])(implicit
@@ -838,18 +827,6 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
    */
   override def getCacheData: UIO[OntologyCacheData] = cacheDataRef.get
 
-  /**
-   * Updates an existing ontology in the cache without updating the cache lookup maps. This should only be used if only the ontology metadata has changed.
-   *
-   * @param updatedOntologyIri  the IRI of the updated ontology
-   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
-   * @return the updated cache data
-   */
-  override def cacheUpdatedOntologyWithoutUpdatingMaps(
-    updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2,
-  ): Task[OntologyCacheData] =
-    cacheDataRef.updateAndGet(data => data.copy(data.ontologies + (updatedOntologyIri -> updatedOntologyData)))
 }
 
 object OntologyCacheLive {

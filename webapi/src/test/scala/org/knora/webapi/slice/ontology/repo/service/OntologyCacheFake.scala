@@ -10,8 +10,6 @@ import zio.UIO
 import zio.ZIO
 import zio.ZLayer
 
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 
 case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache {
@@ -25,18 +23,6 @@ case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache 
    */
   override def refreshCache(): Task[Unit] =
     throw new UnsupportedOperationException("Not possible in tests. Provide the respective test data as Ref.")
-
-  /**
-   * Updates an existing ontology in the cache without updating the cache lookup maps. This should only be used if only the ontology metadata has changed.
-   *
-   * @param updatedOntologyIri  the IRI of the updated ontology
-   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
-   * @return the updated cache data
-   */
-  override def cacheUpdatedOntologyWithoutUpdatingMaps(
-    updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2,
-  ): Task[OntologyCacheData] = ???
 }
 
 object OntologyCacheFake {

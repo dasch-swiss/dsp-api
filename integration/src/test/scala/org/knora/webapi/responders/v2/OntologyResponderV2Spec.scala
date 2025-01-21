@@ -1993,8 +1993,8 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val newObjects = Seq(
         StringLiteralV2.from("has name", Some("en")),
-        StringLiteralV2.from("a nom", Some("fr")),
         StringLiteralV2.from("hat Namen", Some("de")),
+        StringLiteralV2.from("a nom", Some("fr")),
       )
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -2028,8 +2028,8 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val newObjects = Seq(
         StringLiteralV2.from("has name", Some("en")),
-        StringLiteralV2.from("a nom", Some("fr")),
         StringLiteralV2.from("hat Namen", Some("de")),
+        StringLiteralV2.from("a nom", Some("fr")),
       )
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -2091,11 +2091,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val newObjects = Seq(
         StringLiteralV2.from("The name of a Thing", Some("en")),
+        StringLiteralV2.from("Der Name eines Dinges", Some("de")),
         StringLiteralV2.from(
           "Le nom d\\'une chose",
           Some("fr"),
         ), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
-        StringLiteralV2.from("Der Name eines Dinges", Some("de")),
       )
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
@@ -2134,11 +2134,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val newObjects = Seq(
         StringLiteralV2.from("The name of a Thing", Some("en")),
+        StringLiteralV2.from("Der Name eines Dinges", Some("de")),
         StringLiteralV2.from(
           "Le nom d\\'une chose",
           Some("fr"),
         ), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
-        StringLiteralV2.from("Der Name eines Dinges", Some("de")),
       )
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.

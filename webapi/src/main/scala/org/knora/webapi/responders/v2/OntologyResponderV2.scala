@@ -255,7 +255,7 @@ final case class OntologyResponderV2(
    * Checks whether a certain Knora resource or value class is a subclass of another class.
    *
    * @param subClassIri   the IRI of the resource or value class whose subclassOf relations have to be checked.
-   * @param superClassIri the IRI of the resource or value class to check for (whether it is a a super class of `subClassIri` or not).
+   * @param superClassIri the IRI of the resource or value class to check for (whether it is a super class of `subClassIri` or not).
    * @return a [[CheckSubClassResponseV2]].
    */
   private def checkSubClassV2(subClassIri: SmartIri, superClassIri: SmartIri): Task[CheckSubClassResponseV2] =
@@ -263,8 +263,7 @@ final case class OntologyResponderV2(
       cacheData <- ontologyCache.getCacheData
       isSubClass <- ZIO
                       .fromOption(cacheData.classToSuperClassLookup.get(subClassIri))
-                      .map(_.contains(superClassIri))
-                      .orElseFail(BadRequestException(s"Class $subClassIri not found"))
+                      .mapBoth(_ => BadRequestException(s"Class $subClassIri not found"), _.contains(superClassIri))
     } yield CheckSubClassResponseV2(isSubClass)
 
   /**
@@ -288,8 +287,10 @@ final case class OntologyResponderV2(
             )
           ZIO
             .fromOption(labelValueMaybe)
-            .orElseFail(InconsistentRepositoryDataException(s"Resource class $subClassIri has no rdfs:label"))
-            .map(SubClassInfoV2(subClassIri, _))
+            .mapBoth(
+              _ => InconsistentRepositoryDataException(s"Resource class $subClassIri has no rdfs:label"),
+              SubClassInfoV2(subClassIri, _),
+            )
         }
     } yield SubClassesGetResponseV2(subClasses)
 
@@ -465,7 +466,7 @@ final case class OntologyResponderV2(
                                    ontologyComment = createOntologyRequest.comment,
                                    currentTime = currentTime,
                                  )
-        _ <- triplestoreService.query(Update(createOntologySparql))
+        _ <- save(Update(createOntologySparql))
 
         // Check that the update was successful. To do this, we have to undo the SPARQL-escaping of the input.
 
@@ -484,13 +485,6 @@ final case class OntologyResponderV2(
                  ZIO.unless(loadedOntologyMetadata == unescapedNewMetadata)(ZIO.fail(UpdateNotPerformedException()))
                case None => ZIO.fail(UpdateNotPerformedException())
              }
-
-        _ <- // Update the ontology cache with the unescaped metadata.
-          ontologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(
-            internalOntologyIri,
-            ReadOntologyV2(ontologyMetadata = unescapedNewMetadata),
-          )
-
       } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
 
     for {
@@ -535,6 +529,8 @@ final case class OntologyResponderV2(
                     )
     } yield taskResult
   }
+
+  private def save(sparql: Update) = triplestoreService.query(sparql) *> ontologyCache.refreshCache()
 
   /**
    * Changes ontology metadata.
@@ -581,7 +577,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = changeOntologyMetadataRequest.lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql))
+        _ <- save(Update(updateSparql))
 
         // Check that the update was successful. To do this, we have to undo the SPARQL-escaping of the input.
 
@@ -620,15 +616,6 @@ final case class OntologyResponderV2(
                  ZIO.unless(loadedOntologyMetadata == unescapedNewMetadata)(ZIO.fail(UpdateNotPerformedException()))
                case None => ZIO.fail(UpdateNotPerformedException())
              }
-
-        // Update the ontology cache with the unescaped metadata.
-        updatedOntology = cacheData
-                            .ontologies(internalOntologyIri)
-                            .copy(ontologyMetadata = unescapedNewMetadata)
-        _ <- ontologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(
-               internalOntologyIri,
-               updatedOntology,
-             )
 
       } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
 
@@ -683,7 +670,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = deleteOntologyCommentRequestV2.lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql))
+        _ <- save(Update(updateSparql))
 
         // Check that the update was successful.
 
@@ -702,13 +689,6 @@ final case class OntologyResponderV2(
                  ZIO.unless(loadedOntologyMetadata == unescapedNewMetadata)(ZIO.fail(UpdateNotPerformedException()))
                case None => ZIO.fail(UpdateNotPerformedException())
              }
-
-        // Update the ontology cache with the unescaped metadata.
-
-        updatedOntology = cacheData
-                            .ontologies(internalOntologyIri)
-                            .copy(ontologyMetadata = unescapedNewMetadata)
-        _ <- ontologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
       } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
 
     for {
@@ -810,7 +790,7 @@ final case class OntologyResponderV2(
                                         cacheData,
                                       )
                                       .toZIO
-        (internalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = cardinalitiesCheckResult
+        (internalClassDefWithLinkValueProps, _) = cardinalitiesCheckResult
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ <- ZIO.attempt(
@@ -821,41 +801,8 @@ final case class OntologyResponderV2(
                ),
              )
 
-        // Prepare to update the ontology cache, undoing the SPARQL-escaping of the input.
-
-        propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
-
-        inheritedCardinalities =
-          cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
-            internalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
-          }
-
-        unescapedClassDefWithLinkValueProps = internalClassDefWithLinkValueProps.unescape
-
-        readClassInfo = ReadClassInfoV2(
-                          entityInfoContent = unescapedClassDefWithLinkValueProps,
-                          allBaseClasses = allBaseClassIris,
-                          isResourceClass = true,
-                          canBeInstantiated = true,
-                          inheritedCardinalities = inheritedCardinalities,
-                          knoraResourceProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isKnoraResourceProperty(propertyIri, cacheData),
-                          ),
-                          linkProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isLinkProp(propertyIri, cacheData),
-                          ),
-                          linkValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isLinkValueProp(propertyIri, cacheData),
-                          ),
-                          fileValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                            OntologyHelpers.isFileValueProp(propertyIri, cacheData),
-                          ),
-                        )
-
         // Add the SPARQL-escaped class to the triplestore.
-
         currentTime = Instant.now
-
         updateSparql = sparql.v2.txt.createClass(
                          ontologyNamedGraphIri = internalOntologyIri,
                          ontologyIri = internalOntologyIri,
@@ -863,7 +810,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = createClassRequest.lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
+        _ <- save(Update(updateSparql))
 
         // Read the data back from the cache.
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
@@ -984,7 +931,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = changeGuiOrderRequest.lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
+        _ <- save(Update(updateSparql))
 
         // Read the data back from the cache.
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
@@ -1119,7 +1066,7 @@ final case class OntologyResponderV2(
                                       existingLinkPropsToKeep = existingLinkPropsToKeep,
                                     )
                                     .toZIO
-        (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = cardinalityCheckResult
+        (newInternalClassDefWithLinkValueProps, _) = cardinalityCheckResult
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ <- ZIO.attempt(
@@ -1130,35 +1077,7 @@ final case class OntologyResponderV2(
                ),
              )
 
-        // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
-        // isn't any text to escape in cardinalities.)
-
-        propertyIrisOfAllCardinalities = cardinalitiesForClassWithInheritance.keySet
-
-        inheritedCardinalities =
-          cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
-            newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
-          }
-
-        readClassInfo = ReadClassInfoV2(
-                          entityInfoContent = newInternalClassDefWithLinkValueProps,
-                          allBaseClasses = allBaseClassIris,
-                          isResourceClass = true,
-                          canBeInstantiated = true,
-                          inheritedCardinalities = inheritedCardinalities,
-                          knoraResourceProperties = propertyIrisOfAllCardinalities.filter(
-                            OntologyHelpers.isKnoraResourceProperty(_, cacheData),
-                          ),
-                          linkProperties =
-                            propertyIrisOfAllCardinalities.filter(OntologyHelpers.isLinkProp(_, cacheData)),
-                          linkValueProperties =
-                            propertyIrisOfAllCardinalities.filter(OntologyHelpers.isLinkValueProp(_, cacheData)),
-                          fileValueProperties =
-                            propertyIrisOfAllCardinalities.filter(OntologyHelpers.isFileValueProp(_, cacheData)),
-                        )
-
         // Add the cardinalities to the class definition in the triplestore.
-
         currentTime = Instant.now
         cardinalitiesToAdd =
           newInternalClassDefWithLinkValueProps.directCardinalities -- existingClassDef.directCardinalities.keySet
@@ -1171,7 +1090,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = addCardinalitiesRequest.lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
+        _ <- save(Update(updateSparql))
         // Read the data back from the cache.
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                       classIris = Set(internalClassIri),
@@ -1375,7 +1294,7 @@ final case class OntologyResponderV2(
       currentTime = timeOfUpdate,
     )
     for {
-      _              <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
+      _              <- save(Update(updateSparql))
       _              <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateAfterUpdate(ontologyIri, timeOfUpdate)
       loadedClassDef <- ontologyTriplestoreHelpers.loadClassDefinition(classIri)
       _ <- ZIO.when(loadedClassDef != newReadClassInfo.entityInfoContent) {
@@ -1528,7 +1447,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = deleteClassRequest.lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
+        _ <- save(Update(updateSparql))
         updatedOntology = ontology.copy(
                             ontologyMetadata = ontology.ontologyMetadata.copy(
                               lastModificationDate = Some(currentTime),
@@ -1669,7 +1588,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = deletePropertyRequest.lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
+        _ <- save(Update(updateSparql))
 
         propertiesToRemoveFromCache = Set(internalPropertyIri) ++ maybeInternalLinkValuePropertyIri
 
@@ -1761,8 +1680,7 @@ final case class OntologyResponderV2(
              }
 
         // Delete everything in the ontology's named graph.
-        _ <- triplestoreService.query(Update(sparql.v2.txt.deleteOntology(internalOntologyIri))) *> ontologyCache
-               .refreshCache()
+        _ <- save(Update(sparql.v2.txt.deleteOntology(internalOntologyIri)))
 
         // Check that the ontology has been deleted.
         maybeOntologyMetadata <- ontologyTriplestoreHelpers.loadOntologyMetadata(internalOntologyIri)
@@ -1791,7 +1709,7 @@ final case class OntologyResponderV2(
   /**
    * Creates a property in an existing ontology.
    *
-   * @param createPropertyRequest the request to create the property.
+   * @param req the request to create the property.
    * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new property.
    */
   def createProperty(req: CreatePropertyRequestV2): Task[ReadOntologyV2] =
@@ -2002,7 +1920,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
+        _ <- save(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -2131,7 +2049,7 @@ final case class OntologyResponderV2(
                        lastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
                        currentTime = currentTime,
                      )
-      _ <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
+      _ <- save(Update(updateSparql))
 
       // Read the data back from the cache.
 
@@ -2175,7 +2093,7 @@ final case class OntologyResponderV2(
   private def changePropertyLabelsOrComments(
     changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2,
   ): Task[ReadOntologyV2] = {
-    def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] = {
+    def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] =
       for {
         cacheData <- ontologyCache.getCacheData
 
@@ -2199,8 +2117,10 @@ final case class OntologyResponderV2(
             val linkValuePropertyIri = internalPropertyIri.fromLinkPropToLinkValueProp
             ZIO
               .fromOption(ontology.properties.get(linkValuePropertyIri))
-              .orElseFail(InconsistentRepositoryDataException(s"Link value property $linkValuePropertyIri not found"))
-              .map(Some(_))
+              .mapBoth(
+                _ => InconsistentRepositoryDataException(s"Link value property $linkValuePropertyIri not found"),
+                Some(_),
+              )
           } else {
             ZIO.none
           }
@@ -2219,7 +2139,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = changePropertyLabelsOrCommentsRequest.lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql))
+        _ <- save(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -2247,73 +2167,13 @@ final case class OntologyResponderV2(
                ZIO.fail(InconsistentRepositoryDataException(msg))
              }
 
-        maybeLoadedLinkValuePropertyDefFuture: Option[Task[PropertyInfoContentV2]] =
-          maybeCurrentLinkValueReadPropertyInfo.map { linkValueReadPropertyInfo =>
-            ontologyTriplestoreHelpers.loadPropertyDefinition(linkValueReadPropertyInfo.entityInfoContent.propertyIri)
-          }
-
-        maybeLoadedLinkValuePropertyDef <- ZIO.collectAll(maybeLoadedLinkValuePropertyDefFuture)
-
-        maybeUnescapedNewLinkValuePropertyDef <-
-          maybeLoadedLinkValuePropertyDef.map { loadedLinkValuePropertyDef =>
-            val unescapedNewLinkPropertyDef = maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.copy(
-              predicates =
-                maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.predicates + (changePropertyLabelsOrCommentsRequest.predicateToUpdate -> unescapedNewLabelOrCommentPredicate),
-            )
-
-            if (loadedLinkValuePropertyDef != unescapedNewLinkPropertyDef) {
-              ZIO.fail(
-                InconsistentRepositoryDataException(
-                  s"Attempted to save link value property definition $unescapedNewLinkPropertyDef, but $loadedLinkValuePropertyDef was saved",
-                ),
-              )
-            } else {
-
-              ZIO.succeed(Some(unescapedNewLinkPropertyDef))
-            }
-          }.getOrElse(ZIO.none)
-
-        // Update the ontology cache, using the unescaped definition(s).
-
-        newReadPropertyInfo = ReadPropertyInfoV2(
-                                entityInfoContent = unescapedNewPropertyDef,
-                                isEditable = true,
-                                isResourceProp = true,
-                                isLinkProp = currentReadPropertyInfo.isLinkProp,
-                              )
-
-        maybeLinkValuePropertyCacheEntry =
-          maybeUnescapedNewLinkValuePropertyDef.map { unescapedNewLinkPropertyDef =>
-            unescapedNewLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
-              entityInfoContent = unescapedNewLinkPropertyDef,
-              isEditable = true,
-              isResourceProp = true,
-              isLinkValueProp = true,
-            )
-          }
-
-        updatedOntologyMetadata = ontology.ontologyMetadata.copy(
-                                    lastModificationDate = Some(currentTime),
-                                  )
-
-        updatedOntology =
-          ontology.copy(
-            ontologyMetadata = updatedOntologyMetadata,
-            properties =
-              ontology.properties ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> newReadPropertyInfo),
-          )
-
-        _ <- ontologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
-
         // Read the data back from the cache.
-
         response <- getPropertyDefinitionsFromOntologyV2(
                       propertyIris = Set(internalPropertyIri),
                       allLanguages = true,
                       requestingUser = changePropertyLabelsOrCommentsRequest.requestingUser,
                     )
       } yield response
-    }
 
     for {
       requestingUser <- ZIO.succeed(changePropertyLabelsOrCommentsRequest.requestingUser)
@@ -2377,7 +2237,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = changeClassLabelsOrCommentsRequest.lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql))
+        _ <- save(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -2402,20 +2262,7 @@ final case class OntologyResponderV2(
                ZIO.fail(InconsistentRepositoryDataException(msg))
              }
 
-        // Update the ontology cache, using the unescaped definition(s).
-        newReadClassInfo = currentReadClassInfo.copy(entityInfoContent = unescapedNewClassDef)
-
-        updatedOntology = ontology.copy(
-                            ontologyMetadata = ontology.ontologyMetadata.copy(
-                              lastModificationDate = Some(currentTime),
-                            ),
-                            classes = ontology.classes + (internalClassIri -> newReadClassInfo),
-                          )
-
-        _ <- ontologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
-
         // Read the data back from the cache.
-
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                       classIris = Set(internalClassIri),
                       allLanguages = true,
@@ -2467,21 +2314,6 @@ final case class OntologyResponderV2(
                deletePropertyCommentRequest.lastModificationDate,
              )
 
-        // If this is a link property, also delete the comment of the corresponding link value property.
-        maybeLinkValueOfPropertyToUpdate <-
-          if (propertyToUpdate.isLinkProp) {
-            val linkValuePropertyIri = internalPropertyIri.fromLinkPropToLinkValueProp
-            ZIO
-              .fromOption(ontology.properties.get(linkValuePropertyIri))
-              .orElseFail {
-                val msg = s"Link value property $linkValuePropertyIri not found"
-                InconsistentRepositoryDataException(msg)
-              }
-              .map(Some(_))
-          } else {
-            ZIO.none
-          }
-
         maybeLinkValueOfPropertyToUpdateIri =
           if (propertyToUpdate.isLinkProp) { Some(internalPropertyIri.fromLinkPropToLinkValueProp) }
           else { None }
@@ -2497,7 +2329,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = deletePropertyCommentRequest.lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql))
+        _ <- save(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -2518,60 +2350,7 @@ final case class OntologyResponderV2(
                ZIO.fail(InconsistentRepositoryDataException(msg))
              }
 
-        maybeLoadedLinkValuePropertyDefFuture: Option[Task[PropertyInfoContentV2]] =
-          maybeLinkValueOfPropertyToUpdate.map { (linkValueReadPropertyInfo: ReadPropertyInfoV2) =>
-            ontologyTriplestoreHelpers.loadPropertyDefinition(linkValueReadPropertyInfo.entityInfoContent.propertyIri)
-          }
-
-        maybeLoadedLinkValuePropertyDef <- ZIO.collectAll(maybeLoadedLinkValuePropertyDefFuture)
-
-        maybeNewLinkValuePropertyDef <-
-          maybeLoadedLinkValuePropertyDef.map { (loadedLinkValuePropertyDef: PropertyInfoContentV2) =>
-            val newLinkPropertyDef: PropertyInfoContentV2 =
-              maybeLinkValueOfPropertyToUpdate.get.entityInfoContent.copy(
-                predicates = maybeLinkValueOfPropertyToUpdate.get.entityInfoContent.predicates
-                  .-(OntologyConstants.Rdfs.Comment.toSmartIri),
-              )
-            if (loadedLinkValuePropertyDef != newLinkPropertyDef) {
-              val msg =
-                s"Attempted to save link value property definition $newLinkPropertyDef, but $loadedLinkValuePropertyDef was saved"
-              ZIO.fail(InconsistentRepositoryDataException(msg))
-            } else {
-              ZIO.some(newLinkPropertyDef)
-            }
-          }.getOrElse(ZIO.none)
-
-        // Update the ontology cache using the new property definition.
-        newReadPropertyInfo = ReadPropertyInfoV2(
-                                entityInfoContent = loadedPropertyDef,
-                                isEditable = true,
-                                isResourceProp = true,
-                                isLinkProp = propertyToUpdate.isLinkProp,
-                              )
-
-        maybeLinkValuePropertyCacheEntry =
-          maybeNewLinkValuePropertyDef.map { (newLinkPropertyDef: PropertyInfoContentV2) =>
-            newLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
-              entityInfoContent = newLinkPropertyDef,
-              isEditable = true,
-              isResourceProp = true,
-              isLinkValueProp = true,
-            )
-          }
-
-        updatedOntologyMetadata = ontology.ontologyMetadata.copy(lastModificationDate = Some(currentTime))
-
-        updatedOntology: ReadOntologyV2 =
-          ontology.copy(
-            ontologyMetadata = updatedOntologyMetadata,
-            properties =
-              ontology.properties ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> newReadPropertyInfo),
-          )
-
-        _ <- ontologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
-
         // Read the data back from the cache.
-
         response <- getPropertyDefinitionsFromOntologyV2(
                       propertyIris = Set(internalPropertyIri),
                       allLanguages = true,
@@ -2666,7 +2445,7 @@ final case class OntologyResponderV2(
                            lastModificationDate = deleteClassCommentRequest.lastModificationDate,
                            currentTime = currentTime,
                          )
-        _ <- triplestoreService.query(Update(updateSparql))
+        _ <- save(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -2686,25 +2465,12 @@ final case class OntologyResponderV2(
                ZIO.fail(InconsistentRepositoryDataException(msg))
              }
 
-        // Update the ontology cache using the new class definition.
-        newReadClassInfo        = classToUpdate.copy(entityInfoContent = classDefWithoutComment)
-        updatedOntologyMetadata = ontology.ontologyMetadata.copy(lastModificationDate = Some(currentTime))
-
-        updatedOntology: ReadOntologyV2 =
-          ontology.copy(
-            ontologyMetadata = updatedOntologyMetadata,
-            classes = ontology.classes + (internalClassIri -> newReadClassInfo),
-          )
-
-        _ <- ontologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
-
         // Read the data back from the cache.
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                       classIris = Set(internalClassIri),
                       allLanguages = true,
                       requestingUser = deleteClassCommentRequest.requestingUser,
                     )
-
       } yield response
 
     for {
