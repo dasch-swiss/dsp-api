@@ -863,30 +863,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = createClassRequest.lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql))
-
-        // Check that the ontology's last modification date was updated.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
-
-        // Check that the data that was saved corresponds to the data that was submitted.
-        loadedClassDef <- ontologyTriplestoreHelpers.loadClassDefinition(internalClassIri)
-
-        _ <- ZIO.when(loadedClassDef != unescapedClassDefWithLinkValueProps) {
-               val msg =
-                 s"Attempted to save class definition $unescapedClassDefWithLinkValueProps, but $loadedClassDef was saved"
-               ZIO.fail(InconsistentRepositoryDataException(msg))
-             }
-
-        // Update the cache.
-
-        updatedOntology = ontology.copy(
-                            ontologyMetadata = ontology.ontologyMetadata.copy(
-                              lastModificationDate = Some(currentTime),
-                            ),
-                            classes = ontology.classes + (internalClassIri -> readClassInfo),
-                          )
-
-        _ <- ontologyCache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+        _ <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
 
         // Read the data back from the cache.
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
@@ -925,7 +902,7 @@ final case class OntologyResponderV2(
    * @return the updated class definition.
    */
   private def changeGuiOrder(changeGuiOrderRequest: ChangeGuiOrderRequestV2): Task[ReadOntologyV2] = {
-    def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] = {
+    def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] =
       for {
         cacheData                           <- ontologyCache.getCacheData
         internalClassDef: ClassInfoContentV2 = changeGuiOrderRequest.classInfoContent.toOntologySchema(InternalSchema)
@@ -1007,30 +984,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = changeGuiOrderRequest.lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql))
-
-        // Check that the ontology's last modification date was updated.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
-
-        // Check that the data that was saved corresponds to the data that was submitted.
-        loadedClassDef <- ontologyTriplestoreHelpers.loadClassDefinition(internalClassIri)
-
-        _ <- ZIO.when(loadedClassDef != newReadClassInfo.entityInfoContent) {
-               val msg =
-                 s"Attempted to save class definition ${newReadClassInfo.entityInfoContent}, but $loadedClassDef was saved"
-               ZIO.fail(InconsistentRepositoryDataException(msg))
-             }
-
-        // Update the cache.
-
-        updatedOntology = ontology.copy(
-                            ontologyMetadata = ontology.ontologyMetadata.copy(
-                              lastModificationDate = Some(currentTime),
-                            ),
-                            classes = ontology.classes + (internalClassIri -> newReadClassInfo),
-                          )
-        // Update subclasses and write the cache.
-        _ <- ontologyCache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+        _ <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
 
         // Read the data back from the cache.
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
@@ -1040,7 +994,6 @@ final case class OntologyResponderV2(
                     )
 
       } yield response
-    }
 
     for {
       requestingUser <- ZIO.succeed(changeGuiOrderRequest.requestingUser)
@@ -1218,31 +1171,7 @@ final case class OntologyResponderV2(
                          lastModificationDate = addCardinalitiesRequest.lastModificationDate,
                          currentTime = currentTime,
                        )
-        _ <- triplestoreService.query(Update(updateSparql))
-
-        // Check that the ontology's last modification date was updated.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
-
-        // Check that the data that was saved corresponds to the data that was submitted.
-        loadedClassDef <- ontologyTriplestoreHelpers.loadClassDefinition(internalClassIri)
-
-        _ <- ZIO.when(loadedClassDef != newInternalClassDefWithLinkValueProps) {
-               val msg =
-                 s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved"
-               ZIO.fail(InconsistentRepositoryDataException(msg))
-             }
-
-        // Update subclasses and write the cache.
-
-        updatedOntology = ontology.copy(
-                            ontologyMetadata = ontology.ontologyMetadata.copy(
-                              lastModificationDate = Some(currentTime),
-                            ),
-                            classes = ontology.classes + (internalClassIri -> readClassInfo),
-                          )
-
-        _ <- ontologyCache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
-
+        _ <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
         // Read the data back from the cache.
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                       classIris = Set(internalClassIri),
@@ -1421,7 +1350,6 @@ final case class OntologyResponderV2(
     val classIri     = request.classInfoContent.classIri.toOntologySchema(InternalSchema)
     for {
       _ <- replaceClassCardinalitiesInTripleStore(request, newReadClassInfo, timeOfUpdate)
-      _ <- replaceClassCardinalitiesInOntologyCache(request, newReadClassInfo, timeOfUpdate)
       // Return the response with the new data from the cache
       response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                     classIris = Set(classIri),
@@ -1447,7 +1375,7 @@ final case class OntologyResponderV2(
       currentTime = timeOfUpdate,
     )
     for {
-      _              <- triplestoreService.query(Update(updateSparql))
+      _              <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
       _              <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateAfterUpdate(ontologyIri, timeOfUpdate)
       loadedClassDef <- ontologyTriplestoreHelpers.loadClassDefinition(classIri)
       _ <- ZIO.when(loadedClassDef != newReadClassInfo.entityInfoContent) {
@@ -1455,27 +1383,6 @@ final case class OntologyResponderV2(
                s"Attempted to save class definition ${newReadClassInfo.entityInfoContent}, but $loadedClassDef was saved instead."
              ZIO.fail(InconsistentRepositoryDataException(msg))
            }
-    } yield ()
-  }
-
-  private def replaceClassCardinalitiesInOntologyCache(
-    request: ReplaceClassCardinalitiesRequestV2,
-    newReadClassInfo: ReadClassInfoV2,
-    timeOfUpdate: Instant,
-  ): Task[Unit] = {
-    val classIriExternal    = request.classInfoContent.classIri
-    val classIri            = classIriExternal.toOntologySchema(InternalSchema)
-    val ontologyIriExternal = classIriExternal.getOntologyFromEntity
-    val ontologyIri         = classIri.getOntologyFromEntity
-    for {
-      ontology <- ontologyRepo
-                    .findById(ontologyIri.toInternalIri)
-                    .flatMap(ZIO.fromOption(_))
-                    .orElseFail(BadRequestException(s"Ontology $ontologyIriExternal does not exist."))
-      updatedOntologyMetaData = ontology.ontologyMetadata.copy(lastModificationDate = Some(timeOfUpdate))
-      updatedOntologyClasses  = ontology.classes + (classIri -> newReadClassInfo)
-      updatedOntology         = ontology.copy(ontologyMetadata = updatedOntologyMetaData, classes = updatedOntologyClasses)
-      _                      <- ontologyCache.cacheUpdatedOntologyWithClass(ontologyIri, updatedOntology, classIri)
     } yield ()
   }
 

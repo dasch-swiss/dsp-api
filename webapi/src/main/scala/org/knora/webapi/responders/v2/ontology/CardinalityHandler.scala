@@ -10,7 +10,6 @@ import zio.*
 import java.time.Instant
 
 import dsp.errors.BadRequestException
-import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -317,35 +316,9 @@ final case class CardinalityHandler(
                        currentTime = currentTime,
                      )
 
-      _ <- triplestoreService.query(Update(updateSparql))
-
-      // Check that the ontology's last modification date was updated.
-      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
-
-      // Check that the data that was saved corresponds to the data that was submitted.
-
-      loadedClassDef <- ontologyTriplestoreHelpers.loadClassDefinition(internalClassIri)
-
-      _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
-            throw InconsistentRepositoryDataException(
-              s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, " +
-                s"but $loadedClassDef was saved",
-            )
-          }
-
-      // Update subclasses and write the cache.
-
-      updatedOntology = ontology.copy(
-                          ontologyMetadata = ontology.ontologyMetadata.copy(
-                            lastModificationDate = Some(currentTime),
-                          ),
-                          classes = ontology.classes + (internalClassIri -> readClassInfo),
-                        )
-
-      _ <- ontologyCache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+      _ <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
 
       // Read the data back from the cache.
-
       response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                     Set(internalClassIri),
                     allLanguages = true,

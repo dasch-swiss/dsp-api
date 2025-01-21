@@ -37,20 +37,6 @@ case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache 
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2,
   ): Task[OntologyCacheData] = ???
-
-  /**
-   * Updates an existing ontology in the cache and ensures that the sub- and superclasses of a (presumably changed) class get updated correctly.
-   *
-   * @param updatedOntologyIri  the IRI of the updated ontology
-   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
-   * @param updatedClassIri     the IRI of the changed class
-   * @return the updated cache data
-   */
-  override def cacheUpdatedOntologyWithClass(
-    updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2,
-    updatedClassIri: SmartIri,
-  ): Task[OntologyCacheData] = ???
 }
 
 object OntologyCacheFake {
