@@ -26,23 +26,11 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
-trait OntologyTriplestoreHelpers {
-
-  /**
-   * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].
-   *
-   * @param classIri the IRI of the class to be loaded.
-   * @return a [[ClassInfoContentV2]] representing the class definition.
-   */
-  def loadClassDefinition(classIri: SmartIri): Task[ClassInfoContentV2]
-
-  /**
-   * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
-   *
-   * @param propertyIri the IRI of the property to be loaded.
-   * @return a [[PropertyInfoContentV2]] representing the property definition.
-   */
-  def loadPropertyDefinition(propertyIri: SmartIri): Task[PropertyInfoContentV2]
+final case class OntologyTriplestoreHelpers(
+  features: Features,
+  triplestore: TriplestoreService,
+  stringFormatter: StringFormatter,
+) {
 
   /**
    * Reads an ontology's metadata.
@@ -50,50 +38,7 @@ trait OntologyTriplestoreHelpers {
    * @param internalOntologyIri the ontology's internal IRI.
    * @return an [[OntologyMetadataV2]], or [[None]] if the ontology is not found.
    */
-  def loadOntologyMetadata(internalOntologyIri: SmartIri): Task[Option[OntologyMetadataV2]]
-
-  /**
-   * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
-   * an error message fitting for the "before update" case.
-   *
-   * @param internalOntologyIri          the internal IRI of the ontology.
-   * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
-   * @return a failed Future if the expected last modification date is not found.
-   */
-  def checkOntologyLastModificationDateBeforeUpdate(
-    internalOntologyIri: SmartIri,
-    expectedLastModificationDate: Instant,
-  ): Task[Unit]
-
-  /**
-   * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
-   * an error message fitting for the "after update" case.
-   *
-   * @param internalOntologyIri          the internal IRI of the ontology.
-   * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
-   * @return a failed Future if the expected last modification date is not found.
-   */
-  def checkOntologyLastModificationDateAfterUpdate(
-    internalOntologyIri: SmartIri,
-    expectedLastModificationDate: Instant,
-  ): Task[Unit]
-
-  /**
-   * Gets the set of subjects that refer to an ontology or its entities.
-   *
-   * @param ontology the ontology.
-   * @return the set of subjects that refer to the ontology or its entities.
-   */
-  def getSubjectsUsingOntology(ontology: ReadOntologyV2): Task[Set[IRI]]
-}
-
-final case class OntologyTriplestoreHelpersLive(
-  features: Features,
-  triplestore: TriplestoreService,
-  stringFormatter: StringFormatter,
-) extends OntologyTriplestoreHelpers {
-
-  override def loadOntologyMetadata(internalOntologyIri: SmartIri): Task[Option[OntologyMetadataV2]] = {
+  def loadOntologyMetadata(internalOntologyIri: SmartIri): Task[Option[OntologyMetadataV2]] = {
     for {
       _ <- ZIO.when(!internalOntologyIri.getOntologySchema.contains(InternalSchema)) {
              ZIO.fail(AssertionException(s"Expected an internal ontology IRI: $internalOntologyIri"))
@@ -250,7 +195,15 @@ final case class OntologyTriplestoreHelpersLive(
           .when(!disableLastModificationDateCheck && existingLastModificationDate != expectedLastModificationDate)
     } yield ()
 
-  override def checkOntologyLastModificationDateBeforeUpdate(
+  /**
+   * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
+   * an error message fitting for the "before update" case.
+   *
+   * @param internalOntologyIri          the internal IRI of the ontology.
+   * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
+   * @return a failed Future if the expected last modification date is not found.
+   */
+  def checkOntologyLastModificationDateBeforeUpdate(
     internalOntologyIri: SmartIri,
     expectedLastModificationDate: Instant,
   ): Task[Unit] =
@@ -263,7 +216,15 @@ final case class OntologyTriplestoreHelpersLive(
       ),
     )
 
-  override def checkOntologyLastModificationDateAfterUpdate(
+  /**
+   * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
+   * an error message fitting for the "after update" case.
+   *
+   * @param internalOntologyIri          the internal IRI of the ontology.
+   * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
+   * @return a failed Future if the expected last modification date is not found.
+   */
+  def checkOntologyLastModificationDateAfterUpdate(
     internalOntologyIri: SmartIri,
     expectedLastModificationDate: Instant,
   ): Task[Unit] =
@@ -276,7 +237,13 @@ final case class OntologyTriplestoreHelpersLive(
       ),
     )
 
-  override def getSubjectsUsingOntology(ontology: ReadOntologyV2): Task[Set[IRI]] =
+  /**
+   * Gets the set of subjects that refer to an ontology or its entities.
+   *
+   * @param ontology the ontology.
+   * @return the set of subjects that refer to the ontology or its entities.
+   */
+  def getSubjectsUsingOntology(ontology: ReadOntologyV2): Task[Set[IRI]] =
     for {
       isOntologyUsedSparql <- ZIO.attempt(
                                 sparql.v2.txt
@@ -292,7 +259,13 @@ final case class OntologyTriplestoreHelpersLive(
       subjects = isOntologyUsedResponse.getColOrThrow("s").toSet
     } yield subjects
 
-  override def loadPropertyDefinition(propertyIri: SmartIri): Task[PropertyInfoContentV2] =
+  /**
+   * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
+   *
+   * @param propertyIri the IRI of the property to be loaded.
+   * @return a [[PropertyInfoContentV2]] representing the property definition.
+   */
+  def loadPropertyDefinition(propertyIri: SmartIri): Task[PropertyInfoContentV2] =
     triplestore
       .query(Construct(sparql.v2.txt.getPropertyDefinition(propertyIri)))
       .flatMap(_.asExtended(stringFormatter))
@@ -300,11 +273,17 @@ final case class OntologyTriplestoreHelpersLive(
         OntologyHelpers.constructResponseToPropertyDefinition(propertyIri, constructResponse)(stringFormatter),
       )
 
-  override def loadClassDefinition(classIri: SmartIri): Task[ClassInfoContentV2] =
+  /**
+   * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].
+   *
+   * @param classIri the IRI of the class to be loaded.
+   * @return a [[ClassInfoContentV2]] representing the class definition.
+   */
+  def loadClassDefinition(classIri: SmartIri): Task[ClassInfoContentV2] =
     triplestore
       .query(Construct(sparql.v2.txt.getClassDefinition(classIri)))
       .flatMap(_.asExtended(stringFormatter))
       .map(OntologyHelpers.constructResponseToClassDefinition(classIri, _)(stringFormatter))
 }
 
-object OntologyTriplestoreHelpersLive { val layer = ZLayer.derive[OntologyTriplestoreHelpersLive] }
+object OntologyTriplestoreHelpers { val layer = ZLayer.derive[OntologyTriplestoreHelpers] }

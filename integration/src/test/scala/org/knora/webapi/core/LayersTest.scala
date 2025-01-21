@@ -30,7 +30,6 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpersLive
 import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
-import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpersLive
 import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
@@ -202,7 +201,7 @@ object LayersTest {
       OntologyCacheHelpersLive.layer,
       OntologyRepoLive.layer,
       OntologyServiceLive.layer,
-      OntologyTriplestoreHelpersLive.layer,
+      OntologyTriplestoreHelpers.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,
