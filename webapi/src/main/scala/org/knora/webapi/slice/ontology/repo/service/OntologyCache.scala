@@ -418,7 +418,7 @@ trait OntologyCache {
   /**
    * Loads and caches all ontology information.
    */
-  def loadOntologies(): Task[Unit]
+  def refreshCache(): Task[Unit]
 
   /**
    * Gets the ontology data from the cache.
@@ -448,15 +448,6 @@ trait OntologyCache {
   def deleteOntology(ontologyIri: SmartIri): Task[OntologyCacheData]
 
   /**
-   * Updates an existing ontology in the cache. If a class has changed, use `cacheUpdatedOntologyWithClass()`.
-   *
-   * @param updatedOntologyIri  the IRI of the updated ontology
-   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
-   * @return the updated cache data
-   */
-  def cacheUpdatedOntology(updatedOntologyIri: SmartIri, updatedOntologyData: ReadOntologyV2): Task[OntologyCacheData]
-
-  /**
    * Updates an existing ontology in the cache and ensures that the sub- and superclasses of a (presumably changed) class get updated correctly.
    *
    * @param updatedOntologyIri  the IRI of the updated ontology
@@ -480,7 +471,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
   /**
    * Loads and caches all ontology information.
    */
-  override def loadOntologies(): Task[Unit] =
+  override def refreshCache(): Task[Unit] =
     for {
       // Get all ontology metadata.
       _                           <- ZIO.logInfo(s"Loading ontologies into cache")
@@ -969,19 +960,6 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
         OntologyCache.make(data.ontologies + (updatedOntologyIri -> updatedOntologyData)),
       )
     }
-
-  /**
-   * Updates an existing ontology in the cache. If a class has changed, use `cacheUpdatedOntologyWithClass()`.
-   *
-   * @param updatedOntologyIri  the IRI of the updated ontology
-   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
-   * @return the updated cache data
-   */
-  override def cacheUpdatedOntology(
-    updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2,
-  ): Task[OntologyCacheData] =
-    cacheDataRef.updateAndGet(data => OntologyCache.make(data.ontologies + (updatedOntologyIri -> updatedOntologyData)))
 
   /**
    * Updates an existing ontology in the cache without updating the cache lookup maps. This should only be used if only the ontology metadata has changed.

@@ -451,7 +451,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(!cachedMetadataResponse.ontologies.exists(_.ontologyIri == fooIri.get.toSmartIri))
 
       // Reload the ontologies from the triplestore and check again.
-      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[OntologyCache](_.loadOntologies()))
+      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[OntologyCache](_.refreshCache()))
 
       appActor ! OntologyMetadataGetByProjectRequestV2()
 
@@ -792,7 +792,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Reload the ontology cache and see if we get the same result.
       UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies()),
+        ZIO.serviceWithZIO[OntologyCache](_.refreshCache()),
       )
 
       appActor ! PropertiesGetRequestV2(
@@ -896,7 +896,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Reload the ontology cache and see if we get the same result.
       UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies()),
+        ZIO.serviceWithZIO[OntologyCache](_.refreshCache()),
       )
 
       appActor ! PropertiesGetRequestV2(
@@ -3735,7 +3735,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Reload the ontology cache and see if we get the same result.
       UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies()),
+        ZIO.serviceWithZIO[OntologyCache](_.refreshCache()),
       )
 
       appActor ! linkPropGetRequest

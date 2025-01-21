@@ -65,7 +65,7 @@ final case class AppServer(
   private def populateOntologyCaches(requiresRepository: Boolean): Task[Unit] =
     for {
       _ <- state.set(AppState.LoadingOntologies)
-      _ <- ontologyCache.loadOntologies().when(requiresRepository)
+      _ <- ontologyCache.refreshCache().when(requiresRepository)
       _ <- state.set(AppState.OntologiesReady)
     } yield ()
 
