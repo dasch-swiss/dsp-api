@@ -1758,7 +1758,7 @@ final case class OntologyResponderV2(
                      ),
                    )
                    .whenZIO(iriService.isEntityUsed(internalLinkValuePropertyIri))
-               case None => ZIO.succeed(())
+               case None => ZIO.unit
              }
 
         // Delete the property from the triplestore.
