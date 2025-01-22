@@ -12,7 +12,6 @@ import zio.prelude.Validation
 import java.time.Instant
 import java.util.UUID
 import scala.collection.immutable
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -419,11 +418,13 @@ final case class OntologyResponderV2(
   def createOntology(createOntologyRequest: CreateOntologyRequestV2): Task[ReadOntologyMetadataV2] = {
     def makeTaskFuture(internalOntologyIri: SmartIri): Task[ReadOntologyMetadataV2] =
       for {
-        _ <- ontologyRepo.findById(internalOntologyIri.toInternalIri).someOrFail {
-               val msg =
-                 s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} cannot be created, because it already exists"
-               BadRequestException(msg)
-             }
+        _ <- ontologyRepo
+               .findById(internalOntologyIri.toInternalIri)
+               .filterOrFail(_.isEmpty)(
+                 BadRequestException(
+                   s"Ontology ${internalOntologyIri.toComplexSchema} cannot be created, because it already exists",
+                 ),
+               )
 
         // If this is a shared ontology, make sure it's in the default shared ontologies project.
         _ <-
