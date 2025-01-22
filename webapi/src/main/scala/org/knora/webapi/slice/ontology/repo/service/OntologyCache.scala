@@ -417,7 +417,7 @@ trait OntologyCache {
   /**
    * Loads and caches all ontology information.
    */
-  def refreshCache(): Task[Unit]
+  def refreshCache(): Task[OntologyCacheData]
 
   /**
    * Gets the ontology data from the cache.
@@ -425,7 +425,6 @@ trait OntologyCache {
    * @return an [[OntologyCacheData]]
    */
   def getCacheData: UIO[OntologyCacheData]
-
 }
 
 final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef: Ref[OntologyCacheData])(implicit
@@ -436,10 +435,10 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
   /**
    * Loads and caches all ontology information.
    */
-  override def refreshCache(): Task[Unit] =
+  override def refreshCache(): Task[OntologyCacheData] =
     for {
       // Get all ontology metadata.
-      _                           <- ZIO.logInfo(s"Loading ontologies into cache")
+      _                           <- ZIO.logDebug(s"Loading ontologies into cache")
       allOntologyMetadataResponse <- triplestore.query(Select(sparql.v2.txt.getAllOntologyMetadata()))
       allOntologyMetadata          = OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
 
@@ -495,8 +494,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
       ontologyGraphs <- ZIO.collectAll(ontologyGraphResponseTasks)
 
       cacheData <- makeOntologyCache(allOntologyMetadata, ontologyGraphs)
-      _         <- ZIO.logInfo(s"Loaded ${cacheData.ontologies.values.size} ontologies into cache")
-    } yield ()
+    } yield cacheData
 
   /**
    * Given ontology metadata and ontology graphs read from the triplestore, constructs the ontology cache.

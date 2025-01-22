@@ -21,7 +21,7 @@ case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache 
   /**
    * Loads and caches all ontology information.
    */
-  override def refreshCache(): Task[Unit] =
+  override def refreshCache(): Task[OntologyCacheData] =
     throw new UnsupportedOperationException("Not possible in tests. Provide the respective test data as Ref.")
 }
 

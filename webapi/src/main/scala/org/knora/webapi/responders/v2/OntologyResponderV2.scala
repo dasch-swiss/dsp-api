@@ -1240,7 +1240,7 @@ final case class OntologyResponderV2(
       lastModificationDate = request.lastModificationDate,
       currentTime = timeOfUpdate,
     )
-    save(Update(updateSparql))
+    save(Update(updateSparql)).unit
   }
 
   /**
