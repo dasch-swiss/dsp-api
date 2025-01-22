@@ -188,7 +188,6 @@ final case class CardinalityHandler(
     val internalClassInfo = deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
     for {
       cacheData <- ontologyCache.getCacheData
-      ontology   = cacheData.ontologies(internalOntologyIri)
 
       // Check that the ontology exists and has not been updated by another user since the client last read it.
       _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
@@ -274,39 +273,8 @@ final case class CardinalityHandler(
              ),
            )
 
-      // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
-      // isn't any text to escape in cardinalities.)
-
-      propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
-
-      inheritedCardinalities = cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
-                                 newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
-                               }
-
-      readClassInfo = ReadClassInfoV2(
-                        entityInfoContent = newInternalClassDefWithLinkValueProps,
-                        allBaseClasses = allBaseClassIris,
-                        isResourceClass = true,
-                        canBeInstantiated = true,
-                        inheritedCardinalities = inheritedCardinalities,
-                        knoraResourceProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          OntologyHelpers.isKnoraResourceProperty(propertyIri, cacheData),
-                        ),
-                        linkProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          OntologyHelpers.isLinkProp(propertyIri, cacheData),
-                        ),
-                        linkValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          OntologyHelpers.isLinkValueProp(propertyIri, cacheData),
-                        ),
-                        fileValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          OntologyHelpers.isFileValueProp(propertyIri, cacheData),
-                        ),
-                      )
-
       // Add the cardinalities to the class definition in the triplestore.
-
       currentTime: Instant = Instant.now
-
       updateSparql = sparql.v2.txt.replaceClassCardinalities(
                        ontologyNamedGraphIri = internalOntologyIri,
                        ontologyIri = internalOntologyIri,
@@ -324,7 +292,6 @@ final case class CardinalityHandler(
                     allLanguages = true,
                     deleteCardinalitiesFromClassRequest.requestingUser,
                   )
-
     } yield response
   }
 

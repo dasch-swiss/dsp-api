@@ -217,27 +217,6 @@ final case class OntologyTriplestoreHelpers(
     )
 
   /**
-   * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
-   * an error message fitting for the "after update" case.
-   *
-   * @param internalOntologyIri          the internal IRI of the ontology.
-   * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
-   * @return a failed Future if the expected last modification date is not found.
-   */
-  def checkOntologyLastModificationDateAfterUpdate(
-    internalOntologyIri: SmartIri,
-    expectedLastModificationDate: Instant,
-  ): Task[Unit] =
-    checkOntologyLastModificationDate(
-      internalOntologyIri,
-      expectedLastModificationDate,
-      features.disableLastModificationDateCheck,
-      UpdateNotPerformedException(
-        s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} was not updated. Please report this as a possible bug.",
-      ),
-    )
-
-  /**
    * Gets the set of subjects that refer to an ontology or its entities.
    *
    * @param ontology the ontology.
