@@ -130,7 +130,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private def extractPredicateInfo(stmt: Statement): ZIO[Scope, String, (SmartIri, PredicateInfoV2)] =
     for {
-      propertyIri <- iriConverter.asSmartIri(stmt.predicateUri).mapError(_.getMessage + "DOHH")
+      propertyIri <- iriConverter.asSmartIri(stmt.predicateUri).mapError(_.getMessage)
       objects     <- asPredicateInfoV2(stmt.getObject)
     } yield (propertyIri, PredicateInfoV2(propertyIri, List(objects)))
 
