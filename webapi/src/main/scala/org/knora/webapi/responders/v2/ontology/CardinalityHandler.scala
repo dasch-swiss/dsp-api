@@ -247,7 +247,7 @@ final case class CardinalityHandler(
 
       allBaseClassIris = internalClassIri +: allBaseClassIrisWithoutInternal
 
-      (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
+      (newInternalClassDefWithLinkValueProps, _) =
         OntologyHelpers
           .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
             internalClassDef = newClassDefinitionWithRemovedCardinality,

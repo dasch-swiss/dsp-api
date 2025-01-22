@@ -419,13 +419,10 @@ final case class OntologyResponderV2(
   def createOntology(createOntologyRequest: CreateOntologyRequestV2): Task[ReadOntologyMetadataV2] = {
     def makeTaskFuture(internalOntologyIri: SmartIri): Task[ReadOntologyMetadataV2] =
       for {
-        // Make sure the ontology doesn't already exist.
-        existingOntologyMetadata <- ontologyTriplestoreHelpers.loadOntologyMetadata(internalOntologyIri)
-
-        _ <- ZIO.when(existingOntologyMetadata.nonEmpty) {
+        _ <- ontologyRepo.findById(internalOntologyIri.toInternalIri).someOrFail {
                val msg =
                  s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} cannot be created, because it already exists"
-               ZIO.fail(BadRequestException(msg))
+               BadRequestException(msg)
              }
 
         // If this is a shared ontology, make sure it's in the default shared ontologies project.
