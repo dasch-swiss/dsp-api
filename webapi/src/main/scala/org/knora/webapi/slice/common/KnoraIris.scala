@@ -105,4 +105,16 @@ object KnoraIris {
         Right(ResourceIri(iri, shortcode, resourceId))
       else Left(s"<$iri> is not a Knora resource IRI")
   }
+
+  final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri
+  object OntologyIri {
+    def unsafeFrom(iri: SmartIri): OntologyIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
+
+    def fromApiV2Complex(iri: SmartIri): Either[String, OntologyIri] =
+      from(iri).filterOrElse(_.smartIri.isApiV2ComplexSchema, s"Not an API v2 complex IRI ${iri.toString}")
+
+    def from(iri: SmartIri): Either[String, OntologyIri] =
+      if iri.isKnoraOntologyIri then Right(OntologyIri(iri))
+      else Left(s"<$iri> is not a Knora ontology IRI")
+  }
 }
