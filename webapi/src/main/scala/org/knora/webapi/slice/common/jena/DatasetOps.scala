@@ -39,11 +39,11 @@ object DatasetOps { self =>
 
   def fromJsonLd(jsonLd: String): ZIO[Scope, String, Dataset] = from(jsonLd, Lang.JSONLD)
 
-  def from(jsonLd: String, lang: Lang): ZIO[Scope, String, Dataset] =
+  def from(str: String, lang: Lang): ZIO[Scope, String, Dataset] =
     for {
       ds <- createDataset
       _ <- ZIO
-             .attempt(RDFDataMgr.read(ds, ByteArrayInputStream(jsonLd.getBytes(StandardCharsets.UTF_8)), lang))
+             .attempt(RDFDataMgr.read(ds, ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8)), lang))
              .mapError(_.getMessage)
     } yield ds
 }
