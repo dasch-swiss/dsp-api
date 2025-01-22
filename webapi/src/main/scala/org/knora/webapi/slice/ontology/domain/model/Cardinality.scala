@@ -114,4 +114,9 @@ object Cardinality {
   val allCardinalities: Array[Cardinality] = Array(AtLeastOne, ExactlyOne, Unbounded, ZeroOrOne)
 
   def fromString(str: String): Option[Cardinality] = allCardinalities.find(_.toString == str)
+
+  def from(min: Int, max: Option[Int]): Either[String, Cardinality] =
+    allCardinalities
+      .find(it => min == it.min && max == it.max)
+      .toRight(s"Invalid cardinality $min-${max.getOrElse("n")}, expected one of ${allCardinalities.mkString(", ")}")
 }

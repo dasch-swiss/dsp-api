@@ -25,7 +25,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
  * Tests [[InputOntologyV2]].
  */
 object InputOntologyV2Spec extends ZIOSpecDefault {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val PropertyDef = InputOntologyV2(
     ontologyMetadata = OntologyMetadataV2(
