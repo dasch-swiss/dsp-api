@@ -50,11 +50,10 @@ final case class CardinalityHandler(
     for {
       cacheData <- ontologyCache.getCacheData
 
-      _ <- // Check that the ontology exists and has not been updated by another user since the client last read it.
-        ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
-          internalOntologyIri = internalOntologyIri,
-          expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
-        )
+      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
+             internalOntologyIri,
+             deleteCardinalitiesFromClassRequest.lastModificationDate,
+           )
 
       _ <- getRdfTypeAndEnsureSingleCardinality(internalClassInfo)
 
@@ -190,7 +189,7 @@ final case class CardinalityHandler(
       cacheData <- ontologyCache.getCacheData
 
       // Check that the ontology exists and has not been updated by another user since the client last read it.
-      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
              internalOntologyIri,
              deleteCardinalitiesFromClassRequest.lastModificationDate,
            )

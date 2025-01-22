@@ -158,63 +158,28 @@ final case class OntologyTriplestoreHelpers(
   }
 
   /**
-   * Checks that:
-   *  1. The metadata of an ontology is loaded and has a `lastModificationDate`.
-   *  2. The `lastModificationDate` of an ontology is the same as the one we expect it to be.
-   *
-   * @param ontologyIri                   The internal IRI of the ontology.
-   * @param expectedLastModificationDate  The last modification date that the ontology is expected to have.
-   * @param error                         It will be returned if the expected last modification date is not found.
-   * @return A failed Task if the checks fail:
-   *         The 1. check fails with an [[InconsistentRepositoryDataException]] and
-   *         The 2. check fails with the provided error.
-   */
-  private def checkOntologyLastModificationDate(
-    ontologyIri: SmartIri,
-    expectedLastModificationDate: Instant,
-    disableLastModificationDateCheck: Boolean,
-    error: => Exception,
-  ): Task[Unit] =
-    for {
-      metadataMaybe       <- loadOntologyMetadata(ontologyIri)
-      externalOntologyIri <- ZIO.attempt(ontologyIri.toOntologySchema(ApiV2Complex))
-      metadata <-
-        ZIO
-          .fromOption(metadataMaybe)
-          .orElseFail(NotFoundException(s"Ontology $externalOntologyIri not found."))
-      existingLastModificationDate <-
-        ZIO
-          .fromOption(metadata.lastModificationDate)
-          .orElseFail {
-            val msg = s"Ontology $externalOntologyIri has no ${OntologyConstants.KnoraBase.LastModificationDate}."
-            InconsistentRepositoryDataException(msg)
-          }
-      _ <-
-        ZIO
-          .fail(error)
-          .when(!disableLastModificationDateCheck && existingLastModificationDate != expectedLastModificationDate)
-    } yield ()
-
-  /**
    * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
    * an error message fitting for the "before update" case.
    *
-   * @param internalOntologyIri          the internal IRI of the ontology.
+   * @param ontologyIri          the IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
    * @return a failed Future if the expected last modification date is not found.
    */
-  def checkOntologyLastModificationDateBeforeUpdate(
-    internalOntologyIri: SmartIri,
+  def checkOntologyLastModificationDate(
+    ontologyIri: SmartIri,
     expectedLastModificationDate: Instant,
   ): Task[Unit] =
-    checkOntologyLastModificationDate(
-      internalOntologyIri,
-      expectedLastModificationDate,
-      features.disableLastModificationDateCheck,
-      EditConflictException(
-        s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been modified by another user, please reload it and try again.",
-      ),
-    )
+    val ontologyIriExternal = ontologyIri.toComplexSchema.toString
+    for {
+      lmd <- loadOntologyMetadata(ontologyIri)
+               .map(_.flatMap(_.lastModificationDate))
+               .someOrFail(NotFoundException(s"Ontology $ontologyIriExternal not found."))
+      _ <- ZIO.fail {
+             val msg =
+               s"Ontology $ontologyIriExternal has been modified by another user, please reload it and try again."
+             EditConflictException(msg)
+           }.when(!features.disableLastModificationDateCheck && lmd != expectedLastModificationDate)
+    } yield ()
 
   /**
    * Gets the set of subjects that refer to an ontology or its entities.

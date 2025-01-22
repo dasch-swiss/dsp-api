@@ -540,7 +540,7 @@ final case class OntologyResponderV2(
           )
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
                changeOntologyMetadataRequest.lastModificationDate,
              )
@@ -603,7 +603,7 @@ final case class OntologyResponderV2(
                       )
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
                deleteOntologyCommentRequestV2.lastModificationDate,
              )
@@ -673,7 +673,7 @@ final case class OntologyResponderV2(
         internalClassDef: ClassInfoContentV2 = createClassRequest.classInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
                createClassRequest.lastModificationDate,
              )
@@ -803,7 +803,7 @@ final case class OntologyResponderV2(
         internalClassDef: ClassInfoContentV2 = changeGuiOrderRequest.classInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
                changeGuiOrderRequest.lastModificationDate,
              )
@@ -925,7 +925,7 @@ final case class OntologyResponderV2(
         internalClassDef: ClassInfoContentV2 = addCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
                addCardinalitiesRequest.lastModificationDate,
              )
@@ -1180,7 +1180,7 @@ final case class OntologyResponderV2(
     val ontologyIri          = classIri.getOntologyFromEntity
     val lastModificationDate = request.lastModificationDate
     for {
-      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(ontologyIri, lastModificationDate)
+      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
       _ <- checkCanCardinalitiesBeSet(newModel.entityInfoContent).mapError(f => BadRequestException(f.mkString(" ")))
     } yield newModel
   }
@@ -1353,7 +1353,7 @@ final case class OntologyResponderV2(
         cacheData <- ontologyCache.getCacheData
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
                deleteClassRequest.lastModificationDate,
              )
@@ -1464,7 +1464,7 @@ final case class OntologyResponderV2(
         cacheData <- ontologyCache.getCacheData
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
                deletePropertyRequest.lastModificationDate,
              )
@@ -1596,7 +1596,7 @@ final case class OntologyResponderV2(
           )
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
                deleteOntologyRequest.lastModificationDate,
              )
@@ -1658,7 +1658,7 @@ final case class OntologyResponderV2(
         internalPropertyDef = propertyInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
                lastModificationDate,
              )
@@ -1896,7 +1896,7 @@ final case class OntologyResponderV2(
           .orElseFail(NotFoundException(s"Property ${changePropertyGuiElementRequest.propertyIri} not found"))
 
       // Check that the ontology exists and has not been updated by another user since the client last read it.
-      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
              internalOntologyIri,
              changePropertyGuiElementRequest.lastModificationDate,
            )
@@ -1987,7 +1987,7 @@ final case class OntologyResponderV2(
             .orElseFail(NotFoundException(s"Property ${changePropertyLabelsOrCommentsRequest.propertyIri} not found"))
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
                changePropertyLabelsOrCommentsRequest.lastModificationDate,
              )
@@ -2074,7 +2074,7 @@ final case class OntologyResponderV2(
             .orElseFail(NotFoundException(s"Class ${changeClassLabelsOrCommentsRequest.classIri} not found"))
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
                changeClassLabelsOrCommentsRequest.lastModificationDate,
              )
@@ -2141,7 +2141,7 @@ final case class OntologyResponderV2(
       for {
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
                deletePropertyCommentRequest.lastModificationDate,
              )
@@ -2241,7 +2241,7 @@ final case class OntologyResponderV2(
       for {
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
                deleteClassCommentRequest.lastModificationDate,
              )
