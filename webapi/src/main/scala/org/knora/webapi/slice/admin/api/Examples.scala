@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
@@ -84,7 +85,7 @@ object Examples {
 
     private val project: Project = Project(
       id = ProjectExample.projectIri.value,
-      shortname = "example",
+      shortname = Shortname.unsafeFrom("example"),
       shortcode = "0001",
       longname = Some("Example Project"),
       description = Seq(StringLiteralV2.from("An example project", Some("en"))),

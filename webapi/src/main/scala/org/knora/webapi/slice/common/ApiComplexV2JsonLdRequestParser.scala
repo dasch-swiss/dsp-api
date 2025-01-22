@@ -36,7 +36,6 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.KnoraIris.*
-import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri as KResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri as KResourceIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
@@ -97,8 +96,7 @@ final case class ApiComplexV2JsonLdRequestParser(
     private def resourceClassIri(r: Resource): IO[String, ResourceClassIri] = ZIO
       .fromOption(r.rdfsType)
       .orElseFail("No root resource class IRI found")
-      .flatMap(converter.asSmartIri(_).mapError(_.getMessage))
-      .flatMap(iri => ZIO.fromEither(KResourceClassIri.fromApiV2Complex(iri)))
+      .flatMap(str => converter.asResourceClassIri(str))
   }
 
   def updateResourceMetadataRequestV2(

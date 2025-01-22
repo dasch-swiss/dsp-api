@@ -22,7 +22,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Nothing] =
     suite("projectDataNamedGraphV2 should return the data named graph of a project with shortcode for")(
       test("a ProjectADM") {
-        val shortname = "someProject"
+        val shortname = Shortname.unsafeFrom("someProject")
         val shortcode = "0001"
         val p = Project(
           id = IriTestConstants.Project.TestProject,
@@ -37,7 +37,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           selfjoin = true,
         )
         assertTrue(
-          ProjectService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/$shortname",
+          ProjectService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/${shortname.value}",
         )
       },
       test("a KnoraProject") {

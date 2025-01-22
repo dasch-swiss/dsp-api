@@ -42,7 +42,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
   private val testPass         = SharedTestDataADM.testPass
   private val projectIri       = SharedTestDataADM.imagesProject.id
   private val projectIriEnc    = URLEncoder.encode(projectIri, "utf-8")
-  private val projectShortname = SharedTestDataADM.imagesProject.shortname
+  private val projectShortname = SharedTestDataADM.imagesProject.shortname.value
   private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
@@ -171,7 +171,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
 
         // check the rest of project info
         result.shortcode should be("3333")
-        result.shortname should be("newprojectWithIri")
+        result.shortname.value should be("newprojectWithIri")
         result.longname should be(Some("new project with a custom IRI"))
         result.keywords should be(Seq("projectIRI"))
         result.description should be(Seq(StringLiteralV2.from("a project created with a custom IRI", Some("en"))))
@@ -229,7 +229,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         response.status should be(StatusCodes.OK)
 
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
-        result.shortname should be("newproject")
+        result.shortname.value should be("newproject")
         result.shortcode should be("1111")
         result.longname should be(Some("project longname"))
         result.description should be(Seq(StringLiteralV2.from(value = "project description", language = Some("en"))))
@@ -354,7 +354,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         response.status should be(StatusCodes.OK)
 
         val result: Project = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
-        result.shortname should be("newproject")
+        result.shortname.value should be("newproject")
         result.shortcode should be("1111")
         result.longname should be(Some("updated project longname"))
         result.description should be(
