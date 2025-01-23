@@ -18,6 +18,7 @@ import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseText
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseUri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
@@ -39,7 +40,7 @@ sealed abstract case class UploadFileRequest private (
    * @return JSON-LD serialization of the request.
    */
   def toJsonLd(
-    shortcode: String = "0001",
+    shortcode: Shortcode = Shortcode.unsafeFrom("0001"),
     ontologyName: String = "knora-api",
     className: Option[String] = None,
     ontologyIRI: Option[String] = None,
