@@ -99,7 +99,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
             r          <- m.singleRootResource
             name       <- r.objectString(KA.OntologyName)
             projectIri <- r.objectUri(KA.AttachedToProject, ProjectIri.from)
-            isShared   <- r.objectBoolean(KA.IsShared)
+            isShared   <- r.objectBooleanOption(KA.IsShared).map(_.getOrElse(false))
             label      <- r.objectString(RDFS.label)
             comment    <- r.objectStringOption(RDFS.comment)
           } yield CreateOntologyRequestV2(
