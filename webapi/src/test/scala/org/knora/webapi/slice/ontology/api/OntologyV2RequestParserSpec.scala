@@ -134,7 +134,8 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
          |    "@id": "$projectIri"
          |  },
          |  "knora-api:isShared": true,
-         |  "rdfs:label": "some Label",
+         |  "rdfs:label": "Label",
+         |  "rdfs:comment": "Comment",
          |  "@context": {
          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
@@ -144,7 +145,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
       uuid   <- Random.nextUUID
       actual <- parser(_.createOntologyRequestV2(reqStr, uuid, user))
     } yield assertTrue(
-      actual == CreateOntologyRequestV2("useless", projectIri, true, "some Label", None, uuid, user),
+      actual == CreateOntologyRequestV2("useless", projectIri, true, "Label", Some("Comment"), uuid, user),
     )
   })
 
