@@ -51,7 +51,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val imagesUser           = SharedTestDataADM.imagesUser01
-  private val imagesProjectIri     = SharedTestDataADM.imagesProjectIri.toSmartIri
+  private val imagesProjectIri     = SharedTestDataADM.imagesProjectIri
   private val anythingAdminUser    = SharedTestDataADM.anythingAdminUser
   private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
   private val anythingProjectIri   = SharedTestDataADM.anythingProjectIri.toSmartIri
@@ -186,7 +186,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not allow a user to create an ontology if they are not a sysadmin or an admin in the ontology's project" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "foo",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         label = "The foo ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = SharedTestDataADM.imagesUser02,
@@ -200,7 +200,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "create an empty ontology called 'foo' with a project code" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "foo",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         label = "The foo ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -336,7 +336,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology if the given name matches NCName pattern but is not URL safe" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "bär",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         label = "The bär ontology",
         comment = Some("some comment"),
         apiRequestID = UUID.randomUUID,
@@ -351,7 +351,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "create an empty ontology called 'bar' with a comment" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "bar",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         label = "The bar ontology",
         comment = Some("some comment"),
         apiRequestID = UUID.randomUUID,
@@ -397,7 +397,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create 'foo' again" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "foo",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         label = "The foo ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -499,7 +499,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called 'rdfs'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "rdfs",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         label = "The rdfs ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -514,7 +514,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called '0000'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "0000",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         label = "The 0000 ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -529,7 +529,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called '-foo'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "-foo",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         label = "The -foo ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -544,7 +544,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called 'v3'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "v3",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         label = "The v3 ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -559,7 +559,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called 'ontology'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "ontology",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         label = "The ontology ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -574,7 +574,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called 'knora'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "knora",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         label = "The wrong knora ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -589,7 +589,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called 'simple'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "simple",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         label = "The simple ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -604,7 +604,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called 'shared'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "shared",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         label = "The invalid shared ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -619,7 +619,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create a shared ontology in the wrong project" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "misplaced",
-        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
+        projectIri = imagesProjectIri,
         isShared = true,
         label = "The invalid shared ontology",
         apiRequestID = UUID.randomUUID,

@@ -16,6 +16,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -134,7 +135,7 @@ object SharedTestDataADM {
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
             KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
-          imagesProjectIri -> List(
+          imagesProjectIri.value -> List(
             "http://rdfh.ch/groups/00FF/images-reviewer",
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
             KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
@@ -145,7 +146,7 @@ object SharedTestDataADM {
             PermissionADM.from(Permission.Administrative.ProjectAdminAll),
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
-          imagesProjectIri -> Set(
+          imagesProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectAdminAll),
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
@@ -193,7 +194,7 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val imagesProjectIri = "http://rdfh.ch/projects/00FF"
+  val imagesProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/00FF")
 
   /* represents 'user01' as found in admin-data.ttl  */
   def imagesUser01: User =
@@ -210,13 +211,13 @@ object SharedTestDataADM {
       projects = Seq(imagesProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          imagesProjectIri -> List(
+          imagesProjectIri.value -> List(
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
             KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
-          imagesProjectIri -> Set(
+          imagesProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectAdminAll),
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
@@ -239,10 +240,10 @@ object SharedTestDataADM {
       projects = Seq(imagesProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          imagesProjectIri -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+          imagesProjectIri.value -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
         ),
         administrativePermissionsPerProject = Map(
-          imagesProjectIri -> Set(
+          imagesProjectIri.value -> Set(
             PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
@@ -264,13 +265,13 @@ object SharedTestDataADM {
       projects = Seq(imagesProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          imagesProjectIri -> List(
+          imagesProjectIri.value -> List(
             "http://rdfh.ch/groups/00FF/images-reviewer",
             KnoraGroupRepo.builtIn.ProjectMember.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
-          imagesProjectIri -> Set(
+          imagesProjectIri.value -> Set(
             PermissionADM.from(
               Permission.Administrative.ProjectResourceCreateRestricted,
               s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild",
@@ -286,7 +287,7 @@ object SharedTestDataADM {
 
   /* represents the full ProjectADM of the images project */
   def imagesProject: Project = Project(
-    id = imagesProjectIri,
+    id = imagesProjectIri.value,
     shortname = Shortname.unsafeFrom("images"),
     shortcode = "00FF",
     longname = Some("Image Collection Demo"),
@@ -300,7 +301,7 @@ object SharedTestDataADM {
 
   /* represents the full ProjectADM of the images project in the external format */
   def imagesProjectExternal: Project = Project(
-    id = imagesProjectIri,
+    id = imagesProjectIri.value,
     shortname = Shortname.unsafeFrom("images"),
     shortcode = "00FF",
     longname = Some("Image Collection Demo"),
