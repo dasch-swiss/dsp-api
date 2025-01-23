@@ -93,28 +93,26 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
   ): IO[String, CreateOntologyRequestV2] =
     import ModelOps.*
     ZIO.scoped {
-      for {
-        m <- ModelOps.fromJsonLd(jsonLd)
-        req <-
-          ZIO.fromEither {
-            for {
-              r          <- m.singleRootResource
-              name       <- r.objectString(KA.OntologyName)
-              projectIri <- r.objectUri(KA.AttachedToProject, ProjectIri.from)
-              isShared   <- r.objectBoolean(KA.IsShared)
-              label      <- r.objectString(RDFS.label)
-              comment    <- r.objectStringOption(RDFS.comment)
-            } yield CreateOntologyRequestV2(
-              name,
-              projectIri,
-              isShared,
-              label,
-              comment,
-              apiRequestId,
-              requestingUser,
-            )
-          }
-      } yield req
+      ModelOps.fromJsonLd(jsonLd).flatMap { m =>
+        ZIO.fromEither {
+          for {
+            r          <- m.singleRootResource
+            name       <- r.objectString(KA.OntologyName)
+            projectIri <- r.objectUri(KA.AttachedToProject, ProjectIri.from)
+            isShared   <- r.objectBoolean(KA.IsShared)
+            label      <- r.objectString(RDFS.label)
+            comment    <- r.objectStringOption(RDFS.comment)
+          } yield CreateOntologyRequestV2(
+            name,
+            projectIri,
+            isShared,
+            label,
+            comment,
+            apiRequestId,
+            requestingUser,
+          )
+        }
+      }
     }
 
   def createClassRequestV2(jsonLd: String, apiRequestId: UUID, requestingUser: User): IO[String, CreateClassRequestV2] =
