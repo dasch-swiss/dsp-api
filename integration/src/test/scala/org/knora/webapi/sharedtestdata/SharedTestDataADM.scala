@@ -16,6 +16,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -157,7 +158,7 @@ object SharedTestDataADM {
   def systemProject: Project = Project(
     id = KnoraProjectRepo.builtIn.SystemProject.id.value,
     shortname = Shortname.unsafeFrom("SystemProject"),
-    shortcode = "FFFF",
+    shortcode = Shortcode.unsafeFrom("FFFF"),
     longname = Some("Knora System Project"),
     description = Seq(StringLiteralV2.from(value = "Knora System Project", language = Some("en"))),
     keywords = Seq.empty[String],
@@ -176,7 +177,7 @@ object SharedTestDataADM {
   def defaultSharedOntologiesProject: Project = Project(
     id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
     shortname = Shortname.unsafeFrom("DefaultSharedOntologiesProject"),
-    shortcode = "0000",
+    shortcode = Shortcode.unsafeFrom("0000"),
     longname = Some("Default Knora Shared Ontologies Project"),
     description = Seq(StringLiteralV2.from(value = "Default Knora Shared Ontologies Project", language = Some("en"))),
     keywords = Seq.empty[String],
@@ -288,7 +289,7 @@ object SharedTestDataADM {
   def imagesProject: Project = Project(
     id = imagesProjectIri,
     shortname = Shortname.unsafeFrom("images"),
-    shortcode = "00FF",
+    shortcode = Shortcode.unsafeFrom("00FF"),
     longname = Some("Image Collection Demo"),
     description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
     keywords = Seq("images", "collection").sorted,
@@ -302,7 +303,7 @@ object SharedTestDataADM {
   def imagesProjectExternal: Project = Project(
     id = imagesProjectIri,
     shortname = Shortname.unsafeFrom("images"),
-    shortcode = "00FF",
+    shortcode = Shortcode.unsafeFrom("00FF"),
     longname = Some("Image Collection Demo"),
     description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
     keywords = Seq("images", "collection").sorted,
@@ -444,7 +445,7 @@ object SharedTestDataADM {
   def incunabulaProject: Project = Project(
     id = incunabulaProjectIri,
     shortname = Shortname.unsafeFrom("incunabula"),
-    shortcode = "0803",
+    shortcode = Shortcode.unsafeFrom("0803"),
     longname = Some("Bilderfolgen Basler Frühdrucke"),
     description = Seq(
       StringLiteralV2.from(
@@ -479,7 +480,7 @@ object SharedTestDataADM {
   def incunabulaProjectExternal: Project = Project(
     id = incunabulaProjectIri,
     shortname = Shortname.unsafeFrom("incunabula"),
-    shortcode = "0803",
+    shortcode = Shortcode.unsafeFrom("0803"),
     longname = Some("Bilderfolgen Basler Frühdrucke"),
     description = Seq(
       StringLiteralV2.from(
@@ -612,7 +613,7 @@ object SharedTestDataADM {
   def anythingProject: Project = Project(
     id = anythingProjectIri,
     shortname = Shortname.unsafeFrom("anything"),
-    shortcode = "0001",
+    shortcode = Shortcode.unsafeFrom("0001"),
     longname = Some("Anything Project"),
     description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
     keywords = Seq("things", "arbitrary test data").sorted,
@@ -625,7 +626,7 @@ object SharedTestDataADM {
   def anythingProjectExternal: Project = Project(
     id = anythingProjectIri,
     shortname = Shortname.unsafeFrom("anything"),
-    shortcode = "0001",
+    shortcode = Shortcode.unsafeFrom("0001"),
     longname = Some("Anything Project"),
     description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
     keywords = Seq("things", "arbitrary test data").sorted,
@@ -660,7 +661,7 @@ object SharedTestDataADM {
   def beolProject: Project = Project(
     id = beolProjectIri,
     shortname = Shortname.unsafeFrom("beol"),
-    shortcode = "0801",
+    shortcode = Shortcode.unsafeFrom("0801"),
     longname = Some("Bernoulli-Euler Online"),
     description = Seq(StringLiteralV2.from(value = "Bernoulli-Euler Online", language = None)),
     keywords = Seq.empty[String],
@@ -714,7 +715,7 @@ object SharedTestDataADM {
   def dokubibProject: Project = Project(
     id = dokubibProjectIri,
     shortname = Shortname.unsafeFrom("dokubib"),
-    shortcode = "0804",
+    shortcode = Shortcode.unsafeFrom("0804"),
     longname = Some("Dokubib"),
     description = Seq(StringLiteralV2.from(value = "Dokubib", language = None)),
     keywords = Seq.empty[String],
