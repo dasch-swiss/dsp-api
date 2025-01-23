@@ -35,6 +35,8 @@ object ResourceOps {
         case Some(stmt) => f.apply(stmt).map(Some(_))
         case None       => Right(None)
 
+    def objectRdfClass(): Either[String, String] = statement(RDF.`type`).flatMap(_.objectAsUri)
+
     def objectBigDecimal(p: Property): Either[String, BigDecimal]               = statement(p).flatMap(_.objectAsBigDecimal)
     def objectBigDecimalOption(p: Property): Either[String, Option[BigDecimal]] = fromStatement(p, _.objectAsBigDecimal)
 

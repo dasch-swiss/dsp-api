@@ -16,6 +16,7 @@ import org.knora.webapi.slice.common.Value.StringValue
 
 trait Value[A] extends Any {
   def value: A
+  override def toString: String = value.toString
 }
 
 object Value {

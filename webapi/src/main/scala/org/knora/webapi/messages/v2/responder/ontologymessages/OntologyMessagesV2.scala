@@ -444,26 +444,6 @@ case class CreateClassRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[CreateClassRequestV2]] based on JSON-LD requests.
- */
-object CreateClassRequestV2 {
-
-  /**
-   * Converts a JSON-LD request to a [[CreateClassRequestV2]].
-   *
-   * @param document the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[CreateClassRequestV2]] representing the input.
-   */
-  def fromJsonLd(document: JsonLDDocument, apiRequestID: UUID, requestingUser: User): CreateClassRequestV2 = {
-    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(document)
-    val updateInfo        = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    CreateClassRequestV2(updateInfo.classInfoContent, updateInfo.lastModificationDate, apiRequestID, requestingUser)
-  }
-}
-
-/**
  * Requests the addition of cardinalities to a class. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.

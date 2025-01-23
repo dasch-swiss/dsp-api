@@ -66,7 +66,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
 
       "return information about a project identified by shortname" in {
         val actual = UnsafeZioRun.runOrThrow(
-          ProjectRestService(_.findByShortname(SharedTestDataADM.incunabulaProject.getShortname)),
+          ProjectRestService(_.findByShortname(SharedTestDataADM.incunabulaProject.shortname)),
         )
         assert(actual == ProjectGetResponse(toExternal(SharedTestDataADM.incunabulaProject)))
       }
@@ -106,7 +106,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return restricted view settings using project SHORTNAME" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectRestrictedViewSettingsByShortname(SharedTestDataADM.imagesProject.getShortname),
+            _.getProjectRestrictedViewSettingsByShortname(SharedTestDataADM.imagesProject.shortname),
           ),
         )
         actual shouldEqual expectedResult
@@ -115,7 +115,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return restricted view settings using project SHORTCODE" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectRestrictedViewSettingsByShortcode(SharedTestDataADM.imagesProject.getShortcode),
+            _.getProjectRestrictedViewSettingsByShortcode(SharedTestDataADM.imagesProject.shortcode),
           ),
         )
         actual shouldEqual expectedResult
@@ -168,8 +168,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
           ),
         )
 
-        received.project.shortname should be("newproject")
-        received.project.shortcode should be(shortcode.toUpperCase) // upper case
+        received.project.shortname.value should be("newproject")
+        received.project.shortcode.value should be(shortcode.toUpperCase) // upper case
         received.project.longname should contain("project longname")
         received.project.description should be(
           Seq(StringLiteralV2.from(value = "project description", language = Some("en"))),
@@ -262,8 +262,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
           ),
         )
 
-        received.project.shortname should be("newproject2")
-        received.project.shortcode should be("1112")
+        received.project.shortname.value should be("newproject2")
+        received.project.shortcode.value should be("1112")
         received.project.longname should contain("project longname")
         received.project.description should be(
           Seq(StringLiteralV2.from(value = "project description", language = Some("en"))),
@@ -382,8 +382,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
             ),
           ),
         )
-        received.project.shortname should be("newproject")
-        received.project.shortcode should be("111C")
+        received.project.shortname.value should be("newproject")
+        received.project.shortcode.value should be("111C")
         received.project.longname should be(Some("updated project longname"))
         received.project.description should be(
           Seq(
@@ -436,7 +436,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return all members of a project identified by shortname" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectMembersByShortname(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.getShortname),
+            _.getProjectMembersByShortname(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.shortname),
           ),
         )
 
@@ -453,7 +453,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return all members of a project identified by shortcode" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.getProjectMembersByShortcode(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.getShortcode),
+            _.getProjectMembersByShortcode(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.shortcode),
           ),
         )
 
@@ -512,7 +512,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
           ProjectRestService(
             _.getProjectAdminMembersByShortname(
               SharedTestDataADM.rootUser,
-              SharedTestDataADM.imagesProject.getShortname,
+              SharedTestDataADM.imagesProject.shortname,
             ),
           ),
         )
@@ -530,7 +530,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
           ProjectRestService(
             _.getProjectAdminMembersByShortcode(
               SharedTestDataADM.rootUser,
-              SharedTestDataADM.imagesProject.getShortcode,
+              SharedTestDataADM.imagesProject.shortcode,
             ),
           ),
         )
