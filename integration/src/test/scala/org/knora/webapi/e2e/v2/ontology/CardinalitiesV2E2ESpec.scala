@@ -6,17 +6,18 @@
 package org.knora.webapi.e2e.v2.ontology
 
 import org.apache.pekko
-import spray.json.JsString
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.routing.UnsafeZioRun
+import zio.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util.AkkaHttpUtils
-
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import pekko.http.scaladsl.model.HttpEntity
 import pekko.http.scaladsl.model.HttpResponse
 import pekko.http.scaladsl.model.StatusCodes
@@ -24,41 +25,21 @@ import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
 class CardinalitiesV2E2ESpec extends E2ESpec {
 
-  private def createProject(shortname: String, shortcode: String) = {
-    val payload =
-      s"""|{
-          |    "shortname": "$shortname",
-          |    "shortcode": "$shortcode",
-          |    "longname": "project $shortname",
-          |    "description": [
-          |        {
-          |            "value": "project $shortname",
-          |            "language": "en"
-          |        }
-          |    ],
-          |    "keywords": [
-          |        "test project"
-          |    ],
-          |    "status": true,
-          |    "selfjoin": false
-          |}
-          |""".stripMargin
-    val request = Post(
-      s"$baseApiUrl/admin/projects",
-      HttpEntity(RdfMediaTypes.`application/json`, payload),
-    ) ~> addCredentials(rootCredentials)
-    val response = singleAwaitingRequest(request)
-    assert(response.status == StatusCodes.OK, responseToString(response))
-    AkkaHttpUtils
-      .httpResponseToJson(response)
-      .fields("project")
-      .asJsObject
-      .fields("id")
-      .asInstanceOf[JsString]
-      .value
-  }
+  private def createProject(shortname: String, shortcode: String) = UnsafeZioRun.runOrThrow(
+    ZIO
+      .serviceWithZIO[KnoraProjectService] {
+        _.createProject(
+          ProjectCreateRequest(
+            shortname = Shortname.unsafeFrom(shortname),
+            shortcode = Shortcode.unsafeFrom(shortcode),
+            description = List(Description.unsafeFrom("test project", Some("en"))),
+          ),
+        )
+      }
+      .map(_.id),
+  )
 
-  private def createOntology(projectIri: String) = {
+  private def createOntology(projectIri: ProjectIri) = {
     val payload =
       s"""|{
           |  "knora-api:ontologyName" : "inherit",
@@ -234,7 +215,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
   }
 
   private def createValue(
-    projectIri: String,
+    projectIri: ProjectIri,
     ontologyIri: String,
     ontologyName: String,
     className: String,
