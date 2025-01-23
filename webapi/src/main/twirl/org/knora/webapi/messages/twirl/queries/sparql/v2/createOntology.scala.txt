@@ -4,6 +4,7 @@
  *@
 
 @import org.knora.webapi.messages.SmartIri
+@import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 @import java.time.Instant
 
 @*
@@ -16,7 +17,7 @@
  *@
 @(ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
-  projectIri: SmartIri,
+  projectIri: ProjectIri,
   isShared: Boolean,
   ontologyLabel: String,
   ontologyComment: Option[String],

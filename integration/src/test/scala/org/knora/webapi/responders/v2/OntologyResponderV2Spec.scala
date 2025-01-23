@@ -35,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewR
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -185,7 +186,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not allow a user to create an ontology if they are not a sysadmin or an admin in the ontology's project" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "foo",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         label = "The foo ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = SharedTestDataADM.imagesUser02,
@@ -199,7 +200,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "create an empty ontology called 'foo' with a project code" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "foo",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         label = "The foo ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -335,7 +336,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology if the given name matches NCName pattern but is not URL safe" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "bär",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         label = "The bär ontology",
         comment = Some("some comment"),
         apiRequestID = UUID.randomUUID,
@@ -350,7 +351,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "create an empty ontology called 'bar' with a comment" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "bar",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         label = "The bar ontology",
         comment = Some("some comment"),
         apiRequestID = UUID.randomUUID,
@@ -396,7 +397,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create 'foo' again" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "foo",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         label = "The foo ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -498,7 +499,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called 'rdfs'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "rdfs",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         label = "The rdfs ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -513,7 +514,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called '0000'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "0000",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         label = "The 0000 ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -528,7 +529,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called '-foo'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "-foo",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         label = "The -foo ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -543,7 +544,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called 'v3'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "v3",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         label = "The v3 ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -558,7 +559,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called 'ontology'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "ontology",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         label = "The ontology ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -573,7 +574,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called 'knora'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "knora",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         label = "The wrong knora ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -588,7 +589,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called 'simple'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "simple",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         label = "The simple ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -603,7 +604,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create an ontology called 'shared'" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "shared",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         label = "The invalid shared ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -618,7 +619,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create a shared ontology in the wrong project" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "misplaced",
-        projectIri = imagesProjectIri,
+        projectIri = ProjectIri.unsafeFrom(imagesProjectIri.toIri),
         isShared = true,
         label = "The invalid shared ontology",
         apiRequestID = UUID.randomUUID,
@@ -633,7 +634,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create a non-shared ontology in the shared ontologies project" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "misplaced",
-        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.toSmartIri,
+        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
         label = "The invalid non-shared ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = SharedTestDataADM.superUser,
@@ -647,7 +648,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "create a shared ontology" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "chair",
-        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.toSmartIri,
+        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
         isShared = true,
         label = "a chaired ontology",
         apiRequestID = UUID.randomUUID,

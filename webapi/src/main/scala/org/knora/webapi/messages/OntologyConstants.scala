@@ -7,6 +7,7 @@ package org.knora.webapi
 package messages
 
 import dsp.constants.SalsahGui
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 /**
  * Contains string constants for IRIs from ontologies used by the application.
@@ -496,7 +497,8 @@ object OntologyConstants {
       HasDefaultChangeRightsPermission,
     )
 
-    val DefaultSharedOntologiesProject: IRI = KnoraAdminPrefixExpansion + "DefaultSharedOntologiesProject"
+    val DefaultSharedOntologiesProject: ProjectIri =
+      ProjectIri.unsafeFrom(KnoraAdminPrefixExpansion + "DefaultSharedOntologiesProject")
   }
 
   object Standoff {

@@ -19,8 +19,10 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.jena.DatasetOps.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
@@ -121,6 +123,30 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
         }
       },
     )
+
+  private val createOntologySuite = suite("CreateOntologyRequestV2")(test("should succeed") {
+    val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+    val reqStr: String =
+      s"""
+         |{
+         |  "knora-api:ontologyName": "useless",
+         |  "knora-api:attachedToProject": {
+         |    "@id": "$projectIri"
+         |  },
+         |  "knora-api:isShared": true,
+         |  "rdfs:label": "some Label",
+         |  "@context": {
+         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
+         |  }
+         |}""".stripMargin
+    for {
+      uuid   <- Random.nextUUID
+      actual <- parser(_.createOntologyRequestV2(reqStr, uuid, user))
+    } yield assertTrue(
+      actual == CreateOntologyRequestV2("useless", projectIri, true, "some Label", None, uuid, user),
+    )
+  })
 
   private val classDef = ClassInfoContentV2(
     predicates = Map(
@@ -254,6 +280,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
     },
   )
 
-  val spec = suite("OntologyV2RequestParser")(changeOntologyMetadataRequestV2Suite, createClassRequest)
-    .provide(OntologyV2RequestParser.layer, IriConverter.layer, StringFormatter.test)
+  val spec =
+    suite("OntologyV2RequestParser")(changeOntologyMetadataRequestV2Suite, createOntologySuite, createClassRequest)
+      .provide(OntologyV2RequestParser.layer, IriConverter.layer, StringFormatter.test)
 }

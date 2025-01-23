@@ -174,7 +174,7 @@ object SharedTestDataADM {
 
   /* represents the full ProjectADM of the default shared ontologies project */
   def defaultSharedOntologiesProject: Project = Project(
-    id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
+    id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.value,
     shortname = Shortname.unsafeFrom("DefaultSharedOntologiesProject"),
     shortcode = "0000",
     longname = Some("Default Knora Shared Ontologies Project"),
