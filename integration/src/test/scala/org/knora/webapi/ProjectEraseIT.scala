@@ -205,11 +205,10 @@ object ProjectEraseIT extends E2EZSpec {
         },
         test("when called as root then it should delete the ontology graph") {
           for {
-            project         <- getProject
-            projectSmartIri <- ZIO.serviceWithZIO[IriConverter](_.asSmartIri(project.id.value))
+            project <- getProject
             req = CreateOntologyRequestV2(
                     "test",
-                    projectSmartIri,
+                    project.id,
                     false,
                     "some label",
                     None,

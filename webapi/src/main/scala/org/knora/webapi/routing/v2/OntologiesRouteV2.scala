@@ -763,9 +763,9 @@ final case class OntologiesRouteV2()(
       entity(as[String]) { jsonRequest => requestContext =>
         val t = for {
           requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-          requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
           apiRequestId   <- RouteUtilZ.randomUuid()
-          requestMessage <- CreateOntologyRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
+          requestMessage <- requestParser(_.createOntologyRequestV2(jsonRequest, apiRequestId, requestingUser))
+                              .mapError(BadRequestException.apply)
         } yield requestMessage
         RouteUtilV2.runRdfRouteZ(t, requestContext)
       }
