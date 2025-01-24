@@ -70,7 +70,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
           SharedTestDataADM2.multiuserUser.projects_info.keys,
           SharedTestDataADM2.multiuserUser.groups,
           SystemAdmin.IsNotSystemAdmin,
-          Chunk(SharedTestDataADM.incunabulaProjectIri, imagesProjectIri),
+          Chunk(SharedTestDataADM.incunabulaProjectIri, imagesProjectIri.value),
         )
         for {
           actual <- knoraUserToUserConverter(_.toUser(user))
@@ -117,7 +117,7 @@ object KnoraUserToUserConverterSpec extends E2EZSpec {
             SharedTestDataADM2.imagesUser01.projects_info.keys,
             SharedTestDataADM2.imagesUser01.groups,
             SystemAdmin.IsNotSystemAdmin,
-            Chunk(imagesProjectIri),
+            Chunk(imagesProjectIri.value),
           )
         for {
           actual <- knoraUserToUserConverter(_.toUser(user))

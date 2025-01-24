@@ -35,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewR
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -50,7 +51,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val imagesUser           = SharedTestDataADM.imagesUser01
-  private val imagesProjectIri     = SharedTestDataADM.imagesProjectIri.toSmartIri
+  private val imagesProjectIri     = SharedTestDataADM.imagesProjectIri
   private val anythingAdminUser    = SharedTestDataADM.anythingAdminUser
   private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
   private val anythingProjectIri   = SharedTestDataADM.anythingProjectIri.toSmartIri
@@ -633,7 +634,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create a non-shared ontology in the shared ontologies project" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "misplaced",
-        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.toSmartIri,
+        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
         label = "The invalid non-shared ontology",
         apiRequestID = UUID.randomUUID,
         requestingUser = SharedTestDataADM.superUser,
@@ -647,7 +648,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "create a shared ontology" in {
       appActor ! CreateOntologyRequestV2(
         ontologyName = "chair",
-        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.toSmartIri,
+        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
         isShared = true,
         label = "a chaired ontology",
         apiRequestID = UUID.randomUUID,

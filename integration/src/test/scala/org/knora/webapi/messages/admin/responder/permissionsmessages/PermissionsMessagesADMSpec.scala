@@ -45,7 +45,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val exit = UnsafeZioRun.run(
         PermissionRestService.createAdministrativePermission(
           CreateAdministrativePermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
+            forProject = SharedTestDataADM.imagesProjectIri.value,
             forGroup = groupIri,
             hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectAdminAll)),
           ),
@@ -61,7 +61,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         PermissionRestService.createAdministrativePermission(
           CreateAdministrativePermissionAPIRequestADM(
             id = Some(permissionIri),
-            forProject = SharedTestDataADM.imagesProjectIri,
+            forProject = SharedTestDataADM.imagesProjectIri.value,
             forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
             hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectAdminAll)),
           ),
@@ -83,7 +83,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val exit = UnsafeZioRun.run(
         PermissionRestService.createAdministrativePermission(
           CreateAdministrativePermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
+            forProject = SharedTestDataADM.imagesProjectIri.value,
             forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
             hasPermissions = hasPermissions,
           ),
@@ -101,7 +101,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val exit = UnsafeZioRun.run(
         PermissionRestService.createAdministrativePermission(
           CreateAdministrativePermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
+            forProject = SharedTestDataADM.imagesProjectIri.value,
             forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
             hasPermissions = Set.empty[PermissionADM],
           ),
@@ -115,7 +115,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val exit = UnsafeZioRun.run(
         PermissionRestService.createAdministrativePermission(
           CreateAdministrativePermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
+            forProject = SharedTestDataADM.imagesProjectIri.value,
             forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
             hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectAdminAll)),
           ),
@@ -153,7 +153,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val exit = UnsafeZioRun.run(
         PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
+            forProject = SharedTestDataADM.imagesProjectIri.value,
             forGroup = Some(groupIri),
             hasPermissions = Set(
               PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
@@ -171,7 +171,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             id = Some(permissionIri),
-            forProject = SharedTestDataADM.imagesProjectIri,
+            forProject = SharedTestDataADM.imagesProjectIri.value,
             forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
             hasPermissions = Set(
               PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
@@ -187,7 +187,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val exit = UnsafeZioRun.run(
         PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
+            forProject = SharedTestDataADM.imagesProjectIri.value,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set.empty[PermissionADM],
           ),
