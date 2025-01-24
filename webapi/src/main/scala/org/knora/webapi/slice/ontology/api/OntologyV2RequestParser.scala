@@ -17,7 +17,7 @@ import scala.language.implicitConversions
 
 import dsp.constants.SalsahGui
 import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
@@ -26,8 +26,10 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
@@ -75,7 +77,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       ontologyIri          <- uriAsOntologyIri(r)
       label                <- ZIO.fromEither(r.objectStringOption(RDFS.label))
       comment              <- ZIO.fromEither(r.objectStringOption(RDFS.comment))
-      lastModificationDate <- ZIO.fromEither(r.objectInstant(LastModificationDate))
+      lastModificationDate <- ZIO.fromEither(r.objectInstant(KA.LastModificationDate))
     } yield OntologyMetadata(ontologyIri, label, comment, lastModificationDate)
 
   private def uriAsOntologyIri(r: Resource): ZIO[Scope, String, OntologyIri] = ZIO
@@ -83,6 +85,35 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     .orElseFail("No IRI found")
     .flatMap(iriConverter.asSmartIri(_).mapError(_.getMessage))
     .flatMap(sIri => ZIO.fromEither(OntologyIri.fromApiV2Complex(sIri)))
+
+  def createOntologyRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, CreateOntologyRequestV2] =
+    import ModelOps.*
+    ZIO.scoped {
+      ModelOps.fromJsonLd(jsonLd).flatMap { m =>
+        ZIO.fromEither {
+          for {
+            r          <- m.singleRootResource
+            name       <- r.objectString(KA.OntologyName)
+            projectIri <- r.objectUri(KA.AttachedToProject, ProjectIri.from)
+            isShared   <- r.objectBooleanOption(KA.IsShared).map(_.getOrElse(false))
+            label      <- r.objectString(RDFS.label)
+            comment    <- r.objectStringOption(RDFS.comment)
+          } yield CreateOntologyRequestV2(
+            name,
+            projectIri,
+            isShared,
+            label,
+            comment,
+            apiRequestId,
+            requestingUser,
+          )
+        }
+      }
+    }
 
   def createClassRequestV2(jsonLd: String, apiRequestId: UUID, requestingUser: User): IO[String, CreateClassRequestV2] =
     ZIO.scoped {

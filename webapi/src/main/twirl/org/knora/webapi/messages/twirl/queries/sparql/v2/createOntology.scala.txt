@@ -4,6 +4,7 @@
  *@
 
 @import org.knora.webapi.messages.SmartIri
+@import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 @import java.time.Instant
 
 @*
@@ -12,11 +13,11 @@
  * @param ontologyNamedGraphIri the IRI of the named graph where the ontology should be stored.
  * @param ontologyIri the IRI of the ontology to be created.
  * @param projectIri the IRI of the project that the ontology belongs to.
- * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
+ * @param currentTime a xsd:dateTimeStamp that will be attached to the ontology.
  *@
 @(ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
-  projectIri: SmartIri,
+  projectIri: ProjectIri,
   isShared: Boolean,
   ontologyLabel: String,
   ontologyComment: Option[String],
@@ -44,7 +45,7 @@ INSERT {
 WHERE {
     BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
     BIND(IRI("@ontologyIri") AS ?ontology)
-    BIND(IRI("@projectIri") AS ?project)
+    BIND(IRI("@projectIri.value") AS ?project)
 
     FILTER NOT EXISTS {
         ?ontology rdf:type ?existingOntologyType .

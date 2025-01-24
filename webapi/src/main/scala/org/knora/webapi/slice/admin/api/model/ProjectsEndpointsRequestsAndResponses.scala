@@ -22,11 +22,11 @@ object ProjectsEndpointsRequestsAndResponses {
     shortname: Shortname,
     shortcode: Shortcode,
     longname: Option[Longname] = None,
-    description: List[Description],
-    keywords: List[Keyword],
+    description: List[Description] = List.empty,
+    keywords: List[Keyword] = List.empty,
     logo: Option[Logo] = None,
-    status: Status,
-    selfjoin: SelfJoin,
+    status: Status = Status.Active,
+    selfjoin: SelfJoin = SelfJoin.CannotJoin,
   )
   object ProjectCreateRequest {
     implicit val codec: JsonCodec[ProjectCreateRequest] = DeriveJsonCodec.gen[ProjectCreateRequest]

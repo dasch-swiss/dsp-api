@@ -116,7 +116,7 @@ final case class CreateResourceV2Handler(
     projectIri <- ZIO.succeed(createResourceRequestV2.createResource.projectADM.id)
     isSystemOrSharedProject =
       projectIri == KnoraProjectRepo.builtIn.SystemProject.id.value ||
-        projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
+        projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.value
     _ <- ZIO.when(isSystemOrSharedProject)(
            ZIO.fail(BadRequestException(s"Resources cannot be created in project <$projectIri>")),
          )

@@ -152,7 +152,7 @@ final case class OntologyTriplestoreHelpersLive(
                 }
 
                 if (
-                  internalOntologyIri.isKnoraSharedDefinitionIri && projectIri.toString != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
+                  internalOntologyIri.isKnoraSharedDefinitionIri && projectIri.toString != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.value
                 ) {
                   throw InconsistentRepositoryDataException(
                     s"Shared ontology $internalOntologyIri must be in project ${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}",
