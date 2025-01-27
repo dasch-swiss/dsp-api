@@ -37,12 +37,6 @@ object OntologyName extends StringValueCompanion[OntologyName] {
       Validation.fromPredicateWith(msgStr)(str)(value => regex.forall(_.matches(value)))
     }
 
-  private def matchesRegex(regex: Regex, msg: Option[String] = None): String => Validation[String, String] =
-    (str: String) => {
-      val msgStr = msg.getOrElse(s"must match regex: ${regex.toString()}")
-      Validation.fromPredicateWith(msgStr)(str)(regex.matches)
-    }
-
   private def notMatchesRegex(regex: Regex, msg: Option[String]): String => Validation[String, String] =
     (str: String) => {
       val msgStr = msg.getOrElse(s"must not match regex: ${regex.toString()}")
@@ -88,18 +82,4 @@ object OntologyName extends StringValueCompanion[OntologyName] {
         notContainKnoraIfNotInternal,
       ),
     )(str)
-
-  private def combine(
-    v1: String => Validation[String, String],
-    v2: String => Validation[String, String],
-    msg: String,
-  ): String => Validation[String, String] =
-    (str: String) => {
-      val v1applied: Validation[String, String] = v1(str)
-      val v2applied: Validation[String, String] = v2(str)
-      Validation
-        .validateAll(List(v1applied, v2applied))
-        .as(str)
-        .mapError(_ => msg)
-    }
 }
