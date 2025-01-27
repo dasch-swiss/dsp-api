@@ -31,12 +31,23 @@ object OntologyName extends StringValueCompanion[OntologyName] {
       "simple",
     )
 
-  private def matchesRegex(regex: Regex, msg: String): String => Validation[String, String] =
-    (str: String) => Validation.fromPredicateWith(s"$msg and must match regex: ${regex.toString()}")(str)(regex.matches)
+  private def matchesRegexes(regex: List[Regex], msg: Option[String] = None): String => Validation[String, String] =
+    (str: String) => {
+      val msgStr = msg.getOrElse(s"must match regexes: ${regex.mkString("'", "', '", "'")}")
+      Validation.fromPredicateWith(msgStr)(str)(value => regex.forall(_.matches(value)))
+    }
 
-  private def notMatchesRegex(regex: Regex, msg: String): String => Validation[String, String] =
-    (str: String) =>
-      Validation.fromPredicateWith(s"$msg and must not match regex: ${regex.toString()}: $msg")(str)(!regex.matches(_))
+  private def matchesRegex(regex: Regex, msg: Option[String] = None): String => Validation[String, String] =
+    (str: String) => {
+      val msgStr = msg.getOrElse(s"must match regex: ${regex.toString()}")
+      Validation.fromPredicateWith(msgStr)(str)(regex.matches)
+    }
+
+  private def notMatchesRegex(regex: Regex, msg: Option[String]): String => Validation[String, String] =
+    (str: String) => {
+      val msgStr = msg.getOrElse(s"must not match regex: ${regex.toString()}")
+      Validation.fromPredicateWith(msgStr)(str)(!regex.matches(_))
+    }
 
   private def notContainsReservedWord(reservedWords: Set[String]): String => Validation[String, String] =
     (str: String) =>
@@ -66,11 +77,29 @@ object OntologyName extends StringValueCompanion[OntologyName] {
     fromValidations(
       "OntologyName",
       List(
-        matchesRegex(nCNameRegex, "must be a valid NCName"),
-        matchesRegex(urlSafeRegex, "must be url safe"),
-        notMatchesRegex(apiVersionNumberRegex, "must not start with 'v' followed by a number"),
+        matchesRegexes(
+          List(nCNameRegex, urlSafeRegex),
+          Some(
+            "starts with a letter or an underscore and is followed by one or more alphanumeric characters, underscores, or hyphens, and does not contain any other characters",
+          ),
+        ),
+        notMatchesRegex(apiVersionNumberRegex, Some("must not start with 'v' followed by a number")),
         notContainsReservedWord(reservedWords),
         notContainKnoraIfNotInternal,
       ),
     )(str)
+
+  private def combine(
+    v1: String => Validation[String, String],
+    v2: String => Validation[String, String],
+    msg: String,
+  ): String => Validation[String, String] =
+    (str: String) => {
+      val v1applied: Validation[String, String] = v1(str)
+      val v2applied: Validation[String, String] = v2(str)
+      Validation
+        .validateAll(List(v1applied, v2applied))
+        .as(str)
+        .mapError(_ => msg)
+    }
 }

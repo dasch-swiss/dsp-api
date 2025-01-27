@@ -34,9 +34,23 @@ object OntologyNameSpec extends ZIOSpecDefault {
       }
     },
     test("must not create with invalid value") {
-      val invalidNames = List("1", "1abc", "abc.1", "abc/1", "abc 1", "abc@1", "abc#1", "abc$1", "abc%1", "some-knora")
+      val invalidNames =
+        List("1", "no space", "1abc", "abc.1", "abc/1", "abc 1", "abc@1", "abc#1", "abc$1", "abc%1")
       check(Gen.fromIterable(invalidNames)) { invalidName =>
-        assertTrue(OntologyName.from(invalidName).isLeft)
+        assertTrue(
+          OntologyName.from(invalidName) == Left(
+            "OntologyName starts with a letter or an underscore and is followed by one or more alphanumeric characters, underscores, or hyphens, and does not contain any other characters.",
+          ),
+        )
+      }
+    },
+    test("must not contain 'knora' if not internal") {
+      val invalidNames =
+        List("some-knora", "knora-some", "some-knora-some", "knora")
+      check(Gen.fromIterable(invalidNames)) { invalidName =>
+        assertTrue(
+          OntologyName.from(invalidName) == Left("OntologyName must not contain 'knora' if not internal."),
+        )
       }
     },
   )
