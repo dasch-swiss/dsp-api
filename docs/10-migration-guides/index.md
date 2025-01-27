@@ -60,4 +60,9 @@ is deprecated and will be removed in a future version.
 Insteads use `/admin/permissions/doap/{permissionIri}`
 as described [here](../03-endpoints/api-admin/permissions.md#updating-an-existing-default-object-access-permission).
 
+### Retrieving List Information
 
+For retrieving list infos, the routes `/admin/lists/infos/{listIri}` and `/admin/lists/nodes/{listIri}`
+are deprecated and will be removed in a future version.  
+Instead, use `/admin/lists/{listIri}/info` 
+as described [here](../03-endpoints/api-admin/lists.md#get-list-info). 
