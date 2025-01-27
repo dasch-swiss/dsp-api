@@ -9,7 +9,7 @@ For an extensive explanation on how DSP permissions are implemented, see
 [here](../../05-internals/design/api-admin/administration.md#permissions).
 
 | Route                                                       | Operations | Explanation                                                                                                                                                                               |
-|-------------------------------------------------------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ----------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/admin/permissions/{projectIri}`                           | `GET`      | [get all permissions of a project](#getting-permissions)                                                                                                                                  |
 | `/admin/permissions/ap/{projectIri}`                        | `GET`      | [get all administrative permissions of a project](#getting-permissions)                                                                                                                   |
 | `/admin/permissions/ap/{projectIri}/{groupIri}`             | `GET`      | [get all administrative permissions of a group](#getting-permissions)                                                                                                                     |
@@ -21,7 +21,7 @@ For an extensive explanation on how DSP permissions are implemented, see
 | `/admin/permissions/{permissionIri}/hasPermission`          | `PUT`      | [update the scope of an administrative or default object access permission](#updating-a-permissions-scope), i.e. what permissions are granted to which group when this permission applies |
 | `/admin/permissions/{permissionIri}`                        | `DELETE`   | [delete an administrative or default object access permission](#deleting-a-permission)                                                                                                    |
 | ~~`/admin/permissions/{doap_permissionIri}/resourceClass`~~ | `PUT`      | **deprecated**, use `/admin/permissions/doap/{permissionIri}` instead                                                                                                                     |
-| ~~`/admin/permissions/{doap_permissionIri}/property`~~      | `PUT`      | **deprecated**,  use `/admin/permissions/doap/{permissionIri}` instead                                                                                                                    | 
+| ~~`/admin/permissions/{doap_permissionIri}/property`~~      | `PUT`      | **deprecated**,  use `/admin/permissions/doap/{permissionIri}` instead                                                                                                                    |
 
 ## Permission Operations
 
@@ -267,8 +267,10 @@ The response is the updated default object access permission with its new attrib
 
 ### Updating a Permission's Group
 
-!!! warning
-    For Default Object Access Permissions this endpoint is deprecated, use [`PUT: /admin/permissions/doap/<permissionIri>`](#updating-an-existing-default-object-access-permission) instead. 
+!!! note
+    For Default Object Access Permissions this endpoint is deprecated, 
+    use [`PUT: /admin/permissions/doap/<permissionIri>`](#updating-an-existing-default-object-access-permission) instead.  
+    For more information, see [here](../../../10-migration-guides#updating-doaps).
 
 - `PUT: /admin/permissions/<permissionIri>/group` to change the group for which an administrative or a default object 
 access permission, identified by its IRI `<permissionIri>`, is defined. The request body must contain the IRI of the new 
@@ -289,7 +291,9 @@ the combination of both, the permission will be defined for the newly specified 
 ### Updating a Permission's Scope
 
 !!! note
-    For Default Object Access Permissions this endpoint is deprecated, use [`PUT: /admin/permissions/doap/<permissionIri>`](#updating-an-existing-default-object-access-permission) instead.
+    For Default Object Access Permissions this endpoint is deprecated, 
+    use [`PUT: /admin/permissions/doap/<permissionIri>`](#updating-an-existing-default-object-access-permission) instead.  
+    For more information, see [here](../../../10-migration-guides#updating-doaps).
 
 - `PUT: /admin/permissions/<permissionIri>/hasPermissions` to change the scope of permissions assigned to an administrative
   or a default object access permission identified by it IRI, `<permissionIri>`. The request body must contain the new set 

@@ -52,4 +52,12 @@ Instead, use the newly introduced Segment type.
 
 More information on Segments can be found [here](../02-dsp-ontologies/knora-base.md#segment).
 
+### Updating DOAPs
+
+For updating DOAPs, using the general-purpose route `/admin/permissions/{permissionIri}/group|hasPermissions`
+is deprecated and will be removed in a future version.
+
+Insteads use `/admin/permissions/doap/{permissionIri}`
+as described [here](../03-endpoints/api-admin/permissions.md#updating-an-existing-default-object-access-permission).
+
 
