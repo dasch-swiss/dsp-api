@@ -170,7 +170,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
 
         received.project.shortname.value should be("newproject")
         received.project.shortcode.value should be(shortcode.toUpperCase) // upper case
-        received.project.longname should contain("project longname")
+        received.project.longname.map(_.value) should contain("project longname")
         received.project.description should be(
           Seq(StringLiteralV2.from(value = "project description", language = Some("en"))),
         )
@@ -264,7 +264,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
 
         received.project.shortname.value should be("newproject2")
         received.project.shortcode.value should be("1112")
-        received.project.longname should contain("project longname")
+        received.project.longname.map(_.value) should contain("project longname")
         received.project.description should be(
           Seq(StringLiteralV2.from(value = "project description", language = Some("en"))),
         )
@@ -296,7 +296,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
           ),
         )
 
-        received.project.longname should contain(Iri.fromSparqlEncodedString(longnameWithSpecialCharacter))
+        received.project.longname.map(_.value) should contain(Iri.fromSparqlEncodedString(longnameWithSpecialCharacter))
         received.project.description should be(
           Seq(
             StringLiteralV2.from(
@@ -384,7 +384,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         )
         received.project.shortname.value should be("newproject")
         received.project.shortcode.value should be("111C")
-        received.project.longname should be(Some("updated project longname"))
+        received.project.longname.map(_.value) should be(Some("updated project longname"))
         received.project.description should be(
           Seq(
             StringLiteralV2.from(
