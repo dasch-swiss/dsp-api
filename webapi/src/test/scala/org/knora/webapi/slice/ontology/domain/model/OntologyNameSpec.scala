@@ -7,11 +7,26 @@ package org.knora.webapi.slice.ontology.domain.model
 import zio.test.*
 
 object OntologyNameSpec extends ZIOSpecDefault {
-  val spec = suite("OntologyNameSpec")(test("should") {
-    val validNames = List("anything")
-    check(Gen.fromIterable(validNames)) { name =>
-      val result = OntologyName.from(name)
-      assertTrue(result.map(_.value) == Right(name))
-    }
-  })
+  val spec = suite("OntologyName")(
+    test("should create a valid OntologyName") {
+      val validNames = List("anything", "beol", "limc")
+      check(Gen.fromIterable(validNames)) { name =>
+        val result = OntologyName.from(name)
+        assertTrue(result.map(_.value) == Right(name))
+      }
+    },
+    test("must not contain reserved words") {
+      val reservedWords = List("knora", "ontology", "rdf", "rdfs", "owl", "xsd", "schema", "shared", "simple")
+      check(Gen.fromIterable(reservedWords)) { reservedWord =>
+        val result = OntologyName.from(reservedWord)
+        assertTrue(
+          result == Left(
+            "OntologyName must not contain reserved words: HashSet(rdf, knora, standoff, ontology, knora-admin, " +
+              "knora-base, owl, salsah-gui, simple, xsd, shared, knora-api, schema, rdfs).",
+          ),
+        )
+      }
+    },
+  )
+
 }
