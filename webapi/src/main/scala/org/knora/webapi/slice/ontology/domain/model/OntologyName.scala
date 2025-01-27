@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.ontology.domain.model
 import zio.prelude.Validation
 import zio.prelude.ZValidation
@@ -30,6 +35,10 @@ object OntologyName extends StringValueCompanion[OntologyName] {
   private def matchesRegex(regex: Regex, msg: String): String => Validation[String, String] =
     (str: String) => Validation.fromPredicateWith(s"must match regex: ${regex.toString()}: $msg")(str)(regex.matches)
 
+  private def notMatchesRegex(regex: Regex, msg: String): String => Validation[String, String] =
+    (str: String) =>
+      Validation.fromPredicateWith(s"must not match regex: ${regex.toString()}: $msg")(str)(!regex.matches(_))
+
   private def notContainsReservedWord(reservedWords: Set[String]): String => Validation[String, String] =
     (str: String) =>
       Validation.fromPredicateWith(s"must not contain reserved words: $reservedWords")(str)(value =>
@@ -53,7 +62,7 @@ object OntologyName extends StringValueCompanion[OntologyName] {
       List(
         matchesRegex(nCNameRegex, "must be a valid NCName"),
         matchesRegex(urlSafeRegex, "must be url safe"),
-        matchesRegex(apiVersionNumberRegex, "must not start with 'v' followed by a number"),
+        notMatchesRegex(apiVersionNumberRegex, "must not start with 'v' followed by a number"),
         notContainsReservedWord(reservedWords),
       ),
     )(str)
