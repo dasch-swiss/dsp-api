@@ -16,6 +16,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
@@ -160,7 +161,7 @@ object SharedTestDataADM {
     id = KnoraProjectRepo.builtIn.SystemProject.id.value,
     shortname = Shortname.unsafeFrom("SystemProject"),
     shortcode = Shortcode.unsafeFrom("FFFF"),
-    longname = Some("Knora System Project"),
+    longname = Some(Longname.unsafeFrom("Knora System Project")),
     description = Seq(StringLiteralV2.from(value = "Knora System Project", language = Some("en"))),
     keywords = Seq.empty[String],
     logo = None,
@@ -179,7 +180,7 @@ object SharedTestDataADM {
     id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.value,
     shortname = Shortname.unsafeFrom("DefaultSharedOntologiesProject"),
     shortcode = Shortcode.unsafeFrom("0000"),
-    longname = Some("Default Knora Shared Ontologies Project"),
+    longname = Some(Longname.unsafeFrom("Default Knora Shared Ontologies Project")),
     description = Seq(StringLiteralV2.from(value = "Default Knora Shared Ontologies Project", language = Some("en"))),
     keywords = Seq.empty[String],
     logo = None,
@@ -291,7 +292,7 @@ object SharedTestDataADM {
     id = imagesProjectIri.value,
     shortname = Shortname.unsafeFrom("images"),
     shortcode = Shortcode.unsafeFrom("00FF"),
-    longname = Some("Image Collection Demo"),
+    longname = Some(Longname.unsafeFrom("Image Collection Demo")),
     description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
     keywords = Seq("images", "collection").sorted,
     logo = None,
@@ -305,7 +306,7 @@ object SharedTestDataADM {
     id = imagesProjectIri.value,
     shortname = Shortname.unsafeFrom("images"),
     shortcode = Shortcode.unsafeFrom("00FF"),
-    longname = Some("Image Collection Demo"),
+    longname = Some(Longname.unsafeFrom("Image Collection Demo")),
     description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
     keywords = Seq("images", "collection").sorted,
     logo = None,
@@ -447,7 +448,7 @@ object SharedTestDataADM {
     id = incunabulaProjectIri,
     shortname = Shortname.unsafeFrom("incunabula"),
     shortcode = Shortcode.unsafeFrom("0803"),
-    longname = Some("Bilderfolgen Basler Frühdrucke"),
+    longname = Some(Longname.unsafeFrom("Bilderfolgen Basler Frühdrucke")),
     description = Seq(
       StringLiteralV2.from(
         value =
@@ -482,7 +483,7 @@ object SharedTestDataADM {
     id = incunabulaProjectIri,
     shortname = Shortname.unsafeFrom("incunabula"),
     shortcode = Shortcode.unsafeFrom("0803"),
-    longname = Some("Bilderfolgen Basler Frühdrucke"),
+    longname = Some(Longname.unsafeFrom("Bilderfolgen Basler Frühdrucke")),
     description = Seq(
       StringLiteralV2.from(
         value =
@@ -615,7 +616,7 @@ object SharedTestDataADM {
     id = anythingProjectIri,
     shortname = Shortname.unsafeFrom("anything"),
     shortcode = Shortcode.unsafeFrom("0001"),
-    longname = Some("Anything Project"),
+    longname = Some(Longname.unsafeFrom("Anything Project")),
     description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
     keywords = Seq("things", "arbitrary test data").sorted,
     logo = None,
@@ -628,7 +629,7 @@ object SharedTestDataADM {
     id = anythingProjectIri,
     shortname = Shortname.unsafeFrom("anything"),
     shortcode = Shortcode.unsafeFrom("0001"),
-    longname = Some("Anything Project"),
+    longname = Some(Longname.unsafeFrom("Anything Project")),
     description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
     keywords = Seq("things", "arbitrary test data").sorted,
     logo = None,
@@ -663,7 +664,7 @@ object SharedTestDataADM {
     id = beolProjectIri,
     shortname = Shortname.unsafeFrom("beol"),
     shortcode = Shortcode.unsafeFrom("0801"),
-    longname = Some("Bernoulli-Euler Online"),
+    longname = Some(Longname.unsafeFrom("Bernoulli-Euler Online")),
     description = Seq(StringLiteralV2.from(value = "Bernoulli-Euler Online", language = None)),
     keywords = Seq.empty[String],
     logo = None,
@@ -717,7 +718,7 @@ object SharedTestDataADM {
     id = dokubibProjectIri,
     shortname = Shortname.unsafeFrom("dokubib"),
     shortcode = Shortcode.unsafeFrom("0804"),
-    longname = Some("Dokubib"),
+    longname = Some(Longname.unsafeFrom("Dokubib")),
     description = Seq(StringLiteralV2.from(value = "Dokubib", language = None)),
     keywords = Seq.empty[String],
     logo = None,
