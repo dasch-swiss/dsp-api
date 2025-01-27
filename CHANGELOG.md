@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.18.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.17.0...v0.18.0) (2025-01-27)
+
+
+### Maintenances
+
+* Dependency updates ([#320](https://github.com/dasch-swiss/dsp-ingest/issues/320)) ([39116d8](https://github.com/dasch-swiss/dsp-ingest/commit/39116d8c4be5b492690510e184fe8af558bb4ccc))
+* Minor dependency updates ([#319](https://github.com/dasch-swiss/dsp-ingest/issues/319)) ([6840226](https://github.com/dasch-swiss/dsp-ingest/commit/6840226130d4e59dea137b7076f0487d48a31025))
+* Patch dependency updates ([#318](https://github.com/dasch-swiss/dsp-ingest/issues/318)) ([363c6e4](https://github.com/dasch-swiss/dsp-ingest/commit/363c6e42d77c1a1a1bb0e77aac31ecf8a7581a60))
+* Update SIPI to v31.3.0 ([#325](https://github.com/dasch-swiss/dsp-ingest/issues/325)) ([bf81072](https://github.com/dasch-swiss/dsp-ingest/commit/bf810724b946642d834c9dcaac9825856b0ddf4a))
+
+
+### Enhancements
+
+* Always apply top-left correction for new derivatives (DEV-4481) ([#323](https://github.com/dasch-swiss/dsp-ingest/issues/323)) ([83185e9](https://github.com/dasch-swiss/dsp-ingest/commit/83185e9c5d0a3a9b8ac7242c5f003c30e99d2914))
+* Revive topleft maintenance action (DEV-4501) ([#317](https://github.com/dasch-swiss/dsp-ingest/issues/317)) ([7a89e77](https://github.com/dasch-swiss/dsp-ingest/commit/7a89e77901504eaa1b0aa9cf1f0155768d66cc92))
+
+
+### Bug Fixes
+
+* Fix argument order with --topleft (DEV-4481) ([#324](https://github.com/dasch-swiss/dsp-ingest/issues/324)) ([d9a74a1](https://github.com/dasch-swiss/dsp-ingest/commit/d9a74a131b557e435e0d2b7ed88268018e95805c))
+
 ## [0.17.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.16.0...v0.17.0) (2025-01-07)
 
 
