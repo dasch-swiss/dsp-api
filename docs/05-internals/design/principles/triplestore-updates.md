@@ -247,8 +247,6 @@ Knora enforces consistency constraints using three redundant mechanisms:
 1. By doing pre-update checks using SPARQL SELECT queries and cached
    ontology data.
 2. By doing checks in the `WHERE` clauses of SPARQL updates.
-3. **Deprecated**: By using GraphDB's built-in consistency checker (see
-   [Consistency Checking](consistency-checking.md)).
 
 We take the view that redundant consistency checks are a good thing.
 
