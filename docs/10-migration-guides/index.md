@@ -67,7 +67,7 @@ are deprecated and will be removed in a future version.
 Instead, use `/admin/lists/{listIri}/info` 
 as described [here](../03-endpoints/api-admin/lists.md#get-list-info). 
 
-### Authentication
+### Authentication
 
 All authentication methods other than the bearer token are deprecated.
 This includes DSP-API and Sipi.
