@@ -66,3 +66,10 @@ For retrieving list infos, the routes `/admin/lists/infos/{listIri}` and `/admin
 are deprecated and will be removed in a future version.  
 Instead, use `/admin/lists/{listIri}/info` 
 as described [here](../03-endpoints/api-admin/lists.md#get-list-info). 
+
+### Authentication
+
+All authentication methods other than the bearer token are deprecated.
+This includes DSP-API and Sipi.
+For more information, see the [Authentication](../03-endpoints/api-v2/authentication.md) page
+and the [SIPI documentation](../06-sipi/sipi-and-dsp-api.md#authentication-of-users-with-sipi).
