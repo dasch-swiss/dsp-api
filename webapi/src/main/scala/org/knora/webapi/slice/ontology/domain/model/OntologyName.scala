@@ -13,7 +13,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 
-final case class OntologyName(value: String) extends StringValue
+final case class OntologyName(value: String, isInternal: Boolean) extends StringValue
 object OntologyName extends StringValueCompanion[OntologyName] {
 
   private val nCNameRegex: Regex           = "^[\\p{L}_][\\p{L}0-9_.-]*$".r
@@ -21,7 +21,6 @@ object OntologyName extends StringValueCompanion[OntologyName] {
   private val apiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
   private val reservedWords: Set[String] =
     Set(
-      "knora",
       "ontology",
       "rdf",
       "rdfs",
@@ -30,19 +29,26 @@ object OntologyName extends StringValueCompanion[OntologyName] {
       "schema",
       "shared",
       "simple",
-    ) ++ OntologyConstants.BuiltInOntologyLabels
+    )
 
   private def matchesRegex(regex: Regex, msg: String): String => Validation[String, String] =
-    (str: String) => Validation.fromPredicateWith(s"must match regex: ${regex.toString()}: $msg")(str)(regex.matches)
+    (str: String) => Validation.fromPredicateWith(s"$msg and must match regex: ${regex.toString()}")(str)(regex.matches)
 
   private def notMatchesRegex(regex: Regex, msg: String): String => Validation[String, String] =
     (str: String) =>
-      Validation.fromPredicateWith(s"must not match regex: ${regex.toString()}: $msg")(str)(!regex.matches(_))
+      Validation.fromPredicateWith(s"$msg and must not match regex: ${regex.toString()}: $msg")(str)(!regex.matches(_))
 
   private def notContainsReservedWord(reservedWords: Set[String]): String => Validation[String, String] =
     (str: String) =>
-      Validation.fromPredicateWith(s"must not contain reserved words: $reservedWords")(str)(value =>
+      Validation.fromPredicateWith(s"must not contain reserved words: ${reservedWords.mkString(", ")}")(str)(value =>
         reservedWords.forall(word => !value.toLowerCase().contains(word.toLowerCase)),
+      )
+
+  private def notContainKnoraIfNotInternal: String => Validation[String, String] =
+    (str: String) =>
+      Validation.fromPredicateWith("must not contain 'knora' if not internal")(str)(value =>
+        if (OntologyConstants.BuiltInOntologyLabels.contains(str)) true
+        else !value.toLowerCase().contains("knora"),
       )
 
   private def fromValidations(
@@ -51,7 +57,7 @@ object OntologyName extends StringValueCompanion[OntologyName] {
   ): String => Either[String, OntologyName] = value =>
     ZValidation
       .validateAll(validations.map(_(value)))
-      .as(OntologyName(value))
+      .as(OntologyName(value, OntologyConstants.BuiltInOntologyLabels.contains(value)))
       .toEither
       .left
       .map(_.mkString(s"$typ ", ", ", "."))
@@ -64,6 +70,7 @@ object OntologyName extends StringValueCompanion[OntologyName] {
         matchesRegex(urlSafeRegex, "must be url safe"),
         notMatchesRegex(apiVersionNumberRegex, "must not start with 'v' followed by a number"),
         notContainsReservedWord(reservedWords),
+        notContainKnoraIfNotInternal,
       ),
     )(str)
 }

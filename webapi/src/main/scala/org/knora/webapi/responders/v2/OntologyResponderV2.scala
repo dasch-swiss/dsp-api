@@ -521,6 +521,7 @@ final case class OntologyResponderV2(
               s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}, reason: ${err}",
             ),
           )
+          .filterOrFail(!_.isInternal)(BadRequestException("Internal ontologies cannot be created"))
 
       // Make the internal ontology IRI.
       projectId <- ZIO.fromEither(ProjectIri.from(projectIri.toString)).mapError(e => BadRequestException(e))
