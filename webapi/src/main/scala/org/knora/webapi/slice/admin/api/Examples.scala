@@ -23,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
@@ -88,7 +89,7 @@ object Examples {
       id = ProjectExample.projectIri.value,
       shortname = Shortname.unsafeFrom("example"),
       shortcode = Shortcode.unsafeFrom("0001"),
-      longname = Some("Example Project"),
+      longname = Some(Longname.unsafeFrom("Example Project")),
       description = Seq(StringLiteralV2.from("An example project", Some("en"))),
       keywords = Seq("example", "project"),
       logo = None,
