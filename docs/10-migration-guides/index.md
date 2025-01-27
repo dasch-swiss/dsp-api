@@ -82,3 +82,12 @@ use `/v2/ontologies/canreplacecardinalities/{classIRI}?propertyIri={propertyIRI}
 
 For more information, see [here](../03-endpoints/api-v2/ontology-information/#pre-update-checks).
 
+### `fileValueHasExternalUrl`
+
+For still image file values, the property `knora-base:fileValueHasExternalUrl` is deprecated.
+Instead, use `knora-base:stillImageFileValueExternalFileValue`.  
+Additionally, this property should no longer be typed as a string literal,
+but as a `xsd:anyURI` instead.
+
+For more information, see [here](../03-endpoints/api-v2/editing-values.md#images-stored-in-an-external-iiif-server).
+
