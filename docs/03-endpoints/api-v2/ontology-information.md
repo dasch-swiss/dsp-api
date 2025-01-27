@@ -1980,7 +1980,9 @@ Success:
 }
 ```
 
-_Note_: The following check is still available but deprecated - use the more detailed check above.
+!!! note
+    The following check is still available but deprecated - use the more detailed check above.  
+    This request is only checking if the class is in use. 
 
 To check whether all class's cardinalities can be replaced:
 
