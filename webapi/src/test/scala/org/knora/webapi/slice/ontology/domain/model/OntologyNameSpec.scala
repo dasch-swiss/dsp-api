@@ -9,7 +9,7 @@ import zio.test.*
 object OntologyNameSpec extends ZIOSpecDefault {
   val spec = suite("OntologyName")(
     test("should create a valid OntologyName") {
-      val validNames = List("anything", "beol", "limc", "test", "AVeryVeryVeryVeryLongLongName")
+      val validNames = List("anything", "beol", "limc", "test", "AVeryVeryVeryVeryLongLongName", "another-onto")
       check(Gen.fromIterable(validNames)) { name =>
         val result = OntologyName.from(name)
         assertTrue(result.map(_.value) == Right(name))
@@ -34,7 +34,7 @@ object OntologyNameSpec extends ZIOSpecDefault {
       }
     },
     test("must not create with invalid value") {
-      val invalidNames = List("1", "1abc", "abc.1", "abc/1", "abc 1", "abc@1", "abc#1", "abc$1", "abc%1")
+      val invalidNames = List("1", "1abc", "abc.1", "abc/1", "abc 1", "abc@1", "abc#1", "abc$1", "abc%1", "some-knora")
       check(Gen.fromIterable(invalidNames)) { invalidName =>
         assertTrue(OntologyName.from(invalidName).isLeft)
       }
