@@ -13,7 +13,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 
-final case class OntologyName(value: String, isInternal: Boolean) extends StringValue
+final case class OntologyName(value: String, isBuiltIn: Boolean) extends StringValue
 object OntologyName extends StringValueCompanion[OntologyName] {
 
   private val nCNameRegex: Regex           = "^[\\p{L}_][\\p{L}0-9_.-]*$".r

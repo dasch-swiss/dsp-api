@@ -19,7 +19,7 @@ object OntologyNameSpec extends ZIOSpecDefault {
       val internalNames = List("knora-api", "knora-admin", "knora-base", "salsah-gui")
       check(Gen.fromIterable(internalNames)) { name =>
         val result = OntologyName.from(name)
-        assertTrue(result.map(it => (it.isInternal, it.value)) == Right((true, name)))
+        assertTrue(result.map(it => (it.isBuiltIn, it.value)) == Right((true, name)))
       }
     },
     test("must not contain reserved words") {

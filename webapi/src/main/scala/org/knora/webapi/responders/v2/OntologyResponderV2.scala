@@ -516,12 +516,8 @@ final case class OntologyResponderV2(
       validOntologyName <-
         ZIO
           .fromEither(OntologyName.from(createOntologyRequest.ontologyName))
-          .mapError(err =>
-            BadRequestException(
-              s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}, reason: ${err}",
-            ),
-          )
-          .filterOrFail(!_.isInternal)(BadRequestException("Internal ontologies cannot be created"))
+          .mapError(BadRequestException.apply)
+          .filterOrFail(!_.isBuiltIn)(BadRequestException("A built in ontology cannot be created"))
 
       // Make the internal ontology IRI.
       projectId <- ZIO.fromEither(ProjectIri.from(projectIri.toString)).mapError(e => BadRequestException(e))
