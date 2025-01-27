@@ -73,3 +73,12 @@ All authentication methods other than the bearer token are deprecated.
 This includes DSP-API and Sipi.
 For more information, see the [Authentication](../03-endpoints/api-v2/authentication.md) page
 and the [SIPI documentation](../06-sipi/sipi-and-dsp-api.md#authentication-of-users-with-sipi).
+
+### Cardinality Replacement Check
+
+The unparametrised check if it is possible to replace a cardinality of a property on a resource class is deprecated.
+Instead of `/v2/ontologies/canreplacecardinalities/{classIRI}`,
+use `/v2/ontologies/canreplacecardinalities/{classIRI}?propertyIri={propertyIRI}&newCardinality=[0-1|1|1-n|0-n]`.
+
+For more information, see [here](../03-endpoints/api-v2/ontology-information/#pre-update-checks).
+
