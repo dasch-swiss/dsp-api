@@ -48,8 +48,8 @@ import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseText
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseUri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
