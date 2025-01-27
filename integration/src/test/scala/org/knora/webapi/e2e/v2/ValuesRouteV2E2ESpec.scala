@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -19,6 +19,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration.*
+import scala.xml.XML
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -1555,6 +1556,72 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           | test</p>""".stripMargin
 
       assert(savedTextValueAsXml.contains(expectedText))
+    }
+
+    "create a text value with standoff containing a footnote" in {
+      val resourceIri: IRI = AThing.iri
+      val textValueAsXml: String =
+        """|<?xml version="1.0" encoding="UTF-8"?>
+           |<text>This text has a footnote<footnote content="this is footnote content"/> containing text.</text>
+           |""".stripMargin
+
+      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+      val jsonLDEntity = createTextValueWithStandoffRequest(
+        resourceIri = resourceIri,
+        textValueAsXml = textValueAsXml,
+        mappingIri = standardMappingIri,
+      )
+
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      val response: HttpResponse = singleAwaitingRequest(request)
+      assert(response.status == StatusCodes.OK, responseToString(response))
+      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val valueType: SmartIri =
+        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
+      valueType should ===(KnoraApiV2Complex.TextValue.toSmartIri)
+
+      val savedValue: JsonLDObject = getValue(
+        resourceIri = resourceIri,
+        maybePreviousLastModDate = maybeResourceLastModDate,
+        propertyIriForGravsearch = propertyIri,
+        propertyIriInResult = propertyIri,
+        expectedValueIri = valueIri,
+        userEmail = anythingUserEmail,
+      )
+
+      val savedTextValueAsXml = savedValue
+        .getRequiredString(KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), XML.loadString)
+      assert(savedTextValueAsXml == XML.loadString(textValueAsXml))
+    }
+
+    "not create a text value with standoff containing a footnote without content" in {
+      val resourceIri: IRI = AThing.iri
+      val textValueAsXml: String =
+        """|<?xml version="1.0" encoding="UTF-8"?>
+           |<text>
+           |   This text has a footnote<footnote /> without content.
+           |</text>
+           |""".stripMargin
+
+      val jsonLDEntity = createTextValueWithStandoffRequest(
+        resourceIri = resourceIri,
+        textValueAsXml = textValueAsXml,
+        mappingIri = standardMappingIri,
+      )
+
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      val response: HttpResponse = singleAwaitingRequest(request)
+      assert(response.status == StatusCodes.BadRequest)
     }
 
     "create a TextValue from XML representing HTML with an attribute containing escaped quotes" in {

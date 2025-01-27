@@ -41,6 +41,7 @@ that are mapped to standoff classes and properties defined in the ontology:
 - `<cite>` → `standoff:StandoffCiteTag`
 - `<blockquote>` → `standoff:StandoffBlockquoteTag`
 - `<code>` → `standoff:StandoffCodeTag`
+- `<footnote content="footnote text">` → `standoff:StandoffFootnoteTag`
 
 The HTML produced by CKEditor is wrapped in an XML doctype and a pair of root tags `<text>...</text>` 
 and then sent to the DSP-API.
@@ -48,3 +49,13 @@ The XML sent to the GUI by the DSP-API is unwrapped accordingly.
 Although the GUI supports HTML5, it is treated as if it was XHTML in strict XML notation.
 
 Text with standard standoff markup can be transformed to TEI XML as described [here](tei-xml.md).
+
+## Footnotes
+
+Footnote support is currently experimental and has some limitations:
+
+- CKE does not support footnotes out of the box. DSP-APP uses a custom build of CKE that supports footnotes.
+- The content of footnotes is not covered by the full text search.
+- The content of footnotes may contain further markup, but this will internally not be converted to standoff. 
+  For that reason, markup in footnotes can not be searched for through gravsearch
+  and hence outgoing and incoming links will not be displayed in DSP-APP.

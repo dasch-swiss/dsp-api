@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -205,11 +205,10 @@ object ProjectEraseIT extends E2EZSpec {
         },
         test("when called as root then it should delete the ontology graph") {
           for {
-            project         <- getProject
-            projectSmartIri <- ZIO.serviceWithZIO[IriConverter](_.asSmartIri(project.id.value))
+            project <- getProject
             req = CreateOntologyRequestV2(
                     "test",
-                    projectSmartIri,
+                    project.id,
                     false,
                     "some label",
                     None,

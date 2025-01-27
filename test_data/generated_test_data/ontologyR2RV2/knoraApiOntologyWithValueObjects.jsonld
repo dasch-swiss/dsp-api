@@ -172,8 +172,8 @@
             "@id": "knora-api:Annotation"
         },
         {
-            "@id": "knora-api:ArchiveFileValue",
-            "@type": "owl:Class",
+            "knora-api:isValueClass": true,
+            "rdfs:label": "archive file value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:FileValue"
@@ -323,7 +323,8 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "knora-api:isValueClass": true
+            "@type": "owl:Class",
+            "@id": "knora-api:ArchiveFileValue"
         },
         {
             "knora-api:isResourceClass": true,
@@ -481,6 +482,7 @@
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "audio file value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:FileValue"
@@ -1029,6 +1031,7 @@
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "boolean value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:BooleanBase"
@@ -1167,10 +1170,12 @@
                     },
                     "owl:cardinality": 1
                 }
-            ]
+            ],
+            "rdfs:label": "color base"
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "color value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:ColorBase"
@@ -1303,6 +1308,7 @@
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "3D file value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:FileValue"
@@ -1681,10 +1687,12 @@
                     },
                     "owl:cardinality": 1
                 }
-            ]
+            ],
+            "rdfs:label": "date base"
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "date value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:DateBase"
@@ -1887,10 +1895,12 @@
                     },
                     "owl:cardinality": 1
                 }
-            ]
+            ],
+            "rdfs:label": "decimal base"
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "decimal value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:DecimalBase"
@@ -2280,8 +2290,8 @@
             "@id": "knora-api:DeletedValue"
         },
         {
-            "@id": "knora-api:DocumentFileValue",
-            "@type": "owl:Class",
+            "knora-api:isValueClass": true,
+            "rdfs:label": "document file value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:FileValue"
@@ -2438,7 +2448,8 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "knora-api:isValueClass": true
+            "@type": "owl:Class",
+            "@id": "knora-api:DocumentFileValue"
         },
         {
             "knora-api:isResourceClass": true,
@@ -2595,8 +2606,8 @@
             "@id": "knora-api:DocumentRepresentation"
         },
         {
-            "@id": "knora-api:FileValue",
-            "@type": "owl:Class",
+            "knora-api:isValueClass": true,
+            "rdfs:label": "file value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:Value"
@@ -2741,7 +2752,8 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "knora-api:isValueClass": true
+            "@type": "owl:Class",
+            "@id": "knora-api:FileValue"
         },
         {
             "@id": "knora-api:FormattedText",
@@ -2751,6 +2763,7 @@
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "geometry value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:Value"
@@ -2872,8 +2885,8 @@
             "@id": "knora-api:GeomValue"
         },
         {
-            "@id": "knora-api:GeonameValue",
-            "@type": "owl:Class",
+            "knora-api:isValueClass": true,
+            "rdfs:label": "geoname value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:Value"
@@ -2990,7 +3003,8 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "knora-api:isValueClass": true
+            "@type": "owl:Class",
+            "@id": "knora-api:GeonameValue"
         },
         {
             "@id": "knora-api:IntBase",
@@ -3006,10 +3020,12 @@
                     },
                     "owl:cardinality": 1
                 }
-            ]
+            ],
+            "rdfs:label": "integer base"
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "integer value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:IntBase"
@@ -3155,10 +3171,12 @@
                     },
                     "owl:cardinality": 1
                 }
-            ]
+            ],
+            "rdfs:label": "interval base"
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "interval value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:IntervalBase"
@@ -3464,6 +3482,7 @@
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "link value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:Value"
@@ -3609,8 +3628,7 @@
             "@id": "knora-api:LinkValue"
         },
         {
-            "@id": "knora-api:ListNode",
-            "@type": "owl:Class",
+            "rdfs:label": "list node",
             "rdfs:subClassOf": [
                 {
                     "@type": "owl:Restriction",
@@ -3627,11 +3645,13 @@
                     "owl:minCardinality": 1
                 }
             ],
-            "rdfs:comment": "Represents a flat or hierarchical list"
+            "rdfs:comment": "Represents a flat or hierarchical list",
+            "@type": "owl:Class",
+            "@id": "knora-api:ListNode"
         },
         {
-            "@id": "knora-api:ListValue",
-            "@type": "owl:Class",
+            "knora-api:isValueClass": true,
+            "rdfs:label": "list value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:Value"
@@ -3748,10 +3768,12 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "knora-api:isValueClass": true
+            "@type": "owl:Class",
+            "@id": "knora-api:ListValue"
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "moving image file value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:FileValue"
@@ -4749,6 +4771,7 @@
             "@id": "knora-api:Segment"
         },
         {
+            "rdfs:label": "standoff boolean tag",
             "knora-api:isStandoffClass": true,
             "rdfs:subClassOf": [
                 {
@@ -4851,6 +4874,7 @@
             "@id": "knora-api:StandoffBooleanTag"
         },
         {
+            "rdfs:label": "standoff color tag",
             "knora-api:isStandoffClass": true,
             "rdfs:subClassOf": [
                 {
@@ -4953,6 +4977,7 @@
             "@id": "knora-api:StandoffColorTag"
         },
         {
+            "rdfs:label": "standoff data type tag",
             "knora-api:isStandoffClass": true,
             "rdfs:subClassOf": [
                 {
@@ -5044,6 +5069,7 @@
             "@id": "knora-api:StandoffDataTypeTag"
         },
         {
+            "rdfs:label": "standoff date tag",
             "knora-api:isStandoffClass": true,
             "rdfs:subClassOf": [
                 {
@@ -5210,6 +5236,7 @@
             "@id": "knora-api:StandoffDateTag"
         },
         {
+            "rdfs:label": "standoff decimal tag",
             "knora-api:isStandoffClass": true,
             "rdfs:subClassOf": [
                 {
@@ -5312,6 +5339,7 @@
             "@id": "knora-api:StandoffDecimalTag"
         },
         {
+            "rdfs:label": "standoff integer tag",
             "knora-api:isStandoffClass": true,
             "rdfs:subClassOf": [
                 {
@@ -5414,6 +5442,7 @@
             "@id": "knora-api:StandoffIntegerTag"
         },
         {
+            "rdfs:label": "standoff internal reference tag",
             "knora-api:isStandoffClass": true,
             "rdfs:subClassOf": [
                 {
@@ -5515,6 +5544,7 @@
             "@id": "knora-api:StandoffInternalReferenceTag"
         },
         {
+            "rdfs:label": "standoff interval tag",
             "knora-api:isStandoffClass": true,
             "rdfs:subClassOf": [
                 {
@@ -5625,6 +5655,7 @@
             "@id": "knora-api:StandoffIntervalTag"
         },
         {
+            "rdfs:label": "standoff link tag",
             "knora-api:isStandoffClass": true,
             "rdfs:subClassOf": [
                 {
@@ -5723,6 +5754,7 @@
             "@id": "knora-api:StandoffLinkTag"
         },
         {
+            "rdfs:label": "standoff tag",
             "knora-api:isStandoffClass": true,
             "rdfs:subClassOf": [
                 {
@@ -5801,6 +5833,7 @@
             "@id": "knora-api:StandoffTag"
         },
         {
+            "rdfs:label": "standoff time tag",
             "knora-api:isStandoffClass": true,
             "rdfs:subClassOf": [
                 {
@@ -5903,6 +5936,7 @@
             "@id": "knora-api:StandoffTimeTag"
         },
         {
+            "rdfs:label": "standoff URI tag",
             "knora-api:isStandoffClass": true,
             "rdfs:subClassOf": [
                 {
@@ -6006,6 +6040,7 @@
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "still image abstract file value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:FileValue"
@@ -6161,6 +6196,7 @@
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "still image external file value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:StillImageAbstractFileValue"
@@ -6337,6 +6373,7 @@
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "still image file value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:StillImageAbstractFileValue"
@@ -6671,6 +6708,7 @@
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "Text file value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:FileValue"
@@ -6980,8 +7018,8 @@
             "@id": "knora-api:TextRepresentation"
         },
         {
-            "@id": "knora-api:TextValue",
-            "@type": "owl:Class",
+            "knora-api:isValueClass": true,
+            "rdfs:label": "Text Value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:Value"
@@ -7147,7 +7185,8 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "knora-api:isValueClass": true
+            "@type": "owl:Class",
+            "@id": "knora-api:TextValue"
         },
         {
             "@id": "knora-api:TextValueType",
@@ -7169,10 +7208,12 @@
                     },
                     "owl:cardinality": 1
                 }
-            ]
+            ],
+            "rdfs:label": "time base"
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "time value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:TimeBase"
@@ -7323,10 +7364,12 @@
                     },
                     "owl:cardinality": 1
                 }
-            ]
+            ],
+            "rdfs:label": "URI base"
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "URI value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:UriBase"
@@ -7453,6 +7496,7 @@
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "Value",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:ValueBase"
@@ -8019,6 +8063,7 @@
             "rdfs:comment": "Represents the literal RGB value of a ColorValue."
         },
         {
+            "rdfs:label": "creation date",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:dateTimeStamp"
@@ -8180,28 +8225,31 @@
             "rdfs:comment": "Represents the literal decimal value of a DecimalValue."
         },
         {
-            "@id": "knora-api:deleteComment",
+            "rdfs:label": "delete comment",
+            "rdfs:comment": "A comment explaining why a resource or value was marked as deleted",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "rdfs:comment": "A comment explaining why a resource or value was marked as deleted"
+            "@id": "knora-api:deleteComment"
         },
         {
-            "@id": "knora-api:deleteDate",
+            "rdfs:label": "delete date",
+            "rdfs:comment": "Indicates when a resource or value was deleted",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:dateTimeStamp"
             },
-            "rdfs:comment": "Indicates when a resource or value was deleted"
+            "@id": "knora-api:deleteDate"
         },
         {
-            "@id": "knora-api:deletedBy",
+            "rdfs:label": "deleted by",
+            "rdfs:comment": "Indicates who deleted a resource or value",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "xsd:anyURI"
             },
-            "rdfs:comment": "Indicates who deleted a resource or value"
+            "@id": "knora-api:deletedBy"
         },
         {
             "rdfs:label": "error",
@@ -8213,6 +8261,7 @@
             "@id": "knora-api:error"
         },
         {
+            "rdfs:label": "external URL",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
@@ -8612,7 +8661,8 @@
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
-            }
+            },
+            "rdfs:label": "has permissions"
         },
         {
             "rdfs:label": "has Representation",
@@ -8634,6 +8684,7 @@
         },
         {
             "knora-api:isLinkValueProperty": true,
+            "rdfs:label": "has Representation Value",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkToValue"
             },
@@ -8809,6 +8860,7 @@
             "rdfs:comment": "Indicates the title of a resource"
         },
         {
+            "rdfs:label": "has value",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:resourceProperty"
             },
@@ -8886,6 +8938,7 @@
         },
         {
             "knora-api:isLinkValueProperty": true,
+            "rdfs:label": "is Annotation of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkToValue"
             },
@@ -8920,6 +8973,7 @@
         },
         {
             "knora-api:isLinkValueProperty": true,
+            "rdfs:label": "Segment of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:isSegmentOfValue"
             },
@@ -8944,12 +8998,13 @@
             "@id": "knora-api:isBuiltIn"
         },
         {
-            "@id": "knora-api:isDeleted",
+            "rdfs:label": "is deleted",
+            "rdfs:comment": "Exists and is true if the resource has been deleted",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:boolean"
             },
-            "rdfs:comment": "Exists and is true if the resource has been deleted"
+            "@id": "knora-api:isDeleted"
         },
         {
             "rdfs:label": "is editable",
@@ -9000,6 +9055,7 @@
             "rdfs:comment": "Indicates whether a property points to a link value (reification)"
         },
         {
+            "rdfs:label": "is main resource",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:boolean"
@@ -9030,6 +9086,7 @@
         },
         {
             "knora-api:isLinkValueProperty": true,
+            "rdfs:label": "is part of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkToValue"
             },
@@ -9120,6 +9177,7 @@
         },
         {
             "knora-api:isLinkValueProperty": true,
+            "rdfs:label": "Segment of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkToValue"
             },
@@ -9154,6 +9212,7 @@
         },
         {
             "knora-api:isLinkValueProperty": true,
+            "rdfs:label": "is sequence of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkToValue"
             },
@@ -9222,6 +9281,7 @@
         },
         {
             "knora-api:isLinkValueProperty": true,
+            "rdfs:label": "Segment of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:isSegmentOfValue"
             },
@@ -9241,7 +9301,8 @@
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:dateTimeStamp"
-            }
+            },
+            "rdfs:label": "last modification date"
         },
         {
             "rdfs:label": "Link value has source",
@@ -9370,6 +9431,7 @@
             "@id": "knora-api:ontologyName"
         },
         {
+            "rdfs:label": "page count",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
@@ -9427,16 +9489,18 @@
             "rdfs:comment": "Indicates that this resource relates to another resource"
         },
         {
-            "@id": "knora-api:resourceIcon",
-            "@type": "owl:DatatypeProperty",
+            "rdfs:label": "resource icon",
             "knora-api:subjectType": {
                 "@id": "owl:Class"
             },
+            "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
-            }
+            },
+            "@id": "knora-api:resourceIcon"
         },
         {
+            "rdfs:label": "resource property",
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
             "@id": "knora-api:resourceProperty",
@@ -9469,34 +9533,37 @@
             "@id": "knora-api:seqnum"
         },
         {
-            "@id": "knora-api:standoffTagHasEnd",
-            "@type": "owl:DatatypeProperty",
+            "rdfs:label": "standoff tag has end",
             "knora-api:subjectType": {
                 "@id": "knora-api:StandoffTag"
             },
+            "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
-            }
+            },
+            "@id": "knora-api:standoffTagHasEnd"
         },
         {
-            "@id": "knora-api:standoffTagHasEndIndex",
-            "@type": "owl:DatatypeProperty",
+            "rdfs:label": "standoff tag has end index",
             "knora-api:subjectType": {
                 "@id": "knora-api:StandoffTag"
             },
+            "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
-            }
+            },
+            "@id": "knora-api:standoffTagHasEndIndex"
         },
         {
-            "@id": "knora-api:standoffTagHasEndParent",
+            "rdfs:label": "standoff tag has end parent",
+            "knora-api:subjectType": {
+                "@id": "knora-api:StandoffTag"
+            },
             "@type": "owl:ObjectProperty",
-            "knora-api:subjectType": {
-                "@id": "knora-api:StandoffTag"
-            },
             "knora-api:objectType": {
                 "@id": "knora-api:StandoffTag"
-            }
+            },
+            "@id": "knora-api:standoffTagHasEndParent"
         },
         {
             "rdfs:label": "standoff tag has end parent index",
@@ -9511,69 +9578,76 @@
             "rdfs:comment": "The next knora-api:standoffTagHasStartIndex of the end parent tag of a standoff tag."
         },
         {
-            "@id": "knora-api:standoffTagHasInternalReference",
-            "@type": "owl:ObjectProperty",
+            "rdfs:label": "standoff tag has internal reference",
             "knora-api:subjectType": {
                 "@id": "knora-api:StandoffInternalReferenceTag"
             },
+            "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:StandoffTag"
-            }
+            },
+            "@id": "knora-api:standoffTagHasInternalReference"
         },
         {
-            "@id": "knora-api:standoffTagHasLink",
-            "@type": "owl:ObjectProperty",
+            "rdfs:label": "standoff tag has link",
             "knora-api:subjectType": {
                 "@id": "knora-api:StandoffLinkTag"
             },
+            "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:Resource"
-            }
+            },
+            "@id": "knora-api:standoffTagHasLink"
         },
         {
-            "@id": "knora-api:standoffTagHasOriginalXMLID",
-            "@type": "owl:DatatypeProperty",
+            "rdfs:label": "standoff tag has original XML ID",
             "knora-api:subjectType": {
                 "@id": "knora-api:StandoffTag"
             },
+            "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
-            }
+            },
+            "@id": "knora-api:standoffTagHasOriginalXMLID"
         },
         {
-            "@id": "knora-api:standoffTagHasStart",
-            "@type": "owl:DatatypeProperty",
+            "rdfs:label": "standoff tag has start",
             "knora-api:subjectType": {
                 "@id": "knora-api:StandoffTag"
             },
+            "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
-            }
+            },
+            "@id": "knora-api:standoffTagHasStart"
         },
         {
-            "@id": "knora-api:standoffTagHasStartAncestor",
+            "rdfs:label": "standoff tag has start ancestor",
+            "knora-api:subjectType": {
+                "@id": "knora-api:StandoffTag"
+            },
             "@type": [
                 "owl:ObjectProperty",
                 "owl:TransitiveProperty"
             ],
-            "knora-api:subjectType": {
-                "@id": "knora-api:StandoffTag"
-            },
             "knora-api:objectType": {
                 "@id": "knora-api:StandoffTag"
-            }
+            },
+            "@id": "knora-api:standoffTagHasStartAncestor"
         },
         {
-            "@id": "knora-api:standoffTagHasStartIndex",
-            "@type": "owl:DatatypeProperty",
+            "rdfs:label": "standoff tag has start index",
             "knora-api:subjectType": {
                 "@id": "knora-api:StandoffTag"
             },
+            "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
-            }
+            },
+            "@id": "knora-api:standoffTagHasStartIndex"
         },
         {
+            "rdfs:label": "standoff tag has start parent",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:standoffTagHasStartAncestor"
             },
@@ -9599,14 +9673,15 @@
             "rdfs:comment": "The next knora-api:standoffTagHasStartIndex of the start parent tag of a standoff tag."
         },
         {
-            "@id": "knora-api:standoffTagHasUUID",
-            "@type": "owl:DatatypeProperty",
+            "rdfs:label": "standoff tag has UUID",
             "knora-api:subjectType": {
                 "@id": "knora-api:StandoffTag"
             },
+            "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
-            }
+            },
+            "@id": "knora-api:standoffTagHasUUID"
         },
         {
             "rdfs:label": "Still image file value has X dimension",
@@ -9780,6 +9855,7 @@
             "rdfs:comment": "Standoff markup attached to a text value."
         },
         {
+            "rdfs:label": "value has timestamp",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
@@ -9828,6 +9904,7 @@
             "rdfs:comment": "A plain string representation of a value"
         },
         {
+            "rdfs:label": "value creation date",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
@@ -9845,9 +9922,11 @@
             "@type": "rdf:Property",
             "knora-api:subjectType": {
                 "@id": "knora-api:ValueBase"
-            }
+            },
+            "rdfs:label": "value has"
         },
         {
+            "rdfs:label": "value has comment",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
@@ -9862,6 +9941,7 @@
             "rdfs:comment": "A comment on a value"
         },
         {
+            "rdfs:label": "value has UUID",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },

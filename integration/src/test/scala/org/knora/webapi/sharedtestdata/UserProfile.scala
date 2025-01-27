@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -36,7 +36,7 @@ object UserProfile {
 
       val projectsWithoutBuiltinProjects = userADM.projects
         .filter(_.id != KnoraProjectRepo.builtIn.SystemProject.id.value)
-        .filter(_.id != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject)
+        .filter(_.id != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.value)
       val projectInfosV1 = projectsWithoutBuiltinProjects.map(ProjectInfo.from)
       val projects_info_v1: Map[IRI, ProjectInfo] =
         projectInfosV1.map(_.id).zip(projectInfosV1).toMap[IRI, ProjectInfo]

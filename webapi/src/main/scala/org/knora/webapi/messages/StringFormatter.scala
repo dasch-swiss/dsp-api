@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -260,7 +260,7 @@ object StringFormatter {
   private def getOrCacheSmartIri(iriStr: IRI, creationFun: () => SmartIri): SmartIri =
     smartIriCache.computeIfAbsent(
       iriStr,
-      JavaUtil.function({ (_: Object) => creationFun() }),
+      JavaUtil.function((_: Object) => creationFun()),
     )
 
   val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { (appConfig: AppConfig) =>
@@ -1590,9 +1590,9 @@ class StringFormatter private (
    * @param projectShortcode the project's shortcode.
    * @return a new resource IRI.
    */
-  def makeRandomResourceIri(projectShortcode: String): IRI = {
+  def makeRandomResourceIri(shortcode: Shortcode): IRI = {
     val knoraResourceID = UuidUtil.makeRandomBase64EncodedUuid
-    s"http://$IriDomain/$projectShortcode/$knoraResourceID"
+    s"http://$IriDomain/$shortcode/$knoraResourceID"
   }
 
   /**

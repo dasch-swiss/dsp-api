@@ -1,10 +1,11 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.slice.resourceinfo.domain
 
+import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
@@ -12,6 +13,8 @@ import zio.ZLayer
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 
 final case class IriConverter(sf: StringFormatter) {
   def asSmartIri(iri: String): Task[SmartIri]              = ZIO.attempt(sf.toSmartIri(iri, requireInternal = false))
@@ -28,6 +31,28 @@ final case class IriConverter(sf: StringFormatter) {
   def getOntologySmartIriFromClassIri(iri: InternalIri): Task[SmartIri] =
     asInternalSmartIri(iri.value).mapAttempt(_.getOntologyFromEntity)
   def isKnoraDataIri(iri: String): Task[Boolean] = asSmartIri(iri).map(_.isKnoraDataIri)
+
+  def asResourceClassIri(iri: String, requireApiV2Complex: Boolean = true): IO[String, ResourceClassIri] =
+    asSmartIri(iri)
+      .mapError(_.getMessage)
+      .flatMap(sIri =>
+        ZIO.fromEither {
+          if (requireApiV2Complex) ResourceClassIri.fromApiV2Complex(sIri)
+          else ResourceClassIri.from(sIri)
+        },
+      )
+  def asResourceClassIris(iris: Set[String], requireApiV2Complex: Boolean = true): IO[String, Set[ResourceClassIri]] =
+    ZIO.foreach(iris)(asResourceClassIri(_, requireApiV2Complex))
+
+  def asPropertyIri(iri: String, requireApiV2Complex: Boolean = true): IO[String, PropertyIri] =
+    asSmartIri(iri)
+      .mapError(_.getMessage)
+      .flatMap(sIri =>
+        ZIO.fromEither {
+          if (requireApiV2Complex) PropertyIri.fromApiV2Complex(sIri)
+          else PropertyIri.from(sIri)
+        },
+      )
 }
 
 object IriConverter {

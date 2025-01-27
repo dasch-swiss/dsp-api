@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -203,7 +203,7 @@ object Username extends StringValueCompanion[Username] {
       "[a-zA-Z0-9._-]+" +
       // Only contains alphanumeric characters, underscore, hyphen and dot.
       "(?<![_.-])$"
-        // Underscore, hyphen and dot can't be at the end of a username
+      // Underscore, hyphen and dot can't be at the end of a username
   ).r
 
   def from(value: String): Either[String, Username] =

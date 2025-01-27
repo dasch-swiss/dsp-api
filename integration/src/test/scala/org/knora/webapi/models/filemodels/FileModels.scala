@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -18,6 +18,7 @@ import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseText
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseUri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
@@ -39,7 +40,7 @@ sealed abstract case class UploadFileRequest private (
    * @return JSON-LD serialization of the request.
    */
   def toJsonLd(
-    shortcode: String = "0001",
+    shortcode: Shortcode = Shortcode.unsafeFrom("0001"),
     ontologyName: String = "knora-api",
     className: Option[String] = None,
     ontologyIRI: Option[String] = None,

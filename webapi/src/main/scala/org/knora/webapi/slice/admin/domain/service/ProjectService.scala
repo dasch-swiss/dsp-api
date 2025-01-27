@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -47,9 +47,9 @@ final case class ProjectService(
     .map(ontologies =>
       Project(
         knoraProject.id.value,
-        knoraProject.shortname.value,
-        knoraProject.shortcode.value,
-        knoraProject.longname.map(_.value),
+        knoraProject.shortname,
+        knoraProject.shortcode,
+        knoraProject.longname,
         knoraProject.description.map(_.value),
         knoraProject.keywords.map(_.value),
         knoraProject.logo.map(_.value),
@@ -62,9 +62,9 @@ final case class ProjectService(
   private def toKnoraProject(project: Project, restrictedView: RestrictedView): KnoraProject =
     KnoraProject(
       id = ProjectIri.unsafeFrom(project.id),
-      shortname = Shortname.unsafeFrom(project.shortname),
-      shortcode = Shortcode.unsafeFrom(project.shortcode),
-      longname = project.longname.map(Longname.unsafeFrom),
+      shortname = project.shortname,
+      shortcode = project.shortcode,
+      longname = project.longname,
       description = NonEmptyChunk
         .fromIterable(project.description.head, project.description.tail)
         .map(Description.unsafeFrom),
@@ -93,11 +93,8 @@ object ProjectService {
    * @param project A [[ProjectADM]].
    * @return the [[InternalIri]] of the project's data named graph.
    */
-  def projectDataNamedGraphV2(project: Project): InternalIri = {
-    val shortcode = Shortcode.unsafeFrom(project.shortcode)
-    val shortname = Shortname.unsafeFrom(project.shortname)
-    projectDataNamedGraphV2(shortcode, shortname)
-  }
+  def projectDataNamedGraphV2(project: Project): InternalIri =
+    projectDataNamedGraphV2(project.shortcode, project.shortname)
 
   /**
    * Given the [[KnoraProject]] constructs the project's data named graph.

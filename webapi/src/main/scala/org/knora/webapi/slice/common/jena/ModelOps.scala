@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -24,10 +24,15 @@ object ModelOps { self =>
     def printTurtle: UIO[Unit] =
       asTurtle.flatMap(Console.printLine(_)).logError.ignore
 
-    def asTurtle: Task[String] =
+    def printTriG: UIO[Unit] =
+      asTriG.flatMap(Console.printLine(_)).logError.ignore
+
+    def asTurtle: Task[String] = as(Lang.TURTLE)
+    def asTriG: Task[String]   = as(Lang.TRIG)
+    def as(lang: Lang): Task[String] =
       ZIO.attempt {
         val out = new java.io.ByteArrayOutputStream()
-        RDFDataMgr.write(out, model, Lang.TURTLE)
+        RDFDataMgr.write(out, model, lang)
         out.toString(java.nio.charset.StandardCharsets.UTF_8)
       }
 

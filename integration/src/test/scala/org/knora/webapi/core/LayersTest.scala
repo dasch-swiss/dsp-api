@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -50,6 +50,7 @@ import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.lists.domain.ListsService
+import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -85,6 +86,7 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.testservices.TestDspIngestClient
 
 object LayersTest {
 
@@ -92,7 +94,7 @@ object LayersTest {
    * The `Environment`s that we require for the tests to run - with or without Sipi
    */
   type DefaultTestEnvironmentWithoutSipi =
-    LayersLive.DspEnvironmentLive & FusekiTestContainer & TestClientService
+    LayersLive.DspEnvironmentLive & FusekiTestContainer & TestClientService & TestDspIngestClient
 
   type DefaultTestEnvironmentWithSipi =
     DefaultTestEnvironmentWithoutSipi & SipiTestContainer & DspIngestTestContainer & SharedVolumes.Volumes
@@ -123,6 +125,7 @@ object LayersTest {
     ListsApiModule.Provided &
     ListsResponder &
     MessageRelay &
+    OntologyApiModule.Provided &
     OntologyCache &
     OntologyCacheHelpers &
     OntologyInferencer &
@@ -151,6 +154,7 @@ object LayersTest {
     State &
     StringFormatter &
     TestClientService &
+    TestDspIngestClient &
     TriplestoreService &
     UserRestService &
     ValuesResponderV2
@@ -193,6 +197,7 @@ object LayersTest {
       ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
+      OntologyApiModule.layer,
       OntologyCacheLive.layer,
       OntologyCacheHelpersLive.layer,
       OntologyRepoLive.layer,
@@ -221,6 +226,7 @@ object LayersTest {
       StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
+      TestDspIngestClient.layer,
       TriplestoreServiceLive.layer,
       ValuesResponderV2.layer,
     )

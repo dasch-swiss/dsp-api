@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -48,6 +48,9 @@ import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.CopyrightAttribution
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseText
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseUri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.Value.StringValue
 
@@ -214,6 +217,18 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
 
   implicit object LicenseUriFormat extends StringValueFormat[LicenseUri] {
     override val from: String => Either[String, LicenseUri] = LicenseUri.from
+  }
+
+  implicit object ShortnameFormat extends StringValueFormat[Shortname] {
+    override val from: String => Either[String, Shortname] = Shortname.from
+  }
+
+  implicit object ShortcodeFormat extends StringValueFormat[Shortcode] {
+    override val from: String => Either[String, Shortcode] = Shortcode.from
+  }
+
+  implicit object LongnameFormat extends StringValueFormat[Longname] {
+    override val from: String => Either[String, Longname] = Longname.from
   }
 
   implicit val groupFormat: JsonFormat[Group] = jsonFormat6(Group.apply)

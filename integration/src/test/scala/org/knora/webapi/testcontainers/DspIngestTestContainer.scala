@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -36,6 +36,7 @@ object DspIngestTestContainer {
       .withEnv("DB_JDBC_URL", "jdbc:sqlite:/tmp/ingest.sqlite")
       .withFileSystemBind(imagesVolume.hostPath, assetDir, BindMode.READ_WRITE)
       .withFileSystemBind(tempVolume.hostPath, tempDir, BindMode.READ_WRITE)
+      .withLogConsumer(frame => print("DSP-INGEST:" + frame.getUtf8String))
   }
 
   val layer: URLayer[SharedVolumes.Volumes, DspIngestTestContainer] =

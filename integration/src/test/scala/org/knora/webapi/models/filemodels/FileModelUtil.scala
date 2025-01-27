@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -207,7 +207,7 @@ object FileModelUtil {
     }
     val lines = ontologies.toList
       .map(x => s"""    "${x._1}": "${x._2}\"""")
-      .reduce({ (a, b) => a + ",\n" + b })
+      .reduce((a, b) => a + ",\n" + b)
     s"""|"@context" : {
         |$lines
         |  }

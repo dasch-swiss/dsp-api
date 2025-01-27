@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -170,9 +170,9 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         result.id should be(customProjectIri)
 
         // check the rest of project info
-        result.shortcode should be("3333")
-        result.shortname should be("newprojectWithIri")
-        result.longname should be(Some("new project with a custom IRI"))
+        result.shortcode.value should be("3333")
+        result.shortname.value should be("newprojectWithIri")
+        result.longname.map(_.value) should be(Some("new project with a custom IRI"))
         result.keywords should be(Seq("projectIRI"))
         result.description should be(Seq(StringLiteralV2.from("a project created with a custom IRI", Some("en"))))
       }
@@ -229,9 +229,9 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         response.status should be(StatusCodes.OK)
 
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
-        result.shortname should be("newproject")
-        result.shortcode should be("1111")
-        result.longname should be(Some("project longname"))
+        result.shortname.value should be("newproject")
+        result.shortcode.value should be("1111")
+        result.longname.map(_.value) should be(Some("project longname"))
         result.description should be(Seq(StringLiteralV2.from(value = "project description", language = Some("en"))))
         result.keywords should be(Seq("keywords"))
         result.logo should be(Some("/fu/bar/baz.jpg"))
@@ -354,9 +354,9 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         response.status should be(StatusCodes.OK)
 
         val result: Project = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
-        result.shortname should be("newproject")
-        result.shortcode should be("1111")
-        result.longname should be(Some("updated project longname"))
+        result.shortname.value should be("newproject")
+        result.shortcode.value should be("1111")
+        result.longname.map(_.value) should be(Some("updated project longname"))
         result.description should be(
           Seq(StringLiteralV2.from(value = "updated project description", language = Some("en"))),
         )

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -22,8 +22,8 @@ object ProjectServiceSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Nothing] =
     suite("projectDataNamedGraphV2 should return the data named graph of a project with shortcode for")(
       test("a ProjectADM") {
-        val shortname = "someProject"
-        val shortcode = "0001"
+        val shortname = Shortname.unsafeFrom("someProject")
+        val shortcode = Shortcode.unsafeFrom("0001")
         val p = Project(
           id = IriTestConstants.Project.TestProject,
           shortname = shortname,

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -22,7 +22,6 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
@@ -74,7 +73,7 @@ class GroupRestServiceSpec extends CoreSpec {
                       ),
                     ),
                   ),
-                project = ProjectIri.unsafeFrom(imagesProjectIri),
+                project = imagesProjectIri,
                 status = GroupStatus.active,
                 selfjoin = GroupSelfJoin.disabled,
               ),
@@ -106,7 +105,7 @@ class GroupRestServiceSpec extends CoreSpec {
                 name = groupName,
                 descriptions = GroupDescriptions
                   .unsafeFrom(Seq(StringLiteralV2.from(value = "NewGroupDescription", language = Some("en")))),
-                project = ProjectIri.unsafeFrom(imagesProjectIri),
+                project = imagesProjectIri,
                 status = GroupStatus.active,
                 selfjoin = GroupSelfJoin.disabled,
               ),

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -778,8 +778,7 @@ object OntologyHelpers {
         OntologyConstants.KnoraBase.IsAudioSegmentOfValue.toSmartIri
       case subProps if subProps.contains(OntologyConstants.KnoraBase.IsVideoSegmentOf.toSmartIri) =>
         OntologyConstants.KnoraBase.IsVideoSegmentOfValue.toSmartIri
-      case subProps
-          if subProps.size == 1 => // if subPropertyOf is neither isPartOf nor HasLinkTo it inherits from a custom link property
+      case subProps if subProps.size == 1 => // if subPropertyOf is neither isPartOf nor HasLinkTo it inherits from a custom link property
         internalPropertyDef.subPropertyOf.head.fromLinkPropToLinkValueProp
       case _ =>
         throw BadRequestException(

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -7,31 +7,25 @@ package org.knora.webapi.it.v2
 
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 
 import java.net.URLEncoder
 import java.nio.file.Paths
-import scala.concurrent.Await
-import scala.concurrent.duration.*
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.e2e.v2.AuthenticationV2JsonProtocol
-import org.knora.webapi.e2e.v2.LoginResponse
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.models.filemodels.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.MutableTestIri
 
 /**
@@ -330,29 +324,9 @@ class KnoraSipiIntegrationV2ITSpec
     getResponseJsonLD(request ~> addAuthorization)
 
   "The Knora/Sipi integration" should {
-    var loginToken: String = ""
-
-    "log in as a Knora user" in {
-      /* Correct username and correct password */
-      val params   = s"""{"email": "$anythingUserEmail", "password": "$password"}"""
-      val request  = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
-      val response = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK)
-
-      loginToken = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds).token
-      loginToken.nonEmpty should be(true)
-    }
-
     "create a resource with a still image file" in {
       // Upload the image to Sipi.
-      val sipiUploadResponse: SipiUploadResponse =
-        uploadToIngest(
-          loginToken = loginToken,
-          filesToUpload =
-            Seq(FileToUpload(path = pathToMarbles, mimeType = org.apache.http.entity.ContentType.IMAGE_TIFF)),
-        )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToMarbles)
       uploadedFile.originalFilename should ===(marblesOriginalFilename)
 
       // Create the resource in the API.
@@ -398,14 +372,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "change a still image file value" in {
       // Upload the image to Sipi.
-      val sipiUploadResponse: SipiUploadResponse =
-        uploadToIngest(
-          loginToken = loginToken,
-          filesToUpload =
-            Seq(FileToUpload(path = pathToTrp88, mimeType = org.apache.http.entity.ContentType.IMAGE_TIFF)),
-        )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToTrp88)
       uploadedFile.originalFilename should ===(trp88OriginalFilename)
 
       // JSON describing the new image to the API.
@@ -439,14 +406,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource with a PDF file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload = Seq(
-          FileToUpload(path = pathToMinimalPdf, mimeType = org.apache.http.entity.ContentType.create("application/pdf")),
-        ),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToMinimalPdf)
       uploadedFile.originalFilename should ===(minimalPdfOriginalFilename)
 
       // Create the resource in the API.
@@ -480,14 +440,8 @@ class KnoraSipiIntegrationV2ITSpec
 
     "change a PDF file value" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload = Seq(
-          FileToUpload(path = pathToTestPdf, mimeType = org.apache.http.entity.ContentType.create("application/pdf")),
-        ),
-      )
+      val uploadedFile = uploadToIngest(pathToTestPdf)
 
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(testPdfOriginalFilename)
 
       // Update the value.
@@ -518,14 +472,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "not create a document resource if the file is actually a zip file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload = Seq(
-          FileToUpload(path = pathToMinimalZip, mimeType = org.apache.http.entity.ContentType.create("application/zip")),
-        ),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToMinimalZip)
       uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
 
       // Create the resource in the API.
@@ -540,13 +487,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource with a CSV file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload =
-          Seq(FileToUpload(path = pathToCsv1, mimeType = org.apache.http.entity.ContentType.create("text/csv"))),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToCsv1)
       uploadedFile.originalFilename should ===(csv1OriginalFilename)
 
       // Create the resource in the API.
@@ -575,13 +516,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "change a CSV file value" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload =
-          Seq(FileToUpload(path = pathToCsv2, mimeType = org.apache.http.entity.ContentType.create("text/csv"))),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToCsv2)
       uploadedFile.originalFilename should ===(csv2OriginalFilename)
 
       // Update the value.
@@ -611,13 +546,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "not create a resource with a still image file that's actually a text file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload =
-          Seq(FileToUpload(path = pathToCsv1, mimeType = org.apache.http.entity.ContentType.create("text/csv"))),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToCsv1)
       uploadedFile.originalFilename should ===(csv1OriginalFilename)
 
       // Create the resource in the API.
@@ -633,12 +562,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource with an XML file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToXml1, mimeType = org.apache.http.entity.ContentType.TEXT_XML)),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToXml1)
       uploadedFile.originalFilename should ===(xml1OriginalFilename)
 
       // Create the resource in the API.
@@ -673,12 +597,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "change an XML file value" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToXml2, mimeType = org.apache.http.entity.ContentType.TEXT_XML)),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToXml2)
       uploadedFile.originalFilename should ===(xml2OriginalFilename)
 
       // Update the value.
@@ -714,14 +633,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "not create a resource of type TextRepresentation with a Zip file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload = Seq(
-          FileToUpload(path = pathToMinimalZip, mimeType = org.apache.http.entity.ContentType.create("application/zip")),
-        ),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToMinimalZip)
       uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
 
       // Create the resource in the API.
@@ -737,14 +649,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource of type ArchiveRepresentation with a Zip file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload = Seq(
-          FileToUpload(path = pathToMinimalZip, mimeType = org.apache.http.entity.ContentType.create("application/zip")),
-        ),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToMinimalZip)
       uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
 
       // Create the resource in the API.
@@ -782,14 +687,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "change a Zip file value" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload = Seq(
-          FileToUpload(path = pathToTestZip, mimeType = org.apache.http.entity.ContentType.create("application/zip")),
-        ),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToTestZip)
       uploadedFile.originalFilename should ===(testZipOriginalFilename)
 
       // Update the value.
@@ -825,17 +723,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource of type ArchiveRepresentation with a 7z file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload = Seq(
-          FileToUpload(
-            path = pathToTest7z,
-            mimeType = org.apache.http.entity.ContentType.create("application/x-7z-compressed"),
-          ),
-        ),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToTest7z)
       uploadedFile.originalFilename should ===(test7zOriginalFilename)
 
       // Create the resource in the API.
@@ -873,13 +761,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource with a WAV file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload =
-          Seq(FileToUpload(path = pathToMinimalWav, mimeType = org.apache.http.entity.ContentType.create("audio/wav"))),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToMinimalWav)
       uploadedFile.originalFilename should ===(minimalWavOriginalFilename)
 
       // Create the resource in the API.
@@ -917,13 +799,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "change a WAV file value" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload =
-          Seq(FileToUpload(path = pathToTestWav, mimeType = org.apache.http.entity.ContentType.create("audio/wav"))),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToTestWav)
       uploadedFile.originalFilename should ===(testWavOriginalFilename)
 
       // Update the value.
@@ -959,13 +835,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "create a resource with a video file" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken = loginToken,
-        filesToUpload =
-          Seq(FileToUpload(path = pathToTestVideo, mimeType = org.apache.http.entity.ContentType.create("video/mp4"))),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToTestVideo)
       uploadedFile.originalFilename should ===(testVideoOriginalFilename)
 
       // Create the resource in the API.
@@ -1003,17 +873,7 @@ class KnoraSipiIntegrationV2ITSpec
 
     "change a video file value" in {
       // Upload the file to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToIngest(
-        loginToken,
-        Seq(
-          FileToUpload(
-            path = pathToTestVideo2,
-            mimeType = org.apache.http.entity.ContentType.create("video/mp4"),
-          ),
-        ),
-      )
-
-      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile = uploadToIngest(pathToTestVideo2)
       uploadedFile.originalFilename should ===(testVideo2OriginalFilename)
 
       // Update the value.

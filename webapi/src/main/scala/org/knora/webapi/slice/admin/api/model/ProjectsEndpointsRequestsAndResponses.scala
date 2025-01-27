@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -22,11 +22,11 @@ object ProjectsEndpointsRequestsAndResponses {
     shortname: Shortname,
     shortcode: Shortcode,
     longname: Option[Longname] = None,
-    description: List[Description],
-    keywords: List[Keyword],
+    description: List[Description] = List.empty,
+    keywords: List[Keyword] = List.empty,
     logo: Option[Logo] = None,
-    status: Status,
-    selfjoin: SelfJoin,
+    status: Status = Status.Active,
+    selfjoin: SelfJoin = SelfJoin.CannotJoin,
   )
   object ProjectCreateRequest {
     implicit val codec: JsonCodec[ProjectCreateRequest] = DeriveJsonCodec.gen[ProjectCreateRequest]

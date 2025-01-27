@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -23,7 +23,10 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
@@ -84,9 +87,9 @@ object Examples {
 
     private val project: Project = Project(
       id = ProjectExample.projectIri.value,
-      shortname = "example",
-      shortcode = "0001",
-      longname = Some("Example Project"),
+      shortname = Shortname.unsafeFrom("example"),
+      shortcode = Shortcode.unsafeFrom("0001"),
+      longname = Some(Longname.unsafeFrom("Example Project")),
       description = Seq(StringLiteralV2.from("An example project", Some("en"))),
       keywords = Seq("example", "project"),
       logo = None,

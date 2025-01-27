@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,6 +11,7 @@ import zio.json.JsonCodec
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
@@ -31,9 +32,9 @@ import org.knora.webapi.slice.admin.domain.model.User
  */
 case class Project(
   id: IRI,
-  shortname: String,
-  shortcode: String,
-  longname: Option[String],
+  shortname: Shortname,
+  shortcode: Shortcode,
+  longname: Option[Longname],
   description: Seq[StringLiteralV2],
   keywords: Seq[String],
   logo: Option[String],
@@ -43,9 +44,6 @@ case class Project(
 ) extends Ordered[Project] {
 
   def projectIri: ProjectIri = ProjectIri.unsafeFrom(id)
-
-  def getShortname: Shortname = Shortname.unsafeFrom(shortname)
-  def getShortcode: Shortcode = Shortcode.unsafeFrom(shortcode)
 
   /**
    * Allows to sort collections of ProjectADM. Sorting is done by the id.

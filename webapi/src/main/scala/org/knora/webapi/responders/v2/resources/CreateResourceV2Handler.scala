@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -116,7 +116,7 @@ final case class CreateResourceV2Handler(
     projectIri <- ZIO.succeed(createResourceRequestV2.createResource.projectADM.id)
     isSystemOrSharedProject =
       projectIri == KnoraProjectRepo.builtIn.SystemProject.id.value ||
-        projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
+        projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.value
     _ <- ZIO.when(isSystemOrSharedProject)(
            ZIO.fail(BadRequestException(s"Resources cannot be created in project <$projectIri>")),
          )

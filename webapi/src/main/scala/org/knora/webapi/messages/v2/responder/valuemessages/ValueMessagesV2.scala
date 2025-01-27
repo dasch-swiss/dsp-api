@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -2186,14 +2186,11 @@ case class StillImageExternalFileValueContentV2(
       case ApiV2Complex =>
         JsonLDObject(
           toJsonLDObjectMapInComplexSchema(makeFileUrl) ++ Map(
-            StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil
-              .makeUriObject(
-                {
-                  val uri = externalUrl.value.toURI
-                  if (uri.getPort == -1) URI.create(s"${uri.getScheme}://${uri.getHost}").toURL
-                  else URI.create(s"${uri.getScheme}://${uri.getHost}:${uri.getPort}").toURL
-                },
-              ),
+            StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil.makeUriObject {
+              val uri = externalUrl.value.toURI
+              if (uri.getPort == -1) URI.create(s"${uri.getScheme}://${uri.getHost}").toURL
+              else URI.create(s"${uri.getScheme}://${uri.getHost}:${uri.getPort}").toURL
+            },
             StillImageFileValueHasExternalUrl -> JsonLDUtil.makeUriObject(externalUrl.value),
           ),
         )

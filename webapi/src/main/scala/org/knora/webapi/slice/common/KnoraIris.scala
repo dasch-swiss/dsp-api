@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -104,5 +104,17 @@ object KnoraIris {
         val resourceId = NonEmptyString.unsafeFrom(iri.getResourceID.getOrElse(throw Exception()))
         Right(ResourceIri(iri, shortcode, resourceId))
       else Left(s"<$iri> is not a Knora resource IRI")
+  }
+
+  final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri
+  object OntologyIri {
+    def unsafeFrom(iri: SmartIri): OntologyIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
+
+    def fromApiV2Complex(iri: SmartIri): Either[String, OntologyIri] =
+      from(iri).filterOrElse(_.smartIri.isApiV2ComplexSchema, s"Not an API v2 complex IRI ${iri.toString}")
+
+    def from(iri: SmartIri): Either[String, OntologyIri] =
+      if iri.isKnoraOntologyIri then Right(OntologyIri(iri))
+      else Left(s"<$iri> is not a Knora ontology IRI")
   }
 }

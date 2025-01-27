@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -7,6 +7,7 @@ package org.knora.webapi
 package messages
 
 import dsp.constants.SalsahGui
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 /**
  * Contains string constants for IRIs from ontologies used by the application.
@@ -496,7 +497,8 @@ object OntologyConstants {
       HasDefaultChangeRightsPermission,
     )
 
-    val DefaultSharedOntologiesProject: IRI = KnoraAdminPrefixExpansion + "DefaultSharedOntologiesProject"
+    val DefaultSharedOntologiesProject: ProjectIri =
+      ProjectIri.unsafeFrom(KnoraAdminPrefixExpansion + "DefaultSharedOntologiesProject")
   }
 
   object Standoff {

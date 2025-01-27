@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -434,7 +434,7 @@ final case class OntologyResponderV2(
         // If this is a shared ontology, make sure it's in the default shared ontologies project.
         _ <-
           ZIO.when(
-            createOntologyRequest.isShared && createOntologyRequest.projectIri.toString != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
+            createOntologyRequest.isShared && createOntologyRequest.projectIri != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
           ) {
             val msg =
               s"Shared ontologies must be created in project <${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}>"
@@ -444,7 +444,7 @@ final case class OntologyResponderV2(
         // If it's in the default shared ontologies project, make sure it's a shared ontology.
         _ <-
           ZIO.when(
-            createOntologyRequest.projectIri.toString == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject && !createOntologyRequest.isShared,
+            createOntologyRequest.projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject && !createOntologyRequest.isShared,
           ) {
             val msg =
               s"Ontologies created in project <${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}> must be shared"
@@ -468,10 +468,10 @@ final case class OntologyResponderV2(
         _ <- triplestoreService.query(Update(createOntologySparql))
 
         // Check that the update was successful. To do this, we have to undo the SPARQL-escaping of the input.
-
+        projectSmartIri = stringFormatter.toSmartIri(createOntologyRequest.projectIri.value)
         unescapedNewMetadata = OntologyMetadataV2(
                                  ontologyIri = internalOntologyIri,
-                                 projectIri = Some(createOntologyRequest.projectIri),
+                                 projectIri = Some(projectSmartIri),
                                  label = Some(createOntologyRequest.label),
                                  comment = createOntologyRequest.comment,
                                  lastModificationDate = Some(currentTime),

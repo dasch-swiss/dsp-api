@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -40,20 +40,46 @@ object DefaultObjectAccessPermissionRepoLiveSpec extends ZIOSpecDefault {
   private def permission(forWhat: ForWhat, permissions: Chunk[DefaultObjectAccessPermissionPart]) =
     DefaultObjectAccessPermission(PermissionIri.makeNew(shortcode), projectIri, forWhat, permissions)
 
+  private val resourceClassIri: InternalIri = InternalIri("https://example.com/rc")
+  private val propertyIri: InternalIri      = InternalIri("https://example.com/p")
   private val expected = permission(
-    ForWhat.ResourceClassAndProperty(InternalIri("https://example.com/rc"), InternalIri("https://example.com/p")),
+    ForWhat.ResourceClassAndProperty(resourceClassIri, propertyIri),
     Chunk(
       DefaultObjectAccessPermissionPart(RestrictedView, NonEmptyChunk(groupIri)),
       DefaultObjectAccessPermissionPart(View, NonEmptyChunk(GroupIri.makeNew(shortcode), GroupIri.makeNew(shortcode))),
     ),
   )
 
-  val spec = suite("AdministrativePermissionRepoLive")(
+  val spec = suite("DefaultObjectAccessPermissionRepoLive")(
     test("should save and find") {
       for {
         saved <- repo(_.save(expected))
         found <- repo(_.findById(saved.id))
       } yield assertTrue(found.contains(saved), saved == expected)
+    },
+    test("given ForWhat Property and ForWhat ResourceClassAndProperty exist should findByProjectAndForWhat") {
+      val rc = permission(
+        ForWhat.ResourceClass(resourceClassIri),
+        Chunk(DefaultObjectAccessPermissionPart(View, NonEmptyChunk(GroupIri.makeNew(shortcode)))),
+      )
+      val p = permission(
+        ForWhat.Property(propertyIri),
+        Chunk(DefaultObjectAccessPermissionPart(View, NonEmptyChunk(GroupIri.makeNew(shortcode)))),
+      )
+      val rcp = permission(
+        ForWhat.ResourceClassAndProperty(resourceClassIri, propertyIri),
+        Chunk(DefaultObjectAccessPermissionPart(View, NonEmptyChunk(GroupIri.makeNew(shortcode)))),
+      )
+      for {
+        _        <- repo(_.saveAll(List(p, rc, rcp)))
+        foundPp  <- repo(_.findByProjectAndForWhat(projectIri, p.forWhat))
+        foundRc  <- repo(_.findByProjectAndForWhat(projectIri, rc.forWhat))
+        foundRcp <- repo(_.findByProjectAndForWhat(projectIri, rcp.forWhat))
+      } yield assertTrue(
+        foundPp.contains(p),
+        foundRc.contains(rc),
+        foundRcp.contains(rcp),
+      )
     },
     test("should delete") {
       for {

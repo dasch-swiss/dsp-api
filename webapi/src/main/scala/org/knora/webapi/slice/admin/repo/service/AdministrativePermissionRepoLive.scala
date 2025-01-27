@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -60,13 +60,13 @@ final case class AdministrativePermissionRepoLive(
     groupIri: GroupIri,
     projectIri: ProjectIri,
   ): Task[Option[AdministrativePermission]] =
-    findOneByTriplePattern(
+    findOneByPattern(
       _.has(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(groupIri.value))
         .andHas(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)),
     )
 
   override def findByProject(projectIri: ProjectIri): Task[Chunk[AdministrativePermission]] =
-    findAllByTriplePattern(_.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)))
+    findAllByPattern(_.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)))
 }
 
 object AdministrativePermissionRepoLive {

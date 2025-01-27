@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -59,23 +59,23 @@ final case class KnoraUserRepoLive(
     super.findById(id).map(_.orElse(KnoraUserRepo.builtIn.findOneBy(_.id == id)))
 
   override def findByProjectAdminMembership(projectIri: ProjectIri): Task[Chunk[KnoraUser]] =
-    findAllByTriplePattern(_.has(isInProjectAdminGroup, Rdf.iri(projectIri.value)))
+    findAllByPattern(_.has(isInProjectAdminGroup, Rdf.iri(projectIri.value)))
       .map(_ ++ KnoraUserRepo.builtIn.findAllBy(_.isInProjectAdminGroup.contains(projectIri)))
 
   override def findByProjectMembership(projectIri: ProjectIri): Task[Chunk[KnoraUser]] =
-    findAllByTriplePattern(_.has(isInProject, Rdf.iri(projectIri.value)))
+    findAllByPattern(_.has(isInProject, Rdf.iri(projectIri.value)))
       .map(_ ++ KnoraUserRepo.builtIn.findAllBy(_.isInProject.contains(projectIri)))
 
   override def findByGroupMembership(groupIri: GroupIri): Task[Chunk[KnoraUser]] =
-    findAllByTriplePattern(_.has(isInGroup, Rdf.iri(groupIri.value)))
+    findAllByPattern(_.has(isInGroup, Rdf.iri(groupIri.value)))
       .map(_ ++ KnoraUserRepo.builtIn.findAllBy(_.isInGroup.contains(groupIri)))
 
   override def findByEmail(mail: Email): Task[Option[KnoraUser]] =
-    findOneByTriplePattern(_.has(email, Rdf.literalOf(mail.value)))
+    findOneByPattern(_.has(email, Rdf.literalOf(mail.value)))
       .map(_.orElse(KnoraUserRepo.builtIn.findOneBy(_.email == mail)))
 
   override def findByUsername(name: Username): Task[Option[KnoraUser]] =
-    findOneByTriplePattern(_.has(username, Rdf.literalOf(name.value)))
+    findOneByPattern(_.has(username, Rdf.literalOf(name.value)))
       .map(_.orElse(KnoraUserRepo.builtIn.findOneBy(_.username == name)))
 
   override def save(user: KnoraUser): Task[KnoraUser] =

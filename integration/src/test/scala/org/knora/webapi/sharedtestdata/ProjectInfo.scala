@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -35,17 +35,17 @@ case class ProjectInfo(
 )
 
 object ProjectInfo {
-  def from(projectADM: Project): ProjectInfo =
+  def from(project: Project): ProjectInfo =
     ProjectInfo(
-      id = projectADM.id,
-      shortname = projectADM.shortname,
-      shortcode = projectADM.shortcode,
-      longname = projectADM.longname,
-      description = projectADM.description.headOption.map(_.value),
-      keywords = projectADM.keywords.headOption.map(_ => projectADM.keywords.mkString(", ")),
-      logo = projectADM.logo,
-      ontologies = projectADM.ontologies,
-      status = projectADM.status,
-      selfjoin = projectADM.selfjoin,
+      id = project.id,
+      shortname = project.shortname.value,
+      shortcode = project.shortcode.value,
+      longname = project.longname.map(_.value),
+      description = project.description.headOption.map(_.value),
+      keywords = project.keywords.headOption.map(_ => project.keywords.mkString(", ")),
+      logo = project.logo,
+      ontologies = project.ontologies,
+      status = project.status,
+      selfjoin = project.selfjoin,
     )
 }

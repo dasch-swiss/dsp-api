@@ -12,8 +12,8 @@
 - `GET: /admin/lists[?projectIri=<projectIri>]` : return all lists optionally filtered by project
 - `GET: /admin/lists/<listItemIri>` : return complete list with all children if IRI of the list (i.e. root node) is given.
   If IRI of the child node is given, return the node with its immediate children
-- `GET: /admin/lists/infos/<listIri>` : return list information (without children)
-- `GET: /admin/lists/nodes/<nodeIri>` : return list node information (without children)
+- `GET: /admin/lists/infos/<listIri>` : **deprecated**, use `/admin/lists/<listIri>/info` instead
+- `GET: /admin/lists/nodes/<nodeIri>` : **deprecated**, use `/admin/lists/<listIri>/info` instead
 - `GET: /admin/lists/<listIri>/info` : return list basic information (without children)
 - `GET: /admin/lists/candelete/<listItemIri>` : check if list or its node is unused and can be deleted
 
@@ -46,19 +46,7 @@
   `listinfo` (or `nodeinfo`), and all its children
 - GET: `/admin/lists/<listIri>`
 
-### Get list's information
-
-- Required permission: none
-- Return list information, `listinfo` (without children).
-- GET: `/admin/lists/infos/<listIri>`
-
-### Get list node Information
-
-- Required permission: none
-- Return node information, `nodeinfo`, (without children).
-- GET: `/admin/lists/nodes/<nodeIri>`
-
-### Get list's information (merged)
+### Get list info
 
 - Required permission: none
 - Return list (or node) basic information, `listinfo` (or `nodeinfo`), without its children

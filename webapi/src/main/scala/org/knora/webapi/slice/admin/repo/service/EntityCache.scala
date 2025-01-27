@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,7 +10,6 @@ import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
-import scala.annotation.nowarn
 import scala.reflect.ClassTag
 
 import org.knora.webapi.slice.common.Value.StringValue
@@ -24,8 +23,6 @@ final case class EntityCache[I <: StringValue, E <: EntityWithId[I]](cache: EhCa
 }
 
 object EntityCache {
-
-  @nowarn // suppresses warnings about unused type parameters Tag
   def layer[I <: StringValue: ClassTag: Tag, E <: EntityWithId[I]: ClassTag: Tag](
     cacheName: String,
   ): URLayer[CacheManager, EntityCache[I, E]] =

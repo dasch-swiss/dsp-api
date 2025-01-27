@@ -1,11 +1,12 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.slice.admin.repo.service
 
 import org.eclipse.rdf4j.common.net.ParsedIRI
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
@@ -54,15 +55,23 @@ final case class DefaultObjectAccessPermissionRepoLive(
     )
 
   override def findByProject(projectIri: ProjectIri): Task[Chunk[DefaultObjectAccessPermission]] =
-    findAllByTriplePattern(_.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)))
+    findAllByPattern(_.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)))
 
   def findByProjectAndForWhat(projectIri: ProjectIri, forWhat: ForWhat): Task[Option[DefaultObjectAccessPermission]] =
-    findOneByTriplePattern(p =>
+    findOneByPattern(p =>
       val pattern = p.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value))
       forWhat match {
-        case Group(g)          => pattern.andHas(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(g.value))
-        case ResourceClass(rc) => pattern.andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))
-        case Property(prop)    => pattern.andHas(Vocabulary.KnoraAdmin.forProperty, Rdf.iri(prop.value))
+        case Group(g) => pattern.andHas(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(g.value))
+        case ResourceClass(rc) =>
+          pattern
+            .andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))
+            .filterNotExists(p.has(Vocabulary.KnoraAdmin.forProperty, variable("prop")))
+
+        case Property(prop) =>
+          pattern
+            .andHas(Vocabulary.KnoraAdmin.forProperty, Rdf.iri(prop.value))
+            .filterNotExists(p.has(Vocabulary.KnoraAdmin.forResourceClass, variable("rc")))
+
         case ResourceClassAndProperty(rc, prop) =>
           pattern
             .andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))

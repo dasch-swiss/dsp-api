@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -134,7 +134,7 @@ object IriLocker {
     val newLock = lockMap.merge(
       iri,
       IriLock(apiRequestID, 1),
-      JavaUtil.biFunction({ (currentLock, _) =>
+      JavaUtil.biFunction((currentLock, _) =>
         // The lock is already in use. Who has it?
         if (currentLock.apiRequestID == apiRequestID) {
           // We already have it, so increment the entry count.
@@ -142,8 +142,8 @@ object IriLocker {
         } else {
           // Another API request has it, so leave it as is.
           currentLock
-        }
-      }),
+        },
+      ),
     )
     // Do we have the lock?
     if (newLock.apiRequestID == apiRequestID) {
@@ -174,7 +174,7 @@ object IriLocker {
   private def decrementOrReleaseLock(iri: IRI, apiRequestID: UUID): Unit = {
     val _ = lockMap.compute(
       iri,
-      JavaUtil.biFunction({ (_, maybeCurrentLock) =>
+      JavaUtil.biFunction((_, maybeCurrentLock) =>
         Option(maybeCurrentLock) match {
           case Some(currentLock) =>
             if (currentLock.apiRequestID == apiRequestID) {
@@ -198,8 +198,8 @@ object IriLocker {
             throw ApplicationLockException(
               s"API request $apiRequestID was supposed to have an update lock on $iri, but the lock is unused",
             )
-        }
-      }),
+        },
+      ),
     )
   }
 }
