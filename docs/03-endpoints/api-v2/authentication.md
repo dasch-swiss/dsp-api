@@ -6,13 +6,10 @@
 # Authentication
 
 Certain routes are secured and require authentication.
-When accessing any secured route we support three options for authentication:
+When accessing any secured route an Access Token must be sent
+in the HTTP authorization header with the [HTTP bearer scheme](https://tools.ietf.org/html/rfc6750#section-2.1).
 
-- **Preferred method**: For each request an Access Token is sent in the HTTP authorization header with the
-  [HTTP bearer scheme](https://tools.ietf.org/html/rfc6750#section-2.1).
-- **Deprecated method**: For each request an Access Token is provided as a cookie in the HTTP request.
-- **Deprecated method**: [HTTP basic authentication](https://en.wikipedia.org/wiki/Basic_access_authentication), where
-  the username is the user's `email`.
+Any other method of authentication is deprecated.
 
 ## Access Token / Login and Logout
 
@@ -23,16 +20,11 @@ If the credentials are valid, a [JSON WEB Token](https://jwt.io) (JWT) will be s
 response (e.g., `{"token": "eyJ0eXAiOiJ..."}`). Additionally, for web browser clients a session cookie
 containing the JWT token is also created, containing `KnoraAuthentication=eyJ0eXAiOiJ...`.
 
-To **logout**, the client sends a DELETE request to the same route **/v2/authentication** and
-the *access token* in one of the three described ways. This will invalidate the access token,
+To **logout**, the client sends a DELETE request to the same route **/v2/authentication** 
+along with the *access token*. This will invalidate the access token,
 thus not allowing further request that would supply the invalidated token.
 
 ## Checking Credentials
 
 To check the credentials, send a GET request to **/v2/authentication** with the credentials
 supplied as URL parameters or HTTP authentication headers as described before.
-
-## Usage Scenarios
-
-1. Create token by logging-in, send token on each subsequent request, and logout when finished.
-2. Send email/password credentials on every request.

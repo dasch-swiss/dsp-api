@@ -1,5 +1,26 @@
 # Changelog
 
+## [31.3.0](https://github.com/dasch-swiss/dsp-api/compare/v31.2.1...v31.3.0) (2025-01-27)
+
+
+### Maintenances
+
+* Make Project.longname typed ([#3473](https://github.com/dasch-swiss/dsp-api/issues/3473)) ([a1ccc26](https://github.com/dasch-swiss/dsp-api/commit/a1ccc26288e3695da709acf928eb5b9fab480067))
+* Make Project.shortcode typed ([#3471](https://github.com/dasch-swiss/dsp-api/issues/3471)) ([513848a](https://github.com/dasch-swiss/dsp-api/commit/513848af4dfd932877644db6222b3a6829af6b9e))
+* Make Project.shortname typed ([#3469](https://github.com/dasch-swiss/dsp-api/issues/3469)) ([b58e89b](https://github.com/dasch-swiss/dsp-api/commit/b58e89be85f91fafebecc800711ba96f7e263c4c))
+* Update sipi to 3.15.0 ([#3475](https://github.com/dasch-swiss/dsp-api/issues/3475)) ([b584531](https://github.com/dasch-swiss/dsp-api/commit/b584531c879669ded60aaf8e98ff5ee79eb02658))
+
+
+### Enhancements
+
+* Support json ld ontology api (Create class) (DEV-4344) ([#3467](https://github.com/dasch-swiss/dsp-api/issues/3467)) ([1d69a9b](https://github.com/dasch-swiss/dsp-api/commit/1d69a9b88a6bc7ba0f23f09ee3591c2e0ff4c4db))
+* Support jsonld for create ontology requests (DEV-4344) ([#3472](https://github.com/dasch-swiss/dsp-api/issues/3472)) ([f3c03ed](https://github.com/dasch-swiss/dsp-api/commit/f3c03ed1b54e95150762b309e53cc8c98df884c7))
+
+
+### Deprecated
+
+* Move deprecation warnings to deprecation section in docs ([#3474](https://github.com/dasch-swiss/dsp-api/issues/3474)) ([48e4885](https://github.com/dasch-swiss/dsp-api/commit/48e488591454c8f9b4d0b937404733576468075e))
+
 ## [31.2.1](https://github.com/dasch-swiss/dsp-api/compare/v31.2.0...v31.2.1) (2025-01-20)
 
 

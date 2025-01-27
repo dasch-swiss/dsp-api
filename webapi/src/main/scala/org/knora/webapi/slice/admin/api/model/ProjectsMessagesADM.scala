@@ -11,8 +11,7 @@ import zio.json.JsonCodec
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.shortcode
-import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.shortname
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
@@ -35,7 +34,7 @@ case class Project(
   id: IRI,
   shortname: Shortname,
   shortcode: Shortcode,
-  longname: Option[String],
+  longname: Option[Longname],
   description: Seq[StringLiteralV2],
   keywords: Seq[String],
   logo: Option[String],
