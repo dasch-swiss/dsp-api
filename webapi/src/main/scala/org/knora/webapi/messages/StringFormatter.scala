@@ -893,7 +893,7 @@ class StringFormatter private (
             val ontologyName           = ontologyPath.last
             val hasBuiltInOntologyName = isBuiltInOntologyName(ontologyName)
 
-            if (OntologyName.from(ontologyName).map(!_.isBuiltIn).getOrElse(true)) {
+            if (!hasBuiltInOntologyName && OntologyName.from(ontologyName).isLeft) {
               errorFun
             }
 
