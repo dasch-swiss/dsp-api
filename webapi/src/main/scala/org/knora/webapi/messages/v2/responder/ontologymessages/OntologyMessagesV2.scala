@@ -1317,8 +1317,8 @@ case class ReadOntologyV2(
     // Make a set of all other Knora ontologies used.
     val otherKnoraOntologiesUsed: Set[SmartIri] =
       (knoraOntologiesFromClasses ++ knoraOntologiesFromProperties).filterNot { ontology =>
-        ontology.getOntologyName == OntologyConstants.KnoraApi.KnoraApiOntologyLabel ||
-        ontology.getOntologyName == SalsahGui.SalsahGuiOntologyLabel
+        ontology.getOntologyName.value == OntologyConstants.KnoraApi.KnoraApiOntologyLabel ||
+        ontology.getOntologyName.value == SalsahGui.SalsahGuiOntologyLabel
       }
 
     // Make the JSON-LD context.
@@ -1594,7 +1594,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2])
     // We may have metadata for knora-api in more than one schema. Just return the one for the target schema.
 
     val ontologiesAvailableInTargetSchema = ontologies.filterNot { ontology =>
-      ontology.ontologyIri.getOntologyName == OntologyConstants.KnoraApi.KnoraApiOntologyLabel &&
+      ontology.ontologyIri.getOntologyName.value == OntologyConstants.KnoraApi.KnoraApiOntologyLabel &&
       !ontology.ontologyIri.getOntologySchema.contains(targetSchema)
     }
 

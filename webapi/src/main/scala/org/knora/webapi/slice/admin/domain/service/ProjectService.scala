@@ -52,7 +52,7 @@ final case class ProjectService(
         knoraProject.longname,
         knoraProject.description.map(_.value),
         knoraProject.keywords.map(_.value),
-        knoraProject.logo.map(_.value),
+        knoraProject.logo,
         ontologies,
         knoraProject.status.value,
         knoraProject.selfjoin.value,
@@ -69,7 +69,7 @@ final case class ProjectService(
         .fromIterable(project.description.head, project.description.tail)
         .map(Description.unsafeFrom),
       keywords = project.keywords.map(Keyword.unsafeFrom).toList,
-      logo = project.logo.map(Logo.unsafeFrom),
+      logo = project.logo,
       status = Status.from(project.status),
       selfjoin = SelfJoin.from(project.selfjoin),
       restrictedView,
