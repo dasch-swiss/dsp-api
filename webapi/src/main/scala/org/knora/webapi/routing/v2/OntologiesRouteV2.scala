@@ -776,10 +776,7 @@ final case class OntologiesRouteV2()(
     path(ontologiesBasePath / "candeleteontology" / Segment) { (ontologyIriStr: IRI) =>
       get { requestContext =>
         val requestTask = for {
-          ontologyIri <- RouteUtilZ
-                           .toSmartIri(ontologyIriStr, s"Invalid ontology IRI for request $ontologyIriStr")
-                           .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
-                           .flatMap(RouteUtilZ.ensureExternalOntologyName)
+          ontologyIri    <- RouteUtilZ.externalApiV2ComplexOntologyIri(ontologyIriStr)
           requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield CanDeleteOntologyRequestV2(ontologyIri, requestingUser)
 
@@ -790,11 +787,7 @@ final case class OntologiesRouteV2()(
   private def deleteOntology(): Route = path(ontologiesBasePath / Segment) { ontologyIriStr =>
     delete { requestContext =>
       val requestMessageTask = for {
-        ontologyIri <- RouteUtilZ
-                         .toSmartIri(ontologyIriStr, s"Invalid ontology IRI for request $ontologyIriStr")
-                         .flatMap(RouteUtilZ.ensureExternalOntologyName)
-                         .flatMap(RouteUtilZ.ensureIsKnoraOntologyIri)
-                         .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
+        ontologyIri          <- RouteUtilZ.externalApiV2ComplexOntologyIri(ontologyIriStr)
         lastModificationDate <- getLastModificationDate(requestContext)
         apiRequestId         <- RouteUtilZ.randomUuid()
         requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))

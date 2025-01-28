@@ -114,6 +114,7 @@ object KnoraIris {
   final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri {
     def makeEntityIri(name: EntityName): SmartIri = smartIri.makeEntityIri(name.toString)
     def ontologyName: OntologyName                = smartIri.getOntologyName
+    def isExternal: Boolean                       = !OntologyConstants.InternalOntologyLabels.contains(ontologyName.value)
   }
   object OntologyIri {
     def makeNew(

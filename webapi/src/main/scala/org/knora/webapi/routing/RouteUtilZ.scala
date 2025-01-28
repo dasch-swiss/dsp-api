@@ -18,15 +18,16 @@ import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 import pekko.http.scaladsl.server.RequestContext
 
-object RouteUtilZ {
+object RouteUtilZ { self =>
 
   /**
    * Url decodes a [[String]].
-   * Fails if String is not a well formed utf-8 [[String]] in `application/x-www-form-urlencoded` MIME format.
+   * Fails if String is not a well-formed utf-8 [[String]] in `application/x-www-form-urlencoded` MIME format.
    *
    * Wraps Java's [[java.net.URLDecoder#decode(java.lang.String, java.lang.String)]] into the zio world.
    *
@@ -54,11 +55,6 @@ object RouteUtilZ {
     } else {
       ZIO.succeed(iri)
     }
-
-  def ensureIsKnoraOntologyIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
-    ZIO
-      .succeed(iri)
-      .filterOrFail(_.isKnoraOntologyIri)(BadRequestException(s"Iri is not a Knora ontology iri: $iri"))
 
   def ensureIsNotKnoraOntologyIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
     ZIO
@@ -88,4 +84,9 @@ object RouteUtilZ {
 
   def toSparqlEncodedString(s: String, errorMsg: String): IO[BadRequestException, String] =
     ZIO.fromOption(Iri.toSparqlEncodedString(s)).orElseFail(BadRequestException(errorMsg))
+
+  def externalApiV2ComplexOntologyIri(str: String): ZIO[IriConverter, BadRequestException, OntologyIri] = self
+    .toSmartIri(str)
+    .flatMap(s => ZIO.fromEither(OntologyIri.fromApiV2Complex(s)).filterOrFail(_.isExternal)(()))
+    .orElseFail(BadRequestException(s"Invalid ontology IRI: $str"))
 }
