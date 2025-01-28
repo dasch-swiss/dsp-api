@@ -957,7 +957,7 @@ object ChangeGuiOrderRequestV2 {
  * @param requestingUser       the user making the request.
  */
 case class ChangeOntologyMetadataRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   label: Option[String] = None,
   comment: Option[String] = None,
   lastModificationDate: Instant,

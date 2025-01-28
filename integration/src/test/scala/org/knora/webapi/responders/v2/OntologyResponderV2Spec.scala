@@ -221,7 +221,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val newLabel = "The modified foo ontology"
 
       appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
         label = Some(newLabel),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -244,7 +244,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val aComment = "a comment"
 
       appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
         comment = Some(aComment),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -268,7 +268,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val aComment = "a changed comment"
 
       appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
         label = Some(aLabel),
         comment = Some(aComment),
         lastModificationDate = fooLastModDate,
@@ -293,7 +293,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val newLabel = "a label changed again"
 
       appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
         label = Some(newLabel),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -376,7 +376,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val newComment = "a new comment"
 
       appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = barIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(barIri.get.toSmartIri.toComplexSchema),
         comment = Some(newComment),
         lastModificationDate = barLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -2720,7 +2720,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val newLabel = "The modified anything ontology"
 
       appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = AnythingOntologyIri,
+        ontologyIri = OntologyIri.unsafeFrom(AnythingOntologyIri),
         label = Some(newLabel),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
