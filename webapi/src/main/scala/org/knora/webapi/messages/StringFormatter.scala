@@ -29,6 +29,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequence
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
@@ -892,7 +893,7 @@ class StringFormatter private (
             val ontologyName           = ontologyPath.last
             val hasBuiltInOntologyName = isBuiltInOntologyName(ontologyName)
 
-            if (!hasBuiltInOntologyName && ValuesValidator.validateProjectSpecificOntologyName(ontologyName).isEmpty) {
+            if (!hasBuiltInOntologyName && OntologyName.from(ontologyName).isLeft) {
               errorFun
             }
 
@@ -1462,11 +1463,11 @@ class StringFormatter private (
    * @return the ontology IRI.
    */
   def makeProjectSpecificInternalOntologyIri(
-    internalOntologyName: String,
+    internalOntologyName: OntologyName,
     isShared: Boolean,
-    projectCode: String,
+    projectCode: Shortcode,
   ): SmartIri =
-    toSmartIri(makeInternalOntologyIriStr(internalOntologyName, isShared, Some(projectCode)))
+    toSmartIri(makeInternalOntologyIriStr(internalOntologyName.value, isShared, Some(projectCode.value)))
 
   /**
    * Converts an internal ontology name to an external ontology name. This only affects `knora-base`, whose
