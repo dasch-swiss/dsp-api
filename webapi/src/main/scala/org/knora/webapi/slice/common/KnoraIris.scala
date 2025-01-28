@@ -26,6 +26,8 @@ object KnoraIris {
     override def toString: String                     = self.smartIri.toString
     def toInternal: InternalIri                       = self.smartIri.toInternalIri
     def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
+    def toComplexSchema: SmartIri                     = self.smartIri.toComplexSchema
+    def toInternalSchema: SmartIri                    = self.smartIri.toInternalSchema
   }
 
   // PropertyIri and ResourceClassIri currently have the same constraint
@@ -112,6 +114,8 @@ object KnoraIris {
   final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri {
     def makeEntityIri(name: EntityName): SmartIri = smartIri.makeEntityIri(name.toString)
     def ontologyName: OntologyName                = smartIri.getOntologyName
+    def isExternal: Boolean                       = ontologyName.isExternal
+    def isInternal: Boolean                       = ontologyName.isInternal
   }
   object OntologyIri {
     def makeNew(

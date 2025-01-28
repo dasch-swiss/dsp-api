@@ -143,7 +143,7 @@ final case class OntologyResponderV2(
       changePropertyGuiElement(changePropertyGuiElementRequest)
     case canDeletePropertyRequest: CanDeletePropertyRequestV2 => canDeleteProperty(canDeletePropertyRequest)
     case deletePropertyRequest: DeletePropertyRequestV2       => deleteProperty(deletePropertyRequest)
-    case canDeleteOntologyRequest: CanDeleteOntologyRequestV2 => canDeleteOntology(canDeleteOntologyRequest)
+    case req: CanDeleteOntologyRequestV2                      => canDeleteOntology(req.ontologyIri, req.requestingUser)
     case deleteOntologyRequest: DeleteOntologyRequestV2       => deleteOntology(deleteOntologyRequest)
     case other                                                => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
@@ -1825,27 +1825,22 @@ final case class OntologyResponderV2(
    * @param canDeleteOntologyRequest the request message.
    * @return a [[CanDoResponseV2]] indicating whether an ontology can be deleted.
    */
-  private def canDeleteOntology(canDeleteOntologyRequest: CanDeleteOntologyRequestV2): Task[CanDoResponseV2] = {
-    val internalOntologyIri: SmartIri = canDeleteOntologyRequest.ontologyIri.toOntologySchema(InternalSchema)
-
+  private def canDeleteOntology(ontologyIri: OntologyIri, requestingUser: User): Task[CanDoResponseV2] =
     for {
-      cacheData <- ontologyCache.getCacheData
-
-      ontology <- ZIO.fromOption(cacheData.ontologies.get(internalOntologyIri)).orElseFail {
-                    val msg = s"Ontology ${canDeleteOntologyRequest.ontologyIri.getOntologyFromEntity} does not exist"
-                    BadRequestException(msg)
-                  }
-
-      userCanUpdateOntology <-
-        ontologyCacheHelpers.canUserUpdateOntology(internalOntologyIri, canDeleteOntologyRequest.requestingUser)
+      ontology <-
+        ontologyRepo
+          .findById(ontologyIri)
+          .someOrFail(BadRequestException(s"Ontology ${ontologyIri.toComplexSchema.toIri} does not exist"))
       subjectsUsingOntology <- ontologyTriplestoreHelpers.getSubjectsUsingOntology(ontology)
+      userCanUpdateOntology <- ontologyCacheHelpers.canUserUpdateOntology(ontologyIri.toInternalSchema, requestingUser)
     } yield CanDoResponseV2.of(userCanUpdateOntology && subjectsUsingOntology.isEmpty)
-  }
 
   private def deleteOntology(deleteOntologyRequest: DeleteOntologyRequestV2): Task[SuccessResponseV2] = {
-    def deleteTask(internalOntologyIri: SmartIri): Task[SuccessResponseV2] =
+    def deleteTask(ontologyIri: OntologyIri): Task[SuccessResponseV2] =
       for {
-        cacheData <- ontologyCache.getCacheData
+        cacheData          <- ontologyCache.getCacheData
+        internalOntologyIri = ontologyIri.toInternalSchema
+        externalOntologyIri = ontologyIri.toComplexSchema
 
         // Check that the user has permission to update the ontology.
         _ <-
@@ -1868,7 +1863,7 @@ final case class OntologyResponderV2(
         _ <- ZIO.when(subjectsUsingOntology.nonEmpty) {
                val sortedSubjects = subjectsUsingOntology.map(s => "<" + s + ">").toVector.sorted.mkString(", ")
                val msg =
-                 s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} cannot be deleted, because of subjects that refer to it: $sortedSubjects"
+                 s"Ontology ${externalOntologyIri.toIri} cannot be deleted, because of subjects that refer to it: $sortedSubjects"
                ZIO.fail(BadRequestException(msg))
              }
 
@@ -1882,22 +1877,18 @@ final case class OntologyResponderV2(
 
         _ <- ZIO.when(maybeOntologyMetadata.nonEmpty) {
                val msg =
-                 s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} was not deleted. Please report this as a possible bug."
+                 s"Ontology ${externalOntologyIri.toIri} was not deleted. Please report this as a possible bug."
                ZIO.fail(UpdateNotPerformedException(msg))
              }
 
-      } yield SuccessResponseV2(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been deleted")
+      } yield SuccessResponseV2(s"Ontology ${externalOntologyIri.toIri} has been deleted")
 
     for {
-      _                  <- OntologyHelpers.checkExternalOntologyIriForUpdate(deleteOntologyRequest.ontologyIri)
-      internalOntologyIri = deleteOntologyRequest.ontologyIri.toOntologySchema(InternalSchema)
-
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      deleteOntologyRequest.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
-                      deleteTask(internalOntologyIri),
-                    )
+      ontologyIri <- ZIO
+                       .succeed(deleteOntologyRequest.ontologyIri)
+                       .filterOrFail(_.isExternal)(BadRequestException("Ontology IRI must be external"))
+      taskResult <-
+        IriLocker.runWithIriLock(deleteOntologyRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteTask(ontologyIri))
     } yield taskResult
   }
 

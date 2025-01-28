@@ -24,12 +24,15 @@ final case class OntologyName(value: String) extends AnyVal with StringValue { s
     if (self == KnoraBase) { KnoraApi }
     else { self }
 
-  def isBuiltIn: Boolean = OntologyName.BuiltIn.contains(self)
+  def isBuiltIn: Boolean  = OntologyName.BuiltIn.contains(self)
+  def isInternal: Boolean = OntologyName.Internal.contains(self)
+  def isExternal: Boolean = !isInternal
 }
 object OntologyName extends StringValueCompanion[OntologyName] {
-  val KnoraApi: OntologyName     = OntologyName.unsafeFrom(OntologyConstants.KnoraApi.KnoraApiOntologyLabel)
-  val KnoraBase: OntologyName    = OntologyName.unsafeFrom(OntologyConstants.KnoraBase.KnoraBaseOntologyLabel)
-  val BuiltIn: Set[OntologyName] = OntologyConstants.BuiltInOntologyLabels.map(OntologyName.unsafeFrom)
+  val KnoraApi: OntologyName      = OntologyName.unsafeFrom(OntologyConstants.KnoraApi.KnoraApiOntologyLabel)
+  val KnoraBase: OntologyName     = OntologyName.unsafeFrom(OntologyConstants.KnoraBase.KnoraBaseOntologyLabel)
+  val BuiltIn: Set[OntologyName]  = OntologyConstants.BuiltInOntologyLabels.map(OntologyName.unsafeFrom)
+  val Internal: Set[OntologyName] = OntologyConstants.InternalOntologyLabels.map(OntologyName.unsafeFrom)
 
   private val nCNameRegex: Regex           = "^[\\p{L}_][\\p{L}0-9_.-]*$".r
   private val urlSafeRegex: Regex          = "^[A-Za-z0-9_-]+$".r

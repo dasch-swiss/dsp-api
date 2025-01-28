@@ -51,6 +51,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Ow
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
 /**
@@ -86,7 +87,7 @@ case class CreateOntologyRequestV2(
  * @param requestingUser the user making the request.
  */
 case class CanDeleteOntologyRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
 
@@ -99,7 +100,7 @@ case class CanDeleteOntologyRequestV2(
  * @param requestingUser       the user making the request.
  */
 case class DeleteOntologyRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,

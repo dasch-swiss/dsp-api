@@ -18,6 +18,7 @@ import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 import pekko.http.scaladsl.server.RequestContext
@@ -55,11 +56,6 @@ object RouteUtilZ {
       ZIO.succeed(iri)
     }
 
-  def ensureIsKnoraOntologyIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
-    ZIO
-      .succeed(iri)
-      .filterOrFail(_.isKnoraOntologyIri)(BadRequestException(s"Iri is not a Knora ontology iri: $iri"))
-
   def ensureIsNotKnoraOntologyIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
     ZIO
       .succeed(iri)
@@ -67,14 +63,6 @@ object RouteUtilZ {
 
   def ensureIsKnoraResourceIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
     ZIO.succeed(iri).filterOrFail(_.isKnoraResourceIri)(BadRequestException(s"Invalid resource IRI: $iri"))
-
-  def ensureIsNotKnoraResourceIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
-    ZIO.succeed(iri).filterOrFail(!_.isKnoraResourceIri)(BadRequestException(s"Invalid resource IRI: $iri"))
-
-  def ensureIsKnoraBuiltInDefinitionIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
-    ZIO
-      .succeed(iri)
-      .filterOrFail(_.isKnoraBuiltInDefinitionIri)(BadRequestException(s"Iri is not a Knora build in definition: $iri"))
 
   def ensureApiV2ComplexSchema(iri: SmartIri): IO[BadRequestException, SmartIri] =
     ZIO
@@ -96,4 +84,12 @@ object RouteUtilZ {
 
   def toSparqlEncodedString(s: String, errorMsg: String): IO[BadRequestException, String] =
     ZIO.fromOption(Iri.toSparqlEncodedString(s)).orElseFail(BadRequestException(errorMsg))
+
+  def apiV2ComplexOntologyIriExternal(iri: String): ZIO[IriConverter, BadRequestException, OntologyIri] = {
+    lazy val err = BadRequestException(s"Invalid API v2 complex ontology IRI: $iri")
+    toSmartIri(iri)
+      .flatMap(sIri => ZIO.fromEither(OntologyIri.fromApiV2Complex(sIri)))
+      .filterOrFail(_.isExternal)(err)
+      .orElseFail(err)
+  }
 }
