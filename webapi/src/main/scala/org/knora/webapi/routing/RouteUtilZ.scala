@@ -68,14 +68,6 @@ object RouteUtilZ {
   def ensureIsKnoraResourceIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
     ZIO.succeed(iri).filterOrFail(_.isKnoraResourceIri)(BadRequestException(s"Invalid resource IRI: $iri"))
 
-  def ensureIsNotKnoraResourceIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
-    ZIO.succeed(iri).filterOrFail(!_.isKnoraResourceIri)(BadRequestException(s"Invalid resource IRI: $iri"))
-
-  def ensureIsKnoraBuiltInDefinitionIri(iri: SmartIri): IO[BadRequestException, SmartIri] =
-    ZIO
-      .succeed(iri)
-      .filterOrFail(_.isKnoraBuiltInDefinitionIri)(BadRequestException(s"Iri is not a Knora build in definition: $iri"))
-
   def ensureApiV2ComplexSchema(iri: SmartIri): IO[BadRequestException, SmartIri] =
     ZIO
       .succeed(iri)
