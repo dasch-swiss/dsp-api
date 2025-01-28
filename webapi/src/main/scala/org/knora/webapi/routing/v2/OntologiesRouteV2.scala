@@ -60,32 +60,32 @@ final case class OntologiesRouteV2()(
 
   def makeRoute: Route =
     dereferenceOntologyIri() ~
-      getOntologyMetadata() ~
+      getOntologyMetadata ~
       updateOntologyMetadata() ~
-      getOntologyMetadataForProjects() ~
-      getOntology() ~
+      getOntologyMetadataForProjects ~
+      getOntology ~
       createClass() ~
       updateClass() ~
       deleteClassComment() ~
       addCardinalities() ~
       canReplaceCardinalities ~
       replaceCardinalities() ~
-      canDeleteCardinalitiesFromClass() ~
+      canDeleteCardinalitiesFromClass ~
       deleteCardinalitiesFromClass() ~
       changeGuiOrder() ~
-      getClasses() ~
-      canDeleteClass() ~
+      getClasses ~
+      canDeleteClass ~
       deleteClass() ~
       deleteOntologyComment() ~
       createProperty() ~
       updatePropertyLabelsOrComments() ~
       deletePropertyComment() ~
       updatePropertyGuiElement() ~
-      getProperties() ~
-      canDeleteProperty() ~
+      getProperties ~
+      canDeleteProperty ~
       deleteProperty() ~
       createOntology() ~
-      canDeleteOntology() ~
+      canDeleteOntology ~
       deleteOntology()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
