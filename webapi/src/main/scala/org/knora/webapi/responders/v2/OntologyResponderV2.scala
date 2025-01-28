@@ -516,7 +516,12 @@ final case class OntologyResponderV2(
 
   /**
    * Changes ontology metadata.
-   *
+   * @param ontologyIri           The IRI of the ontology to be updated.
+   * @param label                 The new label for the ontology.
+   * @param comment               The new comment for the ontology.
+   * @param lastModificationDate  The last modification date of the ontology.
+   * @param apiRequestID          The API request ID.
+   * @param requestingUser        The user making the request.
    * @return a [[ReadOntologyMetadataV2]] containing the new metadata.
    */
   private def changeOntologyMetadata(
