@@ -1170,7 +1170,7 @@ class StringFormatter private (
         iriStr = convertedIriStr,
         creationFun = { () =>
           val convertedSmartIriInfo = iriInfo.copy(
-            ontologyName = Some(internalToExternalOntologyName(getOntologyName).value),
+            ontologyName = Some(getOntologyName.asExternal.value),
             ontologySchema = Some(targetSchema),
           )
 
@@ -1425,26 +1425,6 @@ class StringFormatter private (
   private def isBuiltInOntologyName(ontologyName: String): Boolean =
     OntologyConstants.BuiltInOntologyLabels.contains(ontologyName)
 
-  /**
-   * Converts an internal ontology name to an external ontology name. This only affects `knora-base`, whose
-   * external equivalent is `knora-api.`
-   *
-   * @param ontologyName an internal ontology name.
-   * @return the corresponding external ontology name.
-   */
-  private def internalToExternalOntologyName(ontologyName: OntologyName): OntologyName =
-    if (ontologyName.value == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) {
-      OntologyName.unsafeFrom(OntologyConstants.KnoraApi.KnoraApiOntologyLabel)
-    } else {
-      ontologyName
-    }
-
-  /**
-   * Determines whether a URL path refers to a built-in API v2 ontology (simple or complex).
-   *
-   * @param urlPath the URL path.
-   * @return true if the path refers to a built-in API v2 ontology.
-   */
   def isBuiltInApiV2OntologyUrlPath(urlPath: String): Boolean =
     urlPath match {
       case ApiV2OntologyUrlPathRegex(_, _, ontologyName, _) if isBuiltInOntologyName(ontologyName) => true

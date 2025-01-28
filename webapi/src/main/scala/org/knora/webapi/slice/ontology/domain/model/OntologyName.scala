@@ -8,6 +8,7 @@ import zio.prelude.Validation
 import zio.prelude.ZValidation
 
 import scala.util.matching.Regex
+
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
