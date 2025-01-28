@@ -501,7 +501,7 @@ final case class OntologiesRouteV2()(
               RouteUtilZ.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint, "Should not happen")
             subjectType <-
               propertyInfoContent.predicates.get(subClassConstraintSmartIri) match {
-                case None => ZIO.succeed(None)
+                case None => ZIO.none
                 case Some(value) =>
                   value.objects.head match {
                     case objectType: SmartIriLiteralV2 =>
