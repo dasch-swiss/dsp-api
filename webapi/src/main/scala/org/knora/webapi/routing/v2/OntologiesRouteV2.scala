@@ -36,6 +36,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.completeResponse
 import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -102,7 +103,7 @@ final case class OntologiesRouteV2()(
         allLanguagesStr = params.get(allLanguagesKey)
         allLanguages    = ValuesValidator.optionStringToBoolean(allLanguagesStr, fallback = false)
         user           <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-      } yield OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, user)
+      } yield OntologyEntitiesGetRequestV2(ontologyIri.smartIri, allLanguages, user)
 
       val targetSchemaTask = ontologyIriTask.flatMap(getTargetSchemaFromOntology)
 
@@ -110,12 +111,12 @@ final case class OntologiesRouteV2()(
     }
   }
 
-  private def getTargetSchemaFromOntology(iri: SmartIri) =
-    ZIO.fromOption(iri.getOntologySchema).orElseFail(BadRequestException(s"Invalid ontology IRI: $iri"))
+  private def getTargetSchemaFromOntology(iri: OntologyIri) =
+    ZIO.fromOption(iri.smartIri.getOntologySchema).orElseFail(BadRequestException(s"Invalid ontology IRI: $iri"))
 
   private def getOntologySmartIri(
     requestContext: RequestContext,
-  ): ZIO[AppConfig & IriConverter & StringFormatter, BadRequestException, SmartIri] = {
+  ): ZIO[AppConfig & IriConverter & StringFormatter, BadRequestException, OntologyIri] = {
     val urlPath = requestContext.request.uri.path.toString
     ZIO.serviceWithZIO[AppConfig] { appConfig =>
       val externalOntologyIriHostAndPort = appConfig.knoraApi.externalOntologyIriHostAndPort
@@ -128,14 +129,11 @@ final case class OntologiesRouteV2()(
                  } else {
                    ZIO.fail(BadRequestException(s"Invalid or unknown URL path for external ontology: $urlPath"))
                  }
-          smartIri <- validateOntologyIri(iri)
-        } yield smartIri
+          ontologyIri <- RouteUtilZ.externalApiV2ComplexOntologyIri(iri)
+        } yield ontologyIri
       }
     }
   }
-
-  private def validateOntologyIri(iri: String): ZIO[IriConverter & StringFormatter, BadRequestException, SmartIri] =
-    RouteUtilZ.toSmartIri(iri, s"Invalid ontology IRI: $iri").flatMap(RouteUtilZ.ensureExternalOntologyName)
 
   private def getOntologyMetadata(): Route =
     path(ontologiesBasePath / "metadata") {
@@ -178,11 +176,11 @@ final case class OntologiesRouteV2()(
   private def getOntology(): Route =
     path(ontologiesBasePath / "allentities" / Segment) { (externalOntologyIriStr: IRI) =>
       get { requestContext =>
-        val ontologyIriTask = validateOntologyIri(externalOntologyIriStr)
+        val ontologyIriTask = RouteUtilZ.externalApiV2ComplexOntologyIri(externalOntologyIriStr)
         val requestMessageTask = for {
           ontologyIri    <- ontologyIriTask
           requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield OntologyEntitiesGetRequestV2(ontologyIri, getLanguages(requestContext), requestingUser)
+        } yield OntologyEntitiesGetRequestV2(ontologyIri.smartIri, getLanguages(requestContext), requestingUser)
         val targetSchema = ontologyIriTask.flatMap(getTargetSchemaFromOntology)
         RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext, targetSchema)
       }

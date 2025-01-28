@@ -111,10 +111,11 @@ object KnoraIris {
       else Left(s"<$iri> is not a Knora resource IRI")
   }
 
-  final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri {
+  final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri { self =>
     def makeEntityIri(name: EntityName): SmartIri = smartIri.makeEntityIri(name.toString)
     def ontologyName: OntologyName                = smartIri.getOntologyName
-    def isExternal: Boolean                       = !OntologyConstants.InternalOntologyLabels.contains(ontologyName.value)
+    def isInternal: Boolean                       = ontologyName.isInternal
+    def isExternal: Boolean                       = !isInternal
   }
   object OntologyIri {
     def makeNew(

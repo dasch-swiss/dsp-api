@@ -12,10 +12,12 @@ import scala.util.matching.Regex
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.ontology.domain.model.OntologyNames.BuiltIn
+import org.knora.webapi.slice.ontology.domain.model.OntologyNames.Internal
 import org.knora.webapi.slice.ontology.domain.model.OntologyNames.KnoraApi
 import org.knora.webapi.slice.ontology.domain.model.OntologyNames.KnoraBase
 
-final case class OntologyName(value: String, isBuiltIn: Boolean) extends StringValue { self =>
+final case class OntologyName(value: String) extends AnyVal with StringValue { self =>
   def asExternal: OntologyName =
     if (self == KnoraBase) KnoraApi
     else self
@@ -23,6 +25,9 @@ final case class OntologyName(value: String, isBuiltIn: Boolean) extends StringV
   def asInternal: OntologyName =
     if (self == KnoraApi) KnoraBase
     else self
+
+  def isBuiltIn: Boolean  = BuiltIn.contains(self)
+  def isInternal: Boolean = Internal.contains(self)
 }
 object OntologyName extends StringValueCompanion[OntologyName] {
   private val nCNameRegex: Regex           = "^[\\p{L}_][\\p{L}0-9_.-]*$".r
@@ -71,7 +76,7 @@ object OntologyName extends StringValueCompanion[OntologyName] {
   ): String => Either[String, OntologyName] = value =>
     ZValidation
       .validateAll(validations.map(_(value)))
-      .as(OntologyName(value, OntologyConstants.BuiltInOntologyLabels.contains(value)))
+      .as(OntologyName(value))
       .toEither
       .left
       .map(_.mkString(s"$typ ", ", ", "."))
