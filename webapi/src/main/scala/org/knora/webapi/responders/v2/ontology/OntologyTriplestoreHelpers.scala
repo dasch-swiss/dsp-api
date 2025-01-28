@@ -165,7 +165,7 @@ final case class OntologyTriplestoreHelpersLive(
                   s"Ontology $internalOntologyIri has more than one rdfs:label",
                 )
               } else if (labels.isEmpty) {
-                internalOntologyIri.getOntologyName
+                internalOntologyIri.getOntologyName.value
               } else {
                 labels.head
               }
