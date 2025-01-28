@@ -8,13 +8,27 @@ import zio.prelude.Validation
 import zio.prelude.ZValidation
 
 import scala.util.matching.Regex
-
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.ontology.domain.model.OntologyName.KnoraApi
+import org.knora.webapi.slice.ontology.domain.model.OntologyName.KnoraBase
 
-final case class OntologyName(value: String, isBuiltIn: Boolean) extends StringValue
+final case class OntologyName(value: String) extends AnyVal with StringValue { self =>
+  def asInternal: OntologyName =
+    if (self == KnoraApi) { KnoraBase }
+    else { self }
+
+  def asExternal: OntologyName =
+    if (self == KnoraBase) { KnoraApi }
+    else { self }
+
+  def isBuiltIn: Boolean = OntologyName.BuiltIn.contains(self)
+}
 object OntologyName extends StringValueCompanion[OntologyName] {
+  val KnoraApi: OntologyName     = OntologyName.unsafeFrom(OntologyConstants.KnoraApi.KnoraApiOntologyLabel)
+  val KnoraBase: OntologyName    = OntologyName.unsafeFrom(OntologyConstants.KnoraBase.KnoraBaseOntologyLabel)
+  val BuiltIn: Set[OntologyName] = OntologyConstants.BuiltInOntologyLabels.map(OntologyName.unsafeFrom)
 
   private val nCNameRegex: Regex           = "^[\\p{L}_][\\p{L}0-9_.-]*$".r
   private val urlSafeRegex: Regex          = "^[A-Za-z0-9_-]+$".r
@@ -62,7 +76,7 @@ object OntologyName extends StringValueCompanion[OntologyName] {
   ): String => Either[String, OntologyName] = value =>
     ZValidation
       .validateAll(validations.map(_(value)))
-      .as(OntologyName(value, OntologyConstants.BuiltInOntologyLabels.contains(value)))
+      .as(OntologyName(value))
       .toEither
       .left
       .map(_.mkString(s"$typ ", ", ", "."))
