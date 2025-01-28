@@ -34,17 +34,7 @@ object OntologyName extends StringValueCompanion[OntologyName] {
   private val nCNameRegex: Regex           = "^[\\p{L}_][\\p{L}0-9_.-]*$".r
   private val urlSafeRegex: Regex          = "^[A-Za-z0-9_-]+$".r
   private val apiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
-  private val reservedWords: Set[String] =
-    Set(
-      "ontology",
-      "rdf",
-      "rdfs",
-      "owl",
-      "xsd",
-      "schema",
-      "shared",
-      "simple",
-    )
+  private val reservedWords: Set[String]   = Set("ontology", "rdf", "rdfs", "owl", "xsd", "schema", "shared", "simple")
 
   private def matchesRegexes(regex: List[Regex], msg: Option[String] = None): String => Validation[String, String] =
     (str: String) => {
