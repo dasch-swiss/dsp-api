@@ -44,6 +44,7 @@ import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -258,7 +259,7 @@ final case class OntologyResponderV2(
    * Checks whether a certain Knora resource or value class is a subclass of another class.
    *
    * @param subClassIri   the IRI of the resource or value class whose subclassOf relations have to be checked.
-   * @param superClassIri the IRI of the resource or value class to check for (whether it is a a super class of `subClassIri` or not).
+   * @param superClassIri the IRI of the resource or value class to check for (whether it is a super class of `subClassIri` or not).
    * @return a [[CheckSubClassResponseV2]].
    */
   private def checkSubClassV2(subClassIri: SmartIri, superClassIri: SmartIri): Task[CheckSubClassResponseV2] =
@@ -266,8 +267,7 @@ final case class OntologyResponderV2(
       cacheData <- ontologyCache.getCacheData
       isSubClass <- ZIO
                       .fromOption(cacheData.classToSuperClassLookup.get(subClassIri))
-                      .map(_.contains(superClassIri))
-                      .orElseFail(BadRequestException(s"Class $subClassIri not found"))
+                      .mapBoth(_ => BadRequestException(s"Class $subClassIri not found"), _.contains(superClassIri))
     } yield CheckSubClassResponseV2(isSubClass)
 
   /**
@@ -291,8 +291,10 @@ final case class OntologyResponderV2(
             )
           ZIO
             .fromOption(labelValueMaybe)
-            .orElseFail(InconsistentRepositoryDataException(s"Resource class $subClassIri has no rdfs:label"))
-            .map(SubClassInfoV2(subClassIri, _))
+            .mapBoth(
+              _ => InconsistentRepositoryDataException(s"Resource class $subClassIri has no rdfs:label"),
+              SubClassInfoV2(subClassIri, _),
+            )
         }
     } yield SubClassesGetResponseV2(subClasses)
 
@@ -357,7 +359,9 @@ final case class OntologyResponderV2(
     for {
       cacheData <- ontologyCache.getCacheData
 
-      _ <- ZIO.when(ontologyIri.getOntologyName == "standoff" && ontologyIri.getOntologySchema.contains(ApiV2Simple))(
+      _ <- ZIO.when(
+             ontologyIri.getOntologyName.value == "standoff" && ontologyIri.getOntologySchema.contains(ApiV2Simple),
+           )(
              ZIO.fail(BadRequestException(s"The standoff ontology is not available in the API v2 simple schema")),
            )
 
@@ -423,10 +427,10 @@ final case class OntologyResponderV2(
    * @return a [[SuccessResponseV2]].
    */
   def createOntology(createOntologyRequest: CreateOntologyRequestV2): Task[ReadOntologyMetadataV2] = {
-    def makeTaskFuture(internalOntologyIri: SmartIri): Task[ReadOntologyMetadataV2] =
+    def makeTaskFuture(internalOntologyIri: OntologyIri): Task[ReadOntologyMetadataV2] =
       for {
         // Make sure the ontology doesn't already exist.
-        existingOntologyMetadata <- ontologyTriplestoreHelpers.loadOntologyMetadata(internalOntologyIri)
+        existingOntologyMetadata <- ontologyTriplestoreHelpers.loadOntologyMetadata(internalOntologyIri.smartIri)
 
         _ <- ZIO.when(existingOntologyMetadata.nonEmpty) {
                val msg =
@@ -460,8 +464,8 @@ final case class OntologyResponderV2(
 
         createOntologySparql = sparql.v2.txt
                                  .createOntology(
-                                   ontologyNamedGraphIri = internalOntologyIri,
-                                   ontologyIri = internalOntologyIri,
+                                   ontologyNamedGraphIri = internalOntologyIri.smartIri,
+                                   ontologyIri = internalOntologyIri.smartIri,
                                    projectIri = createOntologyRequest.projectIri,
                                    isShared = createOntologyRequest.isShared,
                                    ontologyLabel = createOntologyRequest.label,
@@ -473,14 +477,14 @@ final case class OntologyResponderV2(
         // Check that the update was successful. To do this, we have to undo the SPARQL-escaping of the input.
         projectSmartIri = stringFormatter.toSmartIri(createOntologyRequest.projectIri.value)
         unescapedNewMetadata = OntologyMetadataV2(
-                                 ontologyIri = internalOntologyIri,
+                                 ontologyIri = internalOntologyIri.smartIri,
                                  projectIri = Some(projectSmartIri),
                                  label = Some(createOntologyRequest.label),
                                  comment = createOntologyRequest.comment,
                                  lastModificationDate = Some(currentTime),
                                ).unescape
 
-        maybeLoadedOntologyMetadata <- ontologyTriplestoreHelpers.loadOntologyMetadata(internalOntologyIri)
+        maybeLoadedOntologyMetadata <- ontologyTriplestoreHelpers.loadOntologyMetadata(internalOntologyIri.smartIri)
 
         _ <- maybeLoadedOntologyMetadata match {
                case Some(loadedOntologyMetadata) =>
@@ -490,7 +494,7 @@ final case class OntologyResponderV2(
 
         _ <- // Update the ontology cache with the unescaped metadata.
           ontologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(
-            internalOntologyIri,
+            internalOntologyIri.smartIri,
             ReadOntologyV2(ontologyMetadata = unescapedNewMetadata),
           )
 
@@ -523,11 +527,8 @@ final case class OntologyResponderV2(
       projectId <- ZIO.fromEither(ProjectIri.from(projectIri.toString)).mapError(e => BadRequestException(e))
       project <-
         knoraProjectService.findById(projectId).someOrFail(BadRequestException(s"Project not found: $projectIri"))
-      internalOntologyIri: SmartIri = stringFormatter.makeProjectSpecificInternalOntologyIri(
-                                        validOntologyName,
-                                        createOntologyRequest.isShared,
-                                        project.shortcode,
-                                      )
+      internalOntologyIri =
+        OntologyIri.makeNew(validOntologyName, createOntologyRequest.isShared, Some(project.shortcode), stringFormatter)
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
       taskResult <- IriLocker.runWithIriLock(
@@ -1758,7 +1759,7 @@ final case class OntologyResponderV2(
                      ),
                    )
                    .whenZIO(iriService.isEntityUsed(internalLinkValuePropertyIri))
-               case None => ZIO.succeed(())
+               case None => ZIO.unit
              }
 
         // Delete the property from the triplestore.
@@ -1903,7 +1904,7 @@ final case class OntologyResponderV2(
   /**
    * Creates a property in an existing ontology.
    *
-   * @param createPropertyRequest the request to create the property.
+   * @param req the request to create the property.
    * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new property.
    */
   def createProperty(req: CreatePropertyRequestV2): Task[ReadOntologyV2] =
@@ -2247,8 +2248,10 @@ final case class OntologyResponderV2(
           val linkValuePropertyIri = internalPropertyIri.fromLinkPropToLinkValueProp
           ZIO
             .fromOption(ontology.properties.get(linkValuePropertyIri))
-            .orElseFail(InconsistentRepositoryDataException(s"Link value property $linkValuePropertyIri not found"))
-            .map(Some(_))
+            .mapBoth(
+              _ => InconsistentRepositoryDataException(s"Link value property $linkValuePropertyIri not found"),
+              Some(_),
+            )
         } else {
           ZIO.none
         }
@@ -2442,8 +2445,10 @@ final case class OntologyResponderV2(
             val linkValuePropertyIri = internalPropertyIri.fromLinkPropToLinkValueProp
             ZIO
               .fromOption(ontology.properties.get(linkValuePropertyIri))
-              .orElseFail(InconsistentRepositoryDataException(s"Link value property $linkValuePropertyIri not found"))
-              .map(Some(_))
+              .mapBoth(
+                _ => InconsistentRepositoryDataException(s"Link value property $linkValuePropertyIri not found"),
+                Some(_),
+              )
           } else {
             ZIO.none
           }
@@ -2511,8 +2516,7 @@ final case class OntologyResponderV2(
                 ),
               )
             } else {
-
-              ZIO.succeed(Some(unescapedNewLinkPropertyDef))
+              ZIO.some(unescapedNewLinkPropertyDef)
             }
           }.getOrElse(ZIO.none)
 
@@ -2716,11 +2720,13 @@ final case class OntologyResponderV2(
             val linkValuePropertyIri = internalPropertyIri.fromLinkPropToLinkValueProp
             ZIO
               .fromOption(ontology.properties.get(linkValuePropertyIri))
-              .orElseFail {
-                val msg = s"Link value property $linkValuePropertyIri not found"
-                InconsistentRepositoryDataException(msg)
-              }
-              .map(Some(_))
+              .mapBoth(
+                { _ =>
+                  val msg = s"Link value property $linkValuePropertyIri not found"
+                  InconsistentRepositoryDataException(msg)
+                },
+                Some(_),
+              )
           } else {
             ZIO.none
           }

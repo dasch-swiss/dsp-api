@@ -8,8 +8,11 @@ package org.knora.webapi.slice.common
 import eu.timepit.refined.types.string.NonEmptyString
 
 import org.knora.webapi.OntologySchema
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 object KnoraIris {
@@ -106,8 +109,26 @@ object KnoraIris {
       else Left(s"<$iri> is not a Knora resource IRI")
   }
 
-  final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri
+  final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri {
+    def makeEntityIri(name: EntityName): SmartIri = smartIri.makeEntityIri(name.toString)
+    def ontologyName: OntologyName                = smartIri.getOntologyName
+  }
   object OntologyIri {
+    def makeNew(
+      ontologyName: OntologyName,
+      isShared: Boolean,
+      shortcode: Option[Shortcode],
+      sf: StringFormatter,
+    ): OntologyIri = {
+      val sb = new StringBuilder()
+      sb.append(OntologyConstants.KnoraInternal.InternalOntologyStart + "/")
+      if (isShared) { sb.append("shared/") }
+      val sharedOntologiesShortcode = "0000"
+      shortcode.map(_.value).filter(v => v != sharedOntologiesShortcode).foreach(v => sb.append(s"$v/"))
+      sb.append(ontologyName.value)
+      unsafeFrom(sf.toSmartIri(sb.toString()))
+    }
+
     def unsafeFrom(iri: SmartIri): OntologyIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
 
     def fromApiV2Complex(iri: SmartIri): Either[String, OntologyIri] =

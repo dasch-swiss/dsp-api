@@ -730,7 +730,7 @@ object OntologyHelpers {
           )
           .toSmartIri
         val ontologyLabel: String =
-          ontologyMetadataMap.getOrElse(OntologyConstants.Rdfs.Label, ontologySmartIri.getOntologyName)
+          ontologyMetadataMap.getOrElse(OntologyConstants.Rdfs.Label, ontologySmartIri.getOntologyName.value)
         val lastModificationDate: Option[Instant] = ontologyMetadataMap
           .get(OntologyConstants.KnoraBase.LastModificationDate)
           .map(instant =>
