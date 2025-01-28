@@ -45,6 +45,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -514,20 +515,19 @@ final case class OntologyResponderV2(
       // Check that the ontology name is valid.
       validOntologyName <-
         ZIO
-          .fromOption(ValuesValidator.validateProjectSpecificOntologyName(createOntologyRequest.ontologyName))
-          .orElseFail(
-            BadRequestException(s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}"),
-          )
+          .fromEither(OntologyName.from(createOntologyRequest.ontologyName))
+          .mapError(BadRequestException.apply)
+          .filterOrFail(!_.isBuiltIn)(BadRequestException("A built in ontology cannot be created"))
 
       // Make the internal ontology IRI.
       projectId <- ZIO.fromEither(ProjectIri.from(projectIri.toString)).mapError(e => BadRequestException(e))
       project <-
         knoraProjectService.findById(projectId).someOrFail(BadRequestException(s"Project not found: $projectIri"))
-      internalOntologyIri = stringFormatter.makeProjectSpecificInternalOntologyIri(
-                              validOntologyName,
-                              createOntologyRequest.isShared,
-                              project.shortcode.value,
-                            )
+      internalOntologyIri: SmartIri = stringFormatter.makeProjectSpecificInternalOntologyIri(
+                                        validOntologyName,
+                                        createOntologyRequest.isShared,
+                                        project.shortcode,
+                                      )
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
       taskResult <- IriLocker.runWithIriLock(

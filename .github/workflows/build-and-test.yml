@@ -92,11 +92,19 @@ jobs:
   test-docs-build:
     name: Test docs
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ "21" ]
     env:
       IS_NOOP: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release-') }}
     steps:
       - name: Inform on no-op
         run: echo "Running this as a no-op job... ${{ env.IS_NOOP}}"
+      - name: Run preparatory steps
+        if: ${{ env.IS_NOOP == 'false' }}
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java-version: ${{ matrix.java }}
       - name: Checkout source
         if: ${{ env.IS_NOOP == 'false' }}
         uses: actions/checkout@v4
