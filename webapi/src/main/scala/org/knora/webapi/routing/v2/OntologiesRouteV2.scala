@@ -135,7 +135,7 @@ final case class OntologiesRouteV2()(
     }
   }
 
-  private def getOntologyMetadata(): Route =
+  private def getOntologyMetadata: Route =
     path(ontologiesBasePath / "metadata") {
       get { requestContext =>
         val requestTask = RouteUtilV2
@@ -162,7 +162,7 @@ final case class OntologiesRouteV2()(
       }
     }
 
-  private def getOntologyMetadataForProjects(): Route =
+  private def getOntologyMetadataForProjects: Route =
     path(ontologiesBasePath / "metadata" / Segments) { (projectIris: List[IRI]) =>
       get { requestContext =>
         val requestTask = ZIO
@@ -173,7 +173,7 @@ final case class OntologiesRouteV2()(
       }
     }
 
-  private def getOntology(): Route =
+  private def getOntology: Route =
     path(ontologiesBasePath / "allentities" / Segment) { (externalOntologyIriStr: IRI) =>
       get { requestContext =>
         val ontologyIriTask = RouteUtilZ.externalApiV2ComplexOntologyIri(externalOntologyIriStr)
@@ -291,7 +291,7 @@ final case class OntologiesRouteV2()(
       }
     }
 
-  private def canDeleteCardinalitiesFromClass(): Route =
+  private def canDeleteCardinalitiesFromClass: Route =
     path(ontologiesBasePath / "candeletecardinalities") {
       post {
         entity(as[String]) { jsonRequest => requestContext =>
@@ -342,7 +342,7 @@ final case class OntologiesRouteV2()(
       }
     }
 
-  private def getClasses(): Route =
+  private def getClasses: Route =
     path(ontologiesBasePath / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
       get { requestContext =>
         val classSmartIrisTask: ZIO[IriConverter & StringFormatter, BadRequestException, Set[SmartIri]] =
@@ -376,7 +376,7 @@ final case class OntologiesRouteV2()(
       }
     }
 
-  private def canDeleteClass(): Route =
+  private def canDeleteClass: Route =
     path(ontologiesBasePath / "candeleteclass" / Segment) { (classIriStr: IRI) =>
       get { requestContext =>
         val requestTask = for {
@@ -686,7 +686,7 @@ final case class OntologiesRouteV2()(
       }
     }
 
-  private def getProperties(): Route =
+  private def getProperties: Route =
     path(ontologiesBasePath / "properties" / Segments) { (externalPropertyIris: List[IRI]) =>
       get { requestContext =>
         val propertyIrisTask = for {
@@ -716,7 +716,7 @@ final case class OntologiesRouteV2()(
       }
     }
 
-  private def canDeleteProperty(): Route =
+  private def canDeleteProperty: Route =
     path(ontologiesBasePath / "candeleteproperty" / Segment) { (propertyIriStr: IRI) =>
       get { requestContext =>
         val requestMessageTask = for {
@@ -770,7 +770,7 @@ final case class OntologiesRouteV2()(
     }
   }
 
-  private def canDeleteOntology(): Route =
+  private def canDeleteOntology: Route =
     path(ontologiesBasePath / "candeleteontology" / Segment) { (ontologyIriStr: IRI) =>
       get { requestContext =>
         val requestTask = for {
