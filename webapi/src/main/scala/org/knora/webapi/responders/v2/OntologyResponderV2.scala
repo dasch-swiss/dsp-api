@@ -347,35 +347,23 @@ final case class OntologyResponderV2(
    * @return a [[ReadOntologyV2]].
    */
   private def getOntologyEntitiesV2(
-    ontologyIri: SmartIri,
+    ontologyIri: OntologyIri,
     allLanguages: Boolean,
     requestingUser: User,
   ): Task[ReadOntologyV2] =
     for {
-      cacheData <- ontologyCache.getCacheData
-
-      _ <- ZIO.when(
-             ontologyIri.getOntologyName.value == "standoff" && ontologyIri.getOntologySchema.contains(ApiV2Simple),
-           )(
-             ZIO.fail(BadRequestException(s"The standoff ontology is not available in the API v2 simple schema")),
-           )
-
-      ontology <- ZIO
-                    .fromOption(cacheData.ontologies.get(ontologyIri.toOntologySchema(InternalSchema)))
-                    .orElseFail(NotFoundException(s"Ontology not found: $ontologyIri"))
-
+      ontology <- ontologyRepo
+                    .findById(ontologyIri)
+                    .someOrFail(NotFoundException(s"Ontology not found: $ontologyIri"))
+      _ <- ZIO
+             .fail(BadRequestException(s"The standoff ontology is not available in the API v2 simple schema"))
+             .when(
+               ontologyIri.ontologyName.value == "standoff" &&
+                 ontologyIri.smartIri.getOntologySchema.contains(ApiV2Simple),
+             )
       // Are we returning data in the user's preferred language, or in all available languages?
-      userLang =
-        if (!allLanguages) {
-          // Just the user's preferred language.
-          Some(requestingUser.lang)
-        } else {
-          // All available languages.
-          None
-        }
-    } yield ontology.copy(
-      userLang = userLang,
-    )
+      userLang = Some(requestingUser.lang).filter(_ => allLanguages)
+    } yield ontology.copy(userLang = userLang)
 
   /**
    * Requests information about properties in a single ontology.

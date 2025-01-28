@@ -1119,7 +1119,7 @@ case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.e
  * @param allLanguages   true if information in all available languages should be returned.
  * @param requestingUser the user making the request.
  */
-case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: User)
+case class OntologyEntitiesGetRequestV2(ontologyIri: OntologyIri, allLanguages: Boolean, requestingUser: User)
     extends OntologiesResponderRequestV2
 
 /**

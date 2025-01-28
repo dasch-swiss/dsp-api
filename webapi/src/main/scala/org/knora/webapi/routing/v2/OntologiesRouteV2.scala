@@ -103,7 +103,7 @@ final case class OntologiesRouteV2()(
         allLanguagesStr = params.get(allLanguagesKey)
         allLanguages    = ValuesValidator.optionStringToBoolean(allLanguagesStr, fallback = false)
         user           <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-      } yield OntologyEntitiesGetRequestV2(ontologyIri.smartIri, allLanguages, user)
+      } yield OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, user)
 
       val targetSchemaTask = ontologyIriTask.flatMap(getTargetSchemaFromOntology)
 
@@ -180,7 +180,7 @@ final case class OntologiesRouteV2()(
         val requestMessageTask = for {
           ontologyIri    <- ontologyIriTask
           requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield OntologyEntitiesGetRequestV2(ontologyIri.smartIri, getLanguages(requestContext), requestingUser)
+        } yield OntologyEntitiesGetRequestV2(ontologyIri, getLanguages(requestContext), requestingUser)
         val targetSchema = ontologyIriTask.flatMap(getTargetSchemaFromOntology)
         RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext, targetSchema)
       }
