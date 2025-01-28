@@ -29,6 +29,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequence
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
@@ -275,7 +276,7 @@ object StringFormatter {
   }
 
   def isKnoraOntologyIri(iri: SmartIri): Boolean =
-    iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName)
+    iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName.value)
 
   def makeValueIri(resourceIri: IRI, uuid: UUID): IRI =
     s"$resourceIri/values/${UuidUtil.base64Encode(uuid)}"
@@ -427,7 +428,7 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
   /**
    * If this is a Knora ontology or entity IRI, returns the name of the ontology. Otherwise, throws [[DataConversionException]].
    */
-  def getOntologyName: String
+  def getOntologyName: OntologyName
 
   /**
    * If this is a Knora entity IRI, returns the name of the entity. Otherwise, throws [[DataConversionException]].
@@ -580,7 +581,7 @@ class StringFormatter private (
   val maybeConfig: Option[AppConfig],
   maybeKnoraHostAndPort: Option[String] = None,
   initForTest: Boolean = false,
-) {
+) { self =>
 
   // The host and port number that this Knora server is running on, and that should be used
   // when constructing IRIs for project-specific ontologies.
@@ -1000,15 +1001,17 @@ class StringFormatter private (
         throw DataConversionException(s"$iri is not a Knora ontology IRI")
       }
 
-    override def getOntologyName: String =
-      iriInfo.ontologyName.getOrElse(throw DataConversionException(s"Expected a Knora ontology IRI: $iri"))
+    override def getOntologyName: OntologyName =
+      iriInfo.ontologyName
+        .flatMap(OntologyName.from(_).toOption)
+        .getOrElse(throw DataConversionException(s"Expected a Knora ontology IRI: $iri"))
 
     override def getEntityName: String =
       iriInfo.entityName.getOrElse(throw DataConversionException(s"Expected a Knora entity IRI: $iri"))
 
     override def getOntologySchema: Option[OntologySchema] = iriInfo.ontologySchema
 
-    override def getShortPrefixLabel: String = getOntologyName
+    override def getShortPrefixLabel: String = getOntologyName.value
 
     override def getLongPrefixLabel: String = {
       val prefix = new StringBuilder
@@ -1081,23 +1084,19 @@ class StringFormatter private (
 
     private def externalToInternalEntityIri: SmartIri = {
       // Construct the string representation of this IRI in the target schema.
-      val internalOntologyName = externalToInternalOntologyName(getOntologyName)
-      val entityName           = getEntityName
+      val ontologyName = externalToInternalOntologyName(getOntologyName)
+      val entityName   = getEntityName
+      val ontologyIri =
+        OntologyIri.makeNew(ontologyName, iriInfo.sharedOntology, iriInfo.projectCode.map(Shortcode.unsafeFrom), self)
 
-      val internalOntologyIri = makeInternalOntologyIriStr(
-        internalOntologyName = internalOntologyName,
-        isShared = iriInfo.sharedOntology,
-        projectCode = iriInfo.projectCode,
-      )
-
-      val convertedIriStr = new StringBuilder(internalOntologyIri).append("#").append(entityName).toString
+      val convertedIriStr = new StringBuilder(ontologyIri.toString).append("#").append(entityName).toString
 
       // Get it from the cache, or construct it and cache it if it's not there.
       getOrCacheSmartIri(
         iriStr = convertedIriStr,
         creationFun = { () =>
           val convertedSmartIriInfo = iriInfo.copy(
-            ontologyName = Some(internalOntologyName),
+            ontologyName = Some(ontologyName.value),
             ontologySchema = Some(InternalSchema),
           )
 
@@ -1120,7 +1119,7 @@ class StringFormatter private (
         iriStr = convertedEntityIriStr,
         creationFun = { () =>
           val convertedSmartIriInfo = iriInfo.copy(
-            ontologyName = Some(internalToExternalOntologyName(getOntologyName)),
+            ontologyName = Some(internalToExternalOntologyName(getOntologyName).value),
             ontologySchema = Some(targetSchema),
           )
 
@@ -1137,7 +1136,9 @@ class StringFormatter private (
       val versionSegment = getVersionSegment(targetSchema)
 
       val convertedIriStr: IRI = if (isKnoraBuiltInDefinitionIri) {
-        OntologyConstants.KnoraApi.ApiOntologyStart + internalToExternalOntologyName(ontologyName) + versionSegment
+        OntologyConstants.KnoraApi.ApiOntologyStart + internalToExternalOntologyName(
+          ontologyName,
+        ).value + versionSegment
       } else if (isKnoraSharedDefinitionIri) {
         val externalOntologyIri = new StringBuilder(OntologyConstants.KnoraApi.ApiOntologyStart).append("shared/")
 
@@ -1171,7 +1172,7 @@ class StringFormatter private (
         iriStr = convertedIriStr,
         creationFun = { () =>
           val convertedSmartIriInfo = iriInfo.copy(
-            ontologyName = Some(internalToExternalOntologyName(getOntologyName)),
+            ontologyName = Some(internalToExternalOntologyName(getOntologyName).value),
             ontologySchema = Some(targetSchema),
           )
 
@@ -1184,17 +1185,20 @@ class StringFormatter private (
     }
 
     private lazy val asInternalOntologyIri: SmartIri = {
-      val convertedIriStr = makeInternalOntologyIriStr(
-        internalOntologyName = externalToInternalOntologyName(getOntologyName),
-        isShared = iriInfo.sharedOntology,
-        projectCode = iriInfo.projectCode,
-      )
+      val convertedIriStr = OntologyIri
+        .makeNew(
+          externalToInternalOntologyName(getOntologyName),
+          iriInfo.sharedOntology,
+          iriInfo.projectCode.map(Shortcode.unsafeFrom),
+          self,
+        )
+        .toString
 
       getOrCacheSmartIri(
         iriStr = convertedIriStr,
         creationFun = { () =>
           val convertedSmartIriInfo = iriInfo.copy(
-            ontologyName = Some(externalToInternalOntologyName(getOntologyName)),
+            ontologyName = Some(externalToInternalOntologyName(getOntologyName).value),
             ontologySchema = Some(InternalSchema),
           )
 
@@ -1424,61 +1428,15 @@ class StringFormatter private (
     OntologyConstants.BuiltInOntologyLabels.contains(ontologyName)
 
   /**
-   * Given a valid internal (built-in or project-specific) ontology name and an optional project code, constructs the
-   * corresponding internal ontology IRI.
-   *
-   * @param internalOntologyName the ontology name.
-   * @param projectCode          the project code.
-   * @return the ontology IRI.
-   */
-  private def makeInternalOntologyIriStr(
-    internalOntologyName: String,
-    isShared: Boolean,
-    projectCode: Option[String],
-  ): IRI = {
-    val internalOntologyIri = new StringBuilder(OntologyConstants.KnoraInternal.InternalOntologyStart)
-
-    if (isShared) {
-      internalOntologyIri.append("/shared")
-    }
-
-    projectCode match {
-      case Some(code) =>
-        if (code != DefaultSharedOntologiesProjectCode) {
-          val _ = internalOntologyIri.append('/').append(code)
-        }
-
-      case None => ()
-    }
-
-    internalOntologyIri.append('/').append(internalOntologyName).toString
-  }
-
-  /**
-   * Given a valid internal ontology name and an optional project code, constructs the corresponding internal
-   * ontology IRI.
-   *
-   * @param internalOntologyName the ontology name.
-   * @param projectCode          the project code.
-   * @return the ontology IRI.
-   */
-  def makeProjectSpecificInternalOntologyIri(
-    internalOntologyName: OntologyName,
-    isShared: Boolean,
-    projectCode: Shortcode,
-  ): SmartIri =
-    toSmartIri(makeInternalOntologyIriStr(internalOntologyName.value, isShared, Some(projectCode.value)))
-
-  /**
    * Converts an internal ontology name to an external ontology name. This only affects `knora-base`, whose
    * external equivalent is `knora-api.`
    *
    * @param ontologyName an internal ontology name.
    * @return the corresponding external ontology name.
    */
-  private def internalToExternalOntologyName(ontologyName: String): String =
-    if (ontologyName == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) {
-      OntologyConstants.KnoraApi.KnoraApiOntologyLabel
+  private def internalToExternalOntologyName(ontologyName: OntologyName): OntologyName =
+    if (ontologyName.value == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) {
+      OntologyName.unsafeFrom(OntologyConstants.KnoraApi.KnoraApiOntologyLabel)
     } else {
       ontologyName
     }
@@ -1490,9 +1448,9 @@ class StringFormatter private (
    * @param ontologyName an external ontology name.
    * @return the corresponding internal ontology name.
    */
-  private def externalToInternalOntologyName(ontologyName: String): String =
-    if (ontologyName == OntologyConstants.KnoraApi.KnoraApiOntologyLabel) {
-      OntologyConstants.KnoraBase.KnoraBaseOntologyLabel
+  private def externalToInternalOntologyName(ontologyName: OntologyName): OntologyName =
+    if (ontologyName.value == OntologyConstants.KnoraApi.KnoraApiOntologyLabel) {
+      OntologyName.unsafeFrom(OntologyConstants.KnoraBase.KnoraBaseOntologyLabel)
     } else {
       ontologyName
     }
@@ -1588,7 +1546,7 @@ class StringFormatter private (
   /**
    * Creates a new resource IRI based on a UUID.
    *
-   * @param projectShortcode the project's shortcode.
+   * @param shortcode the project's shortcode.
    * @return a new resource IRI.
    */
   def makeRandomResourceIri(shortcode: Shortcode): IRI = {
@@ -1634,30 +1592,6 @@ class StringFormatter private (
   def makeRandomMappingElementIri(mappingIri: IRI): IRI = {
     val knoraMappingElementUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"$mappingIri/elements/$knoraMappingElementUuid"
-  }
-
-  /**
-   * Validates a custom value IRI, throwing [[BadRequestException]] if the IRI is not valid.
-   *
-   * @param customValueIri the custom value IRI to be validated.
-   * @param projectCode the project code of the containing resource.
-   * @param resourceID the ID of the containing resource.
-   * @return the validated IRI.
-   */
-  def validateCustomValueIri(customValueIri: SmartIri, projectCode: String, resourceID: String): SmartIri = {
-    if (!customValueIri.isKnoraValueIri) {
-      throw BadRequestException(s"<$customValueIri> is not a Knora value IRI")
-    }
-
-    if (!customValueIri.getProjectCode.contains(projectCode)) {
-      throw BadRequestException(s"The provided value IRI does not contain the correct project code")
-    }
-
-    if (!customValueIri.getResourceID.contains(resourceID)) {
-      throw BadRequestException(s"The provided value IRI does not contain the correct resource ID")
-    }
-
-    customValueIri
   }
 
   def unescapeStringLiteralSeq(stringLiteralSeq: StringLiteralSequenceV2): StringLiteralSequenceV2 =

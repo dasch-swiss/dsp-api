@@ -12,7 +12,6 @@ import zio.prelude.Validation
 import java.time.Instant
 import java.util.UUID
 import scala.collection.immutable
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -35,9 +34,9 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -352,7 +351,9 @@ final case class OntologyResponderV2(
     for {
       cacheData <- ontologyCache.getCacheData
 
-      _ <- ZIO.when(ontologyIri.getOntologyName == "standoff" && ontologyIri.getOntologySchema.contains(ApiV2Simple))(
+      _ <- ZIO.when(
+             ontologyIri.getOntologyName.value == "standoff" && ontologyIri.getOntologySchema.contains(ApiV2Simple),
+           )(
              ZIO.fail(BadRequestException(s"The standoff ontology is not available in the API v2 simple schema")),
            )
 
@@ -418,13 +419,13 @@ final case class OntologyResponderV2(
    * @return a [[SuccessResponseV2]].
    */
   def createOntology(createOntologyRequest: CreateOntologyRequestV2): Task[ReadOntologyMetadataV2] = {
-    def makeTaskFuture(internalOntologyIri: SmartIri): Task[ReadOntologyMetadataV2] =
+    def makeTaskFuture(ontologyIri: OntologyIri): Task[ReadOntologyMetadataV2] =
       for {
         _ <- ontologyRepo
-               .findById(internalOntologyIri.toInternalIri)
+               .findById(ontologyIri)
                .filterOrFail(_.isEmpty)(
                  BadRequestException(
-                   s"Ontology ${internalOntologyIri.toComplexSchema} cannot be created, because it already exists",
+                   s"Ontology ${ontologyIri.toComplexSchema.toIri} cannot be created, because it already exists",
                  ),
                )
 
@@ -452,8 +453,8 @@ final case class OntologyResponderV2(
         currentTime <- Clock.instant
         createOntologySparql = sparql.v2.txt
                                  .createOntology(
-                                   ontologyNamedGraphIri = internalOntologyIri,
-                                   ontologyIri = internalOntologyIri,
+                                   ontologyNamedGraphIri = ontologyIri.toInternalSchema,
+                                   ontologyIri = ontologyIri.toInternalSchema,
                                    projectIri = createOntologyRequest.projectIri,
                                    isShared = createOntologyRequest.isShared,
                                    ontologyLabel = createOntologyRequest.label,
@@ -466,7 +467,7 @@ final case class OntologyResponderV2(
       } yield ReadOntologyMetadataV2(ontologies =
         Set(
           OntologyMetadataV2(
-            ontologyIri = internalOntologyIri,
+            ontologyIri = ontologyIri.smartIri,
             projectIri = Some(projectSmartIri),
             label = Some(createOntologyRequest.label),
             comment = createOntologyRequest.comment,
@@ -499,20 +500,16 @@ final case class OntologyResponderV2(
           .filterOrFail(!_.isBuiltIn)(BadRequestException("A built in ontology cannot be created"))
 
       // Make the internal ontology IRI.
-      projectId <- ZIO.fromEither(ProjectIri.from(projectIri.toString)).mapError(e => BadRequestException(e))
       project <-
-        knoraProjectService.findById(projectId).someOrFail(BadRequestException(s"Project not found: $projectIri"))
-      internalOntologyIri: SmartIri = stringFormatter.makeProjectSpecificInternalOntologyIri(
-                                        validOntologyName,
-                                        createOntologyRequest.isShared,
-                                        project.shortcode,
-                                      )
+        knoraProjectService.findById(projectIri).someOrFail(BadRequestException(s"Project not found: $projectIri"))
+      ontologyIri: OntologyIri =
+        OntologyIri.makeNew(validOntologyName, createOntologyRequest.isShared, Some(project.shortcode), stringFormatter)
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
       taskResult <- IriLocker.runWithIriLock(
                       createOntologyRequest.apiRequestID,
                       ONTOLOGY_CACHE_LOCK_IRI,
-                      makeTaskFuture(internalOntologyIri),
+                      makeTaskFuture(ontologyIri),
                     )
     } yield taskResult
   }
