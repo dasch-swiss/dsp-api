@@ -37,7 +37,7 @@ case class Project(
   longname: Option[Longname],
   description: Seq[StringLiteralV2],
   keywords: Seq[String],
-  logo: Option[String],
+  logo: Option[Logo],
   ontologies: Seq[IRI],
   status: Boolean,
   selfjoin: Boolean,

@@ -16,6 +16,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -472,7 +473,7 @@ object SharedTestDataADM {
       "Basel",
       "Contectualisation of images",
     ).sorted,
-    logo = Some("incunabula_logo.png"),
+    logo = Some(Logo.unsafeFrom("incunabula_logo.png")),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
     status = true,
     selfjoin = false,
@@ -507,7 +508,7 @@ object SharedTestDataADM {
       "Basel",
       "Contectualisation of images",
     ).sorted,
-    logo = Some("incunabula_logo.png"),
+    logo = Some(Logo.unsafeFrom("incunabula_logo.png")),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI_LocalHost),
     status = true,
     selfjoin = false,
