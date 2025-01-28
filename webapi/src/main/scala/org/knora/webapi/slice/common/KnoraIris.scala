@@ -24,7 +24,7 @@ object KnoraIris {
   trait KnoraIri { self =>
     def smartIri: SmartIri
     override def toString: String                     = self.smartIri.toString
-    def toInternal: InternalIri                       = self.smartIri.toInternalIri
+    def toInternalIri: InternalIri                    = self.smartIri.toInternalIri
     def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
   }
 
