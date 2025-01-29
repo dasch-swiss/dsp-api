@@ -369,7 +369,7 @@ final case class OntologyResponderV2(
                  ontologyIri.smartIri.getOntologySchema.contains(ApiV2Simple),
              )
       // Are we returning data in the user's preferred language, or in all available languages?
-      userLang = Some(requestingUser.lang).filter(_ => allLanguages)
+      userLang = Some(requestingUser.lang).filter(_ => !allLanguages)
     } yield ontology.copy(userLang = userLang)
 
   /**

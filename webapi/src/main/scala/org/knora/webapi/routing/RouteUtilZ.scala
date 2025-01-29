@@ -91,8 +91,12 @@ object RouteUtilZ { self =>
       .orElseFail(BadRequestException(s"Invalid external API V2 complex ontology IRI: $str"))
 
   def externalOntologyIri(str: String): ZIO[IriConverter, BadRequestException, OntologyIri] = self
-    .toSmartIri(str)
-    .flatMap(s => ZIO.fromEither(OntologyIri.from(s)))
+    .ontologyIri(str)
     .filterOrFail(_.isExternal)(())
     .orElseFail(BadRequestException(s"Invalid external ontology IRI: $str"))
+
+  def ontologyIri(str: String): ZIO[IriConverter, BadRequestException, OntologyIri] = self
+    .toSmartIri(str)
+    .flatMap(s => ZIO.fromEither(OntologyIri.from(s)))
+    .orElseFail(BadRequestException(s"Invalid ontology IRI: $str"))
 }

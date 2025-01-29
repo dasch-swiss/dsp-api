@@ -129,7 +129,7 @@ final case class OntologiesRouteV2()(
                  } else {
                    ZIO.fail(BadRequestException(s"Invalid or unknown URL path for external ontology: $urlPath"))
                  }
-          ontologyIri <- RouteUtilZ.externalOntologyIri(iri)
+          ontologyIri <- RouteUtilZ.ontologyIri(iri)
         } yield ontologyIri
       }
     }
