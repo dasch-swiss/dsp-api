@@ -55,7 +55,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   private val imagesProjectIri     = SharedTestDataADM.imagesProjectIri
   private val anythingAdminUser    = SharedTestDataADM.anythingAdminUser
   private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
-  private val anythingProjectIri   = SharedTestDataADM.anythingProjectIri.toSmartIri
+  private val anythingProjectIri   = ProjectIri.unsafeFrom(SharedTestDataADM.anythingProjectIri)
   private val ontologyResponder    = ZIO.serviceWithZIO[OntologyResponderV2]
   private val triplestoreService   = ZIO.serviceWithZIO[TriplestoreService]
 
@@ -447,7 +447,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Request the metadata of all ontologies to check that 'foo' isn't listed.
 
-      appActor ! OntologyMetadataGetByProjectRequestV2()
+      appActor ! OntologyMetadataGetByProjectRequestV2(Set.empty)
 
       val cachedMetadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(!cachedMetadataResponse.ontologies.exists(_.ontologyIri == fooIri.get.toSmartIri))
@@ -455,7 +455,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       // Reload the ontologies from the triplestore and check again.
       UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[OntologyCache](_.refreshCache()))
 
-      appActor ! OntologyMetadataGetByProjectRequestV2()
+      appActor ! OntologyMetadataGetByProjectRequestV2(Set.empty)
 
       val loadedMetadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(!loadedMetadataResponse.ontologies.exists(_.ontologyIri == fooIri.get.toSmartIri))

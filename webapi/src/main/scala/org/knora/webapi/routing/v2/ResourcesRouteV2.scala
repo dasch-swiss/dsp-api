@@ -167,7 +167,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         )
 
       val getProjectIri = RouteUtilV2
-        .getProjectIri(requestContext)
+        .getProjectIriFromHeader(requestContext)
         .some
         .orElseFail(BadRequestException(s"This route requires the request header $xKnoraAcceptProject"))
 

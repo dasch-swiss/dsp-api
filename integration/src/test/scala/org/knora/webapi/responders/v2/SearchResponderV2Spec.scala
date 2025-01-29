@@ -96,7 +96,7 @@ class SearchResponderV2Spec extends CoreSpec {
     ZIO.serviceWithZIO[SearchResponderV2](_.gravsearchV2(query, schemaAndOptions, user))
 
   private def searchResourcesByProjectAndClassV2(
-    projectIri: SmartIri,
+    projectIri: ProjectIri,
     resourceClass: SmartIri,
     orderByProperty: Option[SmartIri],
     page: Int,
@@ -303,7 +303,7 @@ class SearchResponderV2Spec extends CoreSpec {
     "search by project and resource class" in {
       val result = UnsafeZioRun.runOrThrow(
         searchResourcesByProjectAndClassV2(
-          projectIri = SharedTestDataADM.incunabulaProject.id.toSmartIri,
+          projectIri = SharedTestDataADM.incunabulaProject.projectIri,
           resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
           page = 0,

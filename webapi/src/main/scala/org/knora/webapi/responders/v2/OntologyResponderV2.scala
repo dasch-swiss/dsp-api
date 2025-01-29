@@ -35,6 +35,7 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
@@ -306,15 +307,18 @@ final case class OntologyResponderV2(
    * @param projectIris    the IRIs of the projects selected, or an empty set if all projects are selected.
    * @return a [[ReadOntologyMetadataV2]].
    */
-  def getOntologyMetadataForProjectsV2(projectIris: Set[SmartIri]): Task[ReadOntologyMetadataV2] = {
-    val returnAllOntologies = projectIris.isEmpty
+  def getOntologyMetadataForProjectsV2(projectIris: Set[ProjectIri]): Task[ReadOntologyMetadataV2] =
     for {
-      allOntologies <- ontologyCache.getCacheData.map(_.ontologies.values.map(_.ontologyMetadata).toSet)
+      allOntologies      <- ontologyCache.getCacheData.map(_.ontologies.values.map(_.ontologyMetadata).toSet)
+      returnAllOntologies = projectIris.isEmpty
       ontologies =
         if (returnAllOntologies) { allOntologies }
-        else { allOntologies.filter(ontology => projectIris.contains(ontology.projectIri.orNull)) }
+        else {
+          val projectIrisString = projectIris.map(_.value)
+          allOntologies
+            .filter(ontology => ontology.projectIri.map(_.toIri).exists(iri => projectIrisString.contains(iri)))
+        }
     } yield ReadOntologyMetadataV2(ontologies)
-  }
 
   /**
    * Gets the metadata describing the specified ontologies, or all ontologies.

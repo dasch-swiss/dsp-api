@@ -1100,8 +1100,7 @@ case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
  * @param projectIris    the IRIs of the projects for which ontologies should be returned. If this set is empty, information
  *                       about all ontologies is returned.
  */
-case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[SmartIri] = Set.empty[SmartIri])
-    extends OntologiesResponderRequestV2
+case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[ProjectIri]) extends OntologiesResponderRequestV2
 
 /**
  * Requests metadata about ontologies by ontology IRI.

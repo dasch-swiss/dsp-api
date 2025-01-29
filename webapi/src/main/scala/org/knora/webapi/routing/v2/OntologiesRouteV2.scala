@@ -36,6 +36,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.completeResponse
 import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -139,9 +140,9 @@ final case class OntologiesRouteV2()(
     path(ontologiesBasePath / "metadata") {
       get { requestContext =>
         val requestTask = RouteUtilV2
-          .getProjectIri(requestContext)
+          .getProjectIriFromHeader(requestContext)
           .map(_.toSet)
-          .map(OntologyMetadataGetByProjectRequestV2(_))
+          .map(OntologyMetadataGetByProjectRequestV2.apply)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
@@ -166,9 +167,10 @@ final case class OntologiesRouteV2()(
     path(ontologiesBasePath / "metadata" / Segments) { (projectIris: List[IRI]) =>
       get { requestContext =>
         val requestTask = ZIO
-          .foreach(projectIris)(iri => RouteUtilZ.toSmartIri(iri, s"Invalid project IRI: $iri"))
-          .map(_.toSet)
-          .map(OntologyMetadataGetByProjectRequestV2(_))
+          .foreach(projectIris.toSet)(iri =>
+            ZIO.fromEither(ProjectIri.from(iri)).orElseFail(BadRequestException(s"Invalid project IRI: $iri")),
+          )
+          .map(OntologyMetadataGetByProjectRequestV2.apply)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
