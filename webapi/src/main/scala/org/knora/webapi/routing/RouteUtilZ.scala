@@ -85,11 +85,11 @@ object RouteUtilZ { self =>
   def toSparqlEncodedString(s: String, errorMsg: String): IO[BadRequestException, String] =
     ZIO.fromOption(Iri.toSparqlEncodedString(s)).orElseFail(BadRequestException(errorMsg))
 
-  def externalApiV2ComplexOntologyIri(str: String): ZIO[IriConverter, BadRequestException, OntologyIri] = self
-    .toSmartIri(str)
-    .flatMap(s => ZIO.fromEither(OntologyIri.fromApiV2Complex(s)))
-    .filterOrFail(_.isExternal)(())
-    .orElseFail(BadRequestException(s"Invalid external API V2 complex ontology IRI: $str"))
+  def externalApiV2ComplexOntologyIri(str: String): ZIO[IriConverter, BadRequestException, OntologyIri] =
+    ontologyIri(str)
+      .filterOrFail(_.isExternal)(())
+      .filterOrFail(_.smartIri.isApiV2ComplexSchema)(())
+      .orElseFail(BadRequestException(s"Invalid external API V2 complex ontology IRI: $str"))
 
   def ontologyIri(str: String): ZIO[IriConverter, BadRequestException, OntologyIri] = self
     .toSmartIri(str)

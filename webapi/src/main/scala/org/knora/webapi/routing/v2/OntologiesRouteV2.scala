@@ -176,7 +176,11 @@ final case class OntologiesRouteV2()(
   private def getOntology: Route =
     path(ontologiesBasePath / "allentities" / Segment) { (externalOntologyIriStr: IRI) =>
       get { requestContext =>
-        val ontologyIriTask = RouteUtilZ.ontologyIri(externalOntologyIriStr)
+        val ontologyIriTask = RouteUtilZ
+          .ontologyIri(externalOntologyIriStr)
+          .filterOrFail(_.isExternal)(
+            BadRequestException(s"Invalid ontology IRI for request: $externalOntologyIriStr"),
+          )
         val requestMessageTask = for {
           ontologyIri    <- ontologyIriTask
           requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
