@@ -65,7 +65,12 @@ final case class AppServer(
   private def populateOntologyCaches(requiresRepository: Boolean): Task[Unit] =
     for {
       _ <- state.set(AppState.LoadingOntologies)
-      _ <- ontologyCache.loadOntologies().when(requiresRepository)
+      _ <-
+        ZIO.when(requiresRepository) {
+          ontologyCache
+            .refreshCache()
+            .tap(cd => ZIO.logInfo(s"Ontology cache loaded: ${cd.ontologies.size} ontologies"))
+        }
       _ <- state.set(AppState.OntologiesReady)
     } yield ()
 

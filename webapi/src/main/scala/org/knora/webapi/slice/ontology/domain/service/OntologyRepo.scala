@@ -8,6 +8,7 @@ package org.knora.webapi.slice.ontology.domain.service
 import zio.Chunk
 import zio.Task
 
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
@@ -20,7 +21,8 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
-  final def findById(id: OntologyIri): Task[Option[ReadOntologyV2]] = findById(id.toInternal)
+  final def findById(iri: OntologyIri): Task[Option[ReadOntologyV2]] = findById(iri.toInternalIri)
+  final def findById(iri: SmartIri): Task[Option[ReadOntologyV2]]    = findById(iri.toInternalIri)
   override def findById(id: InternalIri): Task[Option[ReadOntologyV2]]
 
   override def findAll(): Task[Chunk[ReadOntologyV2]]

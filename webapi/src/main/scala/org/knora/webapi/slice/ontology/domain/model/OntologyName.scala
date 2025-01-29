@@ -12,8 +12,7 @@ import scala.util.matching.Regex
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
-import org.knora.webapi.slice.ontology.domain.model.OntologyName.KnoraApi
-import org.knora.webapi.slice.ontology.domain.model.OntologyName.KnoraBase
+import org.knora.webapi.slice.ontology.domain.model.OntologyNames.*
 
 final case class OntologyName(value: String) extends AnyVal with StringValue { self =>
   def asInternal: OntologyName =
@@ -24,15 +23,12 @@ final case class OntologyName(value: String) extends AnyVal with StringValue { s
     if (self == KnoraBase) { KnoraApi }
     else { self }
 
-  def isBuiltIn: Boolean  = OntologyName.BuiltIn.contains(self)
-  def isInternal: Boolean = OntologyName.Internal.contains(self)
+  def isBuiltIn: Boolean  = BuiltIn.contains(self)
+  def isInternal: Boolean = Internal.contains(self)
   def isExternal: Boolean = !isInternal
 }
+
 object OntologyName extends StringValueCompanion[OntologyName] {
-  val KnoraApi: OntologyName      = OntologyName.unsafeFrom(OntologyConstants.KnoraApi.KnoraApiOntologyLabel)
-  val KnoraBase: OntologyName     = OntologyName.unsafeFrom(OntologyConstants.KnoraBase.KnoraBaseOntologyLabel)
-  val BuiltIn: Set[OntologyName]  = OntologyConstants.BuiltInOntologyLabels.map(OntologyName.unsafeFrom)
-  val Internal: Set[OntologyName] = OntologyConstants.InternalOntologyLabels.map(OntologyName.unsafeFrom)
 
   private val nCNameRegex: Regex           = "^[\\p{L}_][\\p{L}0-9_.-]*$".r
   private val urlSafeRegex: Regex          = "^[A-Za-z0-9_-]+$".r
@@ -90,4 +86,11 @@ object OntologyName extends StringValueCompanion[OntologyName] {
         notContainKnoraIfNotInternal,
       ),
     )(str)
+}
+
+object OntologyNames {
+  val KnoraApi: OntologyName      = OntologyName.unsafeFrom(OntologyConstants.KnoraApi.KnoraApiOntologyLabel)
+  val KnoraBase: OntologyName     = OntologyName.unsafeFrom(OntologyConstants.KnoraBase.KnoraBaseOntologyLabel)
+  val BuiltIn: Set[OntologyName]  = OntologyConstants.BuiltInOntologyLabels.map(OntologyName.unsafeFrom)
+  val Internal: Set[OntologyName] = OntologyConstants.InternalOntologyLabels.map(OntologyName.unsafeFrom)
 }
