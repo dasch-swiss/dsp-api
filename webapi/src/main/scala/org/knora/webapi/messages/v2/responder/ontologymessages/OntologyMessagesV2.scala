@@ -974,7 +974,7 @@ case class ChangeOntologyMetadataRequestV2(
  * @param requestingUser       the user making the request.
  */
 case class DeleteOntologyCommentRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,

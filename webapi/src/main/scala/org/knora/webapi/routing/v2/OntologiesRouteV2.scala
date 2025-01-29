@@ -426,10 +426,7 @@ final case class OntologiesRouteV2()(
     path(ontologiesBasePath / "comment" / Segment) { (ontologyIriStr: IRI) =>
       delete { requestContext =>
         val requestMessageTask = for {
-          ontologyIri <- RouteUtilZ
-                           .toSmartIri(ontologyIriStr, s"Invalid ontology IRI: $ontologyIriStr")
-                           .flatMap(RouteUtilZ.ensureExternalOntologyName)
-                           .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
+          ontologyIri          <- RouteUtilZ.externalApiV2ComplexOntologyIri(ontologyIriStr)
           lastModificationDate <- getLastModificationDate(requestContext)
           apiRequestId         <- RouteUtilZ.randomUuid()
           requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))

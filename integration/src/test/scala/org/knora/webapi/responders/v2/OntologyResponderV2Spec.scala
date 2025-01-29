@@ -315,7 +315,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "delete the comment from 'foo'" in {
       appActor ! DeleteOntologyCommentRequestV2(
-        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
