@@ -129,7 +129,7 @@ final case class OntologiesRouteV2()(
                  } else {
                    ZIO.fail(BadRequestException(s"Invalid or unknown URL path for external ontology: $urlPath"))
                  }
-          ontologyIri <- RouteUtilZ.ontologyIri(iri)
+          ontologyIri <- RouteUtilZ.externalOntologyIri(iri)
         } yield ontologyIri
       }
     }
@@ -176,11 +176,7 @@ final case class OntologiesRouteV2()(
   private def getOntology: Route =
     path(ontologiesBasePath / "allentities" / Segment) { (externalOntologyIriStr: IRI) =>
       get { requestContext =>
-        val ontologyIriTask = RouteUtilZ
-          .ontologyIri(externalOntologyIriStr)
-          .filterOrFail(_.isExternal)(
-            BadRequestException(s"Invalid ontology IRI for request: $externalOntologyIriStr"),
-          )
+        val ontologyIriTask = RouteUtilZ.externalOntologyIri(externalOntologyIriStr)
         val requestMessageTask = for {
           ontologyIri    <- ontologyIriTask
           requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
