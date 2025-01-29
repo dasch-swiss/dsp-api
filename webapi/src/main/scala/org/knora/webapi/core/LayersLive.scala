@@ -26,9 +26,7 @@ import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpers
-import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpersLive
 import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
-import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpersLive
 import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
@@ -171,12 +169,12 @@ object LayersLive {
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyApiModule.layer,
-      OntologyCacheHelpersLive.layer,
+      OntologyCacheHelpers.layer,
       OntologyCacheLive.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2.layer,
       OntologyServiceLive.layer,
-      OntologyTriplestoreHelpersLive.layer,
+      OntologyTriplestoreHelpers.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,

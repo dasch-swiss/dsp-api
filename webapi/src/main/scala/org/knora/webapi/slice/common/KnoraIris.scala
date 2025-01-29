@@ -112,6 +112,8 @@ object KnoraIris {
   final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri {
     def makeEntityIri(name: EntityName): SmartIri = smartIri.makeEntityIri(name.toString)
     def ontologyName: OntologyName                = smartIri.getOntologyName
+    def toComplexSchema: SmartIri                 = smartIri.toComplexSchema
+    def toInternalSchema: SmartIri                = smartIri.toInternalSchema
   }
   object OntologyIri {
     def makeNew(
