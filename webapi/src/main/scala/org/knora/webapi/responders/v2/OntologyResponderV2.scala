@@ -1526,7 +1526,8 @@ final case class OntologyResponderV2(
   /**
    * Checks whether an ontology can be deleted.
    *
-   * @param canDeleteOntologyRequest the request message.
+   * @param ontologyIri     the IRI of the ontology to be deleted.
+   * @param requestingUser  the user making the request.
    * @return a [[CanDoResponseV2]] indicating whether an ontology can be deleted.
    */
   private def canDeleteOntology(ontologyIri: OntologyIri, requestingUser: User): Task[CanDoResponseV2] = for {
@@ -2203,14 +2204,17 @@ final case class OntologyResponderV2(
     for {
       requestingUser <- ZIO.succeed(deleteClassCommentRequest.requestingUser)
 
-      externalClassIri: SmartIri    = deleteClassCommentRequest.classIri
-      externalOntologyIri: SmartIri = externalClassIri.getOntologyFromEntity
+      classIri    = deleteClassCommentRequest.classIri
+      ontologyIri = classIri.ontologyIri
 
-      _ <-
-        ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
+      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
+             ontologyIri.toComplexSchema,
+             classIri.toComplexSchema,
+             requestingUser,
+           )
 
-      internalClassIri: SmartIri    = externalClassIri.toOntologySchema(InternalSchema)
-      internalOntologyIri: SmartIri = externalOntologyIri.toOntologySchema(InternalSchema)
+      internalClassIri: SmartIri    = classIri.toInternalSchema
+      internalOntologyIri: SmartIri = ontologyIri.toInternalSchema
 
       cacheData <- ontologyCache.getCacheData
 

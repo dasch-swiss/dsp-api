@@ -37,6 +37,8 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.ontology.domain.OntologyIriOps.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -90,7 +92,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   private val ExampleSharedOntologyIri     = "http://api.knora.org/ontology/shared/example-box/v2".toSmartIri
   private val IncunabulaOntologyIri        = "http://0.0.0.0:3333/ontology/0803/incunabula/v2".toSmartIri
   private val AnythingOntologyIri          = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
-  private val FreeTestOntologyIri          = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
+  private val FreeTestOntologyIri          = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri)
   private var fooLastModDate: Instant      = Instant.now
   private var barLastModDate: Instant      = Instant.now
   private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
@@ -941,17 +943,17 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       freetestLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
         .ontologies
-        .find(_.ontologyIri == FreeTestOntologyIri)
+        .find(_.ontologyIri == FreeTestOntologyIri.smartIri)
         .get
         .lastModificationDate
         .get
 
       // Create class freetest:ComicBook which is a subclass of freetest:Book
 
-      val comicBookClassIri = FreeTestOntologyIri.makeEntityIri("ComicBook")
+      val comicBookClassIri = FreeTestOntologyIri.makeResourceClassIri("ComicBook")
 
       val comicBookClassInfoContent = ClassInfoContentV2(
-        classIri = comicBookClassIri,
+        classIri = comicBookClassIri.smartIri,
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
@@ -967,7 +969,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
         ),
         directCardinalities = Map(),
-        subClassOf = Set(FreeTestOntologyIri.makeEntityIri("Book")),
+        subClassOf = Set(FreeTestOntologyIri.makeResourceClassIri("Book").smartIri),
         ontologySchema = ApiV2Complex,
       )
 
@@ -990,7 +992,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Create class freetest:ComicAuthor which is a subclass of freetest:Author
 
-      val comicAuthorClassIri = FreeTestOntologyIri.makeEntityIri("ComicAuthor")
+      val comicAuthorClassIri = FreeTestOntologyIri.makeResourceClassIri("ComicAuthor").smartIri
 
       val comicAuthorClassInfoContent = ClassInfoContentV2(
         classIri = comicAuthorClassIri,
@@ -1009,7 +1011,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
         ),
         directCardinalities = Map(),
-        subClassOf = Set(FreeTestOntologyIri.makeEntityIri("Author")),
+        subClassOf = Set(FreeTestOntologyIri.makeResourceClassIri("Author").smartIri),
         ontologySchema = ApiV2Complex,
       )
 
@@ -1032,7 +1034,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Create property freetest:hasComicBookAuthor which is a subproperty of freetest:hasAuthor and links freetest:ComicBook and freetest:ComicAuthor
 
-      val comicAuthorPropertyIri = FreeTestOntologyIri.makeEntityIri("hasComicAuthor")
+      val comicAuthorPropertyIri = FreeTestOntologyIri.makePropertyIri("hasComicAuthor").smartIri
 
       val comicAuthorPropertyInfoContent = PropertyInfoContentV2(
         propertyIri = comicAuthorPropertyIri,
@@ -1043,11 +1045,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeEntityIri("ComicBook"))),
+            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeResourceClassIri("ComicBook").smartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeEntityIri("ComicAuthor"))),
+            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeResourceClassIri("ComicAuthor").smartIri)),
           ),
           Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = Rdfs.Label.toSmartIri,
@@ -1062,7 +1064,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             ),
           ),
         ),
-        subPropertyOf = Set(FreeTestOntologyIri.makeEntityIri("hasAuthor")),
+        subPropertyOf = Set(FreeTestOntologyIri.makePropertyIri("hasAuthor").smartIri),
         ontologySchema = ApiV2Complex,
       )
 
@@ -2175,7 +2177,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "delete the comment of a property that has a comment" in {
-      val propertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasPropertyWithComment")
+      val propertyIri: SmartIri = FreeTestOntologyIri.makePropertyIri("hasPropertyWithComment").smartIri
       appActor ! DeletePropertyCommentRequestV2(
         propertyIri = propertyIri,
         lastModificationDate = freetestLastModDate,
@@ -2200,7 +2202,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not update the ontology when trying to delete a comment of a property that has no comment" in {
-      val propertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasPropertyWithoutComment")
+      val propertyIri: SmartIri = FreeTestOntologyIri.makePropertyIri("hasPropertyWithoutComment").smartIri
       appActor ! DeletePropertyCommentRequestV2(
         propertyIri = propertyIri,
         lastModificationDate = freetestLastModDate,
@@ -2226,9 +2228,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "delete the comment of a class that has a comment" in {
-      val classIri: SmartIri = FreeTestOntologyIri.makeEntityIri("BookWithComment")
+      val classIri: SmartIri = FreeTestOntologyIri.makeResourceClassIri("BookWithComment").smartIri
       appActor ! DeleteClassCommentRequestV2(
-        classIri = classIri,
+        classIri = ResourceClassIri.unsafeFrom(classIri),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
         requestingUser = anythingAdminUser,
@@ -2251,7 +2253,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not update the ontology when trying to delete a comment of a class that has no comment" in {
-      val classIri: SmartIri = FreeTestOntologyIri.makeEntityIri("BookWithoutComment")
+      val classIri = FreeTestOntologyIri.makeResourceClassIri("BookWithoutComment")
       appActor ! DeleteClassCommentRequestV2(
         classIri = classIri,
         lastModificationDate = freetestLastModDate,
@@ -2262,7 +2264,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
-        val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri)
+        val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri.smartIri)
         readClassInfo.entityInfoContent.predicates.contains(
           Rdfs.Comment.toSmartIri,
         ) should ===(false)
@@ -2277,7 +2279,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "delete the comment of a link property and remove the comment of the link value property as well" in {
-      val linkPropertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasLinkPropertyWithComment")
+      val linkPropertyIri: SmartIri = FreeTestOntologyIri.makePropertyIri("hasLinkPropertyWithComment").smartIri
       val linkValueIri: SmartIri    = linkPropertyIri.fromLinkPropToLinkValueProp
 
       // delete the comment of the link property
@@ -3859,7 +3861,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "change the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
       val propertyIri =
         Iri.PropertyIri
-          .make(AnythingOntologyIri.makeEntityIri("hasNothingness").toString())
+          .make(AnythingOntologyIri.makeEntityIri("hasNothingness").toString)
           .fold(e => throw e.head, v => v)
       val guiElement =
         Schema.GuiElement
@@ -3934,7 +3936,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "delete the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
       val propertyIri =
         Iri.PropertyIri
-          .make(AnythingOntologyIri.makeEntityIri("hasNothingness").toString())
+          .make(AnythingOntologyIri.makeEntityIri("hasNothingness").toString)
           .fold(e => throw e.head, v => v)
       val guiElement                              = None
       val guiAttributes: Set[Schema.GuiAttribute] = Set.empty

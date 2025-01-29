@@ -51,6 +51,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
 /**
@@ -872,7 +873,7 @@ object ChangeClassLabelsOrCommentsRequestV2 {
  * @param requestingUser       the user making the request.
  */
 case class DeleteClassCommentRequestV2(
-  classIri: SmartIri,
+  classIri: ResourceClassIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
@@ -902,7 +903,7 @@ object DeleteClassCommentRequestV2 {
     val lastModificationDate: Instant        = classUpdateInfo.lastModificationDate
 
     DeleteClassCommentRequestV2(
-      classIri = classInfoContent.classIri,
+      classIri = ResourceClassIri.unsafeFrom(classInfoContent.classIri),
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
       requestingUser = requestingUser,

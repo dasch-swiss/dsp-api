@@ -38,6 +38,7 @@ import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -233,10 +234,9 @@ final case class OntologiesRouteV2()(
       delete { requestContext =>
         val requestMessageFuture = for {
           classIri <- RouteUtilZ
-                        .toSmartIri(classIriStr, s"Invalid class IRI for request: $classIriStr")
-                        .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(
-                          BadRequestException(s"Invalid class IRI for request: $classIriStr"),
-                        )
+                        .toSmartIri(classIriStr)
+                        .flatMap(s => ZIO.fromEither(ResourceClassIri.fromApiV2Complex(s)))
+                        .orElseFail(BadRequestException(s"Invalid class IRI for request: $classIriStr"))
           lastModificationDate <- getLastModificationDate(requestContext)
           requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
           apiRequestId         <- RouteUtilZ.randomUuid()

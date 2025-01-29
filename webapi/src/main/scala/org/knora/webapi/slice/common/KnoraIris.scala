@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.common
 
+import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.types.string.NonEmptyString
 
 import org.knora.webapi.OntologySchema
@@ -20,6 +21,7 @@ object KnoraIris {
   opaque type ResourceId = NonEmptyString
   opaque type ValueId    = NonEmptyString
   opaque type EntityName = NonEmptyString
+  object EntityName extends RefinedTypeOps[EntityName, String]
 
   trait KnoraIri { self =>
     def smartIri: SmartIri
@@ -63,7 +65,9 @@ object KnoraIris {
       this.shortcode == other.shortcode && this.resourceId == other.resourceId
   }
 
-  final case class ResourceClassIri private (smartIri: SmartIri, entityName: EntityName) extends KnoraIri
+  final case class ResourceClassIri private (smartIri: SmartIri, entityName: EntityName) extends KnoraIri {
+    def ontologyIri: OntologyIri = OntologyIri.unsafeFrom(smartIri.getOntologyFromEntity)
+  }
 
   object ResourceClassIri {
     def unsafeFrom(iri: SmartIri): ResourceClassIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
@@ -112,10 +116,9 @@ object KnoraIris {
   }
 
   final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri { self =>
-    def makeEntityIri(name: EntityName): SmartIri = smartIri.makeEntityIri(name.toString)
-    def ontologyName: OntologyName                = smartIri.getOntologyName
-    def isInternal: Boolean                       = ontologyName.isInternal
-    def isExternal: Boolean                       = !isInternal
+    def ontologyName: OntologyName = smartIri.getOntologyName
+    def isInternal: Boolean        = ontologyName.isInternal
+    def isExternal: Boolean        = !isInternal
   }
   object OntologyIri {
     def makeNew(
