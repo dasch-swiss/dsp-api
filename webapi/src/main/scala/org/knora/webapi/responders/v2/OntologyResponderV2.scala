@@ -535,15 +535,13 @@ final case class OntologyResponderV2(
     val internalOntologyIri = ontologyIri.toInternalSchema
 
     val changeTask: Task[ReadOntologyMetadataV2] = for {
-      _          <- OntologyHelpers.checkExternalOntologyIriForUpdate(ontologyIri.smartIri)
-      ontology   <- ontologyRepo.findById(ontologyIri).someOrFail(NotFoundException(s"Ontology not found: $ontologyIri"))
-      projectIri <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(internalOntologyIri, requestingUser)
-      _          <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
-
+      _                 <- OntologyHelpers.checkExternalOntologyIriForUpdate(ontologyIri.smartIri)
+      ontology          <- ontologyRepo.findById(ontologyIri).someOrFail(NotFoundException(s"Ontology not found: $ontologyIri"))
+      projectIri        <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(internalOntologyIri, requestingUser)
+      _                 <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
       oldMetadata        = ontology.ontologyMetadata
       ontologyHasComment = oldMetadata.comment.nonEmpty
-
-      currentTime <- Clock.instant
+      currentTime       <- Clock.instant
       updateSparql = sparql.v2.txt.changeOntologyMetadata(
                        ontologyNamedGraphIri = internalOntologyIri,
                        ontologyIri = internalOntologyIri,
@@ -555,7 +553,6 @@ final case class OntologyResponderV2(
                        currentTime = currentTime,
                      )
       _ <- save(Update(updateSparql))
-
     } yield ReadOntologyMetadataV2(
       Set(
         OntologyMetadataV2(
