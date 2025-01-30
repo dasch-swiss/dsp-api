@@ -19,7 +19,7 @@ import pekko.actor.Status
 import pekko.testkit.ImplicitSender
 
 /**
- * Tests that the [[OntologyCache.loadOntologies]] method does not load invalid data into the cache.
+ * Tests that the [[OntologyCache.refreshCache]] method does not load invalid data into the cache.
  */
 class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
   private val INVALID_ONTO_NAME = "http://www.knora.org/ontology/invalid"
@@ -41,7 +41,7 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
     )
 
     UnsafeZioRun
-      .run(ZIO.serviceWithZIO[OntologyCache](_.loadOntologies()))
+      .run(ZIO.serviceWithZIO[OntologyCache](_.refreshCache()))
       .toEither
       .map(_ => SuccessResponseV2("OK"))
       .left

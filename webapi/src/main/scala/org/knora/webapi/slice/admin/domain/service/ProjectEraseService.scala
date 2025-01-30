@@ -91,7 +91,7 @@ final case class ProjectEraseService(
     graphsToDelete <- projectService.getNamedGraphsForProject(project)
     _              <- ZIO.logInfo(s"${logPrefix(project)} Removing graphs ${graphsToDelete.map(_.value)}")
     _              <- ZIO.foreachDiscard(graphsToDelete)(triplestore.dropGraphByIri)
-    _              <- ontologyCache.loadOntologies()
+    _              <- ontologyCache.refreshCache()
   } yield ()
 }
 

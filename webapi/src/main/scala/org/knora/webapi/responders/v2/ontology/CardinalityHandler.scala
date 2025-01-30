@@ -10,7 +10,6 @@ import zio.*
 import java.time.Instant
 
 import dsp.errors.BadRequestException
-import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -51,11 +50,10 @@ final case class CardinalityHandler(
     for {
       cacheData <- ontologyCache.getCacheData
 
-      _ <- // Check that the ontology exists and has not been updated by another user since the client last read it.
-        ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
-          internalOntologyIri = internalOntologyIri,
-          expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
-        )
+      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
+             internalOntologyIri,
+             deleteCardinalitiesFromClassRequest.lastModificationDate,
+           )
 
       _ <- getRdfTypeAndEnsureSingleCardinality(internalClassInfo)
 
@@ -189,10 +187,9 @@ final case class CardinalityHandler(
     val internalClassInfo = deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
     for {
       cacheData <- ontologyCache.getCacheData
-      ontology   = cacheData.ontologies(internalOntologyIri)
 
       // Check that the ontology exists and has not been updated by another user since the client last read it.
-      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateBeforeUpdate(
+      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
              internalOntologyIri,
              deleteCardinalitiesFromClassRequest.lastModificationDate,
            )
@@ -250,7 +247,7 @@ final case class CardinalityHandler(
 
       allBaseClassIris = internalClassIri +: allBaseClassIrisWithoutInternal
 
-      (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
+      (newInternalClassDefWithLinkValueProps, _) =
         OntologyHelpers
           .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
             internalClassDef = newClassDefinitionWithRemovedCardinality,
@@ -275,39 +272,8 @@ final case class CardinalityHandler(
              ),
            )
 
-      // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
-      // isn't any text to escape in cardinalities.)
-
-      propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
-
-      inheritedCardinalities = cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
-                                 newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
-                               }
-
-      readClassInfo = ReadClassInfoV2(
-                        entityInfoContent = newInternalClassDefWithLinkValueProps,
-                        allBaseClasses = allBaseClassIris,
-                        isResourceClass = true,
-                        canBeInstantiated = true,
-                        inheritedCardinalities = inheritedCardinalities,
-                        knoraResourceProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          OntologyHelpers.isKnoraResourceProperty(propertyIri, cacheData),
-                        ),
-                        linkProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          OntologyHelpers.isLinkProp(propertyIri, cacheData),
-                        ),
-                        linkValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          OntologyHelpers.isLinkValueProp(propertyIri, cacheData),
-                        ),
-                        fileValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          OntologyHelpers.isFileValueProp(propertyIri, cacheData),
-                        ),
-                      )
-
       // Add the cardinalities to the class definition in the triplestore.
-
       currentTime: Instant = Instant.now
-
       updateSparql = sparql.v2.txt.replaceClassCardinalities(
                        ontologyNamedGraphIri = internalOntologyIri,
                        ontologyIri = internalOntologyIri,
@@ -317,41 +283,14 @@ final case class CardinalityHandler(
                        currentTime = currentTime,
                      )
 
-      _ <- triplestoreService.query(Update(updateSparql))
-
-      // Check that the ontology's last modification date was updated.
-      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
-
-      // Check that the data that was saved corresponds to the data that was submitted.
-
-      loadedClassDef <- ontologyTriplestoreHelpers.loadClassDefinition(internalClassIri)
-
-      _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
-            throw InconsistentRepositoryDataException(
-              s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, " +
-                s"but $loadedClassDef was saved",
-            )
-          }
-
-      // Update subclasses and write the cache.
-
-      updatedOntology = ontology.copy(
-                          ontologyMetadata = ontology.ontologyMetadata.copy(
-                            lastModificationDate = Some(currentTime),
-                          ),
-                          classes = ontology.classes + (internalClassIri -> readClassInfo),
-                        )
-
-      _ <- ontologyCache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+      _ <- triplestoreService.query(Update(updateSparql)) *> ontologyCache.refreshCache()
 
       // Read the data back from the cache.
-
       response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                     Set(internalClassIri),
                     allLanguages = true,
                     deleteCardinalitiesFromClassRequest.requestingUser,
                   )
-
     } yield response
   }
 
