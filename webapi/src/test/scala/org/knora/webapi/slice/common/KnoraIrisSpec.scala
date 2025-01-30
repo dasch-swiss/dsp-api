@@ -70,25 +70,17 @@ object KnoraIrisSpec extends ZIOSpecDefault {
           "http://www.knora.org/ontology/0001/anything#Thing",
           // external api v2 complex
           "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
+
+          /// other IRIs
+          "http://example.com/ontology#Foo",
+          "http://0.0.0.0/ontology/0001/anything/v2#Thing",
+          "http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw/values/tdWAtnWK2qUC6tr4uQLAHA",
         )
         check(Gen.fromIterable(validIris)) { iri =>
           for {
             sIri  <- converter(_.asSmartIri(iri))
             actual = ResourceClassIri.from(sIri)
           } yield assertTrue(actual.map(_.smartIri) == Right(sIri))
-        }
-      },
-      test("should fail for an invalid ResourceClassIri") {
-        val invalidIris = Seq(
-          "http://example.com/ontology#Foo",
-          "http://0.0.0.0/ontology/0001/anything/v2#Thing",
-          "http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw/values/tdWAtnWK2qUC6tr4uQLAHA",
-        )
-        check(Gen.fromIterable(invalidIris)) { iri =>
-          for {
-            sIri  <- converter(_.asSmartIri(iri))
-            actual = ResourceClassIri.from(sIri)
-          } yield assertTrue(actual == Left(s"<${sIri.toIri}> is not a Knora resource class IRI"))
         }
       },
     ),

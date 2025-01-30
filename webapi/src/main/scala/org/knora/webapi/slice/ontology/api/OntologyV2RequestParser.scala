@@ -177,7 +177,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private def extractSubClasses(r: Resource): ZIO[Scope, String, Set[ResourceClassIri]] = {
     val subclasses: Set[String] = r.listProperties(RDFS.subClassOf).asScala.flatMap(_.objectAsUri.toOption).toSet
-    iriConverter.asResourceClassIris(subclasses)
+    iriConverter.asResourceClassIris(subclasses, requireApiV2Complex = false)
   }
 
   private def extractCardinalities(r: Resource): ZIO[Scope, String, Map[SmartIri, KnoraCardinalityInfo]] = {
