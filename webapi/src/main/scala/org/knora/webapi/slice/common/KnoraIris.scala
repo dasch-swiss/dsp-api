@@ -61,7 +61,7 @@ object KnoraIris {
       this.shortcode == other.shortcode && this.resourceId == other.resourceId
   }
 
-  final case class ResourceClassIri private (smartIri: SmartIri, entityName: EntityName) extends KnoraIri
+  final case class ResourceClassIri private (smartIri: SmartIri) extends KnoraIri
 
   object ResourceClassIri {
     def unsafeFrom(iri: SmartIri): ResourceClassIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
@@ -70,9 +70,7 @@ object KnoraIris {
       if iri.isApiV2ComplexSchema then from(iri)
       else Left(s"Not an API v2 complex IRI ${iri.toString}")
 
-    def from(iri: SmartIri): Either[String, ResourceClassIri] =
-      if iri.isKnoraEntityIri then Right(ResourceClassIri(iri, NonEmptyString.unsafeFrom(iri.getEntityName)))
-      else Left(s"<$iri> is not a Knora resource class IRI")
+    def from(iri: SmartIri): Either[String, ResourceClassIri] = Right(ResourceClassIri(iri))
   }
 
   // `ValueIri` and `ResourceIri` have no different internal representation.
