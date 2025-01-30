@@ -394,7 +394,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
           ),
         )
         received.project.keywords.sorted should be(Seq("updated", "keywords").sorted)
-        received.project.logo should be(Some("/fu/bar/baz-updated.jpg"))
+        received.project.logo.map(_.value) should be(Some("/fu/bar/baz-updated.jpg"))
         received.project.status should be(true)
         received.project.selfjoin should be(true)
       }

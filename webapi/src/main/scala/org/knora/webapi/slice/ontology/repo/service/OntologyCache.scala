@@ -11,7 +11,6 @@ import zio.*
 import java.time.Instant
 
 import dsp.errors.*
-import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.KnoraBaseVersionString
 import org.knora.webapi.OntologySchema
@@ -418,58 +417,14 @@ trait OntologyCache {
   /**
    * Loads and caches all ontology information.
    */
-  def loadOntologies(): Task[Unit]
+  def refreshCache(): Task[OntologyCacheData]
 
   /**
    * Gets the ontology data from the cache.
    *
    * @return an [[OntologyCacheData]]
    */
-  def getCacheData: Task[OntologyCacheData]
-
-  /**
-   * Updates an existing ontology in the cache without updating the cache lookup maps. This should only be used if only the ontology metadata has changed.
-   *
-   * @param updatedOntologyIri  the IRI of the updated ontology
-   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
-   * @return the updated cache data
-   */
-  def cacheUpdatedOntologyWithoutUpdatingMaps(
-    updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2,
-  ): Task[OntologyCacheData]
-
-  /**
-   * Deletes an ontology from the cache.
-   *
-   * @param ontologyIri the IRI of the ontology to delete
-   * @return the updated cache data
-   */
-  def deleteOntology(ontologyIri: SmartIri): Task[OntologyCacheData]
-
-  /**
-   * Updates an existing ontology in the cache. If a class has changed, use `cacheUpdatedOntologyWithClass()`.
-   *
-   * @param updatedOntologyIri  the IRI of the updated ontology
-   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
-   * @return the updated cache data
-   */
-  def cacheUpdatedOntology(updatedOntologyIri: SmartIri, updatedOntologyData: ReadOntologyV2): Task[OntologyCacheData]
-
-  /**
-   * Updates an existing ontology in the cache and ensures that the sub- and superclasses of a (presumably changed) class get updated correctly.
-   *
-   * @param updatedOntologyIri  the IRI of the updated ontology
-   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
-   * @param updatedClassIri     the IRI of the changed class
-   * @return the updated cache data
-   */
-  def cacheUpdatedOntologyWithClass(
-    updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2,
-    updatedClassIri: SmartIri,
-  ): Task[OntologyCacheData]
-
+  def getCacheData: UIO[OntologyCacheData]
 }
 
 final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef: Ref[OntologyCacheData])(implicit
@@ -480,10 +435,10 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
   /**
    * Loads and caches all ontology information.
    */
-  override def loadOntologies(): Task[Unit] =
+  override def refreshCache(): Task[OntologyCacheData] =
     for {
       // Get all ontology metadata.
-      _                           <- ZIO.logInfo(s"Loading ontologies into cache")
+      _                           <- ZIO.logDebug(s"Loading ontologies into cache")
       allOntologyMetadataResponse <- triplestore.query(Select(sparql.v2.txt.getAllOntologyMetadata()))
       allOntologyMetadata          = OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
 
@@ -539,8 +494,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
       ontologyGraphs <- ZIO.collectAll(ontologyGraphResponseTasks)
 
       cacheData <- makeOntologyCache(allOntologyMetadata, ontologyGraphs)
-      _         <- ZIO.logInfo(s"Loaded ${cacheData.ontologies.values.size} ontologies into cache")
-    } yield ()
+    } yield cacheData
 
   /**
    * Given ontology metadata and ontology graphs read from the triplestore, constructs the ontology cache.
@@ -869,141 +823,8 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
    *
    * @return an [[OntologyCacheData]]
    */
-  override def getCacheData: Task[OntologyCacheData] = cacheDataRef.get
+  override def getCacheData: UIO[OntologyCacheData] = cacheDataRef.get
 
-  /**
-   * Given the IRI of a base class, updates inherited cardinalities in subclasses.
-   *
-   * @param baseClassIri the internal IRI of the base class.
-   * @param cacheData    the ontology cache.
-   * @return the updated ontology cache.
-   */
-  private def updateSubClasses(baseClassIri: SmartIri, cacheData: OntologyCacheData): OntologyCacheData = {
-    // Get the class definitions of all the subclasses of the base class.
-
-    val allSubClassIris: Set[SmartIri] = cacheData.classToSubclassLookup(baseClassIri)
-
-    val allSubClasses: Set[ReadClassInfoV2] = allSubClassIris.map { subClassIri =>
-      cacheData.ontologies(subClassIri.getOntologyFromEntity).classes(subClassIri)
-    }
-
-    // Filter them to get only the direct subclasses.
-
-    val directSubClasses: Set[ReadClassInfoV2] = allSubClasses.filter { subClass =>
-      subClass.entityInfoContent.subClassOf
-        .contains(baseClassIri) && subClass.entityInfoContent.classIri != baseClassIri
-    }
-
-    // Iterate over the subclasses, updating cardinalities.
-    val cacheDataWithUpdatedSubClasses = directSubClasses.foldLeft(cacheData) {
-      case (cacheDataAcc: OntologyCacheData, directSubClass: ReadClassInfoV2) =>
-        val directSubClassIri = directSubClass.entityInfoContent.classIri
-
-        // Get the cardinalities that this subclass can inherit from its direct base classes.
-
-        val inheritableCardinalities: Map[SmartIri, KnoraCardinalityInfo] =
-          directSubClass.entityInfoContent.subClassOf.flatMap { baseClassIri =>
-            for {
-              ontology  <- cacheData.ontologies.get(baseClassIri.getOntologyFromEntity)
-              classInfo <- ontology.classes.get(baseClassIri)
-            } yield classInfo
-          }.flatMap(_.allCardinalities).toMap
-
-        // Override inherited cardinalities with directly defined cardinalities.
-        val newInheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = OntologyHelpers.overrideCardinalities(
-          classIri = directSubClassIri,
-          thisClassCardinalities = directSubClass.entityInfoContent.directCardinalities,
-          inheritableCardinalities = inheritableCardinalities,
-          allSubPropertyOfRelations = cacheData.subPropertyOfRelations,
-          errorSchema = ApiV2Complex,
-          errorFun = { (msg: String) =>
-            throw BadRequestException(msg)
-          },
-        )
-
-        // Update the cache.
-
-        val ontologyIri              = directSubClass.entityInfoContent.classIri.getOntologyFromEntity
-        val ontology: ReadOntologyV2 = cacheDataAcc.ontologies(ontologyIri)
-
-        val newKnoraResourceProperties = newInheritedCardinalities.keySet.filter(
-          OntologyHelpers.isKnoraResourceProperty(_, cacheData),
-        )
-
-        val updatedOntology = ontology.copy(
-          classes = ontology.classes + (directSubClassIri -> directSubClass.copy(
-            inheritedCardinalities = newInheritedCardinalities,
-            knoraResourceProperties = newKnoraResourceProperties,
-          )),
-        )
-
-        cacheDataAcc.copy(
-          ontologies = cacheDataAcc.ontologies + (ontologyIri -> updatedOntology),
-        )
-    }
-
-    // Recurse to subclasses of subclasses.
-
-    directSubClasses.map(_.entityInfoContent.classIri).foldLeft(cacheDataWithUpdatedSubClasses) {
-      case (cacheDataAcc: OntologyCacheData, directSubClassIri: SmartIri) =>
-        updateSubClasses(baseClassIri = directSubClassIri, cacheDataAcc)
-    }
-  }
-
-  /**
-   * Updates an existing ontology in the cache and ensures that the sub- and superclasses of a (presumably changed) class get updated correctly.
-   *
-   * @param updatedOntologyIri  the IRI of the updated ontology
-   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
-   * @param updatedClassIri     the IRI of the changed class
-   * @return the updated cache data
-   */
-  override def cacheUpdatedOntologyWithClass(
-    updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2,
-    updatedClassIri: SmartIri,
-  ): Task[OntologyCacheData] =
-    cacheDataRef.updateAndGet { data =>
-      updateSubClasses(
-        updatedClassIri,
-        OntologyCache.make(data.ontologies + (updatedOntologyIri -> updatedOntologyData)),
-      )
-    }
-
-  /**
-   * Updates an existing ontology in the cache. If a class has changed, use `cacheUpdatedOntologyWithClass()`.
-   *
-   * @param updatedOntologyIri  the IRI of the updated ontology
-   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
-   * @return the updated cache data
-   */
-  override def cacheUpdatedOntology(
-    updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2,
-  ): Task[OntologyCacheData] =
-    cacheDataRef.updateAndGet(data => OntologyCache.make(data.ontologies + (updatedOntologyIri -> updatedOntologyData)))
-
-  /**
-   * Updates an existing ontology in the cache without updating the cache lookup maps. This should only be used if only the ontology metadata has changed.
-   *
-   * @param updatedOntologyIri  the IRI of the updated ontology
-   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
-   * @return the updated cache data
-   */
-  override def cacheUpdatedOntologyWithoutUpdatingMaps(
-    updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2,
-  ): Task[OntologyCacheData] =
-    cacheDataRef.updateAndGet(data => data.copy(data.ontologies + (updatedOntologyIri -> updatedOntologyData)))
-
-  /**
-   * Deletes an ontology from the cache.
-   *
-   * @param ontologyIri the IRI of the ontology to delete
-   * @return the updated cache data
-   */
-  override def deleteOntology(ontologyIri: SmartIri): Task[OntologyCacheData] =
-    cacheDataRef.updateAndGet(data => OntologyCache.make(data.ontologies - ontologyIri))
 }
 
 object OntologyCacheLive {

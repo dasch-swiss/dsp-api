@@ -147,42 +147,4 @@ object ValuesValidator {
    */
   def optionStringToBoolean(maybe: Option[String], fallback: Boolean): Boolean =
     optionStringToBoolean(maybe).getOrElse(fallback)
-
-  /**
-   * Checks that a name is valid as a project-specific ontology name.
-   *
-   * @param ontologyName the ontology name to be checked.
-   */
-  def validateProjectSpecificOntologyName(ontologyName: String): Option[String] = {
-    // TODO: below separators still exists in SF - think about how all consts should be distributed
-
-    val nCNamePattern = """[\p{L}_][\p{L}0-9_.-]*"""
-    val nCNameRegex   = ("^" + nCNamePattern + "$").r
-    val isNCName      = nCNameRegex.matches(ontologyName)
-
-    val base64UrlPattern      = "[A-Za-z0-9_-]+"
-    val base64UrlPatternRegex = ("^" + base64UrlPattern + "$").r
-    val isUrlSafe             = base64UrlPatternRegex.matches(ontologyName)
-
-    val apiVersionNumberRegex = "^v[0-9]+.*$".r
-    val isNotAVersionNumber   = !apiVersionNumberRegex.matches(ontologyName.toLowerCase())
-
-    val isNotABuiltInOntology = !OntologyConstants.BuiltInOntologyLabels.contains(ontologyName)
-
-    val versionSegmentWords = Set("simple", "v2")
-    val reservedIriWords =
-      Set("knora", "ontology", "rdf", "rdfs", "owl", "xsd", "schema", "shared") ++ versionSegmentWords
-    val isNotReservedIriWord =
-      reservedIriWords.forall(reserverdWord => !ontologyName.toLowerCase().contains(reserverdWord))
-
-    if (
-      isNCName &&
-      isUrlSafe &&
-      isNotAVersionNumber &&
-      isNotABuiltInOntology &&
-      isNotReservedIriWord
-    ) Some(ontologyName)
-    else None
-  }
-
 }

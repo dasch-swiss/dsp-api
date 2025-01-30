@@ -43,7 +43,7 @@ object ProjectInfo {
       longname = project.longname.map(_.value),
       description = project.description.headOption.map(_.value),
       keywords = project.keywords.headOption.map(_ => project.keywords.mkString(", ")),
-      logo = project.logo,
+      logo = project.logo.map(_.value),
       ontologies = project.ontologies,
       status = project.status,
       selfjoin = project.selfjoin,
