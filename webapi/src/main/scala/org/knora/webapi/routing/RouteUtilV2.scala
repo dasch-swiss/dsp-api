@@ -19,13 +19,12 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.ApiV2
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 import ApiV2.Headers.xKnoraAcceptMarkup
 import ApiV2.Headers.xKnoraAcceptProject
@@ -110,12 +109,12 @@ object RouteUtilV2 {
    * @return The specified project IRI, or [[None]] if no project header was included in the request.
    *         Fails with a [[BadRequestException]] if the project IRI is invalid.
    */
-  def getProjectIri(requestContext: RequestContext): ZIO[IriConverter, BadRequestException, Option[SmartIri]] = {
+  def getProjectIriFromHeader(requestContext: RequestContext): IO[BadRequestException, Option[ProjectIri]] = {
     val maybeProjectIriStr =
       requestContext.request.headers.find(_.lowercaseName == xKnoraAcceptProject).map(_.value())
     ZIO.foreach(maybeProjectIriStr)(iri =>
       ZIO
-        .serviceWithZIO[IriConverter](_.asSmartIri(iri))
+        .fromEither(ProjectIri.from(iri))
         .orElseFail(BadRequestException(s"Invalid project IRI: $iri in request header $xKnoraAcceptSchemaHeader")),
     )
   }

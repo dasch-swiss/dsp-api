@@ -4,7 +4,6 @@
  */
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
-
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.apache.pekko
@@ -51,6 +50,8 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Ow
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
 /**
@@ -86,7 +87,7 @@ case class CreateOntologyRequestV2(
  * @param requestingUser the user making the request.
  */
 case class CanDeleteOntologyRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
 
@@ -99,7 +100,7 @@ case class CanDeleteOntologyRequestV2(
  * @param requestingUser       the user making the request.
  */
 case class DeleteOntologyRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
@@ -872,7 +873,7 @@ object ChangeClassLabelsOrCommentsRequestV2 {
  * @param requestingUser       the user making the request.
  */
 case class DeleteClassCommentRequestV2(
-  classIri: SmartIri,
+  classIri: ResourceClassIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
@@ -902,7 +903,7 @@ object DeleteClassCommentRequestV2 {
     val lastModificationDate: Instant        = classUpdateInfo.lastModificationDate
 
     DeleteClassCommentRequestV2(
-      classIri = classInfoContent.classIri,
+      classIri = ResourceClassIri.unsafeFrom(classInfoContent.classIri),
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
       requestingUser = requestingUser,
@@ -957,7 +958,7 @@ object ChangeGuiOrderRequestV2 {
  * @param requestingUser       the user making the request.
  */
 case class ChangeOntologyMetadataRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   label: Option[String] = None,
   comment: Option[String] = None,
   lastModificationDate: Instant,
@@ -974,7 +975,7 @@ case class ChangeOntologyMetadataRequestV2(
  * @param requestingUser       the user making the request.
  */
 case class DeleteOntologyCommentRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
@@ -1100,8 +1101,7 @@ case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
  * @param projectIris    the IRIs of the projects for which ontologies should be returned. If this set is empty, information
  *                       about all ontologies is returned.
  */
-case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[SmartIri] = Set.empty[SmartIri])
-    extends OntologiesResponderRequestV2
+case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[ProjectIri]) extends OntologiesResponderRequestV2
 
 /**
  * Requests metadata about ontologies by ontology IRI.
@@ -1119,7 +1119,7 @@ case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.e
  * @param allLanguages   true if information in all available languages should be returned.
  * @param requestingUser the user making the request.
  */
-case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: User)
+case class OntologyEntitiesGetRequestV2(ontologyIri: OntologyIri, allLanguages: Boolean, requestingUser: User)
     extends OntologiesResponderRequestV2
 
 /**
