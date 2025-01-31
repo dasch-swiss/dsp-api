@@ -25,7 +25,9 @@ object ModelOps { self =>
       asTurtle.flatMap(Console.printLine(_)).logError.ignore
 
     def printTriG: UIO[Unit] =
-      asTriG.flatMap(Console.printLine(_)).logError.ignore
+      Console.printLine("/// Model TRIG START ///").ignore *>
+        asTriG.flatMap(Console.printLine(_)).logError.ignore *>
+        Console.printLine("/// Model TRIG END ///").ignore
 
     def asTurtle: Task[String] = as(Lang.TURTLE)
     def asTriG: Task[String]   = as(Lang.TRIG)

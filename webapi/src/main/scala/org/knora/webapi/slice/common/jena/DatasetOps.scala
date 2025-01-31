@@ -19,7 +19,11 @@ import java.nio.charset.StandardCharsets
 object DatasetOps { self =>
 
   extension (ds: Dataset) {
-    def printTrig: UIO[Unit] = as(Lang.TRIG).flatMap(Console.printLine(_)).logError.ignore
+
+    def printTrig: UIO[Unit] =
+      Console.printLine("/// DS TRIG START ///").ignore *>
+        as(Lang.TRIG).flatMap(Console.printLine(_)).logError.ignore *>
+        Console.printLine("/// DS TRIG END ///").ignore
 
     def asTriG: Task[String] = as(Lang.TRIG)
 
