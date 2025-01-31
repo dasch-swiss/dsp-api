@@ -8,6 +8,7 @@ package org.knora.webapi.responders.v2
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
 import zio.ZIO
+import zio.json.EncoderOps
 
 import java.time.Instant
 import java.util.UUID
@@ -56,6 +57,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
+import zio.json.JsonEncoder
+import zio.json.DeriveJsonEncoder
 
 trait GetResources {
   def getResourcesV2(
@@ -185,9 +188,163 @@ final case class ResourcesResponderV2(
     case projectHistoryEventsRequestV2: ProjectResourcesWithHistoryGetRequestV2 =>
       getProjectResourceHistoryEvents(projectHistoryEventsRequestV2)
 
+    case request: ResourceJsonGetRequestV3 => getResourceAsJson(request.resourceIri, request.requestingUser)
+
     case other =>
       Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
+
+  final case class UserInfo(iri: String, name: String)
+  object UserInfo { given JsonEncoder[UserInfo] = DeriveJsonEncoder.gen[UserInfo] }
+
+  final case class ProjectInfo(iri: String, name: String)
+  object ProjectInfo { given JsonEncoder[ProjectInfo] = DeriveJsonEncoder.gen[ProjectInfo] }
+
+  final case class PropertyInfoWithValues(
+    iri: String,
+    label: String,
+    guiOrder: Option[Int],
+    values: Seq[ValueInfo],
+  )
+  object PropertyInfoWithValues {
+    given JsonEncoder[PropertyInfoWithValues] = DeriveJsonEncoder.gen[PropertyInfoWithValues]
+  }
+
+  final case class ValueInfo(
+    iri: String,
+    valueAsString: String,
+    valueType: String,
+    valueUUID: UUID,
+  )
+  object ValueInfo { given JsonEncoder[ValueInfo] = DeriveJsonEncoder.gen[ValueInfo] }
+
+  final case class ResourceResponse(
+    iri: String,
+    label: String,
+    ark: String,
+    attachedToUser: UserInfo,
+    attachedToProject: ProjectInfo,
+    creationDate: Instant,
+    lastModificationDate: Option[Instant],
+    properties: Seq[PropertyInfoWithValues],
+  ) {
+    // TODO:
+    // - attached user: user name missing
+    // - properly handle different value types
+    // - handle outgoing standoff links
+    // - gui order not yet working
+    // - consider gui order in the order of properties
+    // - comments
+    // - permissions
+
+    // should ARK be an object, containing general and timestamped ARK?
+    // should incoming link be retrieved separately for performance reasons?
+    // property should also contain emnpty properties for those that are not set, so the APP knows they exist
+  }
+  object ResourceResponse { given JsonEncoder[ResourceResponse] = DeriveJsonEncoder.gen[ResourceResponse] }
+
+  private def getResourceAsJson(resIri: IRI, requestingUser: User): Task[String] =
+    for {
+      resourcesSeq <- getResourcesV2(
+                        resourceIris = Seq(resIri),
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = Set(MarkupRendering.Xml),
+                        requestingUser = requestingUser,
+                      )
+      resource <- ZIO
+                    .fromOption(resourcesSeq.resources.headOption)
+                    .orElseFail(NotFoundException(s"Resource $resIri not found"))
+      // c <- ontologyService
+      user    = UserInfo(iri = resource.attachedToUser, name = "TODO")
+      project = ProjectInfo(resource.projectADM.id, resource.projectADM.shortname)
+      ark     = resource.resourceIri.toSmartIri.fromResourceIriToArkUrl()
+      props <- ZIO
+                 .foreach(resource.values.toSeq)((iri, values) => makePropertyInfo(iri, values))
+      response = ResourceResponse(
+                   iri = resource.resourceIri,
+                   label = resource.label,
+                   ark = ark,
+                   attachedToUser = user,
+                   attachedToProject = project,
+                   creationDate = resource.creationDate,
+                   lastModificationDate = resource.lastModificationDate,
+                   properties = props,
+                 )
+      json = response.toJsonPretty
+    } yield json
+
+  private def makePropertyInfo(iri: SmartIri, values: Seq[ReadValueV2]): Task[PropertyInfoWithValues] =
+    for {
+      label <-
+        ontologyService
+          .getPropertyLabelByIri(iri)
+          .someOrFail(Exception("Property label not found"))
+      guiOrder <- ontologyService.getGuiOrderForProperty(iri)
+    } yield PropertyInfoWithValues(
+      iri = iri.toIri,
+      label = label,
+      guiOrder = guiOrder,
+      values = values.map(makeValueInfo),
+    )
+
+  private def makeValueInfo(value: ReadValueV2): ValueInfo =
+    value match
+      case ReadTextValueV2(
+            valueIri,
+            _attachedToUser,
+            _permissions,
+            _userPermission,
+            _valueCreationDate,
+            valueHasUUID,
+            valueContent,
+            _valueHasMaxStandoffStartIndex,
+            _previousValueIri,
+            _deletionInfo,
+          ) => {
+        ValueInfo(
+          iri = value.valueIri,
+          valueAsString = valueContent.valueHasString,
+          valueType = valueContent.valueType.toIri,
+          valueUUID = valueHasUUID,
+        )
+      }
+      case ReadLinkValueV2(
+            valueIri,
+            _attachedToUser,
+            _permissions,
+            _userPermission,
+            _valueCreationDate,
+            valueHasUUID,
+            valueContent,
+            _valueHasRefCount,
+            _previousValueIri,
+            _deletionInfo,
+          ) => {
+        ValueInfo(
+          iri = value.valueIri,
+          valueAsString = valueContent.valueHasString,
+          valueType = valueContent.valueType.toIri,
+          valueUUID = valueHasUUID,
+        )
+      }
+      case ReadOtherValueV2(
+            valueIri,
+            _attachedToUser,
+            _permissions,
+            _userPermission,
+            _valueCreationDate,
+            valueHasUUID,
+            valueContent,
+            _previousValueIri,
+            _deletionInfo,
+          ) => {
+        ValueInfo(
+          iri = value.valueIri,
+          valueAsString = valueContent.valueHasString,
+          valueType = valueContent.valueType.toIri,
+          valueUUID = valueHasUUID,
+        )
+      }
 
   def createResource(createResource: CreateResourceRequestV2): Task[ReadResourcesSequenceV2] =
     createHandler(createResource)

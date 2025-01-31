@@ -38,6 +38,8 @@ import org.knora.webapi.slice.common.api.ApiV2.Headers.xKnoraAcceptProject
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.store.iiif.api.SipiService
+import org.apache.pekko.http.scaladsl.model.*
+import org.knora.webapi.routing.UnsafeZioRun
 
 /**
  * Provides a routing function for API v2 routes that deal with resources.
@@ -70,6 +72,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
 
   def makeRoute: Route =
     getIIIFManifest() ~
+      jsonroute() ~
       createResource() ~
       updateResourceMetadata() ~
       getResourcesInProject() ~
@@ -94,6 +97,22 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
           user <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield ResourceIIIFManifestGetRequestV2(resourceIri, user)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
+      }
+    }
+
+  private def jsonroute(): Route =
+    path(resourcesBasePath / "json" / Segment) { (resIri: String) =>
+      get { requestContext =>
+
+        val task = for {
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
+          requestTask     = ResourceJsonGetRequestV3(resIri, requestingUser)
+          relay          <- ZIO.service[MessageRelay]
+          content        <- relay.ask[String](requestTask)
+          response        = HttpResponse(StatusCodes.OK, entity = HttpEntity(ContentTypes.`application/json`, content))
+          routeResult    <- ZIO.fromFuture(_ => requestContext.complete(response))
+        } yield routeResult
+        UnsafeZioRun.runToFuture(task)
       }
     }
 

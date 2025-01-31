@@ -122,6 +122,16 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
   }
 
   "The resources v2 endpoint" should {
+    "create nice json" in {
+      val request = Get(s"$baseApiUrl/v2/resources/json/$reiseInsHeiligeLandIriEncoded")
+      // val request                = Get(s"$baseApiUrl/v2/resources/json/$aThingIriEncoded")
+      val response: HttpResponse = singleAwaitingRequest(request)
+      val responseAsString       = responseToString(response)
+      assert(response.status == StatusCodes.OK, responseAsString)
+      println(responseAsString)
+      assert(responseAsString.nonEmpty)
+    }
+
     "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
       val request                = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
       val response: HttpResponse = singleAwaitingRequest(request)
