@@ -11,10 +11,10 @@ import java.net.URI
 import scala.util.Try
 import scala.util.matching.Regex
 
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.isIri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
@@ -48,7 +48,10 @@ object KnoraProject {
   object ProjectIri extends StringValueCompanion[ProjectIri] {
 
     private val BuiltInProjects: Seq[String] =
-      Seq("SystemProject", "DefaultSharedOntologiesProject").map(KnoraAdminPrefixExpansion + _)
+      Seq(
+        "http://www.knora.org/ontology/knora-admin#SystemProject",
+        "http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject",
+      )
 
     /**
      * Explanation of the project IRI regex:
@@ -56,7 +59,7 @@ object KnoraProject {
      * * `http://rdfh\.ch/projects/` matches the specified prefix.
      * * `[a-zA-Z0-9_-]{4,40}` matches any alphanumeric character, hyphen, or underscore between 4 and 40 times.
      */
-    private val projectIriRegEx = """^http://rdfh\.ch/projects/[a-zA-Z0-9_-]{4,40}$""".r
+    private lazy val projectIriRegEx = """^http://rdfh\.ch/projects/[a-zA-Z0-9_-]{4,40}$""".r
 
     /**
      * Returns `true` if an IRI string looks like a Knora project IRI
