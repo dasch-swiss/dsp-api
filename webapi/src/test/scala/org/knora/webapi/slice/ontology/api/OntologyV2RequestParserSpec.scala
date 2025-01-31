@@ -11,6 +11,7 @@ import zio.test.check
 import java.time.Instant
 
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
@@ -157,11 +158,17 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
       ),
       "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
         predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-        objects = Seq(StringLiteralV2.from("wild thing", Some("en"))),
+        objects = Seq(
+          StringLiteralV2.from("wild thing", LanguageCode.EN),
+          StringLiteralV2.from("Wildes Ding", LanguageCode.DE),
+        ),
       ),
       "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
         predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-        objects = Seq(StringLiteralV2.from("A thing that is wild", Some("en"))),
+        objects = Seq(
+          StringLiteralV2.from("A thing that is wild", LanguageCode.EN),
+          StringLiteralV2.from("Ein valides Ding", LanguageCode.DE),
+        ),
       ),
     ),
     classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,
@@ -188,14 +195,26 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
            |  "@graph" : [ {
            |    "@id" : "anything:WildThing",
            |    "@type" : "owl:Class",
-           |    "rdfs:label" : {
-           |      "@language" : "en",
-           |      "@value" : "wild thing"
-           |    },
-           |    "rdfs:comment" : {
-           |      "@language" : "en",
-           |      "@value" : "A thing that is wild"
-           |    },
+           |    "rdfs:label" : [
+           |      {
+           |        "@language" : "en",
+           |        "@value" : "wild thing"
+           |      },
+           |      {
+           |        "@language" : "de",
+           |        "@value" : "Wildes Ding"
+           |      }
+           |    ],
+           |    "rdfs:comment" :  [
+           |      {
+           |        "@language" : "en",
+           |        "@value" : "A thing that is wild"
+           |      },
+           |      {
+           |        "@language" : "de",
+           |        "@value" : "Ein valides Ding"
+           |      }
+           |    ],
            |    "rdfs:subClassOf" : [ {
            |      "@id" : "anything:Thing"
            |    }, {

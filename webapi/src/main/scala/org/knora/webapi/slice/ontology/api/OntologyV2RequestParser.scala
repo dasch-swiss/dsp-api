@@ -150,34 +150,38 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     ZIO.fromOption(r.uri).orElseFail("No class IRI found").flatMap(str => iriConverter.asResourceClassIri(str))
 
   private def extractPredicates(r: Resource): ZIO[Scope, String, Map[SmartIri, PredicateInfoV2]] =
-    val propertyIter = r
+    val propertyIter: Map[String, List[Statement]] = r
       .listProperties()
       .asScala
       .filterNot(_.predicateUri == null)
       .filterNot(_.predicateUri == RDFS.subPropertyOf.toString)
       .filterNot(_.predicateUri == RDFS.subClassOf.toString)
       .toList
-    ZIO.foreach(propertyIter)(extractPredicateInfo).map(_.toMap).logError
+      .groupBy(_.predicateUri)
+    ZIO.foreach(propertyIter) { case (iri, stmts) => extractPredicateInfo(iri, stmts) }.map(_.toMap).logError
 
-  private def extractPredicateInfo(stmt: Statement): ZIO[Scope, String, (SmartIri, PredicateInfoV2)] =
+  private def extractPredicateInfo(
+    iri: String,
+    stmts: List[Statement],
+  ): ZIO[Scope, String, (SmartIri, PredicateInfoV2)] =
     for {
-      propertyIri <- iriConverter.asSmartIri(stmt.predicateUri).mapError(_.getMessage)
-      objects     <- asPredicateInfoV2(stmt.getObject)
-    } yield (propertyIri, PredicateInfoV2(propertyIri, List(objects)))
+      propertyIri <- iriConverter.asSmartIri(iri).mapError(_.getMessage)
+      objects     <- ZIO.foreach(stmts)(asOntologyLiteralV2)
+    } yield (propertyIri, PredicateInfoV2(propertyIri, objects))
 
-  private def asPredicateInfoV2(node: RDFNode): ZIO[Scope, String, OntologyLiteralV2] =
-    node match
+  private def asOntologyLiteralV2(stmt: Statement): ZIO[Scope, String, OntologyLiteralV2] =
+    stmt.getObject match
       case res: Resource => iriConverter.asSmartIri(res.getURI).mapBoth(_.getMessage, SmartIriLiteralV2.apply)
       case literal: Literal => {
         literal.getValue match
-          case str: String          => ZIO.succeed(StringLiteralV2.from(str, Option(literal.getLanguage)))
+          case str: String          => ZIO.succeed(StringLiteralV2.from(str, Option(literal.getLanguage).filter(_.nonEmpty)))
           case b: java.lang.Boolean => ZIO.succeed(BooleanLiteralV2(b))
           case _                    => ZIO.fail(s"Unsupported literal type: ${literal.getValue.getClass}")
       }
 
   private def extractSubClasses(r: Resource): ZIO[Scope, String, Set[ResourceClassIri]] = {
     val subclasses: Set[String] = r.listProperties(RDFS.subClassOf).asScala.flatMap(_.objectAsUri.toOption).toSet
-    iriConverter.asResourceClassIris(subclasses)
+    iriConverter.asResourceClassIris(subclasses, requireApiV2Complex = false)
   }
 
   private def extractCardinalities(r: Resource): ZIO[Scope, String, Map[SmartIri, KnoraCardinalityInfo]] = {
