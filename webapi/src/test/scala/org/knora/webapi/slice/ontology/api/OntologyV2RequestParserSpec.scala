@@ -9,6 +9,7 @@ import zio.test.*
 import zio.test.check
 
 import java.time.Instant
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.LanguageCode
 import org.knora.webapi.TestDataFactory
@@ -194,22 +195,26 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
            |  "@graph" : [ {
            |    "@id" : "anything:WildThing",
            |    "@type" : "owl:Class",
-           |    "rdfs:label" : {
-           |      "@language" : "en",
-           |      "@value" : "wild thing"
-           |    },
-           |    "rdfs:label" : {
-           |      "@language" : "de",
-           |      "@value" : "Wildes Ding"
-           |    },
-           |    "rdfs:comment" : {
-           |      "@language" : "en",
-           |      "@value" : "A thing that is wild"
-           |    },
-           |    "rdfs:comment" : {
-           |      "@language" : "de",
-           |      "@value" : "Ein valides Ding"
-           |    },
+           |    "rdfs:label" : [
+           |      {
+           |        "@language" : "en",
+           |        "@value" : "wild thing"
+           |      },
+           |      {
+           |        "@language" : "de",
+           |        "@value" : "Wildes Ding"
+           |      }
+           |    ],
+           |    "rdfs:comment" :  [
+           |      {
+           |        "@language" : "en",
+           |        "@value" : "A thing that is wild"
+           |      },
+           |      {
+           |        "@language" : "de",
+           |        "@value" : "Ein valides Ding"
+           |      }
+           |    ],
            |    "rdfs:subClassOf" : [ {
            |      "@id" : "anything:Thing"
            |    }, {
