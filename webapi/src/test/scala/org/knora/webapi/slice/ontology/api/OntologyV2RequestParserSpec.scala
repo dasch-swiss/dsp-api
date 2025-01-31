@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.ontology.api
 import zio.*
 import zio.test.*
+import zio.test.Assertion.hasSameElements
 import zio.test.check
 
 import java.time.Instant
@@ -243,6 +244,40 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
         } yield assertTrue(
           req == CreateClassRequestV2(classDef, lastModified, uuid, user),
         )
+      }
+    },
+    test("should allow an external subclassOf ontology") {
+      val jsonLd: String =
+        s"""
+           |{
+           |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "2017-12-19T15:23:42.166Z"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:WildThing",
+           |    "@type" : "owl:Class",
+           |    "rdfs:subClassOf" : { "@id" : "external:Ext" }
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "external" : "http://example.com#"
+           |  }
+           |}
+            """.stripMargin
+
+      check(JsonLdTransformations.allGen) { t =>
+        for {
+          uuid <- Random.nextUUID
+          req  <- parser(_.createClassRequestV2(t(jsonLd), uuid, user))
+        } yield assert(req.classInfoContent.subClassOf.map(_.toIri))(hasSameElements(List("http://example.com#Ext")))
       }
     },
     test("reject a definition with an invalid class iri") {
