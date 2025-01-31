@@ -159,15 +159,15 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
       "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
         predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
         objects = Seq(
-          StringLiteralV2.from("wild thing", LanguageCode.EN),
-          StringLiteralV2.from("Wildes Ding", LanguageCode.DE),
+          StringLiteralV2.from("An English label", LanguageCode.EN),
+          StringLiteralV2.from("Ein deutsches Label", LanguageCode.DE),
         ),
       ),
       "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
         predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
         objects = Seq(
-          StringLiteralV2.from("A thing that is wild", LanguageCode.EN),
-          StringLiteralV2.from("Ein valides Ding", LanguageCode.DE),
+          StringLiteralV2.from("An English comment", LanguageCode.EN),
+          StringLiteralV2.from("Ein deutscher Kommentar", LanguageCode.DE),
         ),
       ),
     ),
@@ -198,21 +198,21 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
            |    "rdfs:label" : [
            |      {
            |        "@language" : "en",
-           |        "@value" : "wild thing"
+           |        "@value" : "An English label"
            |      },
            |      {
            |        "@language" : "de",
-           |        "@value" : "Wildes Ding"
+           |        "@value" : "Ein deutsches Label"
            |      }
            |    ],
            |    "rdfs:comment" :  [
            |      {
            |        "@language" : "en",
-           |        "@value" : "A thing that is wild"
+           |        "@value" : "An English comment"
            |      },
            |      {
            |        "@language" : "de",
-           |        "@value" : "Ein valides Ding"
+           |        "@value" : "Ein deutscher Kommentar"
            |      }
            |    ],
            |    "rdfs:subClassOf" : [ {
@@ -260,11 +260,11 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
            |    "@type" : "owl:Class",
            |    "rdfs:label" : {
            |      "@language" : "en",
-           |      "@value" : "wild thing"
+           |      "@value" : "An English Label"
            |    },
            |    "rdfs:comment" : {
            |      "@language" : "en",
-           |      "@value" : "A thing that is wild"
+           |      "@value" : "An English Comment"
            |    },
            |    "rdfs:subClassOf" : [ {
            |      "@id" : "anything:Thing"
