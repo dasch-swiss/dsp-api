@@ -246,7 +246,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
         )
       }
     },
-    test("should allow an external subclassOf ontology") {
+    test("should allow an external subclassOf IRI") {
       val jsonLd: String =
         s"""
            |{
