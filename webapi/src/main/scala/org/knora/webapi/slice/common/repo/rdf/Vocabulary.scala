@@ -108,9 +108,11 @@ object Vocabulary {
     val valueHasMapping: Iri               = iri(kb + "valueHasMapping")
     val valueHasMaxStandoffStartIndex: Iri = iri(kb + "valueHasMaxStandoffStartIndex")
     val valueHasStandoff: Iri              = iri(kb + "valueHasStandoff")
-    val hasCopyrightAttribution: Iri       = iri(kb + "hasCopyrightAttribution")
-    val hasLicenseText: Iri                = iri(kb + "hasLicenseText")
+    val hasCopyrightHolder: Iri            = iri(kb + "hasCopyrightHolder")
+    val hasAuthorship: Iri                 = iri(kb + "hasAuthorship")
+    val hasLicenseIdentifier: Iri          = iri(kb + "hasLicenseIdentifier")
     val hasLicenseUri: Iri                 = iri(kb + "hasLicenseUri")
+    val hasLicenseDate: Iri                = iri(kb + "hasLicenseDate")
 
     val internalFilename: Iri = iri(kb + "internalFilename")
     val internalMimeType: Iri = iri(kb + "internalMimeType")
