@@ -55,7 +55,7 @@ object DefaultObjectAccessPermission {
       resourceClass: Option[ResourceClassIri],
       property: Option[PropertyIri],
     ): Either[String, ForWhat] =
-      from(group, resourceClass.map(_.toInternal), property.map(_.toInternal))
+      from(group, resourceClass.map(_.toInternalIri), property.map(_.toInternalIri))
 
     def from(
       group: Option[GroupIri],
