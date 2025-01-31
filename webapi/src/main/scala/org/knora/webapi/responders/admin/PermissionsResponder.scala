@@ -728,10 +728,11 @@ final case class PermissionsResponder(
     _    <- groupService.findById(gIri).someOrFail(BadRequestException(s"Group ${groupIri} not found."))
   } yield gIri
 
-  private def checkPropertyIri(propertyIri: IRI): Task[PropertyIri] = for {
-    smartIri <- iriConverter.asSmartIri(propertyIri).mapError(BadRequestException.apply)
-    pIri     <- ZIO.fromEither(PropertyIri.from(smartIri)).mapError(BadRequestException.apply)
-  } yield pIri
+  private def checkPropertyIri(propertyIri: IRI): Task[PropertyIri] =
+    iriConverter
+      .asPropertyIri(propertyIri)
+      .filterOrFail(_.smartIri.isKnoraEntityIri)(())
+      .orElseFail(BadRequestException(s"<$propertyIri> is not a Knora property IRI"))
 
   private def checkResourceClassIri(resourceClassIri: IRI): Task[ResourceClassIri] = for {
     smartIri <- iriConverter.asSmartIri(resourceClassIri).mapError(BadRequestException.apply)

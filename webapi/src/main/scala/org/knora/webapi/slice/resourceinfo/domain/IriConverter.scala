@@ -32,27 +32,15 @@ final case class IriConverter(sf: StringFormatter) {
     asInternalSmartIri(iri.value).mapAttempt(_.getOntologyFromEntity)
   def isKnoraDataIri(iri: String): Task[Boolean] = asSmartIri(iri).map(_.isKnoraDataIri)
 
-  def asResourceClassIri(iri: String, requireApiV2Complex: Boolean = true): IO[String, ResourceClassIri] =
-    asSmartIri(iri)
-      .mapError(_.getMessage)
-      .flatMap(sIri =>
-        ZIO.fromEither {
-          if (requireApiV2Complex) ResourceClassIri.fromApiV2Complex(sIri)
-          else ResourceClassIri.from(sIri)
-        },
-      )
-  def asResourceClassIris(iris: Set[String], requireApiV2Complex: Boolean = true): IO[String, Set[ResourceClassIri]] =
-    ZIO.foreach(iris)(asResourceClassIri(_, requireApiV2Complex))
+  def asResourceClassIriApiV2Complex(iri: String): IO[String, ResourceClassIri] =
+    asSmartIri(iri).mapError(_.getMessage).flatMap(sIri => ZIO.fromEither(ResourceClassIri.fromApiV2Complex(sIri)))
+  def asResourceClassIri(iri: String): IO[String, ResourceClassIri] =
+    asSmartIri(iri).mapError(_.getMessage).flatMap(sIri => ZIO.fromEither(ResourceClassIri.from(sIri)))
 
-  def asPropertyIri(iri: String, requireApiV2Complex: Boolean = true): IO[String, PropertyIri] =
-    asSmartIri(iri)
-      .mapError(_.getMessage)
-      .flatMap(sIri =>
-        ZIO.fromEither {
-          if (requireApiV2Complex) PropertyIri.fromApiV2Complex(sIri)
-          else PropertyIri.from(sIri)
-        },
-      )
+  def asPropertyIriApiV2Complex(iri: String): IO[String, PropertyIri] =
+    asSmartIri(iri).mapError(_.getMessage).flatMap(sIri => ZIO.fromEither(PropertyIri.fromApiV2Complex(sIri)))
+  def asPropertyIri(iri: String): IO[String, PropertyIri] =
+    asSmartIri(iri).mapError(_.getMessage).flatMap(sIri => ZIO.fromEither(PropertyIri.from(sIri)))
 }
 
 object IriConverter {

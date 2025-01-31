@@ -33,7 +33,7 @@ object KnoraIrisSpec extends ZIOSpecDefault {
   private val propertyIriSuite = suite("PropertyIri")(
     suite("from")(
       test("should return a PropertyIri") {
-        val validIris = Seq(internalPropertyIri, apiV2ComplexPropertyIri)
+        val validIris = Seq(internalPropertyIri, apiV2ComplexPropertyIri, "http://example.com/foo#hasBar")
         check(Gen.fromIterable(validIris)) { iri =>
           for {
             sIri  <- converter(_.asSmartIri(iri))
@@ -41,23 +41,25 @@ object KnoraIrisSpec extends ZIOSpecDefault {
           } yield assertTrue(actual.map(_.smartIri) == Right(sIri))
         }
       },
-      test("should fail for an invalid PropertyIri") {
-        val invalidIris = Seq("http://example.com/foo#hasBar", valueIri)
-        check(Gen.fromIterable(invalidIris)) { iri =>
-          for {
-            sIri  <- converter(_.asSmartIri(iri))
-            actual = PropertyIri.from(sIri)
-          } yield assertTrue(actual == Left(s"<${sIri.toIri}> is not a Knora property IRI"))
-        }
-      },
     ),
     suite("fromApiV2Complex")(
-      test("should fail for an internal IRI") {
-        val iri = internalPropertyIri
-        for {
-          sIri  <- converter(_.asSmartIri(iri))
-          actual = PropertyIri.fromApiV2Complex(sIri)
-        } yield assertTrue(actual == Left(s"Not an API v2 complex IRI $iri"))
+      test("should return a PropertyIri") {
+        val validIris = Seq(apiV2ComplexPropertyIri)
+        check(Gen.fromIterable(validIris)) { iri =>
+          for {
+            sIri  <- converter(_.asSmartIri(iri))
+            actual = PropertyIri.fromApiV2Complex(sIri)
+          } yield assertTrue(actual.map(_.smartIri) == Right(sIri))
+        }
+      },
+      test("should fail for an non api V2 complex IRI") {
+        val validIris = Seq(internalPropertyIri, "http://example.com/foo#hasBar")
+        check(Gen.fromIterable(validIris)) { iri =>
+          for {
+            sIri  <- converter(_.asSmartIri(iri))
+            actual = PropertyIri.fromApiV2Complex(sIri)
+          } yield assertTrue(actual == Left(s"Not an API v2 complex IRI $iri"))
+        }
       },
     ),
   )
