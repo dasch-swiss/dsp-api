@@ -38,7 +38,7 @@ object Dependencies {
   val zioConfig             = "dev.zio"                       %% "zio-config"                % ZioConfigVersion
   val zioConfigMagnolia     = "dev.zio"                       %% "zio-config-magnolia"       % ZioConfigVersion
   val zioConfigTypesafe     = "dev.zio"                       %% "zio-config-typesafe"       % ZioConfigVersion
-  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.4"
+  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.11"
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
@@ -49,7 +49,7 @@ object Dependencies {
   // refined
   val refined = Seq(
     "eu.timepit" %% "refined"                  % "0.11.3",
-    "dev.zio"    %% "zio-json-interop-refined" % "0.7.4",
+    "dev.zio"    %% "zio-json-interop-refined" % "0.7.11",
   )
 
   // monocle
@@ -94,7 +94,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.1"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.3.6" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.4.2" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -122,7 +122,7 @@ object Dependencies {
   val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.4"
 
   // use version 3.9.2 until https://github.com/wiremock/wiremock/issues/2911 is fixed
-  val wiremock = "org.wiremock" % "wiremock" % "3.9.2"
+  val wiremock = "org.wiremock" % "wiremock" % "3.11.0"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
