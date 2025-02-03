@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.api
 
+import org.apache.jena.query.Dataset
 import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.OWL2 as OWL
 import org.apache.jena.vocabulary.RDFS
@@ -14,8 +15,8 @@ import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
+
 import dsp.constants.SalsahGui
-import org.apache.jena.query.Dataset
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.SmartIri
