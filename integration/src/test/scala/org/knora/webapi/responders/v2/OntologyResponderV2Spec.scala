@@ -28,6 +28,7 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
@@ -36,6 +37,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -88,7 +90,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   private val chairIri                     = new MutableTestIri
   private val ExampleSharedOntologyIri     = "http://api.knora.org/ontology/shared/example-box/v2".toSmartIri
   private val IncunabulaOntologyIri        = "http://0.0.0.0:3333/ontology/0803/incunabula/v2".toSmartIri
-  private val AnythingOntologyIri          = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
+  private val AnythingOntologyIri          = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
   private val FreeTestOntologyIri          = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
   private var fooLastModDate: Instant      = Instant.now
   private var barLastModDate: Instant      = Instant.now
@@ -468,13 +470,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       anythingLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
         .ontologies
-        .find(_.ontologyIri == AnythingOntologyIri)
+        .find(_.ontologyIri == AnythingOntologyIri.smartIri)
         .get
         .lastModificationDate
         .get
 
       appActor ! DeleteOntologyRequestV2(
-        ontologyIri = AnythingOntologyIri,
+        ontologyIri = AnythingOntologyIri.smartIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
         requestingUser = anythingAdminUser,
@@ -674,7 +676,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       anythingLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
         .ontologies
-        .find(_.ontologyIri == AnythingOntologyIri)
+        .find(_.ontologyIri == AnythingOntologyIri.smartIri)
         .get
         .lastModificationDate
         .get
@@ -733,7 +735,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       anythingLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
         .ontologies
-        .find(_.ontologyIri == AnythingOntologyIri)
+        .find(_.ontologyIri == AnythingOntologyIri.smartIri)
         .get
         .lastModificationDate
         .get
@@ -819,7 +821,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       anythingLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
         .ontologies
-        .find(_.ontologyIri == AnythingOntologyIri)
+        .find(_.ontologyIri == AnythingOntologyIri.smartIri)
         .get
         .lastModificationDate
         .get
@@ -2719,7 +2721,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val newLabel = "The modified anything ontology"
 
       appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = AnythingOntologyIri,
+        ontologyIri = AnythingOntologyIri.smartIri,
         label = Some(newLabel),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -2729,7 +2731,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val response = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
-      assert(metadata.ontologyIri.toOntologySchema(ApiV2Complex) == AnythingOntologyIri)
+      assert(metadata.ontologyIri.toOntologySchema(ApiV2Complex) == AnythingOntologyIri.smartIri)
       assert(metadata.label.contains(newLabel))
       val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
         throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
@@ -3146,7 +3148,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not allow a user to change the labels of a class if they are not a sysadmin or an admin in the ontology's project" in {
 
-      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+      val classIri = AnythingOntologyIri.makeClass("Nothing")
 
       val newObjects = Seq(
         StringLiteralV2.from("nothing", Some("en")),
@@ -3155,7 +3157,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
         classIri = classIri,
-        predicateToUpdate = Rdfs.Label.toSmartIri,
+        predicateToUpdate = LabelOrComment.Label,
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -3169,7 +3171,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "change the labels of a class" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+      val classIri = AnythingOntologyIri.makeClass("Nothing")
 
       val newObjects = Seq(
         StringLiteralV2.from("nothing", Some("en")),
@@ -3178,7 +3180,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
         classIri = classIri,
-        predicateToUpdate = Rdfs.Label.toSmartIri,
+        predicateToUpdate = LabelOrComment.Label,
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -3188,7 +3190,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri)
+        val readClassInfo = externalOntology.classes(classIri.smartIri)
         readClassInfo.entityInfoContent.predicates(Rdfs.Label.toSmartIri).objects should ===(
           newObjects,
         )
@@ -3203,7 +3205,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "change the labels of a class, submitting the same labels again" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+      val classIri = AnythingOntologyIri.makeClass("Nothing")
 
       val newObjects = Seq(
         StringLiteralV2.from("nothing", Some("en")),
@@ -3212,7 +3214,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
         classIri = classIri,
-        predicateToUpdate = Rdfs.Label.toSmartIri,
+        predicateToUpdate = LabelOrComment.Label,
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -3222,7 +3224,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri)
+        val readClassInfo = externalOntology.classes(classIri.smartIri)
         readClassInfo.entityInfoContent.predicates(Rdfs.Label.toSmartIri).objects should ===(
           newObjects,
         )
@@ -3238,7 +3240,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not allow a user to change the comments of a class if they are not a sysadmin or an admin in the ontology's project" in {
 
-      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+      val classIri = AnythingOntologyIri.makeClass("Nothing")
 
       val newObjects = Seq(
         StringLiteralV2.from("Represents nothing", Some("en")),
@@ -3247,7 +3249,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
         classIri = classIri,
-        predicateToUpdate = Rdfs.Comment.toSmartIri,
+        predicateToUpdate = LabelOrComment.Comment,
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -3261,7 +3263,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "change the comments of a class" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+      val classIri = AnythingOntologyIri.makeClass("Nothing")
 
       val newObjects = Seq(
         StringLiteralV2.from("Represents nothing", Some("en")),
@@ -3275,7 +3277,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
         classIri = classIri,
-        predicateToUpdate = Rdfs.Comment.toSmartIri,
+        predicateToUpdate = LabelOrComment.Comment,
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -3285,7 +3287,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri)
+        val readClassInfo = externalOntology.classes(classIri.smartIri)
         readClassInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects should ===(
           newObjectsUnescaped,
         )
@@ -3300,7 +3302,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "change the comments of a class, submitting the same comments again" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+      val classIri = AnythingOntologyIri.makeClass("Nothing")
 
       val newObjects = Seq(
         StringLiteralV2.from("Represents nothing", Some("en")),
@@ -3314,7 +3316,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
         classIri = classIri,
-        predicateToUpdate = Rdfs.Comment.toSmartIri,
+        predicateToUpdate = LabelOrComment.Comment,
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -3324,7 +3326,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri)
+        val readClassInfo = externalOntology.classes(classIri.smartIri)
         readClassInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects should ===(
           newObjectsUnescaped,
         )
@@ -6198,7 +6200,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       anythingLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
         .ontologies
-        .find(_.ontologyIri == AnythingOntologyIri)
+        .find(_.ontologyIri == AnythingOntologyIri.smartIri)
         .get
         .lastModificationDate
         .get

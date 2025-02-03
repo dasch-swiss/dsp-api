@@ -25,6 +25,8 @@ object KnoraIris {
     def smartIri: SmartIri
     override def toString: String                     = self.smartIri.toString
     def toInternal: InternalIri                       = self.smartIri.toInternalIri
+    def toInternalSchema: SmartIri                    = self.smartIri.toInternalSchema
+    def toComplexSchema: SmartIri                     = self.smartIri.toComplexSchema
     def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
   }
 
@@ -61,7 +63,9 @@ object KnoraIris {
       this.shortcode == other.shortcode && this.resourceId == other.resourceId
   }
 
-  final case class ResourceClassIri private (smartIri: SmartIri) extends KnoraIri
+  final case class ResourceClassIri private (smartIri: SmartIri) extends KnoraIri {
+    def ontologyIri: OntologyIri = OntologyIri.unsafeFrom(smartIri.getOntologyFromEntity)
+  }
 
   object ResourceClassIri {
     def unsafeFrom(iri: SmartIri): ResourceClassIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
@@ -107,11 +111,13 @@ object KnoraIris {
       else Left(s"<$iri> is not a Knora resource IRI")
   }
 
-  final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri {
-    def makeEntityIri(name: EntityName): SmartIri = smartIri.makeEntityIri(name.toString)
-    def ontologyName: OntologyName                = smartIri.getOntologyName
-    def toComplexSchema: SmartIri                 = smartIri.toComplexSchema
-    def toInternalSchema: SmartIri                = smartIri.toInternalSchema
+  final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri { self =>
+    def makeEntityIri(name: String): SmartIri = smartIri.makeEntityIri(name)
+    def makeClass(name: String): ResourceClassIri =
+      ResourceClassIri.unsafeFrom(self.makeEntityIri(name))
+    def makeProperty(name: String): PropertyIri =
+      PropertyIri.unsafeFrom(self.makeEntityIri(name))
+    def ontologyName: OntologyName = smartIri.getOntologyName
   }
   object OntologyIri {
     def makeNew(
