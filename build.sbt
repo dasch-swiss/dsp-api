@@ -15,7 +15,7 @@ val hikariVersion               = "6.2.1"
 val quillVersion                = "4.8.6"
 val sipiVersion                 = "v31.3.0"
 val sqliteVersion               = "3.47.2.0"
-val tapirVersion                = "1.11.12"
+val tapirVersion                = "1.11.13"
 val testContainersVersion       = "1.20.4"
 val zioConfigVersion            = "4.0.3"
 val zioJsonVersion              = "0.7.4"
@@ -32,7 +32,7 @@ val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
 
 ThisBuild / organization      := "dasch.swiss"
 ThisBuild / version           := gitVersion
-ThisBuild / scalaVersion      := "3.3.4"
+ThisBuild / scalaVersion      := "3.3.5"
 ThisBuild / fork              := true
 ThisBuild / semanticdbEnabled := true
 
