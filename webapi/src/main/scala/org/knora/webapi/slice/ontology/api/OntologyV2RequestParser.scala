@@ -14,8 +14,8 @@ import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
-
 import dsp.constants.SalsahGui
+import org.apache.jena.query.Dataset
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.SmartIri
@@ -120,10 +120,9 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
   def createClassRequestV2(jsonLd: String, apiRequestId: UUID, requestingUser: User): IO[String, CreateClassRequestV2] =
     ZIO.scoped {
       for {
-        ds         <- DatasetOps.fromJsonLd(jsonLd)
-        meta       <- extractOntologyMetadata(ds.defaultModel)
-        classModel <- ZIO.fromOption(ds.namedModel(meta.ontologyIri.toString)).orElseFail("No class definition found")
-        classInfo  <- extractClassInfo(classModel)
+        ds        <- DatasetOps.fromJsonLd(jsonLd)
+        meta      <- extractOntologyMetadata(ds.defaultModel)
+        classInfo <- extractClassInfo(ds, meta)
         _ <-
           ZIO
             .fail(
@@ -138,8 +137,9 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       )
     }
 
-  private def extractClassInfo(classModel: Model): ZIO[Scope, String, ClassInfoContentV2] =
+  private def extractClassInfo(ds: Dataset, meta: OntologyMetadata): ZIO[Scope, String, ClassInfoContentV2] =
     for {
+      classModel    <- ZIO.fromOption(ds.namedModel(meta.ontologyIri.toString)).orElseFail("No class definition found")
       r             <- ZIO.fromEither(classModel.singleRootResource)
       classIri      <- extractClassIri(r)
       predicates    <- extractPredicates(r)
@@ -242,11 +242,10 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
   ): IO[String, ChangeClassLabelsOrCommentsRequestV2] =
     ZIO.scoped {
       for {
-        ds         <- DatasetOps.fromJsonLd(jsonLd)
-        meta       <- extractOntologyMetadata(ds.defaultModel)
-        classModel <- ZIO.fromOption(ds.namedModel(meta.ontologyIri.toString)).orElseFail("No class definition found")
-        classInfo  <- extractClassInfo(classModel)
-        classIri   <- ZIO.fromEither(ResourceClassIri.fromApiV2Complex(classInfo.classIri))
+        ds        <- DatasetOps.fromJsonLd(jsonLd)
+        meta      <- extractOntologyMetadata(ds.defaultModel)
+        classInfo <- extractClassInfo(ds, meta)
+        classIri  <- ZIO.fromEither(ResourceClassIri.fromApiV2Complex(classInfo.classIri))
         preds = classInfo.predicates.filter { case (iri, _) =>
                   iri.toIri == RDFS.label.toString || iri.toIri == RDFS.comment.toString
                 }
@@ -265,6 +264,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
         requestingUser,
       )
     }
+
 }
 
 object OntologyV2RequestParser {
