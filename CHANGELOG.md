@@ -1,5 +1,29 @@
 # Changelog
 
+## [31.4.0](https://github.com/dasch-swiss/dsp-api/compare/v31.3.0...v31.4.0) (2025-02-03)
+
+
+### Maintenances
+
+* Dependency updates ([#3491](https://github.com/dasch-swiss/dsp-api/issues/3491)) ([1ab1b96](https://github.com/dasch-swiss/dsp-api/commit/1ab1b9629ade484f4ccc89fed88c6f58a30b3e00))
+* Major dependency updates ([#3490](https://github.com/dasch-swiss/dsp-api/issues/3490)) ([1553d0b](https://github.com/dasch-swiss/dsp-api/commit/1553d0b0aa437efd69b9441dafce76c86896ee2d))
+* Make Project.logo typed ([#3477](https://github.com/dasch-swiss/dsp-api/issues/3477)) ([324319a](https://github.com/dasch-swiss/dsp-api/commit/324319a695cbd88847daa66c80e7839244912f61))
+* Move creating OntologyIri code to OntologyIri ([#3479](https://github.com/dasch-swiss/dsp-api/issues/3479)) ([30052c2](https://github.com/dasch-swiss/dsp-api/commit/30052c243ad57f2da00f206880a6ec2c50f7e0a1))
+* Patch dependency updates ([#3488](https://github.com/dasch-swiss/dsp-api/issues/3488)) ([d54cad2](https://github.com/dasch-swiss/dsp-api/commit/d54cad2beadc637d943fb8247cdeffce01a29881))
+
+
+### Enhancements
+
+* Clarify error message when creating an ontology with an invalid name ([#3476](https://github.com/dasch-swiss/dsp-api/issues/3476)) ([7c16110](https://github.com/dasch-swiss/dsp-api/commit/7c161103a0c62003deee546b9d0b181afdcdd7fb))
+
+
+### Bug Fixes
+
+* Allow external iri for subclasses (DEV-4553) ([#3484](https://github.com/dasch-swiss/dsp-api/issues/3484)) ([7fd7f46](https://github.com/dasch-swiss/dsp-api/commit/7fd7f4678fdd5744b2e81cc3a6b941cd95d8fa82))
+* Allow non api complex V2 IRI as subclass IRI during creation of a class ([#3483](https://github.com/dasch-swiss/dsp-api/issues/3483)) ([12874d1](https://github.com/dasch-swiss/dsp-api/commit/12874d1134b9b2ce476e6b5083493a53eac37096))
+* Allow StringLiterals with language tag for properties when creating a class (DEV-4555) ([#3486](https://github.com/dasch-swiss/dsp-api/issues/3486)) ([8df9737](https://github.com/dasch-swiss/dsp-api/commit/8df97378ca942c9c2721caea0e316b582b69f7dd))
+* When changing the ontologies refresh the cache completely (DEV-4362) ([#3468](https://github.com/dasch-swiss/dsp-api/issues/3468)) ([6be8422](https://github.com/dasch-swiss/dsp-api/commit/6be8422e7c8f3d239f4a77587cda5cbc5b6d2d27))
+
 ## [31.3.0](https://github.com/dasch-swiss/dsp-api/compare/v31.2.1...v31.3.0) (2025-01-27)
 
 
