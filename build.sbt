@@ -10,7 +10,7 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck; integration/Te
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate; integration/Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck; integration/Test/headerCheck")
 
-val flywayVersion               = "11.1.1"
+val flywayVersion               = "11.3.0"
 val hikariVersion               = "6.2.1"
 val quillVersion                = "4.8.6"
 val sipiVersion                 = "v31.3.0"
@@ -18,13 +18,16 @@ val sqliteVersion               = "3.48.0.0"
 val tapirVersion                = "1.11.13"
 val testContainersVersion       = "1.20.4"
 val zioConfigVersion            = "4.0.3"
+// jwt-scala 10.0.1 depends on zio-json 0.7.4
+// though newer version compatible with a newer zio-json version is available
+// it is not yet published: https://github.com/jwt-scala/jwt-scala/issues/642
 val zioJsonVersion              = "0.7.4"
 val zioLoggingVersion           = "2.4.0"
 val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
 val zioPreludeVersion           = "1.0.0-RC37"
-val zioSchemaVersion            = "1.5.0"
+val zioSchemaVersion            = "1.6.1"
 val zioVersion                  = "2.1.14"
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
