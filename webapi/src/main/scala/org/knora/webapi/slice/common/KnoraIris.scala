@@ -23,9 +23,11 @@ object KnoraIris {
 
   trait KnoraIri { self =>
     def smartIri: SmartIri
-    override def toString: String                     = self.smartIri.toString
-    def toInternal: InternalIri                       = self.smartIri.toInternalIri
-    def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
+    override def toString: String                           = self.smartIri.toString
+    final def toInternalIri: InternalIri                    = self.smartIri.toInternalIri
+    final def toComplexSchema: SmartIri                     = self.smartIri.toComplexSchema
+    final def toInternalSchema: SmartIri                    = self.smartIri.toInternalSchema
+    final def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
   }
 
   // PropertyIri and ResourceClassIri currently have the same constraint
@@ -107,11 +109,11 @@ object KnoraIris {
       else Left(s"<$iri> is not a Knora resource IRI")
   }
 
-  final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri {
+  final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri { self =>
     def makeEntityIri(name: EntityName): SmartIri = smartIri.makeEntityIri(name.toString)
     def ontologyName: OntologyName                = smartIri.getOntologyName
-    def toComplexSchema: SmartIri                 = smartIri.toComplexSchema
-    def toInternalSchema: SmartIri                = smartIri.toInternalSchema
+    def isInternal: Boolean                       = ontologyName.isInternal
+    def isExternal: Boolean                       = !isInternal
   }
   object OntologyIri {
     def makeNew(
