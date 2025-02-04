@@ -52,10 +52,39 @@ Text with standard standoff markup can be transformed to TEI XML as described [h
 
 ## Footnotes
 
-Footnote support is currently experimental and has some limitations:
+The `<footnote>` tag is an anchor tag indicating where in the text a footnote should be placed.
+It must not contain any text or other tags.
+
+The contents of the footnote are stored in the `content` attribute of the `<footnote>` tag.
+These may contain further markup, so the content of the footnote must be valid XML.
+It is not strictly necessary, but recommended to wrap the content of the footnote in a `<div>` or `<p>` tag.
+
+In order to result in valid xml, the content of the footnote must be properly escaped
+so that it does not contain any characters that are not allowed in XML.
+Special characters like `<`, `>`, `&`, `"`, and `'` must be replaced by their respective XML entities,
+i.e. `&lt;`, `&gt;`, `&amp;`, `&quot;`, and `&apos;`.
+
+The following example shows how a footnote is used in the XML:
+
+```xml
+<text>
+    <div>
+        <p>
+            Some text with a footnote
+            <footnote content="&lt;div&gt;Text with &lt;a href=&quot;...&quot;&gt;markup&lt;/a&gt;.&lt;/div&gt;" /> 
+            in it.
+        </p>
+    </div>
+</text>
+```
+
+**Note:**  
+Footnote support is still in an early stage, and may change in the future.
+There are some known limitations:
 
 - CKE does not support footnotes out of the box. DSP-APP uses a custom build of CKE that supports footnotes.
 - The content of footnotes is not covered by the full text search.
-- The content of footnotes may contain further markup, but this will internally not be converted to standoff. 
+- The content of footnotes may contain further markup, but this will not be converted to standoff by the API.
   For that reason, markup in footnotes can not be searched for through gravsearch
   and hence outgoing and incoming links will not be displayed in DSP-APP.
+
