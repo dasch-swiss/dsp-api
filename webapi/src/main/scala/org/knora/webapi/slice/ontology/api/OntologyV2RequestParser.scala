@@ -24,6 +24,7 @@ import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
@@ -266,6 +267,24 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       )
     }
 
+  def addCardinalitiesToClassRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, AddCardinalitiesToClassRequestV2] =
+    ZIO.scoped {
+      for {
+        ds        <- DatasetOps.fromJsonLd(jsonLd)
+        meta      <- extractOntologyMetadata(ds.defaultModel)
+        classInfo <- extractClassInfo(ds, meta)
+        _         <- ZIO.fail("No cardinalities specified").when(classInfo.directCardinalities.isEmpty)
+      } yield AddCardinalitiesToClassRequestV2(
+        classInfo,
+        meta.lastModificationDate,
+        apiRequestId,
+        requestingUser,
+      )
+    }
 }
 
 object OntologyV2RequestParser {
