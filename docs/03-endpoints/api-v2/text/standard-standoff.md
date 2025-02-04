@@ -57,7 +57,7 @@ It must not contain any text or other tags.
 
 The contents of the footnote are stored in the `content` attribute of the `<footnote>` tag.
 These may contain further markup, so the content of the footnote must be valid XML.
-It is not strictly necessary, but recommended to wrap the content of the footnote in a `<div>` or `<p>` tag.
+It is not strictly necessary, but recommended to wrap the content of the footnote in a `<text>` or `<p>` tag.
 
 In order to result in valid xml, the content of the footnote must be properly escaped
 so that it does not contain any characters that are not allowed in XML.
@@ -68,13 +68,11 @@ The following example shows how a footnote is used in the XML:
 
 ```xml
 <text>
-    <div>
-        <p>
-            Some text with a footnote
-            <footnote content="&lt;div&gt;Text with &lt;a href=&quot;...&quot;&gt;markup&lt;/a&gt;.&lt;/div&gt;" /> 
-            in it.
-        </p>
-    </div>
+  <p>
+    Some text with a 
+    footnote<footnote content="&lt;p&gt;Text with &lt;a href=&quot;...&quot;&gt;markup&lt;/a&gt;.&lt;/p&gt;" /> 
+    in it.
+  </p>
 </text>
 ```
 
