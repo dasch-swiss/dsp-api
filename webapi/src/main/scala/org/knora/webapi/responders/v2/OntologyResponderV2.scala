@@ -108,10 +108,17 @@ final case class OntologyResponderV2(
     case OntologyMetadataGetByIriRequestV2(ontologyIris) =>
       getOntologyMetadataByIriV2(ontologyIris)
     case createOntologyRequest: CreateOntologyRequestV2 => createOntology(createOntologyRequest)
-    case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 =>
-      changeOntologyMetadata(changeOntologyMetadataRequest)
-    case deleteOntologyCommentRequest: DeleteOntologyCommentRequestV2 =>
-      deleteOntologyComment(deleteOntologyCommentRequest)
+    case req: ChangeOntologyMetadataRequestV2 =>
+      changeOntologyMetadata(
+        req.ontologyIri,
+        req.label,
+        req.comment,
+        req.lastModificationDate,
+        req.apiRequestID,
+        req.requestingUser,
+      )
+    case req: DeleteOntologyCommentRequestV2 =>
+      deleteOntologyComment(req.ontologyIri, req.lastModificationDate, req.apiRequestID, req.requestingUser)
     case createClassRequest: CreateClassRequestV2 => createClass(createClassRequest)
     case changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2 =>
       changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest)
@@ -136,9 +143,11 @@ final case class OntologyResponderV2(
       changePropertyGuiElement(changePropertyGuiElementRequest)
     case canDeletePropertyRequest: CanDeletePropertyRequestV2 => canDeleteProperty(canDeletePropertyRequest)
     case deletePropertyRequest: DeletePropertyRequestV2       => deleteProperty(deletePropertyRequest)
-    case canDeleteOntologyRequest: CanDeleteOntologyRequestV2 => canDeleteOntology(canDeleteOntologyRequest)
-    case deleteOntologyRequest: DeleteOntologyRequestV2       => deleteOntology(deleteOntologyRequest)
-    case other                                                => Responder.handleUnexpectedMessage(other, this.getClass.getName)
+    case req: CanDeleteOntologyRequestV2 =>
+      canDeleteOntology(req.ontologyIri, req.requestingUser)
+    case req: DeleteOntologyRequestV2 =>
+      deleteOntology(req.ontologyIri, req.lastModificationDate, req.apiRequestID, req.requestingUser)
+    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -345,35 +354,23 @@ final case class OntologyResponderV2(
    * @return a [[ReadOntologyV2]].
    */
   private def getOntologyEntitiesV2(
-    ontologyIri: SmartIri,
+    ontologyIri: OntologyIri,
     allLanguages: Boolean,
     requestingUser: User,
   ): Task[ReadOntologyV2] =
     for {
-      cacheData <- ontologyCache.getCacheData
-
-      _ <- ZIO.when(
-             ontologyIri.getOntologyName.value == "standoff" && ontologyIri.getOntologySchema.contains(ApiV2Simple),
-           )(
-             ZIO.fail(BadRequestException(s"The standoff ontology is not available in the API v2 simple schema")),
-           )
-
-      ontology <- ZIO
-                    .fromOption(cacheData.ontologies.get(ontologyIri.toOntologySchema(InternalSchema)))
-                    .orElseFail(NotFoundException(s"Ontology not found: $ontologyIri"))
-
+      ontology <- ontologyRepo
+                    .findById(ontologyIri)
+                    .someOrFail(NotFoundException(s"Ontology not found: $ontologyIri"))
+      _ <- ZIO
+             .fail(BadRequestException(s"The standoff ontology is not available in the API v2 simple schema"))
+             .when(
+               ontologyIri.ontologyName.value == "standoff" &&
+                 ontologyIri.smartIri.getOntologySchema.contains(ApiV2Simple),
+             )
       // Are we returning data in the user's preferred language, or in all available languages?
-      userLang =
-        if (!allLanguages) {
-          // Just the user's preferred language.
-          Some(requestingUser.lang)
-        } else {
-          // All available languages.
-          None
-        }
-    } yield ontology.copy(
-      userLang = userLang,
-    )
+      userLang = Some(requestingUser.lang).filter(_ => !allLanguages)
+    } yield ontology.copy(userLang = userLang)
 
   /**
    * Requests information about properties in a single ontology.
@@ -519,135 +516,99 @@ final case class OntologyResponderV2(
 
   /**
    * Changes ontology metadata.
-   *
-   * @param changeOntologyMetadataRequest the request to change the metadata.
+   * @param ontologyIri           The IRI of the ontology to be updated.
+   * @param label                 The new label for the ontology.
+   * @param comment               The new comment for the ontology.
+   * @param lastModificationDate  The last modification date of the ontology.
+   * @param apiRequestID          The API request ID.
+   * @param requestingUser        The user making the request.
    * @return a [[ReadOntologyMetadataV2]] containing the new metadata.
    */
   private def changeOntologyMetadata(
-    changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2,
+    ontologyIri: OntologyIri,
+    label: Option[String] = None,
+    comment: Option[String] = None,
+    lastModificationDate: Instant,
+    apiRequestID: UUID,
+    requestingUser: User,
   ): Task[ReadOntologyMetadataV2] = {
-    def makeTaskFuture(internalOntologyIri: SmartIri): Task[ReadOntologyMetadataV2] =
-      for {
-        cacheData <- ontologyCache.getCacheData
+    val internalOntologyIri = ontologyIri.toInternalSchema
 
-        // Check that the user has permission to update the ontology.
-        projectIri <-
-          ontologyCacheHelpers.checkPermissionsForOntologyUpdate(
-            internalOntologyIri,
-            changeOntologyMetadataRequest.requestingUser,
-          )
+    val changeTask: Task[ReadOntologyMetadataV2] = for {
+      _                 <- OntologyHelpers.checkExternalOntologyIriForUpdate(ontologyIri.smartIri)
+      ontology          <- ontologyRepo.findById(ontologyIri).someOrFail(NotFoundException(s"Ontology not found: $ontologyIri"))
+      projectIri        <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(internalOntologyIri, requestingUser)
+      _                 <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
+      oldMetadata        = ontology.ontologyMetadata
+      ontologyHasComment = oldMetadata.comment.nonEmpty
+      currentTime       <- Clock.instant
+      updateSparql = sparql.v2.txt.changeOntologyMetadata(
+                       ontologyNamedGraphIri = internalOntologyIri,
+                       ontologyIri = internalOntologyIri,
+                       newLabel = label,
+                       hasOldComment = ontologyHasComment,
+                       deleteOldComment = ontologyHasComment && comment.nonEmpty,
+                       newComment = comment,
+                       lastModificationDate = lastModificationDate,
+                       currentTime = currentTime,
+                     )
+      _ <- save(Update(updateSparql))
+    } yield ReadOntologyMetadataV2(
+      Set(
+        OntologyMetadataV2(
+          ontologyIri = internalOntologyIri,
+          projectIri = Some(projectIri),
+          label = label.orElse(oldMetadata.label),
+          comment = comment.orElse(oldMetadata.comment),
+          lastModificationDate = Some(currentTime),
+        ).unescape,
+      ),
+    )
 
-        // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-               internalOntologyIri,
-               changeOntologyMetadataRequest.lastModificationDate,
-             )
-
-        // get the metadata of the ontology.
-        oldMetadata = cacheData.ontologies(internalOntologyIri).ontologyMetadata
-        // Was there a comment in the ontology metadata?
-        ontologyHasComment = oldMetadata.comment.nonEmpty
-
-        // Update the metadata.
-        currentTime <- Clock.instant
-        updateSparql = sparql.v2.txt.changeOntologyMetadata(
-                         ontologyNamedGraphIri = internalOntologyIri,
-                         ontologyIri = internalOntologyIri,
-                         newLabel = changeOntologyMetadataRequest.label,
-                         hasOldComment = ontologyHasComment,
-                         deleteOldComment = ontologyHasComment && changeOntologyMetadataRequest.comment.nonEmpty,
-                         newComment = changeOntologyMetadataRequest.comment,
-                         lastModificationDate = changeOntologyMetadataRequest.lastModificationDate,
-                         currentTime = currentTime,
-                       )
-        _ <- save(Update(updateSparql))
-
-      } yield ReadOntologyMetadataV2(
-        Set(
-          OntologyMetadataV2(
-            ontologyIri = internalOntologyIri,
-            projectIri = Some(projectIri),
-            label = changeOntologyMetadataRequest.label.orElse(oldMetadata.label),
-            comment = changeOntologyMetadataRequest.comment.orElse(oldMetadata.comment),
-            lastModificationDate = Some(currentTime),
-          ).unescape,
-        ),
-      )
-
-    for {
-      _                  <- OntologyHelpers.checkExternalOntologyIriForUpdate(changeOntologyMetadataRequest.ontologyIri)
-      internalOntologyIri = changeOntologyMetadataRequest.ontologyIri.toOntologySchema(InternalSchema)
-
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      changeOntologyMetadataRequest.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
-                      makeTaskFuture(internalOntologyIri = internalOntologyIri),
-                    )
-    } yield taskResult
+    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, changeTask)
   }
 
   def deleteOntologyComment(
-    deleteOntologyCommentRequestV2: DeleteOntologyCommentRequestV2,
+    ontologyIri: OntologyIri,
+    lastModificationDate: Instant,
+    apiRequestID: UUID,
+    requestingUser: User,
   ): Task[ReadOntologyMetadataV2] = {
-    def makeTaskFuture(internalOntologyIri: SmartIri): Task[ReadOntologyMetadataV2] =
-      for {
-        cacheData <- ontologyCache.getCacheData
+    val internalOntologyIri: SmartIri = ontologyIri.toInternalSchema
+    val deleteComment = for {
+      _          <- OntologyHelpers.checkExternalOntologyIriForUpdate(ontologyIri.smartIri)
+      projectIri <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(internalOntologyIri, requestingUser)
+      _          <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
+      ontology   <- ontologyRepo.findById(ontologyIri).someOrFail(NotFoundException(s"Ontology not found: $ontologyIri"))
 
-        // Check that the user has permission to update the ontology.
-        projectIri <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(
-                        internalOntologyIri,
-                        deleteOntologyCommentRequestV2.requestingUser,
-                      )
+      oldMetadata        = ontology.ontologyMetadata
+      ontologyHasComment = oldMetadata.comment.nonEmpty
 
-        // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-               internalOntologyIri,
-               deleteOntologyCommentRequestV2.lastModificationDate,
-             )
+      currentTime <- Clock.instant
+      updateSparql = sparql.v2.txt.changeOntologyMetadata(
+                       ontologyNamedGraphIri = internalOntologyIri,
+                       ontologyIri = internalOntologyIri,
+                       newLabel = None,
+                       hasOldComment = ontologyHasComment,
+                       deleteOldComment = true,
+                       newComment = None,
+                       lastModificationDate = lastModificationDate,
+                       currentTime = currentTime,
+                     )
+      _ <- save(Update(updateSparql))
+    } yield ReadOntologyMetadataV2(
+      Set(
+        OntologyMetadataV2(
+          ontologyIri = internalOntologyIri,
+          projectIri = Some(projectIri),
+          label = oldMetadata.label,
+          comment = None,
+          lastModificationDate = Some(currentTime),
+        ).unescape,
+      ),
+    )
 
-        // get the metadata of the ontology.
-        oldMetadata = cacheData.ontologies(internalOntologyIri).ontologyMetadata
-        // Was there a comment in the ontology metadata?
-        ontologyHasComment = oldMetadata.comment.nonEmpty
-
-        // Update the metadata.
-        currentTime <- Clock.instant
-        updateSparql = sparql.v2.txt.changeOntologyMetadata(
-                         ontologyNamedGraphIri = internalOntologyIri,
-                         ontologyIri = internalOntologyIri,
-                         newLabel = None,
-                         hasOldComment = ontologyHasComment,
-                         deleteOldComment = true,
-                         newComment = None,
-                         lastModificationDate = deleteOntologyCommentRequestV2.lastModificationDate,
-                         currentTime = currentTime,
-                       )
-        _ <- save(Update(updateSparql))
-
-      } yield ReadOntologyMetadataV2(
-        Set(
-          OntologyMetadataV2(
-            ontologyIri = internalOntologyIri,
-            projectIri = Some(projectIri),
-            label = oldMetadata.label,
-            comment = None,
-            lastModificationDate = Some(currentTime),
-          ).unescape,
-        ),
-      )
-
-    for {
-      _                  <- OntologyHelpers.checkExternalOntologyIriForUpdate(deleteOntologyCommentRequestV2.ontologyIri)
-      internalOntologyIri = deleteOntologyCommentRequestV2.ontologyIri.toOntologySchema(InternalSchema)
-
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      deleteOntologyCommentRequestV2.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
-                      makeTaskFuture(internalOntologyIri = internalOntologyIri),
-                    )
-    } yield taskResult
+    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteComment)
   }
 
   /**
@@ -1564,67 +1525,37 @@ final case class OntologyResponderV2(
    * @param canDeleteOntologyRequest the request message.
    * @return a [[CanDoResponseV2]] indicating whether an ontology can be deleted.
    */
-  private def canDeleteOntology(canDeleteOntologyRequest: CanDeleteOntologyRequestV2): Task[CanDoResponseV2] = {
-    val internalOntologyIri: SmartIri = canDeleteOntologyRequest.ontologyIri.toOntologySchema(InternalSchema)
+  private def canDeleteOntology(ontologyIri: OntologyIri, requestingUser: User): Task[CanDoResponseV2] = for {
+    ontology <- ontologyRepo
+                  .findById(ontologyIri)
+                  .someOrFail(BadRequestException(s"Ontology ${ontologyIri.toComplexSchema.toIri} does not exist"))
+    userCanUpdateOntology <- ontologyCacheHelpers.canUserUpdateOntology(ontologyIri.toInternalSchema, requestingUser)
+    subjectsUsingOntology <- ontologyTriplestoreHelpers.getSubjectsUsingOntology(ontology)
+  } yield CanDoResponseV2.of(userCanUpdateOntology && subjectsUsingOntology.isEmpty)
 
-    for {
-      cacheData <- ontologyCache.getCacheData
-
-      ontology <- ZIO.fromOption(cacheData.ontologies.get(internalOntologyIri)).orElseFail {
-                    val msg = s"Ontology ${canDeleteOntologyRequest.ontologyIri.getOntologyFromEntity} does not exist"
-                    BadRequestException(msg)
-                  }
-
-      userCanUpdateOntology <-
-        ontologyCacheHelpers.canUserUpdateOntology(internalOntologyIri, canDeleteOntologyRequest.requestingUser)
-      subjectsUsingOntology <- ontologyTriplestoreHelpers.getSubjectsUsingOntology(ontology)
-    } yield CanDoResponseV2.of(userCanUpdateOntology && subjectsUsingOntology.isEmpty)
-  }
-
-  private def deleteOntology(deleteOntologyRequest: DeleteOntologyRequestV2): Task[SuccessResponseV2] = {
-    def deleteTask(internalOntologyIri: SmartIri): Task[SuccessResponseV2] =
+  private def deleteOntology(
+    ontologyIri: OntologyIri,
+    lastModificationDate: Instant,
+    apiRequestID: UUID,
+    requestingUser: User,
+  ): Task[SuccessResponseV2] = {
+    val internalOntologyIri = ontologyIri.toInternalSchema
+    val deleteTask: Task[SuccessResponseV2] =
       for {
-        cacheData <- ontologyCache.getCacheData
-
-        // Check that the user has permission to update the ontology.
-        _ <-
-          ontologyCacheHelpers.checkPermissionsForOntologyUpdate(
-            internalOntologyIri,
-            deleteOntologyRequest.requestingUser,
-          )
-
-        // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-               internalOntologyIri,
-               deleteOntologyRequest.lastModificationDate,
-             )
-
-        // Check that none of the entities in the ontology are used in data or in other ontologies.
-
-        ontology               = cacheData.ontologies(internalOntologyIri)
+        _                     <- OntologyHelpers.checkExternalOntologyIriForUpdate(ontologyIri.smartIri)
+        ontology              <- ontologyRepo.findById(ontologyIri).someOrFail(NotFoundException(s"Ontology $ontologyIri not found"))
+        _                     <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(internalOntologyIri, requestingUser)
+        _                     <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
         subjectsUsingOntology <- ontologyTriplestoreHelpers.getSubjectsUsingOntology(ontology)
-
         _ <- ZIO.when(subjectsUsingOntology.nonEmpty) {
                val sortedSubjects = subjectsUsingOntology.map(s => "<" + s + ">").toVector.sorted.mkString(", ")
                val msg =
                  s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} cannot be deleted, because of subjects that refer to it: $sortedSubjects"
                ZIO.fail(BadRequestException(msg))
              }
-
         _ <- save(Update(sparql.v2.txt.deleteOntology(internalOntologyIri)))
       } yield SuccessResponseV2(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been deleted")
-
-    for {
-      _                  <- OntologyHelpers.checkExternalOntologyIriForUpdate(deleteOntologyRequest.ontologyIri)
-      internalOntologyIri = deleteOntologyRequest.ontologyIri.toOntologySchema(InternalSchema)
-
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      deleteOntologyRequest.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
-                      deleteTask(internalOntologyIri),
-                    )
-    } yield taskResult
+    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteTask)
   }
 
   /**
