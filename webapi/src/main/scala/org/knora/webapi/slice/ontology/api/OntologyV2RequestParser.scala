@@ -150,7 +150,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     } yield ClassInfoContentV2(classIri.smartIri, predicates, cardinalities, datatypeInfo, subClasses, ApiV2Complex)
 
   private def extractClassIri(r: Resource): ZIO[Scope, String, ResourceClassIri] =
-    ZIO.fromOption(r.uri).orElseFail("No class IRI found").flatMap(str => iriConverter.asResourceClassIri(str))
+    ZIO.fromOption(r.uri).orElseFail("No class IRI found").flatMap(iriConverter.asResourceClassIriApiV2Complex)
 
   private def extractPredicates(r: Resource): ZIO[Scope, String, Map[SmartIri, PredicateInfoV2]] =
     val propertyIter: Map[String, List[Statement]] = r
@@ -184,7 +184,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private def extractSubClasses(r: Resource): ZIO[Scope, String, Set[ResourceClassIri]] = {
     val subclasses: Set[String] = r.listProperties(RDFS.subClassOf).asScala.flatMap(_.objectAsUri.toOption).toSet
-    iriConverter.asResourceClassIris(subclasses, requireApiV2Complex = false)
+    ZIO.foreach(subclasses)(iriConverter.asResourceClassIri)
   }
 
   private def extractCardinalities(r: Resource): ZIO[Scope, String, Map[SmartIri, KnoraCardinalityInfo]] = {

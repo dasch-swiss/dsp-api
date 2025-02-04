@@ -48,9 +48,7 @@ object KnoraIris {
       if iri.isApiV2ComplexSchema then from(iri)
       else Left(s"Not an API v2 complex IRI ${iri.toString}")
 
-    def from(iri: SmartIri): Either[String, PropertyIri] =
-      if iri.isKnoraEntityIri then Right(PropertyIri(iri))
-      else Left(s"<$iri> is not a Knora property IRI")
+    def from(iri: SmartIri): Either[String, PropertyIri] = Right(PropertyIri(iri))
   }
 
   final case class ValueIri private (
