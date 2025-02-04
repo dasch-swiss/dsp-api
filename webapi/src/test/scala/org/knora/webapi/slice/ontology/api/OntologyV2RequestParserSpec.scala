@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Kn
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.jena.DatasetOps.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
@@ -39,7 +40,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
   private val parser = ZIO.serviceWithZIO[OntologyV2RequestParser]
   private val user   = TestDataFactory.User.rootUser
 
-  private val ontologyIri  = "http://0.0.0.0:3333/ontology/0001/anything/v2"
+  private val ontologyIri  = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
   private val lastModified = Instant.parse("2017-12-19T15:23:42.166Z")
 
   private val changeOntologyMetadataRequestV2Suite =
@@ -79,7 +80,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
             req  <- parser(_.changeOntologyMetadataRequestV2(t(jsonLd), uuid, user))
           } yield assertTrue(
             req == ChangeOntologyMetadataRequestV2(
-              ontologyIri.toSmartIri,
+              ontologyIri,
               Some("Some Label"),
               Some("Some Comment"),
               lastModified,
@@ -117,7 +118,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
             req  <- parser(_.changeOntologyMetadataRequestV2(t(jsonLd), uuid, user))
           } yield assertTrue(
             req == ChangeOntologyMetadataRequestV2(
-              ontologyIri.toSmartIri,
+              ontologyIri,
               None,
               None,
               instant,

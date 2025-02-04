@@ -65,7 +65,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       model <- ModelOps.fromJsonLd(jsonLd)
       meta  <- extractOntologyMetadata(model)
     } yield ChangeOntologyMetadataRequestV2(
-      meta.ontologyIri.smartIri,
+      meta.ontologyIri,
       meta.label,
       meta.comment,
       meta.lastModificationDate,

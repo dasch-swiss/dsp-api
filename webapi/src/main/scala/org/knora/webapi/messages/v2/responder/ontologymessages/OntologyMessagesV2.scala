@@ -4,7 +4,6 @@
  */
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
-
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.apache.pekko
@@ -51,6 +50,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Ow
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
@@ -87,7 +87,7 @@ case class CreateOntologyRequestV2(
  * @param requestingUser the user making the request.
  */
 case class CanDeleteOntologyRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
 
@@ -100,7 +100,7 @@ case class CanDeleteOntologyRequestV2(
  * @param requestingUser       the user making the request.
  */
 case class DeleteOntologyRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
@@ -935,7 +935,7 @@ object ChangeGuiOrderRequestV2 {
  * @param requestingUser       the user making the request.
  */
 case class ChangeOntologyMetadataRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   label: Option[String] = None,
   comment: Option[String] = None,
   lastModificationDate: Instant,
@@ -952,7 +952,7 @@ case class ChangeOntologyMetadataRequestV2(
  * @param requestingUser       the user making the request.
  */
 case class DeleteOntologyCommentRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
@@ -1096,7 +1096,7 @@ case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.e
  * @param allLanguages   true if information in all available languages should be returned.
  * @param requestingUser the user making the request.
  */
-case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: User)
+case class OntologyEntitiesGetRequestV2(ontologyIri: OntologyIri, allLanguages: Boolean, requestingUser: User)
     extends OntologiesResponderRequestV2
 
 /**
