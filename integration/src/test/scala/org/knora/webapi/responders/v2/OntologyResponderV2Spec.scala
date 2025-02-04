@@ -36,6 +36,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -220,7 +221,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val newLabel = "The modified foo ontology"
 
       appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
         label = Some(newLabel),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -243,7 +244,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val aComment = "a comment"
 
       appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
         comment = Some(aComment),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -267,7 +268,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val aComment = "a changed comment"
 
       appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
         label = Some(aLabel),
         comment = Some(aComment),
         lastModificationDate = fooLastModDate,
@@ -292,7 +293,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val newLabel = "a label changed again"
 
       appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
         label = Some(newLabel),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -314,7 +315,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "delete the comment from 'foo'" in {
       appActor ! DeleteOntologyCommentRequestV2(
-        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -375,7 +376,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val newComment = "a new comment"
 
       appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = barIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(barIri.get.toSmartIri.toComplexSchema),
         comment = Some(newComment),
         lastModificationDate = barLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -410,7 +411,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not delete an ontology that doesn't exist" in {
       appActor ! DeleteOntologyRequestV2(
-        ontologyIri = "http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri,
+        ontologyIri = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -423,7 +424,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not allow a user to delete an ontology if they are not a sysadmin or an admin in the ontology's project" in {
       appActor ! DeleteOntologyRequestV2(
-        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
         requestingUser = SharedTestDataADM.imagesUser02,
@@ -436,7 +437,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "delete the 'foo' ontology" in {
       appActor ! DeleteOntologyRequestV2(
-        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -474,7 +475,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         .get
 
       appActor ! DeleteOntologyRequestV2(
-        ontologyIri = AnythingOntologyIri,
+        ontologyIri = OntologyIri.unsafeFrom(AnythingOntologyIri),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
         requestingUser = anythingAdminUser,
@@ -2719,7 +2720,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val newLabel = "The modified anything ontology"
 
       appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = AnythingOntologyIri,
+        ontologyIri = OntologyIri.unsafeFrom(AnythingOntologyIri),
         label = Some(newLabel),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,

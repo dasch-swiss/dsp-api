@@ -275,8 +275,7 @@ object StringFormatter {
     StringFormatter.getGeneralInstance
   }
 
-  def isKnoraOntologyIri(iri: SmartIri): Boolean =
-    iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName.value)
+  def isKnoraOntologyIri(iri: SmartIri): Boolean = iri.isKnoraApiV2DefinitionIri && iri.getOntologyName.isInternal
 
   def makeValueIri(resourceIri: IRI, uuid: UUID): IRI =
     s"$resourceIri/values/${UuidUtil.base64Encode(uuid)}"
@@ -1084,7 +1083,7 @@ class StringFormatter private (
 
     private def externalToInternalEntityIri: SmartIri = {
       // Construct the string representation of this IRI in the target schema.
-      val ontologyName = externalToInternalOntologyName(getOntologyName)
+      val ontologyName = getOntologyName.asInternal
       val entityName   = getEntityName
       val ontologyIri =
         OntologyIri.makeNew(ontologyName, iriInfo.sharedOntology, iriInfo.projectCode.map(Shortcode.unsafeFrom), self)
@@ -1119,7 +1118,7 @@ class StringFormatter private (
         iriStr = convertedEntityIriStr,
         creationFun = { () =>
           val convertedSmartIriInfo = iriInfo.copy(
-            ontologyName = Some(internalToExternalOntologyName(getOntologyName).value),
+            ontologyName = Some(getOntologyName.asExternal.value),
             ontologySchema = Some(targetSchema),
           )
 
@@ -1136,9 +1135,7 @@ class StringFormatter private (
       val versionSegment = getVersionSegment(targetSchema)
 
       val convertedIriStr: IRI = if (isKnoraBuiltInDefinitionIri) {
-        OntologyConstants.KnoraApi.ApiOntologyStart + internalToExternalOntologyName(
-          ontologyName,
-        ).value + versionSegment
+        OntologyConstants.KnoraApi.ApiOntologyStart + ontologyName.asExternal.value + versionSegment
       } else if (isKnoraSharedDefinitionIri) {
         val externalOntologyIri = new StringBuilder(OntologyConstants.KnoraApi.ApiOntologyStart).append("shared/")
 
@@ -1172,7 +1169,7 @@ class StringFormatter private (
         iriStr = convertedIriStr,
         creationFun = { () =>
           val convertedSmartIriInfo = iriInfo.copy(
-            ontologyName = Some(internalToExternalOntologyName(getOntologyName).value),
+            ontologyName = Some(getOntologyName.asExternal.value),
             ontologySchema = Some(targetSchema),
           )
 
@@ -1187,7 +1184,7 @@ class StringFormatter private (
     private lazy val asInternalOntologyIri: SmartIri = {
       val convertedIriStr = OntologyIri
         .makeNew(
-          externalToInternalOntologyName(getOntologyName),
+          getOntologyName.asInternal,
           iriInfo.sharedOntology,
           iriInfo.projectCode.map(Shortcode.unsafeFrom),
           self,
@@ -1198,7 +1195,7 @@ class StringFormatter private (
         iriStr = convertedIriStr,
         creationFun = { () =>
           val convertedSmartIriInfo = iriInfo.copy(
-            ontologyName = Some(externalToInternalOntologyName(getOntologyName).value),
+            ontologyName = Some(getOntologyName.asInternal.value),
             ontologySchema = Some(InternalSchema),
           )
 
@@ -1426,34 +1423,6 @@ class StringFormatter private (
    */
   private def isBuiltInOntologyName(ontologyName: String): Boolean =
     OntologyConstants.BuiltInOntologyLabels.contains(ontologyName)
-
-  /**
-   * Converts an internal ontology name to an external ontology name. This only affects `knora-base`, whose
-   * external equivalent is `knora-api.`
-   *
-   * @param ontologyName an internal ontology name.
-   * @return the corresponding external ontology name.
-   */
-  private def internalToExternalOntologyName(ontologyName: OntologyName): OntologyName =
-    if (ontologyName.value == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) {
-      OntologyName.unsafeFrom(OntologyConstants.KnoraApi.KnoraApiOntologyLabel)
-    } else {
-      ontologyName
-    }
-
-  /**
-   * Converts an external ontology name to an internal ontology name. This only affects `knora-api`, whose
-   * internal equivalent is `knora-base.`
-   *
-   * @param ontologyName an external ontology name.
-   * @return the corresponding internal ontology name.
-   */
-  private def externalToInternalOntologyName(ontologyName: OntologyName): OntologyName =
-    if (ontologyName.value == OntologyConstants.KnoraApi.KnoraApiOntologyLabel) {
-      OntologyName.unsafeFrom(OntologyConstants.KnoraBase.KnoraBaseOntologyLabel)
-    } else {
-      ontologyName
-    }
 
   /**
    * Determines whether a URL path refers to a built-in API v2 ontology (simple or complex).
