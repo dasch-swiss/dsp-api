@@ -1565,7 +1565,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |<text>
            |  <p>
            |    Some text with a 
-           |    footnote<footnote content="&lt;p&gt;Text with &lt;a href=&quot;...&quot;&gt;markup&lt;/a&gt;.&lt;/p&gt;" /> 
+           |    footnote<footnote content="Text with &lt;a href=&quot;...&quot;&gt;markup&lt;/a&gt;." /> 
            |    in it.
            |  </p>
            |</text>
