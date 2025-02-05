@@ -61,7 +61,9 @@ object KnoraIris {
       this.shortcode == other.shortcode && this.resourceId == other.resourceId
   }
 
-  final case class ResourceClassIri private (smartIri: SmartIri) extends KnoraIri
+  final case class ResourceClassIri private (smartIri: SmartIri) extends KnoraIri {
+    def ontologyIri: OntologyIri = OntologyIri.unsafeFrom(smartIri.getOntologyFromEntity)
+  }
 
   object ResourceClassIri {
     def unsafeFrom(iri: SmartIri): ResourceClassIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
@@ -108,10 +110,14 @@ object KnoraIris {
   }
 
   final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri { self =>
-    def makeEntityIri(name: EntityName): SmartIri = smartIri.makeEntityIri(name.toString)
-    def ontologyName: OntologyName                = smartIri.getOntologyName
-    def isInternal: Boolean                       = ontologyName.isInternal
-    def isExternal: Boolean                       = !isInternal
+    def makeEntityIri(name: String): SmartIri = smartIri.makeEntityIri(name)
+    def makeClass(name: String): ResourceClassIri =
+      ResourceClassIri.unsafeFrom(self.makeEntityIri(name))
+    def makeProperty(name: String): PropertyIri =
+      PropertyIri.unsafeFrom(self.makeEntityIri(name))
+    def ontologyName: OntologyName = smartIri.getOntologyName
+    def isInternal: Boolean        = ontologyName.isInternal
+    def isExternal: Boolean        = !isInternal
   }
   object OntologyIri {
     def makeNew(
