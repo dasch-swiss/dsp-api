@@ -4,11 +4,7 @@
  */
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
-import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.builder.HashCodeBuilder
-import org.apache.pekko
-import org.apache.pekko.actor.ActorRef
-import org.apache.pekko.util.Timeout
 import org.eclipse.rdf4j.model.IRI as Rdf4jIRI
 import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.model.vocabulary.RDF
@@ -19,8 +15,6 @@ import zio.prelude.Validation
 
 import java.time.Instant
 import java.util.UUID
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
@@ -672,36 +666,6 @@ case class ChangePropertyGuiElementRequest(
   apiRequestID: UUID,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
-
-/**
- * Constructs instances of [[ChangePropertyGuiElementRequest]] based on JSON-LD input.
- */
-object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[ChangePropertyGuiElementRequest] {
-
-  /**
-   * Converts a JSON-LD request to a [[ChangePropertyGuiElementRequest]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
-   * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
-   */
-  @deprecated
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-    appActor: ActorRef,
-    log: Logger,
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyGuiElementRequest] =
-    Future {
-      throw BadRequestException(
-        "Deprecated method fromJsonLD() for ChangePropertyGuiElementRequest. Please report this as a bug.",
-      )
-    }
-}
 
 /**
  * Requests that a property's labels or comments are changed. A successful response will be a [[ReadOntologyV2]].
