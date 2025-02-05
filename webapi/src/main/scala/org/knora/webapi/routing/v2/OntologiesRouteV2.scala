@@ -295,11 +295,9 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           val messageTask = for {
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             apiRequestId   <- RouteUtilZ.randomUuid()
-            msg <- ZIO.attempt(
-                     CanDeleteCardinalitiesFromClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser),
-                   )
+            msg <- requestParser(_.canDeleteCardinalitiesFromClassRequestV2(jsonRequest, apiRequestId, requestingUser))
+                     .mapError(BadRequestException.apply)
           } yield msg
           RouteUtilV2.runRdfRouteZ(messageTask, requestContext)
         }
