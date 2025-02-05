@@ -19,6 +19,7 @@ import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -173,7 +174,7 @@ object SharedTestDataADM {
       OntologyConstants.Standoff.StandoffOntologyIri,
     ),
     status = true,
-    selfjoin = false,
+    selfjoin = SelfJoin.CannotJoin,
   )
 
   /* represents the full ProjectADM of the default shared ontologies project */
@@ -187,7 +188,7 @@ object SharedTestDataADM {
     logo = None,
     ontologies = Seq.empty[IRI],
     status = true,
-    selfjoin = false,
+    selfjoin = SelfJoin.CannotJoin,
   )
 
   /**
@@ -299,7 +300,7 @@ object SharedTestDataADM {
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
     status = true,
-    selfjoin = false,
+    selfjoin = SelfJoin.CannotJoin,
   )
 
   /* represents the full ProjectADM of the images project in the external format */
@@ -313,7 +314,7 @@ object SharedTestDataADM {
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI_LocalHost),
     status = true,
-    selfjoin = false,
+    selfjoin = SelfJoin.CannotJoin,
   )
 
   /* represents the full GroupADM of the images ProjectAdmin group */
@@ -476,7 +477,7 @@ object SharedTestDataADM {
     logo = Some(Logo.unsafeFrom("incunabula_logo.png")),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
     status = true,
-    selfjoin = false,
+    selfjoin = SelfJoin.CannotJoin,
   )
 
   /* represents the ProjectADM of the incunabula project in the external format*/
@@ -511,7 +512,7 @@ object SharedTestDataADM {
     logo = Some(Logo.unsafeFrom("incunabula_logo.png")),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI_LocalHost),
     status = true,
-    selfjoin = false,
+    selfjoin = SelfJoin.CannotJoin,
   )
 
   /**
@@ -623,7 +624,7 @@ object SharedTestDataADM {
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI, SharedOntologyTestDataADM.SomethingOntologyIri),
     status = true,
-    selfjoin = false,
+    selfjoin = SelfJoin.CannotJoin,
   )
 
   def anythingProjectExternal: Project = Project(
@@ -639,7 +640,7 @@ object SharedTestDataADM {
       SharedOntologyTestDataADM.SomethingOntologyIriLocalhost,
     ),
     status = true,
-    selfjoin = false,
+    selfjoin = SelfJoin.CannotJoin,
   )
 
   /* represents the full GroupADM of the Thing searcher group */
@@ -676,7 +677,7 @@ object SharedTestDataADM {
       "http://www.knora.org/ontology/0801/newton",
     ),
     status = true,
-    selfjoin = false,
+    selfjoin = SelfJoin.CannotJoin,
   )
 
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
@@ -725,6 +726,6 @@ object SharedTestDataADM {
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0804/dokubib"),
     status = false,
-    selfjoin = false,
+    selfjoin = SelfJoin.CannotJoin,
   )
 }

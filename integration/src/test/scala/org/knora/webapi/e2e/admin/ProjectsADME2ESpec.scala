@@ -29,6 +29,7 @@ import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
@@ -236,7 +237,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         result.keywords should be(Seq("keywords"))
         result.logo.map(_.value) should be(Some("/fu/bar/baz.jpg"))
         result.status should be(true)
-        result.selfjoin should be(false)
+        result.selfjoin should be(SelfJoin.CannotJoin)
 
         newProjectIri.set(result.id)
       }
@@ -363,7 +364,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         result.keywords.sorted should be(Seq("updated", "keywords").sorted)
         result.logo.map(_.value) should be(Some("/fu/bar/baz-updated.jpg"))
         result.status should be(true)
-        result.selfjoin should be(true)
+        result.selfjoin should be(SelfJoin.CanJoin)
       }
 
       "UPDATE a project with multi-language description" in {
