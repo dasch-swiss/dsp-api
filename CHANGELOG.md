@@ -1,5 +1,23 @@
 # Changelog
 
+## [31.4.1](https://github.com/dasch-swiss/dsp-api/compare/v31.4.0...v31.4.1) (2025-02-05)
+
+
+### Maintenances
+
+* Replace method with boolean flag with multiple methods ([#3485](https://github.com/dasch-swiss/dsp-api/issues/3485)) ([89600f4](https://github.com/dasch-swiss/dsp-api/commit/89600f4f3f531d4f26342a4b2edcd0432d0e9e40))
+* Use OntologyIri in ontology requests ([#3481](https://github.com/dasch-swiss/dsp-api/issues/3481)) ([cebb1ae](https://github.com/dasch-swiss/dsp-api/commit/cebb1aecf485cd25a38f690cff89f98cbd630b7f))
+
+
+### Documentation
+
+* Update documentation on footnotes in richtext (DEV-4567) ([#3495](https://github.com/dasch-swiss/dsp-api/issues/3495)) ([3ed58b6](https://github.com/dasch-swiss/dsp-api/commit/3ed58b6c2709ee20fe638b9cf69b9832f855a53c))
+
+
+### Tests
+
+* Allow external IRI for subClassOf when creating a new Class (DEV-4554) ([#3487](https://github.com/dasch-swiss/dsp-api/issues/3487)) ([f254573](https://github.com/dasch-swiss/dsp-api/commit/f254573eef8a77f6a4c97bafecc17172ce64cb9a))
+
 ## [31.4.0](https://github.com/dasch-swiss/dsp-api/compare/v31.3.0...v31.4.0) (2025-02-03)
 
 
