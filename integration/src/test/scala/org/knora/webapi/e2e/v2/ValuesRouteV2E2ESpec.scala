@@ -1562,7 +1562,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI = AThing.iri
       val textValueAsXml: String =
         """|<?xml version="1.0" encoding="UTF-8"?>
-           |<text>This text has a footnote<footnote content="this is footnote content"/> containing text.</text>
+           |<text>
+           |  <p>
+           |    Some text with a 
+           |    footnote<footnote content="Text with &lt;a href=&quot;...&quot;&gt;markup&lt;/a&gt;." /> 
+           |    in it.
+           |  </p>
+           |</text>
            |""".stripMargin
 
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
