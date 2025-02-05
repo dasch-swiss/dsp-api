@@ -14,7 +14,10 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import java.time.Instant
+import java.time.LocalDate
 import scala.collection.mutable
+import scala.reflect.ClassTag
+import scala.util.Try
 
 import dsp.errors.*
 import org.knora.webapi.*
@@ -101,6 +104,14 @@ object SparqlExtendedConstructResponse {
                         ),
                     )
 
+                  case OntologyConstants.Xsd.Date =>
+                    DateLiteralV2(
+                      Try(LocalDate.parse(datatypeLiteral.value))
+                        .getOrElse(
+                          throw InconsistentRepositoryDataException(s"Invalid xsd:date: ${datatypeLiteral.value}"),
+                        ),
+                    )
+
                   case OntologyConstants.Xsd.Boolean =>
                     BooleanLiteralV2(
                       datatypeLiteral.booleanValue(
@@ -139,7 +150,7 @@ object SparqlExtendedConstructResponse {
 
       SparqlExtendedConstructResponse(statementMap.toMap)
     }.foldZIO(
-      _ => ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
+      err => ZIO.fail(DataConversionException(s"Couldn't parse Turtle document ${err.getMessage}")),
       ZIO.succeed(_),
     )
 }
@@ -190,84 +201,11 @@ case class BlankNodeSubjectV2(value: String) extends SubjectV2 {
  * Represents a literal read from the triplestore. There are different subclasses
  * representing literals with the extended type information stored in the triplestore.
  */
-sealed trait LiteralV2 {
-
-  /**
-   * Returns this [[LiteralV2]] as an [[IriLiteralV2]].
-   *
-   * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-   *                 an [[IriLiteralV2]].
-   * @return an [[IriLiteralV2]].
-   */
-  def asIriLiteral(errorFun: => Nothing): IriLiteralV2 =
+sealed trait LiteralV2 { self =>
+  def as[A <: LiteralV2]()(implicit tag: ClassTag[A]): Option[A] =
     this match {
-      case iriLiteral: IriLiteralV2 => iriLiteral
-      case _                        => errorFun
-    }
-
-  /**
-   * Returns this [[LiteralV2]] as a [[StringLiteralV2]].
-   *
-   * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-   *                 a [[StringLiteralV2]].
-   * @return a [[StringLiteralV2]].
-   */
-  def asStringLiteral(errorFun: => Nothing): StringLiteralV2 =
-    this match {
-      case stringLiteral: StringLiteralV2 => stringLiteral
-      case _                              => errorFun
-    }
-
-  /**
-   * Returns this [[LiteralV2]] as a [[BooleanLiteralV2]].
-   *
-   * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-   *                 a [[BooleanLiteralV2]].
-   * @return a [[BooleanLiteralV2]].
-   */
-  def asBooleanLiteral(errorFun: => Nothing): BooleanLiteralV2 =
-    this match {
-      case booleanLiteral: BooleanLiteralV2 => booleanLiteral
-      case _                                => errorFun
-    }
-
-  /**
-   * Returns this [[LiteralV2]] as an [[IntLiteralV2]].
-   *
-   * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-   *                 an [[IntLiteralV2]].
-   * @return an [[IntLiteralV2]].
-   */
-  def asIntLiteral(errorFun: => Nothing): IntLiteralV2 =
-    this match {
-      case intLiteral: IntLiteralV2 => intLiteral
-      case _                        => errorFun
-    }
-
-  /**
-   * Returns this [[LiteralV2]] as a [[DecimalLiteralV2]].
-   *
-   * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-   *                 a [[DecimalLiteralV2]].
-   * @return a [[DecimalLiteralV2]].
-   */
-  def asDecimalLiteral(errorFun: => Nothing): DecimalLiteralV2 =
-    this match {
-      case decimalLiteral: DecimalLiteralV2 => decimalLiteral
-      case _                                => errorFun
-    }
-
-  /**
-   * Returns this [[LiteralV2]] as a [[DateTimeLiteralV2]].
-   *
-   * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
-   *                 a [[DateTimeLiteralV2]].
-   * @return a [[DateTimeLiteralV2]].
-   */
-  def asDateTimeLiteral(errorFun: => Nothing): DateTimeLiteralV2 =
-    this match {
-      case dateTimeLiteral: DateTimeLiteralV2 => dateTimeLiteral
-      case _                                  => errorFun
+      case a: A => Some(a)
+      case _    => None
     }
 }
 
@@ -447,6 +385,15 @@ case class DecimalLiteralV2(value: BigDecimal) extends LiteralV2 {
  * @param value the timestamp value.
  */
 case class DateTimeLiteralV2(value: Instant) extends LiteralV2 {
+  override def toString: String = value.toString
+}
+
+/**
+ * Represents a local date.
+ *
+ * @param value the date.
+ */
+case class DateLiteralV2(value: LocalDate) extends LiteralV2 {
   override def toString: String = value.toString
 }
 

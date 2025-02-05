@@ -152,12 +152,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withIsResourceProp()
     .withIsLinkValueProp()
 
-  private val HasCopyrightAttribution = makeOwlDatatypeProperty(KA.HasCopyrightAttribution, XSD.STRING)
-    .withRdfLabelEn("has copyright attribution")
-    .withRdfCommentEn("The copyright statement that gives credit to the original author.")
+  private val HasCopyrightHolder = makeOwlDatatypeProperty(KA.HasCopyrightHolder, XSD.STRING)
+    .withRdfLabelEn("has copyright holder")
+    .withRdfCommentEn("The copyright holder.")
 
-  private val HasLicenseText = makeOwlDatatypeProperty(KA.HasLicenseText, XSD.STRING)
-    .withRdfLabelEn("has license text")
+  private val HasAuthorship = makeOwlDatatypeProperty(KA.HasAuthorship, XSD.STRING)
+    .withRdfLabelEn("has authorship")
+    .withRdfCommentEn("Credit, Moral Rights, Author(s)")
+
+  private val HasLicenseIdentifier = makeOwlDatatypeProperty(KA.HasLicenseIdentifier, XSD.STRING)
+    .withRdfLabelEn("has license identifier")
     .withRdfCommentEn(
       "Specifies the terms under which a work can be used. This statement may be a reference to a well-known license, such as Creative Commons (e.g. CC BY-SA) or a custom license.",
     )
@@ -165,6 +169,10 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
   private val HasLicenseUri = makeOwlDatatypeProperty(KA.HasLicenseUri, XSD.STRING)
     .withRdfLabelEn("has license URI")
     .withRdfCommentEn("Canonical link to license.")
+
+  private val HasLicenseDate = makeOwlDatatypeProperty(KA.HasLicenseDate, XSD.DATE)
+    .withRdfLabelEn("has license date")
+    .withRdfCommentEn("Date of creation on platform.")
 
   private val ValueAsString = makeOwlDatatypeProperty(KA.ValueAsString, XSD.STRING)
     .withSubjectType(KA.Value)
@@ -659,10 +667,12 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     FileValueHasFilename,
     GeometryValueAsGeometry,
     GeonameValueAsGeonameCode,
-    HasCopyrightAttribution,
+    HasCopyrightHolder,
+    HasAuthorship,
     HasIncomingLinkValue,
-    HasLicenseText,
+    HasLicenseIdentifier,
     HasLicenseUri,
+    HasLicenseDate,
     IntValueAsInt,
     IntervalValueHasEnd,
     IntervalValueHasStart,
