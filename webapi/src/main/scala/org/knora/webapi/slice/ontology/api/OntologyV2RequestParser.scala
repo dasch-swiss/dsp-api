@@ -33,6 +33,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassReques
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris
@@ -279,6 +280,24 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
         classInfo <- extractClassInfo(ds, meta)
         _         <- ZIO.fail("No cardinalities specified").when(classInfo.directCardinalities.isEmpty)
       } yield AddCardinalitiesToClassRequestV2(
+        classInfo,
+        meta.lastModificationDate,
+        apiRequestId,
+        requestingUser,
+      )
+    }
+
+  def replaceClassCardinalitiesRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, ReplaceClassCardinalitiesRequestV2] =
+    ZIO.scoped {
+      for {
+        ds        <- DatasetOps.fromJsonLd(jsonLd)
+        meta      <- extractOntologyMetadata(ds.defaultModel)
+        classInfo <- extractClassInfo(ds, meta)
+      } yield ReplaceClassCardinalitiesRequestV2(
         classInfo,
         meta.lastModificationDate,
         apiRequestId,

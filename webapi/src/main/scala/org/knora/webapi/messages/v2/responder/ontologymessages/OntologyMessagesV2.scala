@@ -421,38 +421,6 @@ case class ReplaceClassCardinalitiesRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[ReplaceClassCardinalitiesRequestV2]] based on JSON-LD input.
- */
-object ReplaceClassCardinalitiesRequestV2 {
-
-  /**
-   * Converts JSON-LD input into a [[ReplaceClassCardinalitiesRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[ReplaceClassCardinalitiesRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): ReplaceClassCardinalitiesRequestV2 = {
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    ReplaceClassCardinalitiesRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
-
-/**
  * FIXME(DSP-1856): Can only remove one single cardinality at a time.
  * Requests a check if the user can remove class's cardinalities. A successful response will be a [[CanDoResponseV2]].
  *

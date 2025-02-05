@@ -280,9 +280,9 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { reqBody => requestContext =>
           val messageTask = for {
             user         <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            document     <- RouteUtilV2.parseJsonLd(reqBody)
             apiRequestId <- RouteUtilZ.randomUuid()
-            msg          <- ZIO.attempt(ReplaceClassCardinalitiesRequestV2.fromJsonLd(document, apiRequestId, user))
+            msg <- requestParser(_.replaceClassCardinalitiesRequestV2(reqBody, apiRequestId, user))
+                     .mapError(BadRequestException.apply)
           } yield msg
           RouteUtilV2.runRdfRouteZ(messageTask, requestContext)
         }
