@@ -275,43 +275,28 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     apiRequestId: UUID,
     requestingUser: User,
   ): IO[String, AddCardinalitiesToClassRequestV2] =
-    ZIO.scoped {
-      for {
-        ds        <- DatasetOps.fromJsonLd(jsonLd)
-        meta      <- extractOntologyMetadata(ds.defaultModel)
-        classInfo <- extractClassInfo(ds, meta)
-        _         <- ZIO.fail("No cardinalities specified").when(classInfo.directCardinalities.isEmpty)
-      } yield AddCardinalitiesToClassRequestV2(
-        classInfo,
-        meta.lastModificationDate,
-        apiRequestId,
-        requestingUser,
-      )
-    }
+    construct(
+      jsonLd,
+      apiRequestId,
+      requestingUser,
+      AddCardinalitiesToClassRequestV2.apply,
+      (_, classInfo) => ZIO.fail("No cardinalities specified").when(classInfo.directCardinalities.isEmpty).unit,
+    )
 
   def replaceClassCardinalitiesRequestV2(
     jsonLd: String,
     apiRequestId: UUID,
     requestingUser: User,
   ): IO[String, ReplaceClassCardinalitiesRequestV2] =
-    ZIO.scoped {
-      for {
-        ds        <- DatasetOps.fromJsonLd(jsonLd)
-        meta      <- extractOntologyMetadata(ds.defaultModel)
-        classInfo <- extractClassInfo(ds, meta)
-      } yield ReplaceClassCardinalitiesRequestV2(
-        classInfo,
-        meta.lastModificationDate,
-        apiRequestId,
-        requestingUser,
-      )
-    }
+    construct(jsonLd, apiRequestId, requestingUser, ReplaceClassCardinalitiesRequestV2.apply)
 
   def canDeleteCardinalitiesFromClassRequestV2(
     jsonLd: String,
     apiRequestId: UUID,
     requestingUser: User,
   ): IO[String, CanDeleteCardinalitiesFromClassRequestV2] =
+    construct(jsonLd, apiRequestId, requestingUser, CanDeleteCardinalitiesFromClassRequestV2.apply)
+
     ZIO.scoped {
       for {
         ds        <- DatasetOps.fromJsonLd(jsonLd)
@@ -330,17 +315,22 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     apiRequestId: UUID,
     requestingUser: User,
   ): IO[String, DeleteCardinalitiesFromClassRequestV2] =
+    construct(jsonLd, apiRequestId, requestingUser, DeleteCardinalitiesFromClassRequestV2.apply)
+
+  private def construct[A](
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+    f: (ClassInfoContentV2, Instant, UUID, User) => A,
+    checkConstraints: (OntologyMetadata, ClassInfoContentV2) => IO[String, Unit] = (_, _) => ZIO.unit,
+  ): IO[String, A] =
     ZIO.scoped {
       for {
         ds        <- DatasetOps.fromJsonLd(jsonLd)
         meta      <- extractOntologyMetadata(ds.defaultModel)
         classInfo <- extractClassInfo(ds, meta)
-      } yield DeleteCardinalitiesFromClassRequestV2(
-        classInfo,
-        meta.lastModificationDate,
-        apiRequestId,
-        requestingUser,
-      )
+        _         <- checkConstraints(meta, classInfo)
+      } yield f(classInfo, meta.lastModificationDate, apiRequestId, requestingUser)
     }
 }
 
