@@ -241,7 +241,7 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
 
   trait BooleanValueFormat[T <: BooleanValue] extends JsonFormat[T] { self =>
     def from: Boolean => T
-    override def write(v: T): JsValue = JsString(v.value.toString)
+    override def write(v: T): JsValue = JsBoolean(v.value)
     override def read(json: JsValue): T = json match
       case JsBoolean(bool) => self.from(bool)
       case _               => throw DeserializationException("Must be a json Boolean")
