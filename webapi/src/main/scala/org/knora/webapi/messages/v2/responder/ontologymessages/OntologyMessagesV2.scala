@@ -453,38 +453,6 @@ final case class DeleteCardinalitiesFromClassRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[DeleteCardinalitiesFromClassRequestV2]] based on JSON-LD input.
- */
-object DeleteCardinalitiesFromClassRequestV2 {
-
-  /**
-   * Converts JSON-LD input into a [[DeleteCardinalitiesFromClassRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): DeleteCardinalitiesFromClassRequestV2 = {
-    val inputOntology        = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntology)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    DeleteCardinalitiesFromClassRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
-
-/**
  * Requests the deletion of a class. A successful response will be a [[ReadOntologyMetadataV2]].
  *
  * @param classIri             the IRI of the class to be deleted.

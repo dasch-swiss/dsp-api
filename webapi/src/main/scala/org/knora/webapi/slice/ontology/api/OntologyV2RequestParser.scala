@@ -32,6 +32,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMet
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReplaceClassCardinalitiesRequestV2
@@ -317,6 +318,24 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
         meta      <- extractOntologyMetadata(ds.defaultModel)
         classInfo <- extractClassInfo(ds, meta)
       } yield CanDeleteCardinalitiesFromClassRequestV2(
+        classInfo,
+        meta.lastModificationDate,
+        apiRequestId,
+        requestingUser,
+      )
+    }
+
+  def deleteCardinalitiesFromClassRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, DeleteCardinalitiesFromClassRequestV2] =
+    ZIO.scoped {
+      for {
+        ds        <- DatasetOps.fromJsonLd(jsonLd)
+        meta      <- extractOntologyMetadata(ds.defaultModel)
+        classInfo <- extractClassInfo(ds, meta)
+      } yield DeleteCardinalitiesFromClassRequestV2(
         classInfo,
         meta.lastModificationDate,
         apiRequestId,
