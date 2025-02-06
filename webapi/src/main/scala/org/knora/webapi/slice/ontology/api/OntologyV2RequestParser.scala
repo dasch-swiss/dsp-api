@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.AddCardinalitiesT
 import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2.LabelOrComment
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeGuiOrderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
@@ -303,6 +304,19 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     requestingUser: User,
   ): IO[String, DeleteCardinalitiesFromClassRequestV2] =
     constructClassRelatedRequest(jsonLd, apiRequestId, requestingUser, DeleteCardinalitiesFromClassRequestV2.apply)
+
+  def changeGuiOrderRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, ChangeGuiOrderRequestV2] =
+    constructClassRelatedRequest(
+      jsonLd,
+      apiRequestId,
+      requestingUser,
+      ChangeGuiOrderRequestV2.apply,
+      (_, classInfo) => ZIO.fail("No cardinalities specified").when(classInfo.directCardinalities.isEmpty).unit,
+    )
 
   private def constructClassRelatedRequest[A](
     jsonLd: String,

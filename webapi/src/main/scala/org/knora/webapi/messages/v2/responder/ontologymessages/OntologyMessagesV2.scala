@@ -723,35 +723,6 @@ case class ChangeGuiOrderRequestV2(
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
 
-object ChangeGuiOrderRequestV2 {
-
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): ChangeGuiOrderRequestV2 = {
-    // Get the class definition and the ontology's last modification date from the JSON-LD.
-
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    // The request must provide cardinalities.
-
-    if (classInfoContent.directCardinalities.isEmpty) {
-      throw BadRequestException("No cardinalities specified")
-    }
-
-    ChangeGuiOrderRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
-
 /**
  * Requests a change in the metadata of an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
  *

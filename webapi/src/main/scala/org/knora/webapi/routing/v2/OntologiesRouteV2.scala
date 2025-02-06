@@ -324,13 +324,12 @@ final case class OntologiesRouteV2()(
   private def changeGuiOrder(): Route =
     path(ontologiesBasePath / "guiorder") {
       put {
-        // Change a class's cardinalities.
         entity(as[String]) { jsonRequest => requestContext =>
           val requestMessageTask = for {
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             apiRequestId   <- RouteUtilZ.randomUuid()
-            msg            <- ZIO.attempt(ChangeGuiOrderRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
+            msg <- requestParser(_.changeGuiOrderRequestV2(jsonRequest, apiRequestId, requestingUser))
+                     .mapError(BadRequestException.apply)
           } yield msg
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }
