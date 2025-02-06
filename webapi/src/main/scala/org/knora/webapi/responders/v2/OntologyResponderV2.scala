@@ -1986,13 +1986,16 @@ final case class OntologyResponderV2(
   /**
    * Changes the values of `rdfs:label` or `rdfs:comment` in a class definition.
    *
-   * @param changeClassLabelsOrCommentsRequest the request to change the class's labels or comments.
+   * @param req the request to change the class's labels or comments.
    * @return a [[ReadOntologyV2]] containing the modified class definition.
    */
-  private def changeClassLabelsOrComments(
-    changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2,
-  ): Task[ReadOntologyV2] = {
-    def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] =
+  private def changeClassLabelsOrComments(req: ChangeClassLabelsOrCommentsRequestV2): Task[ReadOntologyV2] = {
+    val internalClassIri    = req.classIri.toInternalSchema
+    val internalOntologyIri = req.classIri.ontologyIri.toInternalSchema
+    val externalClassIri    = req.classIri.toComplexSchema
+    val externalOntologyIri = req.classIri.ontologyIri.toComplexSchema
+
+    val changeTask: Task[ReadOntologyV2] =
       for {
         cacheData <- ontologyCache.getCacheData
 
@@ -2000,12 +2003,12 @@ final case class OntologyResponderV2(
         currentReadClassInfo <-
           ZIO
             .fromOption(ontology.classes.get(internalClassIri))
-            .orElseFail(NotFoundException(s"Class ${changeClassLabelsOrCommentsRequest.classIri} not found"))
+            .orElseFail(NotFoundException(s"Class ${req.classIri} not found"))
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
         _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
                internalOntologyIri,
-               changeClassLabelsOrCommentsRequest.lastModificationDate,
+               req.lastModificationDate,
              )
 
         // Do the update.
@@ -2016,9 +2019,9 @@ final case class OntologyResponderV2(
                          ontologyNamedGraphIri = internalOntologyIri,
                          ontologyIri = internalOntologyIri,
                          classIri = internalClassIri,
-                         predicateToUpdate = changeClassLabelsOrCommentsRequest.predicateToUpdate,
-                         newObjects = changeClassLabelsOrCommentsRequest.newObjects,
-                         lastModificationDate = changeClassLabelsOrCommentsRequest.lastModificationDate,
+                         predicateToUpdate = req.predicateToUpdate,
+                         newObjects = req.newObjects,
+                         lastModificationDate = req.lastModificationDate,
                          currentTime = currentTime,
                        )
         _ <- save(Update(updateSparql))
@@ -2027,28 +2030,18 @@ final case class OntologyResponderV2(
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                       classIris = Set(internalClassIri),
                       allLanguages = true,
-                      requestingUser = changeClassLabelsOrCommentsRequest.requestingUser,
+                      requestingUser = req.requestingUser,
                     )
       } yield response
 
     for {
-      requestingUser <- ZIO.succeed(changeClassLabelsOrCommentsRequest.requestingUser)
-
-      externalClassIri    = changeClassLabelsOrCommentsRequest.classIri
-      externalOntologyIri = externalClassIri.getOntologyFromEntity
+      requestingUser <- ZIO.succeed(req.requestingUser)
 
       _ <-
         ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
 
-      internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
-      internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
-
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      changeClassLabelsOrCommentsRequest.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
-                      makeTaskFuture(internalClassIri, internalOntologyIri),
-                    )
+      taskResult <- IriLocker.runWithIriLock(req.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, changeTask)
     } yield taskResult
   }
 
