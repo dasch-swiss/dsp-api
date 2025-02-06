@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.api
 
+import org.apache.jena.query.Dataset
 import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.OWL2 as OWL
 import org.apache.jena.vocabulary.RDFS
@@ -23,6 +24,8 @@ import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
@@ -118,10 +121,9 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
   def createClassRequestV2(jsonLd: String, apiRequestId: UUID, requestingUser: User): IO[String, CreateClassRequestV2] =
     ZIO.scoped {
       for {
-        ds         <- DatasetOps.fromJsonLd(jsonLd)
-        meta       <- extractOntologyMetadata(ds.defaultModel)
-        classModel <- ZIO.fromOption(ds.namedModel(meta.ontologyIri.toString)).orElseFail("No class definition found")
-        classInfo  <- extractClassInfo(classModel)
+        ds        <- DatasetOps.fromJsonLd(jsonLd)
+        meta      <- extractOntologyMetadata(ds.defaultModel)
+        classInfo <- extractClassInfo(ds, meta)
         _ <-
           ZIO
             .fail(
@@ -136,8 +138,9 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       )
     }
 
-  private def extractClassInfo(classModel: Model): ZIO[Scope, String, ClassInfoContentV2] =
+  private def extractClassInfo(ds: Dataset, meta: OntologyMetadata): ZIO[Scope, String, ClassInfoContentV2] =
     for {
+      classModel    <- ZIO.fromOption(ds.namedModel(meta.ontologyIri.toString)).orElseFail("No class definition found")
       r             <- ZIO.fromEither(classModel.singleRootResource)
       classIri      <- extractClassIri(r)
       predicates    <- extractPredicates(r)
@@ -232,6 +235,37 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       guiOrder    <- bNode.objectIntOption(SalsahGui.External.GuiOrder)
     } yield KnoraCardinalityInfo(cardinality, guiOrder)
   }
+
+  def changeClassLabelsOrCommentsRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, ChangeClassLabelsOrCommentsRequestV2] =
+    ZIO.scoped {
+      for {
+        ds        <- DatasetOps.fromJsonLd(jsonLd)
+        meta      <- extractOntologyMetadata(ds.defaultModel)
+        classInfo <- extractClassInfo(ds, meta)
+        classIri  <- ZIO.fromEither(ResourceClassIri.fromApiV2Complex(classInfo.classIri))
+        preds = classInfo.predicates.filter { case (iri, _) =>
+                  iri.toIri == RDFS.label.toString || iri.toIri == RDFS.comment.toString
+                }
+        _ <- ZIO.fail(s"Class '${classIri.toString}' does not have any updates").unless(preds.nonEmpty)
+        _ <- ZIO.fail(s"Class '$classIri may only label or comment to update").unless(preds.size == 1)
+        labelOrComment <- ZIO
+                            .fromOption(LabelOrComment.fromString(preds.keys.head.toString))
+                            .orElseFail(s"Invalid predicate: ${preds.keys.head}")
+        newObjects = preds.head._2.objects.collect { case sl: StringLiteralV2 => sl }
+      } yield ChangeClassLabelsOrCommentsRequestV2(
+        classIri,
+        labelOrComment,
+        newObjects,
+        meta.lastModificationDate,
+        apiRequestId,
+        requestingUser,
+      )
+    }
+
 }
 
 object OntologyV2RequestParser {
