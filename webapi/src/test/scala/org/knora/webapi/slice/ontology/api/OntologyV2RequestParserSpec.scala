@@ -18,6 +18,8 @@ import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
@@ -27,6 +29,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.jena.DatasetOps.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -336,7 +339,120 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
     },
   )
 
+  private val changeClassLabelOrCommentSuite = suite("ChangeClassLabelOrCommentRequestV2")(
+    test("should update label") {
+      val jsonLd: String =
+        s"""
+           |{
+           |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "2017-12-19T15:23:42.166Z"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:WildThing",
+           |    "@type" : "owl:Class",
+           |    "rdfs:label" : [
+           |      {
+           |        "@language" : "en",
+           |        "@value" : "An English label"
+           |      },
+           |      {
+           |        "@language" : "de",
+           |        "@value" : "Ein deutsches Label"
+           |      }
+           |    ]
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}
+            """.stripMargin
+      check(JsonLdTransformations.allGen) { t =>
+        for {
+          uuid   <- Random.nextUUID
+          actual <- parser(_.changeClassLabelsOrCommentsRequestV2(t(jsonLd), uuid, user))
+        } yield assertTrue(
+          actual == ChangeClassLabelsOrCommentsRequestV2(
+            ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri),
+            LabelOrComment.Label,
+            Seq(
+              StringLiteralV2.from("Ein deutsches Label", LanguageCode.DE),
+              StringLiteralV2.from("An English label", LanguageCode.EN),
+            ),
+            lastModified,
+            uuid,
+            user,
+          ),
+        )
+      }
+    },
+    test("should update comment") {
+      val jsonLd: String =
+        s"""
+           |{
+           |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "2017-12-19T15:23:42.166Z"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:WildThing",
+           |    "@type" : "owl:Class",
+           |    "rdfs:comment" : [
+           |      {
+           |        "@language" : "en",
+           |        "@value" : "An English comment"
+           |      },
+           |      {
+           |        "@language" : "de",
+           |        "@value" : "Ein deutscher Kommentar"
+           |      }
+           |    ]
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}
+            """.stripMargin
+      check(JsonLdTransformations.allGen) { t =>
+        for {
+          uuid   <- Random.nextUUID
+          actual <- parser(_.changeClassLabelsOrCommentsRequestV2(t(jsonLd), uuid, user))
+        } yield assertTrue(
+          actual == ChangeClassLabelsOrCommentsRequestV2(
+            ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri),
+            LabelOrComment.Comment,
+            Seq(
+              StringLiteralV2.from("Ein deutscher Kommentar", LanguageCode.DE),
+              StringLiteralV2.from("An English comment", LanguageCode.EN),
+            ),
+            lastModified,
+            uuid,
+            user,
+          ),
+        )
+      }
+    },
+  )
+
   val spec =
-    suite("OntologyV2RequestParser")(changeOntologyMetadataRequestV2Suite, createOntologySuite, createClassRequest)
-      .provide(OntologyV2RequestParser.layer, IriConverter.layer, StringFormatter.test)
+    suite("OntologyV2RequestParser")(
+      changeOntologyMetadataRequestV2Suite,
+      createOntologySuite,
+      createClassRequest,
+      changeClassLabelOrCommentSuite,
+    ).provide(OntologyV2RequestParser.layer, IriConverter.layer, StringFormatter.test)
 }

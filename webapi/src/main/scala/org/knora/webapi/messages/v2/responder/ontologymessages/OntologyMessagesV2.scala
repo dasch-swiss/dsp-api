@@ -45,6 +45,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
 /**
@@ -781,49 +782,26 @@ object DeletePropertyCommentRequestV2 {
  * @param requestingUser       the user making the request.
  */
 case class ChangeClassLabelsOrCommentsRequestV2(
-  classIri: SmartIri,
-  predicateToUpdate: SmartIri,
+  classIri: ResourceClassIri,
+  predicateToUpdate: ChangeClassLabelsOrCommentsRequestV2.LabelOrComment,
   newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
-    with ChangeLabelsOrCommentsRequest
-
-/**
- * Constructs instances of [[ChangeClassLabelsOrCommentsRequestV2]] based on JSON-LD input.
- */
 object ChangeClassLabelsOrCommentsRequestV2 {
+  enum LabelOrComment {
+    case Label
+    case Comment
 
-  /**
-   * Converts a JSON-LD request to a [[ChangeClassLabelsOrCommentsRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): ChangeClassLabelsOrCommentsRequestV2 = {
-    val inputOntologiesV2     = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo       = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent      = classUpdateInfo.classInfoContent
-    val lastModificationDate  = classUpdateInfo.lastModificationDate
-    val predicateInfoToUpdate = OntologyUpdateHelper.getLabelsOrComments(classInfoContent)
-
-    ChangeClassLabelsOrCommentsRequestV2(
-      classIri = classInfoContent.classIri,
-      predicateToUpdate = predicateInfoToUpdate.predicateIri,
-      newObjects = predicateInfoToUpdate.objects.collect { case strLiteral: StringLiteralV2 =>
-        strLiteral
-      },
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
+    override def toString: String = this match {
+      case Label   => RDFS.LABEL.toString
+      case Comment => RDFS.COMMENT.toString
+    }
+  }
+  object LabelOrComment {
+    def fromString(str: String): Option[LabelOrComment] =
+      LabelOrComment.values.find(_.toString == str)
   }
 }
 
@@ -975,7 +953,6 @@ case class EntityInfoGetResponseV2(
  *
  * @param standoffClassIris    the IRIs of the resource entities to be queried.
  * @param standoffPropertyIris the IRIs of the property entities to be queried.
- * @param requestingUser       the user making the request.
  */
 case class StandoffEntityInfoGetRequestV2(
   standoffClassIris: Set[SmartIri] = Set.empty,
