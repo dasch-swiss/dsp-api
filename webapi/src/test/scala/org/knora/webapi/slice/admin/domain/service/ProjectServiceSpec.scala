@@ -34,7 +34,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           logo = None,
           ontologies = List.empty,
           status = true,
-          selfjoin = true,
+          selfjoin = SelfJoin.CanJoin,
         )
         assertTrue(
           ProjectService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/$shortname",
