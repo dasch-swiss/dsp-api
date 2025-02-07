@@ -30,6 +30,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
@@ -236,7 +237,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         result.description should be(Seq(StringLiteralV2.from(value = "project description", language = Some("en"))))
         result.keywords should be(Seq("keywords"))
         result.logo.map(_.value) should be(Some("/fu/bar/baz.jpg"))
-        result.status should be(true)
+        result.status should be(Status.Active)
         result.selfjoin should be(SelfJoin.CannotJoin)
 
         newProjectIri.set(result.id)
@@ -363,7 +364,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         )
         result.keywords.sorted should be(Seq("updated", "keywords").sorted)
         result.logo.map(_.value) should be(Some("/fu/bar/baz-updated.jpg"))
-        result.status should be(true)
+        result.status should be(Status.Active)
         result.selfjoin should be(SelfJoin.CanJoin)
       }
 
@@ -399,7 +400,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         response.status should be(StatusCodes.OK)
 
         val result: Project = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
-        result.status should be(false)
+        result.status should be(Status.Inactive)
       }
     }
 
@@ -412,8 +413,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         assert(response.status === StatusCodes.OK)
         val jsObject       = AkkaHttpUtils.httpResponseToJson(response)
         val prjMembersResp = jsonReader[ProjectMembersGetResponseADM].read(jsObject)
-//        val prjMembersResp = jsObject.convertTo[ProjectMembersGetResponseADM]
-        val members = prjMembersResp.members
+        val members        = prjMembersResp.members
         members.size should be(4)
       }
 
