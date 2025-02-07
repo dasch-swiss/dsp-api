@@ -24,14 +24,19 @@ import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.AddCardinalitiesToClassRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2.LabelOrComment
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeGuiOrderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris
@@ -266,6 +271,68 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       )
     }
 
+  def addCardinalitiesToClassRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, AddCardinalitiesToClassRequestV2] =
+    constructClassRelatedRequest(
+      jsonLd,
+      apiRequestId,
+      requestingUser,
+      AddCardinalitiesToClassRequestV2.apply,
+      (_, classInfo) => ZIO.fail("No cardinalities specified").when(classInfo.directCardinalities.isEmpty).unit,
+    )
+
+  def replaceClassCardinalitiesRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, ReplaceClassCardinalitiesRequestV2] =
+    constructClassRelatedRequest(jsonLd, apiRequestId, requestingUser, ReplaceClassCardinalitiesRequestV2.apply)
+
+  def canDeleteCardinalitiesFromClassRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, CanDeleteCardinalitiesFromClassRequestV2] =
+    constructClassRelatedRequest(jsonLd, apiRequestId, requestingUser, CanDeleteCardinalitiesFromClassRequestV2.apply)
+
+  def deleteCardinalitiesFromClassRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, DeleteCardinalitiesFromClassRequestV2] =
+    constructClassRelatedRequest(jsonLd, apiRequestId, requestingUser, DeleteCardinalitiesFromClassRequestV2.apply)
+
+  def changeGuiOrderRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, ChangeGuiOrderRequestV2] =
+    constructClassRelatedRequest(
+      jsonLd,
+      apiRequestId,
+      requestingUser,
+      ChangeGuiOrderRequestV2.apply,
+      (_, classInfo) => ZIO.fail("No cardinalities specified").when(classInfo.directCardinalities.isEmpty).unit,
+    )
+
+  private def constructClassRelatedRequest[A](
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+    f: (ClassInfoContentV2, Instant, UUID, User) => A,
+    checkConstraints: (OntologyMetadata, ClassInfoContentV2) => IO[String, Unit] = (_, _) => ZIO.unit,
+  ): IO[String, A] =
+    ZIO.scoped {
+      for {
+        ds        <- DatasetOps.fromJsonLd(jsonLd)
+        meta      <- extractOntologyMetadata(ds.defaultModel)
+        classInfo <- extractClassInfo(ds, meta)
+        _         <- checkConstraints(meta, classInfo)
+      } yield f(classInfo, meta.lastModificationDate, apiRequestId, requestingUser)
+    }
 }
 
 object OntologyV2RequestParser {

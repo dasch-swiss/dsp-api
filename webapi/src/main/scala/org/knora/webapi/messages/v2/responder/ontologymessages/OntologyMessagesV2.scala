@@ -400,46 +400,6 @@ case class AddCardinalitiesToClassRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[AddCardinalitiesToClassRequestV2]] based on JSON-LD input.
- */
-object AddCardinalitiesToClassRequestV2 {
-
-  /**
-   * Converts JSON-LD input into an [[AddCardinalitiesToClassRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return an [[AddCardinalitiesToClassRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): AddCardinalitiesToClassRequestV2 = {
-    // Get the class definition and the ontology's last modification date from the JSON-LD.
-
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    // The request must provide cardinalities.
-
-    if (classInfoContent.directCardinalities.isEmpty) {
-      throw BadRequestException("No cardinalities specified")
-    }
-
-    AddCardinalitiesToClassRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
-
-/**
  * Requests the replacement of a class's cardinalities with new ones. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.
@@ -453,38 +413,6 @@ case class ReplaceClassCardinalitiesRequestV2(
   apiRequestID: UUID,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
-
-/**
- * Constructs instances of [[ReplaceClassCardinalitiesRequestV2]] based on JSON-LD input.
- */
-object ReplaceClassCardinalitiesRequestV2 {
-
-  /**
-   * Converts JSON-LD input into a [[ReplaceClassCardinalitiesRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[ReplaceClassCardinalitiesRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): ReplaceClassCardinalitiesRequestV2 = {
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    ReplaceClassCardinalitiesRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
 
 /**
  * FIXME(DSP-1856): Can only remove one single cardinality at a time.
@@ -503,38 +431,6 @@ final case class CanDeleteCardinalitiesFromClassRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[CanDeleteCardinalitiesFromClassRequestV2]] based on JSON-LD input.
- */
-object CanDeleteCardinalitiesFromClassRequestV2 {
-
-  /**
-   * Converts JSON-LD input into a [[DeleteCardinalitiesFromClassRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): CanDeleteCardinalitiesFromClassRequestV2 = {
-    val inputOntology        = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntology)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    CanDeleteCardinalitiesFromClassRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
-
-/**
  * FIXME(DSP-1856): Can only remove one single cardinality at a time.
  * Requests the removal of a class's cardinalities. A successful response will be a [[ReadOntologyV2]].
  *
@@ -549,38 +445,6 @@ final case class DeleteCardinalitiesFromClassRequestV2(
   apiRequestID: UUID,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
-
-/**
- * Constructs instances of [[DeleteCardinalitiesFromClassRequestV2]] based on JSON-LD input.
- */
-object DeleteCardinalitiesFromClassRequestV2 {
-
-  /**
-   * Converts JSON-LD input into a [[DeleteCardinalitiesFromClassRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): DeleteCardinalitiesFromClassRequestV2 = {
-    val inputOntology        = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntology)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    DeleteCardinalitiesFromClassRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
 
 /**
  * Requests the deletion of a class. A successful response will be a [[ReadOntologyMetadataV2]].
@@ -858,35 +722,6 @@ case class ChangeGuiOrderRequestV2(
   apiRequestID: UUID,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
-
-object ChangeGuiOrderRequestV2 {
-
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): ChangeGuiOrderRequestV2 = {
-    // Get the class definition and the ontology's last modification date from the JSON-LD.
-
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    // The request must provide cardinalities.
-
-    if (classInfoContent.directCardinalities.isEmpty) {
-      throw BadRequestException("No cardinalities specified")
-    }
-
-    ChangeGuiOrderRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
 
 /**
  * Requests a change in the metadata of an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
