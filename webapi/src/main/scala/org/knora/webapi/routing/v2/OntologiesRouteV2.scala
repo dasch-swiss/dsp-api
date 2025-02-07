@@ -248,10 +248,10 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           val requestMessageTask = for {
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestMessage <-
-              ZIO.attempt(AddCardinalitiesToClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
+              requestParser(_.addCardinalitiesToClassRequestV2(jsonRequest, apiRequestId, requestingUser))
+                .mapError(BadRequestException.apply)
           } yield requestMessage
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }
@@ -280,9 +280,9 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { reqBody => requestContext =>
           val messageTask = for {
             user         <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            document     <- RouteUtilV2.parseJsonLd(reqBody)
             apiRequestId <- RouteUtilZ.randomUuid()
-            msg          <- ZIO.attempt(ReplaceClassCardinalitiesRequestV2.fromJsonLd(document, apiRequestId, user))
+            msg <- requestParser(_.replaceClassCardinalitiesRequestV2(reqBody, apiRequestId, user))
+                     .mapError(BadRequestException.apply)
           } yield msg
           RouteUtilV2.runRdfRouteZ(messageTask, requestContext)
         }
@@ -295,11 +295,9 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           val messageTask = for {
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             apiRequestId   <- RouteUtilZ.randomUuid()
-            msg <- ZIO.attempt(
-                     CanDeleteCardinalitiesFromClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser),
-                   )
+            msg <- requestParser(_.canDeleteCardinalitiesFromClassRequestV2(jsonRequest, apiRequestId, requestingUser))
+                     .mapError(BadRequestException.apply)
           } yield msg
           RouteUtilV2.runRdfRouteZ(messageTask, requestContext)
         }
@@ -314,10 +312,9 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           val requestMessageTask = for {
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             apiRequestId   <- RouteUtilZ.randomUuid()
-            msg <-
-              ZIO.attempt(DeleteCardinalitiesFromClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
+            msg <- requestParser(_.deleteCardinalitiesFromClassRequestV2(jsonRequest, apiRequestId, requestingUser))
+                     .mapError(BadRequestException.apply)
           } yield msg
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }
@@ -327,13 +324,12 @@ final case class OntologiesRouteV2()(
   private def changeGuiOrder(): Route =
     path(ontologiesBasePath / "guiorder") {
       put {
-        // Change a class's cardinalities.
         entity(as[String]) { jsonRequest => requestContext =>
           val requestMessageTask = for {
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             apiRequestId   <- RouteUtilZ.randomUuid()
-            msg            <- ZIO.attempt(ChangeGuiOrderRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
+            msg <- requestParser(_.changeGuiOrderRequestV2(jsonRequest, apiRequestId, requestingUser))
+                     .mapError(BadRequestException.apply)
           } yield msg
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }
