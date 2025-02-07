@@ -39,13 +39,13 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
         .assignToProject(IriTestConstants.Project.TestProject),
     )
     .build
-  private val projectIri: IRI  = IriTestConstants.Project.TestProject
+  private val projectIri       = IriTestConstants.Project.TestProject
   private val classIri: IRI    = IriTestConstants.Biblio.Class.Article.value
   private val propertyIri: IRI = IriTestConstants.Biblio.Property.hasTitle.value
   private val userWithAccess: User =
     SystemUser.copy(permissions =
       SystemUser.permissions
-        .copy(groupsPerProject = Map(projectIri -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),
+        .copy(groupsPerProject = Map(projectIri.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),
     )
 
   override def spec: Spec[TestEnvironment & Scope, Any] =

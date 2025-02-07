@@ -239,7 +239,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       _ <- ZIO
              .fail("Resource IRI and project IRI must reference the same project")
              .when(r.resourceIri.exists(_.shortcode != project.shortcode))
-      attachedToUser <- attachedToUser(r.resource, requestingUser, project.projectIri)
+      attachedToUser <- attachedToUser(r.resource, requestingUser, project.id)
       values         <- extractValues(r.resource, project.shortcode)
     } yield CreateResourceRequestV2(
       CreateResourceV2(

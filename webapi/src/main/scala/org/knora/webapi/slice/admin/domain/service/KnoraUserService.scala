@@ -161,8 +161,8 @@ case class KnoraUserService(
     userRepo.save(user.copy(isInGroup = user.isInGroup.filterNot(_ == groupIri))).orDie
 
   def addUserToProject(user: KnoraUser, project: Project): IO[IsProjectMember, KnoraUser] = for {
-    _    <- ZIO.fail(IsProjectMember(user.id, project.projectIri)).when(user.isInProject.contains(project.projectIri))
-    user <- addUserToProject(user, project.projectIri)
+    _    <- ZIO.fail(IsProjectMember(user.id, project.id)).when(user.isInProject.contains(project.id))
+    user <- addUserToProject(user, project.id)
   } yield user
 
   def addUserToProject(user: KnoraUser, project: KnoraProject): UIO[KnoraUser] = addUserToProject(user, project.id)
@@ -179,7 +179,7 @@ case class KnoraUserService(
    * @return        The updated user. If the user is not a member of the project, an error is returned.
    */
   def removeUserFromProject(user: KnoraUser, project: Project): IO[NotProjectMember, KnoraUser] =
-    removeUserFromProject(user, project.projectIri)
+    removeUserFromProject(user, project.id)
 
   def removeUsersFromProject(users: Seq[KnoraUser], project: KnoraProject): UIO[Unit] =
     ZIO.foreachDiscard(users)(removeUserFromProject(_, project.id).ignore)
@@ -203,14 +203,11 @@ case class KnoraUserService(
   def addUserToProjectAsAdmin(
     user: KnoraUser,
     project: Project,
-  ): IO[IsProjectAdminMember | NotProjectMember, KnoraUser] = {
-    val projectIri = project.projectIri
-    for {
-      _ <- ZIO.fail(IsProjectAdminMember(user.id, projectIri)).when(user.isInProjectAdminGroup.contains(projectIri))
-      _ <- ZIO.fail(NotProjectMember(user.id, projectIri)).unless(user.isInProject.contains(projectIri))
-      _ <- addUserToProjectAsAdmin(user, projectIri)
-    } yield user
-  }
+  ): IO[IsProjectAdminMember | NotProjectMember, KnoraUser] = for {
+    _ <- ZIO.fail(IsProjectAdminMember(user.id, project.id)).when(user.isInProjectAdminGroup.contains(project.id))
+    _ <- ZIO.fail(NotProjectMember(user.id, project.id)).unless(user.isInProject.contains(project.id))
+    _ <- addUserToProjectAsAdmin(user, project.id)
+  } yield user
 
   def addUserToProjectAsAdmin(user: KnoraUser, project: KnoraProject): UIO[KnoraUser] =
     addUserToProjectAsAdmin(user, project.id)
@@ -227,7 +224,7 @@ case class KnoraUserService(
    * @return        The updated user. If the user is not an admin member of the project, an error is returned.
    */
   def removeUserFromProjectAsAdmin(user: KnoraUser, project: Project): IO[NotProjectAdminMember, KnoraUser] =
-    removeUserFromProjectIriAsAdmin(user, project.projectIri)
+    removeUserFromProjectIriAsAdmin(user, project.id)
 
   def removeUsersFromProjectAsAdmin(users: Seq[KnoraUser], project: KnoraProject): IO[NotProjectAdminMember, Unit] =
     ZIO.foreachDiscard(users)(removeUserFromProjectIriAsAdmin(_, project.id))

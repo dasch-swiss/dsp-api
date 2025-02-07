@@ -289,7 +289,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val exit = UnsafeZioRun.run(
         PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.anythingProjectIri,
+            forProject = SharedTestDataADM.anythingProjectIri.value,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions =
               Set(PermissionADM.from(Permission.ObjectAccess.RestrictedView, SharedTestDataADM.thingSearcherGroup.id)),
