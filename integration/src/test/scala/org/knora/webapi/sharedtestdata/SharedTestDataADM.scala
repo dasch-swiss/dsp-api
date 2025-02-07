@@ -22,6 +22,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
@@ -173,7 +174,7 @@ object SharedTestDataADM {
       SalsahGui.SalsahGuiOntologyIri,
       OntologyConstants.Standoff.StandoffOntologyIri,
     ),
-    status = true,
+    status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
   )
 
@@ -187,7 +188,7 @@ object SharedTestDataADM {
     keywords = Seq.empty[String],
     logo = None,
     ontologies = Seq.empty[IRI],
-    status = true,
+    status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
   )
 
@@ -299,7 +300,7 @@ object SharedTestDataADM {
     keywords = Seq("images", "collection").sorted,
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
-    status = true,
+    status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
   )
 
@@ -313,7 +314,7 @@ object SharedTestDataADM {
     keywords = Seq("images", "collection").sorted,
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI_LocalHost),
-    status = true,
+    status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
   )
 
@@ -476,7 +477,7 @@ object SharedTestDataADM {
     ).sorted,
     logo = Some(Logo.unsafeFrom("incunabula_logo.png")),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
-    status = true,
+    status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
   )
 
@@ -511,7 +512,7 @@ object SharedTestDataADM {
     ).sorted,
     logo = Some(Logo.unsafeFrom("incunabula_logo.png")),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI_LocalHost),
-    status = true,
+    status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
   )
 
@@ -623,7 +624,7 @@ object SharedTestDataADM {
     keywords = Seq("things", "arbitrary test data").sorted,
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI, SharedOntologyTestDataADM.SomethingOntologyIri),
-    status = true,
+    status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
   )
 
@@ -639,7 +640,7 @@ object SharedTestDataADM {
       SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost,
       SharedOntologyTestDataADM.SomethingOntologyIriLocalhost,
     ),
-    status = true,
+    status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
   )
 
@@ -676,7 +677,7 @@ object SharedTestDataADM {
       "http://www.knora.org/ontology/0801/leibniz",
       "http://www.knora.org/ontology/0801/newton",
     ),
-    status = true,
+    status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
   )
 
@@ -725,7 +726,7 @@ object SharedTestDataADM {
     keywords = Seq.empty[String],
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0804/dokubib"),
-    status = false,
+    status = Status.Inactive,
     selfjoin = SelfJoin.CannotJoin,
   )
 }
