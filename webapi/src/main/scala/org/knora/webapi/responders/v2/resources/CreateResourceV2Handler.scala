@@ -36,6 +36,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.slice.admin.api.model.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
@@ -115,8 +116,8 @@ final case class CreateResourceV2Handler(
   private def ensureClassBelongsToProjectOntology(createResourceRequestV2: CreateResourceRequestV2): Task[Unit] = for {
     projectIri <- ZIO.succeed(createResourceRequestV2.createResource.projectADM.id)
     isSystemOrSharedProject =
-      projectIri == KnoraProjectRepo.builtIn.SystemProject.id.value ||
-        projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.value
+      projectIri == KnoraProjectRepo.builtIn.SystemProject.id ||
+        projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
     _ <- ZIO.when(isSystemOrSharedProject)(
            ZIO.fail(BadRequestException(s"Resources cannot be created in project <$projectIri>")),
          )
@@ -136,13 +137,13 @@ final case class CreateResourceV2Handler(
           ),
         )
         .unless(
-          projectIri == resourceClassProjectIri || OntologyServiceLive.isBuiltInOrSharedOntology(
+          projectIri.value == resourceClassProjectIri || OntologyServiceLive.isBuiltInOrSharedOntology(
             resourceClassOntologyIri,
           ),
         )
   } yield ()
 
-  private def ensureUserHasPermission(createResourceRequestV2: CreateResourceRequestV2, projectIri: String) = for {
+  private def ensureUserHasPermission(createResourceRequestV2: CreateResourceRequestV2, projectIri: ProjectIri) = for {
     internalResourceClassIri <-
       ZIO.succeed(createResourceRequestV2.createResource.resourceClassIri.toOntologySchema(InternalSchema))
     _ <-
@@ -154,7 +155,7 @@ final case class CreateResourceV2Handler(
         )
         .unless(
           createResourceRequestV2.requestingUser.permissions
-            .hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri),
+            .hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri.value),
         )
   } yield ()
 
@@ -218,14 +219,14 @@ final case class CreateResourceV2Handler(
 
       // Get the default permissions of the resource class.
       defaultResourcePermissions <- permissionsResponder.newResourceDefaultObjectAccessPermissions(
-                                      createResourceRequestV2.createResource.projectADM.projectIri,
+                                      createResourceRequestV2.createResource.projectADM.id,
                                       internalCreateResource.resourceClassIri,
                                       createResourceRequestV2.requestingUser,
                                     )
 
       // Get the default permissions of each property used.
       defaultPropertyPermissionsMap <- permissionsResponder.newValueDefaultObjectAccessPermissions(
-                                         createResourceRequestV2.createResource.projectADM.projectIri,
+                                         createResourceRequestV2.createResource.projectADM.id,
                                          internalCreateResource.resourceClassIri,
                                          internalCreateResource.values.keySet,
                                          createResourceRequestV2.requestingUser,
@@ -251,7 +252,7 @@ final case class CreateResourceV2Handler(
       _ <- resourcesRepo.createNewResource(
              dataGraphIri = dataNamedGraph,
              resource = resourceReadyToCreate,
-             projectIri = InternalIri(createResourceRequestV2.createResource.projectADM.id),
+             projectIri = InternalIri(createResourceRequestV2.createResource.projectADM.id.value),
              userIri = InternalIri(createResourceRequestV2.requestingUser.id),
            )
 
@@ -379,13 +380,13 @@ final case class CreateResourceV2Handler(
               validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
 
               _ <- ZIO.when {
-                     !(requestingUser.permissions.isProjectAdmin(internalCreateResource.projectADM.id) &&
+                     !(requestingUser.permissions.isProjectAdmin(internalCreateResource.projectADM.id.value) &&
                        !requestingUser.permissions.isSystemAdmin)
                    } {
                      // Make sure they don't give themselves higher permissions than they would get from the default permissions.
                      val permissionComparisonResult: PermissionComparisonResult =
                        PermissionUtilADM.comparePermissionsADM(
-                         internalCreateResource.projectADM.id,
+                         internalCreateResource.projectADM.id.value,
                          validatedCustomPermissions,
                          defaultResourcePermissions,
                          requestingUser,
@@ -862,14 +863,14 @@ final case class CreateResourceV2Handler(
                   // Is the requesting user a system admin, or an admin of this project?
                   _ <- ZIO.when(
                          !(requestingUser.permissions
-                           .isProjectAdmin(project.id) || requestingUser.permissions.isSystemAdmin),
+                           .isProjectAdmin(project.id.value) || requestingUser.permissions.isSystemAdmin),
                        ) {
 
                          // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
 
                          val permissionComparisonResult: PermissionComparisonResult =
                            PermissionUtilADM.comparePermissionsADM(
-                             entityProject = project.id,
+                             entityProject = project.id.value,
                              permissionLiteralA = validatedCustomPermissions,
                              permissionLiteralB = defaultPropertyPermissions(propertyIri),
                              requestingUser = requestingUser,
