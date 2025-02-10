@@ -253,7 +253,7 @@ final case class ValuesResponderV2(
 
         // Get the default permissions for the new value.
         defaultValuePermissions <- permissionsResponder.newValueDefaultObjectAccessPermissions(
-                                     resourceInfo.projectADM.projectIri,
+                                     resourceInfo.projectADM.id,
                                      resourceInfo.resourceClassIri,
                                      submittedInternalPropertyIri,
                                      requestingUser,
@@ -274,7 +274,7 @@ final case class ValuesResponderV2(
                        // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
                        val permissionComparisonResult: PermissionComparisonResult =
                          PermissionUtilADM.comparePermissionsADM(
-                           entityProject = resourceInfo.projectADM.id,
+                           entityProject = resourceInfo.projectADM.id.value,
                            permissionLiteralA = validatedCustomPermissions,
                            permissionLiteralB = defaultValuePermissions.permissionLiteral,
                            requestingUser = requestingUser,

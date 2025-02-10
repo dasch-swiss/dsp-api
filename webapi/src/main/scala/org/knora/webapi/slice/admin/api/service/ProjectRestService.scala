@@ -62,7 +62,7 @@ final case class ProjectRestService(
    */
   def listAllProjects(): Task[ProjectsGetResponse] = for {
     internal <- projectService.findAllRegularProjects
-    projects  = internal.filter(_.projectIri.isRegularProjectIri)
+    projects  = internal.filter(_.id.isRegularProjectIri)
     external <- format.toExternal(ProjectsGetResponse(projects))
   } yield external
 
@@ -107,7 +107,7 @@ final case class ProjectRestService(
              },
            )
     internal <- projectService.createProject(createReq).map(ProjectOperationResponseADM.apply)
-    _        <- permissionResponder.createPermissionsForAdminsAndMembersOfNewProject(internal.project.projectIri)
+    _        <- permissionResponder.createPermissionsForAdminsAndMembersOfNewProject(internal.project.id)
     external <- format.toExternal(internal)
   } yield external
 

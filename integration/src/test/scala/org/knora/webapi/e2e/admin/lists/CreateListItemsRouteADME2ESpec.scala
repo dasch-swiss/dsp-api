@@ -168,7 +168,7 @@ class CreateListItemsRouteADME2ESpec
         val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
 
         val listInfo = receivedList.listinfo
-        listInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
+        listInfo.projectIri should be(SharedTestDataADM.anythingProjectIri.value)
 
         val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
         labels.size should be(1)
@@ -202,7 +202,7 @@ class CreateListItemsRouteADME2ESpec
         val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
 
         val listInfo = receivedList.listinfo
-        listInfo.projectIri should be(SharedTestDataADM.beolProjectIri)
+        listInfo.projectIri should be(SharedTestDataADM.beolProjectIri.value)
       }
 
       "return a ForbiddenException if the user creating the list is not project or system admin" in {

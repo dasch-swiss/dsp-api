@@ -29,6 +29,7 @@ import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.User
@@ -43,7 +44,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
   private val rootEmail        = SharedTestDataADM.rootUser.email
   private val testPass         = SharedTestDataADM.testPass
   private val projectIri       = SharedTestDataADM.imagesProject.id
-  private val projectIriEnc    = URLEncoder.encode(projectIri, "utf-8")
+  private val projectIriEnc    = URLEncoder.encode(projectIri.value, "utf-8")
   private val projectShortname = SharedTestDataADM.imagesProject.shortname
   private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
 
@@ -143,7 +144,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
     }
 
     "given a custom Iri" should {
-      val customProjectIri: IRI = "http://rdfh.ch/projects/wahxssy1TDqPuSk6ee8EdQ"
+      val customProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/wahxssy1TDqPuSk6ee8EdQ")
       "CREATE a new project with the provided custom Iri" in {
 
         val createProjectWithCustomIRIRequest: String =
@@ -240,7 +241,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         result.status should be(Status.Active)
         result.selfjoin should be(SelfJoin.CannotJoin)
 
-        newProjectIri.set(result.id)
+        newProjectIri.set(result.id.value)
       }
 
       "return a 'BadRequest' if the supplied project shortname during creation is not unique" in {
@@ -540,7 +541,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
       }
 
       "return all keywords for a single project" in {
-        val incunabulaIriEnc = URLEncoder.encode(SharedTestDataADM.incunabulaProject.id, "utf-8")
+        val incunabulaIriEnc = URLEncoder.encode(SharedTestDataADM.incunabulaProject.id.value, "utf-8")
         val request = Get(baseApiUrl + s"/admin/projects/iri/$incunabulaIriEnc/Keywords") ~> addCredentials(
           BasicHttpCredentials(rootEmail, testPass),
         )
@@ -552,7 +553,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
       }
 
       "return empty list for a project without keywords" in {
-        val dokubibIriEnc = URLEncoder.encode(SharedTestDataADM.dokubibProject.id, "utf-8")
+        val dokubibIriEnc = URLEncoder.encode(SharedTestDataADM.dokubibProject.id.value, "utf-8")
         val request = Get(baseApiUrl + s"/admin/projects/iri/$dokubibIriEnc/Keywords") ~> addCredentials(
           BasicHttpCredentials(rootEmail, testPass),
         )
@@ -575,7 +576,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
 
     "used to dump project data" should {
       "return a TriG file containing all data from a project" in {
-        val anythingProjectIriEnc = URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
+        val anythingProjectIriEnc = URLEncoder.encode(SharedTestDataADM.anythingProject.id.value, "utf-8")
         val request = Get(baseApiUrl + s"/admin/projects/iri/$anythingProjectIriEnc/AllData") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, testPass),
         )
@@ -600,7 +601,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
 
     "used to set RestrictedViewSize by project IRI" should {
       "return requested value to be set with 200 Response Status" in {
-        val encodedIri = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
+        val encodedIri = URLEncoder.encode(SharedTestDataADM.imagesProject.id.value, "utf-8")
         val payload    = """{"size":"pct:1"}"""
         val request =
           Post(
@@ -615,7 +616,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
       }
 
       "return the `BadRequest` if the size value is invalid" in {
-        val encodedIri = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
+        val encodedIri = URLEncoder.encode(SharedTestDataADM.imagesProject.id.value, "utf-8")
         val payload    = """{"size":"pct:0"}"""
         val request =
           Post(
@@ -631,7 +632,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
       }
 
       "return `Forbidden` for the user who is not a system nor project admin" in {
-        val encodedIri = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
+        val encodedIri = URLEncoder.encode(SharedTestDataADM.imagesProject.id.value, "utf-8")
         val payload    = """{"size":"pct:1"}"""
         val request =
           Post(

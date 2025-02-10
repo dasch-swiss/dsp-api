@@ -34,6 +34,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.util.WithAsIs
 
@@ -1182,8 +1183,8 @@ object JsonLDUtil {
    * @param iri the IRI to be converted.
    * @return the JSON-LD representation of the IRI as an object value.
    */
-  def iriToJsonLDObject(iri: IRI): JsonLDObject =
-    JsonLDObject(Map(JsonLDKeywords.ID -> JsonLDString(iri)))
+  def iriToJsonLDObject(iri: IRI | StringValue): JsonLDObject =
+    JsonLDObject(Map(JsonLDKeywords.ID -> JsonLDString(iri.toString)))
 
   /**
    * Given a predicate value and a language code, returns a JSON-LD object containing `@value` and `@language`
