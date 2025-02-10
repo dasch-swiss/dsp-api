@@ -9,6 +9,7 @@ import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import dsp.errors.ValidationException
+import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 
 /**
@@ -16,12 +17,9 @@ import org.knora.webapi.slice.common.Value.StringValue
  */
 final case class LanguageCode private (value: String) extends StringValue
 
-object LanguageCode { self =>
-  implicit val codec: JsonCodec[LanguageCode] =
-    JsonCodec[String].transformOrFail(
-      value => LanguageCode.make(value).toEitherWith(e => e.head.getMessage()),
-      languageCode => languageCode.value,
-    )
+object LanguageCode extends StringValueCompanion[LanguageCode] { self =>
+
+  implicit val codec: JsonCodec[LanguageCode] = JsonCodec[String].transformOrFail(LanguageCode.from, _.value)
 
   val DE: String = "de"
   val EN: String = "en"
@@ -36,9 +34,6 @@ object LanguageCode { self =>
     IT,
     RM,
   )
-
-  def unsafeFrom(value: String): LanguageCode =
-    make(value).fold(e => throw new IllegalArgumentException(e.head.getMessage), identity)
 
   def from(value: String): Either[String, LanguageCode] =
     make(value).toEitherWith(_.head.getMessage)

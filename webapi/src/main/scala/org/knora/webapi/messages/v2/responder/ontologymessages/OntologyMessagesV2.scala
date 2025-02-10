@@ -44,6 +44,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Ow
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
@@ -524,7 +525,7 @@ sealed trait ChangeLabelsOrCommentsRequest {
  * @param requestingUser       the user making the request.
  */
 case class ChangePropertyGuiElementRequest(
-  propertyIri: Iri.PropertyIri,
+  propertyIri: KnoraIris.PropertyIri,
   newGuiObject: Schema.GuiObject,
   lastModificationDate: Instant,
   apiRequestID: UUID,
