@@ -42,7 +42,8 @@ object Dependencies {
   // jwt-scala 10.0.1 depends on zio-json 0.7.4
   // though newer version compatible with a newer zio-json version is available
   // it is not yet published: https://github.com/jwt-scala/jwt-scala/issues/642
-  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.7.4"
+  val ZioJsonVersion        = "0.7.4"
+  val zioJson               = "dev.zio"                       %% "zio-json"                  % ZioJsonVersion
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
@@ -53,7 +54,7 @@ object Dependencies {
   // refined
   val refined = Seq(
     "eu.timepit" %% "refined"                  % "0.11.3",
-    "dev.zio"    %% "zio-json-interop-refined" % "0.7.11",
+    "dev.zio"    %% "zio-json-interop-refined" % ZioJsonVersion,
   )
 
   // monocle
