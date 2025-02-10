@@ -15,8 +15,8 @@ import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
+
 import dsp.constants.SalsahGui
-import org.glassfish.jaxb.core.v2.model.core.PropertyInfo
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.SmartIri
@@ -343,20 +343,26 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
         ds           <- DatasetOps.fromJsonLd(jsonLd)
         meta         <- extractOntologyMetadata(ds.defaultModel)
         propertyInfo <- extractPropertyInfo(ds, meta)
+        // TODO verify object and subject type
       } yield CreatePropertyRequestV2(propertyInfo, meta.lastModificationDate, apiRequestId, user)
     }
 
   private def extractPropertyInfo(ds: Dataset, meta: OntologyMetadata): ZIO[Scope, String, PropertyInfoContentV2] =
     for {
-      classModel   <- ZIO.fromOption(ds.namedModel(meta.ontologyIri.toString)).orElseFail("No property definition found")
-      r            <- ZIO.fromEither(classModel.singleRootResource)
-      propertyIri  <- extractPropertyIri(r)
-      predicates    = Map.empty[SmartIri, PredicateInfoV2]
-      subPropertyOf = Set.empty[SmartIri]
+      classModel    <- ZIO.fromOption(ds.namedModel(meta.ontologyIri.toString)).orElseFail("No property definition found")
+      r             <- ZIO.fromEither(classModel.singleRootResource)
+      propertyIri   <- extractPropertyIri(r)
+      predicates    <- extractPredicates(r)
+      subPropertyOf <- extractSubPropertyOf(r).map(_.map(_.smartIri))
     } yield PropertyInfoContentV2(propertyIri.smartIri, predicates, subPropertyOf, ApiV2Complex)
 
   private def extractPropertyIri(r: Resource): ZIO[Scope, String, PropertyIri] =
     ZIO.fromOption(r.uri).orElseFail("No property IRI found").flatMap(iriConverter.asPropertyIriApiV2Complex)
+
+  private def extractSubPropertyOf(r: Resource): ZIO[Scope, String, Set[ResourceClassIri]] = {
+    val subclasses: Set[String] = r.listProperties(RDFS.subPropertyOf).asScala.flatMap(_.objectAsUri.toOption).toSet
+    ZIO.foreach(subclasses)(iriConverter.asResourceClassIri)
+  }
 }
 
 object OntologyV2RequestParser {

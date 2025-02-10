@@ -10,6 +10,7 @@ import zio.test.Assertion.hasSameElements
 import zio.test.check
 
 import java.time.Instant
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.LanguageCode
 import org.knora.webapi.TestDataFactory
@@ -24,8 +25,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreatePropertyRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
@@ -34,7 +33,6 @@ import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.jena.DatasetOps.*
-import org.knora.webapi.slice.ontology.api.OntologyV2RequestParserSpec.parser
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 

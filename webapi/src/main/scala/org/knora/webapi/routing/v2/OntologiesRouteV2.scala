@@ -435,10 +435,12 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           val requestMessageTask = for {
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <- ZIO.attempt(CreatePropertyRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
-            sf             <- ZIO.service[StringFormatter]
+            requestMessage <- requestParser(_.createPropertyRequestV2(jsonRequest, apiRequestId, requestingUser))
+                                .mapError(BadRequestException.apply)
+
+            requestDoc <- RouteUtilV2.parseJsonLd(jsonRequest)
+            sf         <- ZIO.service[StringFormatter]
 
             /// more validation ahead, not used to construct the requestMessage
             inputOntology                             <- getInputOntology(requestDoc)
