@@ -21,7 +21,7 @@ object CommandExecutorLiveSpec extends ZIOSpecDefault {
         cmd      <- CommandExecutor.buildCommand("customCommand", "customParams").provideSome[StorageService](devLayer)
         assetDir <- StorageService.getAssetsBaseFolder().flatMap(_.toAbsolutePath)
         expected =
-          s"docker run --entrypoint customCommand -v $assetDir:$assetDir daschswiss/knora-sipi:${BuildInfo.sipiVersion} customParams"
+          s"docker run --entrypoint customCommand -v $assetDir:$assetDir daschswiss/knora-sipi:${BuildInfo.knoraSipiVersion} customParams"
       } yield assertTrue(cmd.cmd.mkString(" ") == expected)
     },
     test("buildCommand without docker when useLocalDev is false") {
