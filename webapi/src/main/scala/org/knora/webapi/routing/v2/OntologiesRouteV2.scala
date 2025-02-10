@@ -434,8 +434,12 @@ final case class OntologiesRouteV2()(
         // Create a new property.
         entity(as[String]) { jsonRequest => requestContext =>
           val requestMessageTask = for {
-            requestingUser                            <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            requestDoc                                <- RouteUtilV2.parseJsonLd(jsonRequest)
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
+            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
+            apiRequestId   <- RouteUtilZ.randomUuid()
+            requestMessage <- ZIO.attempt(CreatePropertyRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
+
+            /// more validation ahead, not used to construct the requestMessage
             inputOntology                             <- getInputOntology(requestDoc)
             propertyUpdateInfo                        <- getPropertyDef(inputOntology)
             propertyInfoContent: PropertyInfoContentV2 = propertyUpdateInfo.propertyInfoContent
@@ -452,10 +456,6 @@ final case class OntologiesRouteV2()(
                    .makeFromStrings(maybeGuiAttributes, maybeGuiElement)
                    .toZIO
                    .mapError(error => BadRequestException(error.msg))
-
-            apiRequestId <- RouteUtilZ.randomUuid()
-            requestMessage <-
-              ZIO.attempt(CreatePropertyRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
 
             // get gui related values from request and validate them by making value objects from it
 
