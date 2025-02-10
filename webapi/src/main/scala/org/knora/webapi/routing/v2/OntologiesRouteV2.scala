@@ -17,7 +17,6 @@ import java.time.Instant
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
-import dsp.valueobjects.Iri.*
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema.*
 import org.knora.webapi.*
@@ -35,6 +34,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.completeResponse
 import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -439,7 +439,9 @@ final case class OntologiesRouteV2()(
             inputOntology                             <- getInputOntology(requestDoc)
             propertyUpdateInfo                        <- getPropertyDef(inputOntology)
             propertyInfoContent: PropertyInfoContentV2 = propertyUpdateInfo.propertyInfoContent
-            _                                         <- PropertyIri.make(propertyInfoContent.propertyIri.toString).toZIO
+            _ <- ZIO
+                   .fromEither(KnoraIris.PropertyIri.from(propertyInfoContent.propertyIri))
+                   .mapError(BadRequestException.apply)
 
             // get gui related values from request and validate them by making value objects from it
             // get the (optional) gui element from the request
@@ -624,9 +626,11 @@ final case class OntologiesRouteV2()(
             propertyUpdateInfo  <- getPropertyDef(inputOntology)
             propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
             lastModificationDate = propertyUpdateInfo.lastModificationDate
-            propertyIri         <- PropertyIri.make(propertyInfoContent.propertyIri.toString).toZIO
-            newGuiElement       <- getGuiElement(propertyInfoContent)
-            newGuiAttributes    <- getGuiAttributes(propertyInfoContent)
+            propertyIri <- ZIO
+                             .fromEither(KnoraIris.PropertyIri.from(propertyInfoContent.propertyIri))
+                             .mapError(BadRequestException.apply)
+            newGuiElement    <- getGuiElement(propertyInfoContent)
+            newGuiAttributes <- getGuiAttributes(propertyInfoContent)
             guiObject <-
               GuiObject
                 .makeFromStrings(newGuiAttributes, newGuiElement)

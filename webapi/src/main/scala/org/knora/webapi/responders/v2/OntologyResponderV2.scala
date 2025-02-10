@@ -139,8 +139,7 @@ final case class OntologyResponderV2(
       deletePropertyComment(deletePropertyCommentRequest)
     case deleteClassCommentRequest: DeleteClassCommentRequestV2 =>
       deleteClassComment(deleteClassCommentRequest)
-    case changePropertyGuiElementRequest: ChangePropertyGuiElementRequest =>
-      changePropertyGuiElement(changePropertyGuiElementRequest)
+    case req: ChangePropertyGuiElementRequest                 => changePropertyGuiElement(req)
     case canDeletePropertyRequest: CanDeletePropertyRequestV2 => canDeleteProperty(canDeletePropertyRequest)
     case deletePropertyRequest: DeletePropertyRequestV2       => deleteProperty(deletePropertyRequest)
     case req: CanDeleteOntologyRequestV2 =>
@@ -1874,7 +1873,7 @@ final case class OntologyResponderV2(
     for {
       requestingUser <- ZIO.succeed(changePropertyGuiElementRequest.requestingUser)
 
-      externalPropertyIri = changePropertyGuiElementRequest.propertyIri.value.toSmartIri
+      externalPropertyIri = changePropertyGuiElementRequest.propertyIri.smartIri
       externalOntologyIri = externalPropertyIri.getOntologyFromEntity
 
       _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
@@ -1883,8 +1882,8 @@ final case class OntologyResponderV2(
              requestingUser,
            )
 
-      internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
-      internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+      internalPropertyIri = externalPropertyIri.toInternalSchema
+      internalOntologyIri = externalOntologyIri.toInternalSchema
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
       taskResult <- IriLocker.runWithIriLock(
