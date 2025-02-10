@@ -56,7 +56,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   private val imagesProjectIri     = SharedTestDataADM.imagesProjectIri
   private val anythingAdminUser    = SharedTestDataADM.anythingAdminUser
   private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
-  private val anythingProjectIri   = SharedTestDataADM.anythingProjectIri.toSmartIri
+  private val anythingProjectIri   = SharedTestDataADM.anythingProjectIri.value.toSmartIri
   private val ontologyResponder    = ZIO.serviceWithZIO[OntologyResponderV2]
   private val triplestoreService   = ZIO.serviceWithZIO[TriplestoreService]
 

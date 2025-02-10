@@ -10,6 +10,7 @@ import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.OWL2 as OWL
 import org.apache.jena.vocabulary.RDFS
 import zio.*
+import zio.prelude.Validation
 
 import java.time.Instant
 import java.util.UUID
@@ -343,7 +344,6 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
         ds           <- DatasetOps.fromJsonLd(jsonLd)
         meta         <- extractOntologyMetadata(ds.defaultModel)
         propertyInfo <- extractPropertyInfo(ds, meta)
-        // TODO verify object and subject type
       } yield CreatePropertyRequestV2(propertyInfo, meta.lastModificationDate, apiRequestId, user)
     }
 
@@ -354,7 +354,10 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       propertyIri   <- extractPropertyIri(r)
       predicates    <- extractPredicates(r)
       subPropertyOf <- extractSubPropertyOf(r).map(_.map(_.smartIri))
-    } yield PropertyInfoContentV2(propertyIri.smartIri, predicates, subPropertyOf, ApiV2Complex)
+
+      propertyInfo = PropertyInfoContentV2(propertyIri.smartIri, predicates, subPropertyOf, ApiV2Complex)
+      _           <- sanityCheck(propertyInfo)
+    } yield propertyInfo
 
   private def extractPropertyIri(r: Resource): ZIO[Scope, String, PropertyIri] =
     ZIO.fromOption(r.uri).orElseFail("No property IRI found").flatMap(iriConverter.asPropertyIriApiV2Complex)
@@ -363,6 +366,26 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     val subclasses: Set[String] = r.listProperties(RDFS.subPropertyOf).asScala.flatMap(_.objectAsUri.toOption).toSet
     ZIO.foreach(subclasses)(iriConverter.asResourceClassIri)
   }
+
+  private def sanityCheck(propertyInfo: PropertyInfoContentV2): ZIO[Scope, String, Unit] = for {
+    _           <- ZIO.fail("No predicates found").when(propertyInfo.predicates.isEmpty)
+    subjectType <- iriConverter.asSmartIri(KA.SubjectType).orDie
+    objectType  <- iriConverter.asSmartIri(KA.ObjectType).orDie
+    validSubjectType = propertyInfo.getIriObject(subjectType) match {
+                         case None    => Validation.succeed(None)
+                         case Some(t) => isApiV2ComplexEntityIri(t, "Invalid knora-api:subjectType").map(Some(_))
+                       }
+    hasObjectType = propertyInfo.getIriObject(objectType) match {
+                      case None    => Validation.fail("Missing knora-api:objectType")
+                      case Some(t) => isApiV2ComplexEntityIri(t, "Invalid knora-api:objectType")
+                    }
+    _ <- Validation.validate(validSubjectType, hasObjectType).toZIO
+  } yield ()
+
+  private def isApiV2ComplexEntityIri(s: SmartIri, failMsg: String): Validation[String, SmartIri] =
+    if s.isKnoraApiV2EntityIri && s.isApiV2ComplexSchema then Validation.succeed(s)
+    else Validation.fail(s"$failMsg: ${s.toComplexSchema.toIri}")
+
 }
 
 object OntologyV2RequestParser {

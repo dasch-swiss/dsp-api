@@ -321,56 +321,6 @@ case class CreatePropertyRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[CreatePropertyRequestV2]] based on JSON-LD requests.
- */
-object CreatePropertyRequestV2 {
-
-  /**
-   * Converts a JSON-LD request to a [[CreatePropertyRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[CreatePropertyRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): CreatePropertyRequestV2 = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    // Get the property definition and the ontology's last modification date from the JSON-LD.
-
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val propertyUpdateInfo   = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
-    val propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
-    val lastModificationDate = propertyUpdateInfo.lastModificationDate
-
-    // Check that the knora-api:subjectType (if provided) and the knora-api:objectType point to valid entity IRIs.
-
-    propertyInfoContent.predicates.get(KnoraApiV2Complex.SubjectType.toSmartIri).foreach { subjectTypePred =>
-      val subjectType = subjectTypePred
-        .requireIriObject(throw BadRequestException(s"Missing or invalid object for predicate knora-api:subjectType"))
-
-      if (!(subjectType.isKnoraApiV2EntityIri && subjectType.getOntologySchema.contains(ApiV2Complex))) {
-        throw BadRequestException(s"Invalid knora-api:subjectType: $subjectType")
-      }
-    }
-
-    val objectType = propertyInfoContent.requireIriObject(
-      KnoraApiV2Complex.ObjectType.toSmartIri,
-      throw BadRequestException(s"Missing knora-api:objectType"),
-    )
-
-    if (!(objectType.isKnoraApiV2EntityIri && objectType.getOntologySchema.contains(ApiV2Complex))) {
-      throw BadRequestException(s"Invalid knora-api:objectType: $objectType")
-    }
-    CreatePropertyRequestV2(propertyInfoContent, lastModificationDate, apiRequestID, requestingUser)
-  }
-}
-
-/**
  * Requests the addition of a class to an ontology. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
