@@ -17,8 +17,6 @@ import java.time.Instant
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
-import dsp.valueobjects.CreatePropertyCommand
-import dsp.valueobjects.Iri.*
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema.*
 import org.knora.webapi.*
@@ -36,6 +34,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.completeResponse
 import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -440,7 +439,9 @@ final case class OntologiesRouteV2()(
             inputOntology                             <- getInputOntology(requestDoc)
             propertyUpdateInfo                        <- getPropertyDef(inputOntology)
             propertyInfoContent: PropertyInfoContentV2 = propertyUpdateInfo.propertyInfoContent
-            _                                         <- PropertyIri.make(propertyInfoContent.propertyIri.toString).toZIO
+            _ <- ZIO
+                   .fromEither(KnoraIris.PropertyIri.from(propertyInfoContent.propertyIri))
+                   .mapError(BadRequestException.apply)
 
             // get gui related values from request and validate them by making value objects from it
             // get the (optional) gui element from the request
@@ -483,45 +484,27 @@ final case class OntologiesRouteV2()(
                           .validate(validatedGuiAttributes, validatedGuiElement)
                           .flatMap(values => GuiObject.make(values._1, values._2))
 
-            ontologyIri <-
-              ZIO.serviceWithZIO[IriConverter](_.asSmartIri(inputOntology.ontologyMetadata.ontologyIri.toString))
             lastModificationDate = Validation.succeed(propertyUpdateInfo.lastModificationDate)
-            propertyIri <- ZIO
-                             .serviceWithZIO[IriConverter](_.asSmartIri(propertyInfoContent.propertyIri.toString))
             subClassConstraintSmartIri <-
               RouteUtilZ.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint, "Should not happen")
-            subjectType <-
-              propertyInfoContent.predicates.get(subClassConstraintSmartIri) match {
-                case None => ZIO.none
-                case Some(value) =>
-                  value.objects.head match {
-                    case objectType: SmartIriLiteralV2 =>
-                      ZIO
-                        .serviceWithZIO[IriConverter](
-                          _.asSmartIri(objectType.value.toOntologySchema(InternalSchema).toString),
-                        )
-                        .map(Some(_))
-                    case other =>
-                      ZIO.fail(ValidationException(s"Unexpected subject type for $other"))
-                  }
-              }
+            _ <- propertyInfoContent.predicates.get(subClassConstraintSmartIri) match {
+                   case None => ZIO.none
+                   case Some(value) =>
+                     value.objects.head match {
+                       case objectType: SmartIriLiteralV2 => ZIO.some(objectType.value.toInternalSchema)
+                       case other                         => ZIO.fail(ValidationException(s"Unexpected subject type for $other"))
+                     }
+                 }
             objectTypeSmartIri <- RouteUtilZ
                                     .toSmartIri(OntologyConstants.KnoraApiV2Complex.ObjectType, "Should not happen")
-            objectType <-
-              propertyInfoContent.predicates.get(objectTypeSmartIri) match {
-                case None =>
-                  ZIO.fail(ValidationException(s"Object type cannot be empty."))
-                case Some(value) =>
-                  value.objects.head match {
-                    case objectType: SmartIriLiteralV2 =>
-                      ZIO
-                        .serviceWithZIO[IriConverter](
-                          _.asSmartIri(objectType.value.toOntologySchema(InternalSchema).toString),
-                        )
-                    case other =>
-                      ZIO.fail(ValidationException(s"Unexpected object type for $other"))
-                  }
-              }
+            _ <- propertyInfoContent.predicates.get(objectTypeSmartIri) match {
+                   case None => ZIO.fail(ValidationException(s"Object type cannot be empty."))
+                   case Some(value) =>
+                     value.objects.head match {
+                       case objectType: SmartIriLiteralV2 => ZIO.succeed(objectType.value.toInternalSchema)
+                       case other                         => ZIO.fail(ValidationException(s"Unexpected object type for $other"))
+                     }
+                 }
             labelSmartIri <- RouteUtilZ.toSmartIri(OntologyConstants.Rdfs.Label, "Should not happen")
             label = propertyInfoContent.predicates.get(labelSmartIri) match {
                       case None => Validation.fail(ValidationException("Label missing"))
@@ -551,20 +534,7 @@ final case class OntologiesRouteV2()(
                 case superProps => Validation.succeed(superProps)
               }
 
-            _ <-
-              Validation
-                .validate(
-                  lastModificationDate,
-                  label,
-                  comment,
-                  superProperties,
-                  guiObject,
-                )
-                .flatMap(v =>
-                  CreatePropertyCommand
-                    .make(ontologyIri, v._1, propertyIri, subjectType, objectType, v._2, v._3, v._4, v._5),
-                )
-                .toZIO
+            _ <- Validation.validate(lastModificationDate, label, comment, superProperties, guiObject).toZIO
           } yield requestMessage
 
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
@@ -656,9 +626,11 @@ final case class OntologiesRouteV2()(
             propertyUpdateInfo  <- getPropertyDef(inputOntology)
             propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
             lastModificationDate = propertyUpdateInfo.lastModificationDate
-            propertyIri         <- PropertyIri.make(propertyInfoContent.propertyIri.toString).toZIO
-            newGuiElement       <- getGuiElement(propertyInfoContent)
-            newGuiAttributes    <- getGuiAttributes(propertyInfoContent)
+            propertyIri <- ZIO
+                             .fromEither(KnoraIris.PropertyIri.from(propertyInfoContent.propertyIri))
+                             .mapError(BadRequestException.apply)
+            newGuiElement    <- getGuiElement(propertyInfoContent)
+            newGuiAttributes <- getGuiAttributes(propertyInfoContent)
             guiObject <-
               GuiObject
                 .makeFromStrings(newGuiAttributes, newGuiElement)

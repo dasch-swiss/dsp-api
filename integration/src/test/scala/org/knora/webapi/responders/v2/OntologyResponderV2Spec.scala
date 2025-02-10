@@ -3858,10 +3858,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "change the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
-      val propertyIri =
-        Iri.PropertyIri
-          .make(AnythingOntologyIri.makeEntityIri("hasNothingness").toString())
-          .fold(e => throw e.head, v => v)
+      val propertyIri = AnythingOntologyIri.makeProperty("hasNothingness")
       val guiElement =
         Schema.GuiElement
           .make("http://www.knora.org/ontology/salsah-gui#SimpleText")
@@ -3899,7 +3896,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         // Check that the salsah-gui:guiElement from the message is as expected
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(propertyIri.value.toSmartIri)
+        val property = externalOntology.properties(propertyIri.smartIri)
 
         val guiElementPropComplex = property.entityInfoContent.predicates(
           SalsahGui.External.GuiElementProp.toSmartIri,
@@ -3933,10 +3930,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "delete the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
-      val propertyIri =
-        Iri.PropertyIri
-          .make(AnythingOntologyIri.makeEntityIri("hasNothingness").toString())
-          .fold(e => throw e.head, v => v)
+      val propertyIri                             = AnythingOntologyIri.makeProperty("hasNothingness")
       val guiElement                              = None
       val guiAttributes: Set[Schema.GuiAttribute] = Set.empty
       val guiObject =
@@ -3955,7 +3949,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(propertyIri.value.toSmartIri)
+        val property = externalOntology.properties(propertyIri.smartIri)
 
         property.entityInfoContent.predicates
           .get(SalsahGui.External.GuiElementProp.toSmartIri) should ===(None)
