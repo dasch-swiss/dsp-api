@@ -438,6 +438,7 @@ final case class OntologiesRouteV2()(
             requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestMessage <- ZIO.attempt(CreatePropertyRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
+            sf             <- ZIO.service[StringFormatter]
 
             /// more validation ahead, not used to construct the requestMessage
             inputOntology                             <- getInputOntology(requestDoc)
@@ -485,28 +486,32 @@ final case class OntologiesRouteV2()(
                           .flatMap(values => GuiObject.make(values._1, values._2))
 
             lastModificationDate = Validation.succeed(propertyUpdateInfo.lastModificationDate)
-            subClassConstraintSmartIri <-
-              RouteUtilZ.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint, "Should not happen")
-            _ <- propertyInfoContent.predicates.get(subClassConstraintSmartIri) match {
-                   case None => ZIO.none
+
+            // subject class constraint
+            _ <- propertyInfoContent.predicates.get(
+                   sf.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint),
+                 ) match {
+                   case None => ZIO.unit
                    case Some(value) =>
                      value.objects.head match {
-                       case objectType: SmartIriLiteralV2 => ZIO.some(objectType.value.toInternalSchema)
-                       case other                         => ZIO.fail(ValidationException(s"Unexpected subject type for $other"))
+                       case _: SmartIriLiteralV2 => ZIO.unit
+                       case other                => ZIO.fail(ValidationException(s"Unexpected subject type for $other"))
                      }
                  }
-            objectTypeSmartIri <- RouteUtilZ
-                                    .toSmartIri(OntologyConstants.KnoraApiV2Complex.ObjectType, "Should not happen")
-            _ <- propertyInfoContent.predicates.get(objectTypeSmartIri) match {
-                   case None => ZIO.fail(ValidationException(s"Object type cannot be empty."))
-                   case Some(value) =>
-                     value.objects.head match {
-                       case objectType: SmartIriLiteralV2 => ZIO.succeed(objectType.value.toInternalSchema)
-                       case other                         => ZIO.fail(ValidationException(s"Unexpected object type for $other"))
-                     }
-                 }
-            labelSmartIri <- RouteUtilZ.toSmartIri(OntologyConstants.Rdfs.Label, "Should not happen")
-            label = propertyInfoContent.predicates.get(labelSmartIri) match {
+
+            // object type
+            _ <-
+              propertyInfoContent.predicates.get(sf.toSmartIri(OntologyConstants.KnoraApiV2Complex.ObjectType)) match {
+                case None => ZIO.fail(ValidationException(s"Object type cannot be empty."))
+                case Some(value) =>
+                  value.objects.head match {
+                    case _: SmartIriLiteralV2 => ZIO.unit
+                    case other                => ZIO.fail(ValidationException(s"Unexpected object type for $other"))
+                  }
+              }
+
+            // label
+            label = propertyInfoContent.predicates.get(sf.toSmartIri(OntologyConstants.Rdfs.Label)) match {
                       case None => Validation.fail(ValidationException("Label missing"))
                       case Some(value) =>
                         value.objects.head match {

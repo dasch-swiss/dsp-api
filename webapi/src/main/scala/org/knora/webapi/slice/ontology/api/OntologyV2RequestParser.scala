@@ -15,8 +15,8 @@ import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
-
 import dsp.constants.SalsahGui
+import org.glassfish.jaxb.core.v2.model.core.PropertyInfo
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.SmartIri
@@ -33,14 +33,17 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMet
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.CreatePropertyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.jena.DatasetOps
 import org.knora.webapi.slice.common.jena.DatasetOps.*
@@ -333,6 +336,27 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
         _         <- checkConstraints(meta, classInfo)
       } yield f(classInfo, meta.lastModificationDate, apiRequestId, requestingUser)
     }
+
+  def createPropertyRequestV2(jsonLd: String, apiRequestId: UUID, user: User): IO[String, CreatePropertyRequestV2] =
+    ZIO.scoped {
+      for {
+        ds           <- DatasetOps.fromJsonLd(jsonLd)
+        meta         <- extractOntologyMetadata(ds.defaultModel)
+        propertyInfo <- extractPropertyInfo(ds, meta)
+      } yield CreatePropertyRequestV2(propertyInfo, meta.lastModificationDate, apiRequestId, user)
+    }
+
+  private def extractPropertyInfo(ds: Dataset, meta: OntologyMetadata): ZIO[Scope, String, PropertyInfoContentV2] =
+    for {
+      classModel   <- ZIO.fromOption(ds.namedModel(meta.ontologyIri.toString)).orElseFail("No property definition found")
+      r            <- ZIO.fromEither(classModel.singleRootResource)
+      propertyIri  <- extractPropertyIri(r)
+      predicates    = Map.empty[SmartIri, PredicateInfoV2]
+      subPropertyOf = Set.empty[SmartIri]
+    } yield PropertyInfoContentV2(propertyIri.smartIri, predicates, subPropertyOf, ApiV2Complex)
+
+  private def extractPropertyIri(r: Resource): ZIO[Scope, String, PropertyIri] =
+    ZIO.fromOption(r.uri).orElseFail("No property IRI found").flatMap(iriConverter.asPropertyIriApiV2Complex)
 }
 
 object OntologyV2RequestParser {
