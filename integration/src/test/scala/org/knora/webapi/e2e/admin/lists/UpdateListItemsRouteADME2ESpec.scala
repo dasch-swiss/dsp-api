@@ -84,7 +84,7 @@ class UpdateListItemsRouteADME2ESpec
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
+        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri.value)
 
         receivedListInfo.name should be(Some("updated root node name"))
       }
@@ -105,7 +105,7 @@ class UpdateListItemsRouteADME2ESpec
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
+        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri.value)
 
         val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
         labels.size should be(1)
@@ -128,7 +128,7 @@ class UpdateListItemsRouteADME2ESpec
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
+        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri.value)
 
         val comments: Seq[StringLiteralV2] = receivedListInfo.comments.stringLiterals
         comments.size should be(1)
@@ -377,7 +377,7 @@ class UpdateListItemsRouteADME2ESpec
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
+        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri.value)
 
         val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
         labels.size should be(2)
@@ -405,7 +405,7 @@ class UpdateListItemsRouteADME2ESpec
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
+        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri.value)
 
         receivedListInfo.name should be(Some("a totally new name"))
       }
@@ -439,7 +439,7 @@ class UpdateListItemsRouteADME2ESpec
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri)
+        receivedListInfo.projectIri should be(SharedTestDataADM.anythingProjectIri.value)
 
         val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
         labels.size should be(2)

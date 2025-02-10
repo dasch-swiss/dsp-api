@@ -31,7 +31,7 @@ import org.knora.webapi.slice.admin.domain.model.User
  * @param selfjoin    The project's self-join status.
  */
 case class Project(
-  id: IRI,
+  id: ProjectIri,
   shortname: Shortname,
   shortcode: Shortcode,
   longname: Option[Longname],
@@ -43,12 +43,10 @@ case class Project(
   selfjoin: SelfJoin,
 ) extends Ordered[Project] {
 
-  def projectIri: ProjectIri = ProjectIri.unsafeFrom(id)
-
   /**
    * Allows to sort collections of ProjectADM. Sorting is done by the id.
    */
-  def compare(that: Project): Int = this.id.compareTo(that.id)
+  def compare(that: Project): Int = this.id.value.compareTo(that.id.value)
 }
 object Project {
   implicit val projectCodec: JsonCodec[Project] = DeriveJsonCodec.gen[Project]

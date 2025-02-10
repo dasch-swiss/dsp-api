@@ -1,5 +1,34 @@
 # Changelog
 
+## [31.5.0](https://github.com/dasch-swiss/dsp-api/compare/v31.4.0...v31.5.0) (2025-02-10)
+
+
+### Maintenances
+
+* Make Project.selfjoin typed ([#3497](https://github.com/dasch-swiss/dsp-api/issues/3497)) ([a159f32](https://github.com/dasch-swiss/dsp-api/commit/a159f321b207623d958adbb1a77da6dcf0ff5278))
+* Make Project.status typed ([#3499](https://github.com/dasch-swiss/dsp-api/issues/3499)) ([ec29048](https://github.com/dasch-swiss/dsp-api/commit/ec29048abb9158d7a8998e51e5ed781c8f35e902))
+* Minor dependency updates ([#3489](https://github.com/dasch-swiss/dsp-api/issues/3489)) ([06347d1](https://github.com/dasch-swiss/dsp-api/commit/06347d1ea961947e265bb1956d4604a6ee923da1))
+* Remove unused code ([#3496](https://github.com/dasch-swiss/dsp-api/issues/3496)) ([2d22b98](https://github.com/dasch-swiss/dsp-api/commit/2d22b988f269fb133ea91b1349cd5ed9007d3551))
+* Replace method with boolean flag with multiple methods ([#3485](https://github.com/dasch-swiss/dsp-api/issues/3485)) ([89600f4](https://github.com/dasch-swiss/dsp-api/commit/89600f4f3f531d4f26342a4b2edcd0432d0e9e40))
+* Simplify PR template ([#3494](https://github.com/dasch-swiss/dsp-api/issues/3494)) ([6daced6](https://github.com/dasch-swiss/dsp-api/commit/6daced63d8d2c8adf74b92fc2445caca6179ab1d))
+* Use OntologyIri in ontology requests ([#3481](https://github.com/dasch-swiss/dsp-api/issues/3481)) ([cebb1ae](https://github.com/dasch-swiss/dsp-api/commit/cebb1aecf485cd25a38f690cff89f98cbd630b7f))
+
+
+### Documentation
+
+* Update documentation on footnotes in richtext (DEV-4567) ([#3495](https://github.com/dasch-swiss/dsp-api/issues/3495)) ([3ed58b6](https://github.com/dasch-swiss/dsp-api/commit/3ed58b6c2709ee20fe638b9cf69b9832f855a53c))
+
+
+### Enhancements
+
+* Add json ld support to change label or comment for class (DEV-4344) ([#3493](https://github.com/dasch-swiss/dsp-api/issues/3493)) ([8ee061c](https://github.com/dasch-swiss/dsp-api/commit/8ee061c7998ce94e28e157650671e71eeaa56428))
+* Add more support for JSON-LD on ontology endpoints ([#3498](https://github.com/dasch-swiss/dsp-api/issues/3498)) ([bb9f5d1](https://github.com/dasch-swiss/dsp-api/commit/bb9f5d189b86e394d0b3c3b9603ce702dbe745ac))
+
+
+### Tests
+
+* Allow external IRI for subClassOf when creating a new Class (DEV-4554) ([#3487](https://github.com/dasch-swiss/dsp-api/issues/3487)) ([f254573](https://github.com/dasch-swiss/dsp-api/commit/f254573eef8a77f6a4c97bafecc17172ce64cb9a))
+
 ## [31.4.0](https://github.com/dasch-swiss/dsp-api/compare/v31.3.0...v31.4.0) (2025-02-03)
 
 

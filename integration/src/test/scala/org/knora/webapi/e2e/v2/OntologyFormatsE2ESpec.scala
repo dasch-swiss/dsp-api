@@ -23,6 +23,7 @@ import org.knora.webapi.messages.util.rdf.RdfFormatUtil
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.*
 
 class OntologyFormatsE2ESpec extends E2ESpec {
@@ -73,8 +74,8 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     }
   }
 
-  private def urlEncodeIri(iri: IRI): String =
-    URLEncoder.encode(iri, "UTF-8")
+  private def urlEncodeIri(iri: IRI | ProjectIri): String =
+    URLEncoder.encode(iri.toString, "UTF-8")
 
   private def checkTestCase(httpGetTest: HttpGetTest) = {
     val responseJsonLd = getResponse(httpGetTest.urlPath, RdfMediaTypes.`application/ld+json`)

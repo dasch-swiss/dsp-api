@@ -37,7 +37,7 @@ case class ProjectInfo(
 object ProjectInfo {
   def from(project: Project): ProjectInfo =
     ProjectInfo(
-      id = project.id,
+      id = project.id.value,
       shortname = project.shortname.value,
       shortcode = project.shortcode.value,
       longname = project.longname.map(_.value),
