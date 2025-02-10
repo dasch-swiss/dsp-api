@@ -50,9 +50,12 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseText
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.LicenseUri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.StringValue
 
 /**
@@ -234,6 +237,22 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
 
   implicit object LogoFormat extends StringValueFormat[Logo] {
     override val from: String => Either[String, Logo] = Logo.from
+  }
+
+  trait BooleanValueFormat[T <: BooleanValue] extends JsonFormat[T] { self =>
+    def from: Boolean => T
+    override def write(v: T): JsValue = JsBoolean(v.value)
+    override def read(json: JsValue): T = json match
+      case JsBoolean(bool) => self.from(bool)
+      case _               => throw DeserializationException("Must be a json Boolean")
+  }
+
+  implicit object SelfJoinValueFormat extends BooleanValueFormat[SelfJoin] {
+    override val from: Boolean => SelfJoin = SelfJoin.from
+  }
+
+  implicit object StatusFormat extends BooleanValueFormat[Status] {
+    override val from: Boolean => Status = Status.from
   }
 
   implicit val groupFormat: JsonFormat[Group] = jsonFormat6(Group.apply)

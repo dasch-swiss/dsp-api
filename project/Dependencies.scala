@@ -14,14 +14,14 @@ object Dependencies {
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.15.0"
 
-  val ScalaVersion = "3.3.4"
+  val ScalaVersion = "3.3.5"
 
   val PekkoActorVersion = "1.1.3"
   val PekkoHttpVersion  = "1.1.0"
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion         = "5.1.0"
+  val Rdf4jVersion         = "5.1.1"
   val TopbraidShaclVersion = "1.4.4"
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
@@ -29,7 +29,7 @@ object Dependencies {
   val ZioLoggingVersion           = "2.4.0"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC36"
+  val ZioPreludeVersion           = "1.0.0-RC37"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.1.14"
 
@@ -131,7 +131,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.12"
+  val tapirVersion = "1.11.13"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,

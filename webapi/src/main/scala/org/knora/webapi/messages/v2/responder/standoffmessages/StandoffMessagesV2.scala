@@ -5,15 +5,9 @@
 
 package org.knora.webapi.messages.v2.responder.standoffmessages
 
-import com.typesafe.scalalogging.Logger
-import org.apache.pekko.actor.ActorRef
-import org.apache.pekko.util.Timeout
-
 import java.time.Instant
 import java.util.UUID
 import scala.collection.immutable.SortedSet
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 import dsp.errors.AssertionException
 import dsp.valueobjects.Iri
@@ -28,7 +22,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
-import org.knora.webapi.messages.v2.responder.KnoraJsonLDRequestReaderV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.slice.admin.domain.model.User
@@ -64,18 +57,7 @@ case class CreateMappingRequestV2(
 case class CreateMappingRequestMetadataV2(label: String, projectIri: SmartIri, mappingName: String)
     extends StandoffResponderRequestV2
 
-object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateMappingRequestMetadataV2] {
-
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-    appActor: ActorRef,
-    log: Logger,
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] =
-    Future {
-      fromJsonLDSync(jsonLDDocument = jsonLDDocument)
-    }
+object CreateMappingRequestMetadataV2 {
 
   def fromJsonLDSync(jsonLDDocument: JsonLDDocument): CreateMappingRequestMetadataV2 = {
 

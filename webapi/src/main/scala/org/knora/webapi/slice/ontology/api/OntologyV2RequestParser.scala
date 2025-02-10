@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.api
 
+import org.apache.jena.query.Dataset
 import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.OWL2 as OWL
 import org.apache.jena.vocabulary.RDFS
@@ -23,12 +24,19 @@ import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.AddCardinalitiesToClassRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2.LabelOrComment
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeGuiOrderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris
@@ -62,7 +70,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       model <- ModelOps.fromJsonLd(jsonLd)
       meta  <- extractOntologyMetadata(model)
     } yield ChangeOntologyMetadataRequestV2(
-      meta.ontologyIri.smartIri,
+      meta.ontologyIri,
       meta.label,
       meta.comment,
       meta.lastModificationDate,
@@ -118,10 +126,9 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
   def createClassRequestV2(jsonLd: String, apiRequestId: UUID, requestingUser: User): IO[String, CreateClassRequestV2] =
     ZIO.scoped {
       for {
-        ds         <- DatasetOps.fromJsonLd(jsonLd)
-        meta       <- extractOntologyMetadata(ds.defaultModel)
-        classModel <- ZIO.fromOption(ds.namedModel(meta.ontologyIri.toString)).orElseFail("No class definition found")
-        classInfo  <- extractClassInfo(classModel)
+        ds        <- DatasetOps.fromJsonLd(jsonLd)
+        meta      <- extractOntologyMetadata(ds.defaultModel)
+        classInfo <- extractClassInfo(ds, meta)
         _ <-
           ZIO
             .fail(
@@ -136,8 +143,9 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       )
     }
 
-  private def extractClassInfo(classModel: Model): ZIO[Scope, String, ClassInfoContentV2] =
+  private def extractClassInfo(ds: Dataset, meta: OntologyMetadata): ZIO[Scope, String, ClassInfoContentV2] =
     for {
+      classModel    <- ZIO.fromOption(ds.namedModel(meta.ontologyIri.toString)).orElseFail("No class definition found")
       r             <- ZIO.fromEither(classModel.singleRootResource)
       classIri      <- extractClassIri(r)
       predicates    <- extractPredicates(r)
@@ -147,7 +155,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     } yield ClassInfoContentV2(classIri.smartIri, predicates, cardinalities, datatypeInfo, subClasses, ApiV2Complex)
 
   private def extractClassIri(r: Resource): ZIO[Scope, String, ResourceClassIri] =
-    ZIO.fromOption(r.uri).orElseFail("No class IRI found").flatMap(str => iriConverter.asResourceClassIri(str))
+    ZIO.fromOption(r.uri).orElseFail("No class IRI found").flatMap(iriConverter.asResourceClassIriApiV2Complex)
 
   private def extractPredicates(r: Resource): ZIO[Scope, String, Map[SmartIri, PredicateInfoV2]] =
     val propertyIter: Map[String, List[Statement]] = r
@@ -181,7 +189,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private def extractSubClasses(r: Resource): ZIO[Scope, String, Set[ResourceClassIri]] = {
     val subclasses: Set[String] = r.listProperties(RDFS.subClassOf).asScala.flatMap(_.objectAsUri.toOption).toSet
-    iriConverter.asResourceClassIris(subclasses, requireApiV2Complex = false)
+    ZIO.foreach(subclasses)(iriConverter.asResourceClassIri)
   }
 
   private def extractCardinalities(r: Resource): ZIO[Scope, String, Map[SmartIri, KnoraCardinalityInfo]] = {
@@ -232,6 +240,99 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       guiOrder    <- bNode.objectIntOption(SalsahGui.External.GuiOrder)
     } yield KnoraCardinalityInfo(cardinality, guiOrder)
   }
+
+  def changeClassLabelsOrCommentsRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, ChangeClassLabelsOrCommentsRequestV2] =
+    ZIO.scoped {
+      for {
+        ds        <- DatasetOps.fromJsonLd(jsonLd)
+        meta      <- extractOntologyMetadata(ds.defaultModel)
+        classInfo <- extractClassInfo(ds, meta)
+        classIri  <- ZIO.fromEither(ResourceClassIri.fromApiV2Complex(classInfo.classIri))
+        preds = classInfo.predicates.filter { case (iri, _) =>
+                  iri.toIri == RDFS.label.toString || iri.toIri == RDFS.comment.toString
+                }
+        _ <- ZIO.fail(s"Class '${classIri.toString}' does not have any updates").unless(preds.nonEmpty)
+        _ <- ZIO.fail(s"Class '$classIri may only label or comment to update").unless(preds.size == 1)
+        labelOrComment <- ZIO
+                            .fromOption(LabelOrComment.fromString(preds.keys.head.toString))
+                            .orElseFail(s"Invalid predicate: ${preds.keys.head}")
+        newObjects = preds.head._2.objects.collect { case sl: StringLiteralV2 => sl }
+      } yield ChangeClassLabelsOrCommentsRequestV2(
+        classIri,
+        labelOrComment,
+        newObjects,
+        meta.lastModificationDate,
+        apiRequestId,
+        requestingUser,
+      )
+    }
+
+  def addCardinalitiesToClassRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, AddCardinalitiesToClassRequestV2] =
+    constructClassRelatedRequest(
+      jsonLd,
+      apiRequestId,
+      requestingUser,
+      AddCardinalitiesToClassRequestV2.apply,
+      (_, classInfo) => ZIO.fail("No cardinalities specified").when(classInfo.directCardinalities.isEmpty).unit,
+    )
+
+  def replaceClassCardinalitiesRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, ReplaceClassCardinalitiesRequestV2] =
+    constructClassRelatedRequest(jsonLd, apiRequestId, requestingUser, ReplaceClassCardinalitiesRequestV2.apply)
+
+  def canDeleteCardinalitiesFromClassRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, CanDeleteCardinalitiesFromClassRequestV2] =
+    constructClassRelatedRequest(jsonLd, apiRequestId, requestingUser, CanDeleteCardinalitiesFromClassRequestV2.apply)
+
+  def deleteCardinalitiesFromClassRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, DeleteCardinalitiesFromClassRequestV2] =
+    constructClassRelatedRequest(jsonLd, apiRequestId, requestingUser, DeleteCardinalitiesFromClassRequestV2.apply)
+
+  def changeGuiOrderRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+  ): IO[String, ChangeGuiOrderRequestV2] =
+    constructClassRelatedRequest(
+      jsonLd,
+      apiRequestId,
+      requestingUser,
+      ChangeGuiOrderRequestV2.apply,
+      (_, classInfo) => ZIO.fail("No cardinalities specified").when(classInfo.directCardinalities.isEmpty).unit,
+    )
+
+  private def constructClassRelatedRequest[A](
+    jsonLd: String,
+    apiRequestId: UUID,
+    requestingUser: User,
+    f: (ClassInfoContentV2, Instant, UUID, User) => A,
+    checkConstraints: (OntologyMetadata, ClassInfoContentV2) => IO[String, Unit] = (_, _) => ZIO.unit,
+  ): IO[String, A] =
+    ZIO.scoped {
+      for {
+        ds        <- DatasetOps.fromJsonLd(jsonLd)
+        meta      <- extractOntologyMetadata(ds.defaultModel)
+        classInfo <- extractClassInfo(ds, meta)
+        _         <- checkConstraints(meta, classInfo)
+      } yield f(classInfo, meta.lastModificationDate, apiRequestId, requestingUser)
+    }
 }
 
 object OntologyV2RequestParser {

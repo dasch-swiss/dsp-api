@@ -23,9 +23,11 @@ object KnoraIris {
 
   trait KnoraIri { self =>
     def smartIri: SmartIri
-    override def toString: String                     = self.smartIri.toString
-    def toInternal: InternalIri                       = self.smartIri.toInternalIri
-    def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
+    override def toString: String                           = self.smartIri.toString
+    final def toInternalIri: InternalIri                    = self.smartIri.toInternalIri
+    final def toComplexSchema: SmartIri                     = self.smartIri.toComplexSchema
+    final def toInternalSchema: SmartIri                    = self.smartIri.toInternalSchema
+    final def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
   }
 
   // PropertyIri and ResourceClassIri currently have the same constraint
@@ -46,9 +48,7 @@ object KnoraIris {
       if iri.isApiV2ComplexSchema then from(iri)
       else Left(s"Not an API v2 complex IRI ${iri.toString}")
 
-    def from(iri: SmartIri): Either[String, PropertyIri] =
-      if iri.isKnoraEntityIri then Right(PropertyIri(iri))
-      else Left(s"<$iri> is not a Knora property IRI")
+    def from(iri: SmartIri): Either[String, PropertyIri] = Right(PropertyIri(iri))
   }
 
   final case class ValueIri private (
@@ -61,7 +61,9 @@ object KnoraIris {
       this.shortcode == other.shortcode && this.resourceId == other.resourceId
   }
 
-  final case class ResourceClassIri private (smartIri: SmartIri) extends KnoraIri
+  final case class ResourceClassIri private (smartIri: SmartIri) extends KnoraIri {
+    def ontologyIri: OntologyIri = OntologyIri.unsafeFrom(smartIri.getOntologyFromEntity)
+  }
 
   object ResourceClassIri {
     def unsafeFrom(iri: SmartIri): ResourceClassIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
@@ -107,11 +109,15 @@ object KnoraIris {
       else Left(s"<$iri> is not a Knora resource IRI")
   }
 
-  final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri {
-    def makeEntityIri(name: EntityName): SmartIri = smartIri.makeEntityIri(name.toString)
-    def ontologyName: OntologyName                = smartIri.getOntologyName
-    def toComplexSchema: SmartIri                 = smartIri.toComplexSchema
-    def toInternalSchema: SmartIri                = smartIri.toInternalSchema
+  final case class OntologyIri private (smartIri: SmartIri) extends KnoraIri { self =>
+    def makeEntityIri(name: String): SmartIri = smartIri.makeEntityIri(name)
+    def makeClass(name: String): ResourceClassIri =
+      ResourceClassIri.unsafeFrom(self.makeEntityIri(name))
+    def makeProperty(name: String): PropertyIri =
+      PropertyIri.unsafeFrom(self.makeEntityIri(name))
+    def ontologyName: OntologyName = smartIri.getOntologyName
+    def isInternal: Boolean        = ontologyName.isInternal
+    def isExternal: Boolean        = !isInternal
   }
   object OntologyIri {
     def makeNew(

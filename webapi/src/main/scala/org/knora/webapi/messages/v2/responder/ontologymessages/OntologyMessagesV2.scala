@@ -4,12 +4,7 @@
  */
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
-
-import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.builder.HashCodeBuilder
-import org.apache.pekko
-import org.apache.pekko.actor.ActorRef
-import org.apache.pekko.util.Timeout
 import org.eclipse.rdf4j.model.IRI as Rdf4jIRI
 import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.model.vocabulary.RDF
@@ -20,8 +15,6 @@ import zio.prelude.Validation
 
 import java.time.Instant
 import java.util.UUID
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
@@ -51,6 +44,8 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Ow
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
 /**
@@ -86,7 +81,7 @@ case class CreateOntologyRequestV2(
  * @param requestingUser the user making the request.
  */
 case class CanDeleteOntologyRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
 
@@ -99,7 +94,7 @@ case class CanDeleteOntologyRequestV2(
  * @param requestingUser       the user making the request.
  */
 case class DeleteOntologyRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
@@ -405,46 +400,6 @@ case class AddCardinalitiesToClassRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[AddCardinalitiesToClassRequestV2]] based on JSON-LD input.
- */
-object AddCardinalitiesToClassRequestV2 {
-
-  /**
-   * Converts JSON-LD input into an [[AddCardinalitiesToClassRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return an [[AddCardinalitiesToClassRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): AddCardinalitiesToClassRequestV2 = {
-    // Get the class definition and the ontology's last modification date from the JSON-LD.
-
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    // The request must provide cardinalities.
-
-    if (classInfoContent.directCardinalities.isEmpty) {
-      throw BadRequestException("No cardinalities specified")
-    }
-
-    AddCardinalitiesToClassRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
-
-/**
  * Requests the replacement of a class's cardinalities with new ones. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.
@@ -458,38 +413,6 @@ case class ReplaceClassCardinalitiesRequestV2(
   apiRequestID: UUID,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
-
-/**
- * Constructs instances of [[ReplaceClassCardinalitiesRequestV2]] based on JSON-LD input.
- */
-object ReplaceClassCardinalitiesRequestV2 {
-
-  /**
-   * Converts JSON-LD input into a [[ReplaceClassCardinalitiesRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[ReplaceClassCardinalitiesRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): ReplaceClassCardinalitiesRequestV2 = {
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    ReplaceClassCardinalitiesRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
 
 /**
  * FIXME(DSP-1856): Can only remove one single cardinality at a time.
@@ -508,38 +431,6 @@ final case class CanDeleteCardinalitiesFromClassRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[CanDeleteCardinalitiesFromClassRequestV2]] based on JSON-LD input.
- */
-object CanDeleteCardinalitiesFromClassRequestV2 {
-
-  /**
-   * Converts JSON-LD input into a [[DeleteCardinalitiesFromClassRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): CanDeleteCardinalitiesFromClassRequestV2 = {
-    val inputOntology        = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntology)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    CanDeleteCardinalitiesFromClassRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
-
-/**
  * FIXME(DSP-1856): Can only remove one single cardinality at a time.
  * Requests the removal of a class's cardinalities. A successful response will be a [[ReadOntologyV2]].
  *
@@ -554,38 +445,6 @@ final case class DeleteCardinalitiesFromClassRequestV2(
   apiRequestID: UUID,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
-
-/**
- * Constructs instances of [[DeleteCardinalitiesFromClassRequestV2]] based on JSON-LD input.
- */
-object DeleteCardinalitiesFromClassRequestV2 {
-
-  /**
-   * Converts JSON-LD input into a [[DeleteCardinalitiesFromClassRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): DeleteCardinalitiesFromClassRequestV2 = {
-    val inputOntology        = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntology)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    DeleteCardinalitiesFromClassRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
 
 /**
  * Requests the deletion of a class. A successful response will be a [[ReadOntologyMetadataV2]].
@@ -671,36 +530,6 @@ case class ChangePropertyGuiElementRequest(
   apiRequestID: UUID,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
-
-/**
- * Constructs instances of [[ChangePropertyGuiElementRequest]] based on JSON-LD input.
- */
-object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[ChangePropertyGuiElementRequest] {
-
-  /**
-   * Converts a JSON-LD request to a [[ChangePropertyGuiElementRequest]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @param appActor       a reference to the application actor.
-   * @param log            a logging adapter.
-   * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
-   */
-  @deprecated
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-    appActor: ActorRef,
-    log: Logger,
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyGuiElementRequest] =
-    Future {
-      throw BadRequestException(
-        "Deprecated method fromJsonLD() for ChangePropertyGuiElementRequest. Please report this as a bug.",
-      )
-    }
-}
 
 /**
  * Requests that a property's labels or comments are changed. A successful response will be a [[ReadOntologyV2]].
@@ -817,49 +646,26 @@ object DeletePropertyCommentRequestV2 {
  * @param requestingUser       the user making the request.
  */
 case class ChangeClassLabelsOrCommentsRequestV2(
-  classIri: SmartIri,
-  predicateToUpdate: SmartIri,
+  classIri: ResourceClassIri,
+  predicateToUpdate: ChangeClassLabelsOrCommentsRequestV2.LabelOrComment,
   newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
-    with ChangeLabelsOrCommentsRequest
-
-/**
- * Constructs instances of [[ChangeClassLabelsOrCommentsRequestV2]] based on JSON-LD input.
- */
 object ChangeClassLabelsOrCommentsRequestV2 {
+  enum LabelOrComment {
+    case Label
+    case Comment
 
-  /**
-   * Converts a JSON-LD request to a [[ChangeClassLabelsOrCommentsRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): ChangeClassLabelsOrCommentsRequestV2 = {
-    val inputOntologiesV2     = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo       = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent      = classUpdateInfo.classInfoContent
-    val lastModificationDate  = classUpdateInfo.lastModificationDate
-    val predicateInfoToUpdate = OntologyUpdateHelper.getLabelsOrComments(classInfoContent)
-
-    ChangeClassLabelsOrCommentsRequestV2(
-      classIri = classInfoContent.classIri,
-      predicateToUpdate = predicateInfoToUpdate.predicateIri,
-      newObjects = predicateInfoToUpdate.objects.collect { case strLiteral: StringLiteralV2 =>
-        strLiteral
-      },
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
+    override def toString: String = this match {
+      case Label   => RDFS.LABEL.toString
+      case Comment => RDFS.COMMENT.toString
+    }
+  }
+  object LabelOrComment {
+    def fromString(str: String): Option[LabelOrComment] =
+      LabelOrComment.values.find(_.toString == str)
   }
 }
 
@@ -917,35 +723,6 @@ case class ChangeGuiOrderRequestV2(
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
 
-object ChangeGuiOrderRequestV2 {
-
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): ChangeGuiOrderRequestV2 = {
-    // Get the class definition and the ontology's last modification date from the JSON-LD.
-
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent     = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
-
-    // The request must provide cardinalities.
-
-    if (classInfoContent.directCardinalities.isEmpty) {
-      throw BadRequestException("No cardinalities specified")
-    }
-
-    ChangeGuiOrderRequestV2(
-      classInfoContent = classInfoContent,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
-
 /**
  * Requests a change in the metadata of an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
  *
@@ -957,7 +734,7 @@ object ChangeGuiOrderRequestV2 {
  * @param requestingUser       the user making the request.
  */
 case class ChangeOntologyMetadataRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   label: Option[String] = None,
   comment: Option[String] = None,
   lastModificationDate: Instant,
@@ -974,7 +751,7 @@ case class ChangeOntologyMetadataRequestV2(
  * @param requestingUser       the user making the request.
  */
 case class DeleteOntologyCommentRequestV2(
-  ontologyIri: SmartIri,
+  ontologyIri: OntologyIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
@@ -1011,7 +788,6 @@ case class EntityInfoGetResponseV2(
  *
  * @param standoffClassIris    the IRIs of the resource entities to be queried.
  * @param standoffPropertyIris the IRIs of the property entities to be queried.
- * @param requestingUser       the user making the request.
  */
 case class StandoffEntityInfoGetRequestV2(
   standoffClassIris: Set[SmartIri] = Set.empty,
@@ -1119,7 +895,7 @@ case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.e
  * @param allLanguages   true if information in all available languages should be returned.
  * @param requestingUser the user making the request.
  */
-case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: User)
+case class OntologyEntitiesGetRequestV2(ontologyIri: OntologyIri, allLanguages: Boolean, requestingUser: User)
     extends OntologiesResponderRequestV2
 
 /**

@@ -395,8 +395,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         )
         received.project.keywords.sorted should be(Seq("updated", "keywords").sorted)
         received.project.logo.map(_.value) should be(Some("/fu/bar/baz-updated.jpg"))
-        received.project.status should be(true)
-        received.project.selfjoin should be(true)
+        received.project.status should be(Status.Active)
+        received.project.selfjoin should be(SelfJoin.CanJoin)
       }
 
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
