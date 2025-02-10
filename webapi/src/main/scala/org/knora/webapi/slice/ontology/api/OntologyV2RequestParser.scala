@@ -14,12 +14,15 @@ import zio.prelude.Validation
 
 import java.time.Instant
 import java.util.UUID
+import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
 import dsp.constants.SalsahGui
+import dsp.valueobjects.Schema.GuiObject
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
+import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
@@ -356,7 +359,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       subPropertyOf <- extractSubPropertyOf(r).map(_.map(_.smartIri))
 
       propertyInfo = PropertyInfoContentV2(propertyIri.smartIri, predicates, subPropertyOf, ApiV2Complex)
-      _           <- sanityCheck(propertyInfo)
+      _           <- sanityCheckCreate(propertyInfo)
     } yield propertyInfo
 
   private def extractPropertyIri(r: Resource): ZIO[Scope, String, PropertyIri] =
@@ -367,25 +370,103 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
     ZIO.foreach(subclasses)(iriConverter.asResourceClassIri)
   }
 
-  private def sanityCheck(propertyInfo: PropertyInfoContentV2): ZIO[Scope, String, Unit] = for {
-    _           <- ZIO.fail("No predicates found").when(propertyInfo.predicates.isEmpty)
-    subjectType <- iriConverter.asSmartIri(KA.SubjectType).orDie
-    objectType  <- iriConverter.asSmartIri(KA.ObjectType).orDie
-    validSubjectType = propertyInfo.getIriObject(subjectType) match {
-                         case None    => Validation.succeed(None)
-                         case Some(t) => isApiV2ComplexEntityIri(t, "Invalid knora-api:subjectType").map(Some(_))
-                       }
-    hasObjectType = propertyInfo.getIriObject(objectType) match {
-                      case None    => Validation.fail("Missing knora-api:objectType")
-                      case Some(t) => isApiV2ComplexEntityIri(t, "Invalid knora-api:objectType")
-                    }
-    _ <- Validation.validate(validSubjectType, hasObjectType).toZIO
+  private def sanityCheckCreate(propertyInfo: PropertyInfoContentV2): ZIO[Scope, String, Unit] = for {
+    _                      <- ZIO.fail("No predicates found").when(propertyInfo.predicates.isEmpty)
+    subjectType            <- iriConverter.asSmartIri(KA.SubjectType).orDie
+    objectType             <- iriConverter.asSmartIri(KA.ObjectType).orDie
+    subjectClassConstraint <- iriConverter.asSmartIri(KB.SubjectClassConstraint).orDie
+    rdfsLabel              <- iriConverter.asSmartIri(RDFS.label.toString).orDie
+    rdfsComment            <- iriConverter.asSmartIri(RDFS.comment.toString).orDie
+    guiElementProp         <- iriConverter.asSmartIri(SalsahGui.External.GuiElementProp).orDie
+    guiAttribute           <- iriConverter.asSmartIri(SalsahGui.External.GuiAttribute).orDie
+
+    isPropertyIri = Validation.fromEither(PropertyIri.from(propertyInfo.propertyIri))
+    validSubjectType =
+      propertyInfo.getIriObject(subjectType) match
+        case None    => Validation.succeed(None)
+        case Some(t) => isApiV2ComplexEntityIri(t, "Invalid knora-api:subjectType").map(Some(_))
+    hasObjectType =
+      propertyInfo.getIriObject(objectType) match
+        case None    => Validation.fail("Missing knora-api:objectType")
+        case Some(t) => isApiV2ComplexEntityIri(t, "Invalid knora-api:objectType")
+    subPropertyOfNotEmpty =
+      propertyInfo.subPropertyOf match
+        case set if set.isEmpty => Validation.fail("SuperProperties cannot be empty")
+        case _                  => Validation.succeed(())
+    subjectClassConstraintIsIri =
+      propertyInfo.getIriObject(subjectClassConstraint) match
+        case None    => Validation.fail("Unexpected knora-base:subjectClassConstraint")
+        case Some(_) => Validation.succeed(())
+    labelsAreValid =
+      propertyInfo.predicates.get(rdfsLabel) match
+        case None       => Validation.fail("Missing rdfs:label")
+        case Some(info) => ensureOnlyStringLiteralsWithLanguage(info.objects, "rdfs:label")
+    commentIsValid =
+      propertyInfo.predicates.get(rdfsComment) match
+        case None       => Validation.succeed(())
+        case Some(info) => ensureOnlyStringLiteralsWithLanguage(info.objects, "rdfs:comment")
+    guiObjectValid = ensureValidGuiObject(propertyInfo.predicates, guiElementProp, guiAttribute)
+
+    _ <- Validation
+           .validate(
+             isPropertyIri,
+             validSubjectType,
+             hasObjectType,
+             subPropertyOfNotEmpty,
+             subjectClassConstraintIsIri,
+             labelsAreValid,
+             commentIsValid,
+             guiObjectValid,
+           )
+           .toZIO
   } yield ()
 
   private def isApiV2ComplexEntityIri(s: SmartIri, failMsg: String): Validation[String, SmartIri] =
     if s.isKnoraApiV2EntityIri && s.isApiV2ComplexSchema then Validation.succeed(s)
     else Validation.fail(s"$failMsg: ${s.toComplexSchema.toIri}")
 
+  private def ensureOnlyStringLiteralsWithLanguage(
+    literals: Seq[OntologyLiteralV2],
+    prop: String,
+  ): Validation[String, Seq[StringLiteralV2]] =
+    ensureOnlyStringLiterals(literals, prop)
+      .flatMap(strLit =>
+        strLit.filter(_.language.isEmpty) match
+          case Nil         => Validation.succeed(strLit)
+          case withoutLang => Validation.fail(s"$prop: String literals without language: ${withoutLang.mkString(", ")}"),
+      )
+
+  private def ensureOnlyStringLiterals(
+    literals: Seq[OntologyLiteralV2],
+    prop: String,
+  ): Validation[String, Seq[StringLiteralV2]] = {
+    val nonStringLiterals = literals.filter(pred => !pred.isInstanceOf[StringLiteralV2])
+    if (nonStringLiterals.isEmpty) Validation.succeed(literals.collect { case s: StringLiteralV2 => s })
+    else Validation.fail(s"$prop: Non-string literals: ${nonStringLiterals.mkString(", ")}")
+  }
+
+  private def ensureValidGuiObject(
+    predicates: Map[SmartIri, PredicateInfoV2],
+    guiElementProp: SmartIri,
+    guiAttribute: SmartIri,
+  ): Validation[String, GuiObject] = {
+    val guiElement = predicates.get(guiElementProp)
+    val guiElementVal = guiElement match
+      case None => Validation.succeed(())
+      case Some(info) =>
+        info.objects.head match
+          case _: SmartIriLiteralV2 => Validation.succeed(())
+          case other                => Validation.fail(s"Unexpected object for salsah-gui:guiElement: $other")
+
+    val guiAttributes   = predicates.get(guiAttribute).map(_.objects).getOrElse(Seq.empty)
+    val guiAttributeVal = ensureOnlyStringLiterals(guiAttributes, "salsah-gui:guiAttribute")
+
+    val guiAttrStr = guiAttributes.collect { case StringLiteralV2(value, _) => value }.toSet
+    val guiElementStr =
+      guiElement.flatMap(_.objects.headOption).collect { case SmartIriLiteralV2(value) => value.toInternalSchema.toIri }
+    val validGui = GuiObject.makeFromStrings(guiAttrStr, guiElementStr).mapError(_.getMessage)
+    Validation.validate(guiElementVal, guiAttributeVal, validGui).map { case (_, _, gui) => gui }
+  }
 }
 
 object OntologyV2RequestParser {

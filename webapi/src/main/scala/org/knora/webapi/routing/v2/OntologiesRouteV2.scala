@@ -10,14 +10,11 @@ import org.apache.pekko.http.scaladsl.server.PathMatcher
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
-import zio.prelude.Validation
 
 import java.time.Instant
 
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
-import dsp.errors.ValidationException
-import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -431,119 +428,13 @@ final case class OntologiesRouteV2()(
   private def createProperty(): Route =
     path(ontologiesBasePath / "properties") {
       post {
-        // Create a new property.
         entity(as[String]) { jsonRequest => requestContext =>
           val requestMessageTask = for {
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestMessage <- requestParser(_.createPropertyRequestV2(jsonRequest, apiRequestId, requestingUser))
                                 .mapError(BadRequestException.apply)
-
-            requestDoc <- RouteUtilV2.parseJsonLd(jsonRequest)
-            sf         <- ZIO.service[StringFormatter]
-
-            /// more validation ahead, not used to construct the requestMessage
-            inputOntology                             <- getInputOntology(requestDoc)
-            propertyUpdateInfo                        <- getPropertyDef(inputOntology)
-            propertyInfoContent: PropertyInfoContentV2 = propertyUpdateInfo.propertyInfoContent
-            _ <- ZIO
-                   .fromEither(KnoraIris.PropertyIri.from(propertyInfoContent.propertyIri))
-                   .mapError(BadRequestException.apply)
-
-            // get gui related values from request and validate them by making value objects from it
-            // get the (optional) gui element from the request
-            maybeGuiElement <- getGuiElement(propertyInfoContent)
-            // get the gui attribute(s) from the request
-            maybeGuiAttributes <- getGuiAttributes(propertyInfoContent)
-            _ <- GuiObject
-                   .makeFromStrings(maybeGuiAttributes, maybeGuiElement)
-                   .toZIO
-                   .mapError(error => BadRequestException(error.msg))
-
-            // get gui related values from request and validate them by making value objects from it
-
-            // get ontology info from request
-            inputOntology       <- getInputOntology(requestDoc)
-            propertyInfoContent <- getPropertyDef(inputOntology).map(_.propertyInfoContent)
-
-            // get the (optional) gui element
-            // get the (optional) gui element from the request
-            maybeGuiElement <- getGuiElement(propertyInfoContent)
-
-            // validate the gui element by creating value object
-            validatedGuiElement = maybeGuiElement match {
-                                    case Some(guiElement) => GuiElement.make(guiElement).map(Some(_))
-                                    case None             => Validation.succeed(None)
-                                  }
-            maybeGuiAttributes <- getGuiAttributes(propertyInfoContent)
-
-            // validate the gui attributes by creating value objects
-            guiAttributes = maybeGuiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute))
-
-            validatedGuiAttributes = Validation.validateAll(guiAttributes).map(_.toSet)
-
-            // validate the combination of gui element and gui attribute by creating a GuiObject value object
-            guiObject = Validation
-                          .validate(validatedGuiAttributes, validatedGuiElement)
-                          .flatMap(values => GuiObject.make(values._1, values._2))
-
-            lastModificationDate = Validation.succeed(propertyUpdateInfo.lastModificationDate)
-
-            // subject class constraint
-            _ <- propertyInfoContent.predicates.get(
-                   sf.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint),
-                 ) match {
-                   case None => ZIO.unit
-                   case Some(value) =>
-                     value.objects.head match {
-                       case _: SmartIriLiteralV2 => ZIO.unit
-                       case other                => ZIO.fail(ValidationException(s"Unexpected subject type for $other"))
-                     }
-                 }
-
-            // object type
-            _ <-
-              propertyInfoContent.predicates.get(sf.toSmartIri(OntologyConstants.KnoraApiV2Complex.ObjectType)) match {
-                case None => ZIO.fail(ValidationException(s"Object type cannot be empty."))
-                case Some(value) =>
-                  value.objects.head match {
-                    case _: SmartIriLiteralV2 => ZIO.unit
-                    case other                => ZIO.fail(ValidationException(s"Unexpected object type for $other"))
-                  }
-              }
-
-            // label
-            label = propertyInfoContent.predicates.get(sf.toSmartIri(OntologyConstants.Rdfs.Label)) match {
-                      case None => Validation.fail(ValidationException("Label missing"))
-                      case Some(value) =>
-                        value.objects.head match {
-                          case StringLiteralV2(value, Some(language)) => LangString.makeFromStrings(language, value)
-                          case StringLiteralV2(_, None) =>
-                            Validation.fail(ValidationException("Label missing the language tag"))
-                          case _ => Validation.fail(ValidationException("Unexpected Type for Label"))
-                        }
-                    }
-            commentSmartIri <- RouteUtilZ.toSmartIri(OntologyConstants.Rdfs.Comment, "Should not happen")
-            comment = propertyInfoContent.predicates.get(commentSmartIri) match {
-                        case None => Validation.succeed(None)
-                        case Some(value) =>
-                          value.objects.head match {
-                            case StringLiteralV2(value, Some(language)) =>
-                              LangString.makeFromStrings(language, value).map(Some(_))
-                            case StringLiteralV2(_, None) =>
-                              Validation.fail(ValidationException("Comment missing the language tag"))
-                            case _ => Validation.fail(ValidationException("Unexpected Type for Comment"))
-                          }
-                      }
-            superProperties =
-              propertyInfoContent.subPropertyOf.toList match {
-                case Nil        => Validation.fail(ValidationException("SuperProperties cannot be empty."))
-                case superProps => Validation.succeed(superProps)
-              }
-
-            _ <- Validation.validate(lastModificationDate, label, comment, superProperties, guiObject).toZIO
           } yield requestMessage
-
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }
       }
