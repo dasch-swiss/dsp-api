@@ -348,6 +348,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
         ds           <- DatasetOps.fromJsonLd(jsonLd)
         meta         <- extractOntologyMetadata(ds.defaultModel)
         propertyInfo <- extractPropertyInfo(ds, meta)
+        _            <- sanityCheckCreate(propertyInfo)
       } yield CreatePropertyRequestV2(propertyInfo, meta.lastModificationDate, apiRequestId, user)
     }
 
@@ -360,7 +361,6 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       subPropertyOf <- extractSubPropertyOf(r).map(_.map(_.smartIri))
 
       propertyInfo = PropertyInfoContentV2(propertyIri.smartIri, predicates, subPropertyOf, ApiV2Complex)
-      _           <- sanityCheckCreate(propertyInfo)
     } yield propertyInfo
 
   private def extractPropertyIri(r: Resource): ZIO[Scope, String, PropertyIri] =
