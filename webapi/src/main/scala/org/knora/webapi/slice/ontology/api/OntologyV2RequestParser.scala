@@ -17,6 +17,7 @@ import java.util.UUID
 import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
+
 import dsp.constants.SalsahGui
 import dsp.valueobjects.Schema.GuiObject
 import org.knora.webapi.ApiV2Complex
