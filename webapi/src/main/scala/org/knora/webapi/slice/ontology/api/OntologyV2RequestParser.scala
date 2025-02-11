@@ -17,7 +17,6 @@ import java.util.UUID
 import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
-
 import dsp.constants.SalsahGui
 import dsp.valueobjects.Schema.GuiObject
 import org.knora.webapi.ApiV2Complex
@@ -34,6 +33,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabels
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeGuiOrderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyGuiElementRequest
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
@@ -466,6 +466,24 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       guiElement.flatMap(_.objects.headOption).collect { case SmartIriLiteralV2(value) => value.toInternalSchema.toIri }
     val validGui = GuiObject.makeFromStrings(guiAttrStr, guiElementStr).mapError(_.getMessage)
     Validation.validate(guiElementVal, guiAttributeVal, validGui).map { case (_, _, gui) => gui }
+  }
+
+  def changePropertyGuiElementRequest(
+    jsonLd: String,
+    apiRequestId: UUID,
+    user: User,
+  ): IO[String, ChangePropertyGuiElementRequest] = ZIO.scoped {
+    for {
+      ds           <- DatasetOps.fromJsonLd(jsonLd)
+      meta         <- extractOntologyMetadata(ds.defaultModel)
+      propertyInfo <- extractPropertyInfo(ds, meta)
+      propertyIri  <- ZIO.fromEither(PropertyIri.from(propertyInfo.propertyIri))
+
+      guiElementProp      <- iriConverter.asSmartIri(SalsahGui.External.GuiElementProp).orDie
+      guiAttribute        <- iriConverter.asSmartIri(SalsahGui.External.GuiAttribute).orDie
+      guiElement          <- ensureValidGuiObject(propertyInfo.predicates, guiElementProp, guiAttribute).toZIO
+      lastModificationDate = meta.lastModificationDate
+    } yield ChangePropertyGuiElementRequest(propertyIri, guiElement, lastModificationDate, apiRequestId, user)
   }
 }
 

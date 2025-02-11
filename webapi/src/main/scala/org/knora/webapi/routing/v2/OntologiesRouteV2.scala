@@ -13,7 +13,6 @@ import zio.*
 
 import java.time.Instant
 
-import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Schema.*
 import org.knora.webapi.*
@@ -23,9 +22,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.completeResponse
@@ -440,43 +436,6 @@ final case class OntologiesRouteV2()(
       }
     }
 
-  private def getGuiAttributes(propertyInfoContent: PropertyInfoContentV2) =
-    RouteUtilZ
-      .toSmartIri(SalsahGui.External.GuiAttribute, "Should not happen")
-      .map(propertyInfoContent.predicates.get)
-      .flatMap(infoMaybe =>
-        ZIO
-          .foreach(infoMaybe) { predicateInfoV2 =>
-            ZIO.foreach(predicateInfoV2.objects) {
-              case guiAttribute: StringLiteralV2 => ZIO.succeed(guiAttribute.value)
-              case other =>
-                ZIO.fail(BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other"))
-            }
-          }
-          .map(_.toSet.flatten),
-      )
-
-  private def getGuiElement(propertyInfoContent: PropertyInfoContentV2) =
-    RouteUtilZ
-      .toSmartIri(SalsahGui.External.GuiElementProp, "Should not happen")
-      .map(propertyInfoContent.predicates.get)
-      .flatMap(infoMaybe =>
-        ZIO.foreach(infoMaybe) { (predicateInfoV2: PredicateInfoV2) =>
-          predicateInfoV2.objects.head match {
-            case guiElement: SmartIriLiteralV2 =>
-              ZIO.succeed(guiElement.value.toOntologySchema(InternalSchema).toString)
-            case other =>
-              ZIO.fail(BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other"))
-          }
-        },
-      )
-
-  private def getPropertyDef(inputOntology: InputOntologyV2) =
-    ZIO.attempt(OntologyUpdateHelper.getPropertyDef(inputOntology))
-
-  private def getInputOntology(requestDoc: JsonLDDocument) =
-    ZIO.attempt(InputOntologyV2.fromJsonLD(requestDoc))
-
   private def updatePropertyLabelsOrComments(): Route =
     path(ontologiesBasePath / "properties") {
       put {
@@ -518,30 +477,11 @@ final case class OntologiesRouteV2()(
         // Change the salsah-gui:guiElement and/or salsah-gui:guiAttribute of a property.
         entity(as[String]) { jsonRequest => requestContext =>
           val requestTask = for {
-            requestingUser      <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            requestDoc          <- RouteUtilV2.parseJsonLd(jsonRequest)
-            inputOntology       <- getInputOntology(requestDoc)
-            propertyUpdateInfo  <- getPropertyDef(inputOntology)
-            propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
-            lastModificationDate = propertyUpdateInfo.lastModificationDate
-            propertyIri <- ZIO
-                             .fromEither(KnoraIris.PropertyIri.from(propertyInfoContent.propertyIri))
-                             .mapError(BadRequestException.apply)
-            newGuiElement    <- getGuiElement(propertyInfoContent)
-            newGuiAttributes <- getGuiAttributes(propertyInfoContent)
-            guiObject <-
-              GuiObject
-                .makeFromStrings(newGuiAttributes, newGuiElement)
-                .toZIO
-                .mapError(e => BadRequestException(e.msg))
-            apiRequestId <- RouteUtilZ.randomUuid()
-          } yield ChangePropertyGuiElementRequest(
-            propertyIri,
-            guiObject,
-            lastModificationDate,
-            apiRequestId,
-            requestingUser,
-          )
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
+            apiRequestId   <- RouteUtilZ.randomUuid()
+            msg <- requestParser(_.changePropertyGuiElementRequest(jsonRequest, apiRequestId, requestingUser))
+                     .mapError(BadRequestException.apply)
+          } yield msg
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }
       }
