@@ -502,38 +502,6 @@ case class DeletePropertyCommentRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[DeletePropertyCommentRequestV2]] based on JSON-LD input.
- */
-object DeletePropertyCommentRequestV2 {
-
-  /**
-   * Converts a JSON-LD request to a [[DeletePropertyCommentRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[DeletePropertyCommentRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): DeletePropertyCommentRequestV2 = {
-    val inputOntologyV2      = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val propertyUpdateInfo   = OntologyUpdateHelper.getPropertyDef(inputOntologyV2)
-    val propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
-    val lastModificationDate = propertyUpdateInfo.lastModificationDate
-
-    DeletePropertyCommentRequestV2(
-      propertyIri = propertyInfoContent.propertyIri,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
-
-/**
  * Requests that a class's labels or comments are changed. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classIri             the IRI of the property.
@@ -580,38 +548,6 @@ case class DeleteClassCommentRequestV2(
   apiRequestID: UUID,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
-
-/**
- * Constructs instances of [[DeleteClassCommentRequestV2]] based on JSON-LD input.
- */
-object DeleteClassCommentRequestV2 {
-
-  /**
-   * Converts a JSON-LD request to a [[DeleteClassCommentRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[DeleteClassCommentRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): DeleteClassCommentRequestV2 = {
-    val inputOntologyV2: InputOntologyV2     = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo: ClassUpdateInfo     = OntologyUpdateHelper.getClassDef(inputOntologyV2)
-    val classInfoContent: ClassInfoContentV2 = classUpdateInfo.classInfoContent
-    val lastModificationDate: Instant        = classUpdateInfo.lastModificationDate
-
-    DeleteClassCommentRequestV2(
-      classIri = classInfoContent.classIri,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
 
 case class ChangeGuiOrderRequestV2(
   classInfoContent: ClassInfoContentV2,
