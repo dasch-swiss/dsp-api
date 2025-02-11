@@ -395,9 +395,9 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
         case set if set.isEmpty => Validation.fail("SuperProperties cannot be empty")
         case _                  => Validation.succeed(())
     subjectClassConstraintIsIri =
-      propertyInfo.getIriObject(subjectClassConstraint) match
-        case None    => Validation.fail("Unexpected knora-base:subjectClassConstraint")
-        case Some(_) => Validation.succeed(())
+      propertyInfo.predicates.get(subjectClassConstraint) match
+        case None             => Validation.succeed(())
+        case Some(predicates) => ensureSingleIri(predicates.objects, "knora-base:subjectClassConstraint")
     labelsAreValid =
       propertyInfo.predicates.get(rdfsLabel) match
         case None       => Validation.fail("Missing rdfs:label")
@@ -425,6 +425,11 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
   private def isApiV2ComplexEntityIri(s: SmartIri, failMsg: String): Validation[String, SmartIri] =
     if s.isKnoraApiV2EntityIri && s.isApiV2ComplexSchema then Validation.succeed(s)
     else Validation.fail(s"$failMsg: ${s.toComplexSchema.toIri}")
+
+  private def ensureSingleIri(literals: Seq[OntologyLiteralV2], prop: String): Validation[String, SmartIri] =
+    literals match
+      case Seq(SmartIriLiteralV2(iri)) => Validation.succeed(iri)
+      case _                           => Validation.fail(s"$prop: Expected single IRI, got: ${literals.mkString(", ")}")
 
   private def ensureOnlyStringLiteralsWithLanguage(
     literals: Seq[OntologyLiteralV2],
