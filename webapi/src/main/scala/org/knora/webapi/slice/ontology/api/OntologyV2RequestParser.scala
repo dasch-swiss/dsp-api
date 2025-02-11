@@ -31,15 +31,16 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeGuiOrderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyGuiElementRequest
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreatePropertyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinalitiesFromClassRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
@@ -491,6 +492,44 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       lastModificationDate = meta.lastModificationDate
     } yield ChangePropertyGuiElementRequest(propertyIri, guiElement, lastModificationDate, apiRequestId, user)
   }
+
+  def changePropertyLabelsOrCommentsRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    user: User,
+  ): IO[String, ChangePropertyLabelsOrCommentsRequestV2] = ZIO.scoped {
+    for {
+      ds                          <- DatasetOps.fromJsonLd(jsonLd)
+      meta                        <- extractOntologyMetadata(ds.defaultModel)
+      propertyInfo                <- extractPropertyInfo(ds, meta)
+      propertyIri                 <- ZIO.fromEither(PropertyIri.from(propertyInfo.propertyIri))
+      rdfsLabel                   <- iriConverter.asSmartIri(RDFS.label.toString).orDie
+      rdfsComment                 <- iriConverter.asSmartIri(RDFS.comment.toString).orDie
+      what                        <- labelOrComment(propertyInfo.predicates, rdfsLabel, rdfsComment).toZIO
+      (labelOrComment, newObjects) = what
+    } yield ChangePropertyLabelsOrCommentsRequestV2(
+      propertyIri,
+      labelOrComment,
+      newObjects,
+      meta.lastModificationDate,
+      apiRequestId,
+      user,
+    )
+  }
+
+  private def labelOrComment(
+    predicates: Map[SmartIri, PredicateInfoV2],
+    rdfsLabel: SmartIri,
+    rdfComment: SmartIri,
+  ): Validation[String, (LabelOrComment, Seq[StringLiteralV2])] =
+    (predicates.get(rdfsLabel), predicates.get(rdfComment)) match {
+      case (Some(label), None) =>
+        ensureOnlyStringLiteralsWithLanguage(label.objects, "rdfs:label").map((LabelOrComment.Label, _))
+      case (None, Some(comment)) =>
+        ensureOnlyStringLiteralsWithLanguage(comment.objects, "rdfs:comment").map((LabelOrComment.Comment, _))
+      case (Some(label), Some(comment)) => Validation.fail(s"Both label and comment found: $label, $comment")
+      case (None, None)                 => Validation.fail("No label or comment found")
+    }
 }
 
 object OntologyV2RequestParser {
