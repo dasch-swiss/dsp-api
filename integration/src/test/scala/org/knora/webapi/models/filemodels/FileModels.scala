@@ -25,8 +25,7 @@ sealed abstract case class UploadFileRequest private (
   resourceIRI: Option[String] = None,
   copyrightHolder: Option[CopyrightHolder] = None,
   authorship: Option[List[Authorship]] = None,
-  licenseIdentifier: Option[LicenseIdentifier] = None,
-  licenseUri: Option[LicenseUri] = None,
+  licenseIri: Option[LicenseIri] = None,
 ) { self =>
 
   /**
@@ -71,9 +70,8 @@ sealed abstract case class UploadFileRequest private (
          |    "knora-api:fileValueHasFilename" : "$internalFilename"
          |    $copyrightHolderJson
          |    $authorshipJson
-         |    ${licenseIdentifier.map(l => s""","knora-api:hasLicenseIdentifier" : "${l.value}"""").getOrElse("")}
-         |    ${licenseUri
-          .map(u => s""", "knora-api:hasLicenseUri" : { "@type" : "xsd:anyURI", "@value":"${u.value}" }""")
+         |    ${licenseIri
+          .map(u => s""","knora-api:hasLicense" : { "@id" : "${u.value}" }""")
           .getOrElse("")}
          |  },
          |  "knora-api:attachedToProject" : {
@@ -145,8 +143,7 @@ sealed abstract case class UploadFileRequest private (
       comment = comment,
       copyrightHolder = self.copyrightHolder,
       authorship = self.authorship,
-      licenseIdentifier = self.licenseIdentifier,
-      licenseUri = self.licenseUri,
+      licenseIri = self.licenseIri,
     )
 
     val values = List(
@@ -199,7 +196,7 @@ object UploadFileRequest {
     resourceIRI: Option[String] = None,
     copyrightHolder: Option[CopyrightHolder] = None,
     authorship: Option[List[Authorship]] = None,
-    licenseIdentifier: Option[LicenseIdentifier] = None,
+    licenseIri: Option[LicenseIri] = None,
   ): UploadFileRequest =
     new UploadFileRequest(
       fileType,
@@ -208,7 +205,7 @@ object UploadFileRequest {
       resourceIRI,
       copyrightHolder,
       authorship,
-      licenseIdentifier,
+      licenseIri,
     ) {}
 }
 

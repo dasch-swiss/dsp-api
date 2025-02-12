@@ -110,8 +110,7 @@ object Vocabulary {
     val valueHasStandoff: Iri              = iri(kb + "valueHasStandoff")
     val hasCopyrightHolder: Iri            = iri(kb + "hasCopyrightHolder")
     val hasAuthorship: Iri                 = iri(kb + "hasAuthorship")
-    val hasLicenseIdentifier: Iri          = iri(kb + "hasLicenseIdentifier")
-    val hasLicenseUri: Iri                 = iri(kb + "hasLicenseUri")
+    val hasLicense: Iri                    = iri(kb + "hasLicense")
 
     val internalFilename: Iri = iri(kb + "internalFilename")
     val internalMimeType: Iri = iri(kb + "internalMimeType")

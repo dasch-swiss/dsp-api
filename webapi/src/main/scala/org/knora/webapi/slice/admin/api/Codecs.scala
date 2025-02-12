@@ -108,7 +108,6 @@ object Codecs {
     implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
     implicit val status: StringCodec[Status]                           = booleanCodec(Status.from)
     implicit val copyrightHolder: StringCodec[CopyrightHolder]         = stringCodec(CopyrightHolder.from)
-    implicit val licenseIdentifier: StringCodec[LicenseIdentifier]     = stringCodec(LicenseIdentifier.from)
     implicit val licenseUri: StringCodec[LicenseUri]                   = stringCodec(LicenseUri.from)
 
     // user

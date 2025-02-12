@@ -253,23 +253,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseDate"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseIdentifier"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseUri"
+                        "@id": "knora-api:hasLicense"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -578,23 +562,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseDate"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseIdentifier"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseUri"
+                        "@id": "knora-api:hasLicense"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -1420,23 +1388,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseDate"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseIdentifier"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseUri"
+                        "@id": "knora-api:hasLicense"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -2419,23 +2371,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseDate"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseIdentifier"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseUri"
+                        "@id": "knora-api:hasLicense"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -2747,21 +2683,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseDate"
-                    },
-                    "owl:maxCardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseIdentifier"
-                    },
-                    "owl:maxCardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseUri"
+                        "@id": "knora-api:hasLicense"
                     },
                     "owl:maxCardinality": 1
                 },
@@ -3931,23 +3853,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseDate"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseIdentifier"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseUri"
+                        "@id": "knora-api:hasLicense"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -6214,23 +6120,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseDate"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseIdentifier"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseUri"
+                        "@id": "knora-api:hasLicense"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -6393,23 +6283,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseDate"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseIdentifier"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseUri"
+                        "@id": "knora-api:hasLicense"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -6579,23 +6453,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseDate"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseIdentifier"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseUri"
+                        "@id": "knora-api:hasLicense"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -6930,23 +6788,7 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseDate"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseIdentifier"
-                    },
-                    "owl:maxCardinality": 1,
-                    "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicenseUri"
+                        "@id": "knora-api:hasLicense"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -8750,31 +8592,16 @@
             "rdfs:comment": "Indicates a keyword of a resource"
         },
         {
-            "rdfs:label": "has license date",
-            "rdfs:comment": "Date of creation on platform.",
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:date"
-            },
-            "@id": "knora-api:hasLicenseDate"
-        },
-        {
-            "rdfs:label": "has license identifier",
-            "rdfs:comment": "Specifies the terms under which a work can be used. This statement may be a reference to a well-known license, such as Creative Commons (e.g. CC BY-SA) or a custom license.",
+            "rdfs:label": "has license",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:hasLicenseIdentifier"
-        },
-        {
-            "rdfs:label": "has license URI",
-            "rdfs:comment": "Canonical link to license.",
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:string"
+            "@id": "knora-api:hasLicense",
+            "knora-api:subjectType": {
+                "@id": "knora-admin:License"
             },
-            "@id": "knora-api:hasLicenseUri"
+            "rdfs:comment": "Specifies the license under which a work can be used."
         },
         {
             "rdfs:label": "has Link to",
@@ -10155,7 +9982,7 @@
         }
     ],
     "knora-api:attachedToProject": {
-        "@id": "http://www.knora.org/ontology/knora-admin#SystemProject"
+        "@id": "knora-admin:SystemProject"
     },
     "knora-api:isBuiltIn": true,
     "@type": "owl:Ontology",
@@ -10163,6 +9990,7 @@
     "@context": {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+        "knora-admin": "http://www.knora.org/ontology/knora-admin#",
         "owl": "http://www.w3.org/2002/07/owl#",
         "salsah-gui": "http://api.knora.org/ontology/salsah-gui/v2#",
         "rdfs": "http://www.w3.org/2000/01/rdf-schema#",

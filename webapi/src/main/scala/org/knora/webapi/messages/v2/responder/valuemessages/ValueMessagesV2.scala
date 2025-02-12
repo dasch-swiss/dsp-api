@@ -6,13 +6,11 @@
 package org.knora.webapi.messages.v2.responder.valuemessages
 
 import org.apache.jena.rdf.model.Resource
-import org.apache.jena.vocabulary.XSD
 import zio.IO
 import zio.ZIO
 
 import java.net.URI
 import java.time.Instant
-import java.time.LocalDate
 import java.util.UUID
 import scala.language.implicitConversions
 import scala.util.Try
@@ -47,10 +45,8 @@ import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.LicenseIdentifier
-import org.knora.webapi.slice.admin.domain.model.LicenseUri
+import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.Permission
-import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ResourceOps
@@ -2004,16 +2000,16 @@ case class FileValueV2(
   originalMimeType: Option[String] = None,
   copyrightHolder: Option[CopyrightHolder] = None,
   authorship: Option[List[Authorship]] = None,
-  licenseIdentifier: Option[LicenseIdentifier] = None,
+  licenseIri: Option[LicenseIri] = None,
 )
 object FileValueV2 {
 
   def makeNew(r: Resource, info: FileInfo): Either[String, FileValueV2] = {
     val meta = info.metadata
     for {
-      copyrightHolder   <- r.objectStringOption(HasCopyrightHolder, CopyrightHolder.from)
-      authorship        <- r.objectStringListOption(HasAuthorship, Authorship.from)
-      licenseIdentifier <- r.objectStringOption(HasLicenseIdentifier, LicenseIdentifier.from)
+      copyrightHolder <- r.objectStringOption(HasCopyrightHolder, CopyrightHolder.from)
+      authorship      <- r.objectStringListOption(HasAuthorship, Authorship.from)
+      licenseIri      <- r.objectUriOption(HasLicense, LicenseIri.from)
     } yield FileValueV2(
       info.filename,
       meta.internalMimeType,
@@ -2021,7 +2017,7 @@ object FileValueV2 {
       meta.originalMimeType,
       copyrightHolder,
       authorship,
-      licenseIdentifier,
+      licenseIri,
     )
   }
 }
@@ -2048,20 +2044,7 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
   def toJsonLDObjectMapInComplexSchema(fileUrl: String): Map[IRI, JsonLDValue] = {
     def mkJsonLdString: StringValue => JsonLDString           = sv => JsonLDString(sv.value)
     def mkJsonLdStringArray: List[StringValue] => JsonLDArray = values => JsonLDArray(values.map(mkJsonLdString))
-    def mkJsonLdDate: Value[LocalDate] => JsonLDObject = ld =>
-      JsonLDObject(
-        Map(
-          "@type"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#date"),
-          "@value" -> JsonLDString(ld.value.toString),
-        ),
-      )
-    def mkJsonLdUri: StringValue => JsonLDObject = sv =>
-      JsonLDObject(
-        Map(
-          "@type"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#anyURI"),
-          "@value" -> JsonLDString(sv.value),
-        ),
-      )
+    def mkJsLdId: StringValue => JsonLDObject                 = str => JsonLDObject(Map("@id" -> JsonLDString(str.value)))
     val knownValues: Map[IRI, JsonLDValue] = Map(
       FileValueHasFilename -> JsonLDString(fileValue.internalFilename),
       FileValueAsUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
@@ -2069,10 +2052,11 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
         datatype = OntologyConstants.Xsd.Uri.toSmartIri,
       ),
     )
-    val copyrightHolder   = fileValue.copyrightHolder.map(mkJsonLdString).map((HasCopyrightHolder, _))
-    val authorship        = fileValue.authorship.map(mkJsonLdStringArray).map((HasAuthorship, _))
-    val licenseIdentifier = fileValue.licenseIdentifier.map(mkJsonLdString).map((HasLicenseIdentifier, _))
-    knownValues ++ copyrightHolder ++ authorship ++ licenseIdentifier
+
+    val copyrightHolder = fileValue.copyrightHolder.map(mkJsonLdString).map((HasCopyrightHolder, _))
+    val authorship      = fileValue.authorship.map(mkJsonLdStringArray).map((HasAuthorship, _))
+    val licenseIri      = fileValue.licenseIri.map(mkJsLdId).map((HasLicense, _))
+    knownValues ++ copyrightHolder ++ authorship ++ licenseIri
   }
 }
 

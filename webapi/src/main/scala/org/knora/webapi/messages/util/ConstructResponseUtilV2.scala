@@ -53,8 +53,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.LicenseIdentifier
-import org.knora.webapi.slice.admin.domain.model.LicenseUri
+import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -1060,6 +1059,8 @@ final case class ConstructResponseUtilV2Live(
    * @return a [[FileValueContentV2]].
    */
   private def makeFileValueContentV2(valueType: IRI, valueObject: ValueRdfData, valueCommentOption: Option[IRI]) = {
+    val licenseIri =
+      valueObject.maybeIriObject(OntologyConstants.KnoraBase.HasLicense.toSmartIri).map(LicenseIri.unsafeFrom)
     val fileValue = FileValueV2(
       internalMimeType = valueObject.requireStringObject(OntologyConstants.KnoraBase.InternalMimeType.toSmartIri),
       internalFilename = valueObject.requireStringObject(OntologyConstants.KnoraBase.InternalFilename.toSmartIri),
@@ -1071,9 +1072,7 @@ final case class ConstructResponseUtilV2Live(
       authorship = valueObject
         .maybeStringListObject(OntologyConstants.KnoraBase.HasAuthorship.toSmartIri)
         .map(_.map(Authorship.unsafeFrom).toList),
-      licenseIdentifier = valueObject
-        .maybeStringObject(OntologyConstants.KnoraBase.HasLicenseIdentifier.toSmartIri)
-        .map(LicenseIdentifier.unsafeFrom),
+      licenseIri,
     )
 
     valueType match {

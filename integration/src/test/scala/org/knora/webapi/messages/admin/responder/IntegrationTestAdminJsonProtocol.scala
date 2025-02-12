@@ -214,8 +214,8 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
     override val from: String => Either[String, CopyrightHolder] = CopyrightHolder.from
   }
 
-  implicit object LicenseIdentifierFormat extends StringValueFormat[LicenseIdentifier] {
-    override val from: String => Either[String, LicenseIdentifier] = LicenseIdentifier.from
+  implicit object LicenseIriFormat extends StringValueFormat[LicenseIri] {
+    override val from: String => Either[String, LicenseIri] = LicenseIri.from
   }
 
   implicit object LicenseUriFormat extends StringValueFormat[LicenseUri] {

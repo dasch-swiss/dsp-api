@@ -160,11 +160,10 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfLabelEn("has authorship")
     .withRdfCommentEn("Credit, Moral Rights, Author(s)")
 
-  private val HasLicenseIdentifier = makeOwlDatatypeProperty(KA.HasLicenseIdentifier, XSD.STRING)
-    .withRdfLabelEn("has license identifier")
-    .withRdfCommentEn(
-      "Specifies the terms under which a work can be used. This statement may be a reference to a well-known license, such as Creative Commons (e.g. CC BY-SA) or a custom license.",
-    )
+  private val HasLicense = makeOwlDatatypeProperty(KA.HasLicense, XSD.STRING)
+    .withRdfLabelEn("has license")
+    .withRdfCommentEn("Specifies the license under which a work can be used.")
+    .withSubjectType("http://www.knora.org/ontology/knora-admin#License")
 
   private val ValueAsString = makeOwlDatatypeProperty(KA.ValueAsString, XSD.STRING)
     .withSubjectType(KA.Value)
@@ -662,7 +661,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     HasCopyrightHolder,
     HasAuthorship,
     HasIncomingLinkValue,
-    HasLicenseIdentifier,
+    HasLicense,
     IntValueAsInt,
     IntervalValueHasEnd,
     IntervalValueHasStart,

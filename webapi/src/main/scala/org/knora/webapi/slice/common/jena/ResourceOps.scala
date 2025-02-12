@@ -76,6 +76,8 @@ object ResourceOps {
     def objectUri(p: Property): Either[String, String]                                    = statement(p).flatMap(stmt => stmt.objectAsUri)
     def objectUri[A](p: Property, mapper: String => Either[String, A]): Either[String, A] = objectUri(p).flatMap(mapper)
     def objectUriOption(p: Property): Either[String, Option[String]]                      = fromStatement(p, _.objectAsUri)
+    def objectUriOption[A](p: Property, mapper: String => Either[String, A]): Either[String, Option[A]] =
+      objectUriOption(p).flatMap(_.traverse(mapper))
 
     def objectUuid(p: Property): Either[String, UUID]               = statement(p).flatMap(stmt => stmt.objectAsUuid)
     def objectUuidOption(p: Property): Either[String, Option[UUID]] = fromStatement(p, _.objectAsUuid)

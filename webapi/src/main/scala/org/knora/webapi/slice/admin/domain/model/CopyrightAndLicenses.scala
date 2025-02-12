@@ -27,14 +27,6 @@ object Authorship extends StringValueCompanion[Authorship] {
     fromValidations("Authorship", Authorship.apply, List(nonEmpty, noLineBreaks, maxLength(1_000)))(str)
 }
 
-final case class LicenseIdentifier private (override val value: String) extends StringValue
-object LicenseIdentifier extends StringValueCompanion[LicenseIdentifier] {
-  def from(str: String): Either[String, LicenseIdentifier] =
-    fromValidations("License Identifier", LicenseIdentifier.apply, List(nonEmpty, noLineBreaks, maxLength(100_000)))(
-      str,
-    )
-}
-
 final case class LicenseIri private (override val value: String) extends StringValue
 object LicenseIri extends StringValueCompanion[LicenseIri] {
 
