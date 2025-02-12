@@ -30,6 +30,21 @@ object CopyrightAndLicensesModelSpec extends ZIOSpecDefault {
     },
   )
 
+  private val licenseIriSuite = suite("LicenseIri")(
+    test("pass a valid object and successfully create value object") {
+      val validIri = "http://rdfh.ch/licenses/i6xBpZn4RVOdOIyTezEumw"
+      assertTrue(LicenseIri.from(validIri).map(_.value).contains(validIri))
+    },
+    test("pass an invalid object and return an error") {
+      val invalidIri = "http://rdfh.ch/licenses/invalid"
+      assertTrue(LicenseIri.from(invalidIri) == Left("Invalid license IRI"))
+    },
+    test("make new returns a valid IRI") {
+      val newIri = LicenseIri.makeNew
+      assertTrue(LicenseIri.from(newIri).isRight)
+    },
+  )
+
   private val licenseUriSuite = suite("LicenseUri")(
     test("pass a valid object and successfully create value object") {
       val validUri = "https://www.apache.org/licenses/LICENSE-2.0.html"
@@ -55,6 +70,7 @@ object CopyrightAndLicensesModelSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Nothing] = suite("Copyright And Licenses Model")(
     authorshipSuite,
+    licenseIriSuite,
     licenseUriSuite,
     licenseDate,
   )

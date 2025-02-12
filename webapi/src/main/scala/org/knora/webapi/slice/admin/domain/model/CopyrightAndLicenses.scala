@@ -5,9 +5,10 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import dsp.valueobjects.UuidUtil
+
 import java.time.LocalDate
 import scala.util.Try
-
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion.*
 import org.knora.webapi.slice.common.StringValueCompanion.maxLength
@@ -37,6 +38,30 @@ object LicenseIdentifier extends StringValueCompanion[LicenseIdentifier] {
     fromValidations("License Identifier", LicenseIdentifier.apply, List(nonEmpty, noLineBreaks, maxLength(100_000)))(
       str,
     )
+}
+
+final case class LicenseIri private (override val value: String) extends StringValue
+object LicenseIri extends StringValueCompanion[LicenseIri] {
+
+  /**
+   * Explanation of the IRI regex:
+   * * `^` asserts the start of the string.
+   * * `http://rdfh\.ch/licenses/` matches the specified prefix.
+   * * `[A-Za-z0-9_-]{22}` matches any base64 encoded UUID (22 characters long).
+   */
+  private lazy val licenseIriRegEx = """^http://rdfh\.ch/licenses/[A-Za-z0-9_-]{22}$""".r
+
+  private def isLicenseIri(iri: String) = licenseIriRegEx.matches(iri)
+
+  def from(str: String): Either[String, LicenseIri] = str match {
+    case str if !isLicenseIri(str) => Left("Invalid license IRI")
+    case _                         => Right(LicenseIri(str))
+  }
+
+  def makeNew: LicenseIri = {
+    val uuid = UuidUtil.makeRandomBase64EncodedUuid
+    unsafeFrom(s"http://rdfh.ch/licenses/$uuid")
+  }
 }
 
 final case class LicenseUri private (override val value: String) extends StringValue
