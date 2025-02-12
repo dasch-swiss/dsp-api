@@ -284,10 +284,6 @@ object ResourcesRepoLive {
         .andHasOptional(KB.hasCopyrightHolder, v.fileValue.copyrightHolder.map(_.value).map(literalOf))
         .andHasOptional(KB.hasLicenseIdentifier, v.fileValue.licenseIdentifier.map(_.value).map(literalOf))
         .andHasOptional(KB.hasLicenseUri, v.fileValue.licenseUri.map(_.value).map(literalOfType(_, XSD.ANYURI)))
-        .andHasOptional(
-          KB.hasLicenseDate,
-          v.fileValue.licenseDate.map(_.value.toString).map(literalOfType(_, XSD.DATE)),
-        )
       v.fileValue.authorship.foreach(_.map(_.value).foreach(result.andHas(KB.hasAuthorship, _)))
 
       v match {

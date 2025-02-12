@@ -7,8 +7,6 @@ package org.knora.webapi.slice.admin.domain.model
 
 import zio.test.*
 
-import java.time.LocalDate
-
 object CopyrightAndLicensesModelSpec extends ZIOSpecDefault {
 
   private val authorshipSuite = suite("Authorship")(
@@ -41,7 +39,7 @@ object CopyrightAndLicensesModelSpec extends ZIOSpecDefault {
     },
     test("make new returns a valid IRI") {
       val newIri = LicenseIri.makeNew
-      assertTrue(LicenseIri.from(newIri).isRight)
+      assertTrue(LicenseIri.from(newIri.value).contains(newIri))
     },
   )
 
@@ -56,22 +54,9 @@ object CopyrightAndLicensesModelSpec extends ZIOSpecDefault {
     },
   )
 
-  private val licenseDate = suite("LicenseDate")(
-    test("pass a valid object and successfully create value object") {
-      val validDate = "2021-01-01"
-      assertTrue(LicenseDate.from(validDate).map(_.value).contains(LocalDate.parse("2021-01-01")))
-    },
-    test("pass an invalid object and fail with correct error message") {
-      check(Gen.fromIterable(List("09-24-2021", "01-01-2025", "2021-01-01T00:00:00Z"))) { invalidDate =>
-        assertTrue(LicenseDate.from(invalidDate) == Left("License Date must be in format 'YYYY-MM-DD'."))
-      }
-    },
-  )
-
   val spec: Spec[Any, Nothing] = suite("Copyright And Licenses Model")(
     authorshipSuite,
     licenseIriSuite,
     licenseUriSuite,
-    licenseDate,
   )
 }

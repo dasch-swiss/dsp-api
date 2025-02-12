@@ -53,7 +53,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.LicenseDate
 import org.knora.webapi.slice.admin.domain.model.LicenseIdentifier
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
@@ -1077,8 +1076,6 @@ final case class ConstructResponseUtilV2Live(
         .map(LicenseIdentifier.unsafeFrom),
       licenseUri =
         valueObject.maybeIriObject(OntologyConstants.KnoraBase.HasLicenseUri.toSmartIri).map(LicenseUri.unsafeFrom),
-      licenseDate =
-        valueObject.maybeDateObject(OntologyConstants.KnoraBase.HasLicenseDate.toSmartIri).map(LicenseDate.from),
     )
 
     valueType match {

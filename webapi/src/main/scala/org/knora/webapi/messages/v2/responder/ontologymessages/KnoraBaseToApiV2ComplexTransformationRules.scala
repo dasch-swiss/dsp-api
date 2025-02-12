@@ -170,10 +170,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfLabelEn("has license URI")
     .withRdfCommentEn("Canonical link to license.")
 
-  private val HasLicenseDate = makeOwlDatatypeProperty(KA.HasLicenseDate, XSD.DATE)
-    .withRdfLabelEn("has license date")
-    .withRdfCommentEn("Date of creation on platform.")
-
   private val ValueAsString = makeOwlDatatypeProperty(KA.ValueAsString, XSD.STRING)
     .withSubjectType(KA.Value)
     .withRdfCommentEn("A plain string representation of a value")
@@ -672,7 +668,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     HasIncomingLinkValue,
     HasLicenseIdentifier,
     HasLicenseUri,
-    HasLicenseDate,
     IntValueAsInt,
     IntervalValueHasEnd,
     IntervalValueHasStart,

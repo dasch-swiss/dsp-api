@@ -264,13 +264,6 @@ DELETE {
                     case None => {}
                 }
 
-                @fileValueContentV2.fileValue.licenseDate match {
-                    case Some(date) => {
-                        <@newValueIri> knora-base:hasLicenseDate """@date.value.toString"""^^xsd:date .
-                    }
-                    case None => {}
-                }
-
                 @fileValueContentV2 match {
                     case stillImageFileValue: StillImageFileValueContentV2 => {
                         <@newValueIri> knora-base:dimX @stillImageFileValue.dimX ;

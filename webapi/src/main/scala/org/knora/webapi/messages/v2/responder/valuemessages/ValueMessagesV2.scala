@@ -47,7 +47,6 @@ import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.LicenseDate
 import org.knora.webapi.slice.admin.domain.model.LicenseIdentifier
 import org.knora.webapi.slice.admin.domain.model.LicenseUri
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -2007,7 +2006,6 @@ case class FileValueV2(
   authorship: Option[List[Authorship]] = None,
   licenseIdentifier: Option[LicenseIdentifier] = None,
   licenseUri: Option[LicenseUri] = None,
-  licenseDate: Option[LicenseDate] = None,
 )
 object FileValueV2 {
 
@@ -2018,7 +2016,6 @@ object FileValueV2 {
       authorship        <- r.objectStringListOption(HasAuthorship, Authorship.from)
       licenseIdentifier <- r.objectStringOption(HasLicenseIdentifier, LicenseIdentifier.from)
       licenseUri        <- r.objectDataTypeOption(HasLicenseUri, XSD.anyURI.toString, LicenseUri.from)
-      licenseDate        = Some(LicenseDate.makeNew)
     } yield FileValueV2(
       info.filename,
       meta.internalMimeType,
@@ -2028,7 +2025,6 @@ object FileValueV2 {
       authorship,
       licenseIdentifier,
       licenseUri,
-      licenseDate,
     )
   }
 }
@@ -2080,8 +2076,7 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
     val authorship        = fileValue.authorship.map(mkJsonLdStringArray).map((HasAuthorship, _))
     val licenseIdentifier = fileValue.licenseIdentifier.map(mkJsonLdString).map((HasLicenseIdentifier, _))
     val licenseUri        = fileValue.licenseUri.map(mkJsonLdUri).map((HasLicenseUri, _))
-    val licenseDate       = fileValue.licenseDate.map(mkJsonLdDate).map((HasLicenseDate, _))
-    knownValues ++ copyrightHolder ++ authorship ++ licenseIdentifier ++ licenseUri ++ licenseDate
+    knownValues ++ copyrightHolder ++ authorship ++ licenseIdentifier ++ licenseUri
   }
 }
 

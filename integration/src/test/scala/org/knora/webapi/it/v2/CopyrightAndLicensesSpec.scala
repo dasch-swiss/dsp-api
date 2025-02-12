@@ -64,7 +64,6 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.authorship.isEmpty,
         info.licenseIdentifier.isEmpty,
         info.licenseUri.isEmpty,
-        info.licenseDate.contains(LicenseDate.makeNew),
       )
     },
     test(
@@ -78,7 +77,6 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.copyrightHolder.contains(aCopyrightHolder),
         info.licenseIdentifier.contains(aLicenseIdentifier),
         info.licenseUri.contains(aLicenseUri),
-        info.licenseDate.contains(LicenseDate.makeNew),
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     },
     test(
@@ -94,7 +92,6 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.copyrightHolder.contains(aCopyrightHolder),
         info.licenseIdentifier.contains(aLicenseIdentifier),
         info.licenseUri.contains(aLicenseUri),
-        info.licenseDate.contains(LicenseDate.makeNew),
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     },
     test(
@@ -109,7 +106,6 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.copyrightHolder.contains(aCopyrightHolder),
         info.licenseIdentifier.contains(aLicenseIdentifier),
         info.licenseUri.contains(aLicenseUri),
-        info.licenseDate.contains(LicenseDate.makeNew),
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     },
   )
@@ -137,7 +133,6 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       } yield assertTrue(
         info.licenseIdentifier.contains(aLicenseIdentifier),
         info.licenseUri.contains(aLicenseUri),
-        info.licenseDate.contains(LicenseDate.makeNew),
       ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
     }
   }
@@ -269,7 +264,6 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
     authorship: Option[List[Authorship]],
     licenseIdentifier: Option[LicenseIdentifier],
     licenseUri: Option[LicenseUri],
-    licenseDate: Option[LicenseDate],
   )
 
   private def copyrightAndLicenseInfo(model: Model) =
@@ -278,8 +272,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
       authorship        <- authorshipValuesOption(model).map(_.map(_.map(Authorship.unsafeFrom)))
       licenseIdentifier <- licenseIdentifierValueOption(model).map(_.map(LicenseIdentifier.unsafeFrom))
       licenseUri        <- licenseUriValueOption(model).map(_.map(LicenseUri.unsafeFrom))
-      licenseDate       <- licenseDateValueOption(model).map(_.map(LicenseDate.unsafeFrom))
-    } yield CopyrightAndLicenseInfo(copyright, authorship, licenseIdentifier, licenseUri, licenseDate)
+    } yield CopyrightAndLicenseInfo(copyright, authorship, licenseIdentifier, licenseUri)
 
   private def copyrightValueOption(model: Model) =
     singleStringValueOption(model, KA.HasCopyrightHolder)
@@ -298,9 +291,6 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
 
   private def licenseUriValueOption(model: Model) =
     singleStringValueOption(model, KA.HasLicenseUri)
-
-  private def licenseDateValueOption(model: Model) =
-    singleStringValueOption(model, KA.HasLicenseDate)
 
   private def singleStringValueOption(model: Model, property: Property): Task[Option[String]] =
     ZIO

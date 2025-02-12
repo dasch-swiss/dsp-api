@@ -587,15 +587,6 @@
     :objectDatatypeConstraint xsd:anyUri .
 
 
-###  http://www.knora.org/ontology/knora-base#hasLicenseDate
-
-:hasLicenseDate
-    rdf:type                  owl:DatatypeProperty ;
-    rdfs:label                "has license date"@en;
-    rdfs:comment              "Date of creation on platform."@en ;
-    :objectDatatypeConstraint xsd:date.
-
-
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOf
 
 :isAnnotationOf

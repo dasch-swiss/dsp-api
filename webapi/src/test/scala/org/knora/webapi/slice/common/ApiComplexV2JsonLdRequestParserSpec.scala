@@ -81,7 +81,6 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     "internalMimeType",
     Some("originalFilename.orig"),
     Some("originalMimeType"),
-    licenseDate = Some(LicenseDate.makeNew),
   )
 
   private val configureSipiServiceMock = for {
@@ -479,7 +478,6 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             authorship = Some(List(Authorship.unsafeFrom("Author McAuthorface"), Authorship.unsafeFrom("Mr. Smith"))),
             licenseIdentifier = Some(LicenseIdentifier.unsafeFrom("CC-BY-4.0")),
             licenseUri = Some(LicenseUri.unsafeFrom("http://creativecommons.org/licenses/by/4.0/")),
-            licenseDate = Some(LicenseDate.makeNew),
           ),
           givenFileInfo.width.getOrElse(throw new Exception("width is missing")),
           givenFileInfo.height.getOrElse(throw new Exception("height is missing")),
@@ -518,7 +516,6 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             "internalMimeType",
             Some("originalFilename"),
             Some("originalMimeType"),
-            licenseDate = Some(LicenseDate.makeNew),
           ),
           IiifImageRequestUrl.unsafeFrom("http://www.example.org/prefix1/abcd1234/full/0/native.jpg"),
           None,
