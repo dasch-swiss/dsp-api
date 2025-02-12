@@ -105,7 +105,6 @@ object FileModelUtil {
             copyrightHolder = copyrightHolder,
             authorship = authorship,
             licenseIdentifier = licenseIdentifier,
-            licenseUri = licenseUri,
           ),
           pageCount = pageCount,
           dimX = dimX,
@@ -123,7 +122,6 @@ object FileModelUtil {
             copyrightHolder = copyrightHolder,
             authorship = authorship,
             licenseIdentifier = licenseIdentifier,
-            licenseUri = licenseUri,
           ),
           dimX = dimX,
           dimY = dimY,
@@ -140,7 +138,6 @@ object FileModelUtil {
             copyrightHolder = copyrightHolder,
             authorship = authorship,
             licenseIdentifier = licenseIdentifier,
-            licenseUri = licenseUri,
           ),
           externalUrl = externalUrl,
           comment = comment,
@@ -156,7 +153,6 @@ object FileModelUtil {
             copyrightHolder = copyrightHolder,
             authorship = authorship,
             licenseIdentifier = licenseIdentifier,
-            licenseUri = licenseUri,
           ),
         )
       case FileType.TextFile =>
@@ -170,7 +166,6 @@ object FileModelUtil {
             copyrightHolder = copyrightHolder,
             authorship = authorship,
             licenseIdentifier = licenseIdentifier,
-            licenseUri = licenseUri,
           ),
         )
       case FileType.AudioFile =>
@@ -184,7 +179,6 @@ object FileModelUtil {
             copyrightHolder = copyrightHolder,
             authorship = authorship,
             licenseIdentifier = licenseIdentifier,
-            licenseUri = licenseUri,
           ),
         )
       case FileType.ArchiveFile =>
@@ -198,7 +192,6 @@ object FileModelUtil {
             copyrightHolder = copyrightHolder,
             authorship = authorship,
             licenseIdentifier = licenseIdentifier,
-            licenseUri = licenseUri,
           ),
           comment = comment,
         )

@@ -166,10 +166,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       "Specifies the terms under which a work can be used. This statement may be a reference to a well-known license, such as Creative Commons (e.g. CC BY-SA) or a custom license.",
     )
 
-  private val HasLicenseUri = makeOwlDatatypeProperty(KA.HasLicenseUri, XSD.STRING)
-    .withRdfLabelEn("has license URI")
-    .withRdfCommentEn("Canonical link to license.")
-
   private val ValueAsString = makeOwlDatatypeProperty(KA.ValueAsString, XSD.STRING)
     .withSubjectType(KA.Value)
     .withRdfCommentEn("A plain string representation of a value")
@@ -667,7 +663,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     HasAuthorship,
     HasIncomingLinkValue,
     HasLicenseIdentifier,
-    HasLicenseUri,
     IntValueAsInt,
     IntervalValueHasEnd,
     IntervalValueHasStart,

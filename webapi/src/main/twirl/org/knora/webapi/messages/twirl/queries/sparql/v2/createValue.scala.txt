@@ -251,13 +251,6 @@ DELETE {
                     case None => {}
                 }
 
-                @fileValueContentV2.fileValue.licenseUri match {
-                    case Some(uri) => {
-                        <@newValueIri> knora-base:hasLicenseUri """@uri.value"""^^xsd:anyURI .
-                    }
-                    case None => {}
-                }
-
                 @fileValueContentV2 match {
                     case stillImageFileValue: StillImageFileValueContentV2 => {
                         <@newValueIri> knora-base:dimX @stillImageFileValue.dimX ;

@@ -2005,7 +2005,6 @@ case class FileValueV2(
   copyrightHolder: Option[CopyrightHolder] = None,
   authorship: Option[List[Authorship]] = None,
   licenseIdentifier: Option[LicenseIdentifier] = None,
-  licenseUri: Option[LicenseUri] = None,
 )
 object FileValueV2 {
 
@@ -2015,7 +2014,6 @@ object FileValueV2 {
       copyrightHolder   <- r.objectStringOption(HasCopyrightHolder, CopyrightHolder.from)
       authorship        <- r.objectStringListOption(HasAuthorship, Authorship.from)
       licenseIdentifier <- r.objectStringOption(HasLicenseIdentifier, LicenseIdentifier.from)
-      licenseUri        <- r.objectDataTypeOption(HasLicenseUri, XSD.anyURI.toString, LicenseUri.from)
     } yield FileValueV2(
       info.filename,
       meta.internalMimeType,
@@ -2024,7 +2022,6 @@ object FileValueV2 {
       copyrightHolder,
       authorship,
       licenseIdentifier,
-      licenseUri,
     )
   }
 }
@@ -2075,8 +2072,7 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
     val copyrightHolder   = fileValue.copyrightHolder.map(mkJsonLdString).map((HasCopyrightHolder, _))
     val authorship        = fileValue.authorship.map(mkJsonLdStringArray).map((HasAuthorship, _))
     val licenseIdentifier = fileValue.licenseIdentifier.map(mkJsonLdString).map((HasLicenseIdentifier, _))
-    val licenseUri        = fileValue.licenseUri.map(mkJsonLdUri).map((HasLicenseUri, _))
-    knownValues ++ copyrightHolder ++ authorship ++ licenseIdentifier ++ licenseUri
+    knownValues ++ copyrightHolder ++ authorship ++ licenseIdentifier
   }
 }
 

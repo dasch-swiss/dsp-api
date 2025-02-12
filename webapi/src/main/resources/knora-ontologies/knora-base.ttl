@@ -578,15 +578,6 @@
     :objectDatatypeConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/knora-base#hasLicenseUri
-
-:hasLicenseUri
-    rdf:type                  owl:DatatypeProperty ;
-    rdfs:label                "has license URI"@en;
-    rdfs:comment              "Canonical link to license."@en ;
-    :objectDatatypeConstraint xsd:anyUri .
-
-
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOf
 
 :isAnnotationOf

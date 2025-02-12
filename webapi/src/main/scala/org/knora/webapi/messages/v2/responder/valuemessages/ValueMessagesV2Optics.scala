@@ -22,8 +22,6 @@ object ValueMessagesV2Optics {
     val licenseIdentifierOption: Lens[FileValueV2, Option[LicenseIdentifier]] =
       GenLens[FileValueV2](_.licenseIdentifier)
 
-    val licenseUriOption: Lens[FileValueV2, Option[LicenseUri]] = GenLens[FileValueV2](_.licenseUri)
-
   }
 
   object FileValueContentV2Optics {
@@ -42,7 +40,5 @@ object ValueMessagesV2Optics {
       fileValueV2.andThen(FileValueV2Optics.copyrightHolderOption)
     val licenseIdentifierOption: Lens[FileValueContentV2, Option[LicenseIdentifier]] =
       fileValueV2.andThen(FileValueV2Optics.licenseIdentifierOption)
-    val licenseUriOption: Lens[FileValueContentV2, Option[LicenseUri]] =
-      fileValueV2.andThen(FileValueV2Optics.licenseUriOption)
   }
 }

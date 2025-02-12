@@ -200,7 +200,6 @@ object UploadFileRequest {
     copyrightHolder: Option[CopyrightHolder] = None,
     authorship: Option[List[Authorship]] = None,
     licenseIdentifier: Option[LicenseIdentifier] = None,
-    licenseUri: Option[LicenseUri] = None,
   ): UploadFileRequest =
     new UploadFileRequest(
       fileType,
@@ -210,7 +209,6 @@ object UploadFileRequest {
       copyrightHolder,
       authorship,
       licenseIdentifier,
-      licenseUri,
     ) {}
 }
 

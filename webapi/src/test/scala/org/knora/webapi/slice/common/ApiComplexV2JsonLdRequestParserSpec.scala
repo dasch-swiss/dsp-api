@@ -477,7 +477,6 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
             copyrightHolder = Some(CopyrightHolder.unsafeFrom("Jane Doe")),
             authorship = Some(List(Authorship.unsafeFrom("Author McAuthorface"), Authorship.unsafeFrom("Mr. Smith"))),
             licenseIdentifier = Some(LicenseIdentifier.unsafeFrom("CC-BY-4.0")),
-            licenseUri = Some(LicenseUri.unsafeFrom("http://creativecommons.org/licenses/by/4.0/")),
           ),
           givenFileInfo.width.getOrElse(throw new Exception("width is missing")),
           givenFileInfo.height.getOrElse(throw new Exception("height is missing")),

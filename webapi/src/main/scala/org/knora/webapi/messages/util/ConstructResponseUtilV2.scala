@@ -1074,8 +1074,6 @@ final case class ConstructResponseUtilV2Live(
       licenseIdentifier = valueObject
         .maybeStringObject(OntologyConstants.KnoraBase.HasLicenseIdentifier.toSmartIri)
         .map(LicenseIdentifier.unsafeFrom),
-      licenseUri =
-        valueObject.maybeIriObject(OntologyConstants.KnoraBase.HasLicenseUri.toSmartIri).map(LicenseUri.unsafeFrom),
     )
 
     valueType match {
