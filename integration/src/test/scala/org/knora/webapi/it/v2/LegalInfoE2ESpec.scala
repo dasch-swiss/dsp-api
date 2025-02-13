@@ -42,7 +42,7 @@ import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
-object CopyrightAndLicensesSpec extends E2EZSpec {
+object LegalInfoE2ESpec extends E2EZSpec {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
   private val aCopyrightHolder             = CopyrightHolder.unsafeFrom("Universität Basel")

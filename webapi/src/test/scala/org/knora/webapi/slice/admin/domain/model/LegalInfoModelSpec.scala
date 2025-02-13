@@ -7,7 +7,7 @@ package org.knora.webapi.slice.admin.domain.model
 
 import zio.test.*
 
-object CopyrightAndLicensesModelSpec extends ZIOSpecDefault {
+object LegalInfoModelSpec extends ZIOSpecDefault {
 
   private val authorshipSuite = suite("Authorship")(
     test("pass a valid object and successfully create value object") {

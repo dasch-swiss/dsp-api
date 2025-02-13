@@ -6,10 +6,12 @@
 package org.knora.webapi.slice.admin.domain.model
 
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.LanguageCode
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion.*
 import org.knora.webapi.slice.common.StringValueCompanion.maxLength
 import org.knora.webapi.slice.common.Value.StringValue
+import zio.prelude.Validation
 
 final case class CopyrightHolder private (override val value: String) extends StringValue
 object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
