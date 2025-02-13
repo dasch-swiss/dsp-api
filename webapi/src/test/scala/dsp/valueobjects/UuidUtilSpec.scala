@@ -17,9 +17,7 @@ object UuidUtilSpec extends ZIOSpecDefault {
     val uuid              = UUID.randomUUID
     val base64EncodedUuid = UuidUtil.base64Encode(uuid)
     val base64DecodedUuid = UuidUtil.base64Decode(base64EncodedUuid)
-
-    zio.Console.printLine(base64EncodedUuid).orDie *>
-      assertTrue(base64DecodedUuid.toOption.contains(uuid))
+    assertTrue(base64DecodedUuid.toOption.contains(uuid))
   }
 
   private val hasSupportedVersion =

@@ -11,13 +11,10 @@ import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.rdf.model.Statement
 import org.apache.jena.vocabulary.RDF
-import org.apache.jena.vocabulary.XSD
 
 import java.time.Instant
-import java.time.LocalDate
 import java.util.UUID
 import scala.jdk.CollectionConverters.IteratorHasAsScala
-import scala.util.Try
 
 import org.knora.webapi.slice.common.jena.StatementOps.*
 
@@ -81,11 +78,6 @@ object ResourceOps {
 
     def objectUuid(p: Property): Either[String, UUID]               = statement(p).flatMap(stmt => stmt.objectAsUuid)
     def objectUuidOption(p: Property): Either[String, Option[UUID]] = fromStatement(p, _.objectAsUuid)
-
-    def objectLocalDate(p: Property): Either[String, LocalDate] =
-      objectDataType(p, XSD.date.toString, str => Try(LocalDate.parse(str)).toEither.left.map(_.getMessage))
-    def objectLocalDateOption(p: Property): Either[String, Option[LocalDate]] =
-      objectDataTypeOption(p, XSD.date.toString, str => Try(LocalDate.parse(str)).toEither.left.map(_.getMessage))
 
     def objectDataType(p: Property, dt: String): Either[String, String] =
       statement(p).flatMap(stmt => stmt.objectAsDataType(dt))

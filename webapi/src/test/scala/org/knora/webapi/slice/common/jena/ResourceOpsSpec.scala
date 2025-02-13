@@ -9,7 +9,6 @@ import zio.*
 import zio.test.*
 
 import java.time.Instant
-import java.time.LocalDate
 import scala.language.implicitConversions
 
 import org.knora.webapi.slice.common
@@ -353,22 +352,6 @@ object ResourceOpsSpec extends ZIOSpecDefault {
         for {
           res   <- resource()
           actual = res.objectDataTypeOption("https://example.com/test#str", "http://www.w3.org/2001/XMLSchema#date")
-        } yield assertTrue(
-          actual == Left(
-            "Invalid datatype for property https://example.com/test#str, http://www.w3.org/2001/XMLSchema#date expected",
-          ),
-        )
-      },
-      test("objectLocalDateOption should return a date") {
-        for {
-          res   <- resource()
-          actual = res.objectLocalDateOption("https://example.com/test#date")
-        } yield assertTrue(actual == Right(Some(LocalDate.parse("1879-03-14"))))
-      },
-      test("objectLocalDateOption should fail if it is not a date") {
-        for {
-          res   <- resource()
-          actual = res.objectLocalDateOption("https://example.com/test#str")
         } yield assertTrue(
           actual == Left(
             "Invalid datatype for property https://example.com/test#str, http://www.w3.org/2001/XMLSchema#date expected",
