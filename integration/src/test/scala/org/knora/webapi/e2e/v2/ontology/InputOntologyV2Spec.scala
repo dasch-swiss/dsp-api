@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.v2.responder.ontologymessages
+package org.knora.webapi.e2e.v2.ontology
 
 import zio.ZIO
 import zio.test.*
@@ -13,12 +13,17 @@ import java.time.Instant
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.e2e.v2.ontology
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 
 /**
