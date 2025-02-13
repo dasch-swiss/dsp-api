@@ -598,6 +598,8 @@ object OntologyConstants {
     val ResourceClassIri: IRI   = KnoraApiV2PrefixExpansion + "resourceClassIri"
     val ResourceIri: IRI        = KnoraApiV2PrefixExpansion + "resourceIri"
 
+    val License: IRI = KnoraApiV2PrefixExpansion + "License"
+
     val IsShared: IRI  = KnoraApiV2PrefixExpansion + "isShared"
     val IsBuiltIn: IRI = KnoraApiV2PrefixExpansion + "isBuiltIn"
 

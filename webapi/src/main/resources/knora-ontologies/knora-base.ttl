@@ -574,7 +574,7 @@
     rdf:type                  owl:DatatypeProperty ;
     rdfs:label                "has license"@en;
     rdfs:comment              "The license"@en ;
-    :objectDatatypeConstraint knora-admin:License .
+    :objectDatatypeConstraint :License .
 
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOf
 
@@ -1601,6 +1601,26 @@
                       owl:onProperty     :hasLicense;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ].
 
+
+###  http://www.knora.org/ontology/knora-base#License
+:License
+    rdf:type        owl:Class ;
+    rdfs:label      "License"@en ;
+    rdfs:comment    "A license for a FileValue."@en ;
+    rdfs:subClassOf :ValueBase ,
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :hasLicenseUri;
+                      owl:cardinality    "1"^^xsd:nonNegativeInteger ].
+
+
+###  http://www.knora.org/ontology/knora-base#hasLicenseUri
+
+:hasLicenseUri
+    rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "has license URI"@en ;
+    rdfs:comment              "The canonical URI to the license."@en ;
+    :subjectClassConstraint   :License ;
+    :objectDatatypeConstraint xsd:anyURI .
 
 
 ###  http://www.knora.org/ontology/knora-base#DecimalBase
