@@ -60,7 +60,7 @@ object CopyrightAndLicensesSpec extends E2EZSpec {
         info.licenseIri.isEmpty,
       )
     },
-    test("when creating a resource with legal info the creation response should not contain it") {
+    test("when creating a resource with legal info the creation response should contain it") {
       for {
         createResourceResponseModel <- createStillImageResourceWithInfos
         info                        <- copyrightAndLicenseInfo(createResourceResponseModel)
