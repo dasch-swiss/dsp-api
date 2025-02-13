@@ -13,6 +13,8 @@ import scala.collection.mutable
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import org.knora.webapi.*
+import org.knora.webapi.e2e.v2.ontology.InputOntologyParsingModeV2.KnoraOutputParsingModeV2
+import org.knora.webapi.e2e.v2.ontology.InputOntologyV2
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri

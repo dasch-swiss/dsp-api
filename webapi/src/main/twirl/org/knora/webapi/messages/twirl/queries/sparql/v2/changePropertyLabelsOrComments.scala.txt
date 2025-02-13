@@ -6,6 +6,7 @@
 @import dsp.errors.SparqlGenerationException
 @import org.knora.webapi.messages.SmartIri
 @import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+@import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 @import java.time.Instant
 
 @*
@@ -24,7 +25,7 @@
   ontologyIri: SmartIri,
   propertyIri: SmartIri,
   maybeLinkValuePropertyIri: Option[SmartIri],
-  predicateToUpdate: SmartIri,
+  predicateToUpdate: LabelOrComment,
   newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   currentTime: Instant)

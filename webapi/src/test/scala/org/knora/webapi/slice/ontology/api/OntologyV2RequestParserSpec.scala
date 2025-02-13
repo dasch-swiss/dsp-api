@@ -19,13 +19,15 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.CreatePropertyRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
@@ -448,11 +450,110 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
     },
   )
 
+  private val propertySuite = suite("property requests")(
+    suite("createProperty")(
+      test("should parse a valid request") {
+        val jsonLd =
+          s"""
+             |{
+             |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+             |  "@type" : "owl:Ontology",
+             |  "knora-api:lastModificationDate" : {
+             |    "@type" : "xsd:dateTimeStamp",
+             |    "@value" : "$lastModified"
+             |  },
+             |  "@graph" : [ {
+             |    "@id" : "anything:hasName",
+             |    "@type" : "owl:ObjectProperty",
+             |    "knora-api:subjectType" : {
+             |      "@id" : "anything:Thing"
+             |    },
+             |    "knora-api:objectType" : {
+             |      "@id" : "knora-api:TextValue"
+             |    },
+             |    "rdfs:comment" : [ {
+             |      "@language" : "en",
+             |      "@value" : "The name of a 'Thing'"
+             |    }, {
+             |      "@language" : "de",
+             |      "@value" : "Der Name eines Dinges"
+             |    } ],
+             |    "rdfs:label" : [ {
+             |      "@language" : "en",
+             |      "@value" : "has name"
+             |    }, {
+             |      "@language" : "de",
+             |      "@value" : "hat Namen"
+             |    } ],
+             |    "rdfs:subPropertyOf" : [ {
+             |      "@id" : "knora-api:hasValue"
+             |    }, {
+             |      "@id" : "http://schema.org/name"
+             |    } ]
+             |  } ],
+             |  "@context" : {
+             |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "owl" : "http://www.w3.org/2002/07/owl#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+             |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+             |  }
+             |}
+                """.stripMargin
+
+        val propertyDef = PropertyInfoContentV2(
+          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri,
+          predicates = Map(
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+              objects = Seq(SmartIriLiteralV2("http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
+            ),
+            "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
+              objects = Seq(SmartIriLiteralV2("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)),
+            ),
+            "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
+              objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri)),
+            ),
+            "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+              objects = Seq(
+                StringLiteralV2.from("has name", Some("en")),
+                StringLiteralV2.from("hat Namen", Some("de")),
+              ),
+            ),
+            "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+              objects = Seq(
+                StringLiteralV2.from("The name of a 'Thing'", Some("en")),
+                StringLiteralV2.from("Der Name eines Dinges", Some("de")),
+              ),
+            ),
+          ),
+          subPropertyOf = Set(
+            "http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri,
+            "http://schema.org/name".toSmartIri,
+          ),
+          ontologySchema = ApiV2Complex,
+        )
+        check(JsonLdTransformations.allGen) { t =>
+          for {
+            apiRequestId <- Random.nextUUID
+            actual       <- parser(_.createPropertyRequestV2(t(jsonLd), apiRequestId, user))
+          } yield assertTrue(actual == CreatePropertyRequestV2(propertyDef, lastModified, apiRequestId, user))
+        }
+      },
+    ),
+  )
+
   val spec =
     suite("OntologyV2RequestParser")(
       changeOntologyMetadataRequestV2Suite,
       createOntologySuite,
       createClassRequest,
       changeClassLabelOrCommentSuite,
+      propertySuite,
     ).provide(OntologyV2RequestParser.layer, IriConverter.layer, StringFormatter.test)
 }

@@ -28,7 +28,7 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
-import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2.LabelOrComment
+import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
@@ -1968,7 +1968,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not allow a user to change the labels of a property if they are not a sysadmin or an admin in the ontology's project" in {
 
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
+      val propertyIri = AnythingOntologyIri.makeProperty("hasName")
 
       val newObjects = Seq(
         StringLiteralV2.from("has name", Some("en")),
@@ -1978,7 +1978,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
         propertyIri = propertyIri,
-        predicateToUpdate = Rdfs.Label.toSmartIri,
+        predicateToUpdate = LabelOrComment.Label,
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -1992,7 +1992,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "change the labels of a property" in {
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
+      val propertyIri = AnythingOntologyIri.makeProperty("hasName")
 
       val newObjects = Seq(
         StringLiteralV2.from("has name", Some("en")),
@@ -2002,7 +2002,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
         propertyIri = propertyIri,
-        predicateToUpdate = Rdfs.Label.toSmartIri,
+        predicateToUpdate = LabelOrComment.Label,
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -2012,7 +2012,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
-        val readPropertyInfo = externalOntology.properties(propertyIri)
+        val readPropertyInfo = externalOntology.properties(propertyIri.smartIri)
         readPropertyInfo.entityInfoContent.predicates(Rdfs.Label.toSmartIri).objects should ===(
           newObjects,
         )
@@ -2027,7 +2027,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "change the labels of a property, submitting the same labels again" in {
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
+      val propertyIri = AnythingOntologyIri.makeProperty("hasName")
 
       val newObjects = Seq(
         StringLiteralV2.from("has name", Some("en")),
@@ -2037,7 +2037,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
         propertyIri = propertyIri,
-        predicateToUpdate = Rdfs.Label.toSmartIri,
+        predicateToUpdate = LabelOrComment.Label,
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -2047,7 +2047,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
-        val readPropertyInfo = externalOntology.properties(propertyIri)
+        val readPropertyInfo = externalOntology.properties(propertyIri.smartIri)
         readPropertyInfo.entityInfoContent.predicates(Rdfs.Label.toSmartIri).objects should ===(
           newObjects,
         )
@@ -2063,7 +2063,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not allow a user to change the comments of a property if they are not a sysadmin or an admin in the ontology's project" in {
 
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
+      val propertyIri = AnythingOntologyIri.makeProperty("hasName")
 
       val newObjects = Seq(
         StringLiteralV2.from("The name of a Thing", Some("en")),
@@ -2076,7 +2076,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
         propertyIri = propertyIri,
-        predicateToUpdate = Rdfs.Comment.toSmartIri,
+        predicateToUpdate = LabelOrComment.Comment,
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -2090,7 +2090,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "change the comments of a property" in {
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
+      val propertyIri = AnythingOntologyIri.makeProperty("hasName")
 
       val newObjects = Seq(
         StringLiteralV2.from("The name of a Thing", Some("en")),
@@ -2108,7 +2108,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
         propertyIri = propertyIri,
-        predicateToUpdate = Rdfs.Comment.toSmartIri,
+        predicateToUpdate = LabelOrComment.Comment,
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -2118,7 +2118,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
-        val readPropertyInfo = externalOntology.properties(propertyIri)
+        val readPropertyInfo = externalOntology.properties(propertyIri.smartIri)
         readPropertyInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects should ===(
           newObjectsUnescaped,
         )
@@ -2133,7 +2133,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "change the comments of a property, submitting the same comments again" in {
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
+      val propertyIri = AnythingOntologyIri.makeProperty("hasName")
 
       val newObjects = Seq(
         StringLiteralV2.from("The name of a Thing", Some("en")),
@@ -2151,7 +2151,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
         propertyIri = propertyIri,
-        predicateToUpdate = Rdfs.Comment.toSmartIri,
+        predicateToUpdate = LabelOrComment.Comment,
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -2161,7 +2161,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
-        val readPropertyInfo = externalOntology.properties(propertyIri)
+        val readPropertyInfo = externalOntology.properties(propertyIri.smartIri)
         readPropertyInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects should ===(
           newObjectsUnescaped,
         )

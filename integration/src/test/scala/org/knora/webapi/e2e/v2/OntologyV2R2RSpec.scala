@@ -19,6 +19,8 @@ import dsp.valueobjects.Iri
 import dsp.valueobjects.LangString
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
+import org.knora.webapi.e2e.v2.ontology.InputOntologyParsingModeV2.TestResponseParsingModeV2
+import org.knora.webapi.e2e.v2.ontology.InputOntologyV2
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -28,8 +30,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.TestResponseParsingModeV2
 import org.knora.webapi.models.*
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.routing.v2.ResourcesRouteV2

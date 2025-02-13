@@ -1961,7 +1961,7 @@ final case class OntologyResponderV2(
     for {
       requestingUser <- ZIO.succeed(changePropertyLabelsOrCommentsRequest.requestingUser)
 
-      externalPropertyIri = changePropertyLabelsOrCommentsRequest.propertyIri
+      externalPropertyIri = changePropertyLabelsOrCommentsRequest.propertyIri.toComplexSchema
       externalOntologyIri = externalPropertyIri.getOntologyFromEntity
 
       _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(

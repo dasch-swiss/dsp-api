@@ -10,15 +10,19 @@ import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.OWL2 as OWL
 import org.apache.jena.vocabulary.RDFS
 import zio.*
+import zio.prelude.Validation
 
 import java.time.Instant
 import java.util.UUID
+import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
 import dsp.constants.SalsahGui
+import dsp.valueobjects.Schema.GuiObject
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
+import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
@@ -27,20 +31,25 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeGuiOrderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyGuiElementRequest
+import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.CreatePropertyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinalitiesFromClassRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.jena.DatasetOps
 import org.knora.webapi.slice.common.jena.DatasetOps.*
@@ -332,6 +341,194 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
         classInfo <- extractClassInfo(ds, meta)
         _         <- checkConstraints(meta, classInfo)
       } yield f(classInfo, meta.lastModificationDate, apiRequestId, requestingUser)
+    }
+
+  def createPropertyRequestV2(jsonLd: String, apiRequestId: UUID, user: User): IO[String, CreatePropertyRequestV2] =
+    ZIO.scoped {
+      for {
+        ds           <- DatasetOps.fromJsonLd(jsonLd)
+        meta         <- extractOntologyMetadata(ds.defaultModel)
+        propertyInfo <- extractPropertyInfo(ds, meta)
+        _            <- sanityCheckCreate(propertyInfo)
+      } yield CreatePropertyRequestV2(propertyInfo, meta.lastModificationDate, apiRequestId, user)
+    }
+
+  private def extractPropertyInfo(ds: Dataset, meta: OntologyMetadata): ZIO[Scope, String, PropertyInfoContentV2] =
+    for {
+      classModel    <- ZIO.fromOption(ds.namedModel(meta.ontologyIri.toString)).orElseFail("No property definition found")
+      r             <- ZIO.fromEither(classModel.singleRootResource)
+      propertyIri   <- extractPropertyIri(r)
+      predicates    <- extractPredicates(r)
+      subPropertyOf <- extractSubPropertyOf(r).map(_.map(_.smartIri))
+
+      propertyInfo = PropertyInfoContentV2(propertyIri.smartIri, predicates, subPropertyOf, ApiV2Complex)
+    } yield propertyInfo
+
+  private def extractPropertyIri(r: Resource): ZIO[Scope, String, PropertyIri] =
+    ZIO.fromOption(r.uri).orElseFail("No property IRI found").flatMap(iriConverter.asPropertyIriApiV2Complex)
+
+  private def extractSubPropertyOf(r: Resource): ZIO[Scope, String, Set[ResourceClassIri]] = {
+    val subclasses: Set[String] = r.listProperties(RDFS.subPropertyOf).asScala.flatMap(_.objectAsUri.toOption).toSet
+    ZIO.foreach(subclasses)(iriConverter.asResourceClassIri)
+  }
+
+  private def sanityCheckCreate(propertyInfo: PropertyInfoContentV2): ZIO[Scope, String, Unit] = for {
+    _                      <- ZIO.fail("No predicates found").when(propertyInfo.predicates.isEmpty)
+    subjectType            <- iriConverter.asSmartIri(KA.SubjectType).orDie
+    objectType             <- iriConverter.asSmartIri(KA.ObjectType).orDie
+    subjectClassConstraint <- iriConverter.asSmartIri(KB.SubjectClassConstraint).orDie
+    rdfsLabel              <- iriConverter.asSmartIri(RDFS.label.toString).orDie
+    rdfsComment            <- iriConverter.asSmartIri(RDFS.comment.toString).orDie
+    guiElementProp         <- iriConverter.asSmartIri(SalsahGui.External.GuiElementProp).orDie
+    guiAttribute           <- iriConverter.asSmartIri(SalsahGui.External.GuiAttribute).orDie
+
+    isPropertyIri = Validation.fromEither(PropertyIri.from(propertyInfo.propertyIri))
+    validSubjectType =
+      propertyInfo.getIriObject(subjectType) match
+        case None    => Validation.succeed(None)
+        case Some(t) => isApiV2ComplexEntityIri(t, "Invalid knora-api:subjectType").map(Some(_))
+    hasObjectType =
+      propertyInfo.getIriObject(objectType) match
+        case None    => Validation.fail("Missing knora-api:objectType")
+        case Some(t) => isApiV2ComplexEntityIri(t, "Invalid knora-api:objectType")
+    subPropertyOfNotEmpty =
+      propertyInfo.subPropertyOf match
+        case set if set.isEmpty => Validation.fail("SuperProperties cannot be empty")
+        case _                  => Validation.succeed(())
+    subjectClassConstraintIsIri =
+      propertyInfo.predicates.get(subjectClassConstraint) match
+        case None             => Validation.succeed(())
+        case Some(predicates) => ensureSingleIri(predicates.objects, "knora-base:subjectClassConstraint")
+    labelsAreValid =
+      propertyInfo.predicates.get(rdfsLabel) match
+        case None       => Validation.fail("Missing rdfs:label")
+        case Some(info) => ensureOnlyStringLiteralsWithLanguage(info.objects, "rdfs:label")
+    commentIsValid =
+      propertyInfo.predicates.get(rdfsComment) match
+        case None       => Validation.succeed(())
+        case Some(info) => ensureOnlyStringLiteralsWithLanguage(info.objects, "rdfs:comment")
+    guiObjectValid = ensureValidGuiObject(propertyInfo.predicates, guiElementProp, guiAttribute)
+
+    _ <- Validation
+           .validate(
+             isPropertyIri,
+             validSubjectType,
+             hasObjectType,
+             subPropertyOfNotEmpty,
+             subjectClassConstraintIsIri,
+             labelsAreValid,
+             commentIsValid,
+             guiObjectValid,
+           )
+           .toZIO
+  } yield ()
+
+  private def isApiV2ComplexEntityIri(s: SmartIri, failMsg: String): Validation[String, SmartIri] =
+    if s.isKnoraApiV2EntityIri && s.isApiV2ComplexSchema then Validation.succeed(s)
+    else Validation.fail(s"$failMsg: ${s.toComplexSchema.toIri}")
+
+  private def ensureSingleIri(literals: Seq[OntologyLiteralV2], prop: String): Validation[String, SmartIri] =
+    literals match
+      case Seq(SmartIriLiteralV2(iri)) => Validation.succeed(iri)
+      case _                           => Validation.fail(s"$prop: Expected single IRI, got: ${literals.mkString(", ")}")
+
+  private def ensureOnlyStringLiteralsWithLanguage(
+    literals: Seq[OntologyLiteralV2],
+    prop: String,
+  ): Validation[String, Seq[StringLiteralV2]] =
+    ensureOnlyStringLiterals(literals, prop)
+      .flatMap(strLit =>
+        strLit.filter(_.language.isEmpty) match
+          case Nil         => Validation.succeed(strLit)
+          case withoutLang => Validation.fail(s"$prop: String literals without language: ${withoutLang.mkString(", ")}"),
+      )
+
+  private def ensureOnlyStringLiterals(
+    literals: Seq[OntologyLiteralV2],
+    prop: String,
+  ): Validation[String, Seq[StringLiteralV2]] = {
+    val nonStringLiterals = literals.filter(pred => !pred.isInstanceOf[StringLiteralV2])
+    if (nonStringLiterals.isEmpty) Validation.succeed(literals.collect { case s: StringLiteralV2 => s })
+    else Validation.fail(s"$prop: Non-string literals: ${nonStringLiterals.mkString(", ")}")
+  }
+
+  private def ensureValidGuiObject(
+    predicates: Map[SmartIri, PredicateInfoV2],
+    guiElementProp: SmartIri,
+    guiAttribute: SmartIri,
+  ): Validation[String, GuiObject] = {
+    val guiElement = predicates.get(guiElementProp)
+    val guiElementVal = guiElement match
+      case None => Validation.succeed(())
+      case Some(info) =>
+        info.objects.head match
+          case _: SmartIriLiteralV2 => Validation.succeed(())
+          case other                => Validation.fail(s"Unexpected object for salsah-gui:guiElement: $other")
+
+    val guiAttributes   = predicates.get(guiAttribute).map(_.objects).getOrElse(Seq.empty)
+    val guiAttributeVal = ensureOnlyStringLiterals(guiAttributes, "salsah-gui:guiAttribute")
+
+    val guiAttrStr = guiAttributes.collect { case StringLiteralV2(value, _) => value }.toSet
+    val guiElementStr =
+      guiElement.flatMap(_.objects.headOption).collect { case SmartIriLiteralV2(value) => value.toInternalSchema.toIri }
+    val validGui = GuiObject.makeFromStrings(guiAttrStr, guiElementStr).mapError(_.getMessage)
+    Validation.validate(guiElementVal, guiAttributeVal, validGui).map { case (_, _, gui) => gui }
+  }
+
+  def changePropertyGuiElementRequest(
+    jsonLd: String,
+    apiRequestId: UUID,
+    user: User,
+  ): IO[String, ChangePropertyGuiElementRequest] = ZIO.scoped {
+    for {
+      ds           <- DatasetOps.fromJsonLd(jsonLd)
+      meta         <- extractOntologyMetadata(ds.defaultModel)
+      propertyInfo <- extractPropertyInfo(ds, meta)
+      propertyIri  <- ZIO.fromEither(PropertyIri.from(propertyInfo.propertyIri))
+
+      guiElementProp      <- iriConverter.asSmartIri(SalsahGui.External.GuiElementProp).orDie
+      guiAttribute        <- iriConverter.asSmartIri(SalsahGui.External.GuiAttribute).orDie
+      guiElement          <- ensureValidGuiObject(propertyInfo.predicates, guiElementProp, guiAttribute).toZIO
+      lastModificationDate = meta.lastModificationDate
+    } yield ChangePropertyGuiElementRequest(propertyIri, guiElement, lastModificationDate, apiRequestId, user)
+  }
+
+  def changePropertyLabelsOrCommentsRequestV2(
+    jsonLd: String,
+    apiRequestId: UUID,
+    user: User,
+  ): IO[String, ChangePropertyLabelsOrCommentsRequestV2] = ZIO.scoped {
+    for {
+      ds                          <- DatasetOps.fromJsonLd(jsonLd)
+      meta                        <- extractOntologyMetadata(ds.defaultModel)
+      propertyInfo                <- extractPropertyInfo(ds, meta)
+      propertyIri                 <- ZIO.fromEither(PropertyIri.from(propertyInfo.propertyIri))
+      rdfsLabel                   <- iriConverter.asSmartIri(RDFS.label.toString).orDie
+      rdfsComment                 <- iriConverter.asSmartIri(RDFS.comment.toString).orDie
+      what                        <- labelOrComment(propertyInfo.predicates, rdfsLabel, rdfsComment).toZIO
+      (labelOrComment, newObjects) = what
+    } yield ChangePropertyLabelsOrCommentsRequestV2(
+      propertyIri,
+      labelOrComment,
+      newObjects,
+      meta.lastModificationDate,
+      apiRequestId,
+      user,
+    )
+  }
+
+  private def labelOrComment(
+    predicates: Map[SmartIri, PredicateInfoV2],
+    rdfsLabel: SmartIri,
+    rdfComment: SmartIri,
+  ): Validation[String, (LabelOrComment, Seq[StringLiteralV2])] =
+    (predicates.get(rdfsLabel), predicates.get(rdfComment)) match {
+      case (Some(label), None) =>
+        ensureOnlyStringLiteralsWithLanguage(label.objects, "rdfs:label").map((LabelOrComment.Label, _))
+      case (None, Some(comment)) =>
+        ensureOnlyStringLiteralsWithLanguage(comment.objects, "rdfs:comment").map((LabelOrComment.Comment, _))
+      case (Some(label), Some(comment)) => Validation.fail(s"Both label and comment found: $label, $comment")
+      case (None, None)                 => Validation.fail("No label or comment found")
     }
 }
 
