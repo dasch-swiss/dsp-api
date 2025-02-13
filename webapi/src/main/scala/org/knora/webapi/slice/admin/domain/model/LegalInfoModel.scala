@@ -5,9 +5,11 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion.*
 import org.knora.webapi.slice.common.StringValueCompanion.maxLength
@@ -15,6 +17,7 @@ import org.knora.webapi.slice.common.Value.StringValue
 
 final case class CopyrightHolder private (override val value: String) extends StringValue
 object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
+  given JsonCodec[CopyrightHolder] = ZioJsonCodec.stringCodec(CopyrightHolder.from)
   def from(str: String): Either[String, CopyrightHolder] =
     fromValidations(
       "Copyright Holder",
@@ -25,12 +28,14 @@ object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
 
 final case class Authorship private (override val value: String) extends StringValue
 object Authorship extends StringValueCompanion[Authorship] {
+  given JsonCodec[LicenseIri] = ZioJsonCodec.stringCodec(LicenseIri.from)
   def from(str: String): Either[String, Authorship] =
     fromValidations("Authorship", Authorship.apply, List(nonEmpty, noLineBreaks, maxLength(1_000)))(str)
 }
 
 final case class LicenseIri private (override val value: String) extends StringValue
 object LicenseIri extends StringValueCompanion[LicenseIri] {
+  given JsonCodec[LicenseIri] = ZioJsonCodec.stringCodec(LicenseIri.from)
 
   /**
    * Explanation of the IRI regex:
@@ -55,6 +60,7 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
 
 final case class LicenseUri private (override val value: String) extends StringValue
 object LicenseUri extends StringValueCompanion[LicenseUri] {
+  given JsonCodec[LicenseUri] = ZioJsonCodec.stringCodec(LicenseUri.from)
   def from(str: String): Either[String, LicenseUri] =
     fromValidations("License URI", LicenseUri.apply, List(nonEmpty, isUri))(str)
 }

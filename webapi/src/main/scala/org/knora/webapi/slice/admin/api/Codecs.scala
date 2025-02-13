@@ -65,10 +65,10 @@ object Codecs {
 
   object ZioJsonCodec {
 
-    private type StringCodec[A] = JsonCodec[A]
-    private def stringCodec[A <: StringValue](from: String => Either[String, A]): StringCodec[A] =
+    type StringCodec[A] = JsonCodec[A]
+    def stringCodec[A <: StringValue](from: String => Either[String, A]): StringCodec[A] =
       stringCodec(from, _.value)
-    private def stringCodec[A](from: String => Either[String, A], to: A => String): StringCodec[A] =
+    def stringCodec[A](from: String => Either[String, A], to: A => String): StringCodec[A] =
       JsonCodec[String].transformOrFail(from, to)
 
     private def booleanCodec[A <: BooleanValue](from: Boolean => A): StringCodec[A] =
@@ -107,8 +107,6 @@ object Codecs {
     implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
     implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
     implicit val status: StringCodec[Status]                           = booleanCodec(Status.from)
-    implicit val copyrightHolder: StringCodec[CopyrightHolder]         = stringCodec(CopyrightHolder.from)
-    implicit val licenseUri: StringCodec[LicenseUri]                   = stringCodec(LicenseUri.from)
 
     // user
     implicit val userIri: StringCodec[UserIri]         = stringCodec(UserIri.from)
