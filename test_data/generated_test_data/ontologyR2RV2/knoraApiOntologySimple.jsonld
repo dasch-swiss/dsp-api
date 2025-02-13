@@ -502,6 +502,19 @@
             "@id": "knora-api:Interval"
         },
         {
+            "rdfs:label": "License",
+            "rdfs:subClassOf": {
+                "@type": "owl:Restriction",
+                "owl:onProperty": {
+                    "@id": "knora-api:hasLicenseUri"
+                },
+                "owl:cardinality": 1
+            },
+            "rdfs:comment": "A license for a FileValue.",
+            "@type": "owl:Class",
+            "@id": "knora-api:License"
+        },
+        {
             "rdfs:label": "Link Object",
             "rdfs:subClassOf": [
                 {
@@ -913,13 +926,6 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:hasCopyrightHolder"
-                    },
-                    "owl:maxCardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasLicense"
                     },
                     "owl:maxCardinality": 1
                 }
@@ -1438,13 +1444,16 @@
             "@id": "knora-api:hasKeyword"
         },
         {
-            "rdfs:label": "has license",
-            "rdfs:comment": "The license",
+            "rdfs:label": "has license URI",
+            "rdfs:comment": "The canonical URI to the license.",
             "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "knora-admin:License"
+            "knora-api:subjectType": {
+                "@id": "knora-api:License"
             },
-            "@id": "knora-api:hasLicense"
+            "knora-api:objectType": {
+                "@id": "xsd:anyURI"
+            },
+            "@id": "knora-api:hasLicenseUri"
         },
         {
             "rdfs:label": "has Link to",
@@ -1854,7 +1863,6 @@
     "@context": {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "knora-api": "http://api.knora.org/ontology/knora-api/simple/v2#",
-        "knora-admin": "http://api.knora.org/ontology/knora-admin/simple/v2#",
         "owl": "http://www.w3.org/2002/07/owl#",
         "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
         "xsd": "http://www.w3.org/2001/XMLSchema#"
