@@ -14,10 +14,8 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import java.time.Instant
-import java.time.LocalDate
 import scala.collection.mutable
 import scala.reflect.ClassTag
-import scala.util.Try
 
 import dsp.errors.*
 import org.knora.webapi.*
@@ -101,14 +99,6 @@ object SparqlExtendedConstructResponse {
                         .xsdDateTimeStampToInstant(datatypeLiteral.value)
                         .getOrElse(
                           throw InconsistentRepositoryDataException(s"Invalid xsd:dateTime: ${datatypeLiteral.value}"),
-                        ),
-                    )
-
-                  case OntologyConstants.Xsd.Date =>
-                    DateLiteralV2(
-                      Try(LocalDate.parse(datatypeLiteral.value))
-                        .getOrElse(
-                          throw InconsistentRepositoryDataException(s"Invalid xsd:date: ${datatypeLiteral.value}"),
                         ),
                     )
 
@@ -385,15 +375,6 @@ case class DecimalLiteralV2(value: BigDecimal) extends LiteralV2 {
  * @param value the timestamp value.
  */
 case class DateTimeLiteralV2(value: Instant) extends LiteralV2 {
-  override def toString: String = value.toString
-}
-
-/**
- * Represents a local date.
- *
- * @param value the date.
- */
-case class DateLiteralV2(value: LocalDate) extends LiteralV2 {
   override def toString: String = value.toString
 }
 

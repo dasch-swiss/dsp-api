@@ -8,7 +8,6 @@ package org.knora.webapi.messages.util
 import zio.*
 
 import java.time.Instant
-import java.time.LocalDate
 import java.util.UUID
 import scala.reflect.ClassTag
 
@@ -324,15 +323,6 @@ object ConstructResponseUtilV2 {
      */
     def requireDateTimeObject(predicateIri: SmartIri): Instant =
       requireSingleAs[DateTimeLiteralV2](predicateIri).value
-
-    /**
-     * Returns the optional date object of the specified predicate. Throws an exception if the object is not a date.
-     *
-     * @param predicateIri the predicate.
-     * @return the date object of the predicate.
-     */
-    def maybeDateObject(predicateIri: SmartIri): Option[LocalDate] =
-      maybeSingleAs[DateLiteralV2](predicateIri).map(_.value)
   }
 
   /**
