@@ -46,6 +46,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
@@ -321,56 +322,6 @@ case class CreatePropertyRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Constructs instances of [[CreatePropertyRequestV2]] based on JSON-LD requests.
- */
-object CreatePropertyRequestV2 {
-
-  /**
-   * Converts a JSON-LD request to a [[CreatePropertyRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[CreatePropertyRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): CreatePropertyRequestV2 = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    // Get the property definition and the ontology's last modification date from the JSON-LD.
-
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val propertyUpdateInfo   = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
-    val propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
-    val lastModificationDate = propertyUpdateInfo.lastModificationDate
-
-    // Check that the knora-api:subjectType (if provided) and the knora-api:objectType point to valid entity IRIs.
-
-    propertyInfoContent.predicates.get(KnoraApiV2Complex.SubjectType.toSmartIri).foreach { subjectTypePred =>
-      val subjectType = subjectTypePred
-        .requireIriObject(throw BadRequestException(s"Missing or invalid object for predicate knora-api:subjectType"))
-
-      if (!(subjectType.isKnoraApiV2EntityIri && subjectType.getOntologySchema.contains(ApiV2Complex))) {
-        throw BadRequestException(s"Invalid knora-api:subjectType: $subjectType")
-      }
-    }
-
-    val objectType = propertyInfoContent.requireIriObject(
-      KnoraApiV2Complex.ObjectType.toSmartIri,
-      throw BadRequestException(s"Missing knora-api:objectType"),
-    )
-
-    if (!(objectType.isKnoraApiV2EntityIri && objectType.getOntologySchema.contains(ApiV2Complex))) {
-      throw BadRequestException(s"Invalid knora-api:objectType: $objectType")
-    }
-    CreatePropertyRequestV2(propertyInfoContent, lastModificationDate, apiRequestID, requestingUser)
-  }
-}
-
-/**
  * Requests the addition of a class to an ontology. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
@@ -500,22 +451,6 @@ case class CanDeletePropertyRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * A trait for requests to change entity labels or comments.
- */
-sealed trait ChangeLabelsOrCommentsRequest {
-
-  /**
-   * The predicate to update: `rdfs:label` or `rdfs:comment`.
-   */
-  val predicateToUpdate: SmartIri
-
-  /**
-   * The new objects of the predicate.
-   */
-  val newObjects: Seq[StringLiteralV2]
-}
-
-/**
  * Requests that the `salsah-gui:guiElement` and `salsah-gui:guiAttribute` of a property are changed.
  *
  * @param propertyIri          the IRI of the property to be changed.
@@ -543,51 +478,13 @@ case class ChangePropertyGuiElementRequest(
  * @param requestingUser       the user making the request.
  */
 case class ChangePropertyLabelsOrCommentsRequestV2(
-  propertyIri: SmartIri,
-  predicateToUpdate: SmartIri,
+  propertyIri: PropertyIri,
+  predicateToUpdate: LabelOrComment,
   newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
-    with ChangeLabelsOrCommentsRequest
-
-/**
- * Constructs instances of [[ChangePropertyLabelsOrCommentsRequestV2]] based on JSON-LD input.
- */
-object ChangePropertyLabelsOrCommentsRequestV2 {
-
-  /**
-   * Converts a JSON-LD request to a [[ChangePropertyLabelsOrCommentsRequestV2]].
-   *
-   * @param jsonLDDocument the JSON-LD input.
-   * @param apiRequestID   the UUID of the API request.
-   * @param requestingUser the user making the request.
-   * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: User,
-  ): ChangePropertyLabelsOrCommentsRequestV2 = {
-    val inputOntologiesV2     = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val propertyUpdateInfo    = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
-    val propertyInfoContent   = propertyUpdateInfo.propertyInfoContent
-    val lastModificationDate  = propertyUpdateInfo.lastModificationDate
-    val predicateInfoToUpdate = OntologyUpdateHelper.getLabelsOrComments(propertyInfoContent)
-
-    ChangePropertyLabelsOrCommentsRequestV2(
-      propertyIri = propertyInfoContent.propertyIri,
-      predicateToUpdate = predicateInfoToUpdate.predicateIri,
-      newObjects = predicateInfoToUpdate.objects.collect { case strLiteral: StringLiteralV2 =>
-        strLiteral
-      },
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser,
-    )
-  }
-}
 
 /**
  * Deletes the comment from a property. A successful response will be a [[ReadOntologyV2]].
@@ -648,26 +545,25 @@ object DeletePropertyCommentRequestV2 {
  */
 case class ChangeClassLabelsOrCommentsRequestV2(
   classIri: ResourceClassIri,
-  predicateToUpdate: ChangeClassLabelsOrCommentsRequestV2.LabelOrComment,
+  predicateToUpdate: LabelOrComment,
   newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
-object ChangeClassLabelsOrCommentsRequestV2 {
-  enum LabelOrComment {
-    case Label
-    case Comment
 
-    override def toString: String = this match {
-      case Label   => RDFS.LABEL.toString
-      case Comment => RDFS.COMMENT.toString
-    }
+enum LabelOrComment {
+  case Label
+  case Comment
+
+  override def toString: String = this match {
+    case Label   => RDFS.LABEL.toString
+    case Comment => RDFS.COMMENT.toString
   }
-  object LabelOrComment {
-    def fromString(str: String): Option[LabelOrComment] =
-      LabelOrComment.values.find(_.toString == str)
-  }
+}
+object LabelOrComment {
+  def fromString(str: String): Option[LabelOrComment] =
+    LabelOrComment.values.find(_.toString == str)
 }
 
 /**
