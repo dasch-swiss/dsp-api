@@ -71,7 +71,7 @@ final case class ProjectsLegalInfoRestService(
     for {
       _       <- auth.ensureSystemAdmin(user)
       project <- projects.findByShortcode(shortcode).someOrFail(NotFoundException(s"Project ${shortcode} not found"))
-      _       <- projects.replaceCopyrightHolser(project.id, req.`old-value`, req.`new-value`)
+      _       <- projects.replaceCopyrightHolder(project.id, req.`old-value`, req.`new-value`)
     } yield ()
 }
 
