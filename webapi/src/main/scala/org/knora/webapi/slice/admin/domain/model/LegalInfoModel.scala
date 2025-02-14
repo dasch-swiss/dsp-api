@@ -5,8 +5,13 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import zio.NonEmptyChunk
+import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.prelude.Validation
+
+import java.net.URI
+import scala.util.Try
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec
@@ -56,4 +61,26 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
     val uuid = UuidUtil.makeRandomBase64EncodedUuid
     unsafeFrom(s"http://rdfh.ch/licenses/$uuid")
   }
+}
+
+final case class License private (id: LicenseIri, uri: URI, labelEn: String)
+object License {
+  given JsonCodec[URI] =
+    JsonCodec[String].transformOrFail(s => Try(URI.create(s)).toEither.left.map(_.getMessage), _.toString)
+  given JsonCodec[License] = DeriveJsonCodec.gen[License]
+
+  def from(id: LicenseIri, uri: URI, labelEn: String): Either[String, License] = {
+    val labelValidation = Validation
+      .validate(nonEmpty(labelEn), maxLength(255)(labelEn), noLineBreaks(labelEn))
+      .mapErrorAll(errs => NonEmptyChunk(s"Label en ${errs.mkString("; ")}"))
+    Validation
+      .validate(absoluteUri(uri), labelValidation)
+      .as(License(id, uri, labelEn))
+      .toEither
+      .left
+      .map(errs => s"License: ${errs.mkString(", ")}")
+  }
+
+  def unsafeFrom(id: LicenseIri, uri: URI, labelEn: String): License =
+    from(id, uri, labelEn).fold(e => throw new IllegalArgumentException(e), identity)
 }

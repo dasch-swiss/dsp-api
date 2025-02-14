@@ -44,5 +44,6 @@ object AdminRepoModule {
     KnoraUserRepoLive.layer,
     AdministrativePermissionRepoLive.layer,
     DefaultObjectAccessPermissionRepoLive.layer,
+    LicenseRepo.layer,
   )
 }

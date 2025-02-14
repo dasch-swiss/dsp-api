@@ -7,6 +7,8 @@ package org.knora.webapi.slice.admin.domain.model
 
 import zio.test.*
 
+import java.net.URI
+
 object LegalInfoModelSpec extends ZIOSpecDefault {
 
   private val authorshipSuite = suite("Authorship")(
@@ -43,8 +45,49 @@ object LegalInfoModelSpec extends ZIOSpecDefault {
     },
   )
 
+  private val licenseSuite = suiteAll("License") {
+    val validIri   = LicenseIri.unsafeFrom("http://rdfh.ch/licenses/i6xBpZn4RVOdOIyTezEumw")
+    val validUri   = URI.create("https://creativecommons.org/licenses/by/4.0/")
+    val invalidUri = URI.create("./invalid")
+    val validLabel = "CC BY 4.0"
+
+    test("pass a valid object and successfully create value object") {
+      val actual = License.from(validIri, validUri, validLabel)
+      assertTrue(
+        actual.map(_.id).contains(validIri),
+        actual.map(_.uri).contains(validUri),
+        actual.map(_.labelEn).contains(validLabel),
+      )
+    }
+    test("pass a relative URI and return an error") {
+      val actual = License.from(validIri, invalidUri, validLabel)
+      assertTrue(actual == Left("License: URI must be absolute"))
+    }
+    test("pass an empty label and return an error") {
+      val actual = License.from(validIri, validUri, "")
+      assertTrue(actual == Left("License: Label en cannot be empty"))
+    }
+    test("pass a new line in labelEn and return an error") {
+      val actual = License.from(validIri, validUri, "some\nlabel")
+      assertTrue(actual == Left("License: Label en must not contain line breaks"))
+    }
+    test("pass a too long labelEn and return an error") {
+      val actual = License.from(validIri, validUri, "s" * 256)
+      assertTrue(actual == Left("License: Label en must be maximum 255 characters long"))
+    }
+    test("errors are combined") {
+      val actual = License.from(validIri, invalidUri, "s\n" * 256)
+      assertTrue(
+        actual == Left(
+          "License: URI must be absolute, Label en must be maximum 255 characters long; must not contain line breaks",
+        ),
+      )
+    }
+  }
+
   val spec: Spec[Any, Nothing] = suite("Copyright And Licenses Model")(
     authorshipSuite,
     licenseIriSuite,
+    licenseSuite,
   )
 }
