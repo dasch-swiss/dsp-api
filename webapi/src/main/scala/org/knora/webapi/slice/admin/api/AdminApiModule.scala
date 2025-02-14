@@ -18,6 +18,7 @@ import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
+import org.knora.webapi.slice.admin.api.service.ProjectsLegalInfoRestService
 import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
@@ -26,6 +27,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
+import org.knora.webapi.slice.admin.domain.service.LicenseService
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectEraseService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
@@ -55,6 +57,7 @@ object AdminApiModule
       KnoraResponseRenderer &
       KnoraUserService &
       KnoraUserToUserConverter &
+      LicenseService &
       ListsResponder &
       MaintenanceService &
       OntologyCache &
@@ -95,6 +98,9 @@ object AdminApiModule
       PermissionsEndpoints.layer,
       PermissionsEndpointsHandlers.layer,
       PermissionRestService.layer,
+      ProjectsLegalInfoEndpoints.layer,
+      ProjectsLegalInfoEndpointsHandler.layer,
+      ProjectsLegalInfoRestService.layer,
       ProjectRestService.layer,
       ProjectsEndpoints.layer,
       ProjectsEndpointsHandler.layer,

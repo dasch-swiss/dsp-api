@@ -8,7 +8,7 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.ZIO
 import zio.test.*
 
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.repo.LicenseRepo
 
 object LicenseServiceSpec extends ZIOSpecDefault {
@@ -18,7 +18,7 @@ object LicenseServiceSpec extends ZIOSpecDefault {
   def spec = suite("LicenseService")(
     test("findByProjectId should return all licenses for any ProjectIri") {
       for {
-        actual <- service(_.findByProjectId(ProjectIri.makeNew))
+        actual <- service(_.findByProjectShortcode(Shortcode.unsafeFrom("0001")))
       } yield assertTrue(actual.size == 9)
     },
   ).provide(LicenseService.layer, LicenseRepo.layer)
