@@ -21,12 +21,12 @@ object LicenseRepositorySpec extends ZIOSpecDefault {
     },
     test("should find license by id") {
       for {
-        actual <- repo(_.findById(LicenseIri.unsafeFrom("http://rdfh.ch/licenses/heUgoYutSxWm2Rc7Gc1J5g")))
+        actual <- repo(_.findById(LicenseIri.unsafeFrom("http://rdfh.ch/licenses/cc-by-4.0")))
       } yield {
         assertTrue(
           actual.contains(
             License.unsafeFrom(
-              LicenseIri.unsafeFrom("http://rdfh.ch/licenses/heUgoYutSxWm2Rc7Gc1J5g"),
+              LicenseIri.unsafeFrom("http://rdfh.ch/licenses/cc-by-4.0"),
               URI.create("https://creativecommons.org/licenses/by/4.0/"),
               "CC BY 4.0",
             ),

@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.admin.api
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
@@ -41,12 +46,12 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
         PagedResponse.allInOnePage(
           Chunk(
             LicenseDto(
-              "http://rdfh.ch/licenses/heUgoYutSxWm2Rc7Gc1J5g",
+              "http://rdfh.ch/licenses/cc-by-4.0",
               "https://creativecommons.org/licenses/by/4.0/",
               "CC BY 4.0",
             ),
             LicenseDto(
-              "http://rdfh.ch/licenses/iAMRMWz7QCihyjKTToiOxQ",
+              "http://rdfh.ch/licenses/cc-by-sa-4.0",
               "https://creativecommons.org/licenses/by-sa/4.0/",
               "CC BY-SA 4.0",
             ),

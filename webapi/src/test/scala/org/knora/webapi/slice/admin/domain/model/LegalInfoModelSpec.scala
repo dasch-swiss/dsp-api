@@ -46,7 +46,7 @@ object LegalInfoModelSpec extends ZIOSpecDefault {
   )
 
   private val licenseSuite = suiteAll("License") {
-    val validIri   = LicenseIri.unsafeFrom("http://rdfh.ch/licenses/i6xBpZn4RVOdOIyTezEumw")
+    val validIri   = LicenseIri.unsafeFrom("http://rdfh.ch/licenses/cc-by-4.0")
     val validUri   = URI.create("https://creativecommons.org/licenses/by/4.0/")
     val invalidUri = URI.create("./invalid")
     val validLabel = "CC BY 4.0"
@@ -82,6 +82,14 @@ object LegalInfoModelSpec extends ZIOSpecDefault {
           "License: URI must be absolute, Label en must be maximum 255 characters long; must not contain line breaks",
         ),
       )
+    }
+    test("pass in a predefined invalid license") {
+      val actual = License.from(
+        LicenseIri.unsafeFrom("http://rdfh.ch/licenses/cc-by-4.0"),
+        URI.create("http://rdfh.ch/licenses/cc-by-4.0"),
+        "Wrong label",
+      )
+      assertTrue(actual.isLeft)
     }
   }
 

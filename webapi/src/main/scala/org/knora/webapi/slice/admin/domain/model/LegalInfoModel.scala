@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import zio.Chunk
 import zio.NonEmptyChunk
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
@@ -15,6 +16,15 @@ import scala.util.Try
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.AI_GENERATED
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_4_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_4_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_ND_4_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_SA_4_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_ND_4_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_SA_4_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.PUBLIC_DOMAIN
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.UNKNOWN
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion.*
 import org.knora.webapi.slice.common.StringValueCompanion.maxLength
@@ -50,7 +60,30 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
    */
   private lazy val licenseIriRegEx = """^http://rdfh\.ch/licenses/[A-Za-z0-9_-]{22}$""".r
 
-  private def isLicenseIri(iri: String) = licenseIriRegEx.matches(iri)
+  val CC_BY_4_0: LicenseIri       = LicenseIri("http://rdfh.ch/licenses/cc-by-4.0")
+  val CC_BY_SA_4_0: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/cc-by-sa-4.0")
+  val CC_BY_NC_4_0: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-4.0")
+  val CC_BY_NC_SA_4_0: LicenseIri = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-sa-4.0")
+  val CC_BY_ND_4_0: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/cc-by-nd-4.0")
+  val CC_BY_NC_ND_4_0: LicenseIri = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-nd-4.0")
+  val AI_GENERATED: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/ai-generated")
+  val UNKNOWN: LicenseIri         = LicenseIri("http://rdfh.ch/licenses/unknown")
+  val PUBLIC_DOMAIN: LicenseIri   = LicenseIri("http://rdfh.ch/licenses/public-domain")
+
+  val BUILT_IN: Set[LicenseIri] =
+    Set(
+      CC_BY_4_0,
+      CC_BY_SA_4_0,
+      CC_BY_NC_4_0,
+      CC_BY_NC_SA_4_0,
+      CC_BY_ND_4_0,
+      CC_BY_NC_ND_4_0,
+      AI_GENERATED,
+      UNKNOWN,
+      PUBLIC_DOMAIN,
+    )
+
+  private def isLicenseIri(iri: String) = licenseIriRegEx.matches(iri) || BUILT_IN.map(_.value).contains(iri)
 
   def from(str: String): Either[String, LicenseIri] = str match {
     case str if !isLicenseIri(str) => Left("Invalid license IRI")
@@ -69,6 +102,18 @@ object License {
     JsonCodec[String].transformOrFail(s => Try(URI.create(s)).toEither.left.map(_.getMessage), _.toString)
   given JsonCodec[License] = DeriveJsonCodec.gen[License]
 
+  val BUILT_IN: Chunk[License] = Chunk(
+    License(CC_BY_4_0, URI.create("https://creativecommons.org/licenses/by/4.0/"), "CC BY 4.0"),
+    License(CC_BY_SA_4_0, URI.create("https://creativecommons.org/licenses/by-sa/4.0/"), "CC BY-SA 4.0"),
+    License(CC_BY_NC_4_0, URI.create("https://creativecommons.org/licenses/by-nc/4.0/"), "CC BY-NC 4.0"),
+    License(CC_BY_NC_SA_4_0, URI.create("https://creativecommons.org/licenses/by-nc-sa/4.0/"), "CC BY-NC-SA 4.0"),
+    License(CC_BY_ND_4_0, URI.create("https://creativecommons.org/licenses/by-nd/4.0/"), "CC BY-ND 4.0"),
+    License(CC_BY_NC_ND_4_0, URI.create("https://creativecommons.org/licenses/by-nc-nd/4.0/"), "CC BY-NC-ND 4.0"),
+    License(AI_GENERATED, URI.create("http://example.com/"), "Produced by an AI - Not Protected by Copyright"),
+    License(UNKNOWN, URI.create("http://example.com/"), "Unknown License - Ask Copyright Holder for Permission"),
+    License(PUBLIC_DOMAIN, URI.create("http://example.com/"), "Public Domain - Not Protected by Copyright"),
+  )
+
   def from(id: LicenseIri, uri: URI, labelEn: String): Either[String, License] = {
     val labelValidation = Validation
       .validate(nonEmpty(labelEn), maxLength(255)(labelEn), noLineBreaks(labelEn))
@@ -76,9 +121,23 @@ object License {
     Validation
       .validate(absoluteUri(uri), labelValidation)
       .as(License(id, uri, labelEn))
+      .flatMap(checkAgainstBuiltIn)
       .toEither
       .left
       .map(errs => s"License: ${errs.mkString(", ")}")
+  }
+
+  private def checkAgainstBuiltIn(license: License): Validation[String, License] = {
+    val byId      = BUILT_IN.find(_.id == license.id)
+    val byUri     = BUILT_IN.find(_.uri == license.uri)
+    val msgPrefix = "Found predefined License expected"
+    (license, byId, byUri) match
+      case (l, Some(byId), None) if l != byId   => Validation.fail(s"$msgPrefix $byId")
+      case (l, None, Some(byUri)) if l != byUri => Validation.fail(s"$msgPrefix $byUri")
+      case (l, Some(byId), Some(byUri)) if l != byId || l != byUri =>
+        if byId != byUri then Validation.fail(s"$msgPrefix $byId or $byUri")
+        else Validation.fail(s"$msgPrefix $byId")
+      case _ => Validation.succeed(license)
   }
 
   def unsafeFrom(id: LicenseIri, uri: URI, labelEn: String): License =
