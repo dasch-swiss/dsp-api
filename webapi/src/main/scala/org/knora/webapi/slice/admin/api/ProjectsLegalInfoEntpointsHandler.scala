@@ -27,7 +27,7 @@ final class ProjectsLegalInfoEndpointsHandler(
 
   val getProjectAuthorshipsHandler = SecuredEndpointHandler(
     endpoints.getProjectAuthorships,
-    user => shortcode => restService.findAuthorshipsByProject(shortcode, user),
+    user => (shortcode, pageAndSize) => restService.findAuthorshipsByProject(shortcode, pageAndSize, user),
   )
 
   val putProjectAuthorshipsHandler = SecuredEndpointHandler(

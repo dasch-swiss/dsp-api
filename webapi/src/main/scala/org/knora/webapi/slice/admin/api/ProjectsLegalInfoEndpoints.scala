@@ -88,6 +88,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
   val getProjectAuthorships = baseEndpoints.securedEndpoint.get
     .in(base / "authorships")
+    .in(pageRequestAndSize)
     .out(
       jsonBody[PagedResponse[Authorship]].example(
         PagedResponse.allInOnePage(Chunk(Authorship.unsafeFrom("DaSch"), Authorship.unsafeFrom("University of Zurich"))),

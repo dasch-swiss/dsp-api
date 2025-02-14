@@ -37,17 +37,21 @@ final case class ProjectsLegalInfoRestService(
   ): IO[ForbiddenException, PagedResponse[LicenseDto]] =
     for {
       _      <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-      result <- licenses.findByProjectShortcode(shortcode)
-      slice = result
-                .slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
-                .map(LicenseDto.from)
-    } yield PagedResponse(slice, PageInfo.from(result.size, pageAndSize))
+      result <- licenses.findByProjectShortcode(shortcode).map(_.map(LicenseDto.from))
+    } yield slice(result, pageAndSize)
 
-  def findAuthorshipsByProject(shortcode: Shortcode, user: User): Task[PagedResponse[Authorship]] =
+  private def slice[A](all: Seq[A], pageAndSize: PageAndSize): PagedResponse[A] =
+    val slice = all.slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
+    PagedResponse(slice, PageInfo.from(all.size, pageAndSize))
+
+  def findAuthorshipsByProject(
+    shortcode: Shortcode,
+    pageAndSize: PageAndSize,
+    user: User,
+  ): Task[PagedResponse[Authorship]] =
     for {
       project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-      page     = PagedResponse.allInOnePage(project.predefinedAuthorships.toSeq)
-    } yield page
+    } yield slice(project.predefinedAuthorships.toSeq, pageAndSize)
 
   def addPredefinedAuthorships(
     shortcode: Shortcode,
