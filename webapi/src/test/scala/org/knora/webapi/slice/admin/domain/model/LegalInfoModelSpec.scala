@@ -43,20 +43,8 @@ object LegalInfoModelSpec extends ZIOSpecDefault {
     },
   )
 
-  private val licenseUriSuite = suite("LicenseUri")(
-    test("pass a valid object and successfully create value object") {
-      val validUri = "https://www.apache.org/licenses/LICENSE-2.0.html"
-      assertTrue(LicenseUri.from(validUri).map(_.value).contains(validUri))
-    },
-    test("pass an invalid object and return an error") {
-      val invalidUri = "not a uri"
-      assertTrue(LicenseUri.from(invalidUri) == Left("License URI is not a valid URI."))
-    },
-  )
-
   val spec: Spec[Any, Nothing] = suite("Copyright And Licenses Model")(
     authorshipSuite,
     licenseIriSuite,
-    licenseUriSuite,
   )
 }

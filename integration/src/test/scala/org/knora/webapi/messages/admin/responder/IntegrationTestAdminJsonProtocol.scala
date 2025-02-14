@@ -218,10 +218,6 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
     override val from: String => Either[String, LicenseIri] = LicenseIri.from
   }
 
-  implicit object LicenseUriFormat extends StringValueFormat[LicenseUri] {
-    override val from: String => Either[String, LicenseUri] = LicenseUri.from
-  }
-
   implicit object ProjectIriFormat extends StringValueFormat[ProjectIri] {
     override val from: String => Either[String, ProjectIri] = ProjectIri.from
   }

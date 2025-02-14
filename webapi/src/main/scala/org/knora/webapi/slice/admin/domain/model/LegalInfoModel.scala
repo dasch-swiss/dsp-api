@@ -57,10 +57,3 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
     unsafeFrom(s"http://rdfh.ch/licenses/$uuid")
   }
 }
-
-final case class LicenseUri private (override val value: String) extends StringValue
-object LicenseUri extends StringValueCompanion[LicenseUri] {
-  given JsonCodec[LicenseUri] = ZioJsonCodec.stringCodec(LicenseUri.from)
-  def from(str: String): Either[String, LicenseUri] =
-    fromValidations("License URI", LicenseUri.apply, List(nonEmpty, isUri))(str)
-}
