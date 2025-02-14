@@ -14,6 +14,7 @@ import zio.ZLayer
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -52,6 +53,7 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
                 req.status,
                 req.selfjoin,
                 RestrictedView.default,
+                Set.empty,
               )
     project <- knoraProjectRepo.save(project)
   } yield project
@@ -110,6 +112,34 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
       .map(_.map(_.ontologyMetadata.ontologyIri.toInternalIri))
       .map(_ :+ projectGraph)
   }
+
+  def addPredefinedAuthorships(project: ProjectIri, addThese: Chunk[Authorship]): Task[KnoraProject] =
+    withProjectFromDb(project) { project =>
+      if (addThese.isEmpty) ZIO.succeed(project)
+      else {
+        val newAuthors = (project.predefinedAuthorships ++ addThese)
+        knoraProjectRepo.save(project.copy(predefinedAuthorships = newAuthors))
+      }
+    }
+
+  def replacePredefinedAuthorship(
+    projectIri: ProjectIri,
+    oldValue: Authorship,
+    newValue: Authorship,
+  ): Task[KnoraProject] =
+    withProjectFromDb(projectIri) { project =>
+      if (!project.predefinedAuthorships.contains(oldValue)) ZIO.succeed(project)
+      else {
+        val newAuthors = project.predefinedAuthorships - oldValue + newValue
+        knoraProjectRepo.save(project.copy(predefinedAuthorships = newAuthors))
+      }
+    }
+
+  private def withProjectFromDb[A](id: ProjectIri)(task: KnoraProject => Task[A]): Task[A] =
+    knoraProjectRepo
+      .findById(id)
+      .someOrFail(new IllegalArgumentException(s"Project with id: $id not found"))
+      .flatMap(task)
 }
 
 object KnoraProjectService {

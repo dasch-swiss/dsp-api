@@ -58,6 +58,7 @@ object Vocabulary {
     val projectLongname: Iri                = Rdf.iri(ka, "projectLongname")
     val projectShortcode: Iri               = Rdf.iri(ka, "projectShortcode")
     val projectShortname: Iri               = Rdf.iri(ka, "projectShortname")
+    val projectPredefinedAuthorship         = Rdf.iri(ka, "projectPredefinedAuthorship")
 
     // permission properties
     val AdministrativePermission: Iri      = Rdf.iri(ka, "AdministrativePermission")

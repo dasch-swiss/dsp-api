@@ -250,6 +250,15 @@
     knora-base:objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/knora-admin#projectPredefinedAuthorship
+
+:projectPredefinedAuthorship
+    rdf:type                            owl:DatatypeProperty ;
+    rdfs:subPropertyOf                  knora-base:objectCannotBeMarkedAsDeleted ;
+    rdfs:comment                        "Available authorships to be used for creating assets"@en ;
+    knora-base:subjectClassConstraint   :knoraProject ;
+    knora-base:objectDatatypeConstraint xsd:string .
+
 ###  http://www.knora.org/ontology/knora-admin#username
 
 :username
@@ -382,7 +391,10 @@
                       owl:cardinality    "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :hasSelfJoinEnabled ;
-                      owl:cardinality    "1"^^xsd:nonNegativeInteger ] ;
+                      owl:cardinality    "1"^^xsd:nonNegativeInteger ] ,
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :projectPredefinedAuthorship ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     rdfs:comment    "Represents a project that uses Knora."@en .
 
 

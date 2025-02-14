@@ -14,6 +14,7 @@ import zio.*
 
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -48,6 +49,7 @@ final case class KnoraProjectRepoLive(
       Vocabulary.KnoraAdmin.projectLongname,
       Vocabulary.KnoraAdmin.projectRestrictedViewSize,
       Vocabulary.KnoraAdmin.projectRestrictedViewWatermark,
+      Vocabulary.KnoraAdmin.projectPredefinedAuthorship,
     ),
   )
 
@@ -100,6 +102,7 @@ object KnoraProjectRepoLive {
         logo           <- resource.getStringLiteral[Logo](ProjectLogo)
         status         <- resource.getBooleanLiteralOrFail[Status](StatusProp)
         selfjoin       <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
+        authorship     <- resource.getStringLiterals(ProjectPredefinedAuthorship)(Authorship.from).map(_.toSet)
         restrictedView <- getRestrictedView
       } yield KnoraProject(
         id = ProjectIri.unsafeFrom(iri.value),
@@ -112,6 +115,7 @@ object KnoraProjectRepoLive {
         status = status,
         selfjoin = selfjoin,
         restrictedView = restrictedView,
+        predefinedAuthorships = authorship,
       )
     }
 
@@ -136,7 +140,9 @@ object KnoraProjectRepoLive {
         case RestrictedView.Watermark(watermark) =>
           pattern.andHas(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, watermark)
       }
-
+      project.predefinedAuthorships.foreach(authorship =>
+        pattern.andHas(Vocabulary.KnoraAdmin.projectPredefinedAuthorship, authorship.value),
+      )
       pattern
     }
   }

@@ -73,6 +73,7 @@ final case class ProjectService(
       status = project.status,
       selfjoin = project.selfjoin,
       restrictedView,
+      Set.empty,
     )
 
   def setProjectRestrictedView(project: Project, settings: RestrictedView): Task[RestrictedView] =
