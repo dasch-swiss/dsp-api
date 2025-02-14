@@ -13,6 +13,7 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
@@ -33,6 +34,16 @@ final case class LicenseDto(id: String, uri: String, `label-en`: String)
 object LicenseDto {
   given JsonCodec[LicenseDto]            = DeriveJsonCodec.gen[LicenseDto]
   def from(license: License): LicenseDto = LicenseDto(license.id.value, license.uri.toString, license.labelEn)
+}
+
+final case class AuthorshipAddRequest(data: Set[Authorship])
+object AuthorshipAddRequest {
+  given JsonCodec[AuthorshipAddRequest] = DeriveJsonCodec.gen[AuthorshipAddRequest]
+}
+
+final case class AuthorshipReplaceRequest(`old-value`: Authorship, `new-value`: Authorship)
+object AuthorshipReplaceRequest {
+  given JsonCodec[AuthorshipReplaceRequest] = DeriveJsonCodec.gen[AuthorshipReplaceRequest]
 }
 
 final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
@@ -61,8 +72,42 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     )
     .description("Get the allowed licenses of a project. The user must be a system or project admin.")
 
+  val getProjectAuthorships = baseEndpoints.securedEndpoint.get
+    .in(base / "authorships")
+    .out(
+      jsonBody[List[Authorship]].example(
+        List(
+          Authorship.unsafeFrom("DaSch"),
+          Authorship.unsafeFrom("University of Zurich"),
+        ),
+      ),
+    )
+
+  val postProjectAuthorships = baseEndpoints.securedEndpoint.post
+    .in(base / "authorships")
+    .in(
+      jsonBody[AuthorshipAddRequest]
+        .example(AuthorshipAddRequest(Set("DaSch", "University of Zurich").map(Authorship.unsafeFrom))),
+    )
+    .description("Add a new predefined authorships to a project. The user must be a system or project admin.")
+
+  val putProjectAuthorships = baseEndpoints.securedEndpoint.put
+    .in(base / "authorships")
+    .in(
+      jsonBody[AuthorshipReplaceRequest]
+        .example(
+          AuthorshipReplaceRequest(Authorship.unsafeFrom("Alpert Einstain"), Authorship.unsafeFrom("Albert Einstein")),
+        ),
+    )
+    .description(
+      "Update a particular predefined authorships of a project, does not update existing authorships on assets. The user must be a system admin.",
+    )
+
   val endpoints: Seq[AnyEndpoint] = Seq(
     getProjectLicenses,
+    getProjectAuthorships,
+    postProjectAuthorships,
+    putProjectAuthorships,
   ).map(_.endpoint).map(_.tag("Admin Projects (Legal Info)"))
 }
 

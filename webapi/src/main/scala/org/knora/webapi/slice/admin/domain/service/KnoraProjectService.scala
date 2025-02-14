@@ -113,11 +113,11 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
       .map(_ :+ projectGraph)
   }
 
-  def addPredefinedAuthorships(project: ProjectIri, addThese: Chunk[Authorship]): Task[KnoraProject] =
+  def addPredefinedAuthorships(project: ProjectIri, addThese: Set[Authorship]): Task[KnoraProject] =
     withProjectFromDb(project) { project =>
       if (addThese.isEmpty) ZIO.succeed(project)
       else {
-        val newAuthors = (project.predefinedAuthorships ++ addThese)
+        val newAuthors = project.predefinedAuthorships ++ addThese
         knoraProjectRepo.save(project.copy(predefinedAuthorships = newAuthors))
       }
     }

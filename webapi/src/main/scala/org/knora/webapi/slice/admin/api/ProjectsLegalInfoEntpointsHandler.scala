@@ -20,7 +20,29 @@ final class ProjectsLegalInfoEndpointsHandler(
     user => shortcode => restService.findByProjectId(shortcode, user),
   )
 
-  val allHandlers = List(getProjectLicensesHandler).map(mapper.mapSecuredEndpointHandler(_))
+  val postProjectAuthorshipsHandler = SecuredEndpointHandler(
+    endpoints.postProjectAuthorships,
+    user => (shortcode, req) => restService.addPredefinedAuthorships(shortcode, req, user),
+  )
+
+  val getProjectAuthorshipsHandler = SecuredEndpointHandler(
+    endpoints.getProjectAuthorships,
+    user => shortcode => restService.findAuthorshipsByProject(shortcode, user),
+  )
+
+  val putProjectAuthorshipsHandler = SecuredEndpointHandler(
+    endpoints.putProjectAuthorships,
+    user => (shortcode, req) => restService.replacePredefinedAuthorship(shortcode, req, user),
+  )
+
+  val allHandlers = List(
+    getProjectLicensesHandler,
+    getProjectAuthorshipsHandler,
+    postProjectAuthorshipsHandler,
+    putProjectAuthorshipsHandler,
+  ).map(
+    mapper.mapSecuredEndpointHandler(_),
+  )
 }
 
 object ProjectsLegalInfoEndpointsHandler {

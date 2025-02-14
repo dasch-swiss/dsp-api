@@ -43,7 +43,7 @@ object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
 
 final case class Authorship private (override val value: String) extends StringValue
 object Authorship extends StringValueCompanion[Authorship] {
-  given JsonCodec[LicenseIri] = ZioJsonCodec.stringCodec(LicenseIri.from)
+  given JsonCodec[Authorship] = ZioJsonCodec.stringCodec(Authorship.from)
   def from(str: String): Either[String, Authorship] =
     fromValidations("Authorship", Authorship.apply, List(nonEmpty, noLineBreaks, maxLength(1_000)))(str)
 }
