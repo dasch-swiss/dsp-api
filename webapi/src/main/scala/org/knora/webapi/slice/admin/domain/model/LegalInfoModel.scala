@@ -128,16 +128,15 @@ object License {
   }
 
   private def checkAgainstBuiltIn(license: License): Validation[String, License] = {
-    val byId      = BUILT_IN.find(_.id == license.id)
-    val byUri     = BUILT_IN.find(_.uri == license.uri)
-    val msgPrefix = "Found predefined License expected"
-    (license, byId, byUri) match
-      case (l, Some(byId), None) if l != byId   => Validation.fail(s"$msgPrefix $byId")
-      case (l, None, Some(byUri)) if l != byUri => Validation.fail(s"$msgPrefix $byUri")
-      case (l, Some(byId), Some(byUri)) if l != byId || l != byUri =>
-        if byId != byUri then Validation.fail(s"$msgPrefix $byId or $byUri")
-        else Validation.fail(s"$msgPrefix $byId")
-      case _ => Validation.succeed(license)
+    val byId    = BUILT_IN.find(_.id == license.id)
+    val byUri   = BUILT_IN.find(_.uri == license.uri)
+    val byLabel = BUILT_IN.find(_.labelEn == license.labelEn)
+    (license, Set(byId, byUri, byLabel).flatten) match {
+      case (l, found) if found.isEmpty => Validation.succeed(l)
+      case (l, found) if !found.contains(l) =>
+        Validation.fail(s"Found predefined license expected one of '${found.toList.mkString(", ")}'")
+      case (l, _) => Validation.succeed(l)
+    }
   }
 
   def unsafeFrom(id: LicenseIri, uri: URI, labelEn: String): License =

@@ -89,7 +89,11 @@ object LegalInfoModelSpec extends ZIOSpecDefault {
         URI.create("http://rdfh.ch/licenses/cc-by-4.0"),
         "Wrong label",
       )
-      assertTrue(actual.isLeft)
+      assertTrue(
+        actual == Left(
+          "License: Found predefined license expected one of 'License(http://rdfh.ch/licenses/cc-by-4.0,https://creativecommons.org/licenses/by/4.0/,CC BY 4.0)'",
+        ),
+      )
     }
   }
 
