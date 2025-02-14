@@ -14,6 +14,8 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.api.AuthorshipAddRequest
 import org.knora.webapi.slice.admin.api.AuthorshipReplaceRequest
 import org.knora.webapi.slice.admin.api.LicenseDto
+import org.knora.webapi.slice.admin.api.PageAndSize
+import org.knora.webapi.slice.admin.api.PageInfo
 import org.knora.webapi.slice.admin.api.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -28,17 +30,24 @@ final case class ProjectsLegalInfoRestService(
   private val auth: AuthorizationRestService,
 ) {
 
-  def findByProjectId(shortcode: Shortcode, user: User): IO[ForbiddenException, PagedResponse[LicenseDto]] =
+  def findByProjectId(
+    shortcode: Shortcode,
+    pageAndSize: PageAndSize,
+    user: User,
+  ): IO[ForbiddenException, PagedResponse[LicenseDto]] =
     for {
       _      <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
       result <- licenses.findByProjectShortcode(shortcode)
-      page    = PagedResponse.allInOnePage(result.map(LicenseDto.from))
-    } yield page
+      slice = result
+                .slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
+                .map(LicenseDto.from)
+    } yield PagedResponse(slice, PageInfo.from(result.size, pageAndSize))
 
-  def findAuthorshipsByProject(shortcode: Shortcode, user: User): Task[List[Authorship]] =
+  def findAuthorshipsByProject(shortcode: Shortcode, user: User): Task[PagedResponse[Authorship]] =
     for {
       project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-    } yield project.predefinedAuthorships.toList
+      page     = PagedResponse.allInOnePage(project.predefinedAuthorships.toSeq)
+    } yield page
 
   def addPredefinedAuthorships(
     shortcode: Shortcode,

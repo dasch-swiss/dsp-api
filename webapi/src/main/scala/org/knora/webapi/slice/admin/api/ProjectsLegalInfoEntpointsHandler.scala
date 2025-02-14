@@ -17,7 +17,7 @@ final class ProjectsLegalInfoEndpointsHandler(
 ) {
   val getProjectLicensesHandler = SecuredEndpointHandler(
     endpoints.getProjectLicenses,
-    user => shortcode => restService.findByProjectId(shortcode, user),
+    user => (shortcode, pageAndSize) => restService.findByProjectId(shortcode, pageAndSize, user),
   )
 
   val postProjectAuthorshipsHandler = SecuredEndpointHandler(

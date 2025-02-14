@@ -21,13 +21,26 @@ final case class PageInfo(size: Int, `total-elements`: Int, pages: Int, number: 
 object PageInfo {
   given JsonCodec[PageInfo]         = DeriveJsonCodec.gen[PageInfo]
   def single(seq: Seq[_]): PageInfo = PageInfo(seq.size, seq.size, 1, 1)
+  def from(total: Int, pageAndSize: PageAndSize) =
+    val pages = Math.ceil(total.toDouble / pageAndSize.size).toInt
+    PageInfo(pageAndSize.size, total, pages, pageAndSize.page)
 }
 
-final case class PagedResponse[LicenseDto](data: Chunk[LicenseDto], page: PageInfo)
+case class PageAndSize(page: Int, size: Int)
+val pageQuery = query[Int]("page")
+  .description("The page number to retrieve.")
+  .default(1)
+  .validate(Validator.min(1))
+val sizeQuery = query[Int]("size")
+  .description("The number of items to retrieve.")
+  .default(100)
+  .validate(Validator.min(1))
+val pageRequestAndSize = pageQuery.and(sizeQuery).mapTo[PageAndSize]
+
+final case class PagedResponse[A](data: Seq[A], page: PageInfo)
 object PagedResponse {
-  given JsonCodec[PagedResponse[LicenseDto]] = DeriveJsonCodec.gen[PagedResponse[LicenseDto]]
-  def allInOnePage(licenses: Chunk[LicenseDto]): PagedResponse[LicenseDto] =
-    PagedResponse(licenses, PageInfo.single(licenses))
+  given [A: JsonCodec]: JsonCodec[PagedResponse[A]] = DeriveJsonCodec.gen[PagedResponse[A]]
+  def allInOnePage[A](as: Seq[A]): PagedResponse[A] = PagedResponse[A](as, PageInfo.single(as))
 }
 
 final case class LicenseDto(id: String, uri: String, `label-en`: String)
@@ -52,6 +65,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
   val getProjectLicenses = baseEndpoints.securedEndpoint.get
     .in(base / "licenses")
+    .in(pageRequestAndSize)
     .out(
       jsonBody[PagedResponse[LicenseDto]].example(
         PagedResponse.allInOnePage(
@@ -75,11 +89,8 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
   val getProjectAuthorships = baseEndpoints.securedEndpoint.get
     .in(base / "authorships")
     .out(
-      jsonBody[List[Authorship]].example(
-        List(
-          Authorship.unsafeFrom("DaSch"),
-          Authorship.unsafeFrom("University of Zurich"),
-        ),
+      jsonBody[PagedResponse[Authorship]].example(
+        PagedResponse.allInOnePage(Chunk(Authorship.unsafeFrom("DaSch"), Authorship.unsafeFrom("University of Zurich"))),
       ),
     )
 
