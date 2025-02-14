@@ -20,26 +20,26 @@ final class ProjectsLegalInfoEndpointsHandler(
     user => (shortcode, pageAndSize) => restService.findByProjectId(shortcode, pageAndSize, user),
   )
 
-  val postProjectAuthorshipsHandler = SecuredEndpointHandler(
-    endpoints.postProjectAuthorships,
+  val postProjectCopyrightHoldersHandler = SecuredEndpointHandler(
+    endpoints.postProjectCopyrightHolders,
     user => (shortcode, req) => restService.addPredefinedAuthorships(shortcode, req, user),
   )
 
-  val getProjectAuthorshipsHandler = SecuredEndpointHandler(
-    endpoints.getProjectAuthorships,
-    user => (shortcode, pageAndSize) => restService.findAuthorshipsByProject(shortcode, pageAndSize, user),
+  val getProjectCopyrightHoldersHandler = SecuredEndpointHandler(
+    endpoints.getProjectCopyrightHolders,
+    user => (shortcode, pageAndSize) => restService.findCopyrightHoldersByProject(shortcode, pageAndSize, user),
   )
 
-  val putProjectAuthorshipsHandler = SecuredEndpointHandler(
-    endpoints.putProjectAuthorships,
+  val putProjectCopyrightHoldersHandler = SecuredEndpointHandler(
+    endpoints.putProjectCopyrightHolders,
     user => (shortcode, req) => restService.replacePredefinedAuthorship(shortcode, req, user),
   )
 
   val allHandlers = List(
     getProjectLicensesHandler,
-    getProjectAuthorshipsHandler,
-    postProjectAuthorshipsHandler,
-    putProjectAuthorshipsHandler,
+    getProjectCopyrightHoldersHandler,
+    postProjectCopyrightHoldersHandler,
+    putProjectCopyrightHoldersHandler,
   ).map(
     mapper.mapSecuredEndpointHandler(_),
   )

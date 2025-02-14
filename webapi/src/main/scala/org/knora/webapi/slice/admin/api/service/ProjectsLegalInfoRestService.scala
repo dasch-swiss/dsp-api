@@ -11,13 +11,13 @@ import zio.ZLayer
 
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
-import org.knora.webapi.slice.admin.api.AuthorshipAddRequest
-import org.knora.webapi.slice.admin.api.AuthorshipReplaceRequest
+import org.knora.webapi.slice.admin.api.CopyrighHolderReplaceRequest
+import org.knora.webapi.slice.admin.api.CopyrightHolderAddRequest
 import org.knora.webapi.slice.admin.api.LicenseDto
 import org.knora.webapi.slice.admin.api.PageAndSize
 import org.knora.webapi.slice.admin.api.PageInfo
 import org.knora.webapi.slice.admin.api.PagedResponse
-import org.knora.webapi.slice.admin.domain.model.Authorship
+import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -44,34 +44,34 @@ final case class ProjectsLegalInfoRestService(
     val slice = all.slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
     PagedResponse(slice, PageInfo.from(all.size, pageAndSize))
 
-  def findAuthorshipsByProject(
+  def findCopyrightHoldersByProject(
     shortcode: Shortcode,
     pageAndSize: PageAndSize,
     user: User,
-  ): Task[PagedResponse[Authorship]] =
+  ): Task[PagedResponse[CopyrightHolder]] =
     for {
       project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-    } yield slice(project.predefinedAuthorships.toSeq, pageAndSize)
+    } yield slice(project.predefinedCopyrightHolders.toSeq, pageAndSize)
 
   def addPredefinedAuthorships(
     shortcode: Shortcode,
-    req: AuthorshipAddRequest,
+    req: CopyrightHolderAddRequest,
     user: User,
   ): Task[Unit] =
     for {
       project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-      _       <- projects.addPredefinedAuthorships(project.id, req.data)
+      _       <- projects.addCopyrightHolders(project.id, req.data)
     } yield ()
 
   def replacePredefinedAuthorship(
     shortcode: Shortcode,
-    req: AuthorshipReplaceRequest,
+    req: CopyrighHolderReplaceRequest,
     user: User,
   ): Task[Unit] =
     for {
       _       <- auth.ensureSystemAdmin(user)
       project <- projects.findByShortcode(shortcode).someOrFail(NotFoundException(s"Project ${shortcode} not found"))
-      _       <- projects.replacePredefinedAuthorship(project.id, req.`old-value`, req.`new-value`)
+      _       <- projects.replaceCopyrightHolser(project.id, req.`old-value`, req.`new-value`)
     } yield ()
 }
 

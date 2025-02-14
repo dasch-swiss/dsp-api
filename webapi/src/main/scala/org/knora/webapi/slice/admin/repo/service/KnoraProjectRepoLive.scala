@@ -14,7 +14,7 @@ import zio.*
 
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
-import org.knora.webapi.slice.admin.domain.model.Authorship
+import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -49,7 +49,7 @@ final case class KnoraProjectRepoLive(
       Vocabulary.KnoraAdmin.projectLongname,
       Vocabulary.KnoraAdmin.projectRestrictedViewSize,
       Vocabulary.KnoraAdmin.projectRestrictedViewWatermark,
-      Vocabulary.KnoraAdmin.projectPredefinedAuthorship,
+      Vocabulary.KnoraAdmin.hasPredefinedCopyrightHolder,
     ),
   )
 
@@ -93,16 +93,17 @@ object KnoraProjectRepoLive {
         } yield size.orElse(watermark).getOrElse(RestrictedView.default)
 
       for {
-        iri            <- resource.getSubjectIri
-        shortcode      <- resource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
-        shortname      <- resource.getStringLiteralOrFail[Shortname](ProjectShortname)
-        longname       <- resource.getStringLiteral[Longname](ProjectLongname)
-        description    <- resource.getLangStringLiteralsOrFail[Description](ProjectDescription)
-        keywords       <- resource.getStringLiterals[Keyword](ProjectKeyword)
-        logo           <- resource.getStringLiteral[Logo](ProjectLogo)
-        status         <- resource.getBooleanLiteralOrFail[Status](StatusProp)
-        selfjoin       <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
-        authorship     <- resource.getStringLiterals(ProjectPredefinedAuthorship)(Authorship.from).map(_.toSet)
+        iri         <- resource.getSubjectIri
+        shortcode   <- resource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
+        shortname   <- resource.getStringLiteralOrFail[Shortname](ProjectShortname)
+        longname    <- resource.getStringLiteral[Longname](ProjectLongname)
+        description <- resource.getLangStringLiteralsOrFail[Description](ProjectDescription)
+        keywords    <- resource.getStringLiterals[Keyword](ProjectKeyword)
+        logo        <- resource.getStringLiteral[Logo](ProjectLogo)
+        status      <- resource.getBooleanLiteralOrFail[Status](StatusProp)
+        selfjoin    <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
+        predefinedCopyrightHolders <-
+          resource.getStringLiterals(hasPredefinedCopyrightHolder)(CopyrightHolder.from).map(_.toSet)
         restrictedView <- getRestrictedView
       } yield KnoraProject(
         id = ProjectIri.unsafeFrom(iri.value),
@@ -115,7 +116,7 @@ object KnoraProjectRepoLive {
         status = status,
         selfjoin = selfjoin,
         restrictedView = restrictedView,
-        predefinedAuthorships = authorship,
+        predefinedCopyrightHolders = predefinedCopyrightHolders,
       )
     }
 
@@ -140,8 +141,8 @@ object KnoraProjectRepoLive {
         case RestrictedView.Watermark(watermark) =>
           pattern.andHas(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, watermark)
       }
-      project.predefinedAuthorships.foreach(authorship =>
-        pattern.andHas(Vocabulary.KnoraAdmin.projectPredefinedAuthorship, authorship.value),
+      project.predefinedCopyrightHolders.foreach(authorship =>
+        pattern.andHas(Vocabulary.KnoraAdmin.hasPredefinedCopyrightHolder, authorship.value),
       )
       pattern
     }

@@ -14,7 +14,7 @@ import zio.ZLayer
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
-import org.knora.webapi.slice.admin.domain.model.Authorship
+import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -113,25 +113,25 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
       .map(_ :+ projectGraph)
   }
 
-  def addPredefinedAuthorships(project: ProjectIri, addThese: Set[Authorship]): Task[KnoraProject] =
+  def addCopyrightHolders(project: ProjectIri, addThese: Set[CopyrightHolder]): Task[KnoraProject] =
     withProjectFromDb(project) { project =>
       if (addThese.isEmpty) ZIO.succeed(project)
       else {
-        val newAuthors = project.predefinedAuthorships ++ addThese
-        knoraProjectRepo.save(project.copy(predefinedAuthorships = newAuthors))
+        val newAuthors = project.predefinedCopyrightHolders ++ addThese
+        knoraProjectRepo.save(project.copy(predefinedCopyrightHolders = newAuthors))
       }
     }
 
-  def replacePredefinedAuthorship(
+  def replaceCopyrightHolser(
     projectIri: ProjectIri,
-    oldValue: Authorship,
-    newValue: Authorship,
+    oldValue: CopyrightHolder,
+    newValue: CopyrightHolder,
   ): Task[KnoraProject] =
     withProjectFromDb(projectIri) { project =>
-      if (!project.predefinedAuthorships.contains(oldValue)) ZIO.succeed(project)
+      if (!project.predefinedCopyrightHolders.contains(oldValue)) ZIO.succeed(project)
       else {
-        val newAuthors = project.predefinedAuthorships - oldValue + newValue
-        knoraProjectRepo.save(project.copy(predefinedAuthorships = newAuthors))
+        val newAuthors = project.predefinedCopyrightHolders - oldValue + newValue
+        knoraProjectRepo.save(project.copy(predefinedCopyrightHolders = newAuthors))
       }
     }
 

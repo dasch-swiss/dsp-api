@@ -17,7 +17,7 @@ import zio.test.check
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.domain.model.Authorship
+import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
@@ -46,7 +46,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
-    Set("foo", "bar").map(Authorship.unsafeFrom),
+    Set("foo", "bar").map(CopyrightHolder.unsafeFrom),
   )
 
   private val someProjectTrig =
@@ -66,7 +66,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |    knora-admin:status true ;
         |    knora-admin:hasSelfJoinEnabled false ;
         |    knora-admin:projectRestrictedViewSize "!128,128" ;
-        |    knora-admin:projectPredefinedAuthorship "foo", "bar" .
+        |    knora-admin:hasPredefinedCopyrightHolder "foo", "bar" .
         |}
         |""".stripMargin
 

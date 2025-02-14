@@ -34,7 +34,7 @@ case class KnoraProject(
   status: Status,
   selfjoin: SelfJoin,
   restrictedView: RestrictedView,
-  predefinedAuthorships: Set[Authorship],
+  predefinedCopyrightHolders: Set[CopyrightHolder],
 ) extends EntityWithId[ProjectIri]
 
 object KnoraProject {

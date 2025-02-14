@@ -13,7 +13,7 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
-import org.knora.webapi.slice.admin.domain.model.Authorship
+import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
@@ -49,14 +49,14 @@ object LicenseDto {
   def from(license: License): LicenseDto = LicenseDto(license.id.value, license.uri.toString, license.labelEn)
 }
 
-final case class AuthorshipAddRequest(data: Set[Authorship])
-object AuthorshipAddRequest {
-  given JsonCodec[AuthorshipAddRequest] = DeriveJsonCodec.gen[AuthorshipAddRequest]
+final case class CopyrightHolderAddRequest(data: Set[CopyrightHolder])
+object CopyrightHolderAddRequest {
+  given JsonCodec[CopyrightHolderAddRequest] = DeriveJsonCodec.gen[CopyrightHolderAddRequest]
 }
 
-final case class AuthorshipReplaceRequest(`old-value`: Authorship, `new-value`: Authorship)
-object AuthorshipReplaceRequest {
-  given JsonCodec[AuthorshipReplaceRequest] = DeriveJsonCodec.gen[AuthorshipReplaceRequest]
+final case class CopyrighHolderReplaceRequest(`old-value`: CopyrightHolder, `new-value`: CopyrightHolder)
+object CopyrighHolderReplaceRequest {
+  given JsonCodec[CopyrighHolderReplaceRequest] = DeriveJsonCodec.gen[CopyrighHolderReplaceRequest]
 }
 
 final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
@@ -86,29 +86,32 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     )
     .description("Get the allowed licenses of a project. The user must be a system or project admin.")
 
-  val getProjectAuthorships = baseEndpoints.securedEndpoint.get
-    .in(base / "authorships")
+  val getProjectCopyrightHolders = baseEndpoints.securedEndpoint.get
+    .in(base / "copyright-holders")
     .in(pageRequestAndSize)
     .out(
-      jsonBody[PagedResponse[Authorship]].example(
-        PagedResponse.allInOnePage(Chunk(Authorship.unsafeFrom("DaSch"), Authorship.unsafeFrom("University of Zurich"))),
+      jsonBody[PagedResponse[CopyrightHolder]].example(
+        PagedResponse.allInOnePage(Chunk("DaSch", "University of Zurich").map(CopyrightHolder.unsafeFrom)),
       ),
     )
 
-  val postProjectAuthorships = baseEndpoints.securedEndpoint.post
-    .in(base / "authorships")
+  val postProjectCopyrightHolders = baseEndpoints.securedEndpoint.post
+    .in(base / "copyright-holders")
     .in(
-      jsonBody[AuthorshipAddRequest]
-        .example(AuthorshipAddRequest(Set("DaSch", "University of Zurich").map(Authorship.unsafeFrom))),
+      jsonBody[CopyrightHolderAddRequest]
+        .example(CopyrightHolderAddRequest(Set("DaSCH", "University of Zurich").map(CopyrightHolder.unsafeFrom))),
     )
     .description("Add a new predefined authorships to a project. The user must be a system or project admin.")
 
-  val putProjectAuthorships = baseEndpoints.securedEndpoint.put
-    .in(base / "authorships")
+  val putProjectCopyrightHolders = baseEndpoints.securedEndpoint.put
+    .in(base / "copyright-holders")
     .in(
-      jsonBody[AuthorshipReplaceRequest]
+      jsonBody[CopyrighHolderReplaceRequest]
         .example(
-          AuthorshipReplaceRequest(Authorship.unsafeFrom("Alpert Einstain"), Authorship.unsafeFrom("Albert Einstein")),
+          CopyrighHolderReplaceRequest(
+            CopyrightHolder.unsafeFrom("DaSch"),
+            CopyrightHolder.unsafeFrom("DaSCH"),
+          ),
         ),
     )
     .description(
@@ -117,9 +120,9 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
   val endpoints: Seq[AnyEndpoint] = Seq(
     getProjectLicenses,
-    getProjectAuthorships,
-    postProjectAuthorships,
-    putProjectAuthorships,
+    getProjectCopyrightHolders,
+    postProjectCopyrightHolders,
+    putProjectCopyrightHolders,
   ).map(_.endpoint).map(_.tag("Admin Projects (Legal Info)"))
 }
 
