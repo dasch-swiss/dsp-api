@@ -33,6 +33,7 @@ object AdminRepoModule {
     AdministrativePermissionRepo &
     CacheManager &
     DefaultObjectAccessPermissionRepo &
+    LicenseRepo &
     KnoraGroupRepo &
     KnoraProjectRepo &
     KnoraUserRepo

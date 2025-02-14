@@ -45,6 +45,7 @@ object AdminDomainModule
       KnoraProjectService &
       KnoraUserService &
       KnoraUserToUserConverter &
+      LicenseService &
       MaintenanceService &
       PasswordService &
       ProjectEraseService &
@@ -61,6 +62,7 @@ object AdminDomainModule
       KnoraProjectService.layer,
       KnoraUserService.layer,
       KnoraUserToUserConverter.layer,
+      LicenseService.layer,
       MaintenanceService.layer,
       PasswordService.layer,
       ProjectEraseService.layer,
