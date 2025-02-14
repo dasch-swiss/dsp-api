@@ -29,7 +29,7 @@ object PagedResponse {
     PagedResponse(licenses, PageInfo.single(licenses))
 }
 
-final case class LicenseDto(id: String, url: String, `label-en`: String)
+final case class LicenseDto(id: String, uri: String, `label-en`: String)
 object LicenseDto {
   given JsonCodec[LicenseDto]            = DeriveJsonCodec.gen[LicenseDto]
   def from(license: License): LicenseDto = LicenseDto(license.id.value, license.uri.toString, license.labelEn)
