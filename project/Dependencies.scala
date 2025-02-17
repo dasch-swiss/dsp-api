@@ -21,7 +21,7 @@ object Dependencies {
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion         = "5.1.1"
+  val Rdf4jVersion         = "5.1.2"
   val TopbraidShaclVersion = "1.4.4"
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
@@ -29,9 +29,9 @@ object Dependencies {
   val ZioLoggingVersion           = "2.4.0"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC37"
+  val ZioPreludeVersion           = "1.0.0-RC39"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.1.14"
+  val ZioVersion                  = "2.1.15"
 
   // ZIO
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
@@ -39,17 +39,17 @@ object Dependencies {
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
 
-  // jwt-scala 10.0.1 depends on zio-json 0.7.4
+  // jwt-scala 10.0.1 depends on zio-json 0.7.21
   // though newer version compatible with a newer zio-json version is available
   // it is not yet published: https://github.com/jwt-scala/jwt-scala/issues/642
-  val ZioJsonVersion        = "0.7.4"
+  val ZioJsonVersion        = "0.7.21"
   val zioJson               = "dev.zio"                       %% "zio-json"                  % ZioJsonVersion
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
   val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
-  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.10.2"
+  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.10.3"
 
   // refined
   val refined = Seq(
@@ -96,7 +96,7 @@ object Dependencies {
     "commons-validator" % "commons-validator" % "1.9.0" exclude ("commons-logging", "commons-logging")
 
   // authentication
-  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.1"
+  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.4"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "6.4.2" exclude (
@@ -115,7 +115,7 @@ object Dependencies {
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.5"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "2.0.2"
-  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.4.1"
+  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.5.0"
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.10.0"
 
   // test
@@ -126,12 +126,12 @@ object Dependencies {
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.4"
 
-  val wiremock = "org.wiremock" % "wiremock" % "3.11.0"
+  val wiremock = "org.wiremock" % "wiremock" % "3.12.0"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.13"
+  val tapirVersion = "1.11.14"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
