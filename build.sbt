@@ -10,18 +10,15 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck; integration/Te
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate; integration/Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck; integration/Test/headerCheck")
 
-val flywayVersion         = "11.3.0"
-val hikariVersion         = "6.2.1"
-val knoraSipiVersion      = "v31.5.0"
-val quillVersion          = "4.8.6"
-val sqliteVersion         = "3.49.0.0"
-val tapirVersion          = "1.11.13"
-val testContainersVersion = "1.20.4"
-val zioConfigVersion      = "4.0.3"
-// jwt-scala 10.0.1 depends on zio-json 0.7.4
-// though newer version compatible with a newer zio-json version is available
-// it is not yet published: https://github.com/jwt-scala/jwt-scala/issues/642
-val zioJsonVersion              = "0.7.4"
+val flywayVersion               = "11.3.0"
+val hikariVersion               = "6.2.1"
+val knoraSipiVersion            = "v31.5.0"
+val quillVersion                = "4.8.6"
+val sqliteVersion               = "3.49.0.0"
+val tapirVersion                = "1.11.13"
+val testContainersVersion       = "1.20.4"
+val zioConfigVersion            = "4.0.3"
+val zioJsonVersion              = "0.7.21"
 val zioLoggingVersion           = "2.4.0"
 val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
@@ -113,7 +110,7 @@ lazy val root = (project in file("."))
     name          := "dsp-ingest",
     headerLicense := projectLicense,
     libraryDependencies ++= db ++ tapir ++ metrics ++ zio ++ Seq(
-      "com.github.jwt-scala"          %% "jwt-zio-json"                      % "10.0.1",
+      "com.github.jwt-scala"          %% "jwt-zio-json"                      % "10.0.4",
       "commons-io"                     % "commons-io"                        % "2.18.0",
       "dev.zio"                       %% "zio-config"                        % zioConfigVersion,
       "dev.zio"                       %% "zio-config-magnolia"               % zioConfigVersion,
