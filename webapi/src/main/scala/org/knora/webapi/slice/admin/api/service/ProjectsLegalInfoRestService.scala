@@ -14,9 +14,9 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.api.CopyrighHolderReplaceRequest
 import org.knora.webapi.slice.admin.api.CopyrightHolderAddRequest
 import org.knora.webapi.slice.admin.api.LicenseDto
-import org.knora.webapi.slice.admin.api.PageAndSize
-import org.knora.webapi.slice.admin.api.PageInfo
-import org.knora.webapi.slice.admin.api.PagedResponse
+import org.knora.webapi.slice.admin.api.model.PageAndSize
+import org.knora.webapi.slice.admin.api.model.PagedResponse
+import org.knora.webapi.slice.admin.api.model.Pagination
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
@@ -42,7 +42,7 @@ final case class ProjectsLegalInfoRestService(
 
   private def slice[A](all: Seq[A], pageAndSize: PageAndSize): PagedResponse[A] =
     val slice = all.slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
-    PagedResponse(slice, PageInfo.from(all.size, pageAndSize))
+    PagedResponse(slice, Pagination.from(all.size, pageAndSize))
 
   def findCopyrightHoldersByProject(
     shortcode: Shortcode,

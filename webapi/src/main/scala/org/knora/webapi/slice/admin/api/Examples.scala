@@ -13,6 +13,9 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.api.Examples.GroupExample.groupName
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
+import org.knora.webapi.slice.admin.api.model.PageAndSize
+import org.knora.webapi.slice.admin.api.model.PagedResponse
+import org.knora.webapi.slice.admin.api.model.Pagination
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
@@ -33,8 +36,14 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import zio.json.JsonCodec
 
 object Examples {
+
+  object PageResponse {
+    def from[A: JsonCodec](data: Seq[A]): PagedResponse[A] =
+      PagedResponse(data, Pagination.from(data.size * 5, PageAndSize(1, data.size)))
+  }
 
   object ProjectExample {
     val projectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0042")

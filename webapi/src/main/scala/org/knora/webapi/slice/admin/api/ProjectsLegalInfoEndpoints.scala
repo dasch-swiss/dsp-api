@@ -13,35 +13,11 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
+import org.knora.webapi.slice.admin.api.model.PagedResponse
+import org.knora.webapi.slice.admin.api.model.pageAndSizeQuery
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.common.api.BaseEndpoints
-
-final case class PageInfo(size: Int, `total-elements`: Int, pages: Int, number: Int)
-object PageInfo {
-  given JsonCodec[PageInfo]         = DeriveJsonCodec.gen[PageInfo]
-  def single(seq: Seq[_]): PageInfo = PageInfo(seq.size, seq.size, 1, 1)
-  def from(total: Int, pageAndSize: PageAndSize) =
-    val pages = Math.ceil(total.toDouble / pageAndSize.size).toInt
-    PageInfo(pageAndSize.size, total, pages, pageAndSize.page)
-}
-
-case class PageAndSize(page: Int, size: Int)
-val pageQuery = query[Int]("page")
-  .description("The page number to retrieve.")
-  .default(1)
-  .validate(Validator.min(1))
-val sizeQuery = query[Int]("size")
-  .description("The number of items to retrieve.")
-  .default(100)
-  .validate(Validator.min(1))
-val pageRequestAndSize = pageQuery.and(sizeQuery).mapTo[PageAndSize]
-
-final case class PagedResponse[A](data: Seq[A], page: PageInfo)
-object PagedResponse {
-  given [A: JsonCodec]: JsonCodec[PagedResponse[A]] = DeriveJsonCodec.gen[PagedResponse[A]]
-  def allInOnePage[A](as: Seq[A]): PagedResponse[A] = PagedResponse[A](as, PageInfo.single(as))
-}
 
 final case class LicenseDto(id: String, uri: String, `label-en`: String)
 object LicenseDto {
@@ -65,10 +41,10 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
   val getProjectLicenses = baseEndpoints.securedEndpoint.get
     .in(base / "licenses")
-    .in(pageRequestAndSize)
+    .in(pageAndSizeQuery())
     .out(
       jsonBody[PagedResponse[LicenseDto]].example(
-        PagedResponse.allInOnePage(
+        Examples.PageResponse.from(
           Chunk(
             LicenseDto(
               "http://rdfh.ch/licenses/cc-by-4.0",
@@ -84,14 +60,14 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
         ),
       ),
     )
-    .description("Get the allowed licenses of a project. The user must be a system or project admin.")
+    .description("Get the allowed licenses for use within this project. The user must be a system or project admin.")
 
   val getProjectCopyrightHolders = baseEndpoints.securedEndpoint.get
     .in(base / "copyright-holders")
-    .in(pageRequestAndSize)
+    .in(pageAndSizeQuery())
     .out(
       jsonBody[PagedResponse[CopyrightHolder]].example(
-        PagedResponse.allInOnePage(Chunk("DaSch", "University of Zurich").map(CopyrightHolder.unsafeFrom)),
+        Examples.PageResponse.from(Chunk("DaSch", "University of Zurich").map(CopyrightHolder.unsafeFrom)),
       ),
     )
 
