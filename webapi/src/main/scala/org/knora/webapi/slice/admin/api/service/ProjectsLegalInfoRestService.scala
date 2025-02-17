@@ -30,13 +30,13 @@ final case class ProjectsLegalInfoRestService(
   private val auth: AuthorizationRestService,
 ) {
 
-  def findByProjectId(
+  def findLicensesByProject(
     shortcode: Shortcode,
     pageAndSize: PageAndSize,
     user: User,
   ): IO[ForbiddenException, PagedResponse[LicenseDto]] =
     for {
-      _      <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
+      _      <- auth.ensureProjectMember(user, shortcode)
       result <- licenses.findByProjectShortcode(shortcode).map(_.map(LicenseDto.from))
     } yield slice(result, pageAndSize)
 
@@ -50,14 +50,10 @@ final case class ProjectsLegalInfoRestService(
     user: User,
   ): Task[PagedResponse[CopyrightHolder]] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
+      project <- auth.ensureProjectMember(user, shortcode)
     } yield slice(project.predefinedCopyrightHolders.toSeq, pageAndSize)
 
-  def addPredefinedAuthorships(
-    shortcode: Shortcode,
-    req: CopyrightHolderAddRequest,
-    user: User,
-  ): Task[Unit] =
+  def addPredefinedAuthorships(shortcode: Shortcode, req: CopyrightHolderAddRequest, user: User): Task[Unit] =
     for {
       project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
       _       <- projects.addCopyrightHolders(project.id, req.data)

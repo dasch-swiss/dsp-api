@@ -60,7 +60,10 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
         ),
       ),
     )
-    .description("Get the allowed licenses for use within this project. The user must be a system or project admin.")
+    .description(
+      "Get the allowed licenses for use within this project. " +
+        "The user must be project member, project admin or system admin.",
+    )
 
   val getProjectCopyrightHolders = baseEndpoints.securedEndpoint.get
     .in(base / "copyright-holders")
@@ -69,6 +72,10 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
       jsonBody[PagedResponse[CopyrightHolder]].example(
         Examples.PageResponse.from(Chunk("DaSch", "University of Zurich").map(CopyrightHolder.unsafeFrom)),
       ),
+    )
+    .description(
+      "Get the allowed copyright holders for use within this project. " +
+        "The user must be project member, project admin or system admin.",
     )
 
   val postProjectCopyrightHolders = baseEndpoints.securedEndpoint.post

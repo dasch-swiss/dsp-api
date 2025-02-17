@@ -284,7 +284,7 @@ case class PermissionsDataADM(
 
   /* Is the user a member of the ProjectAdmin group */
   def isProjectAdmin(projectIri: IRI): Boolean =
-    groupsPerProject.getOrElse(projectIri, List.empty[IRI]).contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
+    groupsPerProject.getOrElse(projectIri, List.empty).contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
 
   /* Does the user have the 'ProjectAdminAllPermission' permission for the project */
   def hasProjectAdminAllPermissionFor(projectIri: IRI): Boolean =

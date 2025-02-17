@@ -18,6 +18,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isActive
+import org.knora.webapi.slice.common.api.AuthorizationRestService.isProjectMember
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminOrProjectAdminInAnyProject
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminOrUser
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemOrProjectAdmin
@@ -60,11 +61,13 @@ final case class AuthorizationRestService(
     user: User,
     shortcode: Shortcode,
   ): IO[ForbiddenException, KnoraProject] =
+    ensureProject(shortcode).tap(ensureSystemAdminOrProjectAdmin(user, _))
+
+  private def ensureProject(shortcode: Shortcode): IO[ForbiddenException, KnoraProject] =
     knoraProjectService
       .findByShortcode(shortcode)
       .orDie
       .someOrFail(ForbiddenException(s"Project with shortcode ${shortcode.value} not found."))
-      .tap(ensureSystemAdminOrProjectAdmin(user, _))
 
   def ensureSystemAdminOrProjectAdminByShortname(
     user: User,
@@ -87,6 +90,14 @@ final case class AuthorizationRestService(
     checkActiveUser(requestingUser, isSystemAdminOrProjectAdminInAnyProject, msg)
   }
 
+  def ensureProjectMember(user: User, shortcode: Shortcode): IO[ForbiddenException, KnoraProject] =
+    ensureProject(shortcode).tap(ensureProjectMember(user, _))
+
+  def ensureProjectMember(user: User, project: KnoraProject): IO[ForbiddenException, KnoraProject] = {
+    lazy val msg = s"User '${user.username}' is not a member of project '${project.shortcode.value}'."
+    checkActiveUser(user, isProjectMember(project.id), msg).as(project)
+  }
+
   private def checkActiveUser(
     user: User,
     condition: User => Boolean,
@@ -102,12 +113,15 @@ final case class AuthorizationRestService(
 
 object AuthorizationRestService {
   def isActive(userADM: User): Boolean                           = userADM.status
-  def isSystemAdminOrUser(user: User): Boolean                   = user.permissions.isSystemAdmin || user.isSystemUser
-  def isProjectAdmin(user: User, project: KnoraProject): Boolean = user.permissions.isProjectAdmin(project.id.value)
+  def isSystemAdminOrUser(user: User): Boolean                   = user.isSystemAdmin || user.isSystemUser
+  def isProjectAdmin(user: User, project: KnoraProject): Boolean = user.isProjectAdmin(project.id)
   def isSystemOrProjectAdmin(project: KnoraProject)(userADM: User): Boolean =
     isSystemAdminOrUser(userADM) || isProjectAdmin(userADM, project)
   def isSystemAdminOrProjectAdminInAnyProject(user: User): Boolean =
     isSystemAdminOrUser(user) || user.permissions.isProjectAdminInAnyProject()
+
+  def isProjectMember(projectIri: ProjectIri): User => Boolean =
+    user => user.isProjectMember(projectIri) || user.isProjectAdmin(projectIri) || isSystemAdminOrUser(user)
 
   val layer = ZLayer.derive[AuthorizationRestService]
 }
