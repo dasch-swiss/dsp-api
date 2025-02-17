@@ -109,7 +109,7 @@ object License {
     License(CC_BY_NC_SA_4_0, URI.create("https://creativecommons.org/licenses/by-nc-sa/4.0/"), "CC BY-NC-SA 4.0"),
     License(CC_BY_ND_4_0, URI.create("https://creativecommons.org/licenses/by-nd/4.0/"), "CC BY-ND 4.0"),
     License(CC_BY_NC_ND_4_0, URI.create("https://creativecommons.org/licenses/by-nc-nd/4.0/"), "CC BY-NC-ND 4.0"),
-    License(AI_GENERATED, URI.create("http://example.com/"), "Produced by an AI - Not Protected by Copyright"),
+    License(AI_GENERATED, URI.create("http://example.com/"), "AI-Generated Content - Not Protected by Copyright"),
     License(UNKNOWN, URI.create("http://example.com/"), "Unknown License - Ask Copyright Holder for Permission"),
     License(PUBLIC_DOMAIN, URI.create("http://example.com/"), "Public Domain - Not Protected by Copyright"),
   )
