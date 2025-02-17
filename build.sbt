@@ -10,12 +10,12 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck; integration/Te
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate; integration/Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck; integration/Test/headerCheck")
 
-val flywayVersion               = "11.3.0"
+val flywayVersion               = "11.3.2"
 val hikariVersion               = "6.2.1"
 val knoraSipiVersion            = "v31.5.0"
 val quillVersion                = "4.8.6"
 val sqliteVersion               = "3.49.0.0"
-val tapirVersion                = "1.11.13"
+val tapirVersion                = "1.11.14"
 val testContainersVersion       = "1.20.4"
 val zioConfigVersion            = "4.0.3"
 val zioJsonVersion              = "0.7.21"
@@ -25,7 +25,7 @@ val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
 val zioPreludeVersion           = "1.0.0-RC39"
 val zioSchemaVersion            = "1.6.1"
-val zioVersion                  = "2.1.14"
+val zioVersion                  = "2.1.15"
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
 val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
@@ -120,7 +120,7 @@ lazy val root = (project in file("."))
       "dev.zio"                       %% "zio-metrics-connectors"            % zioMetricsConnectorsVersion,
       "dev.zio"                       %% "zio-metrics-connectors-prometheus" % zioMetricsConnectorsVersion,
       "eu.timepit"                    %% "refined"                           % "0.11.3",
-      "com.softwaremill.sttp.client3" %% "zio"                               % "3.10.2",
+      "com.softwaremill.sttp.client3" %% "zio"                               % "3.10.3",
 
       // csv for reports
       "com.github.tototoshi" %% "scala-csv" % "2.0.0",
