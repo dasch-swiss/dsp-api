@@ -1,5 +1,23 @@
 # Changelog
 
+## [31.6.0](https://github.com/dasch-swiss/dsp-api/compare/v31.5.0...v31.6.0) (2025-02-17)
+
+
+### Maintenances
+
+* Cleanup unused code and move code to integration test source set (DEV-4344) ([#3506](https://github.com/dasch-swiss/dsp-api/issues/3506)) ([49c3c32](https://github.com/dasch-swiss/dsp-api/commit/49c3c3211fb3c88f7b6c1047d54d071afe7353ea))
+* Dependency updates ([#3509](https://github.com/dasch-swiss/dsp-api/issues/3509)) ([be2768f](https://github.com/dasch-swiss/dsp-api/commit/be2768f5ac1e3d0a28e673441e439a684f4496ae))
+* Make Project.id typed `ProjectIri` ([#3501](https://github.com/dasch-swiss/dsp-api/issues/3501)) ([2bcb875](https://github.com/dasch-swiss/dsp-api/commit/2bcb8752a92dbc7285b5852d7b443609df475b4e))
+* Minor dependency updates ([#3508](https://github.com/dasch-swiss/dsp-api/issues/3508)) ([86edd21](https://github.com/dasch-swiss/dsp-api/commit/86edd21ac03dcb3db6bd1841f6b6eba6d23300a7))
+* Patch dependency updates ([#3507](https://github.com/dasch-swiss/dsp-api/issues/3507)) ([ad79473](https://github.com/dasch-swiss/dsp-api/commit/ad79473e82860628c25db6ed8d9818810f2440b9))
+* Remove unused code ([#3502](https://github.com/dasch-swiss/dsp-api/issues/3502)) ([7dbc946](https://github.com/dasch-swiss/dsp-api/commit/7dbc946cc940c189bc01902f5688518e7b9ca2ea))
+* Update app version in docker-compose ([#3503](https://github.com/dasch-swiss/dsp-api/issues/3503)) ([71ec0e0](https://github.com/dasch-swiss/dsp-api/commit/71ec0e046aee5c6dd99632fd1eadf0aa26a8480f))
+
+
+### Enhancements
+
+* Add JSON-LD support for create property and changing gui element (DEV-4344) ([#3505](https://github.com/dasch-swiss/dsp-api/issues/3505)) ([3da4d29](https://github.com/dasch-swiss/dsp-api/commit/3da4d29bdf2b36db2a779a32b24ab035de8b686d))
+
 ## [31.5.0](https://github.com/dasch-swiss/dsp-api/compare/v31.4.0...v31.5.0) (2025-02-10)
 
 
