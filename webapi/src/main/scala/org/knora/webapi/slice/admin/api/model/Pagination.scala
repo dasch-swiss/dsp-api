@@ -10,9 +10,13 @@ import sttp.tapir.query
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
+import org.knora.webapi.slice.admin.api.model.Pagination.DefaultPageSize
+
 final case class Pagination(`page-size`: Int, `total-items`: Int, `total-pages`: Int, `current-page`: Int)
 object Pagination {
   given JsonCodec[Pagination] = DeriveJsonCodec.gen[Pagination]
+
+  val DefaultPageSize: Int = 25
 
   def from(totalItems: Int, pageAndSize: PageAndSize): Pagination =
     val totalPages = Math.ceil(totalItems.toDouble / pageAndSize.size).toInt
@@ -27,9 +31,10 @@ object PagedResponse {
     PagedResponse(data, Pagination.from(totalItems, pageAndSize))
 }
 
-val defaultPageSize = 25
-
-case class PageAndSize(page: Int, size: Int = defaultPageSize)
+case class PageAndSize(page: Int, size: Int)
+object PageAndSize {
+  val Default = PageAndSize(1, DefaultPageSize)
+}
 
 def pageAndSizeQuery(maxSize: Int = 100) = pageQuery.and(sizeQuery(maxSize)).mapTo[PageAndSize]
 
@@ -40,6 +45,6 @@ private val pageQuery = query[Int]("page")
 
 private def sizeQuery(maxSize: Int) = query[Int]("page-size")
   .description("The number of items to retrieve.")
-  .default(defaultPageSize)
+  .default(Pagination.DefaultPageSize)
   .validate(Validator.min(1))
   .validate(Validator.max(maxSize))

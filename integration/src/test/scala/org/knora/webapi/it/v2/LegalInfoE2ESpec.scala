@@ -31,7 +31,10 @@ import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
+import org.knora.webapi.slice.admin.api.model.PageAndSize
+import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
@@ -47,7 +50,9 @@ object LegalInfoE2ESpec extends E2EZSpec {
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
   private val aCopyrightHolder             = CopyrightHolder.unsafeFrom("Universität Basel")
   private val someAuthorship               = List("Hans Müller", "Gigi DAgostino").map(Authorship.unsafeFrom)
+  private val anotherAuthorship            = List("Lotte Reiniger").map(Authorship.unsafeFrom)
   private val aLicenseIri                  = LicenseIri.makeNew
+  private val shortcode                    = Shortcode.unsafeFrom("0001")
 
   private val createResourceSuite = suite("Creating Resources")(
     test("when creating a resource without legal info the creation response should not contain it") {
@@ -60,36 +65,51 @@ object LegalInfoE2ESpec extends E2EZSpec {
         info.licenseIri.isEmpty,
       )
     },
-    test("when creating a resource with legal info the creation response should contain it") {
-      for {
-        createResourceResponseModel <- createStillImageResourceWithInfos
-        info                        <- copyrightAndLicenseInfo(createResourceResponseModel)
-      } yield assertTrue(
-        info.copyrightHolder.contains(aCopyrightHolder),
-        info.licenseIri.contains(aLicenseIri),
-      ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
-    },
-    test("when creating a resource with legal info the response when getting the created resource should contain it") {
-      for {
-        createResourceResponseModel <- createStillImageResourceWithInfos
-        resourceId                  <- resourceId(createResourceResponseModel)
-        getResponseModel            <- getResourceFromApi(resourceId)
-        info                        <- copyrightAndLicenseInfo(getResponseModel)
-      } yield assertTrue(
-        info.copyrightHolder.contains(aCopyrightHolder),
-        info.licenseIri.contains(aLicenseIri),
-      ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
-    },
-    test("when creating a resource with legal info the response when getting the created value should contain it") {
-      for {
-        createResourceResponseModel <- createStillImageResourceWithInfos
-        valueResponseModel          <- getValueFromApi(createResourceResponseModel)
-        info                        <- copyrightAndLicenseInfo(valueResponseModel)
-      } yield assertTrue(
-        info.copyrightHolder.contains(aCopyrightHolder),
-        info.licenseIri.contains(aLicenseIri),
-      ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
-    },
+    suite("given a resource with legal info was created")(
+      test("the creation response should contain it") {
+        for {
+          createResourceResponseModel <- createStillImageResourceWithInfos()
+          info                        <- copyrightAndLicenseInfo(createResourceResponseModel)
+        } yield assertTrue(
+          info.copyrightHolder.contains(aCopyrightHolder),
+          info.licenseIri.contains(aLicenseIri),
+        ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
+      },
+      test("when getting the created resource the response should contain it") {
+        for {
+          createResourceResponseModel <- createStillImageResourceWithInfos()
+          resourceId                  <- resourceId(createResourceResponseModel)
+          getResponseModel            <- getResourceFromApi(resourceId)
+          info                        <- copyrightAndLicenseInfo(getResponseModel)
+        } yield assertTrue(
+          info.copyrightHolder.contains(aCopyrightHolder),
+          info.licenseIri.contains(aLicenseIri),
+        ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
+      },
+      test("when getting the created value the response should contain it") {
+        for {
+          createResourceResponseModel <- createStillImageResourceWithInfos()
+          valueResponseModel          <- getValueFromApi(createResourceResponseModel)
+          info                        <- copyrightAndLicenseInfo(valueResponseModel)
+        } yield assertTrue(
+          info.copyrightHolder.contains(aCopyrightHolder),
+          info.licenseIri.contains(aLicenseIri),
+        ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
+      },
+      test(
+        "and creating another resource with different authorship, " +
+          "when getting the authorships from the admin api it should contain all authorships",
+      ) {
+        val expected = (someAuthorship ++ anotherAuthorship).sortBy(_.value)
+        for {
+          _ <- createStillImageResourceWithInfos(authorship = Some(someAuthorship))
+          _ <- createStillImageResourceWithInfos(authorship = Some(anotherAuthorship))
+          authorships <- sendGetRequestAsRootDecode[PagedResponse[Authorship]](
+                           s"/admin/projects/shortcode/$shortcode/legal-info/authorships",
+                         )
+        } yield assertTrue(authorships == PagedResponse.from(expected, expected.size, PageAndSize.Default))
+      },
+    ),
   )
 
   private val createValueSuite = suite("Values with legal info") {
@@ -156,12 +176,11 @@ object LegalInfoE2ESpec extends E2EZSpec {
   private def failResponse(msg: String)(response: Response) =
     response.body.asString.flatMap(bodyStr => ZIO.fail(Exception(s"$msg\nstatus: ${response.status}\nbody: $bodyStr")))
 
-  private def createStillImageResourceWithInfos =
-    createStillImageResource(
-      Some(aCopyrightHolder),
-      Some(someAuthorship),
-      Some(aLicenseIri),
-    )
+  private def createStillImageResourceWithInfos(
+    copyrightHolder: Option[CopyrightHolder] = Some(aCopyrightHolder),
+    authorship: Option[List[Authorship]] = Some(someAuthorship),
+    licenseIri: Option[LicenseIri] = Some(aLicenseIri),
+  ) = createStillImageResource(copyrightHolder, authorship, licenseIri)
 
   private def createStillImageResource(
     copyrightHolder: Option[CopyrightHolder] = None,
@@ -176,7 +195,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
         authorship = authorship,
         licenseIri = licenseIri,
       )
-      .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
+      .toJsonLd(shortcode = shortcode, className = Some("ThingPicture"), ontologyName = "anything")
     for {
       responseBody <- sendPostRequestAsRoot("/v2/resources", jsonLd)
                         .mapError(Exception(_))
