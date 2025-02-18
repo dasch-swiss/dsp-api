@@ -15,8 +15,7 @@ import zio.json.JsonCodec
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.api.model.pageAndSizeQuery
-import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
-import org.knora.webapi.slice.admin.domain.model.License
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class LicenseDto(id: String, uri: String, `label-en`: String)
@@ -38,6 +37,24 @@ object CopyrighHolderReplaceRequest {
 final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
   private final val base = "admin" / "projects" / "shortcode" / projectShortcode / "legal-info"
+
+  val getProjectAuthorships = baseEndpoints.securedEndpoint.get
+    .in(base / "authorships")
+    .in(pageAndSizeQuery())
+    .out(
+      jsonBody[PagedResponse[Authorship]].example(
+        Examples.PageResponse.from(
+          Chunk(
+            Authorship.unsafeFrom("Theodor W. Adorno"),
+            Authorship.unsafeFrom("Friedrich Nietzsche"),
+          ),
+        ),
+      ),
+    )
+    .description(
+      "Get the allowed authorships for use within this project. " +
+        "The user must be project member, project admin or system admin.",
+    )
 
   val getProjectLicenses = baseEndpoints.securedEndpoint.get
     .in(base / "licenses")
@@ -102,6 +119,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     )
 
   val endpoints: Seq[AnyEndpoint] = Seq(
+    getProjectAuthorships,
     getProjectLicenses,
     getProjectCopyrightHolders,
     postProjectCopyrightHolders,

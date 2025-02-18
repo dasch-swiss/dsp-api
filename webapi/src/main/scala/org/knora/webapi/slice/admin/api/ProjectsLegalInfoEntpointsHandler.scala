@@ -15,6 +15,12 @@ final class ProjectsLegalInfoEndpointsHandler(
   restService: ProjectsLegalInfoRestService,
   mapper: HandlerMapper,
 ) {
+
+  val getProjectAuthorshipHandler = SecuredEndpointHandler(
+    endpoints.getProjectAuthorships,
+    user => (shortcode, pageAndSize) => restService.findAuthorships(shortcode, pageAndSize, user),
+  )
+
   val getProjectLicensesHandler = SecuredEndpointHandler(
     endpoints.getProjectLicenses,
     user => (shortcode, pageAndSize) => restService.findLicensesByProject(shortcode, pageAndSize, user),
@@ -36,6 +42,7 @@ final class ProjectsLegalInfoEndpointsHandler(
   )
 
   val allHandlers = List(
+    getProjectAuthorshipHandler,
     getProjectLicensesHandler,
     getProjectCopyrightHoldersHandler,
     postProjectCopyrightHoldersHandler,

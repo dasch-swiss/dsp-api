@@ -17,6 +17,7 @@ import org.knora.webapi.slice.admin.api.LicenseDto
 import org.knora.webapi.slice.admin.api.model.PageAndSize
 import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.api.model.Pagination
+import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
@@ -29,6 +30,12 @@ final case class ProjectsLegalInfoRestService(
   private val projects: KnoraProjectService,
   private val auth: AuthorizationRestService,
 ) {
+
+  def findAuthorships(shortcode: Shortcode, pageAndSize: PageAndSize, user: User): Task[PagedResponse[Authorship]] =
+    for {
+      _          <- auth.ensureProjectMember(user, shortcode)
+      authorships = Seq.empty // TODO: Implement query
+    } yield slice(authorships, pageAndSize)
 
   def findLicensesByProject(
     shortcode: Shortcode,
