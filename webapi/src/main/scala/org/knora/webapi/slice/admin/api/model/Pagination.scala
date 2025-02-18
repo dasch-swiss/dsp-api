@@ -22,6 +22,9 @@ object Pagination {
 final case class PagedResponse[A](data: Seq[A], pagination: Pagination)
 object PagedResponse {
   given [A: JsonCodec]: JsonCodec[PagedResponse[A]] = DeriveJsonCodec.gen[PagedResponse[A]]
+
+  def from[A: JsonCodec](data: Seq[A], totalItems: Int, pageAndSize: PageAndSize): PagedResponse[A] =
+    PagedResponse(data, Pagination.from(totalItems, pageAndSize))
 }
 
 val defaultPageSize = 25

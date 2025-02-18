@@ -41,6 +41,12 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
   val getProjectAuthorships = baseEndpoints.securedEndpoint.get
     .in(base / "authorships")
     .in(pageAndSizeQuery())
+    .in(
+      query[Option[String]]("filter").description(
+        "Filter the authorships by a search term. " +
+          "The search is case-insensitive and resulting authorships contain the search term.",
+      ),
+    )
     .out(
       jsonBody[PagedResponse[Authorship]].example(
         Examples.PageResponse.from(
