@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.4](https://github.com/dasch-swiss/dsp-ingest/compare/v0.18.3...v0.18.4) (2025-02-18)
+
+
+### Maintenances
+
+* **ci:** Temporary workaround for ARM builds ([#338](https://github.com/dasch-swiss/dsp-ingest/issues/338)) ([f44bfcd](https://github.com/dasch-swiss/dsp-ingest/commit/f44bfcd783e6404a7fc21b9e7711b94bc7420e06))
+
 ## [0.18.3](https://github.com/dasch-swiss/dsp-ingest/compare/v0.18.2...v0.18.3) (2025-02-17)
 
 
