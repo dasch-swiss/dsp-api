@@ -13,8 +13,9 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
+import org.knora.webapi.slice.admin.api.model.FilterAndOrder
+import org.knora.webapi.slice.admin.api.model.PageAndSize
 import org.knora.webapi.slice.admin.api.model.PagedResponse
-import org.knora.webapi.slice.admin.api.model.pageAndSizeQuery
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
@@ -40,13 +41,8 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
   val getProjectAuthorships = baseEndpoints.securedEndpoint.get
     .in(base / "authorships")
-    .in(pageAndSizeQuery())
-    .in(
-      query[Option[String]]("filter").description(
-        "Filter the authorships by a search term. " +
-          "The search is case-insensitive and resulting authorships contain the search term.",
-      ),
-    )
+    .in(PageAndSize.queryParams())
+    .in(FilterAndOrder.queryParams)
     .out(
       jsonBody[PagedResponse[Authorship]].example(
         Examples.PageResponse.from(
@@ -65,7 +61,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
   val getProjectLicenses = baseEndpoints.securedEndpoint.get
     .in(base / "licenses")
-    .in(pageAndSizeQuery())
+    .in(PageAndSize.queryParams())
     .out(
       jsonBody[PagedResponse[LicenseDto]].example(
         Examples.PageResponse.from(
@@ -91,7 +87,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
   val getProjectCopyrightHolders = baseEndpoints.securedEndpoint.get
     .in(base / "copyright-holders")
-    .in(pageAndSizeQuery())
+    .in(PageAndSize.queryParams())
     .out(
       jsonBody[PagedResponse[CopyrightHolder]].example(
         Examples.PageResponse.from(Chunk("DaSch", "University of Zurich").map(CopyrightHolder.unsafeFrom)),

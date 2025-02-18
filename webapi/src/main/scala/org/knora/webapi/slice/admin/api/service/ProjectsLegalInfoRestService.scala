@@ -18,6 +18,7 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.api.CopyrightHolderAddRequest
 import org.knora.webapi.slice.admin.api.CopyrightHolderReplaceRequest
 import org.knora.webapi.slice.admin.api.LicenseDto
+import org.knora.webapi.slice.admin.api.model.FilterAndOrder
 import org.knora.webapi.slice.admin.api.model.PageAndSize
 import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.api.model.Pagination
@@ -44,21 +45,21 @@ final case class ProjectsLegalInfoRestService(
   def findAuthorships(user: User)(
     shortcode: Shortcode,
     pageAndSize: PageAndSize,
-    searchTerm: Option[String],
+    filterAndOrder: FilterAndOrder,
   ): Task[PagedResponse[Authorship]] =
     for {
       project         <- auth.ensureProjectMember(user, shortcode)
-      totalAndAuthors <- queryAuthorships(project, pageAndSize, searchTerm)
+      totalAndAuthors <- queryAuthorships(project, pageAndSize, filterAndOrder)
       (total, authors) = totalAndAuthors
     } yield PagedResponse.from(authors, total, pageAndSize)
 
   private def queryAuthorships(
     project: KnoraProject,
     paging: PageAndSize,
-    searchTerm: Option[String],
+    filterAndOrder: FilterAndOrder,
   ): Task[(Int, Seq[Authorship])] = {
     val graph                 = Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value)
-    val searchTermQueryString = searchTerm.map(Rdf.literalOf).map(_.getQueryString)
+    val searchTermQueryString = filterAndOrder.filter.map(Rdf.literalOf).map(_.getQueryString)
     val authorVar             = "author"
     val graphPattern =
       s"""GRAPH ${graph.getQueryString} {
@@ -66,11 +67,12 @@ final case class ProjectsLegalInfoRestService(
          |  ${searchTermQueryString.fold("")(term => s"FILTER(CONTAINS(LCASE(STR(?$authorVar)), ${term.toLowerCase}))")}
          |}""".stripMargin
 
+    val order = filterAndOrder.order.toString
     val authorshipsQuery =
       s"""
          |SELECT DISTINCT ?$authorVar WHERE {
          |  $graphPattern
-         |} ORDER BY ASC(?$authorVar) LIMIT ${paging.size} OFFSET ${paging.size * (paging.page - 1)}
+         |} ORDER BY $order(?$authorVar) LIMIT ${paging.size} OFFSET ${paging.size * (paging.page - 1)}
          |""".stripMargin
     val queryAuthorships = for {
       result <- triplestore.query(Select(authorshipsQuery)).map(_.results.bindings)
