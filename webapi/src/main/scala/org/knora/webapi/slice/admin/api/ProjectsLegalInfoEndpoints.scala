@@ -29,9 +29,9 @@ object CopyrightHolderAddRequest {
   given JsonCodec[CopyrightHolderAddRequest] = DeriveJsonCodec.gen[CopyrightHolderAddRequest]
 }
 
-final case class CopyrighHolderReplaceRequest(`old-value`: CopyrightHolder, `new-value`: CopyrightHolder)
-object CopyrighHolderReplaceRequest {
-  given JsonCodec[CopyrighHolderReplaceRequest] = DeriveJsonCodec.gen[CopyrighHolderReplaceRequest]
+final case class CopyrightHolderReplaceRequest(`old-value`: CopyrightHolder, `new-value`: CopyrightHolder)
+object CopyrightHolderReplaceRequest {
+  given JsonCodec[CopyrightHolderReplaceRequest] = DeriveJsonCodec.gen[CopyrightHolderReplaceRequest]
 }
 
 final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
@@ -45,8 +45,9 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
       jsonBody[PagedResponse[Authorship]].example(
         Examples.PageResponse.from(
           Chunk(
-            Authorship.unsafeFrom("Theodor W. Adorno"),
-            Authorship.unsafeFrom("Friedrich Nietzsche"),
+            Authorship.unsafeFrom("Lotte Reiniger"),
+            Authorship.unsafeFrom("Margaret J. Winkler"),
+            Authorship.unsafeFrom("Hilma af Klint"),
           ),
         ),
       ),
@@ -106,9 +107,9 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
   val putProjectCopyrightHolders = baseEndpoints.securedEndpoint.put
     .in(base / "copyright-holders")
     .in(
-      jsonBody[CopyrighHolderReplaceRequest]
+      jsonBody[CopyrightHolderReplaceRequest]
         .example(
-          CopyrighHolderReplaceRequest(
+          CopyrightHolderReplaceRequest(
             CopyrightHolder.unsafeFrom("DaSch"),
             CopyrightHolder.unsafeFrom("DaSCH"),
           ),

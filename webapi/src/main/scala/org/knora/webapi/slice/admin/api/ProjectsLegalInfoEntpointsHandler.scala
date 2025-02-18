@@ -15,41 +15,13 @@ final class ProjectsLegalInfoEndpointsHandler(
   restService: ProjectsLegalInfoRestService,
   mapper: HandlerMapper,
 ) {
-
-  val getProjectAuthorshipHandler = SecuredEndpointHandler(
-    endpoints.getProjectAuthorships,
-    user => (shortcode, pageAndSize) => restService.findAuthorships(shortcode, pageAndSize, user),
-  )
-
-  val getProjectLicensesHandler = SecuredEndpointHandler(
-    endpoints.getProjectLicenses,
-    user => (shortcode, pageAndSize) => restService.findLicensesByProject(shortcode, pageAndSize, user),
-  )
-
-  val postProjectCopyrightHoldersHandler = SecuredEndpointHandler(
-    endpoints.postProjectCopyrightHolders,
-    user => (shortcode, req) => restService.addPredefinedAuthorships(shortcode, req, user),
-  )
-
-  val getProjectCopyrightHoldersHandler = SecuredEndpointHandler(
-    endpoints.getProjectCopyrightHolders,
-    user => (shortcode, pageAndSize) => restService.findCopyrightHoldersByProject(shortcode, pageAndSize, user),
-  )
-
-  val putProjectCopyrightHoldersHandler = SecuredEndpointHandler(
-    endpoints.putProjectCopyrightHolders,
-    user => (shortcode, req) => restService.replacePredefinedAuthorship(shortcode, req, user),
-  )
-
   val allHandlers = List(
-    getProjectAuthorshipHandler,
-    getProjectLicensesHandler,
-    getProjectCopyrightHoldersHandler,
-    postProjectCopyrightHoldersHandler,
-    putProjectCopyrightHoldersHandler,
-  ).map(
-    mapper.mapSecuredEndpointHandler(_),
-  )
+    SecuredEndpointHandler(endpoints.getProjectAuthorships, restService.findAuthorships),
+    SecuredEndpointHandler(endpoints.getProjectLicenses, restService.findLicenses),
+    SecuredEndpointHandler(endpoints.getProjectCopyrightHolders, restService.findCopyrightHolders),
+    SecuredEndpointHandler(endpoints.postProjectCopyrightHolders, restService.addCopyrightHolders),
+    SecuredEndpointHandler(endpoints.putProjectCopyrightHolders, restService.replaceCopyrightHolder),
+  ).map(mapper.mapSecuredEndpointHandler)
 }
 
 object ProjectsLegalInfoEndpointsHandler {
