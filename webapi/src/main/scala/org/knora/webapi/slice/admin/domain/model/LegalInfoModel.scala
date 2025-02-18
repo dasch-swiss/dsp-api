@@ -33,6 +33,7 @@ import org.knora.webapi.slice.common.Value.StringValue
 final case class CopyrightHolder private (override val value: String) extends StringValue
 object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
   given JsonCodec[CopyrightHolder] = ZioJsonCodec.stringCodec(CopyrightHolder.from)
+  given Ordering[CopyrightHolder]  = Ordering.by(_.value)
   def from(str: String): Either[String, CopyrightHolder] =
     fromValidations(
       "Copyright Holder",

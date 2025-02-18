@@ -104,23 +104,32 @@ final case class ProjectsLegalInfoRestService(
   def findLicenses(user: User)(
     shortcode: Shortcode,
     pageAndSize: PageAndSize,
+    filterAndOrder: FilterAndOrder,
   ): IO[ForbiddenException, PagedResponse[LicenseDto]] =
     for {
       _      <- auth.ensureProjectMember(user, shortcode)
       result <- licenses.findByProjectShortcode(shortcode).map(_.map(LicenseDto.from))
-    } yield slice(result, pageAndSize)
+    } yield slice(result, pageAndSize, filterAndOrder)
 
-  private def slice[A](all: Seq[A], pageAndSize: PageAndSize): PagedResponse[A] =
-    val slice = all.slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
-    PagedResponse(slice, Pagination.from(all.size, pageAndSize))
+  private def slice[A](
+    all: Seq[A],
+    pageAndSize: PageAndSize,
+    filterAndOrder: FilterAndOrder,
+  )(using o: Ordering[A]): PagedResponse[A] =
+    val filtered = all
+      .filter(a => filterAndOrder.filter.forall(_.toLowerCase.r.findFirstIn(a.toString.toLowerCase).isDefined))
+      .sorted(filterAndOrder.ordering[A])
+    val slice = filtered.slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
+    PagedResponse(slice, Pagination.from(filtered.size, pageAndSize))
 
   def findCopyrightHolders(user: User)(
     shortcode: Shortcode,
     pageAndSize: PageAndSize,
+    filterAndOrder: FilterAndOrder,
   ): Task[PagedResponse[CopyrightHolder]] =
     for {
       project <- auth.ensureProjectMember(user, shortcode)
-    } yield slice(project.predefinedCopyrightHolders.toSeq, pageAndSize)
+    } yield slice(project.predefinedCopyrightHolders.toSeq, pageAndSize, filterAndOrder)
 
   def addCopyrightHolders(user: User)(shortcode: Shortcode, req: CopyrightHolderAddRequest): Task[Unit] =
     for {

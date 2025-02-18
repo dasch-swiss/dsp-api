@@ -7,7 +7,17 @@ package org.knora.webapi.slice.admin.api.model
 
 import sttp.tapir.*
 
-case class FilterAndOrder(filter: Option[String], order: Order)
+import org.knora.webapi.slice.admin.api.model.Order.Asc
+import org.knora.webapi.slice.admin.api.model.Order.Desc
+
+case class FilterAndOrder(filter: Option[String], order: Order) { self =>
+
+  def ordering[A](using o: Ordering[A]): Ordering[A] = self.order match {
+    case Asc  => o
+    case Desc => o.reverse
+  }
+}
+
 object FilterAndOrder {
   private val filterQueryParam =
     query[Option[String]]("filter")

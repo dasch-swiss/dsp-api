@@ -21,7 +21,9 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class LicenseDto(id: String, uri: String, `label-en`: String)
 object LicenseDto {
-  given JsonCodec[LicenseDto]            = DeriveJsonCodec.gen[LicenseDto]
+  given JsonCodec[LicenseDto] = DeriveJsonCodec.gen[LicenseDto]
+  given Ordering[LicenseDto]  = Ordering.by(_.`label-en`)
+
   def from(license: License): LicenseDto = LicenseDto(license.id.value, license.uri.toString, license.labelEn)
 }
 
@@ -62,6 +64,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
   val getProjectLicenses = baseEndpoints.securedEndpoint.get
     .in(base / "licenses")
     .in(PageAndSize.queryParams())
+    .in(FilterAndOrder.queryParams)
     .out(
       jsonBody[PagedResponse[LicenseDto]].example(
         Examples.PageResponse.from(
@@ -88,6 +91,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
   val getProjectCopyrightHolders = baseEndpoints.securedEndpoint.get
     .in(base / "copyright-holders")
     .in(PageAndSize.queryParams())
+    .in(FilterAndOrder.queryParams)
     .out(
       jsonBody[PagedResponse[CopyrightHolder]].example(
         Examples.PageResponse.from(Chunk("DaSch", "University of Zurich").map(CopyrightHolder.unsafeFrom)),
