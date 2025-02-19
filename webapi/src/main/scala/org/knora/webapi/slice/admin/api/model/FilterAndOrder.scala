@@ -22,8 +22,9 @@ object FilterAndOrder {
   private val filterQueryParam =
     query[Option[String]]("filter")
       .description("Filter the results.")
+      .default(None)
   private val orderQueryParam = query[Order]("order")
-    .description("Order the results by ascending (asc) or descending (desc).")
+    .description("Sort the results in ascending (asc) or descending (desc) order.")
     .default(Order.Asc)
 
   val queryParams: EndpointInput[FilterAndOrder] =
