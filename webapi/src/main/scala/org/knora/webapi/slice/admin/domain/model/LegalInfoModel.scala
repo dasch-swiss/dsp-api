@@ -7,12 +7,10 @@ package org.knora.webapi.slice.admin.domain.model
 
 import zio.Chunk
 import zio.NonEmptyChunk
-import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import java.net.URI
-import scala.util.Try
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec
@@ -99,10 +97,6 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
 
 final case class License private (id: LicenseIri, uri: URI, labelEn: String)
 object License {
-  given JsonCodec[URI] =
-    JsonCodec[String].transformOrFail(s => Try(URI.create(s)).toEither.left.map(_.getMessage), _.toString)
-  given JsonCodec[License] = DeriveJsonCodec.gen[License]
-
   val BUILT_IN: Chunk[License] = Chunk(
     License(CC_BY_4_0, URI.create("https://creativecommons.org/licenses/by/4.0/"), "CC BY 4.0"),
     License(CC_BY_SA_4_0, URI.create("https://creativecommons.org/licenses/by-sa/4.0/"), "CC BY-SA 4.0"),
