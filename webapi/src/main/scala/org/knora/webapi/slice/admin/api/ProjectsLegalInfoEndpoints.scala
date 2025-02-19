@@ -47,7 +47,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .in(FilterAndOrder.queryParams)
     .out(
       jsonBody[PagedResponse[Authorship]].example(
-        Examples.PageResponse.from(
+        Examples.PagedResponse.fromSlice(
           Chunk(
             Authorship.unsafeFrom("Lotte Reiniger"),
             Authorship.unsafeFrom("Margaret J. Winkler"),
@@ -65,7 +65,10 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base / "licenses")
     .in(PageAndSize.queryParams())
     .in(FilterAndOrder.queryParams)
-    .out(jsonBody[PagedResponse[LicenseDto]].example(Examples.PageResponse.from(License.BUILT_IN.map(LicenseDto.from))))
+    .out(
+      jsonBody[PagedResponse[LicenseDto]]
+        .example(Examples.PagedResponse.fromTotal(License.BUILT_IN.map(LicenseDto.from))),
+    )
     .description(
       "Get the allowed licenses for use within this project. " +
         "The user must be project member, project admin or system admin.",
@@ -77,7 +80,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .in(FilterAndOrder.queryParams)
     .out(
       jsonBody[PagedResponse[CopyrightHolder]].example(
-        Examples.PageResponse.from(Chunk("DaSch", "University of Zurich").map(CopyrightHolder.unsafeFrom)),
+        Examples.PagedResponse.fromSlice(Chunk("DaSch", "University of Zurich").map(CopyrightHolder.unsafeFrom)),
       ),
     )
     .description(
