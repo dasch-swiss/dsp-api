@@ -7,8 +7,10 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.ZIO
 import zio.test.*
+import zio.test.Assertion.hasSameElements
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.admin.repo.LicenseRepo
 
 object LicenseServiceSpec extends ZIOSpecDefault {
@@ -16,10 +18,10 @@ object LicenseServiceSpec extends ZIOSpecDefault {
   private val service = ZIO.serviceWithZIO[LicenseService]
 
   def spec = suite("LicenseService")(
-    test("findByProjectId should return all licenses for any ProjectIri") {
+    test("findByProjectShortcode should return all licenses for project") {
       for {
         actual <- service(_.findByProjectShortcode(Shortcode.unsafeFrom("0001")))
-      } yield assertTrue(actual.size == 9)
+      } yield assert(actual)(hasSameElements(License.BUILT_IN))
     },
   ).provide(LicenseService.layer, LicenseRepo.layer)
 }
