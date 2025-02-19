@@ -65,24 +65,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base / "licenses")
     .in(PageAndSize.queryParams())
     .in(FilterAndOrder.queryParams)
-    .out(
-      jsonBody[PagedResponse[LicenseDto]].example(
-        Examples.PageResponse.from(
-          Chunk(
-            LicenseDto(
-              "http://rdfh.ch/licenses/cc-by-4.0",
-              "https://creativecommons.org/licenses/by/4.0/",
-              "CC BY 4.0",
-            ),
-            LicenseDto(
-              "http://rdfh.ch/licenses/cc-by-sa-4.0",
-              "https://creativecommons.org/licenses/by-sa/4.0/",
-              "CC BY-SA 4.0",
-            ),
-          ),
-        ),
-      ),
-    )
+    .out(jsonBody[PagedResponse[LicenseDto]].example(Examples.PageResponse.from(License.BUILT_IN.map(LicenseDto.from))))
     .description(
       "Get the allowed licenses for use within this project. " +
         "The user must be project member, project admin or system admin.",
