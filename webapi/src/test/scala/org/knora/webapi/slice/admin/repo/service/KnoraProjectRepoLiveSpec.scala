@@ -66,7 +66,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |    knora-admin:status true ;
         |    knora-admin:hasSelfJoinEnabled false ;
         |    knora-admin:projectRestrictedViewSize "!128,128" ;
-        |    knora-admin:hasPredefinedCopyrightHolder "foo", "bar" .
+        |    knora-admin:hasAllowedCopyrightHolder "foo", "bar" .
         |}
         |""".stripMargin
 

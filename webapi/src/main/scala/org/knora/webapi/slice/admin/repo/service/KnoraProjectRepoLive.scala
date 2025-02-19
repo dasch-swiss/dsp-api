@@ -49,7 +49,7 @@ final case class KnoraProjectRepoLive(
       Vocabulary.KnoraAdmin.projectLongname,
       Vocabulary.KnoraAdmin.projectRestrictedViewSize,
       Vocabulary.KnoraAdmin.projectRestrictedViewWatermark,
-      Vocabulary.KnoraAdmin.hasPredefinedCopyrightHolder,
+      Vocabulary.KnoraAdmin.hasAllowedCopyrightHolder,
     ),
   )
 
@@ -103,7 +103,7 @@ object KnoraProjectRepoLive {
         status      <- resource.getBooleanLiteralOrFail[Status](StatusProp)
         selfjoin    <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
         predefinedCopyrightHolders <-
-          resource.getStringLiterals(hasPredefinedCopyrightHolder)(CopyrightHolder.from).map(_.toSet)
+          resource.getStringLiterals(hasAllowedCopyrightHolder)(CopyrightHolder.from).map(_.toSet)
         restrictedView <- getRestrictedView
       } yield KnoraProject(
         id = ProjectIri.unsafeFrom(iri.value),
@@ -142,7 +142,7 @@ object KnoraProjectRepoLive {
           pattern.andHas(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, watermark)
       }
       project.predefinedCopyrightHolders.foreach(authorship =>
-        pattern.andHas(Vocabulary.KnoraAdmin.hasPredefinedCopyrightHolder, authorship.value),
+        pattern.andHas(Vocabulary.KnoraAdmin.hasAllowedCopyrightHolder, authorship.value),
       )
       pattern
     }
