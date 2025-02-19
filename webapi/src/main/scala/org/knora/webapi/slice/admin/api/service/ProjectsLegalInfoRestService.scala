@@ -28,7 +28,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.admin.domain.service.LicenseService
+import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary
@@ -36,7 +36,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 final case class ProjectsLegalInfoRestService(
-  private val licenses: LicenseService,
+  private val legalInfos: LegalInfoService,
   private val projects: KnoraProjectService,
   private val auth: AuthorizationRestService,
   private val triplestore: TriplestoreService,
@@ -108,7 +108,7 @@ final case class ProjectsLegalInfoRestService(
   ): IO[ForbiddenException, PagedResponse[LicenseDto]] =
     for {
       _      <- auth.ensureProjectMember(user, shortcode)
-      result <- licenses.findByProjectShortcode(shortcode).map(_.map(LicenseDto.from))
+      result <- legalInfos.findLicenses(shortcode).map(_.map(LicenseDto.from))
     } yield slice(result, pageAndSize, filterAndOrder)
 
   private def slice[A: JsonCodec](

@@ -10,7 +10,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.admin.repo.LicenseRepo
 
-case class LicenseService(repo: LicenseRepo) {
+case class LegalInfoService(private val licenses: LicenseRepo) {
 
   /**
    * Currently, the project is not used in the implementation and all allowed licenses are returned.
@@ -18,10 +18,10 @@ case class LicenseService(repo: LicenseRepo) {
    * @param id the Project for which the licenses are retrieved.
    * @return Returns the licenses available in the project.
    */
-  def findByProjectShortcode(id: Shortcode): UIO[Chunk[License]] =
-    repo.findAll().orDie
+  def findLicenses(id: Shortcode): UIO[Chunk[License]] =
+    licenses.findAll().orDie
 }
 
-object LicenseService {
-  val layer = ZLayer.derive[LicenseService]
+object LegalInfoService {
+  val layer = ZLayer.derive[LegalInfoService]
 }
