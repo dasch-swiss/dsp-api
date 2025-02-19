@@ -36,11 +36,13 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optic
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
+import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
@@ -62,6 +64,7 @@ final case class ValuesResponderV2(
   searchResponderV2: SearchResponderV2,
   triplestoreService: TriplestoreService,
   permissionsResponder: PermissionsResponder,
+  legalInfoService: LegalInfoService,
 )(implicit val stringFormatter: StringFormatter) {
 
   /**
@@ -86,6 +89,7 @@ final case class ValuesResponderV2(
         project <- projectService
                      .findByShortcode(resourceIri.shortcode)
                      .someOrFail(NotFoundException(s"Project not found for resource IRI: $resourceIri"))
+        _ <- validateLegalInfo(valueToCreate.valueContent, project.shortcode)
 
         // Convert the submitted value to the internal schema.
         submittedInternalPropertyIri <-
@@ -328,6 +332,13 @@ final case class ValuesResponderV2(
       taskResult <- IriLocker.runWithIriLock(apiRequestID, valueToCreate.resourceIri, taskZio)
     } yield taskResult
   }
+
+  private def validateLegalInfo(fvc: ValueContentV2, shortcode: Shortcode): IO[BadRequestException, Unit] =
+    fvc match {
+      case fvc: FileValueContentV2 =>
+        legalInfoService.validateLegalInfo(fvc.fileValue, shortcode).mapError(BadRequestException.apply).unit
+      case _ => ZIO.unit
+    }
 
   private def ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(valueContent: ValueContentV2) =
     valueContent match {
@@ -658,6 +669,7 @@ final case class ValuesResponderV2(
   ): Task[UpdateValueResponseV2] = {
     for {
       resourcePropertyValue <- checkValueAndRetrieveResourceProperties(updateValue, requestingUser)
+      _                     <- validateLegalInfo(updateValue.valueContent, resourcePropertyValue.resource.projectADM.shortcode)
 
       resourceInfo: ReadResourceV2                     = resourcePropertyValue.resource
       adjustedInternalPropertyInfo: ReadPropertyInfoV2 = resourcePropertyValue.adjustedInternalPropertyInfo

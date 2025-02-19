@@ -37,11 +37,13 @@ import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
+import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
@@ -75,6 +77,7 @@ final case class CreateResourceV2Handler(
   ontologyRepo: OntologyRepo,
   permissionsResponder: PermissionsResponder,
   ontologyService: OntologyService,
+  legalInfoService: LegalInfoService,
 )(implicit val stringFormatter: StringFormatter)
     extends LazyLogging {
 
@@ -94,13 +97,14 @@ final case class CreateResourceV2Handler(
       _         <- ensureNotAnonymousUser(createResourceRequestV2.requestingUser)
       _         <- ensureClassBelongsToProjectOntology(createResourceRequestV2)
       projectIri = createResourceRequestV2.createResource.projectADM.id
+      shortcode  = createResourceRequestV2.createResource.projectADM.shortcode
       _         <- ensureUserHasPermission(createResourceRequestV2, projectIri)
+      _         <- validateLegalInfo(createResourceRequestV2.createResource.values, shortcode)
 
-      resourceIri <-
-        iriService.checkOrCreateEntityIri(
-          createResourceRequestV2.createResource.resourceIri,
-          stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode),
-        )
+      resourceIri <- iriService.checkOrCreateEntityIri(
+                       createResourceRequestV2.createResource.resourceIri,
+                       stringFormatter.makeRandomResourceIri(shortcode),
+                     )
       taskResult <- IriLocker.runWithIriLock(
                       createResourceRequestV2.apiRequestID,
                       resourceIri,
@@ -142,6 +146,14 @@ final case class CreateResourceV2Handler(
           ),
         )
   } yield ()
+
+  private def validateLegalInfo(
+    values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
+    shortcode: Shortcode,
+  ): IO[BadRequestException, Unit] =
+    ZIO.foreachDiscard(values.values.collect { case fvc: FileValueContentV2 => fvc.fileValue })(
+      legalInfoService.validateLegalInfo(_, shortcode).mapError(BadRequestException.apply),
+    )
 
   private def ensureUserHasPermission(createResourceRequestV2: CreateResourceRequestV2, projectIri: ProjectIri) = for {
     internalResourceClassIri <-

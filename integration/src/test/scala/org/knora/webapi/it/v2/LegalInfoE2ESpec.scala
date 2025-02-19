@@ -48,14 +48,27 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 object LegalInfoE2ESpec extends E2EZSpec {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
-  private val aCopyrightHolder             = CopyrightHolder.unsafeFrom("Universität Basel")
-  private val someAuthorship               = List("Hans Müller", "Gigi DAgostino").map(Authorship.unsafeFrom)
-  private val anotherAuthorship            = List("Lotte Reiniger").map(Authorship.unsafeFrom)
-  private val aLicenseIri                  = LicenseIri.makeNew
-  private val shortcode                    = Shortcode.unsafeFrom("0001")
+
+  private val projectService = ZIO.serviceWithZIO[KnoraProjectService]
+
+  private val aCopyrightHolder  = CopyrightHolder.unsafeFrom("Universität Basel")
+  private val someAuthorship    = List("Hans Müller", "Gigi DAgostino").map(Authorship.unsafeFrom)
+  private val anotherAuthorship = List("Lotte Reiniger").map(Authorship.unsafeFrom)
+  private val aLicenseIri       = LicenseIri.PUBLIC_DOMAIN
+  private val shortcode         = Shortcode.unsafeFrom("0001")
+
+  private val allowCopyrightHolder = for {
+    prj     <- projectService(_.findByShortcode(shortcode)).someOrFail(Exception("Project not found"))
+    updated <- projectService(_.addCopyrightHolders(prj.id, Set(aCopyrightHolder)))
+  } yield updated
+
+  private val disallowCopyrightHolder = for {
+    prj <- projectService(_.findByShortcode(shortcode)).someOrFail(Exception("Project not found"))
+    _   <- projectService(_.removeAllCopyrightHolder(prj.id))
+  } yield ()
 
   private val createResourceSuite = suite("Creating Resources")(
-    test("when creating a resource without legal info the creation response should not contain it") {
+    test("without legal info should succeed and the creation response should not contain legal info") {
       for {
         createResourceResponseModel <- createStillImageResource()
         info                        <- copyrightAndLicenseInfo(createResourceResponseModel)
@@ -65,78 +78,126 @@ object LegalInfoE2ESpec extends E2EZSpec {
         info.licenseIri.isEmpty,
       )
     },
-    suite("given a resource with legal info was created")(
-      test("the creation response should contain it") {
-        for {
-          createResourceResponseModel <- createStillImageResourceWithInfos()
-          info                        <- copyrightAndLicenseInfo(createResourceResponseModel)
-        } yield assertTrue(
-          info.copyrightHolder.contains(aCopyrightHolder),
-          info.licenseIri.contains(aLicenseIri),
-        ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
-      },
-      test("when getting the created resource the response should contain it") {
-        for {
-          createResourceResponseModel <- createStillImageResourceWithInfos()
-          resourceId                  <- resourceId(createResourceResponseModel)
-          getResponseModel            <- getResourceFromApi(resourceId)
-          info                        <- copyrightAndLicenseInfo(getResponseModel)
-        } yield assertTrue(
-          info.copyrightHolder.contains(aCopyrightHolder),
-          info.licenseIri.contains(aLicenseIri),
-        ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
-      },
-      test("when getting the created value the response should contain it") {
-        for {
-          createResourceResponseModel <- createStillImageResourceWithInfos()
-          valueResponseModel          <- getValueFromApi(createResourceResponseModel)
-          info                        <- copyrightAndLicenseInfo(valueResponseModel)
-        } yield assertTrue(
-          info.copyrightHolder.contains(aCopyrightHolder),
-          info.licenseIri.contains(aLicenseIri),
-        ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
-      },
-      test(
-        "and creating another resource with different authorship, " +
-          "when getting the authorships from the admin api it should contain all authorships",
-      ) {
-        val expected = (someAuthorship ++ anotherAuthorship).sortBy(_.value)
-        for {
-          _ <- createStillImageResourceWithInfos(authorship = Some(someAuthorship))
-          _ <- createStillImageResourceWithInfos(authorship = Some(anotherAuthorship))
-          authorships <- sendGetRequestAsRootDecode[PagedResponse[Authorship]](
-                           s"/admin/projects/shortcode/$shortcode/legal-info/authorships",
-                         )
-        } yield assertTrue(authorships == PagedResponse.from(expected, expected.size, PageAndSize.Default))
-      },
-    ),
+    suite("when creating a resource with legal info")(
+      suite("given the copyright holder is allowed on the project")(
+        test("then creation response should contain it") {
+          for {
+            createResourceResponseModel <- createStillImageResourceWithInfos()
+            info                        <- copyrightAndLicenseInfo(createResourceResponseModel)
+          } yield assertTrue(
+            info.copyrightHolder.contains(aCopyrightHolder),
+            info.licenseIri.contains(aLicenseIri),
+          ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
+        },
+        test("when getting the created resource the response should contain it") {
+          for {
+            createResourceResponseModel <- createStillImageResourceWithInfos()
+            resourceId                  <- resourceId(createResourceResponseModel)
+            getResponseModel            <- getResourceFromApi(resourceId)
+            info                        <- copyrightAndLicenseInfo(getResponseModel)
+          } yield assertTrue(
+            info.copyrightHolder.contains(aCopyrightHolder),
+            info.licenseIri.contains(aLicenseIri),
+          ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
+        },
+        test("when getting the created value the response should contain it") {
+          for {
+            createResourceResponseModel <- createStillImageResourceWithInfos()
+            valueResponseModel          <- getValueFromApi(createResourceResponseModel)
+            info                        <- copyrightAndLicenseInfo(valueResponseModel)
+          } yield assertTrue(
+            info.copyrightHolder.contains(aCopyrightHolder),
+            info.licenseIri.contains(aLicenseIri),
+          ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
+        },
+        test(
+          "and creating another resource with different authorship, " +
+            "when getting the authorships from the admin api it should contain all authorships",
+        ) {
+          val expected = (someAuthorship ++ anotherAuthorship).sortBy(_.value)
+          for {
+            _ <- createStillImageResourceWithInfos(authorship = Some(someAuthorship))
+            _ <- createStillImageResourceWithInfos(authorship = Some(anotherAuthorship))
+            authorships <- sendGetRequestAsRootDecode[PagedResponse[Authorship]](
+                             s"/admin/projects/shortcode/$shortcode/legal-info/authorships",
+                           )
+          } yield assertTrue(authorships == PagedResponse.from(expected, expected.size, PageAndSize.Default))
+        },
+      ),
+    ) @@ TestAspect.before(allowCopyrightHolder),
   )
 
-  private val createValueSuite = suite("Values with legal info") {
-    test("when updating a value with legal info the created value should contain the update") {
-      val newLicenseIri = LicenseIri.makeNew
-      for {
-        resourceCreated <- createStillImageResource()
-        resourceId      <- resourceId(resourceCreated)
-        valueIdOld      <- valueId(resourceCreated)
-        _ <- sendPutRequestAsRoot(
-               s"/v2/values",
-               UpdateStillImageFileValueRequest(
-                 resourceId,
-                 valueIdOld,
-                 ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri),
-                 aCopyrightHolder,
-                 someAuthorship,
-                 newLicenseIri,
-               ).jsonLd,
-             ).filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create value"))
-        createdResourceModel <- getResourceFromApi(resourceId)
-        info                 <- copyrightAndLicenseInfo(createdResourceModel)
-      } yield assertTrue(
-        info.licenseIri.contains(newLicenseIri),
-      ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
-    }
-  }
+  private val createValueSuite = suite("Values with legal info")(
+    suite("given the copyright holder is allowed")(
+      test("when updating a value with valid legal info the created value should contain the update") {
+        val newLicenseIri = LicenseIri.AI_GENERATED
+        for {
+          resourceCreated <- createStillImageResource()
+          resourceId      <- resourceId(resourceCreated)
+          valueIdOld      <- valueId(resourceCreated)
+          _ <- sendPutRequestAsRoot(
+                 s"/v2/values",
+                 UpdateStillImageFileValueRequest(
+                   resourceId,
+                   valueIdOld,
+                   ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri),
+                   aCopyrightHolder,
+                   someAuthorship,
+                   newLicenseIri,
+                 ).jsonLd,
+               ).filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create value"))
+          createdResourceModel <- getResourceFromApi(resourceId)
+          info                 <- copyrightAndLicenseInfo(createdResourceModel)
+        } yield assertTrue(
+          info.licenseIri.contains(newLicenseIri),
+        ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
+      },
+      test("when updating a value with invalid LicenseIri the update should fail") {
+        val invalidLicenseIri = LicenseIri.makeNew
+        for {
+          resourceCreated <- createStillImageResource()
+          resourceId      <- resourceId(resourceCreated)
+          valueIdOld      <- valueId(resourceCreated)
+          response <- sendPutRequestAsRoot(
+                        s"/v2/values",
+                        UpdateStillImageFileValueRequest(
+                          resourceId,
+                          valueIdOld,
+                          ResourceClassIri.unsafeFrom(
+                            "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                          ),
+                          aCopyrightHolder,
+                          someAuthorship,
+                          invalidLicenseIri,
+                        ).jsonLd,
+                      )
+        } yield assertTrue(response.status.isClientError)
+      },
+    ) @@ TestAspect.before(allowCopyrightHolder),
+    suite("given the copyright holder is NOT allowed")(
+      test("when updating a value with valid legal info the created value should contain the update") {
+        val disallowedCopyrightHolder = CopyrightHolder.unsafeFrom("disallowed-copyright-holder")
+        for {
+          resourceCreated <- createStillImageResource()
+          resourceId      <- resourceId(resourceCreated)
+          valueIdOld      <- valueId(resourceCreated)
+          response <- sendPutRequestAsRoot(
+                        s"/v2/values",
+                        UpdateStillImageFileValueRequest(
+                          resourceId,
+                          valueIdOld,
+                          ResourceClassIri.unsafeFrom(
+                            "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                          ),
+                          disallowedCopyrightHolder,
+                          someAuthorship,
+                          aLicenseIri,
+                        ).jsonLd,
+                      )
+        } yield assertTrue(response.status.isClientError)
+      },
+    ) @@ TestAspect.before(disallowCopyrightHolder),
+  )
 
   final case class UpdateStillImageFileValueRequest(
     resourceId: ResourceIri,
