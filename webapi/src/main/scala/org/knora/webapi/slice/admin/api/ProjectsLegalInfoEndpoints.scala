@@ -94,7 +94,10 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
       jsonBody[CopyrightHolderAddRequest]
         .example(CopyrightHolderAddRequest(Set("DaSCH", "University of Zurich").map(CopyrightHolder.unsafeFrom))),
     )
-    .description("Add a new predefined authorships to a project. The user must be a system or project admin.")
+    .description(
+      "Add new allowed copyright holders for use within this project. " +
+        "The user must be a system or project admin.",
+    )
 
   val putProjectCopyrightHolders = baseEndpoints.securedEndpoint.put
     .in(base / "copyright-holders")
@@ -108,7 +111,8 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
         ),
     )
     .description(
-      "Update a particular predefined authorships of a project, does not update existing authorships on assets. The user must be a system admin.",
+      "Update a particular allowed copyright holder for use within this project, does not update existing values on assets. " +
+        "The user must be a system admin.",
     )
 
   val endpoints: Seq[AnyEndpoint] = Seq(
