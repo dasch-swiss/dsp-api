@@ -15,6 +15,7 @@ import org.apache.jena.vocabulary.RDF
 import zio.*
 import zio.http.Body
 import zio.http.Response
+import zio.http.Status
 import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*
@@ -125,6 +126,18 @@ object LegalInfoE2ESpec extends E2EZSpec {
         },
       ),
     ) @@ TestAspect.before(allowCopyrightHolder),
+    suite("given the copyright holder is NOT allowed on the project")(
+      test("creating with a copyright holder should fail") {
+        for {
+          response <- postCreateResource(Some(aCopyrightHolder))
+        } yield assertTrue(response.status == Status.BadRequest)
+      },
+      test("creating with an invalid LicenseIri should fail") {
+        for {
+          response <- postCreateResource(licenseIri = Some(LicenseIri.makeNew))
+        } yield assertTrue(response.status == Status.BadRequest)
+      },
+    ) @@ TestAspect.before(disallowCopyrightHolder),
   )
 
   private val createValueSuite = suite("Values with legal info")(
@@ -135,17 +148,8 @@ object LegalInfoE2ESpec extends E2EZSpec {
           resourceCreated <- createStillImageResource()
           resourceId      <- resourceId(resourceCreated)
           valueIdOld      <- valueId(resourceCreated)
-          _ <- sendPutRequestAsRoot(
-                 s"/v2/values",
-                 UpdateStillImageFileValueRequest(
-                   resourceId,
-                   valueIdOld,
-                   ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri),
-                   aCopyrightHolder,
-                   someAuthorship,
-                   newLicenseIri,
-                 ).jsonLd,
-               ).filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create value"))
+          _ <- putUpdateValue(resourceId, valueIdOld, aCopyrightHolder, someAuthorship, newLicenseIri)
+                 .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create value"))
           createdResourceModel <- getResourceFromApi(resourceId)
           info                 <- copyrightAndLicenseInfo(createdResourceModel)
         } yield assertTrue(
@@ -158,19 +162,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
           resourceCreated <- createStillImageResource()
           resourceId      <- resourceId(resourceCreated)
           valueIdOld      <- valueId(resourceCreated)
-          response <- sendPutRequestAsRoot(
-                        s"/v2/values",
-                        UpdateStillImageFileValueRequest(
-                          resourceId,
-                          valueIdOld,
-                          ResourceClassIri.unsafeFrom(
-                            "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-                          ),
-                          aCopyrightHolder,
-                          someAuthorship,
-                          invalidLicenseIri,
-                        ).jsonLd,
-                      )
+          response        <- putUpdateValue(resourceId, valueIdOld, aCopyrightHolder, someAuthorship, invalidLicenseIri)
         } yield assertTrue(response.status.isClientError)
       },
     ) @@ TestAspect.before(allowCopyrightHolder),
@@ -181,19 +173,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
           resourceCreated <- createStillImageResource()
           resourceId      <- resourceId(resourceCreated)
           valueIdOld      <- valueId(resourceCreated)
-          response <- sendPutRequestAsRoot(
-                        s"/v2/values",
-                        UpdateStillImageFileValueRequest(
-                          resourceId,
-                          valueIdOld,
-                          ResourceClassIri.unsafeFrom(
-                            "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-                          ),
-                          disallowedCopyrightHolder,
-                          someAuthorship,
-                          aLicenseIri,
-                        ).jsonLd,
-                      )
+          response        <- putUpdateValue(resourceId, valueIdOld, disallowedCopyrightHolder, someAuthorship, aLicenseIri)
         } yield assertTrue(response.status.isClientError)
       },
     ) @@ TestAspect.before(disallowCopyrightHolder),
@@ -247,7 +227,19 @@ object LegalInfoE2ESpec extends E2EZSpec {
     copyrightHolder: Option[CopyrightHolder] = None,
     authorship: Option[List[Authorship]] = None,
     licenseIri: Option[LicenseIri] = None,
-  ): ZIO[env, Throwable, Model] = {
+  ): ZIO[env, Throwable, Model] =
+    for {
+      responseBody <- postCreateResource(copyrightHolder, authorship, licenseIri)
+                        .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create resource"))
+                        .flatMap(_.body.asString)
+      createResourceResponseModel <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
+    } yield createResourceResponseModel
+
+  private def postCreateResource(
+    copyrightHolder: Option[CopyrightHolder] = None,
+    authorship: Option[List[Authorship]] = None,
+    licenseIri: Option[LicenseIri] = None,
+  ): URIO[env, Response] = {
     val jsonLd = UploadFileRequest
       .make(
         FileType.StillImageFile(),
@@ -257,13 +249,27 @@ object LegalInfoE2ESpec extends E2EZSpec {
         licenseIri = licenseIri,
       )
       .toJsonLd(shortcode = shortcode, className = Some("ThingPicture"), ontologyName = "anything")
-    for {
-      responseBody <- sendPostRequestAsRoot("/v2/resources", jsonLd)
-                        .mapError(Exception(_))
-                        .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create resource"))
-                        .flatMap(_.body.asString)
-      createResourceResponseModel <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
-    } yield createResourceResponseModel
+    sendPostRequestAsRoot("/v2/resources", jsonLd).mapError(Exception(_)).orDie
+  }
+
+  private def putUpdateValue(
+    resourceIri: ResourceIri,
+    valueIdOld: ValueIri,
+    copyrightHolder: CopyrightHolder = aCopyrightHolder,
+    authorship: List[Authorship] = someAuthorship,
+    licenseIri: LicenseIri = aLicenseIri,
+  ): ZIO[env, String, Response] = {
+    val request = UpdateStillImageFileValueRequest(
+      resourceIri,
+      valueIdOld,
+      ResourceClassIri.unsafeFrom(
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+      ),
+      copyrightHolder,
+      authorship,
+      licenseIri,
+    )
+    sendPutRequestAsRoot(s"/v2/values", request.jsonLd)
   }
 
   private def getResourceFromApi(resourceId: ResourceIri) = for {

@@ -150,10 +150,14 @@ final case class CreateResourceV2Handler(
   private def validateLegalInfo(
     values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
     shortcode: Shortcode,
-  ): IO[BadRequestException, Unit] =
-    ZIO.foreachDiscard(values.values.collect { case fvc: FileValueContentV2 => fvc.fileValue })(
+  ): IO[BadRequestException, Unit] = {
+    val checkThese: Iterable[FileValueV2] = values.values.flatten
+      .map(_.valueContent)
+      .collect { case fvc: FileValueContentV2 => fvc.fileValue }
+    ZIO.foreachDiscard(checkThese)(
       legalInfoService.validateLegalInfo(_, shortcode).mapError(BadRequestException.apply),
     )
+  }
 
   private def ensureUserHasPermission(createResourceRequestV2: CreateResourceRequestV2, projectIri: ProjectIri) = for {
     internalResourceClassIri <-
