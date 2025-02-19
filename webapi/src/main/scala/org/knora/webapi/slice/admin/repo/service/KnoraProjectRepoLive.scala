@@ -102,7 +102,7 @@ object KnoraProjectRepoLive {
         logo        <- resource.getStringLiteral[Logo](ProjectLogo)
         status      <- resource.getBooleanLiteralOrFail[Status](StatusProp)
         selfjoin    <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
-        predefinedCopyrightHolders <-
+        allowedCopyrightHolders <-
           resource.getStringLiterals(hasAllowedCopyrightHolder)(CopyrightHolder.from).map(_.toSet)
         restrictedView <- getRestrictedView
       } yield KnoraProject(
@@ -116,7 +116,7 @@ object KnoraProjectRepoLive {
         status = status,
         selfjoin = selfjoin,
         restrictedView = restrictedView,
-        predefinedCopyrightHolders = predefinedCopyrightHolders,
+        allowedCopyrightHolders = allowedCopyrightHolders,
       )
     }
 
@@ -141,7 +141,7 @@ object KnoraProjectRepoLive {
         case RestrictedView.Watermark(watermark) =>
           pattern.andHas(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, watermark)
       }
-      project.predefinedCopyrightHolders.foreach(authorship =>
+      project.allowedCopyrightHolders.foreach(authorship =>
         pattern.andHas(Vocabulary.KnoraAdmin.hasAllowedCopyrightHolder, authorship.value),
       )
       pattern

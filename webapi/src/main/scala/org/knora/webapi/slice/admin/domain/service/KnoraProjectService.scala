@@ -125,8 +125,8 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
     withProjectFromDb(project) { project =>
       if (addThese.isEmpty) ZIO.succeed(project)
       else {
-        val newAuthors = project.predefinedCopyrightHolders ++ addThese
-        knoraProjectRepo.save(project.copy(predefinedCopyrightHolders = newAuthors))
+        val newAuthors = project.allowedCopyrightHolders ++ addThese
+        knoraProjectRepo.save(project.copy(allowedCopyrightHolders = newAuthors))
       }
     }
 
@@ -136,10 +136,10 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
     newValue: CopyrightHolder,
   ): Task[KnoraProject] =
     withProjectFromDb(projectIri) { project =>
-      if (!project.predefinedCopyrightHolders.contains(oldValue)) ZIO.succeed(project)
+      if (!project.allowedCopyrightHolders.contains(oldValue)) ZIO.succeed(project)
       else {
-        val newAuthors = project.predefinedCopyrightHolders - oldValue + newValue
-        knoraProjectRepo.save(project.copy(predefinedCopyrightHolders = newAuthors))
+        val newAuthors = project.allowedCopyrightHolders - oldValue + newValue
+        knoraProjectRepo.save(project.copy(allowedCopyrightHolders = newAuthors))
       }
     }
 }

@@ -129,7 +129,7 @@ final case class ProjectsLegalInfoRestService(
   ): Task[PagedResponse[CopyrightHolder]] =
     for {
       project <- auth.ensureProjectMember(user, shortcode)
-    } yield slice(project.predefinedCopyrightHolders.toSeq, pageAndSize, filterAndOrder)
+    } yield slice(project.allowedCopyrightHolders.toSeq, pageAndSize, filterAndOrder)
 
   def addCopyrightHolders(user: User)(shortcode: Shortcode, req: CopyrightHolderAddRequest): Task[Unit] =
     for {
