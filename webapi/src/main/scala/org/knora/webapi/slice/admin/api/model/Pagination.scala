@@ -20,7 +20,7 @@ object Pagination {
     Pagination(pageAndSize.size, totalItems, totalPages, pageAndSize.page)
 }
 
-final case class PagedResponse[A](data: Seq[A], pagination: Pagination)
+final case class PagedResponse[A] private (data: Seq[A], pagination: Pagination)
 object PagedResponse {
   given [A: JsonCodec]: JsonCodec[PagedResponse[A]] = DeriveJsonCodec.gen[PagedResponse[A]]
 

@@ -40,10 +40,10 @@ object Examples {
 
   object PagedResponse {
     def fromSlice[A: JsonCodec](data: Seq[A]): model.PagedResponse[A] =
-      model.PagedResponse(data, Pagination.from(data.size * 5, PageAndSize(1, data.size)))
+      model.PagedResponse.from(data, data.size * 5, PageAndSize(1, data.size))
 
     def fromTotal[A: JsonCodec](data: Seq[A]): model.PagedResponse[A] =
-      model.PagedResponse(data, Pagination.from(data.size, PageAndSize(1, data.size)))
+      model.PagedResponse.from(data, data.size, PageAndSize(1, data.size))
   }
 
   object ProjectExample {

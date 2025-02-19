@@ -11,6 +11,7 @@ import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+import zio.json.JsonCodec
 
 import dsp.errors.ForbiddenException
 import dsp.errors.InconsistentRepositoryDataException
@@ -21,7 +22,6 @@ import org.knora.webapi.slice.admin.api.LicenseDto
 import org.knora.webapi.slice.admin.api.model.FilterAndOrder
 import org.knora.webapi.slice.admin.api.model.PageAndSize
 import org.knora.webapi.slice.admin.api.model.PagedResponse
-import org.knora.webapi.slice.admin.api.model.Pagination
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -111,7 +111,7 @@ final case class ProjectsLegalInfoRestService(
       result <- licenses.findByProjectShortcode(shortcode).map(_.map(LicenseDto.from))
     } yield slice(result, pageAndSize, filterAndOrder)
 
-  private def slice[A](
+  private def slice[A: JsonCodec](
     all: Seq[A],
     pageAndSize: PageAndSize,
     filterAndOrder: FilterAndOrder,
@@ -120,7 +120,7 @@ final case class ProjectsLegalInfoRestService(
       .filter(a => filterAndOrder.filter.forall(_.toLowerCase.r.findFirstIn(a.toString.toLowerCase).isDefined))
       .sorted(filterAndOrder.ordering[A])
     val slice = filtered.slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
-    PagedResponse(slice, Pagination.from(filtered.size, pageAndSize))
+    PagedResponse.from(slice, filtered.size, pageAndSize)
 
   def findCopyrightHolders(user: User)(
     shortcode: Shortcode,
