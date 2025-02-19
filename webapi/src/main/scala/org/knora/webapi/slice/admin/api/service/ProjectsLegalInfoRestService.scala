@@ -67,7 +67,7 @@ final case class ProjectsLegalInfoRestService(
          |  ${searchTermQueryString.fold("")(term => s"FILTER(CONTAINS(LCASE(STR(?$authorVar)), ${term.toLowerCase}))")}
          |}""".stripMargin
 
-    val order = filterAndOrder.order.toString
+    val order = filterAndOrder.order.toQueryString
     val authorshipsQuery =
       s"""
          |SELECT DISTINCT ?$authorVar WHERE {
@@ -143,7 +143,7 @@ final case class ProjectsLegalInfoRestService(
   ): Task[Unit] =
     for {
       _       <- auth.ensureSystemAdmin(user)
-      project <- projects.findByShortcode(shortcode).someOrFail(NotFoundException(s"Project ${shortcode} not found"))
+      project <- projects.findByShortcode(shortcode).someOrFail(NotFoundException(s"Project $shortcode not found"))
       _       <- projects.replaceCopyrightHolder(project.id, req.`old-value`, req.`new-value`)
     } yield ()
 }

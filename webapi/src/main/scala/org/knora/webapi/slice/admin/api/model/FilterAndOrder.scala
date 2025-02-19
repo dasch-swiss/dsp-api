@@ -21,22 +21,29 @@ case class FilterAndOrder(filter: Option[String], order: Order) { self =>
 object FilterAndOrder {
   private val filterQueryParam =
     query[Option[String]]("filter")
-      .description("Filter the results by a string")
+      .description("Filter the results.")
   private val orderQueryParam = query[Order]("order")
-    .description("Order the results by ascending or descending")
+    .description("Order the results by ascending (asc) or descending (desc).")
     .default(Order.Asc)
 
   val queryParams: EndpointInput[FilterAndOrder] =
     filterQueryParam.and(orderQueryParam).mapTo[FilterAndOrder]
 }
 
-enum Order(override val toString: String) {
-  case Asc  extends Order("ASC")
-  case Desc extends Order("DESC")
+enum Order {
+  case Asc  extends Order
+  case Desc extends Order
+
+  def toQueryString: String = this match {
+    case Asc  => "ASC"
+    case Desc => "DESC"
+  }
 }
 object Order {
   given Codec[String, Order, CodecFormat.TextPlain] = Codec.string.mapEither(from)(_.toString)
 
   def from(str: String): Either[String, Order] =
-    Order.values.find(_.toString.equalsIgnoreCase(str)).toRight("Invalid order")
+    Order.values
+      .find(_.toString.equalsIgnoreCase(str))
+      .toRight(s"Invalid order: possible values are '${Order.values.map(_.toString.toLowerCase).mkString(", ")}'")
 }
