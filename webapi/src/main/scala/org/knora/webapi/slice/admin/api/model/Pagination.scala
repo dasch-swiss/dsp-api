@@ -35,12 +35,12 @@ object PageAndSize {
   val Default: PageAndSize = PageAndSize(1, DefaultPageSize)
 
   private val pageQuery = query[Int]("page")
-    .description("The page number to retrieve.")
+    .description("The number of the desired page to be returned.")
     .default(1)
     .validate(Validator.min(1))
 
   private def sizeQuery(maxSize: Int) = query[Int]("page-size")
-    .description("The number of items to retrieve.")
+    .description("The number of items per page to be returned.")
     .default(DefaultPageSize)
     .validate(Validator.min(1))
     .validate(Validator.max(maxSize))
