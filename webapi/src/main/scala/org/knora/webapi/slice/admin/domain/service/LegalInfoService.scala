@@ -125,9 +125,9 @@ case class LegalInfoService(
       .flatMap(result => ZIO.attempt(result.head.rowMap(countVar).toInt))
 
     for {
-      authorsFiber <- runAuthorshipsQuery.logError.fork
+      authorsFiber <- runAuthorshipsQuery.logError.orDie.fork
       count        <- runCountQuery.logError.orDie
-      authors      <- authorsFiber.join.orDie
+      authors      <- authorsFiber.join
     } yield PagedResponse.from(authors, count, paging)
   }
 }
