@@ -61,7 +61,7 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
           service(_.validateLegalInfo(fileValueValid.copy(licenseIri = Some(invalidIri)), prj.shortcode)).exit
       } yield assert(actual)(fails(equalTo(s"License $invalidIri is not allowed in project ${prj.shortcode}")))
     },
-    test("A FileValue with invalid LicenseIri should be invalid") {
+    test("A FileValue with invalid CopyrightHolder should be invalid") {
       for {
         prj    <- setupProject
         holder  = CopyrightHolder.unsafeFrom("this-is-not-allowed")
