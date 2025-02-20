@@ -21,6 +21,7 @@ import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object LegalInfoServiceSpec extends ZIOSpecDefault {
 
@@ -105,5 +106,6 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
     OntologyRepoInMemory.emptyLayer,
     IriConverter.layer,
     StringFormatter.test,
+    TriplestoreServiceInMemory.emptyLayer,
   )
 }
