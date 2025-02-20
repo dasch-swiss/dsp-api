@@ -78,10 +78,17 @@ final case class BaseEndpoints(authenticator: Authenticator)(implicit val r: zio
   private def authenticateBasic(basic: UsernamePassword): Future[Either[RequestRejectedException, User]] =
     UnsafeZioRun.runToFuture(
       (for {
-        email    <- ZIO.fromEither(Email.from(basic.username))
-        password <- ZIO.fromOption(basic.password)
-        user     <- authenticator.authenticate(email, password)
-      } yield user._1).orElseFail(BadCredentialsException("Invalid credentials.")).asRight,
+        email <- ZIO
+                   .fromEither(Email.from(basic.username))
+                   .orElseFail(BadCredentialsException("Invalid credentials, email address expected."))
+        password <- ZIO
+                      .fromOption(basic.password)
+                      .orElseFail(BadCredentialsException("Invalid credentials, missing password."))
+        userAndJwt <- authenticator
+                        .authenticate(email, password)
+                        .orElseFail(BadCredentialsException("Invalid credentials."))
+        (user, _) = userAndJwt
+      } yield user).either,
     )
 }
 
