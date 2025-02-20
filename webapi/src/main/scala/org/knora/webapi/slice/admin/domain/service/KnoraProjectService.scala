@@ -142,6 +142,16 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
         knoraProjectRepo.save(project.copy(allowedCopyrightHolders = newAuthors))
       }
     }
+
+  /**
+   * Removes all copyright holders from the project.
+   * This is not a use case for normal users and currently only used in tests
+   * @param iri the project iri
+   */
+  def removeAllCopyrightHolder(iri: ProjectIri): Task[KnoraProject] =
+    withProjectFromDb(iri) { project =>
+      knoraProjectRepo.save(project.copy(allowedCopyrightHolders = Set.empty))
+    }
 }
 
 object KnoraProjectService {

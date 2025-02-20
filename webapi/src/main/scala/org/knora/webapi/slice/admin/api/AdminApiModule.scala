@@ -27,7 +27,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
-import org.knora.webapi.slice.admin.domain.service.LicenseService
+import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectEraseService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
@@ -57,7 +57,7 @@ object AdminApiModule
       KnoraResponseRenderer &
       KnoraUserService &
       KnoraUserToUserConverter &
-      LicenseService &
+      LegalInfoService &
       ListsResponder &
       MaintenanceService &
       OntologyCache &
