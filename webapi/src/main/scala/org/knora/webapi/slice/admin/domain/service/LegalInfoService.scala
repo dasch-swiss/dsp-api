@@ -104,7 +104,7 @@ case class LegalInfoService(
          |  $graphPattern
          |} ORDER BY $order(?$authorVar) LIMIT ${paging.size} OFFSET ${paging.size * (paging.page - 1)}
          |""".stripMargin
-    val queryAuthorships = for {
+    val runAuthorshipsQuery = for {
       result <- triplestore.query(Select(authorshipsQuery)).map(_.results.bindings)
       authors <-
         ZIO
@@ -119,14 +119,14 @@ case class LegalInfoService(
          |  $graphPattern
          |}
          |""".stripMargin
-    val queryCount = triplestore
+    val runCountQuery = triplestore
       .query(Select(countQuery))
       .map(_.results.bindings)
       .flatMap(result => ZIO.attempt(result.head.rowMap(countVar).toInt))
 
     for {
-      authorsFiber <- queryAuthorships.fork
-      count        <- queryCount.orDie
+      authorsFiber <- runAuthorshipsQuery.fork
+      count        <- runCountQuery.orDie
       authors      <- authorsFiber.join.orDie
     } yield PagedResponse.from(authors, count, paging)
   }
