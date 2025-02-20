@@ -80,7 +80,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .in(FilterAndOrder.queryParams)
     .out(
       jsonBody[PagedResponse[CopyrightHolder]].example(
-        Examples.PagedResponse.fromSlice(Chunk("DaSch", "University of Zurich").map(CopyrightHolder.unsafeFrom)),
+        Examples.PagedResponse.fromSlice(Chunk("DaSCH", "University of Zurich").map(CopyrightHolder.unsafeFrom)),
       ),
     )
     .description(
