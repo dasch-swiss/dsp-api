@@ -359,16 +359,16 @@ DSP-API can store certain kinds of data outside the triplestore, in files (see [
 digital object that is stored outside the triplestore has associated metadata, which is stored in the triplestore in
 a `kb:FileValue`. The base class `FileValue`, which is not intended to be used directly, has these properties:
 
-- `internalFilename` (1): The name of the file as stored by Knora.
-
-- `internalMimeType` (1): The MIME type of the file as stored by Knora.
-
-- `originalFilename` (0-1): The original name of the file when it was uploaded to the DSP-API server.
-
-- `originalMimeType` (0-1): The original MIME type of the file when it was uploaded to the Knora API server.
-
-- `isPreview` (0-1): A boolean indicating whether the file is a preview, i.e. a small image representing the contents of
-  the file. A preview is always a `StillImageAbstractFileValue`, regardless of the type of the enclosing `Representation`.
+File metadata:
+- `internalFilename` (1): The name of the file as stored by DSP.
+- `internalMimeType` (1): The MIME type of the file as stored by DSP.
+- `originalFilename` (0-1): The original name of the file when it was uploaded to DSP.
+- `originalMimeType` (0-1): The original MIME type of the file when it was uploaded to DSP.
+ 
+Legal info metadata:
+- `hasAuthorship` (0-n): Indicates the authorship of the file, each author has their own string literal.
+- `hasCopyrightHolder` (0-1): The copyright holder of the file, a string literal. The project restricts which values are allowed.
+- `hasLicense` (0-1): The license under which the file is published, an IRI to the license. The project restricts which values are allowed.
 
 The subclasses of `FileValue`, which are intended to be used directly in data, include:
 
