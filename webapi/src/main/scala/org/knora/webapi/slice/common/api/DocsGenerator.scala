@@ -29,6 +29,7 @@ import org.knora.webapi.slice.admin.api.ListsEndpoints
 import org.knora.webapi.slice.admin.api.MaintenanceEndpoints
 import org.knora.webapi.slice.admin.api.PermissionsEndpoints
 import org.knora.webapi.slice.admin.api.ProjectsEndpoints
+import org.knora.webapi.slice.admin.api.ProjectsLegalInfoEndpoints
 import org.knora.webapi.slice.admin.api.StoreEndpoints
 import org.knora.webapi.slice.admin.api.UsersEndpoints
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -92,6 +93,7 @@ object DocsGenerator extends ZIOAppDefault {
     MaintenanceEndpoints.layer,
     ManagementEndpoints.layer,
     PermissionsEndpoints.layer,
+    ProjectsLegalInfoEndpoints.layer,
     ProjectsEndpoints.layer,
     ResourceInfoEndpoints.layer,
     SearchEndpoints.layer,

@@ -49,6 +49,9 @@ object StringValueCompanion {
   def isUri: String => Validation[String, String] =
     value => Validation.fromTry(Try(URI.create(value))).as(value).mapError(_ => s"is not a valid URI")
 
+  def absoluteUri: URI => Validation[String, URI] =
+    uri => Validation.fromPredicateWith(s"URI must be absolute")(uri)(_.isAbsolute)
+
   def fromValidations[A](
     typ: String,
     make: String => A,

@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.admin.api
 
+import zio.json.JsonCodec
+
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -13,7 +15,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.api.Examples.GroupExample.groupName
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
-import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
@@ -35,6 +37,14 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 
 object Examples {
+
+  object PagedResponse {
+    def fromSlice[A: JsonCodec](data: Seq[A]): model.PagedResponse[A] =
+      model.PagedResponse.from(data, data.size * 5, PageAndSize(1, data.size))
+
+    def fromTotal[A: JsonCodec](data: Seq[A]): model.PagedResponse[A] =
+      model.PagedResponse.from(data, data.size, PageAndSize(1, data.size))
+  }
 
   object ProjectExample {
     val projectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0042")

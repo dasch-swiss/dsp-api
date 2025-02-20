@@ -14,6 +14,7 @@ import zio.ZLayer
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -29,13 +30,14 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
   def findByShortcode(code: Shortcode): Task[Option[KnoraProject]] = knoraProjectRepo.findByShortcode(code)
   def findByShortname(code: Shortname): Task[Option[KnoraProject]] = knoraProjectRepo.findByShortname(code)
   def findAll(): Task[Chunk[KnoraProject]]                         = knoraProjectRepo.findAll()
-  def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[RestrictedView] = {
-    val newSettings = settings match {
-      case RestrictedView.Watermark(false) => RestrictedView.default
-      case s                               => s
+  def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[RestrictedView] =
+    withProjectFromDb(project.id) { project =>
+      val newSettings = settings match {
+        case RestrictedView.Watermark(false) => RestrictedView.default
+        case s                               => s
+      }
+      knoraProjectRepo.save(project.copy(restrictedView = newSettings)).as(newSettings)
     }
-    knoraProjectRepo.save(project.copy(restrictedView = newSettings)).as(newSettings)
-  }
 
   def createProject(req: ProjectCreateRequest): Task[KnoraProject] = for {
     _            <- ensureShortcodeIsUnique(req.shortcode)
@@ -52,9 +54,16 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
                 req.status,
                 req.selfjoin,
                 RestrictedView.default,
+                Set.empty,
               )
     project <- knoraProjectRepo.save(project)
   } yield project
+
+  private def withProjectFromDb[A](id: ProjectIri)(task: KnoraProject => Task[A]): Task[A] =
+    knoraProjectRepo
+      .findById(id)
+      .someOrFail(new IllegalArgumentException(s"Project with id: $id not found"))
+      .flatMap(task)
 
   private def toNonEmptyChunk(descriptions: List[Description]) =
     ZIO
@@ -69,6 +78,7 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
       .filterOrFail(identity)(
         DuplicateValueException(s"Project with the shortcode: '${shortcode.value}' already exists"),
       )
+
   private def ensureShortnameIsUnique(shortname: Shortname) =
     knoraProjectRepo
       .existsByShortname(shortname)
@@ -80,28 +90,28 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
   def erase(project: KnoraProject): Task[Unit] = knoraProjectRepo.delete(project)
 
   def updateProject(project: KnoraProject, updateReq: ProjectUpdateRequest): Task[KnoraProject] =
-    for {
-      desc <- updateReq.description match {
-                case Some(value) => toNonEmptyChunk(value).map(Some(_))
-                case None        => ZIO.none
-              }
-      _ <- updateReq.shortname match {
-             case Some(value) => ensureShortnameIsUnique(value)
-             case None        => ZIO.unit
-           }
-      updated <- knoraProjectRepo.save(
-                   project.copy(
-                     longname = updateReq.longname.orElse(project.longname),
-                     description = desc.getOrElse(project.description),
-                     keywords = updateReq.keywords.getOrElse(project.keywords),
-                     logo = updateReq.logo.orElse(project.logo),
-                     status = updateReq.status.getOrElse(project.status),
-                     selfjoin = updateReq.selfjoin.getOrElse(project.selfjoin),
-                   ),
-                 )
-    } yield updated
-
-  def save(project: KnoraProject): Task[KnoraProject] = knoraProjectRepo.save(project)
+    withProjectFromDb(project.id) { project =>
+      for {
+        desc <- updateReq.description match {
+                  case Some(value) => toNonEmptyChunk(value).map(Some(_))
+                  case None        => ZIO.none
+                }
+        _ <- updateReq.shortname match {
+               case Some(value) => ensureShortnameIsUnique(value)
+               case None        => ZIO.unit
+             }
+        updated <- knoraProjectRepo.save(
+                     project.copy(
+                       longname = updateReq.longname.orElse(project.longname),
+                       description = desc.getOrElse(project.description),
+                       keywords = updateReq.keywords.getOrElse(project.keywords),
+                       logo = updateReq.logo.orElse(project.logo),
+                       status = updateReq.status.getOrElse(project.status),
+                       selfjoin = updateReq.selfjoin.getOrElse(project.selfjoin),
+                     ),
+                   )
+      } yield updated
+    }
 
   def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] = {
     val projectGraph = ProjectService.projectDataNamedGraphV2(project)
@@ -110,6 +120,28 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
       .map(_.map(_.ontologyMetadata.ontologyIri.toInternalIri))
       .map(_ :+ projectGraph)
   }
+
+  def addCopyrightHolders(project: ProjectIri, addThese: Set[CopyrightHolder]): Task[KnoraProject] =
+    withProjectFromDb(project) { project =>
+      if (addThese.isEmpty) ZIO.succeed(project)
+      else {
+        val newAuthors = project.allowedCopyrightHolders ++ addThese
+        knoraProjectRepo.save(project.copy(allowedCopyrightHolders = newAuthors))
+      }
+    }
+
+  def replaceCopyrightHolder(
+    projectIri: ProjectIri,
+    oldValue: CopyrightHolder,
+    newValue: CopyrightHolder,
+  ): Task[KnoraProject] =
+    withProjectFromDb(projectIri) { project =>
+      if (!project.allowedCopyrightHolders.contains(oldValue)) ZIO.succeed(project)
+      else {
+        val newAuthors = project.allowedCopyrightHolders - oldValue + newValue
+        knoraProjectRepo.save(project.copy(allowedCopyrightHolders = newAuthors))
+      }
+    }
 }
 
 object KnoraProjectService {

@@ -16,6 +16,7 @@ final case class AdminApiRoutes(
   lists: ListsEndpointsHandlers,
   maintenance: MaintenanceEndpointsHandlers,
   permissions: PermissionsEndpointsHandlers,
+  projectLegalInfo: ProjectsLegalInfoEndpointsHandler,
   project: ProjectsEndpointsHandler,
   storeEndpoints: StoreEndpointsHandler,
   users: UsersEndpointsHandler,
@@ -28,6 +29,7 @@ final case class AdminApiRoutes(
       lists.allHandlers ++
       maintenance.allHandlers ++
       permissions.allHanders ++
+      projectLegalInfo.allHandlers ++
       project.allHanders ++
       storeEndpoints.allHandlers ++
       users.allHanders

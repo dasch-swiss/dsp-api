@@ -129,5 +129,6 @@ object TestDataFactory {
     Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
+    Set.empty,
   )
 }

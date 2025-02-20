@@ -33,6 +33,7 @@ object AdminRepoModule {
     AdministrativePermissionRepo &
     CacheManager &
     DefaultObjectAccessPermissionRepo &
+    LicenseRepo &
     KnoraGroupRepo &
     KnoraProjectRepo &
     KnoraUserRepo
@@ -44,5 +45,6 @@ object AdminRepoModule {
     KnoraUserRepoLive.layer,
     AdministrativePermissionRepoLive.layer,
     DefaultObjectAccessPermissionRepoLive.layer,
+    LicenseRepo.layer,
   )
 }
