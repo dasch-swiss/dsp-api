@@ -6,6 +6,7 @@ nav:
       - What is DSP?: 01-introduction/what-is-dsp.md
       - File Formats in DSP-API: 01-introduction/file-formats.md
       - Standoff/RDF Text Markup: 01-introduction/standoff-rdf.md
+      - Legal Information for Assets: 01-introduction/legal-info.md
       - An Example Project: 01-introduction/example-project.md
   - DSP Ontologies:
       - Introduction: 02-dsp-ontologies/introduction.md
