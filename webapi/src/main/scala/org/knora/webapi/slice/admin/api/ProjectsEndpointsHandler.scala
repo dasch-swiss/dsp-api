@@ -161,10 +161,7 @@ final case class ProjectsEndpointsHandler(
     )
 
   val postAdminProjectsByShortcodeImportHandler =
-    SecuredEndpointHandler(
-      projectsEndpoints.Secured.postAdminProjectsByShortcodeImport,
-      user => (id: Shortcode) => restService.importProject(id, user),
-    )
+    SecuredEndpointHandler(projectsEndpoints.Secured.postAdminProjectsByShortcodeImport, restService.importProject)
 
   val postAdminProjectsHandler =
     SecuredEndpointHandler(

@@ -34,6 +34,7 @@ final case class ProjectEraseService(
   private def mkString(values: Seq[StringValue]): String = s"'${values.map(_.value).mkString(",")}'"
 
   def eraseProject(project: KnoraProject, keepAssets: Boolean): Task[Unit] = for {
+    _              <- ZIO.logInfo(s"${logPrefix(project)} Erasing project")
     groupsToDelete <- groupService.findByProject(project)
     _              <- cleanUpUsersAndGroups(project, groupsToDelete)
     _              <- cleanUpPermissions(project)
