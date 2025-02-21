@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio.*
-
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
@@ -36,6 +35,7 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class ProjectRestService(
@@ -46,6 +46,7 @@ final case class ProjectRestService(
   projectEraseService: ProjectEraseService,
   projectExportService: ProjectExportService,
   projectImportService: ProjectImportService,
+  ontologyCache: OntologyCache,
   userService: UserService,
   auth: AuthorizationRestService,
   features: Features,
@@ -303,10 +304,18 @@ final case class ProjectRestService(
 
   def importProject(shortcode: Shortcode, user: User): Task[ProjectImportResponse] = for {
     _ <- auth.ensureSystemAdmin(user)
+    project <- knoraProjectService
+                 .findByShortcode(shortcode)
+                 .someOrFail(NotFoundException(s"Project ${shortcode.value} not found."))
+    _ <- projectExportService
+           .findByProject(project)
+           .someOrFail(NotFoundException(s"Project export for ${shortcode.value} not found."))
+    _ <- projectEraseService.eraseProject(project, keepAssets = false)
     path <- projectImportService.importProject(shortcode).flatMap {
               case Some(ex) => ex.toAbsolutePath.map(_.toString)
               case None     => ZIO.fail(NotFoundException(s"Project export for ${shortcode.value} not found."))
             }
+    _ <- ontologyCache.refreshCache()
   } yield ProjectImportResponse(path)
 
   def listExports(user: User): Task[Chunk[ProjectExportInfoResponse]] = for {

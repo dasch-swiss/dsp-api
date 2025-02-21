@@ -70,6 +70,9 @@ trait ProjectExportService {
   def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path]
 
   def listExports(): Task[Chunk[ProjectExportInfo]]
+
+  final def findByProject(project: KnoraProject): Task[Option[ProjectExportInfo]] =
+    listExports().map(_.find(_.projectShortcode == project.shortcode.value))
 }
 
 /**
