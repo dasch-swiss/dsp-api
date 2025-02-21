@@ -305,19 +305,20 @@ final case class ProjectRestService(
 
   def importProject(user: User)(shortcode: Shortcode): Task[ProjectImportResponse] = for {
     _ <- auth.ensureSystemAdmin(user)
-    project <- knoraProjectService
-                 .findByShortcode(shortcode)
-                 .someOrFail(NotFoundException(s"Project $shortcode not found."))
     _ <- projectExportService
-           .findByProject(project)
+           .findByShortcode(shortcode)
            .someOrFail(NotFoundException(s"Project export for $shortcode not found."))
-    _ <- projectEraseService.eraseProject(project, keepAssets = false)
-    path <- projectImportService.importProject(shortcode).flatMap {
-              case Some(ex) => ex.toAbsolutePath.map(_.toString)
-              case None     => ZIO.fail(NotFoundException(s"Project export for $shortcode not found."))
-            }
+    _ <- knoraProjectService
+           .findByShortcode(shortcode)
+           .some
+           .flatMap(projectEraseService.eraseProject(_, keepAssets = false).asSomeError)
+           .unsome
+    path <- projectImportService
+              .importProject(shortcode)
+              .someOrFail(IllegalStateException(s"Project export for $shortcode not found."))
+              .flatMap(_.toAbsolutePath)
     _ <- ontologyCache.refreshCache()
-  } yield ProjectImportResponse(path)
+  } yield ProjectImportResponse(path.toString)
 
   def listExports(user: User): Task[Chunk[ProjectExportInfoResponse]] = for {
     _       <- auth.ensureSystemAdmin(user)
