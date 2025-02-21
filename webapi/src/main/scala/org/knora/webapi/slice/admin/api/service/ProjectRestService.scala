@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio.*
+
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
@@ -302,18 +303,18 @@ final case class ProjectRestService(
     exportInfo <- projectExportService.exportProject(project).logError
   } yield exportInfo
 
-  def importProject(shortcode: Shortcode, user: User): Task[ProjectImportResponse] = for {
+  def importProject(user: User)(shortcode: Shortcode): Task[ProjectImportResponse] = for {
     _ <- auth.ensureSystemAdmin(user)
     project <- knoraProjectService
                  .findByShortcode(shortcode)
-                 .someOrFail(NotFoundException(s"Project ${shortcode.value} not found."))
+                 .someOrFail(NotFoundException(s"Project $shortcode not found."))
     _ <- projectExportService
            .findByProject(project)
-           .someOrFail(NotFoundException(s"Project export for ${shortcode.value} not found."))
+           .someOrFail(NotFoundException(s"Project export for $shortcode not found."))
     _ <- projectEraseService.eraseProject(project, keepAssets = false)
     path <- projectImportService.importProject(shortcode).flatMap {
               case Some(ex) => ex.toAbsolutePath.map(_.toString)
-              case None     => ZIO.fail(NotFoundException(s"Project export for ${shortcode.value} not found."))
+              case None     => ZIO.fail(NotFoundException(s"Project export for $shortcode not found."))
             }
     _ <- ontologyCache.refreshCache()
   } yield ProjectImportResponse(path)
