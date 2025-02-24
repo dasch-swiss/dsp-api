@@ -9,6 +9,7 @@ import spray.json.*
 import spray.json.DefaultJsonProtocol.*
 
 import java.util.UUID
+
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords

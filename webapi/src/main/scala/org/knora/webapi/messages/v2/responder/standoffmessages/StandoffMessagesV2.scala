@@ -8,8 +8,8 @@ package org.knora.webapi.messages.v2.responder.standoffmessages
 import java.time.Instant
 import java.util.UUID
 import scala.collection.immutable.SortedSet
+
 import dsp.errors.AssertionException
-import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig

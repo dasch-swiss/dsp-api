@@ -16,9 +16,9 @@ import java.util.UUID
 import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
+
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.OntologyConstants.Rdfs
@@ -28,7 +28,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.DeleteOrEraseResourceRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.UpdateResourceMetadataRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestMetadataV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestMetadataV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
@@ -441,14 +440,19 @@ final case class ApiComplexV2JsonLdRequestParser(
     } yield content
 
   def createMappingRequestMetadataV2(jsonlLd: String): IO[String, CreateMappingRequestMetadataV2] =
+    def findSingle[A](m: Model, p: Property, mapper: Resource => Property => Either[String, A]): IO[String, A] = {
+      m.listSubjectsWithProperty(p).asScala.toList match {
+        case Nil      => ZIO.fail(s"No $p found")
+        case r :: Nil => ZIO.succeed(r)
+        case _        => ZIO.fail(s"Multiple $p found")
+      }
+    }.map(r => mapper.apply(r)(p)).flatMap(ZIO.fromEither)
     ZIO.scoped {
       for {
-        m           <- ModelOps.fromJsonLd(jsonlLd)
-        r           <- ZIO.fromEither(m.singleRootResource)
-        label       <- ZIO.fromEither(r.objectString(RDFS.label))
-        projectIri  <- ZIO.fromEither(r.objectString(KA.AttachedToProject, ProjectIri.from))
-        mappingName <- ZIO.fromEither(r.objectString(KA.MappingHasName))
-
+        m           <- ModelOps.fromJsonLd(jsonlLd).logError
+        label       <- findSingle(m, RDFS.label, _.objectString)
+        projectIri  <- findSingle(m, KA.AttachedToProject, r => r.objectUri(_, ProjectIri.from))
+        mappingName <- findSingle(m, KA.MappingHasName, _.objectString)
       } yield CreateMappingRequestMetadataV2(label, projectIri, mappingName)
     }
 }
