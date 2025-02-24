@@ -1,5 +1,21 @@
 # Changelog
 
+## [31.7.0](https://github.com/dasch-swiss/dsp-api/compare/v31.6.0...v31.7.0) (2025-02-24)
+
+
+### Enhancements
+
+* Add admin api for legal info (DEV-4502) ([#3511](https://github.com/dasch-swiss/dsp-api/issues/3511)) ([4199c2a](https://github.com/dasch-swiss/dsp-api/commit/4199c2aedcc41fa6f623f2dcfd60fd021dd0e974))
+* Add checking valid legal info when creating/updating resources and values with assets (DEV-4502) ([#3512](https://github.com/dasch-swiss/dsp-api/issues/3512)) ([4789287](https://github.com/dasch-swiss/dsp-api/commit/4789287c429fc1ca48f3a85178d4aef445bf04aa))
+* Add legal info documentation (DEV-4502) ([#3513](https://github.com/dasch-swiss/dsp-api/issues/3513)) ([c41886b](https://github.com/dasch-swiss/dsp-api/commit/c41886bffae82b4b44e327b0b738c2453daffccd))
+* Add LegalInfo (authorship, copyright holder, license) to FileValue ([#3459](https://github.com/dasch-swiss/dsp-api/issues/3459)) ([74b42b3](https://github.com/dasch-swiss/dsp-api/commit/74b42b3c38fa464b15203efad48f8b26ba54710c))
+
+
+### Bug Fixes
+
+* Erase the project before the import and refresh the ontology cache after import (DEV-4584) ([#3515](https://github.com/dasch-swiss/dsp-api/issues/3515)) ([647e33e](https://github.com/dasch-swiss/dsp-api/commit/647e33e6cc8697da2c708db731b1eab328182b6d))
+* Return 401 when basic auth credentials are invalid instead of failing with Internal Server Error (DEV-4585) ([#3514](https://github.com/dasch-swiss/dsp-api/issues/3514)) ([eb22b2e](https://github.com/dasch-swiss/dsp-api/commit/eb22b2ef31a1016ea1c709dd1fbb1fb7e7e7ed18))
+
 ## [31.6.0](https://github.com/dasch-swiss/dsp-api/compare/v31.5.0...v31.6.0) (2025-02-17)
 
 
