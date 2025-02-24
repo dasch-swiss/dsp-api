@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.5](https://github.com/dasch-swiss/dsp-ingest/compare/v0.18.4...v0.18.5) (2025-02-24)
+
+
+### Maintenances
+
+* Update knoraSipiVersion to v31.7.0  ([#340](https://github.com/dasch-swiss/dsp-ingest/issues/340)) ([b2040a1](https://github.com/dasch-swiss/dsp-ingest/commit/b2040a1217d5b617789d1338f5226ece2c8f032e))
+
 ## [0.18.4](https://github.com/dasch-swiss/dsp-ingest/compare/v0.18.3...v0.18.4) (2025-02-18)
 
 
