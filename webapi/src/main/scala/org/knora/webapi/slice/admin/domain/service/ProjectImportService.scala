@@ -92,12 +92,12 @@ final case class ProjectImportService(
     val trigFile = path / exportStorage.trigFilename(shortcode)
     for {
       trigFileAbsolutePath <- trigFile.toAbsolutePath
-      _                    <- ZIO.logInfo(s"Importing triples for ${shortcode.value} from $trigFileAbsolutePath")
+      _                    <- ZIO.logInfo(s"Importing triples for $shortcode from $trigFileAbsolutePath")
       _ <- ZIO
              .fail(new IllegalStateException(s"trig file does not exist in export ${path.toAbsolutePath}"))
              .whenZIO(Files.notExists(trigFile))
       _ <- importTrigFile(trigFile)
-      _ <- ZIO.logInfo(s"Imported triples for ${shortcode.value}")
+      _ <- ZIO.logInfo(s"Imported triples for $shortcode")
     } yield ()
   }
 

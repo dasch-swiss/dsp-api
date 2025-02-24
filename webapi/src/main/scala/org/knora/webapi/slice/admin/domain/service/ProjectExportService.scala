@@ -33,6 +33,7 @@ import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -70,6 +71,9 @@ trait ProjectExportService {
   def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path]
 
   def listExports(): Task[Chunk[ProjectExportInfo]]
+
+  final def findByShortcode(shortcode: Shortcode): Task[Option[ProjectExportInfo]] =
+    listExports().map(_.find(_.projectShortcode == shortcode.value))
 }
 
 /**

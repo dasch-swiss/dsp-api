@@ -36,6 +36,7 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class ProjectRestService(
@@ -46,6 +47,7 @@ final case class ProjectRestService(
   projectEraseService: ProjectEraseService,
   projectExportService: ProjectExportService,
   projectImportService: ProjectImportService,
+  ontologyCache: OntologyCache,
   userService: UserService,
   auth: AuthorizationRestService,
   features: Features,
@@ -301,13 +303,22 @@ final case class ProjectRestService(
     exportInfo <- projectExportService.exportProject(project).logError
   } yield exportInfo
 
-  def importProject(shortcode: Shortcode, user: User): Task[ProjectImportResponse] = for {
+  def importProject(user: User)(shortcode: Shortcode): Task[ProjectImportResponse] = for {
     _ <- auth.ensureSystemAdmin(user)
-    path <- projectImportService.importProject(shortcode).flatMap {
-              case Some(ex) => ex.toAbsolutePath.map(_.toString)
-              case None     => ZIO.fail(NotFoundException(s"Project export for ${shortcode.value} not found."))
-            }
-  } yield ProjectImportResponse(path)
+    _ <- projectExportService
+           .findByShortcode(shortcode)
+           .someOrFail(NotFoundException(s"Project export for $shortcode not found."))
+    _ <- knoraProjectService
+           .findByShortcode(shortcode)
+           .some
+           .flatMap(projectEraseService.eraseProject(_, keepAssets = false).asSomeError)
+           .unsome
+    path <- projectImportService
+              .importProject(shortcode)
+              .someOrFail(IllegalStateException(s"Project export for $shortcode not found."))
+              .flatMap(_.toAbsolutePath)
+    _ <- ontologyCache.refreshCache()
+  } yield ProjectImportResponse(path.toString)
 
   def listExports(user: User): Task[Chunk[ProjectExportInfoResponse]] = for {
     _       <- auth.ensureSystemAdmin(user)
