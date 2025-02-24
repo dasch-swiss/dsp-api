@@ -13,7 +13,6 @@ import zio.ZIO
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.*
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -24,9 +23,9 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequ
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestXMLV2
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.security.Authenticator
-
 import pekko.actor.ActorSystem
 import pekko.http.scaladsl.model.Multipart
 import pekko.http.scaladsl.model.Multipart.BodyPart
@@ -38,7 +37,7 @@ import pekko.http.scaladsl.server.Route
  */
 final case class StandoffRouteV2()(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & StringFormatter & MessageRelay,
+    ApiComplexV2JsonLdRequestParser & AppConfig & Authenticator & IriConverter & StringFormatter & MessageRelay,
   ],
   private implicit val system: ActorSystem,
 ) extends LazyLogging {
@@ -75,16 +74,17 @@ final case class StandoffRouteV2()(
           val requestMessageTask = for {
             requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             allParts       <- ZIO.fromFuture(_ => allPartsFuture)
-            jsonldDoc <-
+            metadata <-
               ZIO
                 .fromOption(allParts.get(jsonPartKey))
                 .orElseFail(
                   BadRequestException(s"MultiPart POST request was sent without required '$jsonPartKey' part!"),
                 )
-                .mapAttempt(JsonLDUtil.parseJsonLD(_))
-            apiRequestID <- RouteUtilZ.randomUuid()
-            metadata <-
-              ZIO.attempt(CreateMappingRequestMetadataV2.fromJsonLDSync(jsonldDoc))
+                .flatMap(jsonLd =>
+                  ZIO
+                    .serviceWithZIO[ApiComplexV2JsonLdRequestParser](_.createMappingRequestMetadataV2(jsonLd))
+                    .mapError(BadRequestException.apply),
+                )
             xml <-
               ZIO
                 .fromOption(allParts.get(xmlPartKey))
@@ -92,6 +92,7 @@ final case class StandoffRouteV2()(
                   _ => BadRequestException(s"MultiPart POST request was sent without required '$xmlPartKey' part!"),
                   CreateMappingRequestXMLV2.apply,
                 )
+            apiRequestID <- RouteUtilZ.randomUuid()
           } yield CreateMappingRequestV2(metadata, xml, requestingUser, apiRequestID)
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }
