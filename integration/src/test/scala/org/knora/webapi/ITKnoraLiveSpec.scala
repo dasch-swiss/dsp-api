@@ -8,7 +8,6 @@ package org.knora.webapi
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
 import org.apache.pekko
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.client.RequestBuilding
 import org.apache.pekko.http.scaladsl.model.*
@@ -75,29 +74,15 @@ abstract class ITKnoraLiveSpec
   implicit val runtime: Runtime.Scoped[DefaultTestEnvironmentWithSipi] =
     Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
 
-  private val (actorSystem: ActorSystem, messagRelayActor: ActorRef, config: AppConfig) =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            system <- ZIO.service[ActorSystem]
-            router <- ZIO.service[ActorRef]
-            config <- ZIO.service[AppConfig]
-          } yield (system, router, config),
-        )
-        .getOrThrowFiberFailure()
-    }
-
-  implicit lazy val system: ActorSystem                = actorSystem
+  lazy val appConfig: AppConfig                        = UnsafeZioRun.service[AppConfig]
+  implicit lazy val system: ActorSystem                = UnsafeZioRun.service[ActorSystem]
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
-  val log: Logger                                      = Logger(this.getClass())
-  val appActor                                         = messagRelayActor
-  val appConfig                                        = config
+  val log: Logger                                      = Logger(this.getClass)
 
   // needed by some tests
-  val baseApiUrl          = config.knoraApi.internalKnoraApiBaseUrl
-  val baseInternalSipiUrl = config.sipi.internalBaseUrl
+  val baseApiUrl: String          = appConfig.knoraApi.internalKnoraApiBaseUrl
+  val baseInternalSipiUrl: String = appConfig.sipi.internalBaseUrl
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */

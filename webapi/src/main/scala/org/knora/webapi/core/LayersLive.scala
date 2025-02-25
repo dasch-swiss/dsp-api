@@ -5,7 +5,6 @@
 
 package org.knora.webapi.core
 
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import zio.*
 import zio.ULayer
@@ -14,7 +13,6 @@ import zio.ZLayer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.InstrumentationServerConfig
-import org.knora.webapi.core.actors.MessageRelayActor
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
@@ -82,7 +80,6 @@ object LayersLive {
   type DspEnvironmentLive =
     // format: off
     ActorSystem &
-    ActorRef &
     AdminApiEndpoints &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
@@ -169,7 +166,6 @@ object LayersLive {
       ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
-      MessageRelayActor.layer,
       OntologyApiModule.layer,
       OntologyCacheHelpers.layer,
       OntologyCacheLive.layer,

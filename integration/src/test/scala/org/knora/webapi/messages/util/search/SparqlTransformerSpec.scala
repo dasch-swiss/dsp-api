@@ -167,10 +167,12 @@ class SparqlTransformerSpec extends CoreSpec {
         obj = IriRef(blueThingIRI),
       )
 
-      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
-        statementPattern = typeStatement,
-        simulateInference = true,
-      )
+      val expandedStatements = UnsafeZioRun
+        .service[OntologyInferencer]
+        .transformStatementInWhere(
+          statementPattern = typeStatement,
+          simulateInference = true,
+        )
 
       val expectedStatements: Seq[StatementPattern] = Seq(
         StatementPattern(
@@ -200,10 +202,12 @@ class SparqlTransformerSpec extends CoreSpec {
           obj = QueryVariable(variableName = "text"),
         ),
       )
-      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
-        statementPattern = hasValueStatement,
-        simulateInference = true,
-      )
+      val expandedStatements = UnsafeZioRun
+        .service[OntologyInferencer]
+        .transformStatementInWhere(
+          statementPattern = hasValueStatement,
+          simulateInference = true,
+        )
       UnsafeZioRun.runOrThrow(expandedStatements) should equal(expectedStatements)
     }
 
@@ -213,11 +217,13 @@ class SparqlTransformerSpec extends CoreSpec {
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
         obj = IriRef(thingIRI),
       )
-      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
-        statementPattern = typeStatement,
-        simulateInference = true,
-        queryVariableSuffix = Some("5432"),
-      )
+      val expandedStatements = UnsafeZioRun
+        .service[OntologyInferencer]
+        .transformStatementInWhere(
+          statementPattern = typeStatement,
+          simulateInference = true,
+          queryVariableSuffix = Some("5432"),
+        )
       UnsafeZioRun.runOrThrow(expandedStatements) should equal(
         List(
           ValuesPattern(
@@ -245,11 +251,13 @@ class SparqlTransformerSpec extends CoreSpec {
           pred = IriRef(hasOtherThingIRI),
           obj = QueryVariable("text"),
         )
-      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
-        statementPattern = hasValueStatement,
-        simulateInference = true,
-        queryVariableSuffix = Some("5432"),
-      )
+      val expandedStatements = UnsafeZioRun
+        .service[OntologyInferencer]
+        .transformStatementInWhere(
+          statementPattern = hasValueStatement,
+          simulateInference = true,
+          queryVariableSuffix = Some("5432"),
+        )
 
       UnsafeZioRun.runOrThrow(expandedStatements) should equal(
         List(

@@ -7,7 +7,6 @@ package org.knora.webapi
 
 import com.typesafe.scalalogging.*
 import org.apache.pekko
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.client.RequestBuilding
 import org.apache.pekko.http.scaladsl.model.*
@@ -36,7 +35,6 @@ import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.routing.PekkoRoutesData
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
@@ -78,28 +76,13 @@ abstract class E2ESpec
   implicit val runtime: Runtime.Scoped[Environment] =
     Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
 
-  private val (actorSystem: ActorSystem, messagRelayActor: ActorRef, config: AppConfig) =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            system <- ZIO.service[ActorSystem]
-            router <- ZIO.service[ActorRef]
-            config <- ZIO.service[AppConfig]
-          } yield (system, router, config),
-        )
-        .getOrThrowFiberFailure()
-    }
-
-  implicit lazy val system: ActorSystem                = actorSystem
+  lazy val appConfig: AppConfig                        = UnsafeZioRun.service[AppConfig]
+  implicit lazy val system: ActorSystem                = UnsafeZioRun.service[ActorSystem]
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
-  val log: Logger                                      = Logger(this.getClass())
-  val appActor                                         = messagRelayActor
+  val log: Logger                                      = Logger(this.getClass)
 
   // needed by some tests
-  val appConfig  = config
-  val routeData  = PekkoRoutesData(system, appActor, appConfig)
   val baseApiUrl = appConfig.knoraApi.internalKnoraApiBaseUrl
 
   final override def beforeAll(): Unit =

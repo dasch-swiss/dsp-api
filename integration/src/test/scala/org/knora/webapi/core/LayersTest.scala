@@ -6,7 +6,6 @@
 package org.knora.webapi.core
 
 import org.apache.pekko
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import zio.*
 
@@ -17,7 +16,6 @@ import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfig.AppConfigurationsTest
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.config.JwtConfig
-import org.knora.webapi.core.actors.MessageRelayActor
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
@@ -95,7 +93,7 @@ object LayersTest {
    * The `Environment`s that we require for the tests to run - with or without Sipi
    */
   type DefaultTestEnvironmentWithoutSipi =
-    LayersLive.DspEnvironmentLive & FusekiTestContainer & TestClientService & TestDspIngestClient
+    LayersLive.DspEnvironmentLive & MessageRelayActorRef & FusekiTestContainer & TestClientService & TestDspIngestClient
 
   type DefaultTestEnvironmentWithSipi =
     DefaultTestEnvironmentWithoutSipi & SipiTestContainer & DspIngestTestContainer & SharedVolumes.Volumes
@@ -105,7 +103,6 @@ object LayersTest {
 
   type CommonR =
     // format: off
-    ActorRef &
     AdminApiEndpoints &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
@@ -126,6 +123,7 @@ object LayersTest {
     ListsApiModule.Provided &
     ListsResponder &
     MessageRelay &
+    MessageRelayActorRef &
     OntologyApiModule.Provided &
     OntologyCache &
     OntologyCacheHelpers &
@@ -197,7 +195,7 @@ object LayersTest {
       ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
-      MessageRelayActor.layer,
+      MessageRelayActorRef.layer,
       OntologyApiModule.layer,
       OntologyCacheLive.layer,
       OntologyCacheHelpers.layer,

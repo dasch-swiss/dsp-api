@@ -6,7 +6,6 @@
 package org.knora.webapi
 
 import com.typesafe.scalalogging.Logger
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.http.scaladsl.model.HttpResponse
 import org.apache.pekko.http.scaladsl.testkit.RouteTestTimeout
 import org.apache.pekko.http.scaladsl.testkit.ScalatestRouteTest
@@ -29,7 +28,6 @@ import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.routing.PekkoRoutesData
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.LogAspect
@@ -71,13 +69,9 @@ abstract class R2RSpec
   )
 
   // main difference to other specs (no own systen and executionContext defined)
-  lazy val rdfDataObjects = List.empty[RdfDataObject]
-  val log: Logger         = Logger(this.getClass())
-  val appActor: ActorRef  = UnsafeZioRun.runOrThrow(ZIO.service[ActorRef])
-
-  // needed by some tests
-  val appConfig: AppConfig       = UnsafeZioRun.runOrThrow(ZIO.service[AppConfig])
-  val routeData: PekkoRoutesData = PekkoRoutesData(system, appActor, appConfig)
+  lazy val rdfDataObjects  = List.empty[RdfDataObject]
+  val log: Logger          = Logger(this.getClass)
+  val appConfig: AppConfig = UnsafeZioRun.service[AppConfig]
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */

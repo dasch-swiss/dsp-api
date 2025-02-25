@@ -24,6 +24,7 @@ import scala.concurrent.duration.SECONDS
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
+import org.knora.webapi.core.MessageRelayActorRef
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.UnsafeZioRun
@@ -63,32 +64,12 @@ abstract class CoreSpec
     Runtime.unsafe.fromLayer(bootstrap)
   }
 
-  def getService[R: Tag](implicit runtime: Runtime[R]): R = UnsafeZioRun.runOrThrow(ZIO.service[R])
-
-  def runOrThrowWithService[R: Tag, A](run: R => A)(implicit runtime: Runtime[R]): A =
-    UnsafeZioRun.runOrThrow(ZIO.service[R].map(run))
-
-  private val (actorSystem: ActorSystem, messagRelayActor: ActorRef, config: AppConfig) =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            system <- ZIO.service[actor.ActorSystem]
-            router <- ZIO.service[ActorRef]
-            config <- ZIO.service[AppConfig]
-          } yield (system, router, config),
-        )
-        .getOrThrowFiberFailure()
-    }
-
-  implicit lazy val system: ActorSystem                = actorSystem
+  lazy val appConfig: AppConfig                        = UnsafeZioRun.service[AppConfig]
+  lazy val appActor: ActorRef                          = UnsafeZioRun.service[MessageRelayActorRef].ref
+  implicit lazy val system: ActorSystem                = UnsafeZioRun.service[ActorSystem]
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
-  val log: Logger                                      = Logger(this.getClass())
-  val appActor                                         = messagRelayActor
-
-  // needed by some tests
-  val appConfig = config
+  val log: Logger                                      = Logger(this.getClass)
 
   // the default timeout for all tests
   implicit val timeout: FiniteDuration = FiniteDuration(10, SECONDS)

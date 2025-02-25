@@ -5,7 +5,6 @@
 
 package org.knora.webapi.routing
 
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.cors.scaladsl.CorsDirectives
 import org.apache.pekko.http.cors.scaladsl.settings.CorsSettings
@@ -42,15 +41,6 @@ import org.knora.webapi.slice.shacl.api.ShaclApiRoutes
 import org.knora.webapi.store.iiif.api.SipiService
 
 /**
- * Data that needs to be passed to each route.
- *
- * @param system        the actor system.
- * @param messageRelay  the actor ref to the MessageRelayActor.
- * @param appConfig     the application's configuration.
- */
-case class PekkoRoutesData(system: ActorSystem, messageRelay: ActorRef, appConfig: AppConfig)
-
-/**
  * All routes composed together and CORS activated based on the
  * the configuration in application.conf (pekko-http-cors).
  *
@@ -58,7 +48,7 @@ case class PekkoRoutesData(system: ActorSystem, messageRelay: ActorRef, appConfi
  * The FIRST matching route is used for handling a request.
  */
 final case class ApiRoutes(
-  routeData: PekkoRoutesData,
+  appConfig: AppConfig,
   adminApiRoutes: AdminApiRoutes,
   authenticationApiRoutes: AuthenticationApiRoutes,
   listsApiV2Routes: ListsApiV2Routes,
@@ -66,26 +56,24 @@ final case class ApiRoutes(
   searchApiRoutes: SearchApiRoutes,
   shaclApiRoutes: ShaclApiRoutes,
   managementRoutes: ManagementRoutes,
-)(implicit val runtime: Runtime[ApiRoutes.ApiRoutesRuntime])
+)(implicit val runtime: Runtime[ApiRoutes.ApiRoutesRuntime], system: ActorSystem)
     extends AroundDirectives {
-
-  private implicit val system: ActorSystem = routeData.system
 
   val routes: Route =
     logDuration {
       ServerVersion.addServerHeader {
-        DSPApiDirectives.handleErrors(routeData.appConfig) {
+        DSPApiDirectives.handleErrors(appConfig) {
           CorsDirectives.cors(
-            CorsSettings(routeData.system)
+            CorsSettings(system)
               .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS)),
           ) {
-            DSPApiDirectives.handleErrors(routeData.appConfig) {
+            DSPApiDirectives.handleErrors(appConfig) {
               val tapirRoutes =
                 (adminApiRoutes.routes ++ authenticationApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes ++ listsApiV2Routes.routes ++ shaclApiRoutes.routes)
                   .reduce(_ ~ _)
               val pekkoRoutes =
                 OntologiesRouteV2().makeRoute ~
-                  ResourcesRouteV2(routeData.appConfig).makeRoute ~
+                  ResourcesRouteV2(appConfig).makeRoute ~
                   StandoffRouteV2().makeRoute ~
                   ValuesRouteV2().makeRoute
               tapirRoutes ~ pekkoRoutes
@@ -108,13 +96,12 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    ApiRoutesRuntime & ActorSystem & AdminApiRoutes & ActorRef & ManagementRoutes & ResourceInfoRoutes & ShaclApiRoutes,
+    ApiRoutesRuntime & ActorSystem & AdminApiRoutes & ManagementRoutes & ResourceInfoRoutes & ShaclApiRoutes,
     ApiRoutes,
   ] =
     ZLayer {
       for {
-        sys                     <- ZIO.service[ActorSystem]
-        messageRelayActorRef    <- ZIO.service[ActorRef]
+        system                  <- ZIO.service[ActorSystem]
         appConfig               <- ZIO.service[AppConfig]
         adminApiRoutes          <- ZIO.service[AdminApiRoutes]
         authenticationApiRoutes <- ZIO.service[AuthenticationApiRoutes]
@@ -123,10 +110,9 @@ object ApiRoutes {
         searchApiRoutes         <- ZIO.service[SearchApiRoutes]
         shaclApiRoutes          <- ZIO.service[ShaclApiRoutes]
         managementRoutes        <- ZIO.service[ManagementRoutes]
-        routeData               <- ZIO.succeed(PekkoRoutesData(sys, messageRelayActorRef, appConfig))
         runtime                 <- ZIO.runtime[ApiRoutesRuntime]
       } yield ApiRoutes(
-        routeData,
+        appConfig,
         adminApiRoutes,
         authenticationApiRoutes,
         listsApiV2Routes,
@@ -134,6 +120,6 @@ object ApiRoutes {
         searchApiRoutes,
         shaclApiRoutes,
         managementRoutes,
-      )(runtime)
+      )(runtime, system)
     }
 }

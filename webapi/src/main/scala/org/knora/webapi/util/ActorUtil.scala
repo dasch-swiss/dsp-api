@@ -9,20 +9,10 @@ import org.apache.pekko
 import zio.*
 
 import dsp.errors.*
-import org.knora.webapi.routing.UnsafeZioRun
 
 import pekko.actor.ActorRef
 
 object ActorUtil {
-
-  /**
-   * _Unsafely_ runs a ZIO workflow and sends the result to the `sender` actor as a message or a failure.
-   * Used mainly during the refactoring phase, to be able to return ZIO inside an Actor.
-   */
-  def zio2Message[R, A](sender: ActorRef, zio: ZIO[R, Throwable, A])(implicit runtime: Runtime[R]): Unit =
-    UnsafeZioRun.runOrThrow {
-      zio.foldCause(cause => sender ! pekko.actor.Status.Failure(cause.squash), success => sender ! success)
-    }
 
   /**
    * An actor that expects to receive messages sent using the `ask` pattern can use this method to handle
