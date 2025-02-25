@@ -183,7 +183,7 @@ object LayersTest {
       BaseEndpoints.layer,
       CardinalityHandler.layer,
       CardinalityService.layer,
-      ConstructResponseUtilV2Live.layer,
+      ConstructResponseUtilV2.layer,
       DspIngestClientLive.layer,
       HandlerMapper.layer,
       InfrastructureModule.layer,
