@@ -7,6 +7,8 @@ package org.knora.webapi
 
 import com.typesafe.scalalogging.Logger
 import org.apache.pekko.actor
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.testkit.ImplicitSender
 import org.apache.pekko.testkit.TestKitBase
 import org.scalatest.BeforeAndAfterAll
@@ -20,7 +22,6 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
 import org.knora.webapi.core.TestStartupUtils
@@ -67,30 +68,24 @@ abstract class CoreSpec
   def runOrThrowWithService[R: Tag, A](run: R => A)(implicit runtime: Runtime[R]): A =
     UnsafeZioRun.runOrThrow(ZIO.service[R].map(run))
 
-  // An effect for getting stuff out, so that we can pass them
-  // to some legacy code
-  private val routerAndConfig = for {
-    router <- ZIO.service[core.AppRouter]
-    config <- ZIO.service[AppConfig]
-  } yield (router, config)
-
-  /**
-   * Create router and config by unsafe running them.
-   */
-  private val (router: AppRouter, config: AppConfig) =
+  private val (actorSystem: ActorSystem, messagRelayActor: ActorRef, config: AppConfig) =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
-          routerAndConfig,
+          for {
+            system <- ZIO.service[actor.ActorSystem]
+            router <- ZIO.service[ActorRef]
+            config <- ZIO.service[AppConfig]
+          } yield (system, router, config),
         )
         .getOrThrowFiberFailure()
     }
 
-  implicit lazy val system: actor.ActorSystem          = router.system
+  implicit lazy val system: ActorSystem                = actorSystem
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
   val log: Logger                                      = Logger(this.getClass())
-  val appActor                                         = router.ref
+  val appActor                                         = messagRelayActor
 
   // needed by some tests
   val appConfig = config

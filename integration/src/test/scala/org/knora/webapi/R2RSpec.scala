@@ -73,7 +73,7 @@ abstract class R2RSpec
   // main difference to other specs (no own systen and executionContext defined)
   lazy val rdfDataObjects = List.empty[RdfDataObject]
   val log: Logger         = Logger(this.getClass())
-  val appActor: ActorRef  = UnsafeZioRun.runOrThrow(ZIO.serviceWith[core.AppRouter](_.ref))
+  val appActor: ActorRef  = UnsafeZioRun.runOrThrow(ZIO.service[ActorRef])
 
   // needed by some tests
   val appConfig: AppConfig       = UnsafeZioRun.runOrThrow(ZIO.service[AppConfig])

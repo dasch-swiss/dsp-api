@@ -16,7 +16,6 @@ import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
-import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
@@ -45,11 +44,11 @@ import org.knora.webapi.store.iiif.api.SipiService
 /**
  * Data that needs to be passed to each route.
  *
- * @param system    the actor system.
- * @param appActor  the main application actor.
- * @param appConfig the application's configuration.
+ * @param system        the actor system.
+ * @param messageRelay  the actor ref to the MessageRelayActor.
+ * @param appConfig     the application's configuration.
  */
-case class PekkoRoutesData(system: ActorSystem, appActor: ActorRef, appConfig: AppConfig)
+case class PekkoRoutesData(system: ActorSystem, messageRelay: ActorRef, appConfig: AppConfig)
 
 /**
  * All routes composed together and CORS activated based on the
@@ -109,14 +108,13 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    ApiRoutesRuntime & ActorSystem & AdminApiRoutes & AppRouter & ManagementRoutes & ResourceInfoRoutes &
-      ShaclApiRoutes,
+    ApiRoutesRuntime & ActorSystem & AdminApiRoutes & ActorRef & ManagementRoutes & ResourceInfoRoutes & ShaclApiRoutes,
     ApiRoutes,
   ] =
     ZLayer {
       for {
         sys                     <- ZIO.service[ActorSystem]
-        router                  <- ZIO.service[AppRouter]
+        messageRelayActorRef    <- ZIO.service[ActorRef]
         appConfig               <- ZIO.service[AppConfig]
         adminApiRoutes          <- ZIO.service[AdminApiRoutes]
         authenticationApiRoutes <- ZIO.service[AuthenticationApiRoutes]
@@ -125,7 +123,7 @@ object ApiRoutes {
         searchApiRoutes         <- ZIO.service[SearchApiRoutes]
         shaclApiRoutes          <- ZIO.service[ShaclApiRoutes]
         managementRoutes        <- ZIO.service[ManagementRoutes]
-        routeData               <- ZIO.succeed(PekkoRoutesData(sys, router.ref, appConfig))
+        routeData               <- ZIO.succeed(PekkoRoutesData(sys, messageRelayActorRef, appConfig))
         runtime                 <- ZIO.runtime[ApiRoutesRuntime]
       } yield ApiRoutes(
         routeData,

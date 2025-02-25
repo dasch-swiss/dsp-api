@@ -6,6 +6,8 @@
 package org.knora.webapi.core
 
 import org.apache.pekko
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.actor.ActorSystem
 import zio.*
 
 import org.knora.sipi.SipiServiceTestDelegator
@@ -15,6 +17,7 @@ import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfig.AppConfigurationsTest
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.config.JwtConfig
+import org.knora.webapi.core.actors.MessageRelayActor
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
@@ -98,15 +101,15 @@ object LayersTest {
     DefaultTestEnvironmentWithoutSipi & SipiTestContainer & DspIngestTestContainer & SharedVolumes.Volumes
 
   type CommonR0 =
-    pekko.actor.ActorSystem & AppConfigurationsTest & JwtConfig & WhichSipiService
+    ActorSystem & AppConfigurationsTest & JwtConfig & WhichSipiService
 
   type CommonR =
     // format: off
+    ActorRef &
     AdminApiEndpoints &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
     ApiRoutes &
-    AppRouter &
     AuthenticationApiModule.Provided &
     AssetPermissionsResponder &
     AuthorizationRestService &
@@ -174,7 +177,6 @@ object LayersTest {
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
       ApiRoutes.layer,
-      AppRouter.layer,
       AssetPermissionsResponder.layer,
       AuthorizationRestService.layer,
       AuthenticationApiModule.layer,
@@ -195,6 +197,7 @@ object LayersTest {
       ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
+      MessageRelayActor.layer,
       OntologyApiModule.layer,
       OntologyCacheLive.layer,
       OntologyCacheHelpers.layer,
@@ -280,11 +283,11 @@ object LayersTest {
    * @return a [[ULayer]] with the [[DefaultTestEnvironmentWithoutSipi]]
    */
   def integrationTestsWithFusekiTestcontainers(
-    system: Option[pekko.actor.ActorSystem] = None,
+    system: Option[ActorSystem] = None,
   ): ULayer[DefaultTestEnvironmentWithoutSipi] = {
     // Due to bug in Scala 2 compiler invoking methods with by-name parameters in provide/provideSome method does not work
     // assign the layer to a temp val and use it in the ZLayer.make
-    val temp = system.map(ActorSystemTest.layer).getOrElse(ActorSystem.layer)
+    val temp = system.map(ActorSystemTest.layer).getOrElse(PekkoActorSystem.layer)
     ZLayer.make[DefaultTestEnvironmentWithoutSipi](
       commonLayersForAllIntegrationTests,
       fusekiTestcontainers,
@@ -300,6 +303,6 @@ object LayersTest {
     ZLayer.make[DefaultTestEnvironmentWithSipi](
       commonLayersForAllIntegrationTests,
       fusekiAndSipiTestcontainers,
-      ActorSystem.layer,
+      PekkoActorSystem.layer,
     )
 }

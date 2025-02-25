@@ -5,6 +5,7 @@
 
 package org.knora.webapi.core
 
+import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import zio.*
 import zio.ULayer
@@ -13,6 +14,7 @@ import zio.ZLayer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.InstrumentationServerConfig
+import org.knora.webapi.core.actors.MessageRelayActor
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
@@ -80,13 +82,13 @@ object LayersLive {
   type DspEnvironmentLive =
     // format: off
     ActorSystem &
+    ActorRef &
     AdminApiEndpoints &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
     ApiRoutes &
     ApiV2Endpoints &
     AppConfigurations &
-    AppRouter &
     AssetPermissionsResponder &
     AuthorizationRestService &
     AuthenticationApiModule.Provided &
@@ -146,7 +148,6 @@ object LayersLive {
       ApiRoutes.layer,
       ApiV2Endpoints.layer,
       AppConfig.layer,
-      AppRouter.layer,
       AssetPermissionsResponder.layer,
       AuthenticationApiModule.layer,
       AuthorizationRestService.layer,
@@ -168,6 +169,7 @@ object LayersLive {
       ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
+      MessageRelayActor.layer,
       OntologyApiModule.layer,
       OntologyCacheHelpers.layer,
       OntologyCacheLive.layer,
@@ -177,6 +179,7 @@ object LayersLive {
       OntologyTriplestoreHelpers.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
+      PekkoActorSystem.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
       ProjectExportServiceLive.layer,
@@ -202,7 +205,6 @@ object LayersLive {
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
       ValuesResponderV2.layer,
-      org.knora.webapi.core.ActorSystem.layer,
       // ZLayer.Debug.mermaid,
     )
 }
