@@ -75,14 +75,10 @@ final class ValuesRestService(
     } yield response
 
   private def render(task: Task[KnoraResponseV2], formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
-    task.flatMap(render(_, formatOptions))
+    task.flatMap(renderer.render(_, formatOptions))
 
   private def render(resp: KnoraResponseV2): Task[(RenderedResponse, MediaType)] =
-    render(resp, FormatOptions.default)
-
-  private def render(resp: KnoraResponseV2, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
-    renderer.render(resp, formatOptions)
-
+    renderer.render(resp, FormatOptions.default)
 }
 
 object ValuesRestService {
