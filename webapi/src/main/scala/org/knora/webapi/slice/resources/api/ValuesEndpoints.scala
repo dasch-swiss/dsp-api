@@ -23,30 +23,49 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
   private val valueUuid   = path[ValueUuid].name("valueUuid").description("The UUID of a Value.")
   private val version     = query[Option[ValueVersionDate]]("version")
 
+  private val linkToValuesDocumentation =
+    """Find detailed documentation on <a href="https://docs.dasch.swiss/latest/DSP-API/03-endpoints/api-v2/editing-values/">docs.dasch.swiss</a>."""
+
   val getValue = baseEndpoint.withUserEndpoint.get
     .in(base / resourceIri / valueUuid)
     .in(version)
     .in(ApiV2.Inputs.formatOptions)
     .out(header[MediaType](HeaderNames.ContentType))
     .out(stringJsonBody)
+    .description(linkToValuesDocumentation)
 
   val postValues = baseEndpoint.withUserEndpoint.post
     .in(base)
-    .in(stringJsonBody)
+    .in(
+      stringJsonBody.example(
+        "{\n  \"@id\": \"http://rdfh.ch/0001/a-thing\",\n  \"@type\": \"anything:Thing\",\n  \"anything:hasInteger\": {\n    \"@type\": \"knora-api:IntValue\",\n    \"knora-api:intValueAsInt\": 4\n  },\n  \"@context\": {\n    \"knora-api\": \"http://api.knora.org/ontology/knora-api/v2#\",\n    \"anything\": \"http://0.0.0.0:3333/ontology/0001/anything/v2#\"\n  }\n}",
+      ),
+    )
     .out(header[MediaType](HeaderNames.ContentType))
     .out(stringJsonBody)
+    .description(linkToValuesDocumentation)
 
   val putValues = baseEndpoint.withUserEndpoint.put
     .in(base)
-    .in(stringJsonBody)
+    .in(
+      stringJsonBody.example(
+        "{\n  \"@id\": \"http://rdfh.ch/0001/a-thing\",\n  \"@type\": \"anything:Thing\",\n  \"anything:hasInteger\": {\n    \"@id\": \"http://rdfh.ch/0001/a-thing/values/vp96riPIRnmQcbMhgpv_Rg\",\n    \"@type\": \"knora-api:IntValue\",\n    \"knora-api:intValueAsInt\": 5\n  },\n  \"@context\": {\n    \"knora-api\": \"http://api.knora.org/ontology/knora-api/v2#\",\n    \"anything\": \"http://0.0.0.0:3333/ontology/0001/anything/v2#\"\n  }\n}",
+      ),
+    )
     .out(header[MediaType](HeaderNames.ContentType))
     .out(stringJsonBody)
+    .description(linkToValuesDocumentation)
 
   val deleteValues = baseEndpoint.withUserEndpoint.post
     .in(base / "delete")
-    .in(stringJsonBody)
+    .in(
+      stringJsonBody.example(
+        "{\n  \"@id\": \"http://rdfh.ch/0001/a-thing\",\n  \"@type\": \"anything:Thing\",\n  \"anything:hasInteger\": {\n    \"@id\": \"http://rdfh.ch/0001/a-thing/values/vp96riPIRnmQcbMhgpv_Rg\",\n    \"@type\": \"knora-api:IntValue\",\n    \"knora-api:deleteComment\": \"This value was created by mistake.\"\n  },\n  \"@context\": {\n    \"knora-api\": \"http://api.knora.org/ontology/knora-api/v2#\",\n    \"anything\": \"http://0.0.0.0:3333/ontology/0001/anything/v2#\"\n  }\n}",
+      ),
+    )
     .out(header[MediaType](HeaderNames.ContentType))
     .out(stringJsonBody)
+    .description(linkToValuesDocumentation)
 
   val endpoints: Seq[AnyEndpoint] = Seq(
     getValue,
