@@ -8,9 +8,9 @@ package org.knora.webapi.config
 import zio.*
 import zio.test.*
 
+import org.knora.webapi.core.TestContainerLayers
 import org.knora.webapi.testcontainers.DspIngestTestContainer
 import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 
 object AppConfigForTestContainersZSpec extends ZIOSpecDefault {
@@ -30,9 +30,6 @@ object AppConfigForTestContainersZSpec extends ZIOSpecDefault {
     },
   ).provide(
     AppConfigForTestContainers.testcontainers,
-    DspIngestTestContainer.layer,
-    FusekiTestContainer.layer,
-    SharedVolumes.layer,
-    SipiTestContainer.layer,
+    TestContainerLayers.all,
   )
 }

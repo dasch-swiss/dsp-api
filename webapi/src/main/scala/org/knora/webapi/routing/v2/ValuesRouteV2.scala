@@ -15,8 +15,6 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
@@ -39,44 +37,7 @@ final case class ValuesRouteV2()(
   private val responder                         = ZIO.serviceWithZIO[ValuesResponderV2]
   private val valuesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "values")
 
-  def makeRoute: Route = getValue() ~ createValue() ~ updateValue() ~ deleteValue()
-
-  private def getValue(): Route = path(valuesBasePath / Segment / Segment) {
-    (resourceIriStr: IRI, valueUuidStr: String) =>
-      get { requestContext =>
-        val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
-        val requestTask = for {
-          resourceIri <- RouteUtilZ
-                           .toSmartIri(resourceIriStr, s"Invalid resource IRI: $resourceIriStr")
-                           .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
-          valueUuid <- RouteUtilZ.decodeUuid(valueUuidStr)
-          versionDate <- ZIO.foreach(RouteUtilZ.getStringValueFromQuery(requestContext, "version")) { versionStr =>
-                           ZIO
-                             .fromOption(
-                               ValuesValidator
-                                 .xsdDateTimeStampToInstant(versionStr)
-                                 .orElse(ValuesValidator.arkTimestampToInstant(versionStr)),
-                             )
-                             .orElseFail(BadRequestException(s"Invalid version date: $versionStr"))
-                         }
-          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-          targetSchema   <- targetSchemaTask
-        } yield ResourcesGetRequestV2(
-          resourceIris = Seq(resourceIri.toString),
-          valueUuid = Some(valueUuid),
-          versionDate = versionDate,
-          targetSchema = targetSchema,
-          requestingUser = requestingUser,
-        )
-
-        RouteUtilV2.runRdfRouteZ(
-          requestTask,
-          requestContext,
-          targetSchemaTask,
-          RouteUtilV2.getSchemaOptions(requestContext).map(Some(_)),
-        )
-      }
-  }
+  def makeRoute: Route = createValue() ~ updateValue() ~ deleteValue()
 
   private def createValue(): Route = path(valuesBasePath) {
     post {
