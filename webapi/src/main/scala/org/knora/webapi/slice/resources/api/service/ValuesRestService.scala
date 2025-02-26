@@ -34,7 +34,7 @@ final class ValuesRestService(
     valueUuid: ValueUuid,
     versionDate: Option[ValueVersionDate],
     formatOptions: FormatOptions,
-  ): Task[(MediaType, RenderedResponse)] =
+  ): Task[(RenderedResponse, MediaType)] =
     render(
       resourcesService.getResourcesV2(
         Seq(resourceIri),
@@ -50,7 +50,7 @@ final class ValuesRestService(
       formatOptions,
     )
 
-  def createValue(user: User)(jsonLd: String): Task[(MediaType, RenderedResponse)] =
+  def createValue(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
       valueToCreate <- requestParser.createValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
       apiRequestId  <- Random.nextUUID
@@ -58,7 +58,7 @@ final class ValuesRestService(
       response      <- render(knoraResponse)
     } yield response
 
-  def updateValue(user: User)(jsonLd: String): Task[(MediaType, RenderedResponse)] =
+  def updateValue(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
       valueToUpdate <- requestParser.updateValueV2fromJsonLd(jsonLd).mapError(BadRequestException.apply)
       apiRequestId  <- Random.nextUUID
@@ -66,7 +66,7 @@ final class ValuesRestService(
       response      <- render(knoraResponse)
     } yield response
 
-  def deleteValue(user: User)(jsonLd: String): Task[(MediaType, RenderedResponse)] =
+  def deleteValue(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
       valueToDelete <- requestParser.deleteValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
       apiRequestId  <- Random.nextUUID
@@ -74,14 +74,14 @@ final class ValuesRestService(
       response      <- render(knoraResponse)
     } yield response
 
-  private def render(task: Task[KnoraResponseV2], formatOptions: FormatOptions): Task[(MediaType, RenderedResponse)] =
+  private def render(task: Task[KnoraResponseV2], formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
     task.flatMap(render(_, formatOptions))
 
-  private def render(resp: KnoraResponseV2): Task[(MediaType, RenderedResponse)] =
+  private def render(resp: KnoraResponseV2): Task[(RenderedResponse, MediaType)] =
     render(resp, FormatOptions.default)
 
-  private def render(resp: KnoraResponseV2, formatOptions: FormatOptions): Task[(MediaType, RenderedResponse)] =
-    renderer.render(resp, formatOptions).map(_.swap)
+  private def render(resp: KnoraResponseV2, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
+    renderer.render(resp, formatOptions)
 
 }
 
