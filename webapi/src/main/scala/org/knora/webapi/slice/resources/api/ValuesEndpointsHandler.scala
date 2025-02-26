@@ -22,7 +22,12 @@ final class ValuesEndpointsHandler(
 ) {
 
   val allHandlers =
-    Seq(SecuredEndpointHandler(endpoints.getValue, valuesRestService.getValue)).map(mapper.mapSecuredEndpointHandler(_))
+    Seq(
+      SecuredEndpointHandler(endpoints.getValue, valuesRestService.getValue),
+      SecuredEndpointHandler(endpoints.postValues, valuesRestService.createValue),
+      SecuredEndpointHandler(endpoints.putValues, valuesRestService.updateValue),
+      SecuredEndpointHandler(endpoints.deleteValues, valuesRestService.deleteValue),
+    ).map(mapper.mapSecuredEndpointHandler(_))
 }
 
 object ValuesEndpointsHandler {

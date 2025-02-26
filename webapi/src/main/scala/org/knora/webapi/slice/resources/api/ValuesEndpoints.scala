@@ -30,8 +30,29 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(header[MediaType](HeaderNames.ContentType))
     .out(stringJsonBody)
 
+  val postValues = baseEndpoint.withUserEndpoint.post
+    .in(base)
+    .in(stringJsonBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .out(stringJsonBody)
+
+  val putValues = baseEndpoint.withUserEndpoint.put
+    .in(base)
+    .in(stringJsonBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .out(stringJsonBody)
+
+  val deleteValues = baseEndpoint.withUserEndpoint.post
+    .in(base / "delete")
+    .in(stringJsonBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .out(stringJsonBody)
+
   val endpoints: Seq[AnyEndpoint] = Seq(
     getValue,
+    postValues,
+    putValues,
+    deleteValues,
   ).map(_.endpoint.tag("API V2 (Values)"))
 }
 

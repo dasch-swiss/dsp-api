@@ -84,8 +84,7 @@ final case class ApiRoutes(
               val pekkoRoutes =
                 OntologiesRouteV2().makeRoute ~
                   ResourcesRouteV2(appConfig).makeRoute ~
-                  StandoffRouteV2().makeRoute ~
-                  ValuesRouteV2().makeRoute
+                  StandoffRouteV2().makeRoute
               tapirRoutes ~ pekkoRoutes
             }
           }
