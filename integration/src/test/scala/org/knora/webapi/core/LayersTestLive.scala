@@ -10,9 +10,6 @@ import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
-import org.knora.webapi.config.AppConfig.AppConfigurationsTest
-import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -94,7 +91,6 @@ object LayersTestLive { self =>
   val layer: ULayer[self.Environment] =
     ZLayer.make[self.Environment](
       PekkoActorSystem.layer,
-      AppConfigForTestContainers.testcontainers,
       SipiServiceLive.layer,
       TestContainerLayers.all,
       /// common

@@ -11,9 +11,6 @@ import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
-import org.knora.webapi.config.AppConfig.AppConfigurationsTest
-import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -102,8 +99,7 @@ object LayersTestMock { self =>
     val temp = system.map(ActorSystemTest.layer).getOrElse(PekkoActorSystem.layer)
     ZLayer.make[self.Environment](
       temp,
-      AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      FusekiTestContainer.layer,
+      TestContainerLayers.fusekiOnly,
       SipiServiceMock.layer,
       /// common
       AdminApiModule.layer,
