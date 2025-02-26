@@ -53,7 +53,7 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     postValues,
     putValues,
     deleteValues,
-  ).map(_.endpoint.tag("API V2 (Values)"))
+  ).map(_.endpoint.tag("V2 Values"))
 }
 
 object ValuesEndpoints {
