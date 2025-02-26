@@ -10,7 +10,7 @@ import zio.*
 
 import scala.concurrent.ExecutionContext
 
-object ActorSystem {
+object PekkoActorSystem {
 
   private def acquire(executionContext: ExecutionContext): URIO[Any, actor.ActorSystem] =
     ZIO

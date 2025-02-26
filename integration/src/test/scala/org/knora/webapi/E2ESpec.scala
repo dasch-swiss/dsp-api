@@ -7,6 +7,7 @@ package org.knora.webapi
 
 import com.typesafe.scalalogging.*
 import org.apache.pekko
+import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.client.RequestBuilding
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.testkit.TestKitBase
@@ -29,13 +30,11 @@ import scala.concurrent.duration.FiniteDuration
 
 import dsp.errors.AssertionException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.routing.PekkoRoutesData
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
@@ -77,34 +76,13 @@ abstract class E2ESpec
   implicit val runtime: Runtime.Scoped[Environment] =
     Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
 
-  // An effect for getting stuff out, so that we can pass them
-  // to some legacy code
-  val routerAndConfig = for {
-    router <- ZIO.service[core.AppRouter]
-    config <- ZIO.service[AppConfig]
-  } yield (router, config)
-
-  /**
-   * Create router and config by unsafe running them.
-   */
-  val (router: AppRouter, config: AppConfig) =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          routerAndConfig,
-        )
-        .getOrThrowFiberFailure()
-    }
-
-  implicit lazy val system: pekko.actor.ActorSystem    = router.system
+  lazy val appConfig: AppConfig                        = UnsafeZioRun.service[AppConfig]
+  implicit lazy val system: ActorSystem                = UnsafeZioRun.service[ActorSystem]
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
-  val log: Logger                                      = Logger(this.getClass())
-  val appActor                                         = router.ref
+  val log: Logger                                      = Logger(this.getClass)
 
   // needed by some tests
-  val appConfig  = config
-  val routeData  = PekkoRoutesData(system, appActor, appConfig)
   val baseApiUrl = appConfig.knoraApi.internalKnoraApiBaseUrl
 
   final override def beforeAll(): Unit =

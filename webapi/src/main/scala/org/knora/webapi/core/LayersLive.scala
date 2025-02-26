@@ -86,7 +86,6 @@ object LayersLive {
     ApiRoutes &
     ApiV2Endpoints &
     AppConfigurations &
-    AppRouter &
     AssetPermissionsResponder &
     AuthorizationRestService &
     AuthenticationApiModule.Provided &
@@ -146,7 +145,6 @@ object LayersLive {
       ApiRoutes.layer,
       ApiV2Endpoints.layer,
       AppConfig.layer,
-      AppRouter.layer,
       AssetPermissionsResponder.layer,
       AuthenticationApiModule.layer,
       AuthorizationRestService.layer,
@@ -177,6 +175,7 @@ object LayersLive {
       OntologyTriplestoreHelpers.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
+      PekkoActorSystem.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
       ProjectExportServiceLive.layer,
@@ -202,7 +201,6 @@ object LayersLive {
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
       ValuesResponderV2.layer,
-      org.knora.webapi.core.ActorSystem.layer,
       // ZLayer.Debug.mermaid,
     )
 }

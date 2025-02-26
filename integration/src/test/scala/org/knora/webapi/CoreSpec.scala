@@ -7,6 +7,8 @@ package org.knora.webapi
 
 import com.typesafe.scalalogging.Logger
 import org.apache.pekko.actor
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.testkit.ImplicitSender
 import org.apache.pekko.testkit.TestKitBase
 import org.scalatest.BeforeAndAfterAll
@@ -20,9 +22,9 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
+import org.knora.webapi.core.MessageRelayActorRef
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.UnsafeZioRun
@@ -62,38 +64,12 @@ abstract class CoreSpec
     Runtime.unsafe.fromLayer(bootstrap)
   }
 
-  def getService[R: Tag](implicit runtime: Runtime[R]): R = UnsafeZioRun.runOrThrow(ZIO.service[R])
-
-  def runOrThrowWithService[R: Tag, A](run: R => A)(implicit runtime: Runtime[R]): A =
-    UnsafeZioRun.runOrThrow(ZIO.service[R].map(run))
-
-  // An effect for getting stuff out, so that we can pass them
-  // to some legacy code
-  private val routerAndConfig = for {
-    router <- ZIO.service[core.AppRouter]
-    config <- ZIO.service[AppConfig]
-  } yield (router, config)
-
-  /**
-   * Create router and config by unsafe running them.
-   */
-  private val (router: AppRouter, config: AppConfig) =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          routerAndConfig,
-        )
-        .getOrThrowFiberFailure()
-    }
-
-  implicit lazy val system: actor.ActorSystem          = router.system
+  lazy val appConfig: AppConfig                        = UnsafeZioRun.service[AppConfig]
+  lazy val appActor: ActorRef                          = UnsafeZioRun.service[MessageRelayActorRef].ref
+  implicit lazy val system: ActorSystem                = UnsafeZioRun.service[ActorSystem]
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
-  val log: Logger                                      = Logger(this.getClass())
-  val appActor                                         = router.ref
-
-  // needed by some tests
-  val appConfig = config
+  val log: Logger                                      = Logger(this.getClass)
 
   // the default timeout for all tests
   implicit val timeout: FiniteDuration = FiniteDuration(10, SECONDS)
