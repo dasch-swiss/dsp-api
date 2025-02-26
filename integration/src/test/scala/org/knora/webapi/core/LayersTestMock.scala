@@ -84,8 +84,8 @@ object LayersTestMock { self =>
   /**
    * The `Environment`s that we require for the tests to run - with or without Sipi
    */
-  type Environment =
-    LayersLive.DspEnvironmentLive & MessageRelayActorRef & FusekiTestContainer & TestClientService & TestDspIngestClient
+  type Environment = LayersLive.DspEnvironmentLive & FusekiTestContainer & MessageRelayActorRef & TestClientService &
+    TestDspIngestClient
 
   /**
    * Provides a layer for integration tests which depend on Fuseki as Testcontainers.

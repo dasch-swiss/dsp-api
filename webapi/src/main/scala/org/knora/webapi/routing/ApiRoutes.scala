@@ -106,7 +106,7 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    ApiRoutesRuntime & ActorSystem & AdminApiRoutes & ManagementRoutes & ResourceInfoRoutes & ResourcesApiRoutes &
+    ActorSystem & AdminApiRoutes & ApiRoutesRuntime & ManagementRoutes & ResourceInfoRoutes & ResourcesApiRoutes &
       ShaclApiRoutes,
     ApiRoutes,
   ] =
