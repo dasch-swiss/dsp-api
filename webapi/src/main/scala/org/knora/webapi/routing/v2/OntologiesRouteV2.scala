@@ -76,8 +76,7 @@ final case class OntologiesRouteV2()(
       updatePropertyGuiElement() ~
       getProperties ~
       canDeleteProperty ~
-      deleteProperty() ~
-      createOntology()
+      deleteProperty()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -552,19 +551,4 @@ final case class OntologiesRouteV2()(
         RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
       }
     }
-
-  private def createOntology(): Route = path(ontologiesBasePath) {
-    // Create a new, empty ontology.
-    post {
-      entity(as[String]) { jsonRequest => requestContext =>
-        val t = for {
-          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-          apiRequestId   <- RouteUtilZ.randomUuid()
-          requestMessage <- requestParser(_.createOntologyRequestV2(jsonRequest, apiRequestId, requestingUser))
-                              .mapError(BadRequestException.apply)
-        } yield requestMessage
-        RouteUtilV2.runRdfRouteZ(t, requestContext)
-      }
-    }
-  }
 }

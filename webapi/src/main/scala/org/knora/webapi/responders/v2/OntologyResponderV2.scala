@@ -469,21 +469,6 @@ final case class OntologyResponderV2(
       )
 
     for {
-      requestingUser <- ZIO.succeed(createOntologyRequest.requestingUser)
-      projectIri      = createOntologyRequest.projectIri
-
-      // check if the requesting user is allowed to create an ontology
-      _ <-
-        ZIO.when(
-          !(requestingUser.permissions.isProjectAdmin(
-            projectIri.toString,
-          ) || requestingUser.permissions.isSystemAdmin || requestingUser.isSystemUser),
-        ) {
-          val msg =
-            s"A new ontology in the project ${createOntologyRequest.projectIri} can only be created by an admin of that project, or by a system admin."
-          ZIO.fail(ForbiddenException(msg))
-        }
-
       // Check that the ontology name is valid.
       validOntologyName <-
         ZIO
@@ -492,6 +477,7 @@ final case class OntologyResponderV2(
           .filterOrFail(!_.isBuiltIn)(BadRequestException("A built in ontology cannot be created"))
 
       // Make the internal ontology IRI.
+      projectIri = createOntologyRequest.projectIri
       project <-
         knoraProjectService.findById(projectIri).someOrFail(BadRequestException(s"Project not found: $projectIri"))
       ontologyIri: OntologyIri =

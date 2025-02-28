@@ -17,6 +17,7 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.ontology.api.LastModificationDate
+import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.api.model.IriDto
@@ -26,8 +27,19 @@ final case class OntologiesRestService(
   private val iriConverter: IriConverter,
   private val ontologiesRepo: OntologyRepo,
   private val ontologyResponder: OntologyResponderV2,
+  private val requestParser: OntologyV2RequestParser,
   private val renderer: KnoraResponseRenderer,
 ) {
+
+  def createOntology(user: User)(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
+    for {
+      uuid      <- Random.nextUUID()
+      createReq <- requestParser.createOntologyRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+      _         <- auth.ensureSystemAdminOrProjectAdminById(user, createReq.projectIri)
+      result    <- ontologyResponder.createOntology(createReq)
+      response  <- renderer.render(result, formatOptions)
+    } yield response
+
   def deleteOntology(
     user: User,
   )(

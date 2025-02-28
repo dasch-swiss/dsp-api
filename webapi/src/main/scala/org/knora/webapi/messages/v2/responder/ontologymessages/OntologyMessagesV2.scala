@@ -73,7 +73,7 @@ case class CreateOntologyRequestV2(
   comment: Option[String] = None,
   apiRequestID: UUID,
   requestingUser: User,
-) extends OntologiesResponderRequestV2
+)
 
 /**
  * Requests the addition of a property to an ontology. A successful response will be a [[ReadOntologyV2]].

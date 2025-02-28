@@ -157,26 +157,27 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    }
            |}""".stripMargin
 
-      Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        val metadata        = responseJsonDoc.body
-        val ontologyIri     = metadata.value("@id").asInstanceOf[JsonLDString].value
-        assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/foo/v2")
-        fooIri.set(ontologyIri)
-        assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Post(s"$apiBaseUrl/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~>
+              addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ),
+        ),
+      )
+      val metadata    = responseJsonDoc.body
+      val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+      assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/foo/v2")
+      fooIri.set(ontologyIri)
+      assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
 
-        val lastModDate = metadata.requireDatatypeValueInObject(
-          key = KnoraApiV2Complex.LastModificationDate,
-          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-        )
+      val lastModDate = metadata.requireDatatypeValueInObject(
+        key = KnoraApiV2Complex.LastModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+      )
 
-        fooLastModDate = lastModDate
-      }
+      fooLastModDate = lastModDate
     }
 
     "create an empty ontology called 'bar' with a comment" in {
@@ -197,34 +198,34 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    }
            |}""".stripMargin
 
-      Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        val metadata        = responseJsonDoc.body
-        val ontologyIri     = metadata.value("@id").asInstanceOf[JsonLDString].value
-        assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/bar/v2")
-        assert(
-          metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            Iri.fromSparqlEncodedString(comment),
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Post(s"$apiBaseUrl/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~>
+              addCredentials(BasicHttpCredentials(anythingUsername, password)),
           ),
-        )
-        barIri.set(ontologyIri)
-        val lastModDate = metadata.requireDatatypeValueInObject(
-          key = KnoraApiV2Complex.LastModificationDate,
-          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-        )
-        barLastModDate = lastModDate
-      }
+        ),
+      )
+      val metadata    = responseJsonDoc.body
+      val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+      assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/bar/v2")
+      assert(
+        metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
+          Iri.fromSparqlEncodedString(comment),
+        ),
+      )
+      barIri.set(ontologyIri)
+      val lastModDate = metadata.requireDatatypeValueInObject(
+        key = KnoraApiV2Complex.LastModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+      )
+      barLastModDate = lastModDate
     }
 
     "create an empty ontology called 'test' with a comment that has a special character" in {
       val label   = "The test ontology"
       val comment = "some \\\"test\\\" comment"
-
       val params =
         s"""{
            |    "knora-api:ontologyName": "test",
@@ -238,22 +239,24 @@ class OntologyV2R2RSpec extends R2RSpec {
            |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
            |    }
            |}""".stripMargin
-
-      Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        val metadata        = responseJsonDoc.body
-        val ontologyIri     = metadata.value("@id").asInstanceOf[JsonLDString].value
-        assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/test/v2")
-        assert(
-          metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            Iri.fromSparqlEncodedString(comment),
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Post(
+              s"$apiBaseUrl/v2/ontologies",
+              HttpEntity(RdfMediaTypes.`application/ld+json`, params),
+            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
           ),
-        )
-      }
+        ),
+      )
+      val metadata    = responseJsonDoc.body
+      val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+      assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/test/v2")
+      assert(
+        metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
+          Iri.fromSparqlEncodedString(comment),
+        ),
+      )
     }
 
     "change the metadata of 'foo'" in {
@@ -2253,13 +2256,17 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    }
            |}""".stripMargin
 
-      Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, createOntologyJson)) ~> addCredentials(
-        BasicHttpCredentials(superUsername, password),
-      ) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
-        val metadata        = responseJsonDoc.body
-        val ontologyIri     = metadata.value("@id").asInstanceOf[JsonLDString].value
+      {
+        val responseJsonDoc = UnsafeZioRun.runOrThrow(
+          ZIO.serviceWithZIO[TestClientService](
+            _.getResponseJsonLD(
+              Post(s"$apiBaseUrl/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, createOntologyJson)) ~>
+                addCredentials(BasicHttpCredentials(superUsername, password)),
+            ),
+          ),
+        )
+        val metadata    = responseJsonDoc.body
+        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
         assert(ontologyIri == "http://api.knora.org/ontology/shared/useless/v2")
         uselessIri.set(ontologyIri)
         assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
