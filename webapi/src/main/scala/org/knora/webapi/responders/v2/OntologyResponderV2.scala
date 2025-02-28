@@ -143,9 +143,7 @@ final case class OntologyResponderV2(
     case req: ChangePropertyGuiElementRequest                 => changePropertyGuiElement(req)
     case canDeletePropertyRequest: CanDeletePropertyRequestV2 => canDeleteProperty(canDeletePropertyRequest)
     case deletePropertyRequest: DeletePropertyRequestV2       => deleteProperty(deletePropertyRequest)
-    case req: CanDeleteOntologyRequestV2 =>
-      canDeleteOntology(req.ontologyIri, req.requestingUser)
-    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
+    case other                                                => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -1522,7 +1520,7 @@ final case class OntologyResponderV2(
    * @param requestingUser the user making the request.
    * @return a [[CanDoResponseV2]] indicating whether an ontology can be deleted.
    */
-  private def canDeleteOntology(ontologyIri: OntologyIri, requestingUser: User): Task[CanDoResponseV2] = for {
+  def canDeleteOntology(ontologyIri: OntologyIri, requestingUser: User): Task[CanDoResponseV2] = for {
     ontology <- ontologyRepo
                   .findById(ontologyIri)
                   .someOrFail(BadRequestException(s"Ontology ${ontologyIri.toComplexSchema.toIri} does not exist"))

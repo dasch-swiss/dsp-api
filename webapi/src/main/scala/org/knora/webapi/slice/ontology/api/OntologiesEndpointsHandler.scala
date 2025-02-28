@@ -17,6 +17,7 @@ final class OntologiesEndpointsHandler(
 ) {
 
   val allHandlers = Seq(
+    SecuredEndpointHandler(endpoints.getOntologiesCandeleteontology, restService.canDeleteOntology),
     SecuredEndpointHandler(endpoints.deleteOntologies, restService.deleteOntology),
   ).map(mapper.mapSecuredEndpointHandler(_))
 }

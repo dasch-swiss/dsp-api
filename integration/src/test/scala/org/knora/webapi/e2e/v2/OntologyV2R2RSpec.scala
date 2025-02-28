@@ -369,16 +369,15 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     "determine that an ontology can be deleted" in {
       val fooIriEncoded = URLEncoder.encode(fooIri.get, "UTF-8")
-
-      Get(s"/v2/ontologies/candeleteontology/$fooIriEncoded") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-
-        assert(status == StatusCodes.OK, responseStr)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        assert(responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
-      }
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Get(s"$apiBaseUrl/v2/ontologies/candeleteontology/$fooIriEncoded") ~>
+              addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ),
+        ),
+      )
+      assert(responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
     }
 
     "delete the 'foo' ontology" in {
@@ -3208,15 +3207,15 @@ class OntologyV2R2RSpec extends R2RSpec {
 
   "determine that an ontology cannot be deleted" in {
     val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2", "UTF-8")
-
-    Get(s"/v2/ontologies/candeleteontology/$ontologyIri") ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password),
-    ) ~> ontologiesPath ~> check {
-      val responseStr = responseAs[String]
-      assert(status == StatusCodes.OK, responseStr)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-      assert(!responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
-    }
+    val responseJsonDoc = UnsafeZioRun.runOrThrow(
+      ZIO.serviceWithZIO[TestClientService](
+        _.getResponseJsonLD(
+          Get(s"$apiBaseUrl/v2/ontologies/candeleteontology/$ontologyIri") ~>
+            addCredentials(BasicHttpCredentials(anythingUsername, password)),
+        ),
+      ),
+    )
+    assert(!responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
   }
 
   "create a class w/o comment" in {

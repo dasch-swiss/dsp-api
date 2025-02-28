@@ -35,6 +35,12 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val ontologyIriPath      = path[IriDto].name("ontologyIri")
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
 
+  val getOntologiesCandeleteontology = baseEndpoints.securedEndpoint
+    .in(base / "candeleteontology" / ontologyIriPath)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
   val deleteOntologies = baseEndpoints.securedEndpoint.delete
     .in(base / ontologyIriPath)
     .in(ApiV2.Inputs.formatOptions)
@@ -42,7 +48,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
 
-  val endpoints = Seq(deleteOntologies).map(_.endpoint.tag("V2 Ontologies"))
+  val endpoints = Seq(getOntologiesCandeleteontology, deleteOntologies).map(_.endpoint.tag("V2 Ontologies"))
 }
 
 object OntologiesEndpoints {
