@@ -37,6 +37,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -142,7 +143,6 @@ final case class OntologyResponderV2(
       deleteClassComment(deleteClassCommentRequest)
     case req: ChangePropertyGuiElementRequest                 => changePropertyGuiElement(req)
     case canDeletePropertyRequest: CanDeletePropertyRequestV2 => canDeleteProperty(canDeletePropertyRequest)
-    case deletePropertyRequest: DeletePropertyRequestV2       => deleteProperty(deletePropertyRequest)
     case other                                                => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
@@ -1394,109 +1394,91 @@ final case class OntologyResponderV2(
   /**
    * Deletes a property. If the property is a link property, the corresponding link value property is also deleted.
    *
-   * @param deletePropertyRequest the request to delete the property.
+   * @param propertyIri          the IRI of the property to be deleted.
+   * @param lastModificationDate the ontology's last modification date.
+   * @param apiRequestID         the ID of the API request.
+   * @param requestingUser       the user making the request.
    * @return a [[ReadOntologyMetadataV2]].
    */
-  private def deleteProperty(deletePropertyRequest: DeletePropertyRequestV2): Task[ReadOntologyMetadataV2] = {
-    def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyMetadataV2] =
-      for {
-        cacheData <- ontologyCache.getCacheData
+  def deleteProperty(
+    propertyIri: PropertyIri,
+    lastModificationDate: Instant,
+    apiRequestID: UUID,
+    requestingUser: User,
+  ): Task[ReadOntologyMetadataV2] = {
+    val internalPropertyIri = propertyIri.toInternalSchema
+    val externalPropertyIri = propertyIri.toComplexSchema
+    val externalOntologyIri = externalPropertyIri.getOntologyFromEntity
+    val internalOntologyIri = externalOntologyIri.toInternalSchema
 
-        // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-               internalOntologyIri,
-               deletePropertyRequest.lastModificationDate,
-             )
-
-        // Check that the property exists.
-
-        ontology = cacheData.ontologies(internalOntologyIri)
-        propertyDef <-
-          ZIO
-            .fromOption(ontology.properties.get(internalPropertyIri))
-            .orElseFail(BadRequestException(s"Property ${deletePropertyRequest.propertyIri} does not exist"))
-
-        _ <- ZIO.when(propertyDef.isLinkValueProp) {
-               val msg =
-                 s"A link value property cannot be deleted directly; delete the corresponding link property instead"
-               ZIO.fail(BadRequestException(msg))
-             }
-
-        maybeInternalLinkValuePropertyIri: Option[SmartIri] =
-          if (propertyDef.isLinkProp) {
-            Some(internalPropertyIri.fromLinkPropToLinkValueProp)
-          } else {
-            None
-          }
-
-        // Check that the property isn't used in data or ontologies.
-
-        _ <-
-          ZIO
-            .fail(
-              BadRequestException(
-                s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because it is used in data or ontologies",
-              ),
-            )
-            .whenZIO(iriService.isEntityUsed(internalPropertyIri))
-
-        _ <- maybeInternalLinkValuePropertyIri match {
-               case Some(internalLinkValuePropertyIri) =>
-                 ZIO
-                   .fail(
-                     BadRequestException(
-                       s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because the corresponding link value property, ${internalLinkValuePropertyIri
-                           .toOntologySchema(ApiV2Complex)}, is used in data or ontologies",
-                     ),
-                   )
-                   .whenZIO(iriService.isEntityUsed(internalLinkValuePropertyIri))
-               case None => ZIO.unit
-             }
-
-        // Delete the property from the triplestore.
-        currentTime <- Clock.instant
-        updateSparql = sparql.v2.txt.deleteProperty(
-                         ontologyNamedGraphIri = internalOntologyIri,
-                         ontologyIri = internalOntologyIri,
-                         propertyIri = internalPropertyIri,
-                         maybeLinkValuePropertyIri = maybeInternalLinkValuePropertyIri,
-                         lastModificationDate = deletePropertyRequest.lastModificationDate,
-                         currentTime = currentTime,
-                       )
-        _ <- save(Update(updateSparql))
-
-        propertiesToRemoveFromCache = Set(internalPropertyIri) ++ maybeInternalLinkValuePropertyIri
-        updatedOntology =
-          ontology.copy(
-            ontologyMetadata = ontology.ontologyMetadata.copy(
-              lastModificationDate = Some(currentTime),
-            ),
-            properties = ontology.properties -- propertiesToRemoveFromCache,
-          )
-      } yield ReadOntologyMetadataV2(Set(updatedOntology.ontologyMetadata))
-
-    for {
-      requestingUser <- ZIO.succeed(deletePropertyRequest.requestingUser)
-
-      externalPropertyIri = deletePropertyRequest.propertyIri
-      externalOntologyIri = externalPropertyIri.getOntologyFromEntity
-
+    val deleteTask: Task[ReadOntologyMetadataV2] = for {
       _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
              externalOntologyIri,
              externalPropertyIri,
              requestingUser,
            )
+      cacheData <- ontologyCache.getCacheData
+      _         <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
+      // Check that the property exists.
+      ontology = cacheData.ontologies(internalOntologyIri)
+      propertyDef <-
+        ZIO
+          .fromOption(ontology.properties.get(internalPropertyIri))
+          .orElseFail(BadRequestException(s"Property $propertyIri does not exist"))
 
-      internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
-      internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+      _ <- ZIO.when(propertyDef.isLinkValueProp) {
+             val msg =
+               s"A link value property cannot be deleted directly; delete the corresponding link property instead"
+             ZIO.fail(BadRequestException(msg))
+           }
 
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      deletePropertyRequest.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
-                      makeTaskFuture(internalPropertyIri, internalOntologyIri),
-                    )
-    } yield taskResult
+      maybeInternalLinkValuePropertyIri: Option[SmartIri] =
+        if (propertyDef.isLinkProp) {
+          Some(internalPropertyIri.fromLinkPropToLinkValueProp)
+        } else {
+          None
+        }
+
+      _ <- // Check that the property isn't used in data or ontologies.
+        ZIO.fail {
+          BadRequestException(s"Property $propertyIri cannot be deleted, because it is used in data or ontologies")
+        }.whenZIO(iriService.isEntityUsed(internalPropertyIri))
+
+      _ <- maybeInternalLinkValuePropertyIri match {
+             case Some(internalLinkValuePropertyIri) =>
+               ZIO
+                 .fail(
+                   BadRequestException(
+                     s"Property $propertyIri cannot be deleted, because the corresponding link value property, ${internalLinkValuePropertyIri
+                         .toOntologySchema(ApiV2Complex)}, is used in data or ontologies",
+                   ),
+                 )
+                 .whenZIO(iriService.isEntityUsed(internalLinkValuePropertyIri))
+             case None => ZIO.unit
+           }
+
+      // Delete the property from the triplestore.
+      currentTime <- Clock.instant
+      updateSparql = sparql.v2.txt.deleteProperty(
+                       ontologyNamedGraphIri = internalOntologyIri,
+                       ontologyIri = internalOntologyIri,
+                       propertyIri = internalPropertyIri,
+                       maybeLinkValuePropertyIri = maybeInternalLinkValuePropertyIri,
+                       lastModificationDate = lastModificationDate,
+                       currentTime = currentTime,
+                     )
+      _ <- save(Update(updateSparql))
+
+      propertiesToRemoveFromCache = Set(internalPropertyIri) ++ maybeInternalLinkValuePropertyIri
+      updatedOntology =
+        ontology.copy(
+          ontologyMetadata = ontology.ontologyMetadata.copy(
+            lastModificationDate = Some(currentTime),
+          ),
+          properties = ontology.properties -- propertiesToRemoveFromCache,
+        )
+    } yield ReadOntologyMetadataV2(Set(updatedOntology.ontologyMetadata))
+    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteTask)
   }
 
   /**

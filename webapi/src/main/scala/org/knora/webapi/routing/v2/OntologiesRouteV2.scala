@@ -75,8 +75,7 @@ final case class OntologiesRouteV2()(
       deletePropertyComment() ~
       updatePropertyGuiElement() ~
       getProperties ~
-      canDeleteProperty ~
-      deleteProperty()
+      canDeleteProperty
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -523,31 +522,6 @@ final case class OntologiesRouteV2()(
                            .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
           requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield CanDeletePropertyRequestV2(propertyIri, requestingUser)
-        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-      }
-    }
-
-  private def deleteProperty(): Route =
-    path(ontologiesBasePath / "properties" / Segments) { (externalPropertyIris: List[IRI]) =>
-      delete { requestContext =>
-        val requestMessageTask = for {
-          propertyIri <-
-            ZIO
-              .succeed(externalPropertyIris)
-              .filterOrFail(_.size == 1)(BadRequestException(s"Only one property can be deleted at a time"))
-              .map(_.head)
-              .flatMap(iri => RouteUtilZ.toSmartIri(iri, s"Invalid property IRI: $iri"))
-              .flatMap(RouteUtilZ.ensureExternalOntologyName)
-              .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
-          lastModificationDate <- getLastModificationDate(requestContext)
-          apiRequestId         <- RouteUtilZ.randomUuid()
-          requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield DeletePropertyRequestV2(
-          propertyIri,
-          lastModificationDate,
-          apiRequestId,
-          requestingUser,
-        )
         RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
       }
     }

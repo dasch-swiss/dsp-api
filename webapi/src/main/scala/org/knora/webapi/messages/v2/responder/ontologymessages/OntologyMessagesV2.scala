@@ -194,21 +194,6 @@ case class CanDeleteClassRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Requests the deletion of a property. A successful response will be a [[ReadOntologyMetadataV2]].
- *
- * @param propertyIri          the IRI of the property to be deleted.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class DeletePropertyRequestV2(
-  propertyIri: SmartIri,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
  * Asks whether a property can be deleted. A successful response will be a [[CanDoResponseV2]].
  *
  * @param propertyIri    the IRI of the property to be deleted.

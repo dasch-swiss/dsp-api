@@ -1781,24 +1781,26 @@ class OntologyV2R2RSpec extends R2RSpec {
       val propertySegment      = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothing", "UTF-8")
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
-      Delete(
-        s"/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
-        responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
-          "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
-        )
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Delete(
+              s"$apiBaseUrl/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate",
+            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ),
+        ),
+      )
 
-        val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = KnoraApiV2Complex.LastModificationDate,
-          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-        )
-
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
+        "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
+      )
+      val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
+        key = KnoraApiV2Complex.LastModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "create a property anything:hasNothingness with knora-api:subjectType anything:Nothing" in {
@@ -2110,25 +2112,27 @@ class OntologyV2R2RSpec extends R2RSpec {
     "delete the property anything:hasNothingness" in {
       val propertySegment      = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasNothingness", "UTF-8")
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Delete(
+              s"$apiBaseUrl/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate",
+            ) ~>
+              addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ),
+        ),
+      )
 
-      Delete(
-        s"/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
-        responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
-          "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
-        )
-
-        val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = KnoraApiV2Complex.LastModificationDate,
-          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-        )
-
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
+        "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
+      )
+      val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
+        key = KnoraApiV2Complex.LastModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "remove all cardinalities from the class anything:Nothing" in {
@@ -2180,25 +2184,25 @@ class OntologyV2R2RSpec extends R2RSpec {
     "delete the property anything:hasEmptiness" in {
       val propertySegment      = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasEmptiness", "UTF-8")
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
-
-      Delete(
-        s"/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
-        responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
-          "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
-        )
-
-        val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = KnoraApiV2Complex.LastModificationDate,
-          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-        )
-
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Delete(
+              s"$apiBaseUrl/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate",
+            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ),
+        ),
+      )
+      responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
+        "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
+      )
+      val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
+        key = KnoraApiV2Complex.LastModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "determine that a class can be deleted" in {
