@@ -30,6 +30,7 @@ import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiV2Routes
+import org.knora.webapi.slice.ontology.api.OntologiesApiRoutes
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
@@ -58,6 +59,7 @@ final case class ApiRoutes(
   searchApiRoutes: SearchApiRoutes,
   shaclApiRoutes: ShaclApiRoutes,
   managementRoutes: ManagementRoutes,
+  ontologiesRoutes: OntologiesApiRoutes,
 )(implicit val runtime: Runtime[ApiRoutes.ApiRoutesRuntime], system: ActorSystem)
     extends AroundDirectives {
 
@@ -76,6 +78,7 @@ final case class ApiRoutes(
                     authenticationApiRoutes.routes ++
                     listsApiV2Routes.routes ++
                     managementRoutes.routes ++
+                    ontologiesRoutes.routes ++
                     resourceInfoRoutes.routes ++
                     resourcesApiRoutes.routes ++
                     searchApiRoutes.routes ++
@@ -103,8 +106,8 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    ActorSystem & AdminApiRoutes & ApiRoutesRuntime & ManagementRoutes & ResourceInfoRoutes & ResourcesApiRoutes &
-      ShaclApiRoutes,
+    ActorSystem & AdminApiRoutes & ApiRoutesRuntime & ManagementRoutes & OntologiesApiRoutes & ResourceInfoRoutes &
+      ResourcesApiRoutes & ShaclApiRoutes,
     ApiRoutes,
   ] =
     ZLayer {
@@ -119,6 +122,7 @@ object ApiRoutes {
         searchApiRoutes         <- ZIO.service[SearchApiRoutes]
         shaclApiRoutes          <- ZIO.service[ShaclApiRoutes]
         managementRoutes        <- ZIO.service[ManagementRoutes]
+        ontologiesApiRoutes     <- ZIO.service[OntologiesApiRoutes]
         runtime                 <- ZIO.runtime[ApiRoutesRuntime]
       } yield ApiRoutes(
         appConfig,
@@ -130,6 +134,7 @@ object ApiRoutes {
         searchApiRoutes,
         shaclApiRoutes,
         managementRoutes,
+        ontologiesApiRoutes,
       )(runtime, system)
     }
 }

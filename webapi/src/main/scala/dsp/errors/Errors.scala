@@ -12,6 +12,7 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.UserServiceError
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 
 /*
 
@@ -127,6 +128,8 @@ object ForbiddenException {
 case class NotFoundException(message: String) extends RequestRejectedException(message)
 object NotFoundException {
   val notFound: NotFoundException = NotFoundException("The requested data was not found")
+  def notfound(iri: OntologyIri): NotFoundException =
+    NotFoundException(s"The requested ontology ${iri.toComplexSchema.toIri} was not found")
 
   implicit val codec: JsonCodec[NotFoundException] = DeriveJsonCodec.gen[NotFoundException]
 }

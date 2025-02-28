@@ -78,8 +78,7 @@ final case class OntologiesRouteV2()(
       canDeleteProperty ~
       deleteProperty() ~
       createOntology() ~
-      canDeleteOntology ~
-      deleteOntology()
+      canDeleteOntology
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -581,16 +580,4 @@ final case class OntologiesRouteV2()(
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
-
-  private def deleteOntology(): Route = path(ontologiesBasePath / Segment) { ontologyIriStr =>
-    delete { requestContext =>
-      val requestMessageTask = for {
-        ontologyIri          <- RouteUtilZ.externalApiV2ComplexOntologyIri(ontologyIriStr)
-        lastModificationDate <- getLastModificationDate(requestContext)
-        apiRequestId         <- RouteUtilZ.randomUuid()
-        requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-      } yield DeleteOntologyRequestV2(ontologyIri, lastModificationDate, apiRequestId, requestingUser)
-      RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-    }
-  }
 }

@@ -87,21 +87,6 @@ case class CanDeleteOntologyRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Requests that an ontology is deleted. All the entities in the ontology must be unused in data.
- *
- * @param ontologyIri          the IRI of the ontology to delete.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class DeleteOntologyRequestV2(
-  ontologyIri: OntologyIri,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
  * Represents a request to update a property definition.
  *
  * @param propertyInfoContent  information to be updated in the property definition.
@@ -584,6 +569,7 @@ case class ReadOntologyV2(
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   def projectIri: Option[ProjectIri] = ontologyMetadata.projectIri
+  def ontologyIri: OntologyIri       = OntologyIri.unsafeFrom(ontologyMetadata.ontologyIri)
 
   /**
    * Converts this [[ReadOntologyV2]] to the specified Knora API v2 schema.

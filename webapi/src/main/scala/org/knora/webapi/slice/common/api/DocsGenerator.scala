@@ -40,6 +40,7 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.lists.api.ListsEndpointsV2
+import org.knora.webapi.slice.ontology.api.OntologiesEndpoints
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.resources.api.ResourcesEndpoints
 import org.knora.webapi.slice.resources.api.ValuesEndpoints
@@ -96,6 +97,7 @@ object DocsGenerator extends ZIOAppDefault {
     ListsEndpointsV2.layer,
     MaintenanceEndpoints.layer,
     ManagementEndpoints.layer,
+    OntologiesEndpoints.layer,
     PermissionsEndpoints.layer,
     ProjectsLegalInfoEndpoints.layer,
     ProjectsEndpoints.layer,

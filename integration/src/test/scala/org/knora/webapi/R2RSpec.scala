@@ -72,6 +72,7 @@ abstract class R2RSpec
   lazy val rdfDataObjects  = List.empty[RdfDataObject]
   val log: Logger          = Logger(this.getClass)
   val appConfig: AppConfig = UnsafeZioRun.service[AppConfig]
+  val apiBaseUrl           = appConfig.knoraApi.externalKnoraApiBaseUrl
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */

@@ -385,12 +385,16 @@ class OntologyV2R2RSpec extends R2RSpec {
       val fooIriEncoded        = URLEncoder.encode(fooIri.get, "UTF-8")
       val lastModificationDate = URLEncoder.encode(fooLastModDate.toString, "UTF-8")
 
-      Delete(s"/v2/ontologies/$fooIriEncoded?lastModificationDate=$lastModificationDate") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
-      }
+      val _ =
+        UnsafeZioRun.runOrThrow(
+          ZIO.serviceWithZIO[TestClientService](
+            _.checkResponseOK(
+              Delete(
+                s"$apiBaseUrl/v2/ontologies/$fooIriEncoded?lastModificationDate=$lastModificationDate",
+              ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+            ),
+          ),
+        )
     }
 
     "create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name" in {

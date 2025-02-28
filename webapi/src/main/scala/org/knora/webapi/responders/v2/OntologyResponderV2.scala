@@ -145,8 +145,6 @@ final case class OntologyResponderV2(
     case deletePropertyRequest: DeletePropertyRequestV2       => deleteProperty(deletePropertyRequest)
     case req: CanDeleteOntologyRequestV2 =>
       canDeleteOntology(req.ontologyIri, req.requestingUser)
-    case req: DeleteOntologyRequestV2 =>
-      deleteOntology(req.ontologyIri, req.lastModificationDate, req.apiRequestID, req.requestingUser)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
@@ -1532,18 +1530,16 @@ final case class OntologyResponderV2(
     subjectsUsingOntology <- ontologyTriplestoreHelpers.getSubjectsUsingOntology(ontology)
   } yield CanDoResponseV2.of(userCanUpdateOntology && subjectsUsingOntology.isEmpty)
 
-  private def deleteOntology(
+  def deleteOntology(
     ontologyIri: OntologyIri,
     lastModificationDate: Instant,
     apiRequestID: UUID,
-    requestingUser: User,
   ): Task[SuccessResponseV2] = {
     val internalOntologyIri = ontologyIri.toInternalSchema
     val deleteTask: Task[SuccessResponseV2] =
       for {
-        _                     <- OntologyHelpers.checkExternalOntologyIriForUpdate(ontologyIri.smartIri)
+        _                     <- OntologyHelpers.checkExternalOntologyIriForUpdate(ontologyIri.toComplexSchema)
         ontology              <- ontologyRepo.findById(ontologyIri).someOrFail(NotFoundException(s"Ontology $ontologyIri not found"))
-        _                     <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(internalOntologyIri, requestingUser)
         _                     <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
         subjectsUsingOntology <- ontologyTriplestoreHelpers.getSubjectsUsingOntology(ontology)
         _ <- ZIO.when(subjectsUsingOntology.nonEmpty) {
@@ -1553,7 +1549,7 @@ final case class OntologyResponderV2(
                ZIO.fail(BadRequestException(msg))
              }
         _ <- save(Update(sparql.v2.txt.deleteOntology(internalOntologyIri)))
-      } yield SuccessResponseV2(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been deleted")
+      } yield SuccessResponseV2(s"Ontology ${ontologyIri.toComplexSchema} has been deleted")
     IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteTask)
   }
 

@@ -411,40 +411,28 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not delete an ontology that doesn't exist" in {
-      appActor ! DeleteOntologyRequestV2(
-        ontologyIri = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri),
-        lastModificationDate = fooLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteOntology(
+            ontologyIri = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri),
+            lastModificationDate = fooLastModDate,
+            apiRequestID = UUID.randomUUID,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
-    }
-
-    "not allow a user to delete an ontology if they are not a sysadmin or an admin in the ontology's project" in {
-      appActor ! DeleteOntologyRequestV2(
-        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
-        lastModificationDate = fooLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = SharedTestDataADM.imagesUser02,
-      )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
+      assertFailsWithA[NotFoundException](exit)
     }
 
     "delete the 'foo' ontology" in {
-      appActor ! DeleteOntologyRequestV2(
-        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
-        lastModificationDate = fooLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val _ = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteOntology(
+            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            lastModificationDate = fooLastModDate,
+            apiRequestID = UUID.randomUUID,
+          ),
+        ),
       )
-
-      expectMsgType[SuccessResponseV2](timeout)
 
       // Request the metadata of all ontologies to check that 'foo' isn't listed.
 
@@ -475,27 +463,22 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         .lastModificationDate
         .get
 
-      appActor ! DeleteOntologyRequestV2(
-        ontologyIri = AnythingOntologyIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteOntology(
+            ontologyIri = AnythingOntologyIri,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        val cause: Throwable = msg.cause
-        val errorMsg: String = cause.getMessage
-        cause.isInstanceOf[BadRequestException] should ===(true)
-
-        val expectedSubjects = Set(
-          "<http://rdfh.ch/0001/a-thing>",                                   // rdf:type anything:Thing
-          "<http://rdfh.ch/0001/a-blue-thing>",                              // rdf:type anything:BlueThing, a subclass of anything:Thing
-          "<http://www.knora.org/ontology/0001/something#Something>",        // a subclass of anything:Thing in another ontology
-          "<http://www.knora.org/ontology/0001/something#hasOtherSomething>", // a subproperty of anything:hasOtherThing in another ontology
-        )
-
-        expectedSubjects.forall(s => errorMsg.contains(s)) should ===(true)
-      }
+      val expectedSubjects = Set(
+        "<http://rdfh.ch/0001/a-thing>",                                   // rdf:type anything:Thing
+        "<http://rdfh.ch/0001/a-blue-thing>",                              // rdf:type anything:BlueThing, a subclass of anything:Thing
+        "<http://www.knora.org/ontology/0001/something#Something>",        // a subclass of anything:Thing in another ontology
+        "<http://www.knora.org/ontology/0001/something#hasOtherSomething>", // a subproperty of anything:hasOtherThing in another ontology
+      )
+      assertFailsWithA[BadRequestException](exit, e => expectedSubjects.forall(e.getMessage.contains))
     }
 
     "not create an ontology called 'rdfs'" in {
