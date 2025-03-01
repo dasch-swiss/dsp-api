@@ -31,7 +31,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC39"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.1.15"
+  val ZioVersion                  = "2.1.16"
 
   // ZIO
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
@@ -86,7 +86,7 @@ object Dependencies {
 
   // logging
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
-  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.16" // the logging interface
+  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.17" // the logging interface
 
   // Metrics
   val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.22.1"
@@ -99,7 +99,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.4"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.4.2" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.4.3" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -124,14 +124,14 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.4"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.5"
 
   val wiremock = "org.wiremock" % "wiremock" % "3.12.0"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.14"
+  val tapirVersion = "1.11.16"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
