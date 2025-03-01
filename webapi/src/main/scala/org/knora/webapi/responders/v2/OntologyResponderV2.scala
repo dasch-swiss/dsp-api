@@ -141,9 +141,8 @@ final case class OntologyResponderV2(
       deletePropertyComment(deletePropertyCommentRequest)
     case deleteClassCommentRequest: DeleteClassCommentRequestV2 =>
       deleteClassComment(deleteClassCommentRequest)
-    case req: ChangePropertyGuiElementRequest                 => changePropertyGuiElement(req)
-    case canDeletePropertyRequest: CanDeletePropertyRequestV2 => canDeleteProperty(canDeletePropertyRequest)
-    case other                                                => Responder.handleUnexpectedMessage(other, this.getClass.getName)
+    case req: ChangePropertyGuiElementRequest => changePropertyGuiElement(req)
+    case other                                => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -1357,37 +1356,27 @@ final case class OntologyResponderV2(
   /**
    * Checks whether a property can be deleted.
    *
-   * @param canDeletePropertyRequest the request message.
+   * @param propertyIri    the IRI of the property to be deleted.
+   * @param requestingUser the user making the request.
+   *
    * @return a [[CanDoResponseV2]] indicating whether the property can be deleted.
    */
-  private def canDeleteProperty(canDeletePropertyRequest: CanDeletePropertyRequestV2): Task[CanDoResponseV2] = {
-    val internalPropertyIri = canDeletePropertyRequest.propertyIri.toOntologySchema(InternalSchema)
+  def canDeleteProperty(propertyIri: PropertyIri, requestingUser: User): Task[CanDoResponseV2] = {
+    val externalPropertyIri = propertyIri.toComplexSchema
+    val internalPropertyIri = propertyIri.toInternalSchema
+    val externalOntologyIri = externalPropertyIri.getOntologyFromEntity
     val internalOntologyIri = internalPropertyIri.getOntologyFromEntity
-
     for {
-      cacheData <- ontologyCache.getCacheData
-
-      ontology <- ZIO
-                    .fromOption(cacheData.ontologies.get(internalOntologyIri))
-                    .orElseFail {
-                      val msg = s"Ontology ${canDeletePropertyRequest.propertyIri.getOntologyFromEntity} does not exist"
-                      BadRequestException(msg)
-                    }
-
-      propertyDef <-
-        ZIO
-          .fromOption(ontology.properties.get(internalPropertyIri))
-          .orElseFail(BadRequestException(s"Property ${canDeletePropertyRequest.propertyIri} does not exist"))
-
-      _ <- ZIO.when(propertyDef.isLinkValueProp) {
+      property <- ontologyRepo
+                    .findProperty(propertyIri)
+                    .someOrFail(BadRequestException(s"Ontology $externalOntologyIri does not exist"))
+      _ <- ZIO.when(property.isLinkValueProp)(ZIO.fail {
              val msg =
                s"A link value property cannot be deleted directly; check the corresponding link property instead"
-             ZIO.fail(BadRequestException(msg))
-           }
-
-      userCanUpdateOntology <-
-        ontologyCacheHelpers.canUserUpdateOntology(internalOntologyIri, canDeletePropertyRequest.requestingUser)
-      propertyIsUsed <- iriService.isEntityUsed(internalPropertyIri)
+             BadRequestException(msg)
+           })
+      userCanUpdateOntology <- ontologyCacheHelpers.canUserUpdateOntology(internalOntologyIri, requestingUser)
+      propertyIsUsed        <- iriService.isEntityUsed(internalPropertyIri)
     } yield CanDoResponseV2.of(userCanUpdateOntology && !propertyIsUsed)
   }
 

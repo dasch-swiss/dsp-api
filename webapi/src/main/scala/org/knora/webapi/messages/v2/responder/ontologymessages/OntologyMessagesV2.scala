@@ -194,17 +194,6 @@ case class CanDeleteClassRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Asks whether a property can be deleted. A successful response will be a [[CanDoResponseV2]].
- *
- * @param propertyIri    the IRI of the property to be deleted.
- * @param requestingUser the user making the request.
- */
-case class CanDeletePropertyRequestV2(
-  propertyIri: SmartIri,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
  * Requests that the `salsah-gui:guiElement` and `salsah-gui:guiAttribute` of a property are changed.
  *
  * @param propertyIri          the IRI of the property to be changed.

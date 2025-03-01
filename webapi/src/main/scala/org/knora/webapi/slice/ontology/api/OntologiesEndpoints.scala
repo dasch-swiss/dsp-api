@@ -33,10 +33,17 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val base = "v2" / "ontologies"
 
   private val ontologyIriPath      = path[IriDto].name("ontologyIri")
+  private val propertyIriPath      = path[IriDto].name("propertyIri")
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
 
+  val getOntologyiesCandeleteproperty = baseEndpoints.withUserEndpoint.get
+    .in(base / "candeleteproperty" / propertyIriPath)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
   val deleteOntologiesProperty = baseEndpoints.securedEndpoint.delete
-    .in(base / "properties" / ontologyIriPath)
+    .in(base / "properties" / propertyIriPath)
     .in(ApiV2.Inputs.formatOptions)
     .in(lastModificationDate)
     .out(stringBody)

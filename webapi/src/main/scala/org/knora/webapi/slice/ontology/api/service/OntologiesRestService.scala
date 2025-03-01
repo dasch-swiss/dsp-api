@@ -31,9 +31,15 @@ final case class OntologiesRestService(
   private val renderer: KnoraResponseRenderer,
 ) {
 
-  def deleteProperty(
+  def canDeleteProperty(
     user: User,
-  )(
+  )(propertyIri: IriDto, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
+    propertyIri <- iriConverter.asPropertyIri(propertyIri.value).mapError(BadRequestException.apply)
+    result      <- ontologyResponder.canDeleteProperty(propertyIri, user)
+    response    <- renderer.render(result, formatOptions)
+  } yield response
+
+  def deleteProperty(user: User)(
     propertyIri: IriDto,
     formatOptions: FormatOptions,
     lastModificationDate: LastModificationDate,
@@ -53,9 +59,7 @@ final case class OntologiesRestService(
       response  <- renderer.render(result, formatOptions)
     } yield response
 
-  def deleteOntology(
-    user: User,
-  )(
+  def deleteOntology(user: User)(
     ontologyIri: IriDto,
     formatOptions: FormatOptions,
     lastModificationDate: LastModificationDate,
@@ -67,7 +71,9 @@ final case class OntologiesRestService(
     response <- renderer.render(result, formatOptions)
   } yield response
 
-  def canDeleteOntology(user: User)(ontologyIri: IriDto, formatOptions: FormatOptions) = for {
+  def canDeleteOntology(
+    user: User,
+  )(ontologyIri: IriDto, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
     ontologyIri <- asOntologyIri(ontologyIri)
     result      <- ontologyResponder.canDeleteOntology(ontologyIri, user)
     response    <- renderer.render(result, formatOptions)

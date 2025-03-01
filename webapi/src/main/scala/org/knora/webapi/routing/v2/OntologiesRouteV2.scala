@@ -74,8 +74,7 @@ final case class OntologiesRouteV2()(
       updatePropertyLabelsOrComments() ~
       deletePropertyComment() ~
       updatePropertyGuiElement() ~
-      getProperties ~
-      canDeleteProperty
+      getProperties
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -509,20 +508,6 @@ final case class OntologiesRouteV2()(
         } yield PropertiesGetRequestV2(propertyIris, getLanguages(requestContext), requestingUser)
 
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask)
-      }
-    }
-
-  private def canDeleteProperty: Route =
-    path(ontologiesBasePath / "candeleteproperty" / Segment) { (propertyIriStr: IRI) =>
-      get { requestContext =>
-        val requestMessageTask = for {
-          propertyIri <- RouteUtilZ
-                           .toSmartIri(propertyIriStr, s"Invalid property IRI: $propertyIriStr")
-                           .flatMap(RouteUtilZ.ensureExternalOntologyName)
-                           .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
-          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield CanDeletePropertyRequestV2(propertyIri, requestingUser)
-        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
       }
     }
 }

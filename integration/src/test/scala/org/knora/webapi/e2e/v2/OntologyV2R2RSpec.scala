@@ -1766,15 +1766,15 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     "determine that a property can be deleted" in {
       val propertySegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothing", "UTF-8")
-
-      Get(s"/v2/ontologies/candeleteproperty/$propertySegment") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        assert(responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
-      }
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Get(s"$apiBaseUrl/v2/ontologies/candeleteproperty/$propertySegment")
+              ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ),
+        ),
+      )
+      assert(responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
     }
 
     "delete the property anything:hasOtherNothing" in {
@@ -3204,16 +3204,17 @@ class OntologyV2R2RSpec extends R2RSpec {
   }
 
   "determine that a property cannot be deleted" in {
-    val propertyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger", "UTF-8")
-
-    Get(s"/v2/ontologies/candeleteproperty/$propertyIri") ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password),
-    ) ~> ontologiesPath ~> check {
-      val responseStr = responseAs[String]
-      assert(status == StatusCodes.OK, responseStr)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-      assert(!responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
-    }
+    val propertySegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger", "UTF-8")
+    val responseJsonDoc =
+      UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Get(s"$apiBaseUrl/v2/ontologies/candeleteproperty/$propertySegment")
+              ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ),
+        ),
+      )
+    assert(!responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
   }
 
   "determine that an ontology cannot be deleted" in {
