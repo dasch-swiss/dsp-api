@@ -26,7 +26,7 @@ object Dependencies {
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
   val ZioConfigVersion            = "4.0.3"
-  val ZioLoggingVersion           = "2.4.0"
+  val ZioLoggingVersion           = "2.5.0"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC39"
@@ -39,10 +39,10 @@ object Dependencies {
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
 
-  // jwt-scala 10.0.1 depends on zio-json 0.7.21
+  // jwt-scala 10.0.1 depends on zio-json 0.7.36
   // though newer version compatible with a newer zio-json version is available
   // it is not yet published: https://github.com/jwt-scala/jwt-scala/issues/642
-  val ZioJsonVersion        = "0.7.21"
+  val ZioJsonVersion        = "0.7.36"
   val zioJson               = "dev.zio"                       %% "zio-json"                  % ZioJsonVersion
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
