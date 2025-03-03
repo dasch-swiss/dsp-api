@@ -10,12 +10,12 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck; integration/Te
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate; integration/Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck; integration/Test/headerCheck")
 
-val flywayVersion               = "11.3.2"
+val flywayVersion               = "11.3.4"
 val hikariVersion               = "6.2.1"
 val knoraSipiVersion            = "v31.7.0"
 val quillVersion                = "4.8.6"
 val sqliteVersion               = "3.49.1.0"
-val tapirVersion                = "1.11.14"
+val tapirVersion                = "1.11.16"
 val testContainersVersion       = "1.20.4"
 val zioConfigVersion            = "4.0.3"
 val zioJsonVersion              = "0.7.36"
@@ -24,8 +24,8 @@ val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
 val zioPreludeVersion           = "1.0.0-RC39"
-val zioSchemaVersion            = "1.6.1"
-val zioVersion                  = "2.1.15"
+val zioSchemaVersion            = "1.6.3"
+val zioVersion                  = "2.1.16"
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
 val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
@@ -75,7 +75,7 @@ val test = Seq(
   "dev.zio"      %% "zio-test-junit"         % zioVersion     % Test,
   "dev.zio"      %% "zio-test-magnolia"      % zioVersion     % Test,
   "dev.zio"      %% "zio-test-sbt"           % zioVersion     % Test,
-  "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.3.0"        % Test,
+  "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.3.1"        % Test,
 )
 
 val integrationTest = Seq(
