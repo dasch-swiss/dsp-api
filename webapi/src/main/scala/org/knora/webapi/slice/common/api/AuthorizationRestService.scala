@@ -27,6 +27,9 @@ final case class AuthorizationRestService(
   knoraProjectService: KnoraProjectService,
   knoraGroupService: KnoraGroupService,
 ) {
+  def ensureUserIsNotAnonymous(user: User): IO[ForbiddenException, Unit] =
+    checkActiveUser(user, !_.isAnonymousUser, "Anonymous users aren't allowed to perform this operation.")
+
   def ensureSystemAdmin(user: User): IO[ForbiddenException, Unit] = {
     lazy val msg =
       s"You are logged in with username '${user.username}', but only a system administrator has permissions for this operation."

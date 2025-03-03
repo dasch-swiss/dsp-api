@@ -9,7 +9,6 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
@@ -45,9 +44,11 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -65,6 +66,7 @@ final case class ValuesResponderV2(
   triplestoreService: TriplestoreService,
   permissionsResponder: PermissionsResponder,
   legalInfoService: LegalInfoService,
+  auth: AuthorizationRestService,
 )(implicit val stringFormatter: StringFormatter) {
 
   /**
@@ -1172,8 +1174,10 @@ final case class ValuesResponderV2(
     requestingUser: User,
     apiRequestId: UUID,
   ): Task[SuccessResponseV2] = {
-    def deleteTask(): Task[SuccessResponseV2] = {
+    val deleteTask: Task[SuccessResponseV2] = {
       for {
+        _ <- auth.ensureUserIsNotAnonymous(requestingUser)
+
         // Convert the submitted property IRI to the internal schema.
         submittedInternalPropertyIri <- ZIO.attempt(deleteValue.propertyIri.toOntologySchema(InternalSchema))
 
@@ -1351,10 +1355,6 @@ final case class ValuesResponderV2(
     }
 
     for {
-      // Don't allow anonymous users to create values.
-      _ <- ZIO.when(requestingUser.isAnonymousUser)(
-             ZIO.fail(ForbiddenException("Anonymous users aren't allowed to update values")),
-           )
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(apiRequestId, deleteValue.resourceIri, deleteTask())
     } yield taskResult
