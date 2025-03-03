@@ -1,5 +1,20 @@
 # Changelog
 
+## [31.8.0](https://github.com/dasch-swiss/dsp-api/compare/v31.7.0...v31.8.0) (2025-03-03)
+
+
+### Maintenances
+
+* Inline ConstructResponseUtilV2 trait with a single implementation ([#3517](https://github.com/dasch-swiss/dsp-api/issues/3517)) ([aa44b2a](https://github.com/dasch-swiss/dsp-api/commit/aa44b2ab0044841776d80fa59132093bf4efe4aa))
+* Minor dependency updates ([#3523](https://github.com/dasch-swiss/dsp-api/issues/3523)) ([a73083b](https://github.com/dasch-swiss/dsp-api/commit/a73083bdea6d6958d8b32b2960d2a10d79b3253c))
+* Patch dependency updates ([#3522](https://github.com/dasch-swiss/dsp-api/issues/3522)) ([277ee73](https://github.com/dasch-swiss/dsp-api/commit/277ee73f79186755c1e9e1c5324f0ec80596988c))
+* Remove AppRouter and RoutingActor, replace with MessageRelayActorRef ([#3519](https://github.com/dasch-swiss/dsp-api/issues/3519)) ([edaf9fb](https://github.com/dasch-swiss/dsp-api/commit/edaf9fb0134af75e5be1647723b62acf89802044))
+
+
+### Enhancements
+
+* Support JSON-LD for standoff endpoints (DEV-4345) ([#3516](https://github.com/dasch-swiss/dsp-api/issues/3516)) ([03d76c6](https://github.com/dasch-swiss/dsp-api/commit/03d76c6afe1c795c51fe7958f3c470f685f00ff1))
+
 ## [31.7.0](https://github.com/dasch-swiss/dsp-api/compare/v31.6.0...v31.7.0) (2025-02-24)
 
 
