@@ -1,5 +1,12 @@
 # Changelog
 
+## [31.8.1](https://github.com/dasch-swiss/dsp-api/compare/v31.8.0...v31.8.1) (2025-03-04)
+
+
+### Maintenances
+
+* Migrate v2/values to Tapir (DEV-4634) ([#3520](https://github.com/dasch-swiss/dsp-api/issues/3520)) ([9805e5d](https://github.com/dasch-swiss/dsp-api/commit/9805e5d939d618a9a0850b24b634ddecd769bd96))
+
 ## [31.8.0](https://github.com/dasch-swiss/dsp-api/compare/v31.7.0...v31.8.0) (2025-03-03)
 
 
