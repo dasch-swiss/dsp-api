@@ -5,11 +5,12 @@
 
 package org.knora.webapi.slice.resources.api
 
-import org.knora.webapi.slice.admin.api.Examples
 import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
 import zio.ZLayer
+
+import org.knora.webapi.slice.admin.api.Examples
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.resources.api.model.ValueUuid

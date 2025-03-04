@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders
 
+import zio.Random
 import zio.Task
 import zio.UIO
 import zio.ZIO
@@ -17,6 +18,7 @@ import scala.concurrent.Future
 
 import dsp.errors.ApplicationLockException
 import org.knora.webapi.IRI
+import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.util.JavaUtil
 
 /**
@@ -105,6 +107,11 @@ object IriLocker {
     val release: Unit => UIO[Unit] = _ => ZIO.attempt(decrementOrReleaseLock(iri, apiRequestID)).logError.ignore
     ZIO.scoped(ZIO.acquireRelease(acquire)(release) *> task)
   }
+
+  def runWithIriLock[A](iri: KnoraIri, task: Task[A]): Task[A] = for {
+    uuid   <- Random.nextUUID
+    result <- runWithIriLock(uuid, iri.toInternalSchema.toString, task)
+  } yield result
 
   /**
    * Tries to acquire an update lock for an API request on an IRI. If the API request already

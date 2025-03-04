@@ -28,6 +28,7 @@ object KnoraIris {
     final def toComplexSchema: SmartIri                     = self.smartIri.toComplexSchema
     final def toInternalSchema: SmartIri                    = self.smartIri.toInternalSchema
     final def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
+    final def isEqualToApiV2Complex(iri: String): Boolean   = toComplexSchema.toIri == iri
   }
 
   // PropertyIri and ResourceClassIri currently have the same constraint

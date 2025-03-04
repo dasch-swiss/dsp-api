@@ -17,7 +17,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageExternalFileValue
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageFileValue
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
@@ -1177,15 +1176,8 @@ final case class ValuesResponderV2(
     apiRequestId: UUID,
   ): Task[SuccessResponseV2] = {
     val deleteTask: Task[SuccessResponseV2] = for {
-      _ <- auth.ensureUserIsNotAnonymous(requestingUser)
-      propertyIri <-
-        iriConverter
-          .asPropertyIri(deleteValue.propertyIri.toIri)
-          .mapError(BadRequestException.apply)
-          // Don't accept knora-api:hasStandoffLinkToValue.
-          .filterOrFail(_.toComplexSchema.toIri != KA.HasStandoffLinkToValue)(
-            BadRequestException(s"Values of <${KA.HasStandoffLinkToValue}> cannot be deleted directly"),
-          )
+      _          <- auth.ensureUserIsNotAnonymous(requestingUser)
+      propertyIri = deleteValue.propertyIri
 
       propertyInfoForSubmittedProperty <-
         ontologyRepo
@@ -1203,7 +1195,7 @@ final case class ValuesResponderV2(
       // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
       // so we can see objects that the user doesn't have permission to see.
       resourceInfo <- getResourceWithPropertyValues(
-                        deleteValue.resourceIri,
+                        deleteValue.resourceIri.toInternalIri.value,
                         adjustedInternalPropertyInfo,
                         KnoraSystemInstances.Users.SystemUser,
                       )
@@ -1224,7 +1216,7 @@ final case class ValuesResponderV2(
         ZIO
           .fromOption(for {
             values <- resourceInfo.values.get(submittedInternalPropertyIri)
-            curVal <- values.find(_.valueIri == deleteValue.valueIri)
+            curVal <- values.find(_.valueIri == deleteValue.valueIri.toInternalSchema.toIri)
           } yield curVal)
           .orElseFail(
             NotFoundException(
@@ -1301,7 +1293,7 @@ final case class ValuesResponderV2(
           requestingUser,
         )
     } yield SuccessResponseV2(s"Value <$deletedValueIri> marked as deleted")
-    IriLocker.runWithIriLock(apiRequestId, deleteValue.resourceIri, deleteTask)
+    IriLocker.runWithIriLock(deleteValue.resourceIri, deleteTask)
   }
 
   /**

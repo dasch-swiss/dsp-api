@@ -34,6 +34,7 @@ import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
@@ -653,13 +654,14 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         ZIO.serviceWithZIO[ValuesResponderV2](
           _.deleteValueV2(
             DeleteValueV2(
-              resourceIri = resourceIri,
-              resourceClassIri =
+              ResourceIri.unsafeFrom(resourceIri.toSmartIri),
+              ResourceClassIri.unsafeFrom(
                 "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
-              propertyIri = propertyIri,
-              valueIri = intValueIriForFreetest.get,
-              valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-              deleteComment = Some("this value was incorrect"),
+              ),
+              PropertyIri.unsafeFrom(propertyIri),
+              ValueIri.unsafeFrom(intValueIriForFreetest.get.toSmartIri),
+              OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+              Some("this value was incorrect"),
             ),
             anythingUser2,
             randomUUID,
@@ -4408,10 +4410,10 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       ZIO.serviceWithZIO[ValuesResponderV2](
         _.deleteValueV2(
           DeleteValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
+            ResourceIri.unsafeFrom(resourceIri.toSmartIri),
+            ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
+            PropertyIri.unsafeFrom(propertyIri),
+            ValueIri.unsafeFrom(intValueIri.get.toSmartIri),
             valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
             deleteComment = Some("this value was incorrect"),
           ),
@@ -4434,12 +4436,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       ZIO.serviceWithZIO[ValuesResponderV2](
         _.deleteValueV2(
           DeleteValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = valueIri,
-            valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            deleteComment = Some("this value was incorrect"),
+            ResourceIri.unsafeFrom(resourceIri.toSmartIri),
+            ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
+            PropertyIri.unsafeFrom(propertyIri),
+            ValueIri.unsafeFrom(valueIri.toSmartIri),
+            OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            Some("this value was incorrect"),
           ),
           anythingUser1,
           randomUUID,
@@ -4466,13 +4468,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       ZIO.serviceWithZIO[ValuesResponderV2](
         _.deleteValueV2(
           DeleteValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueForRsyncIri.get,
-            valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            deleteComment = deleteComment,
-            deleteDate = Some(deleteDate),
+            ResourceIri.unsafeFrom(resourceIri.toSmartIri),
+            ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
+            PropertyIri.unsafeFrom(propertyIri),
+            ValueIri.unsafeFrom(intValueForRsyncIri.get.toSmartIri),
+            OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            deleteComment,
+            Some(deleteDate),
           ),
           anythingUser1,
           randomUUID,
@@ -4495,11 +4497,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       ZIO.serviceWithZIO[ValuesResponderV2](
         _.deleteValueV2(
           DeleteValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
-            valueIri = standoffLinkValueIri.get,
-            valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
+            ResourceIri.unsafeFrom(zeitglöckleinIri.toSmartIri),
+            ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri),
+            PropertyIri.unsafeFrom(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri),
+            ValueIri.unsafeFrom(standoffLinkValueIri.get.toSmartIri),
+            OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
           ),
           SharedTestDataADM.superUser,
           randomUUID,
@@ -4517,10 +4519,10 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       ZIO.serviceWithZIO[ValuesResponderV2](
         _.deleteValueV2(
           DeleteValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = zeitglöckleinCommentWithStandoffIri.get,
+            ResourceIri.unsafeFrom(zeitglöckleinIri.toSmartIri),
+            ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri),
+            PropertyIri.unsafeFrom(propertyIri),
+            ValueIri.unsafeFrom(zeitglöckleinCommentWithStandoffIri.get.toSmartIri),
             valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
             deleteComment = Some("this value was incorrect"),
           ),
@@ -4558,10 +4560,10 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       ZIO.serviceWithZIO[ValuesResponderV2](
         _.deleteValueV2(
           DeleteValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-            propertyIri = linkValuePropertyIri,
-            valueIri = linkValueIRI,
+            ResourceIri.unsafeFrom(resourceIri.toSmartIri),
+            ResourceClassIri.unsafeFrom(OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri),
+            PropertyIri.unsafeFrom(linkValuePropertyIri),
+            ValueIri.unsafeFrom(linkValueIRI.toSmartIri),
             valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
           ),
           incunabulaUser,
@@ -4586,11 +4588,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       ZIO.serviceWithZIO[ValuesResponderV2](
         _.deleteValueV2(
           DeleteValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
-            valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
+            ResourceIri.unsafeFrom(zeitglöckleinIri.toSmartIri),
+            ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri),
+            PropertyIri.unsafeFrom(propertyIri),
+            ValueIri.unsafeFrom("http://rdfh.ch/0803/c5058f3a/values/c3295339".toSmartIri),
+            OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
           ),
           incunabulaCreatorUser,
           randomUUID,
