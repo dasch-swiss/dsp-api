@@ -839,35 +839,25 @@ case class ReadResourcesSequenceV2(
   }
 
   /**
-   * Checks that requested resources were found and that the user has permission to see them. If not, throws an exception.
+   * Checks that requested resources were found and that the user has permission to see them. If not:
+   * Fails with a [[NotFoundException]]  if the requested resources are not found.
+   * Fails with a [[ForbiddenException]] if the user does not have permission to see the requested resources.
    *
    * @param targetResourceIris the IRIs to be checked.
    * @param resourcesSequence  the result of requesting those IRIs.
-   * @throws NotFoundException  if the requested resources are not found.
-   * @throws ForbiddenException if the user does not have permission to see the requested resources.
    */
-  def checkResourceIris(targetResourceIris: Set[IRI], resourcesSequence: ReadResourcesSequenceV2): Task[Unit] = {
-    val hiddenTargetResourceIris: Set[IRI] = targetResourceIris.intersect(resourcesSequence.hiddenResourceIris)
-
-    if (hiddenTargetResourceIris.nonEmpty) {
-      return ZIO.fail(
-        ForbiddenException(
-          s"You do not have permission to see one or more resources: ${hiddenTargetResourceIris.map(iri => s"<$iri>").mkString(", ")}",
-        ),
-      )
-    }
-
-    val missingResourceIris: Set[IRI] = targetResourceIris -- resourcesSequence.resources.map(_.resourceIri).toSet
-
-    if (missingResourceIris.nonEmpty) {
-      return ZIO.fail(
-        NotFoundException(
-          s"One or more resources were not found:  ${missingResourceIris.map(iri => s"<$iri>").mkString(", ")}",
-        ),
-      )
-    }
-    ZIO.unit
-  }
+  def checkResourceIris(targetResourceIris: Set[IRI], resourcesSequence: ReadResourcesSequenceV2): Task[Unit] =
+    targetResourceIris.intersect(resourcesSequence.hiddenResourceIris) match
+      case hiddenTargetResourceIris if hiddenTargetResourceIris.nonEmpty =>
+        lazy val msg =
+          s"You do not have permission to see one or more resources: ${hiddenTargetResourceIris.map(iri => s"<$iri>").mkString(", ")}"
+        ZIO.fail(ForbiddenException(msg))
+      case _ => {
+        val missingResourceIris = targetResourceIris -- resourcesSequence.resources.map(_.resourceIri).toSet
+        lazy val msg =
+          s"One or more resources were not found:  ${missingResourceIris.map(iri => s"<$iri>").mkString(", ")}"
+        ZIO.when(missingResourceIris.nonEmpty)(ZIO.fail(NotFoundException(msg))).unit
+      }
 
   /**
    * Considers this [[ReadResourcesSequenceV2]] to be the result of an update operation in a single project
