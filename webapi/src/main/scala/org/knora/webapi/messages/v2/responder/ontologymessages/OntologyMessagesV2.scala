@@ -1824,6 +1824,9 @@ case class ReadPropertyInfoV2(
   isStandoffInternalReferenceProperty: Boolean = false,
 ) extends ReadEntityInfoV2
     with KnoraReadV2[ReadPropertyInfoV2] {
+
+  def propertyIri: PropertyIri = PropertyIri.unsafeFrom(entityInfoContent.propertyIri)
+
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadPropertyInfoV2 = copy(
     entityInfoContent = entityInfoContent.toOntologySchema(targetSchema),
   )
