@@ -5,11 +5,11 @@
 
 package org.knora.webapi.slice.resources.api
 
+import org.knora.webapi.slice.admin.api.Examples
 import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
 import zio.ZLayer
-
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.resources.api.model.ValueUuid
@@ -58,20 +58,34 @@ final case class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
 
   val deleteValues = baseEndpoint.withUserEndpoint.post
     .in(base / "delete")
-    .in(
-      stringJsonBody.example(
-        "{\n  \"@id\": \"http://rdfh.ch/0001/a-thing\",\n  \"@type\": \"anything:Thing\",\n  \"anything:hasInteger\": {\n    \"@id\": \"http://rdfh.ch/0001/a-thing/values/vp96riPIRnmQcbMhgpv_Rg\",\n    \"@type\": \"knora-api:IntValue\",\n    \"knora-api:deleteComment\": \"This value was created by mistake.\"\n  },\n  \"@context\": {\n    \"knora-api\": \"http://api.knora.org/ontology/knora-api/v2#\",\n    \"anything\": \"http://0.0.0.0:3333/ontology/0001/anything/v2#\"\n  }\n}",
-      ),
-    )
+    .in(stringJsonBody.example(Examples.Values.deleteValue))
     .out(stringJsonBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .description(linkToValuesDocumentation)
+    .description(s"Delete a Value, aka. soft-delete, marks a value as deleted. $linkToValuesDocumentation")
+
+  val postValuesErase = baseEndpoint.securedEndpoint.post
+    .in(base / "erase")
+    .in(stringJsonBody.example(Examples.Values.deleteValue))
+    .out(stringJsonBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description(s"Erase a Value and all of its old versions from the database completely. $linkToValuesDocumentation")
+
+  val postValuesErasehistory = baseEndpoint.securedEndpoint.post
+    .in(base / "erasehistory")
+    .in(stringJsonBody.example(Examples.Values.deleteValue))
+    .out(stringJsonBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description(
+      s"Erase all old versions of a Value from the database completely and keep only the latest version. $linkToValuesDocumentation",
+    )
 
   val endpoints: Seq[AnyEndpoint] = Seq(
     getValue,
     postValues,
     putValues,
     deleteValues,
+    postValuesErase,
+    postValuesErasehistory,
   ).map(_.endpoint.tag("V2 Values"))
 }
 

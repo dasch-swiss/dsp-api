@@ -1161,6 +1161,9 @@ final case class ValuesResponderV2(
       )
     }
 
+  def eraseValue(delete: DeleteValueV2, requestingUser: User): Task[SuccessResponseV2]        = ???
+  def eraseValueHistory(delete: DeleteValueV2, requestingUser: User): Task[SuccessResponseV2] = ???
+
   /**
    * Marks a value as deleted.
    *

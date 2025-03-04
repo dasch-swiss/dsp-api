@@ -9,7 +9,6 @@ import zio.Random
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.responders.v2.ResourcesResponderV2
@@ -73,6 +72,18 @@ final class ValuesRestService(
       knoraResponse <- valuesService.deleteValueV2(valueToDelete, user, apiRequestId)
       response      <- render(knoraResponse)
     } yield response
+
+  def eraseValue(user: User)(jsondLd: String): Task[(RenderedResponse, MediaType)] = for {
+    req           <- requestParser.deleteValueV2FromJsonLd(jsondLd).mapError(BadRequestException.apply)
+    knoraResponse <- valuesService.eraseValue(req, user)
+    response      <- render(knoraResponse)
+  } yield response
+
+  def eraseValueHistory(user: User)(jsondLd: String): Task[(RenderedResponse, MediaType)] = for {
+    req           <- requestParser.deleteValueV2FromJsonLd(jsondLd).mapError(BadRequestException.apply)
+    knoraResponse <- valuesService.eraseValueHistory(req, user)
+    response      <- render(knoraResponse)
+  } yield response
 
   private def render(task: Task[KnoraResponseV2], formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
     task.flatMap(renderer.render(_, formatOptions))
