@@ -9,6 +9,7 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
+
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
@@ -1202,32 +1203,20 @@ final case class ValuesResponderV2(
                         propertyInfoForDelete,
                       )
 
-      // Check that the resource belongs to the class that the client submitted.
-      _ <- ZIO.when(resourceInfo.resourceClassIri != deleteValue.resourceClassIri.toInternalSchema) {
-             ZIO.fail(
-               BadRequestException(
-                 s"Resource <${deleteValue.resourceIri}> does not belong to class <${deleteValue.resourceClassIri}>",
-               ),
-             )
-           }
-
       // Check that the resource has the value that the user wants to delete, as an object of the submitted property.
       // Check that the user has permission to delete the value.
-      submittedInternalPropertyIri = deleteValue.propertyIri.toInternalSchema
       currentValue <-
-        ZIO
-          .fromOption(for {
-            values <- resourceInfo.values.get(submittedInternalPropertyIri)
-            curVal <- values.find(_.valueIri == deleteValue.valueIri.toInternalSchema.toIri)
-          } yield curVal)
-          .orElseFail(
-            NotFoundException(
-              s"Resource <${deleteValue.resourceIri}> does not have value <${deleteValue.valueIri}> as an object of property <${deleteValue.propertyIri}>",
-            ),
+        ZIO.fromOption(resourceInfo.getValue(deleteValue.propertyIri, deleteValue.valueIri)).orElseFail {
+          NotFoundException(
+            s"Resource <${deleteValue.resourceIri}> does not have value <${deleteValue.valueIri}> as an " +
+              s"object of property <${deleteValue.propertyIri}>",
           )
+        }
 
-      // Check that the value is of the type that the client submitted.
-      _ <-
+      _ <- // Check that the user has permission to delete the value.
+        resourceUtilV2.checkValuePermission(resourceInfo, currentValue, Permission.ObjectAccess.Delete, requestingUser)
+
+      _ <- // Check that the value is of the type that the client submitted.
         ZIO.when(currentValue.valueContent.valueType != deleteValue.valueTypeIri.toOntologySchema(InternalSchema))(
           ZIO.fail(
             BadRequestException(
@@ -1236,49 +1225,40 @@ final case class ValuesResponderV2(
           ),
         )
 
-      // Check the user's permissions on the value.
-      _ <- resourceUtilV2.checkValuePermission(
-             resourceInfo = resourceInfo,
-             valueInfo = currentValue,
-             permissionNeeded = Permission.ObjectAccess.Delete,
-             requestingUser,
-           )
+      _ <- // Check that the custom delete date (if present) is later than the date of the current version.
+        ZIO.when(deleteValue.deleteDate.exists(!_.isAfter(currentValue.valueCreationDate)))(
+          ZIO.fail(BadRequestException("A custom delete date must be later than the value's creation date")),
+        )
 
-      // Get the definition of the resource class.
-      // Check that the resource class's cardinality for the submitted property allows this value to be deleted.
-      cardinalityInfo <-
+      _ <- // Check that the resource belongs to the class that the client submitted.
+        ZIO.when(resourceInfo.resourceClassIri != deleteValue.resourceClassIri.toInternalSchema) {
+          ZIO.fail(
+            BadRequestException(
+              s"Resource <${deleteValue.resourceIri}> does not belong to class <${deleteValue.resourceClassIri}>",
+            ),
+          )
+        }
+
+      cardinalityInfo <- // Check that the resource class's cardinality for the submitted property allows this value to be deleted.
         ontologyRepo
           .findClassBy(resourceInfo.resourceClassIri.toInternalIri)
-          .someOrFail(NotFoundException(s"Resource class not found: ${resourceInfo.resourceClassIri}"))
-          .map(_.allCardinalities)
-          .flatMap(c =>
-            ZIO
-              .fromOption(c.get(submittedInternalPropertyIri))
-              .orElseFail(
-                InconsistentRepositoryDataException(
-                  s"Resource <${deleteValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri.toComplexSchema}>, which has no cardinality for property <${deleteValue.propertyIri}>",
-                ),
-              ),
+          .someOrFail(NotFoundException(s"Resource class not found: ${resourceInfo.resourceClassIri.toComplexSchema}"))
+          .map(_.getCardinalityFromAllCardinalities(deleteValue.propertyIri))
+          .someOrFail(
+            InconsistentRepositoryDataException(
+              s"Resource <${deleteValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri.toComplexSchema}>, which has no cardinality for property <${deleteValue.propertyIri}>",
+            ),
           )
-
-      currentValuesForProp: Seq[ReadValueV2] =
-        resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
-
       _ <-
-        ZIO.when(cardinalityInfo.cardinality.min == 1 && currentValuesForProp.size == 1)(
+        ZIO.when(cardinalityInfo.cardinality.min > (resourceInfo.countValues(deleteValue.propertyIri) - 1))(
           ZIO.fail(
             OntologyConstraintException(
-              s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of " +
+              s"Resource class <${resourceInfo.resourceClassIri.toComplexSchema}> has a cardinality of " +
                 s"${cardinalityInfo.cardinality} on property <${deleteValue.propertyIri}>, " +
                 s"and this does not allow a value to be deleted for that property from resource <${deleteValue.resourceIri}>",
             ),
           ),
         )
-
-      // If a custom delete date was submitted, make sure it's later than the date of the current version.
-      _ <- ZIO.when(deleteValue.deleteDate.exists(!_.isAfter(currentValue.valueCreationDate)))(
-             ZIO.fail(BadRequestException("A custom delete date must be later than the value's creation date")),
-           )
 
       // Get information about the project that the resource is in, so we know which named graph to do the update in.
       dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
@@ -1465,7 +1445,6 @@ final case class ValuesResponderV2(
    * @param submittedPropertyIri             the submitted property IRI, in the API v2 complex schema.
    * @param maybeSubmittedValueType          the submitted value type, if provided, in the API v2 complex schema.
    * @param propertyInfoForSubmittedProperty ontology information about the submitted property, in the internal schema.
-   * @param requestingUser                   the requesting user.
    * @return ontology information about the adjusted property.
    */
   private def getAdjustedInternalPropertyInfo(

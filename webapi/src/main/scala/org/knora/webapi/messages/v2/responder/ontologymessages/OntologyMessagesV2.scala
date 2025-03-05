@@ -1530,6 +1530,9 @@ case class ReadClassInfoV2(
   lazy val allCardinalities: Map[SmartIri, KnoraCardinalityInfo] =
     inheritedCardinalities ++ entityInfoContent.directCardinalities
 
+  def getCardinalityFromAllCardinalities(propertyIri: PropertyIri): Option[KnoraCardinalityInfo] =
+    allCardinalities.get(propertyIri.toInternalSchema)
+
   /**
    * All the class's cardinalities for subproperties of `knora-base:resourceProperty`.
    */
