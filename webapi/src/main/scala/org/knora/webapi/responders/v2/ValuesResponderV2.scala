@@ -1261,12 +1261,10 @@ final case class ValuesResponderV2(
         )
 
       // Get information about the project that the resource is in, so we know which named graph to do the update in.
-      dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
 
       // Do the update.
       deletedValueIri <-
         deleteValueV2AfterChecks(
-          dataNamedGraph,
           resourceInfo,
           propertyInfoForDelete.propertyIri.toInternalSchema,
           deleteValue.deleteComment,
@@ -1281,7 +1279,6 @@ final case class ValuesResponderV2(
    * Deletes a value (either an ordinary value or a link), using an existing transaction, assuming that
    * pre-update checks have already been done.
    *
-   * @param dataNamedGraph the named graph in which the value is to be deleted.
    * @param resourceInfo   information about the the resource in which to create the value.
    * @param propertyIri    the IRI of the property that points from the resource to the value.
    * @param currentValue   the value to be deleted.
@@ -1291,7 +1288,6 @@ final case class ValuesResponderV2(
    * @return the IRI of the value that was marked as deleted.
    */
   private def deleteValueV2AfterChecks(
-    dataNamedGraph: IRI,
     resourceInfo: ReadResourceV2,
     propertyIri: SmartIri,
     deleteComment: Option[String],
@@ -1302,7 +1298,6 @@ final case class ValuesResponderV2(
     currentValue.valueContent match {
       case _: LinkValueContentV2 =>
         deleteLinkValueV2AfterChecks(
-          dataNamedGraph = dataNamedGraph,
           resourceInfo = resourceInfo,
           propertyIri = propertyIri,
           currentValue = currentValue,
@@ -1313,7 +1308,6 @@ final case class ValuesResponderV2(
 
       case _ =>
         deleteOrdinaryValueV2AfterChecks(
-          dataNamedGraph = dataNamedGraph,
           resourceInfo = resourceInfo,
           propertyIri = propertyIri,
           currentValue = currentValue,
@@ -1336,7 +1330,6 @@ final case class ValuesResponderV2(
    * @return the IRI of the value that was marked as deleted.
    */
   private def deleteLinkValueV2AfterChecks(
-    dataNamedGraph: IRI,
     resourceInfo: ReadResourceV2,
     propertyIri: SmartIri,
     currentValue: ReadValueV2,
@@ -1366,7 +1359,7 @@ final case class ValuesResponderV2(
           valueCreator = currentValue.attachedToUser,
           valuePermissions = currentValue.permissions,
         )
-
+      dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
       sparqlUpdate = sparql.v2.txt.deleteLink(
                        dataNamedGraph = dataNamedGraph,
                        linkSourceIri = resourceInfo.resourceIri,
@@ -1382,7 +1375,6 @@ final case class ValuesResponderV2(
   /**
    * Deletes an ordinary value after checks.
    *
-   * @param dataNamedGraph the named graph in which the value is to be deleted.
    * @param resourceInfo   information about the the resource in which to create the value.
    * @param propertyIri    the IRI of the property that points from the resource to the value.
    * @param currentValue   the value to be deleted.
@@ -1392,7 +1384,6 @@ final case class ValuesResponderV2(
    * @return the IRI of the value that was marked as deleted.
    */
   private def deleteOrdinaryValueV2AfterChecks(
-    dataNamedGraph: IRI,
     resourceInfo: ReadResourceV2,
     propertyIri: SmartIri,
     currentValue: ReadValueV2,
@@ -1422,7 +1413,8 @@ final case class ValuesResponderV2(
     // If no custom delete date was provided, make a timestamp to indicate when the value was
     // marked as deleted.
     for {
-      linkUpdates <- ZIO.collectAll(linkUpdateTasks)
+      linkUpdates        <- ZIO.collectAll(linkUpdateTasks)
+      dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
       sparqlUpdate = sparql.v2.txt.deleteValue(
                        dataNamedGraph = dataNamedGraph,
                        resourceIri = resourceInfo.resourceIri,
