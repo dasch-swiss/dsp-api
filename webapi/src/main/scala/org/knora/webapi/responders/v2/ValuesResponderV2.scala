@@ -1174,18 +1174,20 @@ final case class ValuesResponderV2(
     deleteValue: DeleteValueV2,
     requestingUser: User,
     apiRequestId: UUID,
-  ): Task[SuccessResponseV2] = {
-    val deleteTask: Task[SuccessResponseV2] = for {
-      _          <- auth.ensureUserIsNotAnonymous(requestingUser)
-      propertyIri = deleteValue.propertyIri
+  ): Task[SuccessResponseV2] = IriLocker.runWithIriLock(
+    deleteValue.resourceIri,
+    for {
+      _ <- auth.ensureUserIsNotAnonymous(requestingUser)
 
       propertyInfoForSubmittedProperty <-
         ontologyRepo
-          .findProperty(propertyIri)
-          .someOrFail(NotFoundException(s"Property not found: $propertyIri"))
+          .findProperty(deleteValue.propertyIri)
+          .someOrFail(NotFoundException(s"Property not found: $deleteValue.propertyIri"))
           // Don't accept link properties.
           .filterOrFail(!_.isLinkProp)(
-            BadRequestException(s"Invalid property <$propertyIri>. Use a link value property to submit a link."),
+            BadRequestException(
+              s"Invalid property <$deleteValue.propertyIri>. Use a link value property to submit a link.",
+            ),
           )
 
       // Make an adjusted version of the submitted property: if it's a link value property, substitute the
@@ -1211,7 +1213,7 @@ final case class ValuesResponderV2(
 
       // Check that the resource has the value that the user wants to delete, as an object of the submitted property.
       // Check that the user has permission to delete the value.
-      submittedInternalPropertyIri = propertyIri.toInternalSchema
+      submittedInternalPropertyIri = deleteValue.propertyIri.toInternalSchema
       currentValue <-
         ZIO
           .fromOption(for {
@@ -1292,9 +1294,8 @@ final case class ValuesResponderV2(
           currentValue,
           requestingUser,
         )
-    } yield SuccessResponseV2(s"Value <$deletedValueIri> marked as deleted")
-    IriLocker.runWithIriLock(deleteValue.resourceIri, deleteTask)
-  }
+    } yield SuccessResponseV2(s"Value <$deletedValueIri> marked as deleted"),
+  )
 
   /**
    * Deletes a value (either an ordinary value or a link), using an existing transaction, assuming that
