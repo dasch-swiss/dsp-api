@@ -1163,6 +1163,23 @@ final case class ValuesResponderV2(
   def eraseValue(delete: DeleteValueV2, requestingUser: User): Task[SuccessResponseV2]        = ???
   def eraseValueHistory(delete: DeleteValueV2, requestingUser: User): Task[SuccessResponseV2] = ???
 
+  def propertyInfoForDelete(deleteValue: DeleteValueV2) = for {
+    info <-
+      ontologyRepo
+        .findProperty(deleteValue.propertyIri)
+        .someOrFail(NotFoundException(s"Property not found: <$deleteValue.propertyIri>"))
+        // Don't accept link properties.
+        .filterOrFail(!_.isLinkProp)(
+          BadRequestException(
+            s"Invalid property <$deleteValue.propertyIri>. Use a link value property to submit a link.",
+          ),
+        )
+
+    // Make an adjusted version of the submitted property: if it's a link value property, substitute the
+    // corresponding link property, whose objects we will need to query.
+    info <- linkPropertyIfLinkValue(info)
+  } yield info
+
   /**
    * Marks a value as deleted.
    *
@@ -1177,28 +1194,14 @@ final case class ValuesResponderV2(
   ): Task[SuccessResponseV2] = IriLocker.runWithIriLock(
     deleteValue.resourceIri,
     for {
-      _ <- auth.ensureUserIsNotAnonymous(requestingUser)
-
-      propertyInfoForSubmittedProperty <-
-        ontologyRepo
-          .findProperty(deleteValue.propertyIri)
-          .someOrFail(NotFoundException(s"Property not found: $deleteValue.propertyIri"))
-          // Don't accept link properties.
-          .filterOrFail(!_.isLinkProp)(
-            BadRequestException(
-              s"Invalid property <$deleteValue.propertyIri>. Use a link value property to submit a link.",
-            ),
-          )
-
-      // Make an adjusted version of the submitted property: if it's a link value property, substitute the
-      // corresponding link property, whose objects we will need to query.
-      adjustedInternalPropertyInfo <- linkPropertyIfLinkValue(propertyInfoForSubmittedProperty)
+      _                     <- auth.ensureUserIsNotAnonymous(requestingUser)
+      propertyInfoForDelete <- propertyInfoForDelete(deleteValue)
 
       // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
       // so we can see objects that the user doesn't have permission to see.
       resourceInfo <- getResourceWithPropertyValues(
                         deleteValue.resourceIri.toInternalIri.value,
-                        adjustedInternalPropertyInfo,
+                        propertyInfoForDelete,
                         KnoraSystemInstances.Users.SystemUser,
                       )
 
@@ -1288,7 +1291,7 @@ final case class ValuesResponderV2(
         deleteValueV2AfterChecks(
           dataNamedGraph,
           resourceInfo,
-          adjustedInternalPropertyInfo.propertyIri.toInternalSchema,
+          propertyInfoForDelete.propertyIri.toInternalSchema,
           deleteValue.deleteComment,
           deleteValue.deleteDate,
           currentValue,
