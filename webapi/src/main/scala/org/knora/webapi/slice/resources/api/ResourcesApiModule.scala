@@ -12,6 +12,7 @@ import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
@@ -20,8 +21,8 @@ import org.knora.webapi.slice.resources.api.service.ValuesRestService
 
 object ResourcesApiModule
     extends URModule[
-      ApiComplexV2JsonLdRequestParser & BaseEndpoints & HandlerMapper & KnoraResponseRenderer & ResourcesResponderV2 &
-        TapirToPekkoInterpreter & ValuesResponderV2,
+      AuthorizationRestService & ApiComplexV2JsonLdRequestParser & BaseEndpoints & HandlerMapper &
+        KnoraResponseRenderer & ResourcesResponderV2 & TapirToPekkoInterpreter & ValuesResponderV2,
       ResourcesApiRoutes & ValuesEndpoints,
     ] { self =>
 

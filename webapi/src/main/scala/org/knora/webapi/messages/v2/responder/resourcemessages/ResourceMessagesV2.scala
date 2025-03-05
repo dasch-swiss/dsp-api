@@ -31,6 +31,8 @@ import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ValueIri
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -376,6 +378,14 @@ case class ReadResourceV2(
   deletionInfo: Option[DeletionInfo],
 ) extends ResourceV2
     with KnoraReadV2[ReadResourceV2] {
+
+  def getValue(propertyIri: PropertyIri, valueIri: ValueIri): Option[ReadValueV2] =
+    getValues(propertyIri).find(_.valueIri == valueIri.toString)
+
+  def getValues(propertyIri: PropertyIri): Seq[ReadValueV2] = values.getOrElse(propertyIri.toInternalSchema, Seq.empty)
+
+  def countValues(propertyIri: PropertyIri): Int = getValues(propertyIri).size
+
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourceV2 =
     copy(
       resourceClassIri = resourceClassIri.toOntologySchema(targetSchema),

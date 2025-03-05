@@ -28,6 +28,7 @@ object KnoraIris {
     final def toComplexSchema: SmartIri                     = self.smartIri.toComplexSchema
     final def toInternalSchema: SmartIri                    = self.smartIri.toInternalSchema
     final def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
+    final def isEqualToApiV2Complex(iri: String): Boolean   = toComplexSchema.toIri == iri
   }
 
   // PropertyIri and ResourceClassIri currently have the same constraint
@@ -38,7 +39,10 @@ object KnoraIris {
   // functions which create these from a SmartIri. `from` accepts any SmartIri. `fromApiV2Complex` only accepts
   // SmartIris that are part of the API v2 complex schema.
 
-  final case class PropertyIri private (smartIri: SmartIri) extends KnoraIri
+  final case class PropertyIri private (smartIri: SmartIri) extends KnoraIri {
+    def fromLinkValuePropToLinkProp: PropertyIri = PropertyIri.unsafeFrom(smartIri.fromLinkValuePropToLinkProp)
+    def fromLinkPropToLinkValueProp: PropertyIri = PropertyIri.unsafeFrom(smartIri.fromLinkPropToLinkValueProp)
+  }
 
   object PropertyIri {
 

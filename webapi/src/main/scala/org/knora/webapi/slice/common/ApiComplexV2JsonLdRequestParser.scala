@@ -160,11 +160,17 @@ final case class ApiComplexV2JsonLdRequestParser(
       valueIri           <- v.valueIriOrFail
       valueDeleteDate    <- v.deleteDateOption
       valueDeleteComment <- v.deleteCommentOption
+      _ <- ZIO
+             .fail(s"Values of <${KA.HasStandoffLinkToValue}> cannot be deleted directly")
+             .when(v.propertyIri.isEqualToApiV2Complex(KA.HasStandoffLinkToValue))
+      _ <- ZIO
+             .fail(s"Value and resource must be in the same project")
+             .when(valueIri.shortcode != resourceIri.shortcode)
     } yield DeleteValueV2(
-      resourceIri.smartIri.toString,
-      r.resourceClassSmartIri,
-      v.propertySmartIri,
-      valueIri.smartIri.toString,
+      resourceIri,
+      r.resourceClassIri,
+      v.propertyIri,
+      valueIri,
       v.valueType,
       valueDeleteComment,
       valueDeleteDate,

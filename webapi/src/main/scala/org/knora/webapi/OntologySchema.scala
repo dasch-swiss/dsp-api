@@ -16,6 +16,9 @@ import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
  */
 case class SchemaRendering(schema: ApiV2Schema, rendering: Set[Rendering])
 object SchemaRendering {
+
+  def default: SchemaRendering = SchemaRendering(ApiV2Complex, Set.empty)
+
   def apiV2SchemaWithOption(option: Rendering): SchemaRendering        = apiV2SchemaWithOptions(Set(option))
   def apiV2SchemaWithOptions(options: Set[Rendering]): SchemaRendering = SchemaRendering(ApiV2Complex, options)
 }

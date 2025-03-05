@@ -39,6 +39,7 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadReso
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -2246,11 +2247,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
         ZIO.serviceWithZIO[ValuesResponderV2](
           _.deleteValueV2(
             DeleteValueV2(
-              resourceIri = resourceWithLinkIri,
-              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-              propertyIri = linkValuePropertyIri,
-              valueIri = linkValue.valueIri,
-              valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
+              ResourceIri.unsafeFrom(resourceWithLinkIri.toSmartIri),
+              ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
+              PropertyIri.unsafeFrom(linkValuePropertyIri),
+              ValueIri.unsafeFrom(linkValue.valueIri.toSmartIri),
+              OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
             ),
             anythingUserProfile,
             UUID.randomUUID(),
@@ -2518,12 +2519,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
         ZIO.serviceWithZIO[ValuesResponderV2](
           _.deleteValueV2(
             DeleteValueV2(
-              resourceIri = resourceIri,
-              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-              propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
-              valueIri = valueToDelete,
-              valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
-              deleteComment = Some(deleteComment),
+              ResourceIri.unsafeFrom(resourceIri.toSmartIri),
+              ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
+              PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri),
+              ValueIri.unsafeFrom(valueToDelete.toSmartIri),
+              OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
+              Some(deleteComment),
             ),
             anythingUserProfile,
             UUID.randomUUID,

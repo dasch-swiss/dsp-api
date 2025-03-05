@@ -16,6 +16,7 @@ import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
@@ -23,6 +24,7 @@ import org.knora.webapi.slice.resources.api.model.ValueUuid
 import org.knora.webapi.slice.resources.api.model.ValueVersionDate
 
 final class ValuesRestService(
+  private val auth: AuthorizationRestService,
   private val valuesService: ValuesResponderV2,
   private val resourcesService: ResourcesResponderV2,
   private val requestParser: ApiComplexV2JsonLdRequestParser,
@@ -73,6 +75,20 @@ final class ValuesRestService(
       knoraResponse <- valuesService.deleteValueV2(valueToDelete, user, apiRequestId)
       response      <- render(knoraResponse)
     } yield response
+
+  def eraseValue(user: User)(jsondLd: String): Task[(RenderedResponse, MediaType)] = for {
+    req           <- requestParser.deleteValueV2FromJsonLd(jsondLd).mapError(BadRequestException.apply)
+    _             <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, req.shortcode)
+    knoraResponse <- valuesService.eraseValue(req, user)
+    response      <- render(knoraResponse)
+  } yield response
+
+  def eraseValueHistory(user: User)(jsondLd: String): Task[(RenderedResponse, MediaType)] = for {
+    req           <- requestParser.deleteValueV2FromJsonLd(jsondLd).mapError(BadRequestException.apply)
+    _             <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, req.shortcode)
+    knoraResponse <- valuesService.eraseValueHistory(req, user)
+    response      <- render(knoraResponse)
+  } yield response
 
   private def render(task: Task[KnoraResponseV2], formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
     task.flatMap(renderer.render(_, formatOptions))

@@ -1530,6 +1530,9 @@ case class ReadClassInfoV2(
   lazy val allCardinalities: Map[SmartIri, KnoraCardinalityInfo] =
     inheritedCardinalities ++ entityInfoContent.directCardinalities
 
+  def getCardinalityFromAllCardinalities(propertyIri: PropertyIri): Option[KnoraCardinalityInfo] =
+    allCardinalities.get(propertyIri.toInternalSchema)
+
   /**
    * All the class's cardinalities for subproperties of `knora-base:resourceProperty`.
    */
@@ -1824,6 +1827,9 @@ case class ReadPropertyInfoV2(
   isStandoffInternalReferenceProperty: Boolean = false,
 ) extends ReadEntityInfoV2
     with KnoraReadV2[ReadPropertyInfoV2] {
+
+  def propertyIri: PropertyIri = PropertyIri.unsafeFrom(entityInfoContent.propertyIri)
+
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadPropertyInfoV2 = copy(
     entityInfoContent = entityInfoContent.toOntologySchema(targetSchema),
   )
