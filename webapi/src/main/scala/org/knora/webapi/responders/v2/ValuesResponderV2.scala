@@ -44,6 +44,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
@@ -1260,67 +1261,32 @@ final case class ValuesResponderV2(
           ),
         )
 
-      // Get information about the project that the resource is in, so we know which named graph to do the update in.
-
-      // Do the update.
-      deletedValueIri <-
-        deleteValueV2AfterChecks(
-          resourceInfo,
-          propertyInfoForDelete.propertyIri.toInternalSchema,
-          deleteValue.deleteComment,
-          deleteValue.deleteDate,
-          currentValue,
-          requestingUser,
-        )
+      deletedValueIri <- currentValue.valueContent match {
+                           case _: LinkValueContentV2 =>
+                             deleteLinkValueV2AfterChecks(
+                               resourceInfo,
+                               propertyInfoForDelete.propertyIri,
+                               currentValue,
+                               deleteValue.deleteComment,
+                               deleteValue.deleteDate,
+                               requestingUser,
+                             )
+                           case _ =>
+                             deleteOrdinaryValueV2AfterChecks(
+                               resourceInfo,
+                               propertyInfoForDelete.propertyIri,
+                               currentValue,
+                               deleteValue.deleteComment,
+                               deleteValue.deleteDate,
+                               requestingUser,
+                             )
+                         }
     } yield SuccessResponseV2(s"Value <$deletedValueIri> marked as deleted"),
   )
 
   /**
-   * Deletes a value (either an ordinary value or a link), using an existing transaction, assuming that
-   * pre-update checks have already been done.
-   *
-   * @param resourceInfo   information about the the resource in which to create the value.
-   * @param propertyIri    the IRI of the property that points from the resource to the value.
-   * @param currentValue   the value to be deleted.
-   * @param deleteComment  an optional comment explaining why the value is being deleted.
-   * @param deleteDate     an optional timestamp indicating when the value was deleted.
-   * @param requestingUser the user making the request.
-   * @return the IRI of the value that was marked as deleted.
-   */
-  private def deleteValueV2AfterChecks(
-    resourceInfo: ReadResourceV2,
-    propertyIri: SmartIri,
-    deleteComment: Option[String],
-    deleteDate: Option[Instant],
-    currentValue: ReadValueV2,
-    requestingUser: User,
-  ): Task[IRI] =
-    currentValue.valueContent match {
-      case _: LinkValueContentV2 =>
-        deleteLinkValueV2AfterChecks(
-          resourceInfo = resourceInfo,
-          propertyIri = propertyIri,
-          currentValue = currentValue,
-          deleteComment = deleteComment,
-          deleteDate = deleteDate,
-          requestingUser = requestingUser,
-        )
-
-      case _ =>
-        deleteOrdinaryValueV2AfterChecks(
-          resourceInfo = resourceInfo,
-          propertyIri = propertyIri,
-          currentValue = currentValue,
-          deleteComment = deleteComment,
-          deleteDate = deleteDate,
-          requestingUser = requestingUser,
-        )
-    }
-
-  /**
    * Deletes a link after checks.
    *
-   * @param dataNamedGraph the named graph in which the value is to be deleted.
    * @param resourceInfo   information about the the resource in which to create the value.
    * @param propertyIri    the IRI of the property that points from the resource to the value.
    * @param currentValue   the value to be deleted.
@@ -1331,7 +1297,7 @@ final case class ValuesResponderV2(
    */
   private def deleteLinkValueV2AfterChecks(
     resourceInfo: ReadResourceV2,
-    propertyIri: SmartIri,
+    propertyIri: PropertyIri,
     currentValue: ReadValueV2,
     deleteComment: Option[String],
     deleteDate: Option[Instant],
@@ -1354,7 +1320,7 @@ final case class ValuesResponderV2(
       sparqlTemplateLinkUpdate <-
         decrementLinkValue(
           sourceResourceInfo = resourceInfo,
-          linkPropertyIri = propertyIri,
+          linkPropertyIri = propertyIri.toInternalSchema,
           targetResourceIri = currentLinkValueContent.referredResourceIri,
           valueCreator = currentValue.attachedToUser,
           valuePermissions = currentValue.permissions,
@@ -1385,7 +1351,7 @@ final case class ValuesResponderV2(
    */
   private def deleteOrdinaryValueV2AfterChecks(
     resourceInfo: ReadResourceV2,
-    propertyIri: SmartIri,
+    propertyIri: PropertyIri,
     currentValue: ReadValueV2,
     deleteComment: Option[String],
     deleteDate: Option[Instant],
@@ -1418,7 +1384,7 @@ final case class ValuesResponderV2(
       sparqlUpdate = sparql.v2.txt.deleteValue(
                        dataNamedGraph = dataNamedGraph,
                        resourceIri = resourceInfo.resourceIri,
-                       propertyIri = propertyIri,
+                       propertyIri = propertyIri.toInternalSchema,
                        valueIri = currentValue.valueIri,
                        maybeDeleteComment = deleteComment,
                        linkUpdates = linkUpdates,
