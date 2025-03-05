@@ -9,7 +9,6 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
@@ -24,6 +23,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionT
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
@@ -151,7 +151,6 @@ final case class ValuesResponderV2(
           getResourceWithPropertyValues(
             resourceIri = valueToCreate.resourceIri,
             propertyInfo = adjustedInternalPropertyInfo,
-            requestingUser = KnoraSystemInstances.Users.SystemUser,
           )
 
         // Check that the user has permission to modify the resource.
@@ -877,7 +876,6 @@ final case class ValuesResponderV2(
         getResourceWithPropertyValues(
           resourceIri = updateValue.resourceIri,
           propertyInfo = adjustedInternalPropertyInfo,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
         )
 
       _ <- {
@@ -1202,7 +1200,6 @@ final case class ValuesResponderV2(
       resourceInfo <- getResourceWithPropertyValues(
                         deleteValue.resourceIri.toInternalIri.value,
                         propertyInfoForDelete,
-                        KnoraSystemInstances.Users.SystemUser,
                       )
 
       // Check that the resource belongs to the class that the client submitted.
@@ -1539,13 +1536,11 @@ final case class ValuesResponderV2(
    * @param propertyInfo         the property definition (in the internal schema). If the caller wants to query a link, this must be the link property,
    *                             not the link value property.
    *
-   * @param requestingUser       the user making the request.
    * @return a [[ReadResourceV2]] containing only the resource's metadata and its values for the specified property.
    */
   private def getResourceWithPropertyValues(
     resourceIri: IRI,
     propertyInfo: ReadPropertyInfoV2,
-    requestingUser: User,
   ): Task[ReadResourceV2] =
     for {
       // Get the property's object class constraint.
@@ -1584,7 +1579,7 @@ final case class ValuesResponderV2(
 
       // Run the query.
       query          <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
-      searchResponse <- searchResponderV2.gravsearchV2(query, SchemaRendering.default, requestingUser)
+      searchResponse <- searchResponderV2.gravsearchV2(query, SchemaRendering.default, SystemUser)
     } yield searchResponse.toResource(resourceIri)
 
   /**
