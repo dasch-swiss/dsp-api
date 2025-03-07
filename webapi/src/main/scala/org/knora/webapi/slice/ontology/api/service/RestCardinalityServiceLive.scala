@@ -60,9 +60,8 @@ private final case class PermissionService(ontologyRepo: OntologyRepo) {
   def hasOntologyWriteAccess(user: User, ontologyIri: InternalIri): Task[Boolean] = {
     val permissions = user.permissions
     for {
-      data           <- ontologyRepo.findById(ontologyIri)
-      projectIriMaybe = data.flatMap(_.ontologyMetadata.projectIri.map(_.toIri))
-      hasPermission   = projectIriMaybe.exists(permissions.isSystemAdmin || permissions.isProjectAdmin(_))
+      data         <- ontologyRepo.findById(ontologyIri)
+      hasPermission = data.flatMap(_.projectIri).exists(permissions.isSystemAdmin || permissions.isProjectAdmin(_))
     } yield hasPermission
   }
 }

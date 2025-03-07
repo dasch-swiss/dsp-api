@@ -15,7 +15,6 @@ import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.ontology.domain.service.PredicateRepository
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -27,7 +26,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object CoreModule
     extends URModule[
       AppConfig.AppConfigurations & BaseModule.Provided,
-      CardinalityService & IriConverter & OntologyCache & OntologyCacheHelpers & OntologyRepo & OntologyService &
+      CardinalityService & IriConverter & OntologyCache & OntologyCacheHelpers & OntologyRepo &
         OntologyTriplestoreHelpers,
     ] {
   self =>
@@ -38,7 +37,6 @@ object CoreModule
     OntologyCacheHelpers.layer,
     OntologyCacheLive.layer,
     OntologyRepoLive.layer,
-    OntologyService.layer,
     OntologyTriplestoreHelpers.layer,
     PredicateRepositoryLive.layer,
   )

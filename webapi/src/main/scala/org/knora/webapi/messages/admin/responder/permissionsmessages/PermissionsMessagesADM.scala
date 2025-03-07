@@ -17,6 +17,7 @@ import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
@@ -283,6 +284,7 @@ case class PermissionsDataADM(
     groupsPerProject.flatMap(_._2).toSeq.contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
 
   /* Is the user a member of the ProjectAdmin group */
+  def isProjectAdmin(projectIri: ProjectIri): Boolean = isProjectAdmin(projectIri.value)
   def isProjectAdmin(projectIri: IRI): Boolean =
     groupsPerProject.getOrElse(projectIri, List.empty).contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
 

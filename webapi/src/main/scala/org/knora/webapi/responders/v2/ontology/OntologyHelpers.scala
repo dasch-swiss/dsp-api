@@ -26,6 +26,7 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 
@@ -723,12 +724,13 @@ object OntologyHelpers {
           pred -> obj
         }.toMap
 
-        val projectIri: SmartIri = ontologyMetadataMap
-          .getOrElse(
-            OntologyConstants.KnoraBase.AttachedToProject,
-            throw InconsistentRepositoryDataException(s"Ontology $ontologyIri has no knora-base:attachedToProject"),
-          )
-          .toSmartIri
+        val projectIri = ProjectIri.unsafeFrom(
+          ontologyMetadataMap
+            .getOrElse(
+              OntologyConstants.KnoraBase.AttachedToProject,
+              throw InconsistentRepositoryDataException(s"Ontology $ontologyIri has no knora-base:attachedToProject"),
+            ),
+        )
         val ontologyLabel: String =
           ontologyMetadataMap.getOrElse(OntologyConstants.Rdfs.Label, ontologySmartIri.getOntologyName.value)
 

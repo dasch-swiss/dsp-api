@@ -49,7 +49,6 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
@@ -76,7 +75,6 @@ final case class CreateResourceV2Handler(
   getResources: GetResources,
   ontologyRepo: OntologyRepo,
   permissionsResponder: PermissionsResponder,
-  ontologyService: OntologyService,
   legalInfoService: LegalInfoService,
 )(implicit val stringFormatter: StringFormatter)
     extends LazyLogging {
@@ -128,8 +126,9 @@ final case class CreateResourceV2Handler(
 
     resourceClassOntologyIri =
       OntologyIri.unsafeFrom(createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity)
-    resourceClassProjectIri <- ontologyService
-                                 .findProjectIriForOntology(resourceClassOntologyIri)
+    resourceClassProjectIri <- ontologyRepo
+                                 .findById(resourceClassOntologyIri)
+                                 .map(_.flatMap(_.projectIri))
                                  .someOrFail(BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
 
     _ <-

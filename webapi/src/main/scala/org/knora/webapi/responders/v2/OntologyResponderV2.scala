@@ -33,6 +33,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
@@ -311,7 +312,9 @@ final case class OntologyResponderV2(
       allOntologies <- ontologyCache.getCacheData.map(_.ontologies.values.map(_.ontologyMetadata).toSet)
       ontologies =
         if (returnAllOntologies) { allOntologies }
-        else { allOntologies.filter(ontology => projectIris.contains(ontology.projectIri.orNull)) }
+        else {
+          allOntologies.filter(ontology => projectIris.map(_.toIri).contains(ontology.projectIri.map(_.value).orNull))
+        }
     } yield ReadOntologyMetadataV2(ontologies)
   }
 
@@ -460,12 +463,11 @@ final case class OntologyResponderV2(
                                  )
         _ <- save(Update(createOntologySparql))
 
-        projectSmartIri = stringFormatter.toSmartIri(createOntologyRequest.projectIri.value)
       } yield ReadOntologyMetadataV2(ontologies =
         Set(
           OntologyMetadataV2(
             ontologyIri = ontologyIri.smartIri,
-            projectIri = Some(projectSmartIri),
+            projectIri = Some(createOntologyRequest.projectIri),
             label = Some(createOntologyRequest.label),
             comment = createOntologyRequest.comment,
             lastModificationDate = Some(currentTime),

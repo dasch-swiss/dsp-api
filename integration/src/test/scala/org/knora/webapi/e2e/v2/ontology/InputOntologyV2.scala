@@ -27,6 +27,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.OwlCardinalityInfo
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 /**
  * Represents a parsing mode used by [[InputOntologyV2]].
@@ -141,9 +142,9 @@ object InputOntologyV2 {
       throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
     }
 
-    val projectIri: Option[SmartIri] = ontologyObj.maybeIriInObject(
+    val projectIri: Option[ProjectIri] = ontologyObj.maybeIriInObject(
       KnoraApiV2Complex.AttachedToProject,
-      stringFormatter.toSmartIriWithErr,
+      (str, errorFun) => ProjectIri.from(str).getOrElse(errorFun),
     )
 
     val validationFun: (String, => Nothing) => String =

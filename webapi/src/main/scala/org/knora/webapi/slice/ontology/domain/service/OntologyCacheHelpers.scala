@@ -15,6 +15,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -298,12 +299,12 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache) {
   def checkPermissionsForOntologyUpdate(
     internalOntologyIri: SmartIri,
     requestingUser: User,
-  ): Task[SmartIri] =
+  ): Task[ProjectIri] =
     for {
       cacheData <- ontologyCache.getCacheData
       projectIri <-
         ZIO
-          .succeed(cacheData.ontologies.get(internalOntologyIri).flatMap(_.ontologyMetadata.projectIri))
+          .succeed(cacheData.ontologies.get(internalOntologyIri).flatMap(_.projectIri))
           .someOrFail(NotFoundException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} not found"))
       _ <-
         ZIO
@@ -332,7 +333,6 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache) {
             internalOntologyIri,
             throw NotFoundException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} not found"),
           )
-          .ontologyMetadata
           .projectIri
           .get
     } yield requestingUser.permissions.isProjectAdmin(projectIri.toString) || requestingUser.permissions.isSystemAdmin
