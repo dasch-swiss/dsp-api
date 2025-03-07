@@ -476,7 +476,7 @@ case class TriplestoreServiceLive(
           val error = TriplestoreTimeoutException(message, socketTimeoutException)
           ZIO.logError(error.toString) *> ZIO.fail(error)
         case e: Exception =>
-          val message = s"Failed to connect to triplestore."
+          val message = s"Failed to connect to triplestore: ${request.uri.toString}"
           val error   = TriplestoreConnectionException(message, Some(e))
           ZIO.logError(error.toString) *> ZIO.fail(error)
       }
