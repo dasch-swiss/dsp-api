@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.responders.v2.ontology
+package org.knora.webapi.slice.ontology.domain.service
 
 import zio.*
 
@@ -18,7 +18,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
@@ -71,4 +70,6 @@ final case class OntologyTriplestoreHelpers(
   }
 }
 
-object OntologyTriplestoreHelpers { val layer = ZLayer.derive[OntologyTriplestoreHelpers] }
+object OntologyTriplestoreHelpers {
+  val layer = ZLayer.derive[OntologyTriplestoreHelpers]
+}

@@ -23,8 +23,6 @@ import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpers
-import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
 import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
@@ -97,11 +95,9 @@ object LayersLive {
     ListsResponder &
     ListsService &
     MessageRelay &
-    OntologyCacheHelpers &
     OntologyInferencer &
     OntologyApiModule.Provided &
     OntologyResponderV2 &
-    OntologyTriplestoreHelpers &
     PermissionRestService &
     PermissionUtilADM &
     PermissionsResponder &
@@ -159,9 +155,7 @@ object LayersLive {
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyApiModule.layer,
-      OntologyCacheHelpers.layer,
       OntologyResponderV2.layer,
-      OntologyTriplestoreHelpers.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PekkoActorSystem.layer,

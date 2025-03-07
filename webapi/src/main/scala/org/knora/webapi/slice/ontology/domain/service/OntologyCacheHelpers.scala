@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.responders.v2.ontology
+package org.knora.webapi.slice.ontology.domain.service
 
 import zio.*
 
@@ -14,6 +14,7 @@ import org.knora.webapi.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -337,4 +338,6 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache) {
     } yield requestingUser.permissions.isProjectAdmin(projectIri.toString) || requestingUser.permissions.isSystemAdmin
 }
 
-object OntologyCacheHelpers { val layer = ZLayer.derive[OntologyCacheHelpers] }
+object OntologyCacheHelpers {
+  val layer = ZLayer.derive[OntologyCacheHelpers]
+}

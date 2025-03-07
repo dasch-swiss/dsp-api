@@ -18,8 +18,6 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpers
-import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
 import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
@@ -116,9 +114,7 @@ object LayersTestLive { self =>
       MessageRelayActorRef.layer,
       MessageRelayLive.layer,
       OntologyApiModule.layer,
-      OntologyCacheHelpers.layer,
       OntologyResponderV2.layer,
-      OntologyTriplestoreHelpers.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,
