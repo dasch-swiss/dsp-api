@@ -7,8 +7,7 @@ package org.knora.webapi.slice.ontology.api
 import zio.*
 
 import org.knora.webapi.slice.URModule
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 object OntologyApiModule extends URModule[IriConverter, OntologyV2RequestParser] { self =>
 
   val layer: URLayer[self.Dependencies, self.Provided] =

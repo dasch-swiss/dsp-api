@@ -9,9 +9,8 @@ import zio.ZIO
 import zio.test.*
 
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
 object IriConverterLiveSpec extends ZIOSpecDefault {
 
   private val iriConverter    = ZIO.serviceWithZIO[IriConverter]

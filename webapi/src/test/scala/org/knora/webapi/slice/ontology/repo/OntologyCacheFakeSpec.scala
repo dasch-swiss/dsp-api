@@ -10,11 +10,10 @@ import zio.test.*
 import zio.test.ZIOSpecDefault
 
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
 object OntologyCacheFakeSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Throwable] = suite("OntologyCacheFake")(
     suite("with empty cache")(test("should return empty") {

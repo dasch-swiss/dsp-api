@@ -14,9 +14,8 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
 object ConstructTransformerSpec extends ZIOSpecDefault {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance

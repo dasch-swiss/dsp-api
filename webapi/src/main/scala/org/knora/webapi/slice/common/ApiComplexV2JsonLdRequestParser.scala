@@ -46,7 +46,7 @@ import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.store.iiif.api.SipiService
 
 final case class ApiComplexV2JsonLdRequestParser(

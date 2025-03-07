@@ -32,9 +32,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
-import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
@@ -42,7 +40,9 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult
+import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -1521,7 +1521,8 @@ final case class OntologyResponderV2(
   /**
    * Checks whether an ontology can be deleted.
    *
-   * @param canDeleteOntologyRequest the request message.
+   * @param ontologyIri the ontology to delete.
+   * @param requestingUser the user making the request.
    * @return a [[CanDoResponseV2]] indicating whether an ontology can be deleted.
    */
   private def canDeleteOntology(ontologyIri: OntologyIri, requestingUser: User): Task[CanDoResponseV2] = for {

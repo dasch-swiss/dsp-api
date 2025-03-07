@@ -17,8 +17,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 object RouteUtilZ { self =>
 
   /**

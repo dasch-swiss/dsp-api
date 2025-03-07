@@ -11,9 +11,7 @@ import zio.ULayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.InstrumentationServerConfig
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
@@ -25,8 +23,6 @@ import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.responders.v2.ontology.OntologyCacheHelpers
-import org.knora.webapi.responders.v2.ontology.OntologyTriplestoreHelpers
 import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
@@ -37,6 +33,7 @@ import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.BaseModule
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
@@ -44,18 +41,14 @@ import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.lists.domain.ListsService
+import org.knora.webapi.slice.ontology.CoreModule
 import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
-import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
-import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.search.api.SearchApiRoutes
@@ -69,8 +62,6 @@ import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 
 object LayersLive {
@@ -86,11 +77,13 @@ object LayersLive {
     ApiComplexV2JsonLdRequestParser &
     ApiRoutes &
     ApiV2Endpoints &
-    AppConfigurations &
+    AppConfig.AppConfigurations &
     AssetPermissionsResponder &
     AuthorizationRestService &
     AuthenticationApiModule.Provided &
+    BaseModule.Provided &
     CardinalityHandler &
+    CoreModule.Provided &
     ConstructResponseUtilV2 &
     DefaultObjectAccessPermissionService &
     GroupRestService &
@@ -98,17 +91,13 @@ object LayersLive {
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
     InstrumentationServerConfig &
-    IriConverter &
     ListsApiModule.Provided &
     ListsResponder &
     ListsService &
     MessageRelay &
-    OntologyCache &
-    OntologyCacheHelpers &
     OntologyInferencer &
     OntologyApiModule.Provided &
     OntologyResponderV2 &
-    OntologyTriplestoreHelpers &
     PermissionRestService &
     PermissionUtilADM &
     PermissionsResponder &
@@ -129,8 +118,6 @@ object LayersLive {
     StandoffResponderV2 &
     StandoffTagUtilV2 &
     State &
-    StringFormatter &
-    TriplestoreService &
     UserRestService &
     ValuesResponderV2
     // format: on
@@ -150,15 +137,15 @@ object LayersLive {
       AuthenticationApiModule.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
+      BaseModule.layer,
       CardinalityHandler.layer,
-      CardinalityService.layer,
       ConstructResponseUtilV2.layer,
+      CoreModule.layer,
       DspIngestClientLive.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
-      IriConverter.layer,
       IriService.layer,
       KnoraResponseRenderer.layer,
       ListsApiModule.layer,
@@ -168,17 +155,11 @@ object LayersLive {
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyApiModule.layer,
-      OntologyCacheHelpers.layer,
-      OntologyCacheLive.layer,
-      OntologyRepoLive.layer,
       OntologyResponderV2.layer,
-      OntologyServiceLive.layer,
-      OntologyTriplestoreHelpers.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PekkoActorSystem.layer,
       PredicateObjectMapper.layer,
-      PredicateRepositoryLive.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportService.layer,
@@ -199,9 +180,7 @@ object LayersLive {
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
-      StringFormatter.live,
       TapirToPekkoInterpreter.layer,
-      TriplestoreServiceLive.layer,
       ValuesResponderV2.layer,
       // ZLayer.Debug.mermaid,
     )

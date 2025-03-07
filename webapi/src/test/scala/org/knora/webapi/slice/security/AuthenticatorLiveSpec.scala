@@ -46,9 +46,9 @@ import org.knora.webapi.slice.infrastructure.InvalidTokenCache
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.JwtServiceLive
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object AuthenticatorLiveSpec extends ZIOSpecDefault {

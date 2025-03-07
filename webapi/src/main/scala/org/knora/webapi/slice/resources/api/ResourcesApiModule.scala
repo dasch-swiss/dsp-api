@@ -18,7 +18,7 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
 

@@ -14,8 +14,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.KnoraIrisSpec.test
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 object KnoraIrisSpec extends ZIOSpecDefault {
 
   private val converter = ZIO.serviceWithZIO[IriConverter]

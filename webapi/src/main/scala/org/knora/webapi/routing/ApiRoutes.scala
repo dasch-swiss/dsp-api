@@ -32,8 +32,8 @@ import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiV2Routes
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.api.ResourcesApiRoutes
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.security.Authenticator as WebApiAuthenticator
