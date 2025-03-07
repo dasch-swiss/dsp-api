@@ -1,5 +1,16 @@
 # Changelog
 
+## [31.8.1](https://github.com/dasch-swiss/dsp-api/compare/v31.8.0...v31.8.1) (2025-03-07)
+
+
+### Maintenances
+
+* Add context to error failed to connect to Fuseki ([#3529](https://github.com/dasch-swiss/dsp-api/issues/3529)) ([ec1e96c](https://github.com/dasch-swiss/dsp-api/commit/ec1e96cf184e8f8798f0a40f3f325a450cac2f62))
+* Introduce CoreModule (DEV-4686) ([#3527](https://github.com/dasch-swiss/dsp-api/issues/3527)) ([94b5974](https://github.com/dasch-swiss/dsp-api/commit/94b597454ca1b84cfbb93b3a581e396323a36782))
+* Migrate resources routes to Tapir (DEV-4656) ([#3521](https://github.com/dasch-swiss/dsp-api/issues/3521)) ([e19ed17](https://github.com/dasch-swiss/dsp-api/commit/e19ed17e8b5c23a239cf53f893d4aee4f8737015))
+* Migrate v2/values to Tapir (DEV-4634) ([#3520](https://github.com/dasch-swiss/dsp-api/issues/3520)) ([9805e5d](https://github.com/dasch-swiss/dsp-api/commit/9805e5d939d618a9a0850b24b634ddecd769bd96))
+* Simplify delete value pre-checks ([#3524](https://github.com/dasch-swiss/dsp-api/issues/3524)) ([0672f98](https://github.com/dasch-swiss/dsp-api/commit/0672f98187d674afa93f47a2104285ab64b4f61f))
+
 ## [31.8.0](https://github.com/dasch-swiss/dsp-api/compare/v31.7.0...v31.8.0) (2025-03-03)
 
 
