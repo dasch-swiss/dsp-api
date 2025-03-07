@@ -23,7 +23,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.slice.common.api.ApiV2
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 
 import ApiV2.Headers.xKnoraAcceptMarkup
 import ApiV2.Headers.xKnoraAcceptProject

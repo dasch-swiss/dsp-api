@@ -23,7 +23,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequ
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.security.Authenticator
 
 import pekko.actor.ActorSystem

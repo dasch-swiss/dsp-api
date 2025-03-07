@@ -23,10 +23,10 @@ import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.*
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.IsInUseCheckFailure
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 import org.knora.webapi.util.JsonHelper.StringToJson
 import org.knora.webapi.util.JsonHelper.renderResponseJson

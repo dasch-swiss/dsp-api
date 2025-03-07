@@ -34,8 +34,7 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.jena.DatasetOps.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 object OntologyV2RequestParserSpec extends ZIOSpecDefault {
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

@@ -21,7 +21,6 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.SubclassCheckFailure
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.SuperClassCheckFailure
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.util.EitherUtil.joinOnLeft

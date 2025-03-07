@@ -59,8 +59,7 @@ import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private final case class OntologyMetadata(

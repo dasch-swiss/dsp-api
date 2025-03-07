@@ -48,7 +48,6 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
@@ -107,7 +106,6 @@ object LayersTestLive { self =>
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
-      IriConverter.layer,
       IriService.layer,
       KnoraResponseRenderer.layer,
       ListsApiModule.layer,

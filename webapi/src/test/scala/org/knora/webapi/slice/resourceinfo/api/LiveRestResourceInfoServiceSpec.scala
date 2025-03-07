@@ -17,6 +17,7 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Asc
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.CreationDate
@@ -26,7 +27,6 @@ import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Order
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.OrderBy
 import org.knora.webapi.slice.resourceinfo.api.model.ResourceInfoDto
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.knownProjectIRI

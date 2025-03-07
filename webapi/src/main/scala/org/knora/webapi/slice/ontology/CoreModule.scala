@@ -10,6 +10,7 @@ import zio.ZLayer
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
@@ -18,17 +19,17 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object CoreModule
     extends URModule[
-      IriConverter & StringFormatter & TriplestoreService,
-      CardinalityService & OntologyCache & OntologyRepo & OntologyService,
+      StringFormatter & TriplestoreService,
+      CardinalityService & IriConverter & OntologyCache & OntologyRepo & OntologyService,
     ] {
   self =>
 
   val layer: URLayer[self.Dependencies, self.Provided] = ZLayer.makeSome[self.Dependencies, self.Provided](
+    IriConverter.layer,
     OntologyCacheLive.layer,
     OntologyServiceLive.layer,
     OntologyRepoLive.layer,

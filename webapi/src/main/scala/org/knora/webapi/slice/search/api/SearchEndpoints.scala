@@ -27,7 +27,7 @@ import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
 

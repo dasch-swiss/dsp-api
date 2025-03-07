@@ -26,7 +26,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anonymousUser
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 class SearchResponderV2Spec extends CoreSpec {

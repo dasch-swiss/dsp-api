@@ -31,7 +31,7 @@ import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.security.Authenticator
 
 /**

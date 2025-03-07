@@ -52,7 +52,6 @@ import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.search.api.SearchApiRoutes
@@ -96,7 +95,6 @@ object LayersLive {
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
     InstrumentationServerConfig &
-    IriConverter &
     ListsApiModule.Provided &
     ListsResponder &
     ListsService &
@@ -155,7 +153,6 @@ object LayersLive {
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
-      IriConverter.layer,
       IriService.layer,
       KnoraResponseRenderer.layer,
       ListsApiModule.layer,

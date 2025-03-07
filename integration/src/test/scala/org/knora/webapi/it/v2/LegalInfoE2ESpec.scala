@@ -44,8 +44,7 @@ import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 object LegalInfoE2ESpec extends E2EZSpec {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
