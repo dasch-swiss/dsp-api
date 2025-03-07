@@ -39,17 +39,13 @@ import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.lists.domain.ListsService
+import org.knora.webapi.slice.ontology.CoreModule
 import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
-import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
-import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
-import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -104,7 +100,7 @@ object LayersTestLive { self =>
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
       CardinalityHandler.layer,
-      CardinalityService.layer,
+      CoreModule.layer,
       ConstructResponseUtilV2.layer,
       DspIngestClientLive.layer,
       HandlerMapper.layer,
@@ -123,15 +119,11 @@ object LayersTestLive { self =>
       MessageRelayLive.layer,
       OntologyApiModule.layer,
       OntologyCacheHelpers.layer,
-      OntologyCacheLive.layer,
-      OntologyRepoLive.layer,
       OntologyResponderV2.layer,
-      OntologyServiceLive.layer,
       OntologyTriplestoreHelpers.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,
-      PredicateRepositoryLive.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportService.layer,

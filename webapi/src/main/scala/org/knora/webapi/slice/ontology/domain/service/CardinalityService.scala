@@ -297,9 +297,5 @@ final case class CardinalityServiceLive(
 }
 
 object CardinalityService {
-  val layer: ZLayer[
-    StringFormatter & TriplestoreService & PredicateRepository & OntologyRepo & IriConverter,
-    Nothing,
-    CardinalityServiceLive,
-  ] = ZLayer.fromFunction(CardinalityServiceLive.apply _)
+  val layer = ZLayer.derive[CardinalityServiceLive]
 }
