@@ -45,11 +45,11 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
-import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
@@ -127,23 +127,24 @@ final case class CreateResourceV2Handler(
          )
 
     resourceClassOntologyIri =
-      createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity.toInternalIri
-    resourceClassProjectIri <-
-      ontologyService
-        .getProjectIriForOntologyIri(resourceClassOntologyIri)
-        .someOrFail(BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
+      OntologyIri.unsafeFrom(createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity)
+    resourceClassProjectIri <- ontologyService
+                                 .findProjectIriForOntology(resourceClassOntologyIri)
+                                 .someOrFail(BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
 
     _ <-
       ZIO
         .fail(
           BadRequestException(
-            s"Cannot create a resource in project <$projectIri> with resource class <${createResourceRequestV2.createResource.resourceClassIri}>, which is defined in a non-shared ontology in another project",
+            s"Cannot create a resource in project <$projectIri> with " +
+              s"resource class <${createResourceRequestV2.createResource.resourceClassIri}>, " +
+              s"which is defined in a non-shared ontology in another project",
           ),
         )
         .unless(
-          projectIri.value == resourceClassProjectIri || OntologyServiceLive.isBuiltInOrSharedOntology(
-            resourceClassOntologyIri,
-          ),
+          projectIri == resourceClassProjectIri ||
+            resourceClassProjectIri.isBuiltInProjectIri ||
+            resourceClassOntologyIri.isShared,
         )
   } yield ()
 

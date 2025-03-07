@@ -16,7 +16,6 @@ import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyService
-import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.ontology.domain.service.PredicateRepository
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -39,7 +38,7 @@ object CoreModule
     OntologyCacheHelpers.layer,
     OntologyCacheLive.layer,
     OntologyRepoLive.layer,
-    OntologyServiceLive.layer,
+    OntologyService.layer,
     OntologyTriplestoreHelpers.layer,
     PredicateRepositoryLive.layer,
   )

@@ -7,33 +7,20 @@ package org.knora.webapi.slice.ontology.domain.service
 
 import zio.*
 
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 
-trait OntologyService {
-  def getProjectIriForOntologyIri(ontologyIri: InternalIri): Task[Option[String]]
+final case class OntologyService(ontologyRepo: OntologyRepo) {
+  def findProjectIriForOntology(ontologyIri: OntologyIri): Task[Option[ProjectIri]] =
+    ontologyRepo
+      .findById(ontologyIri)
+      .map(
+        _.flatMap(_.ontologyMetadata.projectIri)
+          .map(_.toIri)
+          .map(ProjectIri.unsafeFrom),
+      )
 }
 
-final case class OntologyServiceLive(ontologyCache: OntologyCache) extends OntologyService {
-  def getProjectIriForOntologyIri(ontologyIri: InternalIri): Task[Option[String]] =
-    ontologyCache.getCacheData.map { cacheData =>
-      cacheData.ontologies.map { case (k, v) => k.toString() -> v }
-        .get(ontologyIri.value)
-        .flatMap(_.ontologyMetadata.projectIri.map(_.toString()))
-    }
-
-}
-
-object OntologyServiceLive {
-  def isBuiltInOntology(ontologyIri: InternalIri): Boolean =
-    OntologyConstants.BuiltInOntologyLabels.contains(ontologyIri.value.split("/").last)
-
-  def isSharedOntology(ontologyIri: InternalIri): Boolean =
-    ontologyIri.value.split("/")(4) == "shared"
-
-  def isBuiltInOrSharedOntology(ontologyIri: InternalIri): Boolean =
-    isBuiltInOntology(ontologyIri) || isSharedOntology(ontologyIri)
-
-  val layer = ZLayer.derive[OntologyServiceLive]
+object OntologyService {
+  val layer = ZLayer.derive[OntologyService]
 }
