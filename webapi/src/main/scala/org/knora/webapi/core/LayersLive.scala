@@ -11,9 +11,7 @@ import zio.ULayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.InstrumentationServerConfig
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
@@ -37,6 +35,7 @@ import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.BaseModule
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
@@ -65,8 +64,6 @@ import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 
 object LayersLive {
@@ -82,10 +79,11 @@ object LayersLive {
     ApiComplexV2JsonLdRequestParser &
     ApiRoutes &
     ApiV2Endpoints &
-    AppConfigurations &
+    AppConfig.AppConfigurations &
     AssetPermissionsResponder &
     AuthorizationRestService &
     AuthenticationApiModule.Provided &
+    BaseModule.Provided &
     CardinalityHandler &
     CoreModule.Provided &
     ConstructResponseUtilV2 &
@@ -124,8 +122,6 @@ object LayersLive {
     StandoffResponderV2 &
     StandoffTagUtilV2 &
     State &
-    StringFormatter &
-    TriplestoreService &
     UserRestService &
     ValuesResponderV2
     // format: on
@@ -145,6 +141,7 @@ object LayersLive {
       AuthenticationApiModule.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
+      BaseModule.layer,
       CardinalityHandler.layer,
       ConstructResponseUtilV2.layer,
       CoreModule.layer,
@@ -189,9 +186,7 @@ object LayersLive {
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
-      StringFormatter.live,
       TapirToPekkoInterpreter.layer,
-      TriplestoreServiceLive.layer,
       ValuesResponderV2.layer,
       // ZLayer.Debug.mermaid,
     )

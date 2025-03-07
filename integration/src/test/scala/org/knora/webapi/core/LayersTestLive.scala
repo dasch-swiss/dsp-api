@@ -31,6 +31,7 @@ import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.BaseModule
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.CacheManager
@@ -63,8 +64,6 @@ import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.DspIngestTestContainer
 import org.knora.webapi.testcontainers.FusekiTestContainer
@@ -98,6 +97,7 @@ object LayersTestLive { self =>
       AuthenticationApiModule.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
+      BaseModule.layer,
       CardinalityHandler.layer,
       CoreModule.layer,
       ConstructResponseUtilV2.layer,
@@ -141,11 +141,9 @@ object LayersTestLive { self =>
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
-      StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TestDspIngestClient.layer,
-      TriplestoreServiceLive.layer,
       ValuesResponderV2.layer,
     )
 }
