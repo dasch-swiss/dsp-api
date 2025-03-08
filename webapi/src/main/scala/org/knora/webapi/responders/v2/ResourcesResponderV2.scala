@@ -50,7 +50,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
@@ -95,7 +94,6 @@ final case class ResourcesResponderV2(
   searchResponderV2: SearchResponderV2,
   ontologyRepo: OntologyRepo,
   permissionsResponder: PermissionsResponder,
-  ontologyService: OntologyService,
   resourcesRepo: ResourcesRepo,
   legalInfoService: LegalInfoService,
 )(implicit val stringFormatter: StringFormatter)
@@ -116,7 +114,6 @@ final case class ResourcesResponderV2(
     this,
     ontologyRepo,
     permissionsResponder: PermissionsResponder,
-    ontologyService,
     legalInfoService,
   )
 
@@ -1966,11 +1963,10 @@ object ResourcesResponderV2 {
       or     <- ZIO.service[OntologyRepo]
       sf     <- ZIO.service[StringFormatter]
       pr     <- ZIO.service[PermissionsResponder]
-      os     <- ZIO.service[OntologyService]
       rr     <- ZIO.service[ResourcesRepo]
       li     <- ZIO.service[LegalInfoService]
       handler <-
-        mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, kps, sr, or, pr, os, rr, li)(sf))
+        mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, kps, sr, or, pr, rr, li)(sf))
     } yield handler
   }
 }

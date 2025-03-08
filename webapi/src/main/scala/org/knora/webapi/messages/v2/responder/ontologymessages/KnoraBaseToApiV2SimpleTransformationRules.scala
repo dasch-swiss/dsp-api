@@ -31,7 +31,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
   override val ontologyMetadata: OntologyMetadataV2 = OntologyMetadataV2(
     ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
-    projectIri = Some(KnoraProjectRepo.builtIn.SystemProject.id.value.toSmartIri),
+    projectIri = Some(KnoraProjectRepo.builtIn.SystemProject.id),
     label = Some("The knora-api ontology in the simple schema"),
   )
 

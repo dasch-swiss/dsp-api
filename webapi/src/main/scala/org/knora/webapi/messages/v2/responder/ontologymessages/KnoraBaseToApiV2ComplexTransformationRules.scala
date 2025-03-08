@@ -34,7 +34,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
   override val ontologyMetadata: OntologyMetadataV2 = OntologyMetadataV2(
     ontologyIri = KA.KnoraApiOntologyIri.toSmartIri,
-    projectIri = Some(KnoraProjectRepo.builtIn.SystemProject.id.value.toSmartIri),
+    projectIri = Some(KnoraProjectRepo.builtIn.SystemProject.id),
     label = Some("The knora-api ontology in the complex schema"),
   )
 

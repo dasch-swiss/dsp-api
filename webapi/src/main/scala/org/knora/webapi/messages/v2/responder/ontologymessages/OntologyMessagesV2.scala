@@ -583,6 +583,8 @@ case class ReadOntologyV2(
     with KnoraReadV2[ReadOntologyV2] {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+  def projectIri: Option[ProjectIri] = ontologyMetadata.projectIri
+
   /**
    * Converts this [[ReadOntologyV2]] to the specified Knora API v2 schema.
    *
@@ -2475,7 +2477,7 @@ case class SubClassInfoV2(id: SmartIri, label: String)
  */
 case class OntologyMetadataV2(
   ontologyIri: SmartIri,
-  projectIri: Option[SmartIri] = None,
+  projectIri: Option[ProjectIri] = None,
   label: Option[String] = None,
   comment: Option[String] = None,
   lastModificationDate: Option[Instant] = None,
@@ -2510,14 +2512,8 @@ case class OntologyMetadataV2(
   def toJsonLD(targetSchema: ApiV2Schema): Map[String, JsonLDValue] = {
 
     val projectIriStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2Complex) {
-      projectIri.map { definedProjectIri =>
-        KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(
-          definedProjectIri.toString,
-        )
-      }
-    } else {
-      None
-    }
+      projectIri.map(iri => KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(iri.value))
+    } else { None }
 
     val isSharedStatement: Option[(IRI, JsonLDBoolean)] =
       if (ontologyIri.isKnoraSharedDefinitionIri && targetSchema == ApiV2Complex) {

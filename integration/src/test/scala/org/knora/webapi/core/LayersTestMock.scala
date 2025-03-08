@@ -42,7 +42,6 @@ import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.OntologyService
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
