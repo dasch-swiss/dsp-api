@@ -51,11 +51,8 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
 
   override def findAll(): Task[Chunk[ReadOntologyV2]] = getCache.map(_.ontologies.values.toChunk)
 
-  override def findByProject(projectId: ProjectIri): Task[List[ReadOntologyV2]] =
-    smartIriMapCache(InternalIri(projectId.value))(findByProject)
-
-  private def findByProject(projectIri: SmartIri, cache: OntologyCacheData): List[ReadOntologyV2] =
-    cache.ontologies.values.filter(_.ontologyMetadata.projectIri.contains(projectIri)).toList
+  override def findByProject(projectIri: ProjectIri): Task[List[ReadOntologyV2]] =
+    getCache.map(_.ontologies.values.filter(_.projectIri.contains(projectIri)).toList)
 
   override def findClassBy(classIri: InternalIri): Task[Option[ReadClassInfoV2]] =
     smartIriMapCache(classIri)(findClassBy)
