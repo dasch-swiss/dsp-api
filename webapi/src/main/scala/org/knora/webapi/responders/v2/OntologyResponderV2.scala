@@ -33,6 +33,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
@@ -305,7 +306,7 @@ final case class OntologyResponderV2(
    * @param projectIris    the IRIs of the projects selected, or an empty set if all projects are selected.
    * @return a [[ReadOntologyMetadataV2]].
    */
-  def getOntologyMetadataForProjectsV2(projectIris: Set[SmartIri]): Task[ReadOntologyMetadataV2] = {
+  def getOntologyMetadataForProjectsV2(projectIris: Set[ProjectIri]): Task[ReadOntologyMetadataV2] = {
     val returnAllOntologies = projectIris.isEmpty
     for {
       allOntologies <- ontologyCache.getCacheData.map(_.ontologies.values.map(_.ontologyMetadata).toSet)
@@ -459,13 +460,11 @@ final case class OntologyResponderV2(
                                    currentTime = currentTime,
                                  )
         _ <- save(Update(createOntologySparql))
-
-        projectSmartIri = stringFormatter.toSmartIri(createOntologyRequest.projectIri.value)
       } yield ReadOntologyMetadataV2(ontologies =
         Set(
           OntologyMetadataV2(
             ontologyIri = ontologyIri.smartIri,
-            projectIri = Some(projectSmartIri),
+            projectIri = Some(createOntologyRequest.projectIri),
             label = Some(createOntologyRequest.label),
             comment = createOntologyRequest.comment,
             lastModificationDate = Some(currentTime),

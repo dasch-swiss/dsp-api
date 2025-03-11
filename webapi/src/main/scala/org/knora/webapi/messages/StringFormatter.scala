@@ -419,6 +419,8 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
    */
   def getStandoffStartIndex: Option[Int]
 
+  final def ontologyIri: OntologyIri = OntologyIri.unsafeFrom(getOntologyFromEntity)
+
   /**
    * If this is an ontology entity IRI, returns its ontology IRI.
    */

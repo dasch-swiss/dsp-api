@@ -121,6 +121,8 @@ object KnoraIris {
     def ontologyName: OntologyName = smartIri.getOntologyName
     def isInternal: Boolean        = ontologyName.isInternal
     def isExternal: Boolean        = !isInternal
+    def isBuiltIn: Boolean         = ontologyName.isBuiltIn
+    def isShared: Boolean          = toInternalSchema.toIri.split("/")(4) == "shared"
   }
   object OntologyIri {
     def makeNew(
