@@ -48,7 +48,6 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.ontology.domain.service.OntologyServiceLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
@@ -124,8 +123,7 @@ final case class CreateResourceV2Handler(
            ZIO.fail(BadRequestException(s"Resources cannot be created in project <$projectIri>")),
          )
 
-    resourceClassOntologyIri =
-      createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity.toInternalIri
+    resourceClassOntologyIri = createResourceRequestV2.createResource.resourceClassIri.ontologyIri
     resourceClassProjectIri <- ontologyRepo
                                  .findById(resourceClassOntologyIri)
                                  .map(_.flatMap(_.projectIri))
@@ -139,9 +137,9 @@ final case class CreateResourceV2Handler(
           ),
         )
         .unless(
-          projectIri == resourceClassProjectIri || OntologyServiceLive.isBuiltInOrSharedOntology(
-            resourceClassOntologyIri,
-          ),
+          projectIri == resourceClassProjectIri ||
+            resourceClassOntologyIri.isBuiltIn ||
+            resourceClassOntologyIri.isShared,
         )
   } yield ()
 
