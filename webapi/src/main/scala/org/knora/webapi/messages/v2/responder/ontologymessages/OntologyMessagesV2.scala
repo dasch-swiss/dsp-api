@@ -520,7 +520,7 @@ case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
  * @param projectIris    the IRIs of the projects for which ontologies should be returned. If this set is empty, information
  *                       about all ontologies is returned.
  */
-case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[SmartIri] = Set.empty[SmartIri])
+case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[ProjectIri] = Set.empty)
     extends OntologiesResponderRequestV2
 
 /**
@@ -582,6 +582,8 @@ case class ReadOntologyV2(
 ) extends KnoraJsonLDResponseV2
     with KnoraReadV2[ReadOntologyV2] {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+  def projectIri: Option[ProjectIri] = ontologyMetadata.projectIri
 
   /**
    * Converts this [[ReadOntologyV2]] to the specified Knora API v2 schema.
@@ -2475,7 +2477,7 @@ case class SubClassInfoV2(id: SmartIri, label: String)
  */
 case class OntologyMetadataV2(
   ontologyIri: SmartIri,
-  projectIri: Option[SmartIri] = None,
+  projectIri: Option[ProjectIri] = None,
   label: Option[String] = None,
   comment: Option[String] = None,
   lastModificationDate: Option[Instant] = None,

@@ -27,6 +27,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.completeResponse
 import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
@@ -158,7 +159,7 @@ final case class OntologiesRouteV2()(
     path(ontologiesBasePath / "metadata" / Segments) { (projectIris: List[IRI]) =>
       get { requestContext =>
         val requestTask = ZIO
-          .foreach(projectIris)(iri => RouteUtilZ.toSmartIri(iri, s"Invalid project IRI: $iri"))
+          .foreach(projectIris)(iri => ZIO.fromEither(ProjectIri.from(iri)).mapError(BadRequestException.apply))
           .map(_.toSet)
           .map(OntologyMetadataGetByProjectRequestV2(_))
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)

@@ -61,7 +61,7 @@ private final case class PermissionService(ontologyRepo: OntologyRepo) {
     val permissions = user.permissions
     for {
       data           <- ontologyRepo.findById(ontologyIri)
-      projectIriMaybe = data.flatMap(_.ontologyMetadata.projectIri.map(_.toIri))
+      projectIriMaybe = data.flatMap(_.ontologyMetadata.projectIri)
       hasPermission   = projectIriMaybe.exists(permissions.isSystemAdmin || permissions.isProjectAdmin(_))
     } yield hasPermission
   }

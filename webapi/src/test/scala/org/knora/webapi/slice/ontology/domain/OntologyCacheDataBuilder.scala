@@ -19,7 +19,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIri
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIriKeyMap
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.TestSmartIriFromInternalIri
-import org.knora.webapi.slice.ontology.domain.SmartIriConversion.TestSmartIriFromString
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -84,7 +83,7 @@ object ReadOntologyV2Builder {
     def addClassInfo(infoBuilder: ReadClassInfoV2Builder.Builder): Builder = addClassInfo(infoBuilder.build)
 
     def assignToProject(projectIri: ProjectIri): Builder =
-      copy(ro = ro.copy(ontologyMetadata = ro.ontologyMetadata.copy(projectIri = Some(projectIri.value.smartIri))))
+      copy(ro = ro.copy(ontologyMetadata = ro.ontologyMetadata.copy(projectIri = Some(projectIri))))
 
     def build: ReadOntologyV2 = ro
   }

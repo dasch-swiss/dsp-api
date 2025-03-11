@@ -25,6 +25,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -467,15 +468,14 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
             allOntologyMetadata(ontologyIri)
           val lastModificationDate: Option[Instant] =
             ontology.lastModificationDate
-          val attachedToProject: Option[SmartIri] =
-            ontology.projectIri
+          val attachedToProject = ontology.projectIri
 
           // throw an exception if ontology doesn't have lastModificationDate property and isn't attached to system project
           lastModificationDate match {
             case None =>
               attachedToProject match {
-                case Some(iri: SmartIri) =>
-                  if (iri != KnoraProjectRepo.builtIn.SystemProject.id.value.toSmartIri) {
+                case Some(iri: ProjectIri) =>
+                  if (iri != KnoraProjectRepo.builtIn.SystemProject.id) {
                     throw MissingLastModificationDateOntologyException(
                       s"Required property knora-base:lastModificationDate is missing in `$ontologyIri`",
                     )

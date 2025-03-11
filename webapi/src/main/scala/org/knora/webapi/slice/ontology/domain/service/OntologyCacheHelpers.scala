@@ -15,6 +15,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -298,7 +299,7 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache) {
   def checkPermissionsForOntologyUpdate(
     internalOntologyIri: SmartIri,
     requestingUser: User,
-  ): Task[SmartIri] =
+  ): Task[ProjectIri] =
     for {
       cacheData <- ontologyCache.getCacheData
       projectIri <-
@@ -309,7 +310,7 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache) {
         ZIO
           .fail(ForbiddenException("Ontologies can be modified only by a project or system admin."))
           .unless(
-            requestingUser.permissions.isProjectAdmin(projectIri.toString) ||
+            requestingUser.permissions.isProjectAdmin(projectIri) ||
               requestingUser.permissions.isSystemAdmin,
           )
 
