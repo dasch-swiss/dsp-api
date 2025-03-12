@@ -387,27 +387,15 @@ final case class OntologyResponderV2(
     requestingUser: User,
   ): Task[ReadOntologyV2] =
     for {
-      cacheData <- ontologyCache.getCacheData
-
-      ontologyIris = propertyIris.map(_.getOntologyFromEntity)
-
-      _ <-
-        ZIO.when(ontologyIris.size != 1)(ZIO.fail(BadRequestException(s"Only one ontology may be queried per request")))
-
+      ontologyIri <- ZIO
+                       .succeed(propertyIris.map(_.ontologyIri))
+                       .filterOrFail(_.size == 1)(BadRequestException(s"Only one ontology may be queried per request"))
+                       .map(_.head)
+      ontology             <- ontologyRepo.findById(ontologyIri).someOrFail(NotFoundException(s"Ontology not found: $ontologyIri"))
       propertyInfoResponse <- getEntityInfoResponseV2(propertyIris = propertyIris, requestingUser = requestingUser)
-      internalOntologyIri   = ontologyIris.head.toOntologySchema(InternalSchema)
-
-      // Are we returning data in the user's preferred language, or in all available languages?
-      userLang =
-        if (!allLanguages) {
-          // Just the user's preferred language.
-          Some(requestingUser.lang)
-        } else {
-          // All available languages.
-          None
-        }
+      userLang              = if allLanguages then None else Some(requestingUser.lang)
     } yield ReadOntologyV2(
-      ontologyMetadata = cacheData.ontologies(internalOntologyIri).ontologyMetadata,
+      ontologyMetadata = ontology.ontologyMetadata,
       properties = propertyInfoResponse.propertyInfoMap,
       userLang = userLang,
     )
