@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import sttp.tapir.Schema
 import zio.Chunk
 import zio.NonEmptyChunk
 import zio.json.JsonCodec
@@ -31,6 +32,7 @@ import org.knora.webapi.slice.common.Value.StringValue
 final case class CopyrightHolder private (override val value: String) extends StringValue
 object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
   given JsonCodec[CopyrightHolder] = ZioJsonCodec.stringCodec(CopyrightHolder.from)
+  given Schema[CopyrightHolder]    = Schema.string
   given Ordering[CopyrightHolder]  = Ordering.by(_.value)
   def from(str: String): Either[String, CopyrightHolder] =
     fromValidations(
@@ -43,6 +45,7 @@ object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
 final case class Authorship private (override val value: String) extends StringValue
 object Authorship extends StringValueCompanion[Authorship] {
   given JsonCodec[Authorship] = ZioJsonCodec.stringCodec(Authorship.from)
+  given Schema[Authorship]    = Schema.string
   def from(str: String): Either[String, Authorship] =
     fromValidations("Authorship", Authorship.apply, List(nonEmpty, noLineBreaks, maxLength(1_000)))(str)
 }
@@ -50,6 +53,7 @@ object Authorship extends StringValueCompanion[Authorship] {
 final case class LicenseIri private (override val value: String) extends StringValue
 object LicenseIri extends StringValueCompanion[LicenseIri] {
   given JsonCodec[LicenseIri] = ZioJsonCodec.stringCodec(LicenseIri.from)
+  given Schema[LicenseIri]    = Schema.string
 
   /**
    * Explanation of the IRI regex:
