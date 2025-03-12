@@ -374,6 +374,13 @@ final case class OntologyResponderV2(
    * @param requestingUser the user making the request.
    * @return a [[ReadOntologyV2]].
    */
+  def getPropertiesFromOntologyV2(
+    propertyIris: Set[PropertyIri],
+    allLanguages: Boolean,
+    requestingUser: User,
+  ): Task[ReadOntologyV2] =
+    getPropertyDefinitionsFromOntologyV2(propertyIris.map(_.smartIri), allLanguages, requestingUser)
+
   private def getPropertyDefinitionsFromOntologyV2(
     propertyIris: Set[SmartIri],
     allLanguages: Boolean,

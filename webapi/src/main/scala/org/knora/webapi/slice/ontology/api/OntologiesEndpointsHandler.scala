@@ -17,7 +17,8 @@ final class OntologiesEndpointsHandler(
 ) {
 
   val allHandlers = Seq(
-    SecuredEndpointHandler(endpoints.getOntologyiesCandeleteproperty, restService.canDeleteProperty),
+    SecuredEndpointHandler(endpoints.getOntologiesProperties, restService.getProperties),
+    SecuredEndpointHandler(endpoints.getOntologiesCandeleteproperty, restService.canDeleteProperty),
     SecuredEndpointHandler(endpoints.deleteOntologiesProperty, restService.deleteProperty),
     SecuredEndpointHandler(endpoints.postOntologies, restService.createOntology),
     SecuredEndpointHandler(endpoints.getOntologiesCandeleteontology, restService.canDeleteOntology),

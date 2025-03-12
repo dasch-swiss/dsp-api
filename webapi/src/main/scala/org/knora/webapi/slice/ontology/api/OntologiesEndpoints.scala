@@ -35,8 +35,16 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val ontologyIriPath      = path[IriDto].name("ontologyIri")
   private val propertyIriPath      = path[IriDto].name("propertyIri")
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
+  private val allLanguages         = query[Boolean]("allLanguages").default(false)
 
-  val getOntologyiesCandeleteproperty = baseEndpoints.withUserEndpoint.get
+  val getOntologiesProperties = baseEndpoints.withUserEndpoint.get
+    .in(base / "properties" / paths)
+    .in(allLanguages)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val getOntologiesCandeleteproperty = baseEndpoints.withUserEndpoint.get
     .in(base / "candeleteproperty" / propertyIriPath)
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
@@ -70,7 +78,13 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(header[MediaType](HeaderNames.ContentType))
 
   val endpoints =
-    Seq(deleteOntologiesProperty, postOntologies, getOntologiesCandeleteontology, deleteOntologies).map(
+    Seq(
+      getOntologiesProperties,
+      deleteOntologiesProperty,
+      postOntologies,
+      getOntologiesCandeleteontology,
+      deleteOntologies,
+    ).map(
       _.endpoint.tag("V2 Ontologies"),
     )
 }

@@ -9,6 +9,7 @@ import zio.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
+import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.slice.admin.domain.model.User
@@ -30,6 +31,24 @@ final case class OntologiesRestService(
   private val requestParser: OntologyV2RequestParser,
   private val renderer: KnoraResponseRenderer,
 ) {
+
+  def getProperties(user: User)(
+    propertyIris: List[String],
+    allLanguages: Boolean,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    propertyIris <- ZIO.foreach(propertyIris.toSet)(iriConverter.asPropertyIri).mapError(BadRequestException.apply)
+    _ <- ZIO
+           .fail(BadRequestException(s"Only one ontology may be queried at once"))
+           .when(propertyIris.map(_.ontologyIri).size != 1)
+    schemasFromProperties = propertyIris.flatMap(_.smartIri.getOntologySchema)
+    formatOptions <- ZIO
+                       .fail(BadRequestException(s"Only one ontology schema may be queried at once"))
+                       .when(schemasFromProperties.size != 1)
+                       .as(formatOptions.copy(schema = schemasFromProperties.head.asInstanceOf[ApiV2Schema]))
+    result   <- ontologyResponder.getPropertiesFromOntologyV2(propertyIris, allLanguages, user)
+    response <- renderer.render(result, formatOptions)
+  } yield response
 
   def canDeleteProperty(
     user: User,
