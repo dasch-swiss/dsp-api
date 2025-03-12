@@ -1945,10 +1945,9 @@ final case class OntologyResponderV2(
         cacheData <- ontologyCache.getCacheData
 
         ontology = cacheData.ontologies(internalOntologyIri)
-        currentReadClassInfo <-
-          ZIO
-            .fromOption(ontology.classes.get(internalClassIri))
-            .orElseFail(NotFoundException(s"Class ${req.classIri} not found"))
+        _ <- ZIO
+               .fromOption(ontology.classes.get(internalClassIri))
+               .orElseFail(NotFoundException(s"Class ${req.classIri} not found"))
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
         _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
@@ -1993,31 +1992,38 @@ final case class OntologyResponderV2(
   /**
    * Delete the `rdfs:comment` in a property definition.
    *
-   * @param deletePropertyCommentRequest the request to delete the property's comment
+   * @param req  the request to delete the property's comment
    * @return a [[ReadOntologyV2]] containing the modified property definition.
    */
-  private def deletePropertyComment(
-    deletePropertyCommentRequest: DeletePropertyCommentRequestV2,
-  ): Task[ReadOntologyV2] = {
-    def makeTaskFuture(
-      internalPropertyIri: SmartIri,
-      internalOntologyIri: SmartIri,
-      ontology: ReadOntologyV2,
-      propertyToUpdate: ReadPropertyInfoV2,
-    ) =
-      for {
+  private def deletePropertyComment(req: DeletePropertyCommentRequestV2): Task[ReadOntologyV2] =
+    deletePropertyComment(
+      PropertyIri.unsafeFrom(req.propertyIri),
+      req.lastModificationDate,
+      req.apiRequestID,
+      req.requestingUser,
+    )
 
+  def deletePropertyComment(
+    propertyIri: PropertyIri,
+    lastModificationDate: Instant,
+    apiRequestID: UUID,
+    requestingUser: User,
+  ): Task[ReadOntologyV2] = {
+    val internalPropertyIri = propertyIri.toInternalSchema
+    val internalOntologyIri = internalPropertyIri.getOntologyFromEntity
+    val externalPropertyIri = propertyIri.toComplexSchema
+    val externalOntologyIri = externalPropertyIri.getOntologyFromEntity
+
+    def deleteCommentTask(propertyToUpdate: ReadPropertyInfoV2) =
+      for {
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-               internalOntologyIri,
-               deletePropertyCommentRequest.lastModificationDate,
-             )
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
 
         maybeLinkValueOfPropertyToUpdateIri =
           if (propertyToUpdate.isLinkProp) { Some(internalPropertyIri.fromLinkPropToLinkValueProp) }
           else { None }
 
-        currentTime = Instant.now
+        currentTime <- Clock.instant
 
         // Delete the comment
         updateSparql = sparql.v2.txt.deletePropertyComment(
@@ -2025,7 +2031,7 @@ final case class OntologyResponderV2(
                          ontologyIri = internalOntologyIri,
                          propertyIri = internalPropertyIri,
                          maybeLinkValuePropertyIri = maybeLinkValueOfPropertyToUpdateIri,
-                         lastModificationDate = deletePropertyCommentRequest.lastModificationDate,
+                         lastModificationDate = lastModificationDate,
                          currentTime = currentTime,
                        )
         _ <- save(Update(updateSparql))
@@ -2034,57 +2040,34 @@ final case class OntologyResponderV2(
         response <- getPropertyDefinitionsFromOntologyV2(
                       propertyIris = Set(internalPropertyIri),
                       allLanguages = true,
-                      requestingUser = deletePropertyCommentRequest.requestingUser,
+                      requestingUser = requestingUser,
                     )
       } yield response
 
     for {
-      requestingUser <- ZIO.succeed(deletePropertyCommentRequest.requestingUser)
-
-      externalPropertyIri: SmartIri = deletePropertyCommentRequest.propertyIri
-      externalOntologyIri: SmartIri = externalPropertyIri.getOntologyFromEntity
-
       _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
              externalOntologyIri,
              externalPropertyIri,
              requestingUser,
            )
 
-      internalPropertyIri: SmartIri = externalPropertyIri.toOntologySchema(InternalSchema)
-      internalOntologyIri: SmartIri = externalOntologyIri.toOntologySchema(InternalSchema)
-
-      cacheData <- ontologyCache.getCacheData
-
-      ontology: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
-
       propertyToUpdate <-
-        ZIO
-          .fromOption(ontology.properties.get(internalPropertyIri))
-          .orElseFail(NotFoundException(s"Property ${deletePropertyCommentRequest.propertyIri} not found"))
+        ontologyRepo
+          .findProperty(propertyIri)
+          .someOrFail(NotFoundException(s"Ontology ${propertyIri.ontologyIri.toComplexSchema.toIri} not found"))
 
       hasComment: Boolean =
         propertyToUpdate.entityInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)
 
       taskResult <-
-        if (hasComment) for {
-          // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-          taskResult <- IriLocker.runWithIriLock(
-                          deletePropertyCommentRequest.apiRequestID,
-                          ONTOLOGY_CACHE_LOCK_IRI,
-                          makeTaskFuture(
-                            internalPropertyIri = internalPropertyIri,
-                            internalOntologyIri = internalOntologyIri,
-                            ontology = ontology,
-                            propertyToUpdate = propertyToUpdate,
-                          ),
-                        )
-        } yield taskResult
-        else {
+        if (hasComment) {
+          IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteCommentTask(propertyToUpdate))
+        } else {
           // not change anything if property has no comment
           getPropertyDefinitionsFromOntologyV2(
             propertyIris = Set(internalPropertyIri),
             allLanguages = true,
-            requestingUser = deletePropertyCommentRequest.requestingUser,
+            requestingUser = requestingUser,
           )
         }
     } yield taskResult

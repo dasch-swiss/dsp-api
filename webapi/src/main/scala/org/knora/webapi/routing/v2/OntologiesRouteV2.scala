@@ -71,8 +71,7 @@ final case class OntologiesRouteV2()(
       deleteClass() ~
       deleteOntologyComment() ~
       createProperty() ~
-      updatePropertyLabelsOrComments() ~
-      deletePropertyComment()
+      updatePropertyLabelsOrComments()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -446,21 +445,4 @@ final case class OntologiesRouteV2()(
         }
       }
     }
-
-  // delete the comment of a property definition
-  private def deletePropertyComment(): Route =
-    path(ontologiesBasePath / "properties" / "comment" / Segment) { (propertyIriStr: IRI) =>
-      delete { requestContext =>
-        val requestTask = for {
-          propertyIri <- RouteUtilZ
-                           .toSmartIri(propertyIriStr, s"Invalid property IRI: $propertyIriStr")
-                           .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
-          lastModificationDate <- getLastModificationDate(requestContext)
-          apiRequestId         <- RouteUtilZ.randomUuid()
-          requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield DeletePropertyCommentRequestV2(propertyIri, lastModificationDate, apiRequestId, requestingUser)
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-      }
-    }
-
 }
