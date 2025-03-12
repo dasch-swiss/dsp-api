@@ -185,30 +185,21 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     )
 
   "The ontology responder v2" should {
-    "not allow a user to create an ontology if they are not a sysadmin or an admin in the ontology's project" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "foo",
-        projectIri = imagesProjectIri,
-        label = "The foo ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = SharedTestDataADM.imagesUser02,
-      )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
-    }
-
     "create an empty ontology called 'foo' with a project code" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "foo",
-        projectIri = imagesProjectIri,
-        label = "The foo ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "foo",
+              projectIri = imagesProjectIri,
+              label = "The foo ontology",
+              apiRequestID = UUID.randomUUID,
+              requestingUser = imagesUser,
+            ),
+          ),
+        ),
       )
 
-      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
@@ -336,31 +327,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not create an ontology if the given name matches NCName pattern but is not URL safe" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "bär",
-        projectIri = imagesProjectIri,
-        label = "The bär ontology",
-        comment = Some("some comment"),
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "bär",
+              projectIri = imagesProjectIri,
+              label = "The bär ontology",
+              comment = Some("some comment"),
+              apiRequestID = UUID.randomUUID,
+              requestingUser = imagesUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "create an empty ontology called 'bar' with a comment" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "bar",
-        projectIri = imagesProjectIri,
-        label = "The bar ontology",
-        comment = Some("some comment"),
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "bar",
+              projectIri = imagesProjectIri,
+              label = "The bar ontology",
+              comment = Some("some comment"),
+              apiRequestID = UUID.randomUUID,
+              requestingUser = imagesUser,
+            ),
+          ),
+        ),
       )
-
-      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/bar")
@@ -397,54 +395,45 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not create 'foo' again" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "foo",
-        projectIri = imagesProjectIri,
-        label = "The foo ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "foo",
+              projectIri = imagesProjectIri,
+              label = "The foo ontology",
+              apiRequestID = UUID.randomUUID,
+              requestingUser = imagesUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not delete an ontology that doesn't exist" in {
-      appActor ! DeleteOntologyRequestV2(
-        ontologyIri = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri),
-        lastModificationDate = fooLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteOntology(
+            ontologyIri = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri),
+            lastModificationDate = fooLastModDate,
+            apiRequestID = UUID.randomUUID,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
-    }
-
-    "not allow a user to delete an ontology if they are not a sysadmin or an admin in the ontology's project" in {
-      appActor ! DeleteOntologyRequestV2(
-        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
-        lastModificationDate = fooLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = SharedTestDataADM.imagesUser02,
-      )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
+      assertFailsWithA[NotFoundException](exit)
     }
 
     "delete the 'foo' ontology" in {
-      appActor ! DeleteOntologyRequestV2(
-        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
-        lastModificationDate = fooLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val _ = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteOntology(
+            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            lastModificationDate = fooLastModDate,
+            apiRequestID = UUID.randomUUID,
+          ),
+        ),
       )
-
-      expectMsgType[SuccessResponseV2](timeout)
 
       // Request the metadata of all ontologies to check that 'foo' isn't listed.
 
@@ -475,189 +464,210 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         .lastModificationDate
         .get
 
-      appActor ! DeleteOntologyRequestV2(
-        ontologyIri = AnythingOntologyIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteOntology(
+            ontologyIri = AnythingOntologyIri,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        val cause: Throwable = msg.cause
-        val errorMsg: String = cause.getMessage
-        cause.isInstanceOf[BadRequestException] should ===(true)
-
-        val expectedSubjects = Set(
-          "<http://rdfh.ch/0001/a-thing>",                                   // rdf:type anything:Thing
-          "<http://rdfh.ch/0001/a-blue-thing>",                              // rdf:type anything:BlueThing, a subclass of anything:Thing
-          "<http://www.knora.org/ontology/0001/something#Something>",        // a subclass of anything:Thing in another ontology
-          "<http://www.knora.org/ontology/0001/something#hasOtherSomething>", // a subproperty of anything:hasOtherThing in another ontology
-        )
-
-        expectedSubjects.forall(s => errorMsg.contains(s)) should ===(true)
-      }
+      val expectedSubjects = Set(
+        "<http://rdfh.ch/0001/a-thing>",                                   // rdf:type anything:Thing
+        "<http://rdfh.ch/0001/a-blue-thing>",                              // rdf:type anything:BlueThing, a subclass of anything:Thing
+        "<http://www.knora.org/ontology/0001/something#Something>",        // a subclass of anything:Thing in another ontology
+        "<http://www.knora.org/ontology/0001/something#hasOtherSomething>", // a subproperty of anything:hasOtherThing in another ontology
+      )
+      assertFailsWithA[BadRequestException](exit, e => expectedSubjects.forall(e.getMessage.contains))
     }
 
     "not create an ontology called 'rdfs'" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "rdfs",
-        projectIri = imagesProjectIri,
-        label = "The rdfs ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "rdfs",
+              projectIri = imagesProjectIri,
+              label = "The rdfs ontology",
+              apiRequestID = UUID.randomUUID,
+              requestingUser = imagesUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called '0000'" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "0000",
-        projectIri = imagesProjectIri,
-        label = "The 0000 ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "0000",
+              projectIri = imagesProjectIri,
+              label = "The 0000 ontology",
+              apiRequestID = UUID.randomUUID,
+              requestingUser = imagesUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called '-foo'" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "-foo",
-        projectIri = imagesProjectIri,
-        label = "The -foo ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "-foo",
+              projectIri = imagesProjectIri,
+              label = "The -foo ontology",
+              apiRequestID = UUID.randomUUID,
+              requestingUser = imagesUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'v3'" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "v3",
-        projectIri = imagesProjectIri,
-        label = "The v3 ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "v3",
+              projectIri = imagesProjectIri,
+              label = "The v3 ontology",
+              apiRequestID = UUID.randomUUID,
+              requestingUser = imagesUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'ontology'" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "ontology",
-        projectIri = imagesProjectIri,
-        label = "The ontology ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "ontology",
+              projectIri = imagesProjectIri,
+              label = "The ontology ontology",
+              apiRequestID = UUID.randomUUID,
+              requestingUser = imagesUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'knora'" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "knora",
-        projectIri = imagesProjectIri,
-        label = "The wrong knora ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "knora",
+              projectIri = imagesProjectIri,
+              label = "The wrong knora ontology",
+              apiRequestID = UUID.randomUUID,
+              requestingUser = imagesUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'simple'" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "simple",
-        projectIri = imagesProjectIri,
-        label = "The simple ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "simple",
+              projectIri = imagesProjectIri,
+              label = "The simple ontology",
+              apiRequestID = UUID.randomUUID,
+              requestingUser = imagesUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'shared'" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "shared",
-        projectIri = imagesProjectIri,
-        label = "The invalid shared ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "shared",
+              projectIri = imagesProjectIri,
+              label = "The invalid shared ontology",
+              apiRequestID = UUID.randomUUID,
+              requestingUser = imagesUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a shared ontology in the wrong project" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "misplaced",
-        projectIri = imagesProjectIri,
-        isShared = true,
-        label = "The invalid shared ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "misplaced",
+              projectIri = imagesProjectIri,
+              isShared = true,
+              label = "The invalid shared ontology",
+              apiRequestID = UUID.randomUUID,
+              requestingUser = imagesUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a non-shared ontology in the shared ontologies project" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "misplaced",
-        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
-        label = "The invalid non-shared ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = SharedTestDataADM.superUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "misplaced",
+              projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
+              label = "The invalid non-shared ontology",
+              apiRequestID = UUID.randomUUID,
+              requestingUser = SharedTestDataADM.superUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "create a shared ontology" in {
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "chair",
-        projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
-        isShared = true,
-        label = "a chaired ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = SharedTestDataADM.superUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.createOntology(
+            CreateOntologyRequestV2(
+              ontologyName = "chair",
+              projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
+              isShared = true,
+              label = "a chaired ontology",
+              apiRequestID = UUID.randomUUID,
+              requestingUser = SharedTestDataADM.superUser,
+            ),
+          ),
+        ),
       )
-
-      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/shared/chair")
@@ -3671,52 +3681,49 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "reject a request to delete a link value property directly" in {
-
-      val hasInterestingThingValue = AnythingOntologyIri.makeEntityIri("hasInterestingThingValue")
-
-      appActor ! DeletePropertyRequestV2(
-        propertyIri = hasInterestingThingValue,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val hasInterestingThingValue = AnythingOntologyIri.makeProperty("hasInterestingThingValue")
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.deleteProperty(
+            propertyIri = hasInterestingThingValue,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "delete a link property and automatically delete the corresponding link value property" in {
-
-      val linkPropIri = AnythingOntologyIri.makeEntityIri("hasInterestingThing")
-
-      appActor ! DeletePropertyRequestV2(
-        propertyIri = linkPropIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val linkPropIri = AnythingOntologyIri.makeProperty("hasInterestingThing")
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.deleteProperty(
+            propertyIri = linkPropIri,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(msg.ontologies.size == 1)
+      val metadata = msg.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
 
       // Check that both properties were deleted.
 
       val linkPropGetRequest = PropertiesGetRequestV2(
-        propertyIris = Set(linkPropIri),
+        propertyIris = Set(linkPropIri.smartIri),
         allLanguages = true,
         requestingUser = anythingAdminUser,
       )
 
-      val linkValuePropIri = linkPropIri.fromLinkPropToLinkValueProp
+      val linkValuePropIri = linkPropIri.smartIri.fromLinkPropToLinkValueProp
 
       val linkValuePropGetRequest = PropertiesGetRequestV2(
         propertyIris = Set(linkValuePropIri),
@@ -4788,39 +4795,39 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "delete the property anything:hasNothingness" in {
-      val hasNothingness = AnythingOntologyIri.makeEntityIri("hasNothingness")
-
-      appActor ! DeletePropertyRequestV2(
-        propertyIri = hasNothingness,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val hasNothingness = AnythingOntologyIri.makeProperty("hasNothingness")
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.deleteProperty(
+            propertyIri = hasNothingness,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(msg.ontologies.size == 1)
+      val metadata = msg.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not delete the property anything:hasEmptiness, because the class anything:Nothing refers to it" in {
-      val hasNothingness = AnythingOntologyIri.makeEntityIri("hasEmptiness")
-
-      appActor ! DeletePropertyRequestV2(
-        propertyIri = hasNothingness,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val hasNothingness = AnythingOntologyIri.makeProperty("hasEmptiness")
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.deleteProperty(
+            propertyIri = hasNothingness,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not allow a user to remove all cardinalities from a class if they are not a sysadmin or an admin in the user's project" in {
@@ -4893,65 +4900,68 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not delete the property anything:hasEmptiness with the wrong knora-api:lastModificationDate" in {
-      val hasEmptiness = AnythingOntologyIri.makeEntityIri("hasEmptiness")
-
-      appActor ! DeletePropertyRequestV2(
-        propertyIri = hasEmptiness,
-        lastModificationDate = anythingLastModDate.minusSeconds(60),
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val hasEmptiness = AnythingOntologyIri.makeProperty("hasEmptiness")
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.deleteProperty(
+            propertyIri = hasEmptiness,
+            lastModificationDate = anythingLastModDate.minusSeconds(60),
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[EditConflictException] should ===(true)
-      }
+      assertFailsWithA[EditConflictException](exit)
     }
 
     "not allow a user to delete a property if they are not a sysadmin or an admin in the ontology's project" in {
-      val hasEmptiness = AnythingOntologyIri.makeEntityIri("hasEmptiness")
-
-      appActor ! DeletePropertyRequestV2(
-        propertyIri = hasEmptiness,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser,
+      val hasEmptiness = AnythingOntologyIri.makeProperty("hasEmptiness")
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.deleteProperty(
+            propertyIri = hasEmptiness,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingNonAdminUser,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
+      assertFailsWithA[ForbiddenException](exit)
     }
 
     "delete the properties anything:hasOtherNothing and anything:hasEmptiness" in {
-      val hasOtherNothing = AnythingOntologyIri.makeEntityIri("hasOtherNothing")
-
-      appActor ! DeletePropertyRequestV2(
-        propertyIri = hasOtherNothing,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val hasOtherNothing = AnythingOntologyIri.makeProperty("hasOtherNothing")
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.deleteProperty(
+            propertyIri = hasOtherNothing,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
+      assert(msg.ontologies.size == 1)
+      val metadata = msg.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
 
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      { // prop2
+        val hasEmptiness = AnythingOntologyIri.makeProperty("hasEmptiness")
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.deleteProperty(
+              propertyIri = hasEmptiness,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
         )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
 
-      val hasEmptiness = AnythingOntologyIri.makeEntityIri("hasEmptiness")
-
-      appActor ! DeletePropertyRequestV2(
-        propertyIri = hasEmptiness,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
         assert(msg.ontologies.size == 1)
         val metadata = msg.ontologies.head
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
@@ -5358,24 +5368,24 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "delete the property anything:hasAnyName" in {
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasAnyName")
-
-      appActor ! DeletePropertyRequestV2(
-        propertyIri = propertyIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val propertyIri = AnythingOntologyIri.makeProperty("hasAnyName")
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.deleteProperty(
+            propertyIri = propertyIri,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(msg.ontologies.size == 1)
+      val metadata = msg.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "create a property anything:BoxHasBoolean with subject type example-box:Box" in {
@@ -5428,24 +5438,24 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "delete the property anything:BoxHasBoolean" in {
-      val propertyIri = AnythingOntologyIri.makeEntityIri("BoxHasBoolean")
-
-      appActor ! DeletePropertyRequestV2(
-        propertyIri = propertyIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val propertyIri = AnythingOntologyIri.makeProperty("BoxHasBoolean")
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.deleteProperty(
+            propertyIri = propertyIri,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(msg.ontologies.size == 1)
+      val metadata = msg.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "create a property anything:hasBox with object type example-box:Box" in {
@@ -5495,24 +5505,24 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "delete the property anything:hasBox" in {
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasBox")
-
-      appActor ! DeletePropertyRequestV2(
-        propertyIri = propertyIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val propertyIri = AnythingOntologyIri.makeProperty("hasBox")
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.deleteProperty(
+            propertyIri = propertyIri,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(msg.ontologies.size == 1)
+      val metadata = msg.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "create a class with several cardinalities, then remove one of the cardinalities" in {

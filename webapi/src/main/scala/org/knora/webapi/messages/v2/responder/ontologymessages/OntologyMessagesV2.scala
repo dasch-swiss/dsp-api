@@ -73,49 +73,7 @@ case class CreateOntologyRequestV2(
   comment: Option[String] = None,
   apiRequestID: UUID,
   requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
- * Checks whether an ontology can be deleted. A successful response will be a [[CanDoResponseV2]].
- *
- * @param ontologyIri    the ontology IRI.
- * @param requestingUser the user making the request.
- */
-case class CanDeleteOntologyRequestV2(
-  ontologyIri: OntologyIri,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
- * Requests that an ontology is deleted. All the entities in the ontology must be unused in data.
- *
- * @param ontologyIri          the IRI of the ontology to delete.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class DeleteOntologyRequestV2(
-  ontologyIri: OntologyIri,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
- * Represents a request to update a property definition.
- *
- * @param propertyInfoContent  information to be updated in the property definition.
- * @param lastModificationDate the ontology's last modification date.
- */
-case class PropertyUpdateInfo(propertyInfoContent: PropertyInfoContentV2, lastModificationDate: Instant)
-
-/**
- * Represents a request to update a class definition.
- *
- * @param classInfoContent     information to be updated in the class definition.
- * @param lastModificationDate the ontology's last modification date.
- */
-case class ClassUpdateInfo(classInfoContent: ClassInfoContentV2, lastModificationDate: Instant)
+)
 
 /**
  * Requests the addition of a property to an ontology. A successful response will be a [[ReadOntologyV2]].
@@ -232,32 +190,6 @@ case class DeleteClassRequestV2(
  */
 case class CanDeleteClassRequestV2(
   classIri: SmartIri,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
- * Requests the deletion of a property. A successful response will be a [[ReadOntologyMetadataV2]].
- *
- * @param propertyIri          the IRI of the property to be deleted.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class DeletePropertyRequestV2(
-  propertyIri: SmartIri,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
- * Asks whether a property can be deleted. A successful response will be a [[CanDoResponseV2]].
- *
- * @param propertyIri    the IRI of the property to be deleted.
- * @param requestingUser the user making the request.
- */
-case class CanDeletePropertyRequestV2(
-  propertyIri: SmartIri,
   requestingUser: User,
 ) extends OntologiesResponderRequestV2
 
@@ -584,6 +516,7 @@ case class ReadOntologyV2(
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   def projectIri: Option[ProjectIri] = ontologyMetadata.projectIri
+  def ontologyIri: OntologyIri       = OntologyIri.unsafeFrom(ontologyMetadata.ontologyIri)
 
   /**
    * Converts this [[ReadOntologyV2]] to the specified Knora API v2 schema.
@@ -982,8 +915,8 @@ object PredicateInfoV2 {
     predicateInfo.objects match {
       case Nil => Validation.fail(s"At least one value must be provided for $propertyIri")
       case literals if !literals.forall {
-            case StringLiteralV2(value, Some(_)) => true
-            case _                               => false
+            case StringLiteralV2(_, Some(_)) => true
+            case _                           => false
           } =>
         Validation.fail(s"All values of $propertyIri must be string literals with a language code")
       case literals => Validation.succeed(literals.collect { case l: StringLiteralV2 => l })
@@ -2439,23 +2372,6 @@ object IndividualInfoContentV2 {
 
   }
 }
-
-/**
- * Represents the IRIs of Knora entities (Knora resource classes, standoff class, resource properties, and standoff properties) defined in a particular ontology.
- *
- * @param ontologyIri          the IRI of the ontology.
- * @param classIris            the classes defined in the ontology.
- * @param propertyIris         the properties defined in the ontology.
- * @param standoffClassIris    the standoff classes defined in the ontology.
- * @param standoffPropertyIris the standoff properties defined in the ontology.
- */
-case class OntologyKnoraEntitiesIriInfoV2(
-  ontologyIri: SmartIri,
-  classIris: Set[SmartIri],
-  propertyIris: Set[SmartIri],
-  standoffClassIris: Set[SmartIri],
-  standoffPropertyIris: Set[SmartIri],
-)
 
 /**
  * Represents information about a subclass of a resource class.

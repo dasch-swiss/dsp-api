@@ -13,7 +13,6 @@ import zio.prelude.ForEachOps
 
 import scala.annotation.tailrec
 
-import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
@@ -143,7 +142,7 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
 
   override def findProperty(propertyIri: PropertyIri): Task[Option[ReadPropertyInfoV2]] =
     getCache.map { c =>
-      val iri = propertyIri.smartIri.toOntologySchema(InternalSchema)
+      val iri = propertyIri.toInternalSchema
       for {
         ontology <- c.ontologies.get(iri.getOntologyFromEntity)
         property <- ontology.properties.get(iri)

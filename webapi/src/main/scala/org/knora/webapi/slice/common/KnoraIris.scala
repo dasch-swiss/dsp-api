@@ -39,6 +39,7 @@ object KnoraIris {
   // SmartIris that are part of the API v2 complex schema.
 
   final case class PropertyIri private (smartIri: SmartIri) extends KnoraIri {
+    def ontologyIri: OntologyIri                 = OntologyIri.unsafeFrom(smartIri.getOntologyFromEntity)
     def fromLinkValuePropToLinkProp: PropertyIri = PropertyIri.unsafeFrom(smartIri.fromLinkValuePropToLinkProp)
     def fromLinkPropToLinkValueProp: PropertyIri = PropertyIri.unsafeFrom(smartIri.fromLinkPropToLinkValueProp)
   }
