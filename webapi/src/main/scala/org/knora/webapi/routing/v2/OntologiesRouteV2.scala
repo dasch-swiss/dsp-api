@@ -72,8 +72,7 @@ final case class OntologiesRouteV2()(
       deleteOntologyComment() ~
       createProperty() ~
       updatePropertyLabelsOrComments() ~
-      deletePropertyComment() ~
-      updatePropertyGuiElement()
+      deletePropertyComment()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -464,19 +463,4 @@ final case class OntologiesRouteV2()(
       }
     }
 
-  private def updatePropertyGuiElement(): Route =
-    path(ontologiesBasePath / "properties" / "guielement") {
-      put {
-        // Change the salsah-gui:guiElement and/or salsah-gui:guiAttribute of a property.
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            msg <- requestParser(_.changePropertyGuiElementRequest(jsonRequest, apiRequestId, requestingUser))
-                     .mapError(BadRequestException.apply)
-          } yield msg
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-        }
-      }
-    }
 }

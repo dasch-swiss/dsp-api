@@ -32,6 +32,15 @@ final case class OntologiesRestService(
   private val renderer: KnoraResponseRenderer,
 ) {
 
+  def changePropertyGuiElement(
+    user: User,
+  )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
+    uuid      <- Random.nextUUID()
+    updateReq <- requestParser.changePropertyGuiElementRequest(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    result    <- ontologyResponder.changePropertyGuiElement(updateReq)
+    response  <- renderer.render(result, formatOptions)
+  } yield response
+
   def getProperties(user: User)(
     propertyIris: List[String],
     allLanguages: Boolean,

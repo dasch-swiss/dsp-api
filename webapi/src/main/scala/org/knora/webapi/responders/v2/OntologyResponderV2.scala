@@ -1756,7 +1756,7 @@ final case class OntologyResponderV2(
    * @param changePropertyGuiElementRequest the request to change the property's GUI element and GUI attribute.
    * @return a [[ReadOntologyV2]] containing the modified property definition.
    */
-  private def changePropertyGuiElement(
+  def changePropertyGuiElement(
     changePropertyGuiElementRequest: ChangePropertyGuiElementRequest,
   ): Task[ReadOntologyV2] = {
     def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] = for {
