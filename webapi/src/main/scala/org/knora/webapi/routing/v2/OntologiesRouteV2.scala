@@ -70,8 +70,7 @@ final case class OntologiesRouteV2()(
       canDeleteClass ~
       deleteClass() ~
       deleteOntologyComment() ~
-      createProperty() ~
-      updatePropertyLabelsOrComments()
+      createProperty()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -423,23 +422,6 @@ final case class OntologiesRouteV2()(
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestMessage <- requestParser(_.createPropertyRequestV2(jsonRequest, apiRequestId, requestingUser))
                                 .mapError(BadRequestException.apply)
-          } yield requestMessage
-          RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-        }
-      }
-    }
-
-  private def updatePropertyLabelsOrComments(): Route =
-    path(ontologiesBasePath / "properties") {
-      put {
-        // Change the labels or comments of a property.
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestMessageTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <-
-              requestParser(_.changePropertyLabelsOrCommentsRequestV2(jsonRequest, apiRequestId, requestingUser))
-                .mapError(BadRequestException.apply)
           } yield requestMessage
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }

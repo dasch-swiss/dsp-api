@@ -17,6 +17,7 @@ final class OntologiesEndpointsHandler(
 ) {
 
   val allHandlers = Seq(
+    SecuredEndpointHandler(endpoints.putOntologiesProperties, restService.changePropertyLabelsOrComments),
     SecuredEndpointHandler(endpoints.deletePropertiesComment, restService.deletePropertyComment),
     SecuredEndpointHandler(endpoints.putOntologiesPropertiesGuielement, restService.changePropertyGuiElement),
     SecuredEndpointHandler(endpoints.getOntologiesProperties, restService.getProperties),

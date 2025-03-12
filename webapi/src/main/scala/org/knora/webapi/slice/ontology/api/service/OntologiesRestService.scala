@@ -32,6 +32,18 @@ final case class OntologiesRestService(
   private val renderer: KnoraResponseRenderer,
 ) {
 
+  def changePropertyLabelsOrComments(user: User)(
+    jsonLd: String,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    uuid <- Random.nextUUID()
+    updateReq <- requestParser
+                   .changePropertyLabelsOrCommentsRequestV2(jsonLd, uuid, user)
+                   .mapError(BadRequestException.apply)
+    result   <- ontologyResponder.changePropertyLabelsOrComments(updateReq)
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
   def deletePropertyComment(user: User)(
     propertyIri: IriDto,
     lastModificationDate: LastModificationDate,
