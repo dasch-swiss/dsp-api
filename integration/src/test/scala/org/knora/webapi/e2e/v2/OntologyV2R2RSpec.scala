@@ -2785,21 +2785,14 @@ class OntologyV2R2RSpec extends R2RSpec {
     )
 
     // Expect cardinality can't be deleted - endpoint should return CanDo response with value false
-    Post(
-      "/v2/ontologies/candeletecardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityCantBeDeletedPayload.value),
-    ) ~>
-      addCredentials(anythingUserCreds) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        assert(
-          !responseJsonDoc.body
-            .value(KnoraApiV2Complex.CanDo)
-            .asInstanceOf[JsonLDBoolean]
-            .value,
-        )
-      }
+    {
+      val responseJsonDoc = postJsonLd(
+        s"$apiBaseUrl/v2/ontologies/candeletecardinalities",
+        cardinalityCantBeDeletedPayload.value,
+        anythingUserCreds,
+      )
+      assert(!responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+    }
 
     // Prepare the JsonLD payload to check if a cardinality can be deleted and then to also actually delete it.
     val params =
@@ -2833,15 +2826,8 @@ class OntologyV2R2RSpec extends R2RSpec {
          |}""".stripMargin
 
     // Successfully check if the cardinality can be deleted
-    Post(
-      "/v2/ontologies/candeletecardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, params),
-    ) ~> addCredentials(
-      anythingUserCreds,
-    ) ~> ontologiesPath ~> check {
-      val responseStr = responseAs[String]
-      assert(status == StatusCodes.OK, response.toString)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+    {
+      val responseJsonDoc = postJsonLd(s"$apiBaseUrl/v2/ontologies/candeletecardinalities", params, anythingUserCreds)
       assert(responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
     }
 
@@ -2947,14 +2933,9 @@ class OntologyV2R2RSpec extends R2RSpec {
       )
       .value
 
-    Post(
-      "/v2/ontologies/cardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJsonOne),
-    ) ~> addCredentials(anythingUserCreds) ~> ontologiesPath ~> check {
-      val responseStr = responseAs[String]
-      assert(status == StatusCodes.OK, responseStr)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
+    {
+      val responseJsonDoc =
+        postJsonLd(s"$apiBaseUrl/v2/ontologies/cardinalities", addCardinalitiesRequestJsonOne, anythingUserCreds)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
       freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
@@ -2975,14 +2956,9 @@ class OntologyV2R2RSpec extends R2RSpec {
       )
       .value
 
-    Post(
-      "/v2/ontologies/cardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJsonTwo),
-    ) ~> addCredentials(anythingUserCreds) ~> ontologiesPath ~> check {
-      val responseStr = responseAs[String]
-      assert(status == StatusCodes.OK, responseStr)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
+    {
+      val responseJsonDoc =
+        postJsonLd(s"$apiBaseUrl/v2/ontologies/cardinalities", addCardinalitiesRequestJsonTwo, anythingUserCreds)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
       freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
@@ -3010,16 +2986,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |    "freetest" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}#"
          |  }
          |}""".stripMargin
-    val _ = UnsafeZioRun.runOrThrow(
-      ZIO.serviceWithZIO[TestClientService](
-        _.checkResponseOK(
-          Post(
-            appConfig.knoraApi.internalKnoraApiBaseUrl + "/v2/resources",
-            HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues),
-          ) ~> addCredentials(anythingUserCreds),
-        ),
-      ),
-    )
+    val _ = postJsonLd(s"$apiBaseUrl/v2/resources", createResourceWithValues, anythingUserCreds)
 
     // payload to ask if cardinality can be removed from TestClassTwo
     val cardinalityCanBeDeletedPayload = AddCardinalitiesRequest
@@ -3037,21 +3004,14 @@ class OntologyV2R2RSpec extends R2RSpec {
       .value
 
     // Expect cardinality can be deleted from TestClassTwo - CanDo response should return true
-    Post(
-      "/v2/ontologies/candeletecardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityCanBeDeletedPayload),
-    ) ~>
-      addCredentials(anythingUserCreds) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        assert(
-          responseJsonDoc.body
-            .value(KnoraApiV2Complex.CanDo)
-            .asInstanceOf[JsonLDBoolean]
-            .value,
-        )
-      }
+    {
+      val responseJsonDoc = postJsonLd(
+        s"$apiBaseUrl/v2/ontologies/candeletecardinalities",
+        cardinalityCanBeDeletedPayload,
+        anythingUserCreds,
+      )
+      assert(responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+    }
   }
 
   "verify that link-property can not be deleted" in {
@@ -3069,15 +3029,13 @@ class OntologyV2R2RSpec extends R2RSpec {
       ),
     )
 
-    Post(
-      "/v2/ontologies/candeletecardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityOnLinkPropertyWhichCantBeDeletedPayload.value),
-    ) ~> addCredentials(
-      anythingUserCreds,
-    ) ~> ontologiesPath ~> check {
-      val responseStr = responseAs[String]
-      assert(status == StatusCodes.OK, response.toString)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+    {
+      val responseJsonDoc =
+        postJsonLd(
+          s"$apiBaseUrl/v2/ontologies/candeletecardinalities",
+          cardinalityOnLinkPropertyWhichCantBeDeletedPayload.value,
+          anythingUserCreds,
+        )
       assert(!responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
     }
   }

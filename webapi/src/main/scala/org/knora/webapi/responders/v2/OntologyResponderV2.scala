@@ -1183,7 +1183,7 @@ final case class OntologyResponderV2(
    * @param canDeleteCardinalitiesFromClassRequest the request to remove cardinalities.
    * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be deleted.
    */
-  private def canDeleteCardinalitiesFromClass(
+  def canDeleteCardinalitiesFromClass(
     canDeleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
   ): Task[CanDoResponseV2] =
     for {

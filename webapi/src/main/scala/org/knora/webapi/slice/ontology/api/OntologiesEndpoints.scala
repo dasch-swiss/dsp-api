@@ -38,6 +38,13 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
 
+  val postOntologiesCandeletecardinalities = baseEndpoints.withUserEndpoint.post
+    .in(base / "candeletecardinalities")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
   val patchOntologiesCardinalities = baseEndpoints.withUserEndpoint.patch
     .in(base / "cardinalities")
     .in(stringJsonBody)
@@ -149,6 +156,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 
   val endpoints =
     Seq(
+      postOntologiesCandeletecardinalities,
       patchOntologiesCardinalities,
       putOntologiesGuiorder,
       getOntologiesClassesIris,
