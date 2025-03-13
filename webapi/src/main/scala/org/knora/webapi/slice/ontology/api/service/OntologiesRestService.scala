@@ -32,6 +32,16 @@ final case class OntologiesRestService(
   private val renderer: KnoraResponseRenderer,
 ) {
 
+  def createProperty(user: User)(
+    jsonLd: String,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    uuid      <- Random.nextUUID()
+    createReq <- requestParser.createPropertyRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    result    <- ontologyResponder.createProperty(createReq)
+    response  <- renderer.render(result, formatOptions)
+  } yield response
+
   def changePropertyLabelsOrComments(user: User)(
     jsonLd: String,
     formatOptions: FormatOptions,

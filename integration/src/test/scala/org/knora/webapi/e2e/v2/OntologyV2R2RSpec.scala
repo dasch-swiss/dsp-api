@@ -6,6 +6,7 @@
 package org.knora.webapi.e2e.v2
 
 import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model.headers.HttpCredentials
 import spray.json.JsString
 import zio.ZIO
 
@@ -121,6 +122,9 @@ class OntologyV2R2RSpec extends R2RSpec {
       .toSet
   }
 
+  private val anythingUserCreds: BasicHttpCredentials = BasicHttpCredentials(anythingUsername, password)
+  private val superUserCreds                          = BasicHttpCredentials(superUsername, password)
+
   "The Ontologies v2 Endpoint" should {
 
     "not allow the user to request the knora-base ontology" in {
@@ -161,7 +165,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         ZIO.serviceWithZIO[TestClientService](
           _.getResponseJsonLD(
             Post(s"$apiBaseUrl/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~>
-              addCredentials(BasicHttpCredentials(anythingUsername, password)),
+              addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -202,7 +206,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         ZIO.serviceWithZIO[TestClientService](
           _.getResponseJsonLD(
             Post(s"$apiBaseUrl/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~>
-              addCredentials(BasicHttpCredentials(anythingUsername, password)),
+              addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -245,7 +249,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             Post(
               s"$apiBaseUrl/v2/ontologies",
               HttpEntity(RdfMediaTypes.`application/ld+json`, params),
-            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+            ) ~> addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -280,7 +284,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}""".stripMargin
 
       Put("/v2/ontologies/metadata", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -320,7 +324,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}""".stripMargin
 
       Put("/v2/ontologies/metadata", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -349,7 +353,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val lastModificationDate = URLEncoder.encode(fooLastModDate.toString, "UTF-8")
 
       Delete(s"/v2/ontologies/comment/$fooIriEncoded?lastModificationDate=$lastModificationDate") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -376,7 +380,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         ZIO.serviceWithZIO[TestClientService](
           _.getResponseJsonLD(
             Get(s"$apiBaseUrl/v2/ontologies/candeleteontology/$fooIriEncoded") ~>
-              addCredentials(BasicHttpCredentials(anythingUsername, password)),
+              addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -393,7 +397,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             _.checkResponseOK(
               Delete(
                 s"$apiBaseUrl/v2/ontologies/$fooIriEncoded?lastModificationDate=$lastModificationDate",
-              ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+              ) ~> addCredentials(anythingUserCreds),
             ),
           ),
         )
@@ -455,23 +459,17 @@ class OntologyV2R2RSpec extends R2RSpec {
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-      Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+      val responseJsonDoc = postJsonLd(s"$apiBaseUrl/v2/ontologies/properties", params, anythingUserCreds)
 
-        // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-        val responseAsInput: InputOntologyV2 =
-          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-        responseAsInput.properties should ===(paramsAsInput.properties)
+      // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      responseAsInput.properties should ===(paramsAsInput.properties)
 
-        // Check that the ontology's last modification date was updated.
-        val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      // Check that the ontology's last modification date was updated.
+      val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "change the rdfs:label of a property" in {
@@ -515,7 +513,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             Put(
               s"$apiBaseUrl/v2/ontologies/properties",
               HttpEntity(RdfMediaTypes.`application/ld+json`, params),
-            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+            ) ~> addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -576,7 +574,7 @@ class OntologyV2R2RSpec extends R2RSpec {
               s"$apiBaseUrl/v2/ontologies/properties",
               HttpEntity(RdfMediaTypes.`application/ld+json`, params),
             ) ~> addCredentials(
-              BasicHttpCredentials(anythingUsername, password),
+              anythingUserCreds,
             ),
           ),
         ),
@@ -639,7 +637,7 @@ class OntologyV2R2RSpec extends R2RSpec {
               s"$apiBaseUrl/v2/ontologies/properties",
               HttpEntity(RdfMediaTypes.`application/ld+json`, params),
             ) ~> addCredentials(
-              BasicHttpCredentials(anythingUsername, password),
+              anythingUserCreds,
             ),
           ),
         ),
@@ -667,7 +665,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           _.getResponseJsonLD(
             Delete(
               s"$apiBaseUrl/v2/ontologies/properties/comment/$propertySegment?lastModificationDate=$lastModificationDate",
-            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+            ) ~> addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -746,7 +744,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       Delete(
         s"/v2/ontologies/classes/comment/$classSegment?lastModificationDate=$lastModificationDate",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      ) ~> addCredentials(anythingUserCreds) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
@@ -852,7 +850,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             Put(
               s"$apiBaseUrl/v2/ontologies/properties/guielement",
               HttpEntity(RdfMediaTypes.`application/ld+json`, params),
-            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+            ) ~> addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -920,7 +918,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             Put(
               s"$apiBaseUrl/v2/ontologies/properties/guielement",
               HttpEntity(RdfMediaTypes.`application/ld+json`, params),
-            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+            ) ~> addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -956,7 +954,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             Put(
               s"$apiBaseUrl/v2/ontologies/properties/guielement",
               HttpEntity(RdfMediaTypes.`application/ld+json`, params),
-            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+            ) ~> addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -1031,7 +1029,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Post("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -1093,7 +1091,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Post("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
@@ -1150,7 +1148,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Put("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -1203,7 +1201,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Put("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -1266,25 +1264,18 @@ class OntologyV2R2RSpec extends R2RSpec {
                 """.stripMargin
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
+      val responseJsonDoc = postJsonLd(s"$apiBaseUrl/v2/ontologies/properties", params, anythingUserCreds)
+
+      // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+      responseAsInput.properties should ===(paramsAsInput.properties)
 
-      Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
-        // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-        val responseAsInput: InputOntologyV2 =
-          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-        responseAsInput.properties should ===(paramsAsInput.properties)
-
-        // Check that the ontology's last modification date was updated.
-        val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      // Check that the ontology's last modification date was updated.
+      val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "add a cardinality for the property anything:hasOtherNothing to the class anything:Nothing" in {
@@ -1335,7 +1326,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       )
 
       Post("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
@@ -1447,7 +1438,7 @@ class OntologyV2R2RSpec extends R2RSpec {
               s"$apiBaseUrl/v2/ontologies/properties",
               HttpEntity(RdfMediaTypes.`application/ld+json`, params),
             ) ~> addCredentials(
-              BasicHttpCredentials(anythingUsername, password),
+              anythingUserCreds,
             ),
           ),
         ),
@@ -1542,7 +1533,7 @@ class OntologyV2R2RSpec extends R2RSpec {
               s"$apiBaseUrl/v2/ontologies/properties",
               HttpEntity(RdfMediaTypes.`application/ld+json`, params),
             ) ~> addCredentials(
-              BasicHttpCredentials(anythingUsername, password),
+              anythingUserCreds,
             ),
           ),
         ),
@@ -1609,7 +1600,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           _.getResponseJsonLD(
             Delete(
               s"$apiBaseUrl/v2/ontologies/properties/comment/$propertyIriEncoded?lastModificationDate=$anythingLastModDate",
-            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+            ) ~> addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -1697,7 +1688,7 @@ class OntologyV2R2RSpec extends R2RSpec {
               s"$apiBaseUrl/v2/ontologies/properties/guielement",
               HttpEntity(RdfMediaTypes.`application/ld+json`, params),
             ) ~> addCredentials(
-              BasicHttpCredentials(anythingUsername, password),
+              anythingUserCreds,
             ),
           ),
         ),
@@ -1771,7 +1762,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}""".stripMargin
 
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -1799,7 +1790,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         ZIO.serviceWithZIO[TestClientService](
           _.getResponseJsonLD(
             Get(s"$apiBaseUrl/v2/ontologies/candeleteproperty/$propertySegment")
-              ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+              ~> addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -1815,7 +1806,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           _.getResponseJsonLD(
             Delete(
               s"$apiBaseUrl/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate",
-            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+            ) ~> addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -1875,22 +1866,17 @@ class OntologyV2R2RSpec extends R2RSpec {
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-      Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
+      val responseJsonDoc = postJsonLd(s"$apiBaseUrl/v2/ontologies/properties", params, anythingUserCreds)
 
-        // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-        val responseAsInput: InputOntologyV2 =
-          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-        responseAsInput.properties should ===(paramsAsInput.properties)
+      // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      responseAsInput.properties should ===(paramsAsInput.properties)
 
-        // Check that the ontology's last modification date was updated.
-        val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      // Check that the ontology's last modification date was updated.
+      val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "add a cardinality for the property anything:hasNothingness to the class anything:Nothing" in {
@@ -1927,7 +1913,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Post("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -1987,7 +1973,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Put("/v2/ontologies/guiorder", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2049,29 +2035,24 @@ class OntologyV2R2RSpec extends R2RSpec {
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-      Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
+      val responseJsonDoc = postJsonLd(s"$apiBaseUrl/v2/ontologies/properties", params, anythingUserCreds)
 
-        // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-        val responseAsInput: InputOntologyV2 =
-          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-        responseAsInput.properties should ===(paramsAsInput.properties)
+      // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      responseAsInput.properties should ===(paramsAsInput.properties)
 
-        // Check that the ontology's last modification date was updated.
-        val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      // Check that the ontology's last modification date was updated.
+      val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "determine that a class's cardinalities can be changed" in {
       val classSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing", "UTF-8")
 
       Get(s"/v2/ontologies/canreplacecardinalities/$classSegment") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -2114,7 +2095,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2147,7 +2128,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             Delete(
               s"$apiBaseUrl/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate",
             ) ~>
-              addCredentials(BasicHttpCredentials(anythingUsername, password)),
+              addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -2188,7 +2169,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}""".stripMargin
 
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2218,7 +2199,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           _.getResponseJsonLD(
             Delete(
               s"$apiBaseUrl/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate",
-            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+            ) ~> addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -2238,7 +2219,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val classSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing", "UTF-8")
 
       Get(s"/v2/ontologies/candeleteclass/$classSegment") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -2252,7 +2233,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
       Delete(s"/v2/ontologies/classes/$classSegment?lastModificationDate=$lastModificationDate") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2274,32 +2255,25 @@ class OntologyV2R2RSpec extends R2RSpec {
     "create a shared ontology and put a property in it" in {
       val label = "The useless ontology"
 
-      val createOntologyJson =
-        s"""
-           |{
-           |    "knora-api:ontologyName": "useless",
-           |    "knora-api:attachedToProject": {
-           |      "@id": "${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}"
-           |    },
-           |    "knora-api:isShared": true,
-           |    "rdfs:label": "$label",
-           |    "@context": {
-           |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-           |        "knora-api": "${KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
-           |    }
-           |}""".stripMargin
-
       {
-        val responseJsonDoc = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[TestClientService](
-            _.getResponseJsonLD(
-              Post(s"$apiBaseUrl/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, createOntologyJson)) ~>
-                addCredentials(BasicHttpCredentials(superUsername, password)),
-            ),
-          ),
-        )
-        val metadata    = responseJsonDoc.body
-        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+        val createOntologyJson: String =
+          s"""
+             |{
+             |    "knora-api:ontologyName": "useless",
+             |    "knora-api:attachedToProject": {
+             |      "@id": "${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}"
+             |    },
+             |    "knora-api:isShared": true,
+             |    "rdfs:label": "$label",
+             |    "@context": {
+             |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
+             |        "knora-api": "${KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
+             |    }
+             |}""".stripMargin
+
+        val responseJsonDoc = postJsonLd(s"$apiBaseUrl/v2/ontologies", createOntologyJson, superUserCreds)
+        val metadata        = responseJsonDoc.body
+        val ontologyIri     = metadata.value("@id").asInstanceOf[JsonLDString].value
         assert(ontologyIri == "http://api.knora.org/ontology/shared/useless/v2")
         uselessIri.set(ontologyIri)
         assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
@@ -2354,12 +2328,8 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(createPropertyJson)).unescape
 
-      Post(
-        "/v2/ontologies/properties",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createPropertyJson),
-      ) ~> addCredentials(BasicHttpCredentials(superUsername, password)) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
+      {
+        val responseJsonDoc = postJsonLd(s"$apiBaseUrl/v2/ontologies/properties", createPropertyJson, superUserCreds)
 
         // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
         val responseAsInput: InputOntologyV2 =
@@ -2411,17 +2381,11 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      Post(
-        "/v2/ontologies/classes",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJson),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
-
+      {
+        val responseJsonDoc =
+          postJsonLd(s"$apiBaseUrl/v2/ontologies/classes", createClassRequestJson, anythingUserCreds)
         val responseAsInput: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-
         anythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
       }
 
@@ -2467,18 +2431,12 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      Post(
-        "/v2/ontologies/properties",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createTestTextPropRequestJson),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
+      {
+        val responseJsonDoc =
+          postJsonLd(s"$apiBaseUrl/v2/ontologies/properties", createTestTextPropRequestJson, anythingUserCreds)
         val responseAsInput: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         anythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-
       }
 
       // Create an integer property.
@@ -2523,14 +2481,9 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      Post(
-        "/v2/ontologies/properties",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createTestIntegerPropRequestJson),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
+      {
+        val responseJsonDoc =
+          postJsonLd(s"$apiBaseUrl/v2/ontologies/properties", createTestIntegerPropRequestJson, anythingUserCreds)
         val responseAsInput: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         anythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
@@ -2578,14 +2531,9 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      Post(
-        "/v2/ontologies/properties",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createTestLinkPropRequestJson),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
+      {
+        val responseJsonDoc =
+          postJsonLd(s"$apiBaseUrl/v2/ontologies/properties", createTestLinkPropRequestJson, anythingUserCreds)
         val responseAsInput: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         anythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
@@ -2637,14 +2585,9 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      Post(
-        "/v2/ontologies/cardinalities",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJson),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
+      {
+        val responseJsonDoc =
+          postJsonLd(s"$apiBaseUrl/v2/ontologies/cardinalities", addCardinalitiesRequestJson, anythingUserCreds)
         val responseAsInput: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         anythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
@@ -2689,7 +2632,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}""".stripMargin
 
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+        anythingUserCreds,
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
@@ -2721,16 +2664,10 @@ class OntologyV2R2RSpec extends R2RSpec {
       )
       .value
 
-    Post(
-      "/v2/ontologies/classes",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJson),
-    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-      assert(status == StatusCodes.OK, response.toString)
-      val responseJsonDoc = responseToJsonLDDocument(response)
-
+    {
+      val responseJsonDoc = postJsonLd(s"$apiBaseUrl/v2/ontologies/classes", createClassRequestJson, anythingUserCreds)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-
       freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
     }
 
@@ -2754,18 +2691,12 @@ class OntologyV2R2RSpec extends R2RSpec {
         )
         .value
 
-    Post(
-      "/v2/ontologies/properties",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createTestTextPropRequestJson),
-    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-      val responseStr = responseAs[String]
-      assert(status == StatusCodes.OK, responseStr)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
+    {
+      val responseJsonDoc =
+        postJsonLd(s"$apiBaseUrl/v2/ontologies/properties", createTestTextPropRequestJson, anythingUserCreds)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
       freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-
     }
 
     // Create an integer property.
@@ -2787,14 +2718,9 @@ class OntologyV2R2RSpec extends R2RSpec {
       )
       .value
 
-    Post(
-      "/v2/ontologies/properties",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createTestIntegerPropRequestJson),
-    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-      val responseStr = responseAs[String]
-      assert(status == StatusCodes.OK, responseStr)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
+    {
+      val responseJsonDoc =
+        postJsonLd(s"$apiBaseUrl/v2/ontologies/properties", createTestIntegerPropRequestJson, anythingUserCreds)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
       freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
@@ -2820,21 +2746,15 @@ class OntologyV2R2RSpec extends R2RSpec {
       )
       .value
 
-    Post(
-      "/v2/ontologies/cardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJson),
-    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-      val responseStr = responseAs[String]
-      assert(status == StatusCodes.OK, responseStr)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
+    {
+      val responseJsonDoc =
+        postJsonLd(s"$apiBaseUrl/v2/ontologies/cardinalities", addCardinalitiesRequestJson, anythingUserCreds)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
       freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
     }
 
     // Create a resource of #BlueTestClass using only #hasBlueTestIntProp
-
     val resourceLabel: String = {
       val fuzz1 = Random.nextString(1000)
       val fuzz2 = List.fill(1000)(()).map(_ => Random.nextInt(128).toChar).mkString
@@ -2869,7 +2789,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           Post(
             appConfig.knoraApi.internalKnoraApiBaseUrl + "/v2/resources",
             HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues),
-          ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ) ~> addCredentials(anythingUserCreds),
         ),
       ),
     )
@@ -2892,7 +2812,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       "/v2/ontologies/candeletecardinalities",
       HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityCantBeDeletedPayload.value),
     ) ~>
-      addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      addCredentials(anythingUserCreds) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
@@ -2940,7 +2860,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       "/v2/ontologies/candeletecardinalities",
       HttpEntity(RdfMediaTypes.`application/ld+json`, params),
     ) ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password),
+      anythingUserCreds,
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
@@ -2950,7 +2870,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     // Successfully remove the (unused) text value cardinality from the class.
     Patch("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password),
+      anythingUserCreds,
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
@@ -2980,16 +2900,11 @@ class OntologyV2R2RSpec extends R2RSpec {
       )
       .value
 
-    Post(
-      "/v2/ontologies/classes",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJsonOne),
-    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-      assert(status == StatusCodes.OK, response.toString)
-      val responseJsonDoc = responseToJsonLDDocument(response)
-
+    {
+      val responseJsonDoc =
+        postJsonLd(s"$apiBaseUrl/v2/ontologies/classes", createClassRequestJsonOne, anythingUserCreds)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-
       freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
     }
 
@@ -3010,16 +2925,11 @@ class OntologyV2R2RSpec extends R2RSpec {
       )
       .value
 
-    Post(
-      "/v2/ontologies/classes",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJsonTwo),
-    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-      assert(status == StatusCodes.OK, response.toString)
-      val responseJsonDoc = responseToJsonLDDocument(response)
-
+    {
+      val responseJsonDoc =
+        postJsonLd(s"$apiBaseUrl/v2/ontologies/classes", createClassRequestJsonTwo, anythingUserCreds)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-
       freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
     }
 
@@ -3042,18 +2952,12 @@ class OntologyV2R2RSpec extends R2RSpec {
       )
       .value
 
-    Post(
-      "/v2/ontologies/properties",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createPropRequestJson),
-    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-      val responseStr = responseAs[String]
-      assert(status == StatusCodes.OK, responseStr)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
+    {
+      val responseJsonDoc =
+        postJsonLd(s"$apiBaseUrl/v2/ontologies/properties", createPropRequestJson, anythingUserCreds)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
       freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-
     }
 
     // Add cardinality hasIntProp to TestClassOne.
@@ -3074,7 +2978,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     Post(
       "/v2/ontologies/cardinalities",
       HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJsonOne),
-    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+    ) ~> addCredentials(anythingUserCreds) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
@@ -3102,7 +3006,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     Post(
       "/v2/ontologies/cardinalities",
       HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJsonTwo),
-    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+    ) ~> addCredentials(anythingUserCreds) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
@@ -3140,7 +3044,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           Post(
             appConfig.knoraApi.internalKnoraApiBaseUrl + "/v2/resources",
             HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues),
-          ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ) ~> addCredentials(anythingUserCreds),
         ),
       ),
     )
@@ -3165,7 +3069,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       "/v2/ontologies/candeletecardinalities",
       HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityCanBeDeletedPayload),
     ) ~>
-      addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      addCredentials(anythingUserCreds) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
@@ -3197,7 +3101,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       "/v2/ontologies/candeletecardinalities",
       HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityOnLinkPropertyWhichCantBeDeletedPayload.value),
     ) ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password),
+      anythingUserCreds,
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
@@ -3210,7 +3114,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     val classSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing", "UTF-8")
 
     Get(s"/v2/ontologies/canreplacecardinalities/$classSegment") ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password),
+      anythingUserCreds,
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3223,7 +3127,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     val thingIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing", "UTF-8")
 
     Get(s"/v2/ontologies/candeleteclass/$thingIri") ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password),
+      anythingUserCreds,
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3239,7 +3143,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         ZIO.serviceWithZIO[TestClientService](
           _.getResponseJsonLD(
             Get(s"$apiBaseUrl/v2/ontologies/candeleteproperty/$propertySegment")
-              ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+              ~> addCredentials(anythingUserCreds),
           ),
         ),
       )
@@ -3252,7 +3156,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       ZIO.serviceWithZIO[TestClientService](
         _.getResponseJsonLD(
           Get(s"$apiBaseUrl/v2/ontologies/candeleteontology/$ontologyIri") ~>
-            addCredentials(BasicHttpCredentials(anythingUsername, password)),
+            addCredentials(anythingUserCreds),
         ),
       ),
     )
@@ -3274,7 +3178,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     Post(
       "/v2/ontologies/classes",
       HttpEntity(RdfMediaTypes.`application/ld+json`, request),
-    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+    ) ~> addCredentials(anythingUserCreds) ~> ontologiesPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
 
       val responseJsonDoc = responseToJsonLDDocument(response)
@@ -3286,7 +3190,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   }
 
   "create a property w/o comment" in {
-    val label = LangString.make(LanguageCode.en, "Test label").fold(e => throw e.head, v => v)
+    val label = LangString.unsafeMake(LanguageCode.en, "Test label")
     val request = CreatePropertyRequest
       .make(
         ontologyName = "freetest",
@@ -3299,19 +3203,10 @@ class OntologyV2R2RSpec extends R2RSpec {
       )
       .value
 
-    Post(
-      "/v2/ontologies/properties",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, request),
-    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-
-      val response = responseAs[String]
-      assert(status == StatusCodes.OK, response)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(response)
-      val responseAsInput: InputOntologyV2 =
-        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-
-      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-    }
+    val responseJsonDoc = postJsonLd(s"$apiBaseUrl/v2/ontologies/properties", request, anythingUserCreds)
+    val responseAsInput: InputOntologyV2 =
+      InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+    freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
   }
 
   "not create a property with invalid gui attribute" in {
@@ -3354,15 +3249,8 @@ class OntologyV2R2RSpec extends R2RSpec {
          |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
          |  }
          |}""".stripMargin
-
-    Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password),
-    ) ~> ontologiesPath ~> check {
-
-      val responseStr: String = responseAs[String]
-      assert(response.status == StatusCodes.BadRequest, responseStr)
-
-    }
+    val response = postJsonLdGetResponse(s"$apiBaseUrl/v2/ontologies/properties", params, anythingUserCreds)
+    assert(response.status == StatusCodes.BadRequest)
   }
 
   "not create a property with invalid gui attribute value" in {
@@ -3406,13 +3294,14 @@ class OntologyV2R2RSpec extends R2RSpec {
          |  }
          |}""".stripMargin
 
-    Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password),
-    ) ~> ontologiesPath ~> check {
-
-      val responseStr: String = responseAs[String]
-      assert(response.status == StatusCodes.BadRequest, responseStr)
-
-    }
+    val response = postJsonLdGetResponse(s"$apiBaseUrl/v2/ontologies/properties", params, anythingUserCreds)
+    assert(response.status == StatusCodes.BadRequest)
   }
+
+  def postJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): JsonLDDocument =
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.postJsonLd(url, jsonLd, credentials)))
+
+  def postJsonLdGetResponse(url: String, jsonLd: String, credentials: HttpCredentials): HttpResponse =
+    val request = Post(url, HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLd)) ~> addCredentials(credentials)
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request)))
 }
