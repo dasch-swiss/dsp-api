@@ -38,7 +38,14 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
 
-  val getOntologyCandeleteclass = baseEndpoints.withUserEndpoint.get
+  val getOntologiesClassesIris = baseEndpoints.withUserEndpoint.get
+    .in(base / "classes" / paths)
+    .in(allLanguages)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val getOntologiesCandeleteclass = baseEndpoints.withUserEndpoint.get
     .in(base / "candeleteclass" / resourceClassIriPath)
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
@@ -128,7 +135,8 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 
   val endpoints =
     Seq(
-      getOntologyCandeleteclass,
+      getOntologiesClassesIris,
+      getOntologiesCandeleteclass,
       deleteOntologiesClasses,
       deleteOntologiesComment,
       postOntologiesProperties,
