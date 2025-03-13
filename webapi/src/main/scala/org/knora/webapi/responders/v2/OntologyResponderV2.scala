@@ -729,7 +729,7 @@ final case class OntologyResponderV2(
    * @param changeGuiOrderRequest the request message.
    * @return the updated class definition.
    */
-  private def changeGuiOrder(changeGuiOrderRequest: ChangeGuiOrderRequestV2): Task[ReadOntologyV2] = {
+  def changeGuiOrder(changeGuiOrderRequest: ChangeGuiOrderRequestV2): Task[ReadOntologyV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] =
       for {
         cacheData                           <- ontologyCache.getCacheData
