@@ -66,8 +66,7 @@ final case class OntologiesRouteV2()(
       canDeleteCardinalitiesFromClass ~
       deleteCardinalitiesFromClass() ~
       changeGuiOrder() ~
-      getClasses ~
-      canDeleteClass
+      getClasses
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -351,24 +350,6 @@ final case class OntologiesRouteV2()(
       }
     }
 
-  private def canDeleteClass: Route =
-    path(ontologiesBasePath / "candeleteclass" / Segment) { (classIriStr: IRI) =>
-      get { requestContext =>
-        val requestTask = for {
-          classSmartIri <-
-            RouteUtilZ
-              .toSmartIri(classIriStr, s"Invalid class IRI: $classIriStr")
-              .flatMap(RouteUtilZ.ensureExternalOntologyName)
-              .filterOrFail(_.isKnoraApiV2EntityIri)(BadRequestException(s"Invalid class IRI: $classIriStr"))
-              .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(
-                BadRequestException(s"Invalid class IRI for request: $classIriStr"),
-              )
-          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield CanDeleteClassRequestV2(classSmartIri, requestingUser)
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-      }
-    }
-
   private def getLastModificationDate(ctx: RequestContext): IO[BadRequestException, Instant] =
     ZIO
       .fromOption(ctx.request.uri.query().toMap.get(lastModificationDateKey))
@@ -377,5 +358,4 @@ final case class OntologiesRouteV2()(
         ValuesValidator.xsdDateTimeStampToInstant,
       )
       .flatMap(it => ZIO.fromOption(it).orElseFail(BadRequestException(s"Invalid timestamp: $it")))
-
 }

@@ -133,7 +133,6 @@ final case class OntologyResponderV2(
     case deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2 =>
       deleteCardinalitiesFromClass(deleteCardinalitiesFromClassRequest)
     case changeGuiOrderRequest: ChangeGuiOrderRequestV2 => changeGuiOrder(changeGuiOrderRequest)
-    case canDeleteClassRequest: CanDeleteClassRequestV2 => canDeleteClass(canDeleteClassRequest)
     case deleteClassRequest: DeleteClassRequestV2       => deleteClass(deleteClassRequest)
     case createPropertyRequest: CreatePropertyRequestV2 => createProperty(createPropertyRequest)
     case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 =>
@@ -1248,32 +1247,17 @@ final case class OntologyResponderV2(
   /**
    * Checks whether a class can be deleted.
    *
-   * @param canDeleteClassRequest the request message.
+   * @param classIri the IRI of the class to be deleted.
+   * @param requestingUser the User making the request.
    * @return a [[CanDoResponseV2]].
    */
-  private def canDeleteClass(canDeleteClassRequest: CanDeleteClassRequestV2): Task[CanDoResponseV2] = {
-    val internalClassIri: SmartIri    = canDeleteClassRequest.classIri.toOntologySchema(InternalSchema)
-    val internalOntologyIri: SmartIri = internalClassIri.getOntologyFromEntity
-
-    for {
-      cacheData <- ontologyCache.getCacheData
-
-      ontology <-
-        ZIO
-          .fromOption(cacheData.ontologies.get(internalOntologyIri))
-          .orElseFail(
-            BadRequestException(s"Ontology ${canDeleteClassRequest.classIri.getOntologyFromEntity} does not exist"),
-          )
-
-      _ <- ZIO.when(!ontology.classes.contains(internalClassIri)) {
-             ZIO.fail(BadRequestException(s"Class ${canDeleteClassRequest.classIri} does not exist"))
-           }
-
-      userCanUpdateOntology <-
-        ontologyCacheHelpers.canUserUpdateOntology(internalOntologyIri, canDeleteClassRequest.requestingUser)
-      classIsUsed <- iriService.isEntityUsed(internalClassIri)
-    } yield CanDoResponseV2.of(userCanUpdateOntology && !classIsUsed)
-  }
+  def canDeleteClass(classIri: ResourceClassIri, requestingUser: User): Task[CanDoResponseV2] = for {
+    _ <- ontologyRepo
+           .findClassBy(classIri)
+           .someOrFail(BadRequestException(s"Class $classIri does not exist"))
+    userCanUpdateOntology <- ontologyCacheHelpers.canUserUpdateOntology(classIri.ontologyIri, requestingUser)
+    classIsUsed           <- iriService.isEntityUsed(classIri.toInternalSchema)
+  } yield CanDoResponseV2.of(userCanUpdateOntology && !classIsUsed)
 
   /**
    * Deletes a class.

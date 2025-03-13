@@ -32,6 +32,15 @@ final case class OntologiesRestService(
   private val renderer: KnoraResponseRenderer,
 ) {
 
+  def canDeleteClass(user: User)(
+    resourceClassIri: IriDto,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    classIri <- iriConverter.asResourceClassIriApiV2Complex(resourceClassIri.value).mapError(BadRequestException.apply)
+    result   <- ontologyResponder.canDeleteClass(classIri, user)
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
   def deleteClass(user: User)(
     resourceClassIri: IriDto,
     lastModificationDate: LastModificationDate,
