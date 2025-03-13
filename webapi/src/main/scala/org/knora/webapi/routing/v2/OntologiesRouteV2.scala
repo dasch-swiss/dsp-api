@@ -62,8 +62,7 @@ final case class OntologiesRouteV2()(
       addCardinalities() ~
       canReplaceCardinalities ~
       replaceCardinalities() ~
-      canDeleteCardinalitiesFromClass ~
-      deleteCardinalitiesFromClass()
+      canDeleteCardinalitiesFromClass
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -277,23 +276,6 @@ final case class OntologiesRouteV2()(
                      .mapError(BadRequestException.apply)
           } yield msg
           RouteUtilV2.runRdfRouteZ(messageTask, requestContext)
-        }
-      }
-    }
-
-  // delete a single cardinality from the specified class if the property is
-  // not used in resources.
-  private def deleteCardinalitiesFromClass(): Route =
-    path(ontologiesBasePath / "cardinalities") {
-      patch {
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestMessageTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            msg <- requestParser(_.deleteCardinalitiesFromClassRequestV2(jsonRequest, apiRequestId, requestingUser))
-                     .mapError(BadRequestException.apply)
-          } yield msg
-          RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }
       }
     }

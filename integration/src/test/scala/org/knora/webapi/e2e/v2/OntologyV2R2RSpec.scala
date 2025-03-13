@@ -2846,13 +2846,8 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     // Successfully remove the (unused) text value cardinality from the class.
-    Patch("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-      anythingUserCreds,
-    ) ~> ontologiesPath ~> check {
-      val responseStr = responseAs[String]
-      assert(status == StatusCodes.OK, response.toString)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
+    {
+      val responseJsonDoc = patchJsonLd(s"$apiBaseUrl/v2/ontologies/cardinalities", params, anythingUserCreds)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
       freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
@@ -3259,6 +3254,9 @@ class OntologyV2R2RSpec extends R2RSpec {
     UnsafeZioRun.runOrThrow(
       ZIO.serviceWithZIO[TestClientService](_.getResponseJsonLD(req ~> addCredentials(credentials))),
     )
+
+  def patchJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): JsonLDDocument =
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.patchJsonLd(url, jsonLd, credentials)))
 
   def putJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): JsonLDDocument =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.putJsonLd(url, jsonLd, credentials)))
