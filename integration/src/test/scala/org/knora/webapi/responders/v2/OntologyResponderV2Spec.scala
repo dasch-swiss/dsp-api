@@ -38,6 +38,7 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -808,13 +809,16 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ZIO.serviceWithZIO[OntologyCache](_.refreshCache()),
       )
 
-      appActor ! PropertiesGetRequestV2(
-        propertyIris = Set(propertyIri),
-        allLanguages = true,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.getPropertiesFromOntologyV2(
+              Set(PropertyIri.unsafeFrom(propertyIri)),
+              allLanguages = true,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
@@ -892,13 +896,16 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val linkValuePropIri = propertyIri.fromLinkPropToLinkValueProp
 
-      appActor ! PropertiesGetRequestV2(
-        propertyIris = Set(linkValuePropIri),
-        allLanguages = true,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.getPropertiesFromOntologyV2(
+              propertyIris = Set(PropertyIri.unsafeFrom(linkValuePropIri)),
+              allLanguages = true,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
@@ -912,28 +919,34 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ZIO.serviceWithZIO[OntologyCache](_.refreshCache()),
       )
 
-      appActor ! PropertiesGetRequestV2(
-        propertyIris = Set(propertyIri),
-        allLanguages = true,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.getPropertiesFromOntologyV2(
+              propertyIris = Set(PropertyIri.unsafeFrom(propertyIri)),
+              allLanguages = true,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
         assert(readPropertyInfo.isLinkProp)
         assert(!readPropertyInfo.isLinkValueProp)
-        readPropertyInfo.entityInfoContent should ===(propertyInfoContent)
+        assert(readPropertyInfo.entityInfoContent == propertyInfoContent)
       }
 
-      appActor ! PropertiesGetRequestV2(
-        propertyIris = Set(linkValuePropIri),
-        allLanguages = true,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.getPropertiesFromOntologyV2(
+              propertyIris = Set(PropertyIri.unsafeFrom(linkValuePropIri)),
+              allLanguages = true,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
@@ -941,7 +954,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(!readPropertyInfo.isLinkProp)
         assert(readPropertyInfo.isLinkValueProp)
       }
-
     }
 
     "create a subproperty of an existing custom link property and add it to a resource class, check if the correct link and link value properties were added to the class" in {
@@ -2317,20 +2329,21 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // check that the comment of the link value property was deleted as well
-      appActor ! PropertiesGetRequestV2(
-        propertyIris = Set(linkValueIri),
-        allLanguages = true,
-        requestingUser = anythingAdminUser,
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.getPropertiesFromOntologyV2(
+            propertyIris = Set(PropertyIri.unsafeFrom(linkValueIri)),
+            allLanguages = true,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
+      val externalOntology: ReadOntologyV2              = msg.toOntologySchema(ApiV2Complex)
+      val linkValueReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(linkValueIri)
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology: ReadOntologyV2              = msg.toOntologySchema(ApiV2Complex)
-        val linkValueReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(linkValueIri)
-
-        linkValueReadPropertyInfo.entityInfoContent.predicates.contains(
-          Rdfs.Comment.toSmartIri,
-        ) should ===(false)
-      }
+      linkValueReadPropertyInfo.entityInfoContent.predicates.contains(
+        Rdfs.Comment.toSmartIri,
+      ) should ===(false)
     }
 
     "not allow a user to create a class if they are not a sysadmin or an admin in the ontology's project" in {
@@ -2703,15 +2716,16 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       // Check that the corresponding partOfValue was created
       val partOfValuePropertyIri = AnythingOntologyIri.makeEntityIri("partOfValue")
 
-      val partOfValuePropGetRequest = PropertiesGetRequestV2(
-        propertyIris = Set(partOfValuePropertyIri),
-        allLanguages = true,
-        requestingUser = anythingAdminUser,
-      )
-
-      appActor ! partOfValuePropGetRequest
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.getPropertiesFromOntologyV2(
+              propertyIris = Set(PropertyIri.unsafeFrom(partOfValuePropertyIri)),
+              allLanguages = true,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val property = externalOntology.properties(partOfValuePropertyIri)
@@ -3715,51 +3729,27 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(newAnythingLastModDate.isAfter(anythingLastModDate))
       anythingLastModDate = newAnythingLastModDate
 
-      // Check that both properties were deleted.
-
-      val linkPropGetRequest = PropertiesGetRequestV2(
-        propertyIris = Set(linkPropIri.smartIri),
-        allLanguages = true,
-        requestingUser = anythingAdminUser,
-      )
-
-      val linkValuePropIri = linkPropIri.smartIri.fromLinkPropToLinkValueProp
-
-      val linkValuePropGetRequest = PropertiesGetRequestV2(
-        propertyIris = Set(linkValuePropIri),
-        allLanguages = true,
-        requestingUser = anythingAdminUser,
-      )
-
-      appActor ! linkPropGetRequest
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
-
-      appActor ! linkValuePropGetRequest
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
-
       // Reload the ontology cache and see if we get the same result.
       UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[OntologyCache](_.refreshCache()),
       )
+      // Check that both properties were deleted.
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.getPropertiesFromOntologyV2(
+            propertyIris = Set(linkPropIri),
+            allLanguages = true,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
+      )
+      assertFailsWithA[NotFoundException](exit)
 
-      appActor ! linkPropGetRequest
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
-
-      appActor ! linkValuePropGetRequest
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
-
+      val linkValuePropIri = linkPropIri.fromLinkPropToLinkValueProp
+      val exit2 = UnsafeZioRun.run(
+        ontologyResponder(_.getPropertiesFromOntologyV2(Set(linkValuePropIri), true, anythingAdminUser)),
+      )
+      assertFailsWithA[NotFoundException](exit2)
     }
 
     "not create a property if rdfs:label is missing" in {

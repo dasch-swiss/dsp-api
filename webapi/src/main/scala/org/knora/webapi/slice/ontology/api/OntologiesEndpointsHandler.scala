@@ -17,7 +17,20 @@ final class OntologiesEndpointsHandler(
 ) {
 
   val allHandlers = Seq(
-    SecuredEndpointHandler(endpoints.getOntologyiesCandeleteproperty, restService.canDeleteProperty),
+    SecuredEndpointHandler(endpoints.putOntologiesCardinalities, restService.replaceCardinalities),
+    SecuredEndpointHandler(endpoints.postOntologiesCandeletecardinalities, restService.canDeleteCardinalitiesFromClass),
+    SecuredEndpointHandler(endpoints.patchOntologiesCardinalities, restService.deleteCardinalitiesFromClass),
+    SecuredEndpointHandler(endpoints.putOntologiesGuiorder, restService.changeGuiOrder),
+    SecuredEndpointHandler(endpoints.getOntologiesClassesIris, restService.getClasses),
+    SecuredEndpointHandler(endpoints.getOntologiesCandeleteclass, restService.canDeleteClass),
+    SecuredEndpointHandler(endpoints.deleteOntologiesClasses, restService.deleteClass),
+    SecuredEndpointHandler(endpoints.deleteOntologiesComment, restService.deleteOntologyComment),
+    SecuredEndpointHandler(endpoints.postOntologiesProperties, restService.createProperty),
+    SecuredEndpointHandler(endpoints.putOntologiesProperties, restService.changePropertyLabelsOrComments),
+    SecuredEndpointHandler(endpoints.deletePropertiesComment, restService.deletePropertyComment),
+    SecuredEndpointHandler(endpoints.putOntologiesPropertiesGuielement, restService.changePropertyGuiElement),
+    SecuredEndpointHandler(endpoints.getOntologiesProperties, restService.getProperties),
+    SecuredEndpointHandler(endpoints.getOntologiesCandeleteproperty, restService.canDeleteProperty),
     SecuredEndpointHandler(endpoints.deleteOntologiesProperty, restService.deleteProperty),
     SecuredEndpointHandler(endpoints.postOntologies, restService.createOntology),
     SecuredEndpointHandler(endpoints.getOntologiesCandeleteontology, restService.canDeleteOntology),

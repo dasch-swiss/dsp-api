@@ -44,6 +44,8 @@ final case class IriConverter(sf: StringFormatter) {
   def asPropertyIri(iri: String): IO[String, PropertyIri] =
     asSmartIri(iri).mapError(_.getMessage).flatMap(sIri => ZIO.fromEither(PropertyIri.from(sIri)))
 
+  def asOntologyIriApiV2Complex(iri: String): IO[String, OntologyIri] =
+    asSmartIri(iri).mapError(_.getMessage).flatMap(sIri => ZIO.fromEither(OntologyIri.fromApiV2Complex(sIri)))
   def asOntologyIri(iri: String): IO[String, OntologyIri] =
     asSmartIri(iri).mapError(_.getMessage).flatMap(sIri => ZIO.fromEither(OntologyIri.from(sIri)))
 }

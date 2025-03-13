@@ -34,9 +34,101 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val ontologyIriPath      = path[IriDto].name("ontologyIri")
   private val propertyIriPath      = path[IriDto].name("propertyIri")
+  private val resourceClassIriPath = path[IriDto].name("resourceClassIri")
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
+  private val allLanguages         = query[Boolean]("allLanguages").default(false)
 
-  val getOntologyiesCandeleteproperty = baseEndpoints.withUserEndpoint.get
+  val putOntologiesCardinalities = baseEndpoints.withUserEndpoint.put
+    .in(base / "cardinalities")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val postOntologiesCandeletecardinalities = baseEndpoints.withUserEndpoint.post
+    .in(base / "candeletecardinalities")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val patchOntologiesCardinalities = baseEndpoints.withUserEndpoint.patch
+    .in(base / "cardinalities")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val putOntologiesGuiorder = baseEndpoints.withUserEndpoint.put
+    .in(base / "guiorder")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val getOntologiesClassesIris = baseEndpoints.withUserEndpoint.get
+    .in(base / "classes" / paths)
+    .in(allLanguages)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val getOntologiesCandeleteclass = baseEndpoints.withUserEndpoint.get
+    .in(base / "candeleteclass" / resourceClassIriPath)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val deleteOntologiesClasses = baseEndpoints.withUserEndpoint.delete
+    .in(base / "classes" / resourceClassIriPath)
+    .in(lastModificationDate)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val deleteOntologiesComment = baseEndpoints.withUserEndpoint.delete
+    .in(base / "comment" / ontologyIriPath)
+    .in(lastModificationDate)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val postOntologiesProperties = baseEndpoints.withUserEndpoint.post
+    .in(base / "properties")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val putOntologiesProperties = baseEndpoints.withUserEndpoint.put
+    .in(base / "properties")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val deletePropertiesComment = baseEndpoints.withUserEndpoint.delete
+    .in(base / "properties" / "comment" / propertyIriPath)
+    .in(lastModificationDate)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val putOntologiesPropertiesGuielement = baseEndpoints.withUserEndpoint.put
+    .in(base / "properties" / "guielement")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val getOntologiesProperties = baseEndpoints.withUserEndpoint.get
+    .in(base / "properties" / paths)
+    .in(allLanguages)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val getOntologiesCandeleteproperty = baseEndpoints.withUserEndpoint.get
     .in(base / "candeleteproperty" / propertyIriPath)
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
@@ -70,9 +162,25 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(header[MediaType](HeaderNames.ContentType))
 
   val endpoints =
-    Seq(deleteOntologiesProperty, postOntologies, getOntologiesCandeleteontology, deleteOntologies).map(
-      _.endpoint.tag("V2 Ontologies"),
-    )
+    Seq(
+      putOntologiesCardinalities,
+      postOntologiesCandeletecardinalities,
+      patchOntologiesCardinalities,
+      putOntologiesGuiorder,
+      getOntologiesClassesIris,
+      getOntologiesCandeleteclass,
+      deleteOntologiesClasses,
+      deleteOntologiesComment,
+      postOntologiesProperties,
+      putOntologiesProperties,
+      deletePropertiesComment,
+      putOntologiesPropertiesGuielement,
+      getOntologiesProperties,
+      deleteOntologiesProperty,
+      postOntologies,
+      getOntologiesCandeleteontology,
+      deleteOntologies,
+    ).map(_.endpoint.tag("V2 Ontologies"))
 }
 
 object OntologiesEndpoints {
