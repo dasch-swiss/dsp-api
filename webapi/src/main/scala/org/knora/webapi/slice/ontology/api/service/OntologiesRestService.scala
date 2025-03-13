@@ -20,6 +20,7 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.ontology.api.LastModificationDate
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.api.model.IriDto
 
@@ -28,9 +29,33 @@ final case class OntologiesRestService(
   private val iriConverter: IriConverter,
   private val ontologiesRepo: OntologyRepo,
   private val ontologyResponder: OntologyResponderV2,
+  private val ontologyCacheHelpers: OntologyCacheHelpers,
   private val requestParser: OntologyV2RequestParser,
   private val renderer: KnoraResponseRenderer,
 ) {
+
+  def getClasses(user: User)(
+    classIris: List[String],
+    allLanguages: Boolean,
+    formatOptions: FormatOptions,
+  ) = for {
+    classIris             <- ZIO.foreach(classIris)(iriConverter.asResourceClassIri(_).mapError(BadRequestException.apply))
+    classIrisWithoutSchema = classIris.filter(_.smartIri.getOntologySchema.isEmpty)
+    _ <- ZIO.fail {
+           BadRequestException(s"Class IRIs found without ontology schema: ${classIrisWithoutSchema.mkString(", ")}")
+         }.unless(classIrisWithoutSchema.isEmpty)
+    ontologyIris = classIris.map(_.ontologyIri).toSet
+    _ <- ontologyIris.size match
+           case 1 =>
+             ZIO.fail(BadRequestException("Only external ontologies may be queried")).when(ontologyIris.head.isInternal)
+           case _ => ZIO.fail(BadRequestException("Only one ontology may be queried at once"))
+    schemas = ontologyIris.flatMap(_.smartIri.getOntologySchema).collect { case schema: ApiV2Schema => schema }
+    schema <- schemas.size match
+                case 1 => ZIO.succeed(schemas.head)
+                case _ => ZIO.fail(BadRequestException("Only one ontology schema may be queried at once"))
+    result   <- ontologyCacheHelpers.getClasses(classIris, allLanguages, user)
+    response <- renderer.render(result, formatOptions.copy(schema = schema))
+  } yield response
 
   def canDeleteClass(user: User)(
     resourceClassIri: IriDto,

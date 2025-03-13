@@ -19,7 +19,6 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
@@ -65,8 +64,7 @@ final case class OntologiesRouteV2()(
       replaceCardinalities() ~
       canDeleteCardinalitiesFromClass ~
       deleteCardinalitiesFromClass() ~
-      changeGuiOrder() ~
-      getClasses
+      changeGuiOrder()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -313,40 +311,6 @@ final case class OntologiesRouteV2()(
           } yield msg
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }
-      }
-    }
-
-  private def getClasses: Route =
-    path(ontologiesBasePath / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
-      get { requestContext =>
-        val classSmartIrisTask: ZIO[IriConverter & StringFormatter, BadRequestException, Set[SmartIri]] =
-          ZIO
-            .foreach(externalResourceClassIris)(iri =>
-              RouteUtilZ
-                .toSmartIri(iri, s"Invalid class IRI: $iri")
-                .flatMap(RouteUtilZ.ensureExternalOntologyName)
-                .flatMap(RouteUtilZ.ensureIsNotKnoraOntologyIri),
-            )
-            .map(_.toSet)
-
-        val targetSchemaTask: ZIO[IriConverter & StringFormatter, BadRequestException, OntologySchema] =
-          classSmartIrisTask
-            .flatMap(iriSet =>
-              ZIO.foreach(iriSet)(iri =>
-                ZIO
-                  .fromOption(iri.getOntologySchema)
-                  .orElseFail(BadRequestException(s"Class IRI does not have an ontology schema: $iri")),
-              ),
-            )
-            .filterOrFail(_.size == 1)(BadRequestException(s"Only one ontology may be queried per request"))
-            .map(_.head)
-
-        val requestMessageTask = for {
-          classSmartIris <- classSmartIrisTask
-          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield ClassesGetRequestV2(classSmartIris, getLanguages(requestContext), requestingUser)
-
-        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext, targetSchemaTask)
       }
     }
 

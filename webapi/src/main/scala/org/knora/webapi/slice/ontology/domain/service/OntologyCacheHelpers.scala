@@ -18,10 +18,18 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo: OntologyRepo) {
+
+  def getClasses(
+    classIris: Seq[ResourceClassIri],
+    allLanguages: Boolean,
+    requestingUser: User,
+  ): Task[ReadOntologyV2] =
+    getClassDefinitionsFromOntologyV2(classIris.map(_.smartIri).toSet, allLanguages, requestingUser)
 
   /**
    * Requests information about OWL classes in a single ontology.
