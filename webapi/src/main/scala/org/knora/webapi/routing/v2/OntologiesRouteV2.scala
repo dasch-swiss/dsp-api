@@ -67,8 +67,7 @@ final case class OntologiesRouteV2()(
       deleteCardinalitiesFromClass() ~
       changeGuiOrder() ~
       getClasses ~
-      canDeleteClass ~
-      deleteClass()
+      canDeleteClass
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -366,25 +365,6 @@ final case class OntologiesRouteV2()(
               )
           requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield CanDeleteClassRequestV2(classSmartIri, requestingUser)
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-      }
-    }
-
-  private def deleteClass(): Route =
-    path(ontologiesBasePath / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
-      delete { requestContext =>
-        val requestTask = for {
-          classIri <- ZIO
-                        .succeed(externalResourceClassIris)
-                        .filterOrFail(_.size == 1)(BadRequestException(s"Only one class can be deleted at a time"))
-                        .map(_.head)
-                        .flatMap(iri => RouteUtilZ.toSmartIri(iri, s"Invalid class IRI: $iri"))
-                        .flatMap(RouteUtilZ.ensureExternalOntologyName)
-                        .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
-          lastModificationDate <- getLastModificationDate(requestContext)
-          apiRequestId         <- RouteUtilZ.randomUuid()
-          requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield DeleteClassRequestV2(classIri, lastModificationDate, apiRequestId, requestingUser)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }

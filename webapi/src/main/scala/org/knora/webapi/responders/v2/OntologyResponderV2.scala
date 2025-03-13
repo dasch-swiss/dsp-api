@@ -38,6 +38,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -1280,72 +1281,72 @@ final case class OntologyResponderV2(
    * @param deleteClassRequest the request to delete the class.
    * @return a [[SuccessResponseV2]].
    */
-  private def deleteClass(deleteClassRequest: DeleteClassRequestV2): Task[ReadOntologyMetadataV2] = {
-    def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyMetadataV2] =
-      for {
-        cacheData <- ontologyCache.getCacheData
+  private def deleteClass(deleteClassRequest: DeleteClassRequestV2): Task[ReadOntologyMetadataV2] =
+    deleteClass(
+      ResourceClassIri.unsafeFrom(deleteClassRequest.classIri),
+      deleteClassRequest.lastModificationDate,
+      deleteClassRequest.apiRequestID,
+      deleteClassRequest.requestingUser,
+    )
 
-        // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-               internalOntologyIri,
-               deleteClassRequest.lastModificationDate,
-             )
+  def deleteClass(
+    classIri: ResourceClassIri,
+    lastModificationDate: Instant,
+    apiRequestID: UUID,
+    requestingUser: User,
+  ): Task[ReadOntologyMetadataV2] = {
+    val internalClassIri    = classIri.toInternalSchema
+    val internalOntologyIri = internalClassIri.getOntologyFromEntity
+    val externalClassIri    = classIri.toComplexSchema
+    val externalOntologyIri = externalClassIri.getOntologyFromEntity
 
-        // Check that the class exists.
+    val deleteClassTask = for {
+      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
+             externalOntologyIri,
+             externalClassIri,
+             requestingUser,
+           )
 
-        ontology = cacheData.ontologies(internalOntologyIri)
+      // Check that the ontology exists and has not been updated by another user since the client last read it.
+      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
 
-        _ <- ZIO.when(!ontology.classes.contains(internalClassIri)) {
-               ZIO.fail(BadRequestException(s"Class ${deleteClassRequest.classIri} does not exist"))
+      // Check that the class exists.
+      ontology <- ontologyRepo
+                    .findById(classIri.ontologyIri)
+                    .someOrFail(BadRequestException(s"Ontology ${classIri.ontologyIri} does not exist"))
+      _ <- ZIO
+             .fromOption(ontology.classes.get(classIri.toInternalSchema))
+             .orElseFail(BadRequestException(s"Class $classIri does not exist"))
+
+      // Check that the class isn't used in data or ontologies.
+      _ <- ZIO
+             .whenZIO(iriService.isEntityUsed(internalClassIri)) {
+               val msg =
+                 s"Class ${classIri} cannot be deleted, because it is used in data or ontologies"
+               ZIO.fail(BadRequestException(msg))
              }
 
-        // Check that the class isn't used in data or ontologies.
-        _ <- ZIO
-               .whenZIO(iriService.isEntityUsed(internalClassIri)) {
-                 val msg =
-                   s"Class ${deleteClassRequest.classIri} cannot be deleted, because it is used in data or ontologies"
-                 ZIO.fail(BadRequestException(msg))
-               }
+      // Delete the class from the triplestore.
 
-        // Delete the class from the triplestore.
+      currentTime <- Clock.instant
 
-        currentTime <- Clock.instant
+      updateSparql = sparql.v2.txt.deleteClass(
+                       ontologyNamedGraphIri = internalOntologyIri,
+                       ontologyIri = internalOntologyIri,
+                       classIri = internalClassIri,
+                       lastModificationDate = lastModificationDate,
+                       currentTime = currentTime,
+                     )
+      _ <- save(Update(updateSparql))
+      updatedOntology = ontology.copy(
+                          ontologyMetadata = ontology.ontologyMetadata.copy(
+                            lastModificationDate = Some(currentTime),
+                          ),
+                          classes = ontology.classes - internalClassIri,
+                        )
+    } yield ReadOntologyMetadataV2(Set(updatedOntology.ontologyMetadata))
 
-        updateSparql = sparql.v2.txt.deleteClass(
-                         ontologyNamedGraphIri = internalOntologyIri,
-                         ontologyIri = internalOntologyIri,
-                         classIri = internalClassIri,
-                         lastModificationDate = deleteClassRequest.lastModificationDate,
-                         currentTime = currentTime,
-                       )
-        _ <- save(Update(updateSparql))
-        updatedOntology = ontology.copy(
-                            ontologyMetadata = ontology.ontologyMetadata.copy(
-                              lastModificationDate = Some(currentTime),
-                            ),
-                            classes = ontology.classes - internalClassIri,
-                          )
-      } yield ReadOntologyMetadataV2(Set(updatedOntology.ontologyMetadata))
-
-    for {
-      requestingUser <- ZIO.succeed(deleteClassRequest.requestingUser)
-
-      externalClassIri    = deleteClassRequest.classIri
-      externalOntologyIri = externalClassIri.getOntologyFromEntity
-
-      _ <-
-        ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
-
-      internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
-      internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
-
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      deleteClassRequest.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
-                      makeTaskFuture(internalClassIri, internalOntologyIri),
-                    )
-    } yield taskResult
+    IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteClassTask)
   }
 
   /**
