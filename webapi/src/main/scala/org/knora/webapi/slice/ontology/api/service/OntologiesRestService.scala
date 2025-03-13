@@ -34,6 +34,16 @@ final case class OntologiesRestService(
   private val renderer: KnoraResponseRenderer,
 ) {
 
+  def canDeleteCardinalitiesFromClass(
+    user: User,
+  )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
+    uuid <- Random.nextUUID()
+    updateReq <-
+      requestParser.canDeleteCardinalitiesFromClassRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    result   <- ontologyResponder.canDeleteCardinalitiesFromClass(updateReq)
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
   def deleteCardinalitiesFromClass(
     user: User,
   )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
