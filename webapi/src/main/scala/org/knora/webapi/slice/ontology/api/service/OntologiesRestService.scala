@@ -32,6 +32,21 @@ final case class OntologiesRestService(
   private val renderer: KnoraResponseRenderer,
 ) {
 
+  def deleteClass(user: User)(
+    resourceClassIri: IriDto,
+    lastModificationDate: LastModificationDate,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    classIri <-
+      iriConverter
+        .asResourceClassIriApiV2Complex(resourceClassIri.value)
+        .mapError(BadRequestException.apply)
+        .filterOrFail(_.ontologyIri.isExternal)(BadRequestException("Only external ontologies can be modified"))
+    uuid     <- Random.nextUUID()
+    result   <- ontologyResponder.deleteClass(classIri, lastModificationDate.value, uuid, user)
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
   def deleteOntologyComment(user: User)(
     ontologyIri: IriDto,
     lastModificationDate: LastModificationDate,

@@ -2231,24 +2231,22 @@ class OntologyV2R2RSpec extends R2RSpec {
       val classSegment         = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing", "UTF-8")
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
-      Delete(s"/v2/ontologies/classes/$classSegment?lastModificationDate=$lastModificationDate") ~> addCredentials(
+      val responseJsonDoc = jsonLdResponse(
+        Delete(s"$apiBaseUrl/v2/ontologies/classes/$classSegment?lastModificationDate=$lastModificationDate"),
         anythingUserCreds,
-      ) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
-        responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
-          "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
-        )
+      )
+      responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
+        "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
+      )
 
-        val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = KnoraApiV2Complex.LastModificationDate,
-          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-        )
+      val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
+        key = KnoraApiV2Complex.LastModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+      )
 
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "create a shared ontology and put a property in it" in {
