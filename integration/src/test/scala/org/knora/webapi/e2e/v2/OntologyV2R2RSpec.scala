@@ -352,26 +352,25 @@ class OntologyV2R2RSpec extends R2RSpec {
       val fooIriEncoded        = URLEncoder.encode(fooIri.get, "UTF-8")
       val lastModificationDate = URLEncoder.encode(fooLastModDate.toString, "UTF-8")
 
-      Delete(s"/v2/ontologies/comment/$fooIriEncoded?lastModificationDate=$lastModificationDate") ~> addCredentials(
+      val responseJsonDoc = jsonLdResponse(
+        Delete(s"$apiBaseUrl/v2/ontologies/comment/$fooIriEncoded?lastModificationDate=$lastModificationDate"),
         anythingUserCreds,
-      ) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
-        val metadata        = responseJsonDoc.body
-        val ontologyIri     = metadata.value("@id").asInstanceOf[JsonLDString].value
-        assert(ontologyIri == fooIri.get)
-        assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString("The modified foo ontology"))
-        assert(!metadata.value.contains(OntologyConstants.Rdfs.Comment))
+      )
 
-        val lastModDate = metadata.requireDatatypeValueInObject(
-          key = KnoraApiV2Complex.LastModificationDate,
-          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-        )
+      val metadata    = responseJsonDoc.body
+      val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+      assert(ontologyIri == fooIri.get)
+      assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString("The modified foo ontology"))
+      assert(!metadata.value.contains(OntologyConstants.Rdfs.Comment))
 
-        assert(lastModDate.isAfter(fooLastModDate))
-        fooLastModDate = lastModDate
-      }
+      val lastModDate = metadata.requireDatatypeValueInObject(
+        key = KnoraApiV2Complex.LastModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+      )
+
+      assert(lastModDate.isAfter(fooLastModDate))
+      fooLastModDate = lastModDate
     }
 
     "determine that an ontology can be deleted" in {
@@ -3297,6 +3296,11 @@ class OntologyV2R2RSpec extends R2RSpec {
     val response = postJsonLdGetResponse(s"$apiBaseUrl/v2/ontologies/properties", params, anythingUserCreds)
     assert(response.status == StatusCodes.BadRequest)
   }
+
+  def jsonLdResponse(req: HttpRequest, credentials: HttpCredentials): JsonLDDocument =
+    UnsafeZioRun.runOrThrow(
+      ZIO.serviceWithZIO[TestClientService](_.getResponseJsonLD(req ~> addCredentials(credentials))),
+    )
 
   def postJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): JsonLDDocument =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.postJsonLd(url, jsonLd, credentials)))
