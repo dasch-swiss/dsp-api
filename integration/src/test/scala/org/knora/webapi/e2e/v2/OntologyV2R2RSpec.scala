@@ -1962,27 +1962,19 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
+      val responseJsonDoc = putJsonLd(s"$apiBaseUrl/v2/ontologies/guiorder", params, anythingUserCreds)
+
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      responseAsInput.classes.head._2.directCardinalities should ===(
+        paramsAsInput.classes.head._2.directCardinalities,
+      )
 
-      Put("/v2/ontologies/guiorder", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        anythingUserCreds,
-      ) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
-
-        // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-        val responseAsInput: InputOntologyV2 =
-          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-        responseAsInput.classes.head._2.directCardinalities should ===(
-          paramsAsInput.classes.head._2.directCardinalities,
-        )
-
-        // Check that the ontology's last modification date was updated.
-        val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      // Check that the ontology's last modification date was updated.
+      val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "create a property anything:hasEmptiness with knora-api:subjectType anything:Nothing" in {
@@ -3267,6 +3259,9 @@ class OntologyV2R2RSpec extends R2RSpec {
     UnsafeZioRun.runOrThrow(
       ZIO.serviceWithZIO[TestClientService](_.getResponseJsonLD(req ~> addCredentials(credentials))),
     )
+
+  def putJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): JsonLDDocument =
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.putJsonLd(url, jsonLd, credentials)))
 
   def postJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): JsonLDDocument =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.postJsonLd(url, jsonLd, credentials)))

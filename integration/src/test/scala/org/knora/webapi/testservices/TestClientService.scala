@@ -128,6 +128,9 @@ final case class TestClientService(
       json <- ZIO.succeed(JsonLDUtil.parseJsonLD(body))
     } yield json
 
+  def putJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): Task[JsonLDDocument] =
+    getResponseJsonLD(Put(url, HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLd)) ~> addCredentials(credentials))
+
   def postJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): Task[JsonLDDocument] =
     getResponseJsonLD(Post(url, HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLd)) ~> addCredentials(credentials))
 }
