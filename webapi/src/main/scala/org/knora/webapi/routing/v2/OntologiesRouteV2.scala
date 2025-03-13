@@ -60,8 +60,7 @@ final case class OntologiesRouteV2()(
       updateClass() ~
       deleteClassComment() ~
       addCardinalities() ~
-      canReplaceCardinalities ~
-      replaceCardinalities()
+      canReplaceCardinalities
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -246,21 +245,6 @@ final case class OntologiesRouteV2()(
             ZIO.serviceWithZIO[RestCardinalityService](_.canChangeCardinality(classIri, user, property, newCardinality))
         } yield canChange
         completeResponse(response, requestContext)
-      }
-    }
-
-  private def replaceCardinalities(): Route =
-    path(ontologiesBasePath / "cardinalities") {
-      put {
-        entity(as[String]) { reqBody => requestContext =>
-          val messageTask = for {
-            user         <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId <- RouteUtilZ.randomUuid()
-            msg <- requestParser(_.replaceClassCardinalitiesRequestV2(reqBody, apiRequestId, user))
-                     .mapError(BadRequestException.apply)
-          } yield msg
-          RouteUtilV2.runRdfRouteZ(messageTask, requestContext)
-        }
       }
     }
 
