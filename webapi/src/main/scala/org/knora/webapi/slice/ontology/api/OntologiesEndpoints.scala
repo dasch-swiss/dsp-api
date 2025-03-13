@@ -37,6 +37,13 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
 
+  val deleteOntologiesComment = baseEndpoints.withUserEndpoint.delete
+    .in(base / "comment" / ontologyIriPath)
+    .in(lastModificationDate)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
   val postOntologiesProperties = baseEndpoints.withUserEndpoint.post
     .in(base / "properties")
     .in(stringJsonBody)
@@ -107,6 +114,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 
   val endpoints =
     Seq(
+      deleteOntologiesComment,
       postOntologiesProperties,
       putOntologiesProperties,
       deletePropertiesComment,

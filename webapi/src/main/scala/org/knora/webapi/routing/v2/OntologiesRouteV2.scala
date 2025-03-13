@@ -68,8 +68,7 @@ final case class OntologiesRouteV2()(
       changeGuiOrder() ~
       getClasses ~
       canDeleteClass ~
-      deleteClass() ~
-      deleteOntologyComment()
+      deleteClass()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -399,16 +398,4 @@ final case class OntologiesRouteV2()(
       )
       .flatMap(it => ZIO.fromOption(it).orElseFail(BadRequestException(s"Invalid timestamp: $it")))
 
-  private def deleteOntologyComment(): Route =
-    path(ontologiesBasePath / "comment" / Segment) { (ontologyIriStr: IRI) =>
-      delete { requestContext =>
-        val requestMessageTask = for {
-          ontologyIri          <- RouteUtilZ.externalApiV2ComplexOntologyIri(ontologyIriStr)
-          lastModificationDate <- getLastModificationDate(requestContext)
-          apiRequestId         <- RouteUtilZ.randomUuid()
-          requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield DeleteOntologyCommentRequestV2(ontologyIri, lastModificationDate, apiRequestId, requestingUser)
-        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-      }
-    }
 }
