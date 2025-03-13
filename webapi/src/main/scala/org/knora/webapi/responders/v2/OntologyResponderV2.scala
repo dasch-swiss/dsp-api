@@ -1217,7 +1217,7 @@ final case class OntologyResponderV2(
    * @param deleteCardinalitiesFromClassRequest the request to remove cardinalities.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  private def deleteCardinalitiesFromClass(
+  def deleteCardinalitiesFromClass(
     deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
   ): Task[ReadOntologyV2] =
     for {
