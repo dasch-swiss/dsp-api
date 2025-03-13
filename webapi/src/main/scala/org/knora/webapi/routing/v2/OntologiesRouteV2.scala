@@ -70,11 +70,7 @@ final case class OntologiesRouteV2()(
       canDeleteClass ~
       deleteClass() ~
       deleteOntologyComment() ~
-      createProperty() ~
-      updatePropertyLabelsOrComments() ~
-      deletePropertyComment() ~
-      updatePropertyGuiElement() ~
-      getProperties
+      createProperty()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -429,85 +425,6 @@ final case class OntologiesRouteV2()(
           } yield requestMessage
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }
-      }
-    }
-
-  private def updatePropertyLabelsOrComments(): Route =
-    path(ontologiesBasePath / "properties") {
-      put {
-        // Change the labels or comments of a property.
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestMessageTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <-
-              requestParser(_.changePropertyLabelsOrCommentsRequestV2(jsonRequest, apiRequestId, requestingUser))
-                .mapError(BadRequestException.apply)
-          } yield requestMessage
-          RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-        }
-      }
-    }
-
-  // delete the comment of a property definition
-  private def deletePropertyComment(): Route =
-    path(ontologiesBasePath / "properties" / "comment" / Segment) { (propertyIriStr: IRI) =>
-      delete { requestContext =>
-        val requestTask = for {
-          propertyIri <- RouteUtilZ
-                           .toSmartIri(propertyIriStr, s"Invalid property IRI: $propertyIriStr")
-                           .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
-          lastModificationDate <- getLastModificationDate(requestContext)
-          apiRequestId         <- RouteUtilZ.randomUuid()
-          requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield DeletePropertyCommentRequestV2(propertyIri, lastModificationDate, apiRequestId, requestingUser)
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-      }
-    }
-
-  private def updatePropertyGuiElement(): Route =
-    path(ontologiesBasePath / "properties" / "guielement") {
-      put {
-        // Change the salsah-gui:guiElement and/or salsah-gui:guiAttribute of a property.
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            msg <- requestParser(_.changePropertyGuiElementRequest(jsonRequest, apiRequestId, requestingUser))
-                     .mapError(BadRequestException.apply)
-          } yield msg
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-        }
-      }
-    }
-
-  private def getProperties: Route =
-    path(ontologiesBasePath / "properties" / Segments) { (externalPropertyIris: List[IRI]) =>
-      get { requestContext =>
-        val propertyIrisTask = for {
-          propertyIris <- ZIO.foreach(externalPropertyIris) { (propertyIriStr: IRI) =>
-                            RouteUtilZ
-                              .toSmartIri(propertyIriStr, s"Invalid property IRI: $propertyIriStr")
-                              .flatMap(RouteUtilZ.ensureIsNotKnoraOntologyIri)
-                              .flatMap(RouteUtilZ.ensureExternalOntologyName)
-                          }
-        } yield propertyIris.toSet
-
-        val targetSchemaTask = for {
-          schemas <- propertyIrisTask.map(_.flatMap(_.getOntologySchema))
-          targetSchema <-
-            ZIO
-              .succeed(schemas)
-              .filterOrFail(_.size == 1)(BadRequestException(s"Only one ontology may be queried per request"))
-              .map(_.head)
-        } yield targetSchema
-
-        val requestTask = for {
-          propertyIris   <- propertyIrisTask
-          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield PropertiesGetRequestV2(propertyIris, getLanguages(requestContext), requestingUser)
-
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask)
       }
     }
 }

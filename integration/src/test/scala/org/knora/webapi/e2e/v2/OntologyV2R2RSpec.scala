@@ -509,25 +509,28 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Put(
+              s"$apiBaseUrl/v2/ontologies/properties",
+              HttpEntity(RdfMediaTypes.`application/ld+json`, params),
+            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ),
+        ),
+      )
 
-      Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
+      // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects.toSet should ===(
+        paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects.toSet,
+      )
 
-        // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-        val responseAsInput: InputOntologyV2 =
-          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-        responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects.toSet should ===(
-          paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects.toSet,
-        )
-
-        // Check that the ontology's last modification date was updated.
-        val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      // Check that the ontology's last modification date was updated.
+      val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "change the rdfs:comment of a property" in {
@@ -566,27 +569,33 @@ class OntologyV2R2RSpec extends R2RSpec {
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-      Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Put(
+              s"$apiBaseUrl/v2/ontologies/properties",
+              HttpEntity(RdfMediaTypes.`application/ld+json`, params),
+            ) ~> addCredentials(
+              BasicHttpCredentials(anythingUsername, password),
+            ),
+          ),
+        ),
+      )
 
-        // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-        val responseAsInput: InputOntologyV2 =
-          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-        responseAsInput.properties.head._2
-          .predicates(OntologyConstants.Rdfs.Comment.toSmartIri)
-          .objects
-          .toSet should ===(
-          paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects.toSet,
-        )
+      // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      responseAsInput.properties.head._2
+        .predicates(OntologyConstants.Rdfs.Comment.toSmartIri)
+        .objects
+        .toSet should ===(
+        paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects.toSet,
+      )
 
-        // Check that the ontology's last modification date was updated.
-        val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      // Check that the ontology's last modification date was updated.
+      val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "add an rdfs:comment to a link property that has no rdfs:comment" in {
@@ -623,25 +632,29 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Put(
+              s"$apiBaseUrl/v2/ontologies/properties",
+              HttpEntity(RdfMediaTypes.`application/ld+json`, params),
+            ) ~> addCredentials(
+              BasicHttpCredentials(anythingUsername, password),
+            ),
+          ),
+        ),
+      )
+      // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(
+        paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects,
+      )
 
-      Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc = responseToJsonLDDocument(response)
-
-        // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-        val responseAsInput: InputOntologyV2 =
-          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
-        responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(
-          paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects,
-        )
-
-        // Check that the ontology's last modification date was updated.
-        val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      // Check that the ontology's last modification date was updated.
+      val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "delete the rdfs:comment of a property" in {
@@ -649,79 +662,81 @@ class OntologyV2R2RSpec extends R2RSpec {
         URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/freetest/v2#hasPropertyWithComment2", "UTF-8")
       val lastModificationDate = URLEncoder.encode(freetestLastModDate.toString, "UTF-8")
 
-      Delete(
-        s"/v2/ontologies/properties/comment/$propertySegment?lastModificationDate=$lastModificationDate",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        val newFreetestLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = KnoraApiV2Complex.LastModificationDate,
-          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-        )
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Delete(
+              s"$apiBaseUrl/v2/ontologies/properties/comment/$propertySegment?lastModificationDate=$lastModificationDate",
+            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ),
+        ),
+      )
+      val newFreetestLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
+        key = KnoraApiV2Complex.LastModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+      )
 
-        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
-        freetestLastModDate = newFreetestLastModDate
+      assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+      freetestLastModDate = newFreetestLastModDate
 
-        val expectedResponse: String =
-          s"""{
-             |   "knora-api:lastModificationDate": {
-             |       "@value": "$newFreetestLastModDate",
-             |       "@type": "xsd:dateTimeStamp"
-             |   },
-             |   "rdfs:label": "freetest",
-             |   "@graph": [
-             |      {
-             |         "rdfs:label": [
-             |            {
-             |               "@value": "Property mit einem Kommentar 2",
-             |               "@language": "de"
-             |            },
-             |            {
-             |               "@value": "Property with a comment 2",
-             |               "@language": "en"
-             |            }
-             |         ],
-             |         "rdfs:subPropertyOf": {
-             |            "@id": "knora-api:hasValue"
-             |         },
-             |         "@type": "owl:ObjectProperty",
-             |         "knora-api:objectType": {
-             |            "@id": "knora-api:TextValue"
-             |         },
-             |         "salsah-gui:guiElement": {
-             |            "@id": "salsah-gui:SimpleText"
-             |         },
-             |         "@id": "freetest:hasPropertyWithComment2"
-             |      }
-             |   ],
-             |   "knora-api:attachedToProject": {
-             |      "@id": "http://rdfh.ch/projects/0001"
-             |   },
-             |   "@type": "owl:Ontology",
-             |   "@id": "http://0.0.0.0:3333/ontology/0001/freetest/v2",
-             |   "@context": {
-             |      "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-             |      "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
-             |      "freetest": "http://0.0.0.0:3333/ontology/0001/freetest/v2#",
-             |      "owl": "http://www.w3.org/2002/07/owl#",
-             |      "salsah-gui": "http://api.knora.org/ontology/salsah-gui/v2#",
-             |      "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-             |      "xsd": "http://www.w3.org/2001/XMLSchema#"
-             |   }
-             |}""".stripMargin
+      val expectedResponse: String =
+        s"""{
+           |   "knora-api:lastModificationDate": {
+           |       "@value": "$newFreetestLastModDate",
+           |       "@type": "xsd:dateTimeStamp"
+           |   },
+           |   "rdfs:label": "freetest",
+           |   "@graph": [
+           |      {
+           |         "rdfs:label": [
+           |            {
+           |               "@value": "Property mit einem Kommentar 2",
+           |               "@language": "de"
+           |            },
+           |            {
+           |               "@value": "Property with a comment 2",
+           |               "@language": "en"
+           |            }
+           |         ],
+           |         "rdfs:subPropertyOf": {
+           |            "@id": "knora-api:hasValue"
+           |         },
+           |         "@type": "owl:ObjectProperty",
+           |         "knora-api:objectType": {
+           |            "@id": "knora-api:TextValue"
+           |         },
+           |         "salsah-gui:guiElement": {
+           |            "@id": "salsah-gui:SimpleText"
+           |         },
+           |         "@id": "freetest:hasPropertyWithComment2"
+           |      }
+           |   ],
+           |   "knora-api:attachedToProject": {
+           |      "@id": "http://rdfh.ch/projects/0001"
+           |   },
+           |   "@type": "owl:Ontology",
+           |   "@id": "http://0.0.0.0:3333/ontology/0001/freetest/v2",
+           |   "@context": {
+           |      "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |      "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+           |      "freetest": "http://0.0.0.0:3333/ontology/0001/freetest/v2#",
+           |      "owl": "http://www.w3.org/2002/07/owl#",
+           |      "salsah-gui": "http://api.knora.org/ontology/salsah-gui/v2#",
+           |      "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+           |      "xsd": "http://www.w3.org/2001/XMLSchema#"
+           |   }
+           |}""".stripMargin
 
-        val expectedResponseToCompare: InputOntologyV2 =
-          InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(expectedResponse)).unescape
+      val expectedResponseToCompare: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(expectedResponse)).unescape
 
-        val responseFromJsonLD: InputOntologyV2 =
-          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      val responseFromJsonLD: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
 
-        responseFromJsonLD.properties.head._2.predicates.toSet should ===(
-          expectedResponseToCompare.properties.head._2.predicates.toSet,
-        )
-      }
+      responseFromJsonLD.properties.head._2.predicates.toSet should ===(
+        expectedResponseToCompare.properties.head._2.predicates.toSet,
+      )
     }
 
     "delete the rdfs:comment of a class" in {
@@ -831,43 +846,45 @@ class OntologyV2R2RSpec extends R2RSpec {
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-      Put(
-        "/v2/ontologies/properties/guielement",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, params),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
-        val responseJsonDoc = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Put(
+              s"$apiBaseUrl/v2/ontologies/properties/guielement",
+              HttpEntity(RdfMediaTypes.`application/ld+json`, params),
+            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ),
+        ),
+      )
 
-        // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-        val responseAsInput: InputOntologyV2 =
-          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
 
-        responseAsInput.properties.head._2
+      responseAsInput.properties.head._2
+        .predicates(SalsahGui.External.GuiElementProp.toSmartIri)
+        .objects
+        .toSet should ===(
+        paramsAsInput.properties.head._2
           .predicates(SalsahGui.External.GuiElementProp.toSmartIri)
           .objects
-          .toSet should ===(
-          paramsAsInput.properties.head._2
-            .predicates(SalsahGui.External.GuiElementProp.toSmartIri)
-            .objects
-            .toSet,
-        )
+          .toSet,
+      )
 
-        responseAsInput.properties.head._2
+      responseAsInput.properties.head._2
+        .predicates(SalsahGui.External.GuiAttribute.toSmartIri)
+        .objects
+        .toSet should ===(
+        paramsAsInput.properties.head._2
           .predicates(SalsahGui.External.GuiAttribute.toSmartIri)
           .objects
-          .toSet should ===(
-          paramsAsInput.properties.head._2
-            .predicates(SalsahGui.External.GuiAttribute.toSmartIri)
-            .objects
-            .toSet,
-        )
+          .toSet,
+      )
 
-        // Check that the ontology's last modification date was updated.
-        val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      // Check that the ontology's last modification date was updated.
+      val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not change the salsah-gui:guiElement and salsah-gui:guiAttribute of a property if their combination is invalid" in {
@@ -897,14 +914,17 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}""".stripMargin
-
-      Put(
-        "/v2/ontologies/properties/guielement",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, params),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.BadRequest, responseStr)
-      }
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.singleAwaitingRequest(
+            Put(
+              s"$apiBaseUrl/v2/ontologies/properties/guielement",
+              HttpEntity(RdfMediaTypes.`application/ld+json`, params),
+            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ),
+        ),
+      )
+      assert(response.status == StatusCodes.BadRequest)
     }
 
     "remove the salsah-gui:guiElement and salsah-gui:guiAttribute from a property" in {
@@ -930,34 +950,35 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}""".stripMargin
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Put(
+              s"$apiBaseUrl/v2/ontologies/properties/guielement",
+              HttpEntity(RdfMediaTypes.`application/ld+json`, params),
+            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ),
+        ),
+      )
 
-      Put(
-        "/v2/ontologies/properties/guielement",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, params),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
-        val responseJsonDoc = responseToJsonLDDocument(response)
+      // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
 
-        // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-        val responseAsInput: InputOntologyV2 =
-          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      assert(
+        !responseAsInput.properties.head._2.predicates
+          .contains(SalsahGui.External.GuiElementProp.toSmartIri),
+      )
 
-        assert(
-          !responseAsInput.properties.head._2.predicates
-            .contains(SalsahGui.External.GuiElementProp.toSmartIri),
-        )
+      assert(
+        !responseAsInput.properties.head._2.predicates
+          .contains(SalsahGui.External.GuiAttribute.toSmartIri),
+      )
 
-        assert(
-          !responseAsInput.properties.head._2.predicates
-            .contains(SalsahGui.External.GuiAttribute.toSmartIri),
-        )
-
-        // Check that the ontology's last modification date was updated.
-        val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      // Check that the ontology's last modification date was updated.
+      val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "create a class anything:WildThing that is a subclass of anything:Thing, with a direct cardinality for anything:hasName" in {
@@ -1419,62 +1440,66 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Put(
+              s"$apiBaseUrl/v2/ontologies/properties",
+              HttpEntity(RdfMediaTypes.`application/ld+json`, params),
+            ) ~> addCredentials(
+              BasicHttpCredentials(anythingUsername, password),
+            ),
+          ),
+        ),
+      )
+      val updatedOntologyIri = responseJsonDoc.body.value("@id").asInstanceOf[JsonLDString].value
+      assert(updatedOntologyIri == anythingOntoLocalhostIri)
+      val graph =
+        responseJsonDoc.body.getRequiredArray("@graph").fold(e => throw BadRequestException(e), identity).value
+      val property = graph.head.asInstanceOf[JsonLDObject]
+      val returnedPropertyIri =
+        property.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
+      returnedPropertyIri should equal(hasOtherNothingIri)
+      val returnedLabel = property
+        .getRequiredObject(OntologyConstants.Rdfs.Label)
+        .flatMap(_.getRequiredString("@value"))
+        .fold(msg => throw BadRequestException(msg), identity)
+      returnedLabel should equal(newLabel)
+      val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
+        key = KnoraApiV2Complex.LastModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+      )
+
+      assert(lastModDate.isAfter(fooLastModDate))
+      anythingLastModDate = lastModDate
+
+      // load back the ontology to verify that the updated property still is editable
+      val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
+      Get(
+        s"/v2/ontologies/allentities/$encodedIri",
       ) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
-
+        val responseStr: String = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc    = JsonLDUtil.parseJsonLD(responseStr)
-        val updatedOntologyIri = responseJsonDoc.body.value("@id").asInstanceOf[JsonLDString].value
-        assert(updatedOntologyIri == anythingOntoLocalhostIri)
-        val graph =
-          responseJsonDoc.body.getRequiredArray("@graph").fold(e => throw BadRequestException(e), identity).value
-        val property = graph.head.asInstanceOf[JsonLDObject]
-        val returnedPropertyIri =
-          property.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
-        returnedPropertyIri should equal(hasOtherNothingIri)
-        val returnedLabel = property
-          .getRequiredObject(OntologyConstants.Rdfs.Label)
-          .flatMap(_.getRequiredString("@value"))
-          .fold(msg => throw BadRequestException(msg), identity)
-        returnedLabel should equal(newLabel)
-        val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = KnoraApiV2Complex.LastModificationDate,
-          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-        )
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
 
-        assert(lastModDate.isAfter(fooLastModDate))
-        anythingLastModDate = lastModDate
+        val graph = responseJsonDoc.body
+          .getRequiredArray("@graph")
+          .fold(e => throw BadRequestException(e), identity)
+          .value
+          .map(_.asInstanceOf[JsonLDObject])
+        val nothingValue = graph
+          .filter(
+            _.getRequiredString("@id")
+              .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri,
+          )
+          .head
+        val isEditableMaybe =
+          nothingValue
+            .getBoolean(KnoraApiV2Complex.IsEditable)
+            .fold(msg => throw BadRequestException(msg), identity)
 
-        // load back the ontology to verify that the updated property still is editable
-        val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
-        Get(
-          s"/v2/ontologies/allentities/$encodedIri",
-        ) ~> ontologiesPath ~> check {
-          val responseStr: String = responseAs[String]
-          assert(status == StatusCodes.OK, response.toString)
-          val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
-          val graph = responseJsonDoc.body
-            .getRequiredArray("@graph")
-            .fold(e => throw BadRequestException(e), identity)
-            .value
-            .map(_.asInstanceOf[JsonLDObject])
-          val nothingValue = graph
-            .filter(
-              _.getRequiredString("@id")
-                .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri,
-            )
-            .head
-          val isEditableMaybe =
-            nothingValue
-              .getBoolean(KnoraApiV2Complex.IsEditable)
-              .fold(msg => throw BadRequestException(msg), identity)
-
-          isEditableMaybe should equal(Some(true))
-        }
+        isEditableMaybe should equal(Some(true))
       }
     }
 
@@ -1510,64 +1535,68 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Put(
+              s"$apiBaseUrl/v2/ontologies/properties",
+              HttpEntity(RdfMediaTypes.`application/ld+json`, params),
+            ) ~> addCredentials(
+              BasicHttpCredentials(anythingUsername, password),
+            ),
+          ),
+        ),
+      )
+      val updatedOntologyIri = responseJsonDoc.body.value("@id").asInstanceOf[JsonLDString].value
+      assert(updatedOntologyIri == anythingOntoLocalhostIri)
+      val graph = responseJsonDoc.body
+        .getRequiredArray("@graph")
+        .fold(e => throw BadRequestException(e), identity)
+        .value
+      val property = graph.head.asInstanceOf[JsonLDObject]
+      val returnedPropertyIri =
+        property.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
+      returnedPropertyIri should equal(hasOtherNothingIri)
+      val returnedComment = property
+        .getRequiredObject(OntologyConstants.Rdfs.Comment)
+        .flatMap(_.getRequiredString("@value"))
+        .fold(msg => throw BadRequestException(msg), identity)
+      returnedComment should equal(newComment)
+      val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
+        key = KnoraApiV2Complex.LastModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+      )
 
+      assert(lastModDate.isAfter(fooLastModDate))
+      anythingLastModDate = lastModDate
+
+      // load back the ontology to verify that the updated property still is editable
+      val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
+      Get(
+        s"/v2/ontologies/allentities/$encodedIri",
+      ) ~> ontologiesPath ~> check {
+        val responseStr: String = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc    = JsonLDUtil.parseJsonLD(responseStr)
-        val updatedOntologyIri = responseJsonDoc.body.value("@id").asInstanceOf[JsonLDString].value
-        assert(updatedOntologyIri == anythingOntoLocalhostIri)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
         val graph = responseJsonDoc.body
           .getRequiredArray("@graph")
           .fold(e => throw BadRequestException(e), identity)
           .value
-        val property = graph.head.asInstanceOf[JsonLDObject]
-        val returnedPropertyIri =
-          property.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
-        returnedPropertyIri should equal(hasOtherNothingIri)
-        val returnedComment = property
-          .getRequiredObject(OntologyConstants.Rdfs.Comment)
-          .flatMap(_.getRequiredString("@value"))
-          .fold(msg => throw BadRequestException(msg), identity)
-        returnedComment should equal(newComment)
-        val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = KnoraApiV2Complex.LastModificationDate,
-          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-        )
+          .map(_.asInstanceOf[JsonLDObject])
+        val nothingValue = graph
+          .filter(
+            _.getRequiredString("@id")
+              .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri,
+          )
+          .head
+        val isEditableMaybe =
+          nothingValue
+            .getBoolean(KnoraApiV2Complex.IsEditable)
+            .fold(msg => throw BadRequestException(msg), identity)
 
-        assert(lastModDate.isAfter(fooLastModDate))
-        anythingLastModDate = lastModDate
-
-        // load back the ontology to verify that the updated property still is editable
-        val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
-        Get(
-          s"/v2/ontologies/allentities/$encodedIri",
-        ) ~> ontologiesPath ~> check {
-          val responseStr: String = responseAs[String]
-          assert(status == StatusCodes.OK, response.toString)
-          val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
-          val graph = responseJsonDoc.body
-            .getRequiredArray("@graph")
-            .fold(e => throw BadRequestException(e), identity)
-            .value
-            .map(_.asInstanceOf[JsonLDObject])
-          val nothingValue = graph
-            .filter(
-              _.getRequiredString("@id")
-                .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri,
-            )
-            .head
-          val isEditableMaybe =
-            nothingValue
-              .getBoolean(KnoraApiV2Complex.IsEditable)
-              .fold(msg => throw BadRequestException(msg), identity)
-
-          isEditableMaybe should equal(Some(true))
-        }
+        isEditableMaybe should equal(Some(true))
       }
     }
 
@@ -1575,59 +1604,58 @@ class OntologyV2R2RSpec extends R2RSpec {
       // update label and comment of a property
       val propertyIriEncoded = URLEncoder.encode(hasOtherNothingIri, "UTF-8")
 
-      Delete(
-        s"/v2/ontologies/properties/comment/$propertyIriEncoded?lastModificationDate=$anythingLastModDate",
-      ) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Delete(
+              s"$apiBaseUrl/v2/ontologies/properties/comment/$propertyIriEncoded?lastModificationDate=$anythingLastModDate",
+            ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)),
+          ),
+        ),
+      )
+      val updatedOntologyIri = responseJsonDoc.body.value("@id").asInstanceOf[JsonLDString].value
+      assert(updatedOntologyIri == anythingOntoLocalhostIri)
+      val graph = responseJsonDoc.body
+        .getRequiredArray("@graph")
+        .fold(e => throw BadRequestException(e), identity)
+        .value
+      val property = graph.head.asInstanceOf[JsonLDObject]
+      val returnedPropertyIri =
+        property.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
+      returnedPropertyIri should equal(hasOtherNothingIri)
+      assert(property.value.get(OntologyConstants.Rdfs.Comment) == None)
+      val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
+        key = KnoraApiV2Complex.LastModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+      )
 
+      assert(lastModDate.isAfter(fooLastModDate))
+      anythingLastModDate = lastModDate
+
+      // load back the ontology to verify that the updated property still is editable
+      val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
+      Get(
+        s"/v2/ontologies/allentities/$encodedIri",
+      ) ~> ontologiesPath ~> check {
+        val responseStr: String = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc    = JsonLDUtil.parseJsonLD(responseStr)
-        val updatedOntologyIri = responseJsonDoc.body.value("@id").asInstanceOf[JsonLDString].value
-        assert(updatedOntologyIri == anythingOntoLocalhostIri)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
         val graph = responseJsonDoc.body
           .getRequiredArray("@graph")
           .fold(e => throw BadRequestException(e), identity)
           .value
-        val property = graph.head.asInstanceOf[JsonLDObject]
-        val returnedPropertyIri =
-          property.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
-        returnedPropertyIri should equal(hasOtherNothingIri)
-        assert(property.value.get(OntologyConstants.Rdfs.Comment) == None)
-        val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = KnoraApiV2Complex.LastModificationDate,
-          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-        )
-
-        assert(lastModDate.isAfter(fooLastModDate))
-        anythingLastModDate = lastModDate
-
-        // load back the ontology to verify that the updated property still is editable
-        val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
-        Get(
-          s"/v2/ontologies/allentities/$encodedIri",
-        ) ~> ontologiesPath ~> check {
-          val responseStr: String = responseAs[String]
-          assert(status == StatusCodes.OK, response.toString)
-          val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
-          val graph = responseJsonDoc.body
-            .getRequiredArray("@graph")
-            .fold(e => throw BadRequestException(e), identity)
-            .value
-            .map(_.asInstanceOf[JsonLDObject])
-          val nothingValue = graph
-            .filter(
-              _.getRequiredString("@id")
-                .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri,
-            )
-            .head
-          val isEditableMaybe =
-            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).fold(msg => throw BadRequestException(msg), identity)
-          isEditableMaybe should equal(Some(true))
-        }
+          .map(_.asInstanceOf[JsonLDObject])
+        val nothingValue = graph
+          .filter(
+            _.getRequiredString("@id")
+              .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri,
+          )
+          .head
+        val isEditableMaybe =
+          nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).fold(msg => throw BadRequestException(msg), identity)
+        isEditableMaybe should equal(Some(true))
       }
     }
 
@@ -1662,59 +1690,60 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      Put(
-        "/v2/ontologies/properties/guielement",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, params),
-      ) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password),
-      ) ~> ontologiesPath ~> check {
-        val responseStr = responseAs[String]
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[TestClientService](
+          _.getResponseJsonLD(
+            Put(
+              s"$apiBaseUrl/v2/ontologies/properties/guielement",
+              HttpEntity(RdfMediaTypes.`application/ld+json`, params),
+            ) ~> addCredentials(
+              BasicHttpCredentials(anythingUsername, password),
+            ),
+          ),
+        ),
+      )
+      val updatedOntologyIri = responseJsonDoc.body.value("@id").asInstanceOf[JsonLDString].value
+      assert(updatedOntologyIri == anythingOntoLocalhostIri)
+      val graph = responseJsonDoc.body
+        .getRequiredArray("@graph")
+        .fold(e => throw BadRequestException(e), identity)
+        .value
+      val property = graph.head.asInstanceOf[JsonLDObject]
+      val returnedPropertyIri =
+        property.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
+      returnedPropertyIri should equal(hasOtherNothingIri)
+      val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
+        key = KnoraApiV2Complex.LastModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+      )
 
+      assert(lastModDate.isAfter(fooLastModDate))
+      anythingLastModDate = lastModDate
+
+      // load back the ontology to verify that the updated property still is editable
+      val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
+      Get(
+        s"/v2/ontologies/allentities/$encodedIri",
+      ) ~> ontologiesPath ~> check {
+        val responseStr: String = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc    = JsonLDUtil.parseJsonLD(responseStr)
-        val updatedOntologyIri = responseJsonDoc.body.value("@id").asInstanceOf[JsonLDString].value
-        assert(updatedOntologyIri == anythingOntoLocalhostIri)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
         val graph = responseJsonDoc.body
           .getRequiredArray("@graph")
           .fold(e => throw BadRequestException(e), identity)
           .value
-        val property = graph.head.asInstanceOf[JsonLDObject]
-        val returnedPropertyIri =
-          property.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
-        returnedPropertyIri should equal(hasOtherNothingIri)
-        val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = KnoraApiV2Complex.LastModificationDate,
-          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-        )
-
-        assert(lastModDate.isAfter(fooLastModDate))
-        anythingLastModDate = lastModDate
-
-        // load back the ontology to verify that the updated property still is editable
-        val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
-        Get(
-          s"/v2/ontologies/allentities/$encodedIri",
-        ) ~> ontologiesPath ~> check {
-          val responseStr: String = responseAs[String]
-          assert(status == StatusCodes.OK, response.toString)
-          val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-
-          val graph = responseJsonDoc.body
-            .getRequiredArray("@graph")
-            .fold(e => throw BadRequestException(e), identity)
-            .value
-            .map(_.asInstanceOf[JsonLDObject])
-          val nothingValue = graph
-            .filter(
-              _.getRequiredString("@id")
-                .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri,
-            )
-            .head
-          val isEditableMaybe =
-            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).fold(msg => throw BadRequestException(msg), identity)
-          isEditableMaybe should equal(Some(true))
-        }
+          .map(_.asInstanceOf[JsonLDObject])
+        val nothingValue = graph
+          .filter(
+            _.getRequiredString("@id")
+              .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri,
+          )
+          .head
+        val isEditableMaybe =
+          nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).fold(msg => throw BadRequestException(msg), identity)
+        isEditableMaybe should equal(Some(true))
       }
     }
 
