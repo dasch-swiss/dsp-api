@@ -7,6 +7,8 @@ package org.knora.webapi.testservices
 
 import org.apache.pekko
 import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.http.scaladsl.model.HttpEntity
+import org.apache.pekko.http.scaladsl.model.headers.HttpCredentials
 import sttp.capabilities.zio.ZioStreams
 import sttp.client3
 import sttp.client3.*
@@ -22,6 +24,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
 import dsp.errors.AssertionException
+import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
@@ -124,6 +127,9 @@ final case class TestClientService(
       body <- getResponseString(request)
       json <- ZIO.succeed(JsonLDUtil.parseJsonLD(body))
     } yield json
+
+  def postJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): Task[JsonLDDocument] =
+    getResponseJsonLD(Post(url, HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLd)) ~> addCredentials(credentials))
 }
 
 object TestClientService {

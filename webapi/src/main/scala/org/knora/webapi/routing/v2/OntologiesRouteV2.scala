@@ -69,8 +69,7 @@ final case class OntologiesRouteV2()(
       getClasses ~
       canDeleteClass ~
       deleteClass() ~
-      deleteOntologyComment() ~
-      createProperty()
+      deleteOntologyComment()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -410,21 +409,6 @@ final case class OntologiesRouteV2()(
           requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield DeleteOntologyCommentRequestV2(ontologyIri, lastModificationDate, apiRequestId, requestingUser)
         RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-      }
-    }
-
-  private def createProperty(): Route =
-    path(ontologiesBasePath / "properties") {
-      post {
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestMessageTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <- requestParser(_.createPropertyRequestV2(jsonRequest, apiRequestId, requestingUser))
-                                .mapError(BadRequestException.apply)
-          } yield requestMessage
-          RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-        }
       }
     }
 }
