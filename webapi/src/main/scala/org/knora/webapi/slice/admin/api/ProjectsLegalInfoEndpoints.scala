@@ -19,10 +19,10 @@ import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
-final case class LicenseDto(id: String, uri: String, `label-en`: String)
+final case class LicenseDto(id: String, uri: String, labelEn: String)
 object LicenseDto {
   given JsonCodec[LicenseDto] = DeriveJsonCodec.gen[LicenseDto]
-  given Ordering[LicenseDto]  = Ordering.by(_.`label-en`)
+  given Ordering[LicenseDto]  = Ordering.by(_.labelEn)
 
   def from(license: License): LicenseDto = LicenseDto(license.id.value, license.uri.toString, license.labelEn)
 }
