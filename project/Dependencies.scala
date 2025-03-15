@@ -39,7 +39,7 @@ object Dependencies {
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
 
-  // jwt-scala 10.0.1 depends on zio-json 0.7.36
+  // jwt-scala 10.0.1 depends on zio-json 0.7.39
   // though newer version compatible with a newer zio-json version is available
   // it is not yet published: https://github.com/jwt-scala/jwt-scala/issues/642
   val ZioJsonVersion        = "0.7.39"
