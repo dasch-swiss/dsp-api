@@ -115,7 +115,7 @@ object Dependencies {
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.5"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "2.0.2"
-  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.5.0"
+  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.6.0"
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.10.0"
 
   // test
