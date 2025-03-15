@@ -124,14 +124,14 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.5"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.6"
 
-  val wiremock = "org.wiremock" % "wiremock" % "3.12.0"
+  val wiremock = "org.wiremock" % "wiremock" % "3.12.1"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.16"
+  val tapirVersion = "1.11.19"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
