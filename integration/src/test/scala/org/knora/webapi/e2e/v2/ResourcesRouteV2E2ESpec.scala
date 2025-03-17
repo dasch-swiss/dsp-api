@@ -792,10 +792,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       )
 
       // Request the newly created resource in the simple schema, and check that it matches the ontology.
-      val resourceSimpleGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}")
-        .addHeader(SchemaHeader.simple) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
-      )
+      val resourceSimpleGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~>
+        SchemaHeader.simple ~>
+        addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+
       val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
       val resourceSimpleGetResponseAsString       = responseToString(resourceSimpleGetResponse)
 

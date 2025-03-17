@@ -374,33 +374,28 @@ final case class OntologyResponderV2(
    * @param requestingUser the user making the request.
    * @return a [[ReadOntologyV2]].
    */
+  def getPropertiesFromOntologyV2(
+    propertyIris: Set[PropertyIri],
+    allLanguages: Boolean,
+    requestingUser: User,
+  ): Task[ReadOntologyV2] =
+    getPropertyDefinitionsFromOntologyV2(propertyIris.map(_.smartIri), allLanguages, requestingUser)
+
   private def getPropertyDefinitionsFromOntologyV2(
     propertyIris: Set[SmartIri],
     allLanguages: Boolean,
     requestingUser: User,
   ): Task[ReadOntologyV2] =
     for {
-      cacheData <- ontologyCache.getCacheData
-
-      ontologyIris = propertyIris.map(_.getOntologyFromEntity)
-
-      _ <-
-        ZIO.when(ontologyIris.size != 1)(ZIO.fail(BadRequestException(s"Only one ontology may be queried per request")))
-
+      ontologyIri <- ZIO
+                       .succeed(propertyIris.map(_.ontologyIri))
+                       .filterOrFail(_.size == 1)(BadRequestException(s"Only one ontology may be queried per request"))
+                       .map(_.head)
+      ontology             <- ontologyRepo.findById(ontologyIri).someOrFail(NotFoundException(s"Ontology not found: $ontologyIri"))
       propertyInfoResponse <- getEntityInfoResponseV2(propertyIris = propertyIris, requestingUser = requestingUser)
-      internalOntologyIri   = ontologyIris.head.toOntologySchema(InternalSchema)
-
-      // Are we returning data in the user's preferred language, or in all available languages?
-      userLang =
-        if (!allLanguages) {
-          // Just the user's preferred language.
-          Some(requestingUser.lang)
-        } else {
-          // All available languages.
-          None
-        }
+      userLang              = if allLanguages then None else Some(requestingUser.lang)
     } yield ReadOntologyV2(
-      ontologyMetadata = cacheData.ontologies(internalOntologyIri).ontologyMetadata,
+      ontologyMetadata = ontology.ontologyMetadata,
       properties = propertyInfoResponse.propertyInfoMap,
       userLang = userLang,
     )
@@ -1761,7 +1756,7 @@ final case class OntologyResponderV2(
    * @param changePropertyGuiElementRequest the request to change the property's GUI element and GUI attribute.
    * @return a [[ReadOntologyV2]] containing the modified property definition.
    */
-  private def changePropertyGuiElement(
+  def changePropertyGuiElement(
     changePropertyGuiElementRequest: ChangePropertyGuiElementRequest,
   ): Task[ReadOntologyV2] = {
     def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] = for {
@@ -1851,7 +1846,7 @@ final case class OntologyResponderV2(
    * @param changePropertyLabelsOrCommentsRequest the request to change the property's labels or comments.
    * @return a [[ReadOntologyV2]] containing the modified property definition.
    */
-  private def changePropertyLabelsOrComments(
+  def changePropertyLabelsOrComments(
     changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2,
   ): Task[ReadOntologyV2] = {
     def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] =
@@ -1950,10 +1945,9 @@ final case class OntologyResponderV2(
         cacheData <- ontologyCache.getCacheData
 
         ontology = cacheData.ontologies(internalOntologyIri)
-        currentReadClassInfo <-
-          ZIO
-            .fromOption(ontology.classes.get(internalClassIri))
-            .orElseFail(NotFoundException(s"Class ${req.classIri} not found"))
+        _ <- ZIO
+               .fromOption(ontology.classes.get(internalClassIri))
+               .orElseFail(NotFoundException(s"Class ${req.classIri} not found"))
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
         _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
@@ -1998,31 +1992,38 @@ final case class OntologyResponderV2(
   /**
    * Delete the `rdfs:comment` in a property definition.
    *
-   * @param deletePropertyCommentRequest the request to delete the property's comment
+   * @param req  the request to delete the property's comment
    * @return a [[ReadOntologyV2]] containing the modified property definition.
    */
-  private def deletePropertyComment(
-    deletePropertyCommentRequest: DeletePropertyCommentRequestV2,
-  ): Task[ReadOntologyV2] = {
-    def makeTaskFuture(
-      internalPropertyIri: SmartIri,
-      internalOntologyIri: SmartIri,
-      ontology: ReadOntologyV2,
-      propertyToUpdate: ReadPropertyInfoV2,
-    ) =
-      for {
+  private def deletePropertyComment(req: DeletePropertyCommentRequestV2): Task[ReadOntologyV2] =
+    deletePropertyComment(
+      PropertyIri.unsafeFrom(req.propertyIri),
+      req.lastModificationDate,
+      req.apiRequestID,
+      req.requestingUser,
+    )
 
+  def deletePropertyComment(
+    propertyIri: PropertyIri,
+    lastModificationDate: Instant,
+    apiRequestID: UUID,
+    requestingUser: User,
+  ): Task[ReadOntologyV2] = {
+    val internalPropertyIri = propertyIri.toInternalSchema
+    val internalOntologyIri = internalPropertyIri.getOntologyFromEntity
+    val externalPropertyIri = propertyIri.toComplexSchema
+    val externalOntologyIri = externalPropertyIri.getOntologyFromEntity
+
+    def deleteCommentTask(propertyToUpdate: ReadPropertyInfoV2) =
+      for {
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-               internalOntologyIri,
-               deletePropertyCommentRequest.lastModificationDate,
-             )
+        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
 
         maybeLinkValueOfPropertyToUpdateIri =
           if (propertyToUpdate.isLinkProp) { Some(internalPropertyIri.fromLinkPropToLinkValueProp) }
           else { None }
 
-        currentTime = Instant.now
+        currentTime <- Clock.instant
 
         // Delete the comment
         updateSparql = sparql.v2.txt.deletePropertyComment(
@@ -2030,7 +2031,7 @@ final case class OntologyResponderV2(
                          ontologyIri = internalOntologyIri,
                          propertyIri = internalPropertyIri,
                          maybeLinkValuePropertyIri = maybeLinkValueOfPropertyToUpdateIri,
-                         lastModificationDate = deletePropertyCommentRequest.lastModificationDate,
+                         lastModificationDate = lastModificationDate,
                          currentTime = currentTime,
                        )
         _ <- save(Update(updateSparql))
@@ -2039,57 +2040,34 @@ final case class OntologyResponderV2(
         response <- getPropertyDefinitionsFromOntologyV2(
                       propertyIris = Set(internalPropertyIri),
                       allLanguages = true,
-                      requestingUser = deletePropertyCommentRequest.requestingUser,
+                      requestingUser = requestingUser,
                     )
       } yield response
 
     for {
-      requestingUser <- ZIO.succeed(deletePropertyCommentRequest.requestingUser)
-
-      externalPropertyIri: SmartIri = deletePropertyCommentRequest.propertyIri
-      externalOntologyIri: SmartIri = externalPropertyIri.getOntologyFromEntity
-
       _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
              externalOntologyIri,
              externalPropertyIri,
              requestingUser,
            )
 
-      internalPropertyIri: SmartIri = externalPropertyIri.toOntologySchema(InternalSchema)
-      internalOntologyIri: SmartIri = externalOntologyIri.toOntologySchema(InternalSchema)
-
-      cacheData <- ontologyCache.getCacheData
-
-      ontology: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
-
       propertyToUpdate <-
-        ZIO
-          .fromOption(ontology.properties.get(internalPropertyIri))
-          .orElseFail(NotFoundException(s"Property ${deletePropertyCommentRequest.propertyIri} not found"))
+        ontologyRepo
+          .findProperty(propertyIri)
+          .someOrFail(NotFoundException(s"Ontology ${propertyIri.ontologyIri.toComplexSchema.toIri} not found"))
 
       hasComment: Boolean =
         propertyToUpdate.entityInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)
 
       taskResult <-
-        if (hasComment) for {
-          // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-          taskResult <- IriLocker.runWithIriLock(
-                          deletePropertyCommentRequest.apiRequestID,
-                          ONTOLOGY_CACHE_LOCK_IRI,
-                          makeTaskFuture(
-                            internalPropertyIri = internalPropertyIri,
-                            internalOntologyIri = internalOntologyIri,
-                            ontology = ontology,
-                            propertyToUpdate = propertyToUpdate,
-                          ),
-                        )
-        } yield taskResult
-        else {
+        if (hasComment) {
+          IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteCommentTask(propertyToUpdate))
+        } else {
           // not change anything if property has no comment
           getPropertyDefinitionsFromOntologyV2(
             propertyIris = Set(internalPropertyIri),
             allLanguages = true,
-            requestingUser = deletePropertyCommentRequest.requestingUser,
+            requestingUser = requestingUser,
           )
         }
     } yield taskResult
