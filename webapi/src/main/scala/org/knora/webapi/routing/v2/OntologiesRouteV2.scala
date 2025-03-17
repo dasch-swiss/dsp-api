@@ -19,7 +19,6 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
@@ -61,16 +60,7 @@ final case class OntologiesRouteV2()(
       updateClass() ~
       deleteClassComment() ~
       addCardinalities() ~
-      canReplaceCardinalities ~
-      replaceCardinalities() ~
-      canDeleteCardinalitiesFromClass ~
-      deleteCardinalitiesFromClass() ~
-      changeGuiOrder() ~
-      getClasses ~
-      canDeleteClass ~
-      deleteClass() ~
-      deleteOntologyComment() ~
-      createProperty()
+      canReplaceCardinalities
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -258,139 +248,6 @@ final case class OntologiesRouteV2()(
       }
     }
 
-  private def replaceCardinalities(): Route =
-    path(ontologiesBasePath / "cardinalities") {
-      put {
-        entity(as[String]) { reqBody => requestContext =>
-          val messageTask = for {
-            user         <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId <- RouteUtilZ.randomUuid()
-            msg <- requestParser(_.replaceClassCardinalitiesRequestV2(reqBody, apiRequestId, user))
-                     .mapError(BadRequestException.apply)
-          } yield msg
-          RouteUtilV2.runRdfRouteZ(messageTask, requestContext)
-        }
-      }
-    }
-
-  private def canDeleteCardinalitiesFromClass: Route =
-    path(ontologiesBasePath / "candeletecardinalities") {
-      post {
-        entity(as[String]) { jsonRequest => requestContext =>
-          val messageTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            msg <- requestParser(_.canDeleteCardinalitiesFromClassRequestV2(jsonRequest, apiRequestId, requestingUser))
-                     .mapError(BadRequestException.apply)
-          } yield msg
-          RouteUtilV2.runRdfRouteZ(messageTask, requestContext)
-        }
-      }
-    }
-
-  // delete a single cardinality from the specified class if the property is
-  // not used in resources.
-  private def deleteCardinalitiesFromClass(): Route =
-    path(ontologiesBasePath / "cardinalities") {
-      patch {
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestMessageTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            msg <- requestParser(_.deleteCardinalitiesFromClassRequestV2(jsonRequest, apiRequestId, requestingUser))
-                     .mapError(BadRequestException.apply)
-          } yield msg
-          RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-        }
-      }
-    }
-
-  private def changeGuiOrder(): Route =
-    path(ontologiesBasePath / "guiorder") {
-      put {
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestMessageTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            msg <- requestParser(_.changeGuiOrderRequestV2(jsonRequest, apiRequestId, requestingUser))
-                     .mapError(BadRequestException.apply)
-          } yield msg
-          RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-        }
-      }
-    }
-
-  private def getClasses: Route =
-    path(ontologiesBasePath / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
-      get { requestContext =>
-        val classSmartIrisTask: ZIO[IriConverter & StringFormatter, BadRequestException, Set[SmartIri]] =
-          ZIO
-            .foreach(externalResourceClassIris)(iri =>
-              RouteUtilZ
-                .toSmartIri(iri, s"Invalid class IRI: $iri")
-                .flatMap(RouteUtilZ.ensureExternalOntologyName)
-                .flatMap(RouteUtilZ.ensureIsNotKnoraOntologyIri),
-            )
-            .map(_.toSet)
-
-        val targetSchemaTask: ZIO[IriConverter & StringFormatter, BadRequestException, OntologySchema] =
-          classSmartIrisTask
-            .flatMap(iriSet =>
-              ZIO.foreach(iriSet)(iri =>
-                ZIO
-                  .fromOption(iri.getOntologySchema)
-                  .orElseFail(BadRequestException(s"Class IRI does not have an ontology schema: $iri")),
-              ),
-            )
-            .filterOrFail(_.size == 1)(BadRequestException(s"Only one ontology may be queried per request"))
-            .map(_.head)
-
-        val requestMessageTask = for {
-          classSmartIris <- classSmartIrisTask
-          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield ClassesGetRequestV2(classSmartIris, getLanguages(requestContext), requestingUser)
-
-        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext, targetSchemaTask)
-      }
-    }
-
-  private def canDeleteClass: Route =
-    path(ontologiesBasePath / "candeleteclass" / Segment) { (classIriStr: IRI) =>
-      get { requestContext =>
-        val requestTask = for {
-          classSmartIri <-
-            RouteUtilZ
-              .toSmartIri(classIriStr, s"Invalid class IRI: $classIriStr")
-              .flatMap(RouteUtilZ.ensureExternalOntologyName)
-              .filterOrFail(_.isKnoraApiV2EntityIri)(BadRequestException(s"Invalid class IRI: $classIriStr"))
-              .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(
-                BadRequestException(s"Invalid class IRI for request: $classIriStr"),
-              )
-          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield CanDeleteClassRequestV2(classSmartIri, requestingUser)
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-      }
-    }
-
-  private def deleteClass(): Route =
-    path(ontologiesBasePath / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
-      delete { requestContext =>
-        val requestTask = for {
-          classIri <- ZIO
-                        .succeed(externalResourceClassIris)
-                        .filterOrFail(_.size == 1)(BadRequestException(s"Only one class can be deleted at a time"))
-                        .map(_.head)
-                        .flatMap(iri => RouteUtilZ.toSmartIri(iri, s"Invalid class IRI: $iri"))
-                        .flatMap(RouteUtilZ.ensureExternalOntologyName)
-                        .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
-          lastModificationDate <- getLastModificationDate(requestContext)
-          apiRequestId         <- RouteUtilZ.randomUuid()
-          requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield DeleteClassRequestV2(classIri, lastModificationDate, apiRequestId, requestingUser)
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-      }
-    }
-
   private def getLastModificationDate(ctx: RequestContext): IO[BadRequestException, Instant] =
     ZIO
       .fromOption(ctx.request.uri.query().toMap.get(lastModificationDateKey))
@@ -399,32 +256,4 @@ final case class OntologiesRouteV2()(
         ValuesValidator.xsdDateTimeStampToInstant,
       )
       .flatMap(it => ZIO.fromOption(it).orElseFail(BadRequestException(s"Invalid timestamp: $it")))
-
-  private def deleteOntologyComment(): Route =
-    path(ontologiesBasePath / "comment" / Segment) { (ontologyIriStr: IRI) =>
-      delete { requestContext =>
-        val requestMessageTask = for {
-          ontologyIri          <- RouteUtilZ.externalApiV2ComplexOntologyIri(ontologyIriStr)
-          lastModificationDate <- getLastModificationDate(requestContext)
-          apiRequestId         <- RouteUtilZ.randomUuid()
-          requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield DeleteOntologyCommentRequestV2(ontologyIri, lastModificationDate, apiRequestId, requestingUser)
-        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-      }
-    }
-
-  private def createProperty(): Route =
-    path(ontologiesBasePath / "properties") {
-      post {
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestMessageTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <- requestParser(_.createPropertyRequestV2(jsonRequest, apiRequestId, requestingUser))
-                                .mapError(BadRequestException.apply)
-          } yield requestMessage
-          RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-        }
-      }
-    }
 }
