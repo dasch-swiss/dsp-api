@@ -16,6 +16,7 @@ import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
@@ -23,6 +24,7 @@ import org.knora.webapi.slice.resources.api.model.ValueUuid
 import org.knora.webapi.slice.resources.api.model.VersionDate
 
 final class ValuesRestService(
+  private val auth: AuthorizationRestService,
   private val valuesService: ValuesResponderV2,
   private val resourcesService: ResourcesResponderV2,
   private val requestParser: ApiComplexV2JsonLdRequestParser,
@@ -79,6 +81,24 @@ final class ValuesRestService(
 
   private def render(resp: KnoraResponseV2): Task[(RenderedResponse, MediaType)] =
     renderer.render(resp, FormatOptions.default)
+
+  def eraseValue(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
+    for {
+      valueToDelete <- requestParser.deleteValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
+      apiRequestId  <- Random.nextUUID
+      _             <- ZIO.fail(new NotImplementedError("eraseValue is not implemented yet"))
+      knoraResponse <- valuesService.eraseValue(valueToDelete, user, apiRequestId)
+      response      <- render(knoraResponse)
+    } yield response
+
+  def eraseValueHistory(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
+    for {
+      valueToDelete <- requestParser.deleteValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
+      apiRequestId  <- Random.nextUUID
+      _             <- ZIO.fail(new NotImplementedError("eraseValueHistory is not implemented yet"))
+      knoraResponse <- valuesService.eraseValueHistory(valueToDelete, user, apiRequestId)
+      response      <- render(knoraResponse)
+    } yield response
 }
 
 object ValuesRestService {
