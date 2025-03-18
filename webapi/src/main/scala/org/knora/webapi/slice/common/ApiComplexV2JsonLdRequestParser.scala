@@ -162,10 +162,10 @@ final case class ApiComplexV2JsonLdRequestParser(
       valueDeleteDate    <- v.deleteDateOption
       valueDeleteComment <- v.deleteCommentOption
     } yield DeleteValueV2(
-      resourceIri.smartIri.toString,
-      r.resourceClassSmartIri,
-      v.propertySmartIri,
-      valueIri.smartIri.toString,
+      resourceIri,
+      r.resourceClassIri,
+      v.propertyIri,
+      valueIri,
       v.valueType,
       valueDeleteComment,
       valueDeleteDate,

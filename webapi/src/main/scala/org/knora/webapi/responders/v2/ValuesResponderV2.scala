@@ -1184,9 +1184,8 @@ final case class ValuesResponderV2(
     val deleteTask: Task[SuccessResponseV2] = for {
       _ <- auth.ensureUserIsNotAnonymous(requestingUser)
       propertyIri <-
-        iriConverter
-          .asPropertyIri(deleteValue.propertyIri.toIri)
-          .mapError(BadRequestException.apply)
+        ZIO
+          .succeed(deleteValue.propertyIri)
           // Don't accept knora-api:hasStandoffLinkToValue.
           .filterOrFail(_.toComplexSchema.toIri != KA.HasStandoffLinkToValue)(
             BadRequestException(s"Values of <${KA.HasStandoffLinkToValue}> cannot be deleted directly"),
@@ -1208,7 +1207,7 @@ final case class ValuesResponderV2(
       // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
       // so we can see objects that the user doesn't have permission to see.
       resourceInfo <- getResourceWithPropertyValues(
-                        deleteValue.resourceIri,
+                        deleteValue.resourceIri.toString,
                         adjustedInternalPropertyInfo,
                         KnoraSystemInstances.Users.SystemUser,
                       )
@@ -1229,7 +1228,7 @@ final case class ValuesResponderV2(
         ZIO
           .fromOption(for {
             values <- resourceInfo.values.get(submittedInternalPropertyIri)
-            curVal <- values.find(_.valueIri == deleteValue.valueIri)
+            curVal <- values.find(_.valueIri == deleteValue.valueIri.toString)
           } yield curVal)
           .orElseFail(
             NotFoundException(

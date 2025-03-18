@@ -47,6 +47,10 @@ import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ResourceOps
@@ -160,10 +164,10 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
  *                             the current time will be used.
  */
 case class DeleteValueV2(
-  resourceIri: IRI,
-  resourceClassIri: SmartIri,
-  propertyIri: SmartIri,
-  valueIri: IRI,
+  resourceIri: ResourceIri,
+  resourceClassIri: ResourceClassIri,
+  propertyIri: PropertyIri,
+  valueIri: ValueIri,
   valueTypeIri: SmartIri,
   deleteComment: Option[String] = None,
   deleteDate: Option[Instant] = None,
