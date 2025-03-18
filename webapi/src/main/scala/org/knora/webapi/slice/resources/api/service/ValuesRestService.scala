@@ -86,7 +86,6 @@ final class ValuesRestService(
     for {
       eraseReq      <- requestParser.eraseValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
       _             <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, eraseReq.shortcode)
-      _             <- ZIO.fail(new NotImplementedError("eraseValue is not implemented yet"))
       knoraResponse <- valuesService.eraseValue(eraseReq, user)
       response      <- render(knoraResponse)
     } yield response
@@ -95,7 +94,6 @@ final class ValuesRestService(
     for {
       eraseReq      <- requestParser.eraseValueHistoryV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
       _             <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, eraseReq.shortcode)
-      _             <- ZIO.fail(new NotImplementedError("eraseValueHistory is not implemented yet"))
       knoraResponse <- valuesService.eraseValueHistory(eraseReq, user)
       response      <- render(knoraResponse)
     } yield response
