@@ -156,9 +156,10 @@ final case class ApiComplexV2JsonLdRequestParser(
   def deleteValueV2FromJsonLd(str: String): IO[String, DeleteValueV2] = ZIO.scoped {
     for {
       r                  <- RootResource.fromJsonLd(str)
-      resourceIri        <- r.resourceIriOrFail
       v                  <- ValueResource.from(r)
+      resourceIri        <- r.resourceIriOrFail
       valueIri           <- v.valueIriOrFail
+      _                  <- ensureSameProject(valueIri, resourceIri)
       valueDeleteDate    <- v.deleteDateOption
       valueDeleteComment <- v.deleteCommentOption
     } yield DeleteValueV2(
@@ -169,6 +170,48 @@ final case class ApiComplexV2JsonLdRequestParser(
       v.valueType,
       valueDeleteComment,
       valueDeleteDate,
+    )
+  }
+
+  private def ensureSameProject(v: ValueIri, r: ResourceIri): IO[String, Unit] =
+    ZIO
+      .fail(s"Resource IRI and value IRI must reference the same project")
+      .when(v.shortcode != r.shortcode)
+      .unit
+
+  def eraseValueV2FromJsonLd(str: String): IO[String, EraseValueV2] = ZIO.scoped {
+    for {
+      r           <- RootResource.fromJsonLd(str)
+      v           <- ValueResource.from(r)
+      resourceIri <- r.resourceIriOrFail
+      valueIri    <- v.valueIriOrFail
+      _           <- ensureSameProject(valueIri, resourceIri)
+      uuid        <- Random.nextUUID
+    } yield EraseValueV2(
+      resourceIri,
+      r.resourceClassIri,
+      v.propertyIri,
+      valueIri,
+      v.valueType,
+      uuid,
+    )
+  }
+
+  def eraseValueHistoryV2FromJsonLd(str: String): IO[String, EraseValueHistoryV2] = ZIO.scoped {
+    for {
+      r           <- RootResource.fromJsonLd(str)
+      v           <- ValueResource.from(r)
+      resourceIri <- r.resourceIriOrFail
+      valueIri    <- v.valueIriOrFail
+      _           <- ensureSameProject(valueIri, resourceIri)
+      uuid        <- Random.nextUUID
+    } yield EraseValueHistoryV2(
+      resourceIri,
+      r.resourceClassIri,
+      v.propertyIri,
+      valueIri,
+      v.valueType,
+      uuid,
     )
   }
 

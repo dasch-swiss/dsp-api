@@ -171,7 +171,31 @@ case class DeleteValueV2(
   valueTypeIri: SmartIri,
   deleteComment: Option[String] = None,
   deleteDate: Option[Instant] = None,
-)
+) {
+  def shortcode: Shortcode = resourceIri.shortcode
+}
+
+case class EraseValueV2(
+  resourceIri: ResourceIri,
+  resourceClassIri: ResourceClassIri,
+  propertyIri: PropertyIri,
+  valueIri: ValueIri,
+  valueTypeIri: SmartIri,
+  UUID: UUID,
+) {
+  def shortcode: Shortcode = resourceIri.shortcode
+}
+
+case class EraseValueHistoryV2(
+  resourceIri: ResourceIri,
+  resourceClassIri: ResourceClassIri,
+  propertyIri: PropertyIri,
+  valueIri: ValueIri,
+  valueTypeIri: SmartIri,
+  UUID: UUID,
+) {
+  def shortcode: Shortcode = resourceIri.shortcode
+}
 
 case class GenerateSparqlForValueInNewResourceV2(
   valueContent: ValueContentV2,

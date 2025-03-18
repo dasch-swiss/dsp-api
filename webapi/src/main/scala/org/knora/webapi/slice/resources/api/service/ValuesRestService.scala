@@ -84,19 +84,19 @@ final class ValuesRestService(
 
   def eraseValue(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
-      valueToDelete <- requestParser.deleteValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
-      apiRequestId  <- Random.nextUUID
+      eraseReq      <- requestParser.eraseValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
+      _             <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, eraseReq.shortcode)
       _             <- ZIO.fail(new NotImplementedError("eraseValue is not implemented yet"))
-      knoraResponse <- valuesService.eraseValue(valueToDelete, user, apiRequestId)
+      knoraResponse <- valuesService.eraseValue(eraseReq, user)
       response      <- render(knoraResponse)
     } yield response
 
   def eraseValueHistory(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
-      valueToDelete <- requestParser.deleteValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
-      apiRequestId  <- Random.nextUUID
+      eraseReq      <- requestParser.eraseValueHistoryV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
+      _             <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, eraseReq.shortcode)
       _             <- ZIO.fail(new NotImplementedError("eraseValueHistory is not implemented yet"))
-      knoraResponse <- valuesService.eraseValueHistory(valueToDelete, user, apiRequestId)
+      knoraResponse <- valuesService.eraseValueHistory(eraseReq, user)
       response      <- render(knoraResponse)
     } yield response
 }
