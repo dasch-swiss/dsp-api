@@ -15,6 +15,7 @@ import java.net.URI
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec
+import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.AI_GENERATED
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_4_0
@@ -33,7 +34,10 @@ final case class CopyrightHolder private (override val value: String) extends St
 object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
   given JsonCodec[CopyrightHolder] = ZioJsonCodec.stringCodec(CopyrightHolder.from)
   given Schema[CopyrightHolder]    = Schema.string
-  given Ordering[CopyrightHolder]  = Ordering.by(_.value)
+  given Schema[PagedResponse[CopyrightHolder]] =
+    Schema.derived[PagedResponse[CopyrightHolder]].modify(_.data)(_.copy(isOptional = false))
+
+  given Ordering[CopyrightHolder] = Ordering.by(_.value)
   def from(str: String): Either[String, CopyrightHolder] =
     fromValidations(
       "Copyright Holder",
@@ -46,6 +50,8 @@ final case class Authorship private (override val value: String) extends StringV
 object Authorship extends StringValueCompanion[Authorship] {
   given JsonCodec[Authorship] = ZioJsonCodec.stringCodec(Authorship.from)
   given Schema[Authorship]    = Schema.string
+  given Schema[PagedResponse[Authorship]] =
+    Schema.derived[PagedResponse[Authorship]].modify(_.data)(_.copy(isOptional = false))
   def from(str: String): Either[String, Authorship] =
     fromValidations("Authorship", Authorship.apply, List(nonEmpty, noLineBreaks, maxLength(1_000)))(str)
 }
@@ -53,7 +59,9 @@ object Authorship extends StringValueCompanion[Authorship] {
 final case class LicenseIri private (override val value: String) extends StringValue
 object LicenseIri extends StringValueCompanion[LicenseIri] {
   given JsonCodec[LicenseIri] = ZioJsonCodec.stringCodec(LicenseIri.from)
-  given Schema[LicenseIri]    = Schema.string
+  given Schema[PagedResponse[LicenseIri]] =
+    Schema.derived[PagedResponse[LicenseIri]].modify(_.data)(_.copy(isOptional = false))
+  given Schema[LicenseIri] = Schema.string
 
   /**
    * Explanation of the IRI regex:
@@ -101,6 +109,7 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
 
 final case class License private (id: LicenseIri, uri: URI, labelEn: String)
 object License {
+
   val BUILT_IN: Chunk[License] = Chunk(
     License(CC_BY_4_0, URI.create("https://creativecommons.org/licenses/by/4.0/"), "CC BY 4.0"),
     License(CC_BY_SA_4_0, URI.create("https://creativecommons.org/licenses/by-sa/4.0/"), "CC BY-SA 4.0"),
