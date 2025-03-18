@@ -11,7 +11,7 @@ import sttp.tapir.query
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
-final case class Pagination(`page-size`: Int, `total-items`: Int, `total-pages`: Int, `current-page`: Int)
+final case class Pagination(pageSize: Int, totalItems: Int, totalPages: Int, currentPage: Int)
 object Pagination {
   given JsonCodec[Pagination] = DeriveJsonCodec.gen[Pagination]
 
