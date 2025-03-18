@@ -1174,12 +1174,10 @@ final case class ValuesResponderV2(
    *
    * @param deleteValue the information about value to be deleted.
    * @param requestingUser the user making the request.
-   * @param apiRequestId the API request ID.
    */
   def deleteValueV2(
     deleteValue: DeleteValueV2,
     requestingUser: User,
-    apiRequestId: UUID,
   ): Task[SuccessResponseV2] = {
     val deleteTask: Task[SuccessResponseV2] = for {
       _ <- auth.ensureUserIsNotAnonymous(requestingUser)
@@ -1305,7 +1303,7 @@ final case class ValuesResponderV2(
           requestingUser,
         )
     } yield SuccessResponseV2(s"Value <$deletedValueIri> marked as deleted")
-    IriLocker.runWithIriLock(apiRequestId, deleteValue.resourceIri, deleteTask)
+    IriLocker.runWithIriLock(deleteValue.apiRequestId, deleteValue.resourceIri, deleteTask)
   }
 
   /**

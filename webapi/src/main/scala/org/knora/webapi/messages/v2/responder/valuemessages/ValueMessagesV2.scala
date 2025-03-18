@@ -171,6 +171,7 @@ case class DeleteValueV2(
   valueTypeIri: SmartIri,
   deleteComment: Option[String] = None,
   deleteDate: Option[Instant] = None,
+  apiRequestId: UUID,
 ) {
   def shortcode: Shortcode = resourceIri.shortcode
 }
@@ -181,7 +182,7 @@ case class EraseValueV2(
   propertyIri: PropertyIri,
   valueIri: ValueIri,
   valueTypeIri: SmartIri,
-  UUID: UUID,
+  apiRequestId: UUID,
 ) {
   def shortcode: Shortcode = resourceIri.shortcode
 }
@@ -192,7 +193,7 @@ case class EraseValueHistoryV2(
   propertyIri: PropertyIri,
   valueIri: ValueIri,
   valueTypeIri: SmartIri,
-  UUID: UUID,
+  apiRequestId: UUID,
 ) {
   def shortcode: Shortcode = resourceIri.shortcode
 }

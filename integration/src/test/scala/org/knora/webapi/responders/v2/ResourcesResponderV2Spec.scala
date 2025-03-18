@@ -2203,9 +2203,9 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
               linkValuePropertyIri,
               ValueIri.unsafeFrom(linkValue.valueIri.toSmartIri),
               valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
+              apiRequestId = UUID.randomUUID,
             ),
             anythingUserProfile,
-            UUID.randomUUID(),
           ),
         ),
       )
@@ -2467,9 +2467,9 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
               valueToDelete,
               valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
               deleteComment = Some(deleteComment),
+              apiRequestId = UUID.randomUUID,
             ),
             anythingUserProfile,
-            UUID.randomUUID,
           ),
         ),
       )

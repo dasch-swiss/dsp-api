@@ -71,8 +71,7 @@ final class ValuesRestService(
   def deleteValue(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
       valueToDelete <- requestParser.deleteValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
-      apiRequestId  <- Random.nextUUID
-      knoraResponse <- valuesService.deleteValueV2(valueToDelete, user, apiRequestId)
+      knoraResponse <- valuesService.deleteValueV2(valueToDelete, user)
       response      <- render(knoraResponse)
     } yield response
 

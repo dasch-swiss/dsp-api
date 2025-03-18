@@ -162,6 +162,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       _                  <- ensureSameProject(valueIri, resourceIri)
       valueDeleteDate    <- v.deleteDateOption
       valueDeleteComment <- v.deleteCommentOption
+      uuid               <- Random.nextUUID
     } yield DeleteValueV2(
       resourceIri,
       r.resourceClassIri,
@@ -170,6 +171,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       v.valueType,
       valueDeleteComment,
       valueDeleteDate,
+      uuid,
     )
   }
 
