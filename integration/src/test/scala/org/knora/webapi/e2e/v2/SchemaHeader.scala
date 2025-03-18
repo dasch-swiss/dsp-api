@@ -10,6 +10,10 @@ import org.apache.pekko.http.scaladsl.model.headers.ModeledCustomHeaderCompanion
 
 import scala.util.Try
 
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.ApiV2Schema
+import org.knora.webapi.ApiV2Simple
+
 /**
  * A custom Pekko HTTP header "x-knora-accept-schema", which a client can send to specify which ontology schema
  * should be used in an API response.
@@ -26,6 +30,11 @@ final class SchemaHeader private (token: String) extends ModeledCustomHeader[Sch
 object SchemaHeader extends ModeledCustomHeaderCompanion[SchemaHeader] {
   override val name: String         = "x-knora-accept-schema"
   override def parse(value: String) = Try(new SchemaHeader(value))
+
+  def from(schema: ApiV2Schema): SchemaHeader = schema match {
+    case ApiV2Simple  => simple
+    case ApiV2Complex => complex
+  }
 
   val simple: SchemaHeader  = SchemaHeader("simple")
   val complex: SchemaHeader = SchemaHeader("complex")

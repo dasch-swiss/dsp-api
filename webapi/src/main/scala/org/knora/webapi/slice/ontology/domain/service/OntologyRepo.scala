@@ -16,6 +16,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.repo.service.Repository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
@@ -32,6 +33,7 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
   def findByProject(projectId: ProjectIri): Task[List[ReadOntologyV2]]
 
+  final def findClassBy(classIri: ResourceClassIri): Task[Option[ReadClassInfoV2]] = findClassBy(classIri.toInternalIri)
   def findClassBy(classIri: InternalIri): Task[Option[ReadClassInfoV2]]
 
   def findDirectSuperClassesBy(classIri: InternalIri): Task[List[ReadClassInfoV2]]
