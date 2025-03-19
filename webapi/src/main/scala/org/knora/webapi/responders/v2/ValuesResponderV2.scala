@@ -1161,6 +1161,14 @@ final case class ValuesResponderV2(
       )
     }
 
+  def eraseValue(deleteReq: DeleteValueV2, requestingUser: User, apiRequestId: UUID): Task[SuccessResponseV2] =
+    // TODO : Implement this method
+    ZIO.succeed(SuccessResponseV2("Not implemented yet"))
+
+  def eraseValueHistory(deleteReq: DeleteValueV2, requestingUser: User, apiRequestId: UUID): Task[SuccessResponseV2] =
+    // TODO : Implement this method
+    ZIO.succeed(SuccessResponseV2("Not implemented yet"))
+
   /**
    * Marks a value as deleted.
    *
