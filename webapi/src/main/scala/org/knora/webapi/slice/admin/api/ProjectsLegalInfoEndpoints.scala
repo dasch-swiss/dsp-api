@@ -23,6 +23,9 @@ final case class LicenseDto(id: String, uri: String, labelEn: String)
 object LicenseDto {
   given JsonCodec[LicenseDto] = DeriveJsonCodec.gen[LicenseDto]
   given Ordering[LicenseDto]  = Ordering.by(_.labelEn)
+  given Schema[PagedResponse[LicenseDto]] = Schema
+    .derived[PagedResponse[LicenseDto]]
+    .modify(_.data)(_.copy(isOptional = false))
 
   def from(license: License): LicenseDto = LicenseDto(license.id.value, license.uri.toString, license.labelEn)
 }

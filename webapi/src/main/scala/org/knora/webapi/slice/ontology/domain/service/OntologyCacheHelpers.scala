@@ -17,10 +17,19 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
-final case class OntologyCacheHelpers(ontologyCache: OntologyCache) {
+final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo: OntologyRepo) {
+
+  def getClasses(
+    classIris: Seq[ResourceClassIri],
+    allLanguages: Boolean,
+    requestingUser: User,
+  ): Task[ReadOntologyV2] =
+    getClassDefinitionsFromOntologyV2(classIris.map(_.smartIri).toSet, allLanguages, requestingUser)
 
   /**
    * Requests information about OWL classes in a single ontology.
@@ -319,24 +328,29 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache) {
   /**
    * Checks whether the requesting user has permission to update an ontology.
    *
-   * @param internalOntologyIri the internal IRI of the ontology.
+   * @param ontologyIri the internal IRI of the ontology.
    * @param requestingUser      the user making the request.
    * @return `true` if the user has permission to update the ontology
    */
-  def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: User): Task[Boolean] =
-    for {
-      cacheData <- ontologyCache.getCacheData
+  def canUserUpdateOntology(ontologyIri: OntologyIri, requestingUser: User): Task[Boolean] = for {
+    ontology <- ontologyRepo
+                  .findById(ontologyIri)
+                  .someOrFail(NotFoundException(s"Ontology ${ontologyIri.toComplexSchema} not found"))
+    projectIri <- ZIO
+                    .fromOption(ontology.projectIri)
+                    .orElseFail(NotFoundException(s"Project IRI not found for ontology ${ontologyIri.toComplexSchema}"))
+    canUpdate = requestingUser.permissions.isProjectAdmin(projectIri) || requestingUser.permissions.isSystemAdmin
+  } yield canUpdate
 
-      projectIri =
-        cacheData.ontologies
-          .getOrElse(
-            internalOntologyIri,
-            throw NotFoundException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} not found"),
-          )
-          .ontologyMetadata
-          .projectIri
-          .get
-    } yield requestingUser.permissions.isProjectAdmin(projectIri.toString) || requestingUser.permissions.isSystemAdmin
+  /**
+   * Checks whether the requesting user has permission to update an ontology.
+   *
+   * @param ontologyIri the internal IRI of the ontology.
+   * @param requestingUser      the user making the request.
+   * @return `true` if the user has permission to update the ontology
+   */
+  def canUserUpdateOntology(ontologyIri: SmartIri, requestingUser: User): Task[Boolean] =
+    canUserUpdateOntology(OntologyIri.unsafeFrom(ontologyIri), requestingUser)
 }
 
 object OntologyCacheHelpers {

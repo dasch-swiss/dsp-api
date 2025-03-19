@@ -12,7 +12,7 @@ object Dependencies {
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
   val fusekiImage = "daschswiss/apache-jena-fuseki:5.2.0"
   // base image the knora-sipi image is created from
-  val sipiImage = "daschswiss/sipi:v3.15.0"
+  val sipiImage = "daschswiss/sipi:v3.15.1"
 
   val ScalaVersion = "3.3.5"
 
@@ -89,7 +89,7 @@ object Dependencies {
   val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.17" // the logging interface
 
   // Metrics
-  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.22.1"
+  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.23"
 
   // input validation
   val commonsValidator =
@@ -111,7 +111,7 @@ object Dependencies {
   // other
   val diff           = "com.sksamuel.diff" % "diff"             % "1.1.11"
   val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"       % "icu4j"            % "76.1"
+  val icu4j          = "com.ibm.icu"       % "icu4j"            % "77.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.5"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "2.0.2"
@@ -124,14 +124,14 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.5"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.6"
 
-  val wiremock = "org.wiremock" % "wiremock" % "3.12.0"
+  val wiremock = "org.wiremock" % "wiremock" % "3.12.1"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.16"
+  val tapirVersion = "1.11.19"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,

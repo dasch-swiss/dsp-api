@@ -15,12 +15,13 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.ontology.api.service.OntologiesRestService
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
 object OntologyApiModule
     extends URModule[
-      AuthorizationRestService & BaseEndpoints & HandlerMapper & IriConverter & KnoraResponseRenderer & OntologyRepo &
-        OntologyResponderV2 & TapirToPekkoInterpreter,
+      AuthorizationRestService & BaseEndpoints & HandlerMapper & IriConverter & KnoraResponseRenderer &
+        OntologyCacheHelpers & OntologyRepo & OntologyResponderV2 & TapirToPekkoInterpreter,
       OntologiesApiRoutes & OntologiesEndpoints & OntologyV2RequestParser,
     ] { self =>
 
