@@ -172,8 +172,15 @@ case class DeleteValueV2(
   deleteComment: Option[String] = None,
   deleteDate: Option[Instant] = None,
   apiRequestId: UUID,
-) {
-  def shortcode: Shortcode = resourceIri.shortcode
+) extends ValueRemoval
+
+trait ValueRemoval {
+  def resourceIri: ResourceIri
+  def resourceClassIri: ResourceClassIri
+  def propertyIri: PropertyIri
+  def valueIri: ValueIri
+  def valueTypeIri: SmartIri
+  final def shortcode: Shortcode = resourceIri.shortcode
 }
 
 case class EraseValueV2(
@@ -183,9 +190,7 @@ case class EraseValueV2(
   valueIri: ValueIri,
   valueTypeIri: SmartIri,
   apiRequestId: UUID,
-) {
-  def shortcode: Shortcode = resourceIri.shortcode
-}
+) extends ValueRemoval
 
 case class EraseValueHistoryV2(
   resourceIri: ResourceIri,
@@ -194,9 +199,7 @@ case class EraseValueHistoryV2(
   valueIri: ValueIri,
   valueTypeIri: SmartIri,
   apiRequestId: UUID,
-) {
-  def shortcode: Shortcode = resourceIri.shortcode
-}
+) extends ValueRemoval
 
 case class GenerateSparqlForValueInNewResourceV2(
   valueContent: ValueContentV2,
