@@ -256,7 +256,7 @@ case class TriplestoreServiceLive(
                   .body(rdfContents)
                   .contentType(mimeTypeTextTurtle)
       _ <- ZIO.logDebug(s"INSERT: ${request.uri}")
-      _ <- doHttpRequest(request).map(_.body).flatMap(ensuringBody(_))
+      _ <- doHttpRequest(request).map(_.body).flatMap(ensuringBody)
     } yield ()
 
   /**
@@ -445,8 +445,8 @@ case class TriplestoreServiceLive(
 
   private def ensuringBody(body: Either[String, String]): Task[String] =
     ZIO
-      .succeed(body.toOption)
-      .someOrFail(TriplestoreResponseException("Triplestore returned no content for for repository dump"))
+      .fromOption(body.toOption)
+      .orElseFail(TriplestoreResponseException("Triplestore returned no content for for repository dump"))
 
   /**
    * Uploads repository content from an N-Quads file.

@@ -6,6 +6,7 @@
 package org.knora.webapi.messages.util.rdf
 
 import dsp.errors.InconsistentRepositoryDataException
+import cats.syntax.traverse.*
 
 /**
  * Represents the result of a SPARQL SELECT query.
@@ -91,4 +92,14 @@ case class VariableResultsRow(rowMap: Map[String, String]) {
     },
     "An empty string is not allowed as a variable name or value in a VariableResultsRow",
   )
+
+  def get(v: String): Option[String] = rowMap.get(v)
+  def getRequired(v: String): String =
+    get(v).getOrElse(throw InconsistentRepositoryDataException(s"Variable '$v' not found"))
+  def get[A](v: String, mapper: String => Either[String, A]): Option[A] = rowMap
+    .get(v)
+    .traverse(mapper)
+    .fold(err => throw InconsistentRepositoryDataException(s"Failed mapping variable '$v': $err"), identity)
+  def getRequired[A](v: String, mapper: String => Either[String, A]): A =
+    get(v, mapper).getOrElse(throw InconsistentRepositoryDataException(s"Variable '$v' not found"))
 }

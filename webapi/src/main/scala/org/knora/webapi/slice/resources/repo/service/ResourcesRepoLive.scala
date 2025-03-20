@@ -9,8 +9,8 @@ import org.eclipse.rdf4j.model.Namespace
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.InsertDataQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
+import org.eclipse.rdf4j.sparqlbuilder.core.query.*
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
@@ -23,8 +23,16 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicateObjectList
 import zio.*
 
 import java.time.Instant
-
+import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resources.repo.model.FileValueTypeSpecificInfo
@@ -36,8 +44,13 @@ import org.knora.webapi.slice.resources.repo.model.StandoffLinkValueInfo
 import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo
 import org.knora.webapi.slice.resources.repo.model.TypeSpecificValueInfo.*
 import org.knora.webapi.slice.resources.repo.model.ValueInfo
+import org.knora.webapi.slice.resources.repo.service.ResourceModel.ActiveResource
+import org.knora.webapi.slice.resources.repo.service.ResourceModel.DeletedResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+
+import scala.util.Try
 
 trait ResourcesRepo {
   def createNewResource(
@@ -46,9 +59,57 @@ trait ResourcesRepo {
     userIri: InternalIri,
     projectIri: InternalIri,
   ): Task[Unit]
+
+  def findById(id: ResourceIri): Task[Option[ResourceModel]]
 }
 
-final case class ResourcesRepoLive(triplestore: TriplestoreService) extends ResourcesRepo {
+sealed trait ResourceModel {
+  def iri: ResourceIri
+  def label: String
+  def resourceClassIri: ResourceClassIri
+  def hasStandoffLinkTo: Option[ResourceIri]
+  def hasStandoffLinkToValue: Option[ValueIri]
+  def attachedToUser: UserIri
+  def attachedToProject: ProjectIri
+  def creationDate: Instant
+  def lastModificationDate: Option[Instant]
+  def hasPermissions: String
+}
+object ResourceModel {
+
+  final case class ActiveResource(
+    iri: ResourceIri,
+    label: String,
+    resourceClassIri: ResourceClassIri,
+    hasStandoffLinkTo: Option[ResourceIri],
+    hasStandoffLinkToValue: Option[ValueIri],
+    attachedToUser: UserIri,
+    attachedToProject: ProjectIri,
+    creationDate: Instant,
+    lastModificationDate: Option[Instant],
+    hasPermissions: String,
+  ) extends ResourceModel
+
+  final case class DeletedResource(
+    iri: ResourceIri,
+    label: String,
+    resourceClassIri: ResourceClassIri,
+    hasStandoffLinkTo: Option[ResourceIri],
+    hasStandoffLinkToValue: Option[ValueIri],
+    attachedToUser: UserIri,
+    attachedToProject: ProjectIri,
+    creationDate: Instant,
+    lastModificationDate: Option[Instant],
+    hasPermissions: String,
+    deleteDate: Option[Instant],
+    deleteComment: Option[String],
+    deletedBy: Option[UserIri],
+  ) extends ResourceModel
+}
+
+final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val sf: StringFormatter)
+    extends ResourcesRepo {
+  import org.knora.webapi.messages.IriConversions.ConvertibleIri
 
   def createNewResource(
     dataGraphIri: InternalIri,
@@ -58,6 +119,75 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService) extends Reso
   ): Task[Unit] =
     triplestore.query(ResourcesRepoLive.createNewResourceQuery(dataGraphIri, resource, projectIri, userIri))
 
+  def findById(id: ResourceIri): Task[Option[ResourceModel]] = {
+    val s                = iri(id.toString)
+    val clazz            = variable("clazz")
+    val resourceSubclass = clazz.has(RDFS.SUBCLASSOF, KB.Resource)
+    val whereClause = s
+      .isA(clazz)
+      .andHas(RDFS.LABEL, variable("label"))
+      .andHas(KB.isDeleted, variable("isDeleted"))
+      .andHas(KB.attachedToUser, variable("attachedToUser"))
+      .andHas(KB.attachedToProject, variable("attachedToProject"))
+      .andHas(KB.creationDate, variable("creationDate"))
+      .andHas(KB.hasPermissions, variable("hasPermissions"))
+      .and(s.has(KB.lastModificationDate, variable("lastModificationDate")).optional)
+      .and(s.has(KB.hasStandoffLinkTo, variable("hasStandoffLinkTo")).optional)
+      .and(s.has(KB.hasStandoffLinkToValue, variable("hasStandoffLinkToValue")).optional)
+      .and(s.has(KB.deleteDate, variable("deleteDate")).optional)
+      .and(s.has(KB.deleteComment, variable("deleteComment")).optional)
+      .and(s.has(KB.deletedBy, variable("deletedBy")).optional)
+
+    val query = Queries.SELECT().where(whereClause, resourceSubclass).prefix(KB.NS, RDF.NS, RDFS.NS, XSD.NS)
+    triplestore.query(Select(query)).map(result => if result.nonEmpty then Some(mapToResource(id, result)) else None)
+  }
+
+  private def mapToResource(iri: ResourceIri, result: SparqlSelectResult): ResourceModel = {
+    val row                    = result.getFirstRowOrThrow
+    val isDeleted              = row.getRequired("isDeleted", s => Right(s.toBoolean))
+    val label                  = row.getRequired("label")
+    val resourceClassIri       = row.getRequired("clazz", s => ResourceClassIri.from(s.toSmartIri))
+    val hasStandoffLinkTo      = row.get("hasStandoffLinkTo", s => ResourceIri.from(s.toSmartIri))
+    val hasStandoffLinkToValue = row.get("hasStandoffLinkToValue", s => ValueIri.from(s.toSmartIri))
+    val attachedToUser         = row.getRequired("attachedToUser", UserIri.from)
+    val creationDate           = row.getRequired("creationDate", s => Try(Instant.parse(s)).toEither.left.map(_.getMessage))
+    val attachedToProject      = row.getRequired("attachedToProject", ProjectIri.from)
+    val lastModificationDate =
+      row.get("lastModificationDate", s => Try(Instant.parse(s)).toEither.left.map(_.getMessage))
+    val hasPermissions = row.getRequired("hasPermissions")
+    if isDeleted then
+      val deleteDate    = row.get("deleteDate", s => Try(Instant.parse(s)).toEither.left.map(_.getMessage))
+      val deleteComment = row.get("deleteComment")
+      val deletedBy     = row.get("deletedBy", UserIri.from)
+      DeletedResource(
+        iri,
+        label,
+        resourceClassIri,
+        hasStandoffLinkTo,
+        hasStandoffLinkToValue,
+        attachedToUser,
+        attachedToProject,
+        creationDate,
+        lastModificationDate,
+        hasPermissions,
+        deleteDate,
+        deleteComment,
+        deletedBy,
+      )
+    else
+      ActiveResource(
+        iri,
+        label,
+        resourceClassIri,
+        hasStandoffLinkTo,
+        hasStandoffLinkToValue,
+        attachedToUser,
+        attachedToProject,
+        creationDate,
+        lastModificationDate,
+        hasPermissions,
+      )
+  }
 }
 
 object ResourcesRepoLive {
