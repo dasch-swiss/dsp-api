@@ -23,12 +23,17 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicateObjectList
 import zio.*
 
 import java.time.Instant
-import dsp.errors.InconsistentRepositoryDataException
+import scala.util.Try
+
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
@@ -50,8 +55,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-import scala.util.Try
-
 trait ResourcesRepo {
   def createNewResource(
     dataGraphIri: InternalIri,
@@ -61,6 +64,11 @@ trait ResourcesRepo {
   ): Task[Unit]
 
   def findById(id: ResourceIri): Task[Option[ResourceModel]]
+  final def findActiveById(id: ResourceIri): Task[Option[ActiveResource]] =
+    findById(id).map(_.collect { case r: ActiveResource => r })
+  final def findDeletedById(id: ResourceIri): Task[Option[DeletedResource]] =
+    findById(id).map(_.collect { case r: DeletedResource => r })
+
 }
 
 sealed trait ResourceModel {
@@ -73,7 +81,9 @@ sealed trait ResourceModel {
   def attachedToProject: ProjectIri
   def creationDate: Instant
   def lastModificationDate: Option[Instant]
-  def hasPermissions: String
+  def hasPermissions: Map[ObjectAccess, Set[InternalIri]]
+  final def shortcode: KnoraProject.Shortcode = iri.shortcode
+  final def ontologyIri: OntologyIri          = resourceClassIri.ontologyIri
 }
 object ResourceModel {
 
@@ -87,7 +97,7 @@ object ResourceModel {
     attachedToProject: ProjectIri,
     creationDate: Instant,
     lastModificationDate: Option[Instant],
-    hasPermissions: String,
+    hasPermissions: Map[ObjectAccess, Set[InternalIri]],
   ) extends ResourceModel
 
   final case class DeletedResource(
@@ -100,7 +110,7 @@ object ResourceModel {
     attachedToProject: ProjectIri,
     creationDate: Instant,
     lastModificationDate: Option[Instant],
-    hasPermissions: String,
+    hasPermissions: Map[ObjectAccess, Set[InternalIri]],
     deleteDate: Option[Instant],
     deleteComment: Option[String],
     deletedBy: Option[UserIri],
@@ -154,7 +164,9 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     val attachedToProject      = row.getRequired("attachedToProject", ProjectIri.from)
     val lastModificationDate =
       row.get("lastModificationDate", s => Try(Instant.parse(s)).toEither.left.map(_.getMessage))
-    val hasPermissions = row.getRequired("hasPermissions")
+    val hasPermissions = PermissionUtilADM
+      .parsePermissions(row.getRequired("hasPermissions"))
+      .map { case (k, v) => k -> v.map(InternalIri.apply) }
     if isDeleted then
       val deleteDate    = row.get("deleteDate", s => Try(Instant.parse(s)).toEither.left.map(_.getMessage))
       val deleteComment = row.get("deleteComment")

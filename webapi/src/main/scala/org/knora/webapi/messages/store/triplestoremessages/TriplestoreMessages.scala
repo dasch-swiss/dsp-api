@@ -30,6 +30,7 @@ import org.knora.webapi.messages.util.rdf.*
  * @param statements a map of subject IRIs to statements about each subject.
  */
 case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]], rdfModel: RdfModel) {
+  def isEmpty: Boolean = statements.isEmpty
   def asExtended(implicit sf: StringFormatter): IO[DataConversionException, SparqlExtendedConstructResponse] =
     SparqlExtendedConstructResponse.make(rdfModel)
 }

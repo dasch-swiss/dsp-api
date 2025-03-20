@@ -99,7 +99,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       } yield RootResource(resource, resourceIriOption, resourceClassIri)
 
     private def resourceClassIri(r: Resource): IO[String, ResourceClassIri] = ZIO
-      .fromOption(r.rdfsType)
+      .fromOption(r.rdfType)
       .orElseFail("No root resource class IRI found")
       .flatMap(converter.asResourceClassIriApiV2Complex)
   }
@@ -268,7 +268,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         .flatMap(iri => ZIO.fromEither(PropertyIri.fromApiV2Complex(iri)))
 
     private def valueType(resource: Resource) = ZIO
-      .fromEither(resource.rdfsType.toRight("No rdf:type found for value."))
+      .fromEither(resource.rdfType.toRight("No rdf:type found for value."))
       .orElseFail(s"No value type found for value.")
       .flatMap(converter.asSmartIri(_).mapError(_.getMessage))
 
