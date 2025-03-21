@@ -21,11 +21,12 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfObject
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicate
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicateObjectList
 import zio.*
+import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 import java.time.Instant
 import scala.util.Try
-
 import dsp.valueobjects.UuidUtil
+import org.apache.jena.rdf.model.Resource
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -34,6 +35,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
@@ -52,6 +54,7 @@ import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.service.ResourceModel.ActiveResource
 import org.knora.webapi.slice.resources.repo.service.ResourceModel.DeletedResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
@@ -62,6 +65,8 @@ trait ResourcesRepo {
     userIri: InternalIri,
     projectIri: InternalIri,
   ): Task[Unit]
+
+  def findValues(id: ResourceIri): Task[Map[PropertyIri, Seq[ValueIri]]]
 
   def findById(id: ResourceIri): Task[Option[ResourceModel]]
   final def findActiveById(id: ResourceIri): Task[Option[ActiveResource]] =
@@ -128,6 +133,41 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     projectIri: InternalIri,
   ): Task[Unit] =
     triplestore.query(ResourcesRepoLive.createNewResourceQuery(dataGraphIri, resource, projectIri, userIri))
+
+  def findValues(id: ResourceIri): Task[Map[PropertyIri, Seq[ValueIri]]] = {
+    val resource = iri(id.toString)
+
+    val (resourceClass, valueProp, value, valueClass) =
+      (variable("resourceClass"), variable("valueProperty"), variable("value"), variable("valueClass"))
+
+    val resourceSubclass = resource
+      .isA(resourceClass)
+      .and(resourceClass.has(RDFS.SUBCLASSOF, KB.Resource))
+
+    val valueAValueClass = value
+      .isA(valueClass)
+      .and(valueClass.has(RDFS.SUBCLASSOF, KB.Value))
+
+    val queryP = resource.has(valueProp, value)
+
+    val query = Queries.CONSTRUCT(queryP).where(queryP, resourceSubclass, valueAValueClass)
+    for {
+      rdfModel <- triplestore.queryRdfModel(Construct(query))
+      resource <- rdfModel.getResource(id.toString)
+      result    = resource.map(_.res).map(propertyMap).getOrElse(Map.empty)
+    } yield result
+  }
+
+  private def propertyMap(res: Resource): Map[PropertyIri, Seq[ValueIri]] = res
+    .listProperties()
+    .asScala
+    .map { stmt =>
+      val p = PropertyIri.unsafeFrom(stmt.getPredicate.toString.toSmartIri)
+      val v = ValueIri.unsafeFrom(stmt.getObject.toString.toSmartIri)
+      (p, v)
+    }
+    .toList
+    .groupMap((p, _) => p)((_, v) => v)
 
   def findById(id: ResourceIri): Task[Option[ResourceModel]] = {
     val s                = iri(id.toString)

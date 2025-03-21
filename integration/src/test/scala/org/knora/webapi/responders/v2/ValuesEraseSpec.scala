@@ -10,10 +10,12 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.DeleteValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueContentV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
@@ -31,20 +33,26 @@ object ValuesEraseSpec extends E2EZSpec {
   override val e2eSpec = suite("ValuesEraseSpec")(
     test("erase a value") {
       for {
-        res            <- ResourceHelper.createResource
-        value          <- ValueHelper.createIntegerValue(res)
-        updated        <- ValueHelper.updateIntegerValue(value, res, 666)
-        old            <- ValueHelper.findValue(value.iri)
-        _              <- zio.Console.printLine(s"res: $res,\n\n $value \n\n $updated \n\n $old")
-        updatedDeleted <- ValueHelper.deleteIntegerValue(updated, res)
-        valueDeleted   <- ValueHelper.findValue(value.iri)
-        _              <- zio.Console.printLine(s"Deleted: $updatedDeleted,\n\n $valueDeleted")
+        res1   <- TestHelper.createResource
+        res2   <- TestHelper.createResource
+        value1 <- TestHelper.createLink(res1, res2)
+        _      <- Console.printLine(s"LinkValue created: $value1")
+//        _      <- TestHelper.deleteLinkValue(value1, res1)
+//        deleted   <- TestHelper.findValue(value1.iri)
+//        resValue1 <- ResourceHelper.findValues(res1.iri)
+//        _         <- Console.printLine(s"deleted: ${deleted} \n\nresValue1: $resValue1")
       } yield assertCompletes
     },
-  ).provideSome[env](ResourceHelper.layer, ValueHelper.layer, ValueRepo.layer)
+  ).provideSome[env](TestHelper.layer, ValueRepo.layer)
 }
 
-final case class ValueHelper(valuesResponder: ValuesResponderV2, valueRepo: ValueRepo)(implicit
+final case class TestHelper(
+  projectService: ProjectService,
+  resourceRepo: ResourcesRepo,
+  resourcesResponderV2: ResourcesResponderV2,
+  valueRepo: ValueRepo,
+  valuesResponder: ValuesResponderV2,
+)(implicit
   val sf: StringFormatter,
 ) {
   import org.knora.webapi.messages.IriConversions.ConvertibleIri
@@ -52,6 +60,22 @@ final case class ValueHelper(valuesResponder: ValuesResponderV2, valueRepo: Valu
   def findValue(valueIri: ValueIri): Task[ValueModel] = valueRepo
     .findById(valueIri)
     .someOrFail(IllegalStateException("Value not found"))
+
+  def createLink(left: ActiveResource, right: ActiveResource): ZIO[Any, Throwable, ActiveValue] =
+    val propertyIri = left.ontologyIri.makeProperty("hasOtherThingValue")
+    for {
+      uuid <- Random.nextUUID
+      createVal = CreateValueV2(
+                    left.iri.toString,
+                    left.resourceClassIri.toComplexSchema,
+                    propertyIri.toComplexSchema,
+                    LinkValueContentV2(ApiV2Complex, right.iri.toString),
+                  )
+      value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
+      value <- valueRepo
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .someOrFail(IllegalStateException("Value not found"))
+    } yield value
 
   def createIntegerValue(resource: ActiveResource): Task[ActiveValue] =
     val hasInteger = resource.ontologyIri.makeProperty("hasInteger")
@@ -104,39 +128,27 @@ final case class ValueHelper(valuesResponder: ValuesResponderV2, valueRepo: Valu
       _       <- valuesResponder.deleteValueV2(delete, rootUser)
       deleted <- valueRepo.findById(value.iri).someOrFail(IllegalStateException("Deleted value not found"))
     } yield deleted
-}
 
-object ValueHelper {
-  val layer = ZLayer.derive[ValueHelper]
-
-  def findValue(valueIri: ValueIri): ZIO[ValueHelper, Throwable, ValueModel] =
-    ZIO.serviceWithZIO[ValueHelper](_.findValue(valueIri))
-
-  def deleteIntegerValue(value: ActiveValue, resource: ActiveResource): ZIO[ValueHelper, Throwable, ValueModel] =
-    ZIO.serviceWithZIO[ValueHelper](_.deleteIntegerValue(value, resource))
-
-  def createIntegerValue(resource: ActiveResource): RIO[ValueHelper, ActiveValue] =
-    ZIO.serviceWithZIO[ValueHelper](_.createIntegerValue(resource))
-
-  def updateIntegerValue(
-    value: ActiveValue,
-    resource: ActiveResource,
-    newValue: Int,
-  ): ZIO[ValueHelper, Throwable, ActiveValue] =
-    ZIO.serviceWithZIO[ValueHelper](_.updateIntegerValue(value, resource, newValue))
-}
-
-final case class ResourceHelper(
-  projectService: ProjectService,
-  resourcesResponderV2: ResourcesResponderV2,
-  resourceRepo: ResourcesRepo,
-)(implicit val stringFormatter: StringFormatter) {
-  import org.knora.webapi.messages.IriConversions.ConvertibleIri
+  def deleteLinkValue(value: ActiveValue, resource: ActiveResource): ZIO[Any, Throwable, ValueModel] =
+    val delete = DeleteValueV2(
+      resource.iri,
+      resource.resourceClassIri,
+      resource.ontologyIri.makeProperty("hasOtherThingValue"),
+      value.iri,
+      value.valueClass.value.toSmartIri,
+      None,
+      None,
+      UUID.randomUUID(),
+    )
+    for {
+      _       <- valuesResponder.deleteValueV2(delete, rootUser)
+      deleted <- valueRepo.findById(value.iri).someOrFail(IllegalStateException("Deleted value not found"))
+    } yield deleted
 
   val shortcode   = Shortcode.unsafeFrom("0001")
   val ontologyIri = OntologyIri.unsafeFrom("http://www.knora.org/ontology/0001/anything".toSmartIri)
 
-  def createSomeThingResource: Task[ActiveResource] = for {
+  def createResource: Task[ActiveResource] = for {
     prj      <- projectService.findByShortcode(shortcode).someOrFail(IllegalStateException("Project not found"))
     uuid     <- Random.nextUUID
     createRes = CreateResourceV2(None, ontologyIri.makeClass("Thing").smartIri, "label", Map.empty, prj, None, None)
@@ -146,11 +158,38 @@ final case class ResourceHelper(
                  .findActiveById(ResourceIri.unsafeFrom(res.resources.head.resourceIri.toSmartIri))
                  .someOrFail(IllegalStateException("Resource not found"))
   } yield created
+
+  def findValues(iri: ResourceIri): Task[Map[KnoraIris.PropertyIri, Seq[ValueIri]]] = resourceRepo.findValues(iri)
 }
 
-object ResourceHelper {
-  val layer = ZLayer.derive[ResourceHelper]
+object TestHelper {
+  val layer = ZLayer.derive[TestHelper]
 
-  def createResource: ZIO[ResourceHelper, Throwable, ActiveResource] =
-    ZIO.serviceWithZIO[ResourceHelper](_.createSomeThingResource)
+  def createLink(left: ActiveResource, right: ActiveResource): ZIO[TestHelper, Throwable, ActiveValue] =
+    ZIO.serviceWithZIO[TestHelper](_.createLink(left, right))
+
+  def findValue(valueIri: ValueIri): ZIO[TestHelper, Throwable, ValueModel] =
+    ZIO.serviceWithZIO[TestHelper](_.findValue(valueIri))
+
+  def deleteIntegerValue(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, ValueModel] =
+    ZIO.serviceWithZIO[TestHelper](_.deleteIntegerValue(value, resource))
+
+  def deleteLinkValue(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, ValueModel] =
+    ZIO.serviceWithZIO[TestHelper](_.deleteLinkValue(value, resource))
+
+  def createIntegerValue(resource: ActiveResource): RIO[TestHelper, ActiveValue] =
+    ZIO.serviceWithZIO[TestHelper](_.createIntegerValue(resource))
+
+  def updateIntegerValue(
+    value: ActiveValue,
+    resource: ActiveResource,
+    newValue: Int,
+  ): ZIO[TestHelper, Throwable, ActiveValue] =
+    ZIO.serviceWithZIO[TestHelper](_.updateIntegerValue(value, resource, newValue))
+
+  def findValues(iri: ResourceIri): ZIO[TestHelper, Throwable, Map[KnoraIris.PropertyIri, Seq[ValueIri]]] =
+    ZIO.serviceWithZIO[TestHelper](_.findValues(iri))
+
+  def createResource: ZIO[TestHelper, Throwable, ActiveResource] =
+    ZIO.serviceWithZIO[TestHelper](_.createResource)
 }
