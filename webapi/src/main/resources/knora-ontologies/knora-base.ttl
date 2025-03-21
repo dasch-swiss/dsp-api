@@ -2658,12 +2658,12 @@
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :isAudioSegmentOfValue  ;
                          owl:cardinality    "1"^^xsd:nonNegativeInteger ] ;
-    rdfs:label         "Audio-Segment"@de ,
-                       "Audiosegment"@en ,
-                       "Segment audio"@fr ,
-                       "Segmento audio"@it ;
+    rdfs:label         "Audioannotation"@de ,
+                       "Audio Annotation"@en ,
+                       "Annotation audio"@fr ,
+                       "Annotazione audio"@it ;
     :canBeInstantiated true ;
-    rdfs:comment       "A segment of an audio resource"@en .
+    rdfs:comment       "An annotation of an audio resource"@en .
 
 
 ### http://www.knora.org/ontology/knora-base#VideoSegment
@@ -2677,12 +2677,12 @@
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :isVideoSegmentOfValue  ;
                          owl:cardinality    "1"^^xsd:nonNegativeInteger ] ;
-    rdfs:label         "Video-Segment"@de ,
-                       "Videosegment"@en ,
-                       "Segment vidéo"@fr ,
-                       "Segmento video"@it ;
+    rdfs:label         "Videoannotation"@de ,
+                       "Video Annotation"@en ,
+                       "Annotation vidéo"@fr ,
+                       "Annotazione video"@it ;
     :canBeInstantiated true ;
-    rdfs:comment       "A segment of a video resource"@en .
+    rdfs:comment       "An annotation of a video resource"@en .
 
 ###  http://www.knora.org/ontology/knora-base#isSequenceOf
 
