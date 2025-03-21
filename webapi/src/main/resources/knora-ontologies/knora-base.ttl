@@ -2598,11 +2598,11 @@
     :subjectClassConstraint :Segment  ;
     :isEditable             true ;
     rdfs:subPropertyOf      :hasValue ;
-    rdfs:label              "Segment Bounds"@en ,
-                            "Segmentgrenzen"@de ,
-                            "Limites du segment"@fr ,
-                            "Limiti del segmento"@it ;
-    rdfs:comment            "Indicates the bounds of a segment, i.e. the start and end point in the containing resource."@en .
+    rdfs:label              "Timespan"@en ,
+                            "Zeitspanne"@de ,
+                            "Durée"@fr ,
+                            "Tempi"@it ;
+    rdfs:comment            "Indicates the timespan of an audio or a video, i.e. the start and end point in the containing resource."@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#Segment
