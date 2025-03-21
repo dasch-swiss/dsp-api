@@ -638,10 +638,10 @@
 :isRegionOf
     rdf:type                owl:ObjectProperty ;
     rdfs:comment            "Region of interest within a digital object (e.g. an image)"@en ;
-    rdfs:label              "ist Region von"@de,
-                            "is region of"@en,
-                            "est région de"@fr,
-                            "è regione di"@it ;
+    rdfs:label              "Annotation von"@de,
+                            "Annotation of"@en,
+                            "Annotation de"@fr,
+                            "Annotazione di"@it ;
     :subjectClassConstraint :Region ;
     :objectClassConstraint  :Representation ;
     :isEditable             true ;
@@ -653,10 +653,10 @@
 :isRegionOfValue
     rdf:type                owl:ObjectProperty ;
     rdfs:comment            "Region of interest within a digital object (e.g. an image)"@en ;
-    rdfs:label              "ist Region von"@de,
-                            "is region of"@en,
-                            "est région de"@fr,
-                            "è regione di"@it ;
+    rdfs:label              "Annotation von"@de,
+                            "Annotation of"@en,
+                            "Annotation de"@fr,
+                            "Annotazione di"@it ;
     :objectClassConstraint  :LinkValue ;
     :subjectClassConstraint :Region ;
     :isEditable             true ;
