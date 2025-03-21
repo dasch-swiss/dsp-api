@@ -1,5 +1,21 @@
 # Changelog
 
+## [31.9.1](https://github.com/dasch-swiss/dsp-api/compare/v31.9.0...v31.9.1) (2025-03-21)
+
+
+### Maintenances
+
+* Bump sipi to v3.15.2 ([#3545](https://github.com/dasch-swiss/dsp-api/issues/3545)) ([199777a](https://github.com/dasch-swiss/dsp-api/commit/199777aef4626a0c2abc08933ecf81c02d1aa000))
+* Dependency updates ([#3538](https://github.com/dasch-swiss/dsp-api/issues/3538)) ([db8ae37](https://github.com/dasch-swiss/dsp-api/commit/db8ae37676dbe2e40a048b8b1ac0cd56b03de6e5))
+* Migrate ontology endpoints to tapir pt. 3 (DEV-4657) ([#3539](https://github.com/dasch-swiss/dsp-api/issues/3539)) ([fce26ea](https://github.com/dasch-swiss/dsp-api/commit/fce26ea7c84c68a57db85e567fd0485014e925cb))
+* Minor dependency updates ([#3537](https://github.com/dasch-swiss/dsp-api/issues/3537)) ([d492ba3](https://github.com/dasch-swiss/dsp-api/commit/d492ba3d4d6caa4508ad4d86a59904457a8f07cb))
+* Patch dependency updates ([#3536](https://github.com/dasch-swiss/dsp-api/issues/3536)) ([851d587](https://github.com/dasch-swiss/dsp-api/commit/851d5873da99d7f757a18fb9bfce0e59a30f58e8))
+
+
+### Bug Fixes
+
+* Make data of our PagedResponses required in OpenAPI yaml ([#3543](https://github.com/dasch-swiss/dsp-api/issues/3543)) ([e87c696](https://github.com/dasch-swiss/dsp-api/commit/e87c696fb9e48a6b8c25a10fff18ee07208fe385))
+
 ## [31.9.0](https://github.com/dasch-swiss/dsp-api/compare/v31.8.0...v31.9.0) (2025-03-17)
 
 
