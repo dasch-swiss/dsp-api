@@ -37,33 +37,27 @@ object ValuesEraseSpec extends E2EZSpec {
   override val e2eSpec = suite("ValuesEraseSpec")(
     test("erase an IntValue") {
       for {
-        res1         <- TestHelper.createResource
-        val1         <- TestHelper.createIntegerValue(res1)
-        _            <- Console.printLine(s"val1: $val1")
-        val1         <- TestHelper.updateIntegerValue(val1, res1, 666)
-        _            <- Console.printLine(s"val update1: $val1")
-        val1         <- TestHelper.updateIntegerValue(val1, res1, 123)
-        _            <- Console.printLine(s"val update2: $val1")
-        allValueIris <- TestHelper.findAllPrevious(val1.iri).map(val1.iri +: _)
-        _            <- ZIO.fail(IllegalStateException("Not all expected values found")).when(allValueIris.size != 3)
-        _            <- TestHelper.eraseIntegerValue(val1, res1)
-        allValues    <- ZIO.foreach(allValueIris)(TestHelper.findValue).map(_.flatten)
+        res1               <- TestHelper.createResource
+        val0               <- TestHelper.createIntegerValue(res1)
+        val1               <- TestHelper.updateIntegerValue(val0, res1, 666)
+        activeValueVersion <- TestHelper.updateIntegerValue(val1, res1, 123)
+        allValueIris       <- TestHelper.findAllPrevious(activeValueVersion.iri).map(activeValueVersion.iri +: _)
+        _                  <- ZIO.fail(IllegalStateException("Not all expected values found")).when(allValueIris.size != 3)
+        _                  <- TestHelper.eraseIntegerValue(activeValueVersion, res1)
+        allValues          <- ZIO.foreach(allValueIris)(TestHelper.findValue).map(_.flatten)
       } yield assertTrue(allValues.isEmpty)
     },
     test("erase an IntValue's history") {
       for {
-        res1              <- TestHelper.createResource
-        val1              <- TestHelper.createIntegerValue(res1)
-        _                 <- Console.printLine(s"val1: $val1")
-        val1              <- TestHelper.updateIntegerValue(val1, res1, 666)
-        _                 <- Console.printLine(s"val update1: $val1")
-        val1              <- TestHelper.updateIntegerValue(val1, res1, 123)
-        _                 <- Console.printLine(s"val update2: $val1")
-        previousValueIris <- TestHelper.findAllPrevious(val1.iri)
-        _                 <- ZIO.fail(IllegalStateException("Not all expected values found")).when(previousValueIris.size != 2)
-        _                 <- TestHelper.eraseIntegerValueHistory(val1, res1)
-        previousValues    <- ZIO.foreach(previousValueIris)(TestHelper.findValue).map(_.flatten)
-        currentValue      <- TestHelper.findValue(val1.iri)
+        res1               <- TestHelper.createResource
+        val0               <- TestHelper.createIntegerValue(res1)
+        val1               <- TestHelper.updateIntegerValue(val0, res1, 666)
+        activeValueVersion <- TestHelper.updateIntegerValue(val1, res1, 123)
+        previousValueIris  <- TestHelper.findAllPrevious(activeValueVersion.iri)
+        _                  <- ZIO.fail(IllegalStateException("Not all expected values found")).when(previousValueIris.size != 2)
+        _                  <- TestHelper.eraseIntegerValueHistory(activeValueVersion, res1)
+        previousValues     <- ZIO.foreach(previousValueIris)(TestHelper.findValue).map(_.flatten)
+        currentValue       <- TestHelper.findValue(activeValueVersion.iri)
       } yield assertTrue(previousValues.isEmpty, currentValue.isDefined)
     },
   ).provideSome[env](TestHelper.layer, ValueRepo.layer)
