@@ -9,7 +9,6 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
@@ -36,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optic
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -44,13 +44,16 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
@@ -66,6 +69,7 @@ final case class ValuesResponderV2(
   triplestoreService: TriplestoreService,
   permissionsResponder: PermissionsResponder,
   legalInfoService: LegalInfoService,
+  valueRepo: ValueRepo,
   ontologyRepo: OntologyRepo,
   auth: AuthorizationRestService,
 )(implicit val stringFormatter: StringFormatter) {
@@ -1161,32 +1165,28 @@ final case class ValuesResponderV2(
       )
     }
 
-  def eraseValue(req: EraseValueV2, requestingUser: User): Task[SuccessResponseV2] =
-    deleteValueV2(
-      DeleteValueV2(
-        req.resourceIri,
-        req.resourceClassIri,
-        req.propertyIri,
-        req.valueIri,
-        req.valueTypeIri,
-        apiRequestId = req.apiRequestId,
-      ),
-      requestingUser,
-    ) *> eraseValueHistory(
-      EraseValueHistoryV2(
-        req.resourceIri,
-        req.resourceClassIri,
-        req.propertyIri,
-        req.valueIri,
-        req.valueTypeIri,
-        apiRequestId = req.apiRequestId,
-      ),
-      requestingUser,
-    )
+  def eraseValue(req: EraseValueV2, requestingUser: User, project: KnoraProject): Task[SuccessResponseV2] =
+    canRemoveValue(req, requestingUser).flatMap { case (_, _, value) =>
+      val valueIri = ValueIri.unsafeFrom(value.valueIri.toSmartIri)
+      for {
+        allPrevious <- valueRepo.findAllPrevious(valueIri)
+        _           <- ZIO.foreachDiscard(allPrevious.reverse)(valueRepo.eraseValue(project))
+        _           <- valueRepo.eraseValue(project)(valueIri)
+      } yield ()
+    }.as(SuccessResponseV2("Not implemented yet"))
 
-  def eraseValueHistory(req: EraseValueHistoryV2, requestingUser: User): Task[SuccessResponseV2] =
-    // TODO : Implement this method
-    ZIO.succeed(SuccessResponseV2("Not implemented yet"))
+  def eraseValueHistory(
+    req: EraseValueHistoryV2,
+    requestingUser: User,
+    project: KnoraProject,
+  ): Task[SuccessResponseV2] =
+    canRemoveValue(req, requestingUser).flatMap { case (_, _, value) =>
+      val valueIri = ValueIri.unsafeFrom(value.valueIri.toSmartIri)
+      for {
+        allPrevious <- valueRepo.findAllPrevious(valueIri)
+        _           <- ZIO.foreachDiscard(allPrevious.reverse)(valueRepo.eraseValue(project))
+      } yield ()
+    }.as(SuccessResponseV2("Not implemented yet"))
 
   private def canRemoveValue(
     deleteValue: ValueRemoval,

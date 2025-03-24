@@ -67,6 +67,7 @@ trait ResourcesRepo {
   ): Task[Unit]
 
   def findValues(id: ResourceIri): Task[Map[PropertyIri, Seq[ValueIri]]]
+  def findLinks(id: ResourceIri): Task[Map[PropertyIri, Seq[ResourceIri]]]
 
   def findById(id: ResourceIri): Task[Option[ResourceModel]]
   final def findActiveById(id: ResourceIri): Task[Option[ActiveResource]] =
@@ -154,11 +155,46 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     for {
       rdfModel <- triplestore.queryRdfModel(Construct(query))
       resource <- rdfModel.getResource(id.toString)
-      result    = resource.map(_.res).map(propertyMap).getOrElse(Map.empty)
+      result    = resource.map(_.res).map(mapPropertyValues).getOrElse(Map.empty)
     } yield result
   }
 
-  private def propertyMap(res: Resource): Map[PropertyIri, Seq[ValueIri]] = res
+  def findLinks(id: ResourceIri): Task[Map[PropertyIri, Seq[ResourceIri]]] = {
+    val resource = iri(id.toString)
+
+    val (resourceClass, valueProp, value, valueClass) =
+      (variable("resourceClass"), variable("valueProperty"), variable("value"), variable("valueClass"))
+
+    val resourceSubclass = resource
+      .isA(resourceClass)
+      .and(resourceClass.has(RDFS.SUBCLASSOF, KB.Resource))
+
+    val valueAValueClass = value
+      .isA(valueClass)
+      .and(valueClass.has(RDFS.SUBCLASSOF, KB.Resource))
+
+    val queryP = resource.has(valueProp, value)
+
+    val query = Queries.CONSTRUCT(queryP).where(queryP, resourceSubclass, valueAValueClass)
+    for {
+      rdfModel <- triplestore.queryRdfModel(Construct(query))
+      resource <- rdfModel.getResource(id.toString)
+      result    = resource.map(_.res).map(mapPropertyResources).getOrElse(Map.empty)
+    } yield result
+  }
+
+  private def mapPropertyResources(res: Resource): Map[PropertyIri, Seq[ResourceIri]] = res
+    .listProperties()
+    .asScala
+    .map { stmt =>
+      val p = PropertyIri.unsafeFrom(stmt.getPredicate.toString.toSmartIri)
+      val v = ResourceIri.unsafeFrom(stmt.getObject.toString.toSmartIri)
+      (p, v)
+    }
+    .toList
+    .groupMap((p, _) => p)((_, v) => v)
+
+  private def mapPropertyValues(res: Resource): Map[PropertyIri, Seq[ValueIri]] = res
     .listProperties()
     .asScala
     .map { stmt =>

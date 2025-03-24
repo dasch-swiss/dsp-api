@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.ontology
 import zio.URLayer
 import zio.ZLayer
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.URModule
@@ -21,13 +20,14 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
+import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object CoreModule
     extends URModule[
       AppConfig.AppConfigurations & BaseModule.Provided,
       CardinalityService & IriConverter & OntologyCache & OntologyCacheHelpers & OntologyRepo &
-        OntologyTriplestoreHelpers,
+        OntologyTriplestoreHelpers & ValueRepo,
     ] {
   self =>
 
@@ -39,5 +39,6 @@ object CoreModule
     OntologyRepoLive.layer,
     OntologyTriplestoreHelpers.layer,
     PredicateRepositoryLive.layer,
+    ValueRepo.layer,
   )
 }
