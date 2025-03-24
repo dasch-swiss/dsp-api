@@ -1,18 +1,18 @@
 package org.knora.webapi.slice.resources.repo.service
 
-import scala.language.implicitConversions
 import org.apache.jena.rdf.model.Resource
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-import org.knora.webapi.slice.common.jena.ModelOps.printTurtle
-import org.knora.webapi.slice.common.jena.ResourceOps.*
-import zio.*
-import dsp.errors.InconsistentRepositoryDataException
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
+import zio.*
+
+import java.time.Instant
+import scala.language.implicitConversions
+
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.StringFormatter
@@ -20,6 +20,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_String_Property
+import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -27,8 +28,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-
-import java.time.Instant
 
 sealed trait ValueModel {
   def iri: ValueIri

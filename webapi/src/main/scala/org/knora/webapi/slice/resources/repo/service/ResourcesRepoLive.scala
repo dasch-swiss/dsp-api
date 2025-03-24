@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo.service
 
+import org.apache.jena.rdf.model.Resource
 import org.eclipse.rdf4j.model.Namespace
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
@@ -21,12 +22,12 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfObject
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicate
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicateObjectList
 import zio.*
-import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 import java.time.Instant
+import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.util.Try
+
 import dsp.valueobjects.UuidUtil
-import org.apache.jena.rdf.model.Resource
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult

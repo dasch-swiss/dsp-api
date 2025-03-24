@@ -2,6 +2,9 @@ package org.knora.webapi.responders.v2
 
 import zio.*
 import zio.test.*
+
+import java.util.UUID
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.StringFormatter
@@ -28,8 +31,6 @@ import org.knora.webapi.slice.resources.repo.service.ResourceModel.ActiveResourc
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ValueModel
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
-
-import java.util.UUID
 
 object ValuesEraseSpec extends E2EZSpec {
 
