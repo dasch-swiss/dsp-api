@@ -9,6 +9,8 @@ import swiss.dasch.config.Configuration.SipiConfig
 import swiss.dasch.domain.StorageService
 import swiss.dasch.version.BuildInfo
 import zio.{IO, UIO, ZIO, ZLayer}
+import zio.json._
+import zio.json.ast.Json
 
 import java.io.IOException
 import scala.sys.process.{ProcessLogger, stringSeqToProcess}
@@ -50,6 +52,27 @@ trait CommandExecutor {
     execute(command).filterOrElseWith(_.exitCode == 0)(out =>
       ZIO.fail(new IOException(s"Command failed: '${command.cmd}' $out")),
     )
+
+  /**
+   * Parses Sipi's JSON logs and to prepare for reporting with ZIO's configured format.
+   *
+   * @param out All logs combined.
+   * @return list item per input line
+   */
+  def parseSipiLogs(out: String): List[String] =
+    out.linesIterator.toList.filter(_.replaceAll("\\s", "").nonEmpty).map { line =>
+      val newLine = line
+        .fromJson[Json.Obj]
+        .fold(
+          _ => "INFO: " ++ line.replaceFirst("\\s+", ""),
+          o => {
+            val getStr: String => Option[String] = s => o.toMap.get(s).flatMap(_.asString)
+            getStr("level").getOrElse("INFO") ++ ": " ++ getStr("message").getOrElse(line)
+          },
+        )
+        .replaceAll("[\"\\n]", ".")
+      "Sipi: " ++ newLine
+    }
 }
 
 object CommandExecutor {
@@ -58,7 +81,6 @@ object CommandExecutor {
 }
 
 final case class CommandExecutorLive(sipiConfig: SipiConfig, storageService: StorageService) extends CommandExecutor {
-
   override def buildCommand(command: String, params: String*): UIO[Command] =
     if (sipiConfig.useLocalDev) {
       for {
@@ -96,6 +118,7 @@ final case class CommandExecutorLive(sipiConfig: SipiConfig, storageService: Sto
     for {
       _   <- ZIO.logInfo(s"Executing command: ${command.cmd}")
       out <- ZIO.attemptBlockingIO(command.cmd !< logger).map(logger.buildOutput)
+      _   <- ZIO.foreachDiscard(parseSipiLogs(out.stdout ++ out.stderr))(ZIO.logInfo(_))
       _   <- ZIO.logWarning(s"Command '${command.cmd}' has err output: '$out'").when(out.stderr.nonEmpty)
     } yield out
   }
