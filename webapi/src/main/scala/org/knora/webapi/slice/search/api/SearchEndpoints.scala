@@ -102,18 +102,13 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(header[MediaType](HeaderNames.ContentType))
     .description("Count resources using a Gravsearch query.")
 
-  val postIncomingLinksSearch = baseEndpoints.withUserEndpoint.post
-    .in("v2" / "searchextended" / "offset")
-    .in(stringBody.description(gravsearchDescription))
+  val getSearchIncomingLinks = baseEndpoints.withUserEndpoint.get
+    .in("v2" / "searchIncomingLinks" / path[InputIri]("resourceIri").description("The IRI of the resource to retrieve"))
     .in(SearchEndpointsInputs.offset)
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .description("Search for incoming links using a Gravsearch query with offset.")
-
-  // POST: POST /v2/searchextended/offset?offset=10 with query in body
-  // query is passed as a path parameter instead of in the request body
-  // GET: GET /v2/searchextended/offset/{query}?offset=10
+    .description("Search for incoming links using a Gravsearch query with offset..")
 
   val getSearchByLabel = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchbylabel" / path[String]("searchTerm"))
@@ -162,7 +157,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
       getGravsearch,
       postGravsearchCount,
       getGravsearchCount,
-      postIncomingLinksSearch,
+      getSearchIncomingLinks,
       getSearchByLabel,
       getSearchByLabelCount,
       getFullTextSearch,
@@ -207,11 +202,11 @@ final case class SearchApiRoutes(
       user => { case (query, opts) => searchRestService.gravsearchCount(query, opts, user) },
     )
 
-  private val postIncomingLinksSearch =
-    SecuredEndpointHandler[(GravsearchQuery, Offset, FormatOptions), (RenderedResponse, MediaType)](
-      searchEndpoints.postIncomingLinksSearch,
-      user => { case (query, offset, opts) =>
-        searchRestService.incomingLinksSearch(query, offset, opts, user)
+  private val getSearchIncomingLinks =
+    SecuredEndpointHandler[(InputIri, Offset, FormatOptions), (RenderedResponse, MediaType)](
+      searchEndpoints.getSearchIncomingLinks,
+      user => { case (resourceIRI, offset, opts) =>
+        searchRestService.incomingLinksSearch(resourceIRI.value, offset, opts, user)
       },
     )
 
@@ -269,7 +264,7 @@ final case class SearchApiRoutes(
       getGravsearch,
       postGravsearchCount,
       getGravsearchCount,
-      postIncomingLinksSearch,
+      getSearchIncomingLinks,
     )
       .map(it => mapper.mapSecuredEndpointHandler(it))
       .map(it => tapirToPekko.toRoute(it))
@@ -312,7 +307,7 @@ final case class SearchRestService(
   } yield response
 
   def gravsearch(query: String, opts: FormatOptions, user: User): Task[(RenderedResponse, MediaType)] = for {
-    searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, None)
+    searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user)
     response     <- renderer.render(searchResult, opts)
   } yield response
 
@@ -322,12 +317,12 @@ final case class SearchRestService(
   } yield response
 
   def incomingLinksSearch(
-    query: String,
+    resourceIri: String,
     offset: Offset,
     opts: FormatOptions,
     user: User,
   ): Task[(RenderedResponse, MediaType)] = for {
-    searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, Some(offset.value))
+    searchResult <- searchResponderV2.searchIncomingLinksV2(resourceIri, offset.value, opts.schemaRendering, user)
     response     <- renderer.render(searchResult, opts)
   } yield response
 

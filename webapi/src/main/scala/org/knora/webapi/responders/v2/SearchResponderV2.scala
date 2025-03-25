@@ -96,18 +96,16 @@ trait SearchResponderV2 {
     query: ConstructQuery,
     schemaAndOptions: SchemaRendering,
     user: User,
-    offset: Option[Int] = None,
   ): Task[ReadResourcesSequenceV2]
 
   def gravsearchV2(
     query: IRI,
     rendering: SchemaRendering,
     user: User,
-    offset: Option[Int],
   ): Task[ReadResourcesSequenceV2] =
     for {
       q <- ZIO.attempt(GravsearchParser.parseQuery(query))
-      r <- gravsearchV2(q, rendering, user, offset)
+      r <- gravsearchV2(q, rendering, user)
     } yield r
 
   /**
@@ -123,6 +121,49 @@ trait SearchResponderV2 {
       q <- ZIO.attempt(GravsearchParser.parseQuery(query))
       r <- gravsearchCountV2(q, user)
     } yield r
+
+  def searchIncomingLinksV2(
+    resourceIri: IRI,
+    offset: Int,
+    rendering: SchemaRendering,
+    user: User,
+  ): Task[ReadResourcesSequenceV2] = {
+    val query: String =
+      s"""
+         |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+         |
+         |CONSTRUCT {
+         |?incomingRes knora-api:isMainResource true .
+         |
+         |?incomingRes ?incomingProp <$resourceIri> .
+         |
+         |} WHERE {
+         |
+         |?incomingRes a knora-api:Resource .
+         |
+         |?incomingRes ?incomingProp <$resourceIri> .
+         |
+         |<$resourceIri> a knora-api:Resource .
+         |
+         |?incomingProp knora-api:objectType knora-api:Resource .
+         |
+         |knora-api:isRegionOf knora-api:objectType knora-api:Resource .
+         |knora-api:isPartOf knora-api:objectType knora-api:Resource .
+         |
+         |FILTER NOT EXISTS {
+         |?incomingRes  knora-api:isRegionOf <$resourceIri> .
+         |}
+         |
+         |FILTER NOT EXISTS {
+         |?incomingRes  knora-api:isPartOf <$resourceIri> .
+         |?incomingRes knora-api:seqnum ?seqnum .
+         |}
+         |
+         |} OFFSET $offset
+         |""".stripMargin
+
+    gravsearchV2(query, rendering, user)
+  }
 
   /**
    * Performs a fulltext search and returns the resources count (how many resources match the search criteria),
@@ -489,7 +530,6 @@ final case class SearchResponderV2Live(
     query: ConstructQuery,
     schemaAndOptions: SchemaRendering,
     user: User,
-    offset: Option[Int],
   ): Task[ReadResourcesSequenceV2] = {
 
     for {
@@ -520,22 +560,9 @@ final case class SearchResponderV2Live(
       ontologiesForInferenceMaybe <-
         inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause)
 
-      // Apply offset and limit if provided
-      modifiedQuery =
-        offset match {
-          case Some(off) =>
-            query.copy(
-              whereClause = whereClauseWithoutAnnotations,
-              offset = off * appConfig.v2.resourcesSequence.resultsPerPage,
-//              limit = Some(appConfig.v2.resourcesSequence.resultsPerPage),
-            )
-          case None => query.copy(whereClause = whereClauseWithoutAnnotations)
-        }
-
       prequery <-
         queryTraverser.transformConstructToSelect(
-//          inputQuery = query.copy(whereClause = whereClauseWithoutAnnotations),
-          inputQuery = modifiedQuery,
+          inputQuery = query.copy(whereClause = whereClauseWithoutAnnotations),
           transformer = gravsearchToPrequeryTransformer,
         )
 
