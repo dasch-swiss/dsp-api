@@ -92,17 +92,8 @@ trait SearchResponderV2 {
    * @param user             the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
-  def gravsearchV2(
-    query: ConstructQuery,
-    schemaAndOptions: SchemaRendering,
-    user: User,
-  ): Task[ReadResourcesSequenceV2]
-
-  def gravsearchV2(
-    query: IRI,
-    rendering: SchemaRendering,
-    user: User,
-  ): Task[ReadResourcesSequenceV2] =
+  def gravsearchV2(query: ConstructQuery, schemaAndOptions: SchemaRendering, user: User): Task[ReadResourcesSequenceV2]
+  def gravsearchV2(query: IRI, rendering: SchemaRendering, user: User): Task[ReadResourcesSequenceV2] =
     for {
       q <- ZIO.attempt(GravsearchParser.parseQuery(query))
       r <- gravsearchV2(q, rendering, user)
@@ -122,6 +113,14 @@ trait SearchResponderV2 {
       r <- gravsearchCountV2(q, user)
     } yield r
 
+  /**
+   * Performs a Gravsearchquery to find resources that link to the specified resource.
+   *
+   * @param resourceIri the IRI of the resource to which incoming links are to be found.
+   * @param offset      the offset to be used for paging.
+   * @param rendering   the schema of the response.
+   * @param user        the client making the request.
+   */
   def searchIncomingLinksV2(
     resourceIri: IRI,
     offset: Int,
