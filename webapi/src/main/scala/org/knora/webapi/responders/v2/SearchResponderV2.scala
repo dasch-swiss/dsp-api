@@ -96,12 +96,19 @@ trait SearchResponderV2 {
     query: ConstructQuery,
     schemaAndOptions: SchemaRendering,
     user: User,
+    offset: Option[Int],
   ): Task[ReadResourcesSequenceV2]
 
-  def gravsearchV2(query: IRI, rendering: SchemaRendering, user: User): Task[ReadResourcesSequenceV2] = for {
-    q <- ZIO.attempt(GravsearchParser.parseQuery(query))
-    r <- gravsearchV2(q, rendering, user)
-  } yield r
+  def gravsearchV2(
+    query: IRI,
+    rendering: SchemaRendering,
+    user: User,
+    offset: Option[Int] = None,
+  ): Task[ReadResourcesSequenceV2] =
+    for {
+      q <- ZIO.attempt(GravsearchParser.parseQuery(query))
+      r <- gravsearchV2(q, rendering, user, offset)
+    } yield r
 
   /**
    * Performs a count query for a Gravsearch query provided by the user.
@@ -482,6 +489,7 @@ final case class SearchResponderV2Live(
     query: ConstructQuery,
     schemaAndOptions: SchemaRendering,
     user: User,
+    offset: Option[Int] = None,
   ): Task[ReadResourcesSequenceV2] = {
 
     for {
@@ -495,14 +503,16 @@ final case class SearchResponderV2Live(
       // Create a Select prequery
       querySchema <-
         ZIO.fromOption(query.querySchema).orElseFail(AssertionException(s"InputQuery has no querySchema"))
-      gravsearchToPrequeryTransformer <- ZIO.attempt(
-                                           new GravsearchToPrequeryTransformer(
-                                             constructClause = query.constructClause,
-                                             typeInspectionResult = typeInspectionResult,
-                                             querySchema = querySchema,
-                                             appConfig = appConfig,
-                                           ),
-                                         )
+
+      gravsearchToPrequeryTransformer <-
+        ZIO.attempt(
+          new GravsearchToPrequeryTransformer(
+            constructClause = query.constructClause,
+            typeInspectionResult = typeInspectionResult,
+            querySchema = querySchema,
+            appConfig = appConfig,
+          ),
+        )
 
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
@@ -510,9 +520,22 @@ final case class SearchResponderV2Live(
       ontologiesForInferenceMaybe <-
         inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause)
 
+      // Apply offset and limit if provided
+      modifiedQuery =
+        offset match {
+          case Some(off) =>
+            query.copy(
+              whereClause = whereClauseWithoutAnnotations,
+              offset = off * appConfig.v2.resourcesSequence.resultsPerPage,
+//              limit = Some(appConfig.v2.resourcesSequence.resultsPerPage),
+            )
+          case None => query.copy(whereClause = whereClauseWithoutAnnotations)
+        }
+
       prequery <-
         queryTraverser.transformConstructToSelect(
-          inputQuery = query.copy(whereClause = whereClauseWithoutAnnotations),
+//          inputQuery = query.copy(whereClause = whereClauseWithoutAnnotations),
+          inputQuery = modifiedQuery,
           transformer = gravsearchToPrequeryTransformer,
         )
 
@@ -656,17 +679,18 @@ final case class SearchResponderV2Live(
           ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
         }
 
-      apiResponse <- constructResponseUtilV2.createApiResponse(
-                       mainResourcesAndValueRdfData = mainQueryResults,
-                       orderByResourceIri = mainResourceIris,
-                       pageSizeBeforeFiltering = pageSizeBeforeFiltering,
-                       mappings = mappingsAsMap,
-                       queryStandoff = queryStandoff,
-                       versionDate = None,
-                       calculateMayHaveMoreResults = true,
-                       targetSchema = schemaAndOptions.schema,
-                       requestingUser = user,
-                     )
+      apiResponse <-
+        constructResponseUtilV2.createApiResponse(
+          mainResourcesAndValueRdfData = mainQueryResults,
+          orderByResourceIri = mainResourceIris,
+          pageSizeBeforeFiltering = pageSizeBeforeFiltering,
+          mappings = mappingsAsMap,
+          queryStandoff = queryStandoff,
+          calculateMayHaveMoreResults = true,
+          versionDate = None,
+          targetSchema = schemaAndOptions.schema,
+          requestingUser = user,
+        )
     } yield apiResponse
   }
 

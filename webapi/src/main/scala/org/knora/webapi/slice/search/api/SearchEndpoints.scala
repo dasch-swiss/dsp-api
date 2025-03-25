@@ -327,7 +327,7 @@ final case class SearchRestService(
     opts: FormatOptions,
     user: User,
   ): Task[(RenderedResponse, MediaType)] = for {
-    searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, offset.value)
+    searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, Some(offset.value))
     response     <- renderer.render(searchResult, opts)
   } yield response
 
