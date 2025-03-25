@@ -96,14 +96,14 @@ trait SearchResponderV2 {
     query: ConstructQuery,
     schemaAndOptions: SchemaRendering,
     user: User,
-    offset: Option[Int],
+    offset: Option[Int] = None,
   ): Task[ReadResourcesSequenceV2]
 
   def gravsearchV2(
     query: IRI,
     rendering: SchemaRendering,
     user: User,
-    offset: Option[Int] = None,
+    offset: Option[Int],
   ): Task[ReadResourcesSequenceV2] =
     for {
       q <- ZIO.attempt(GravsearchParser.parseQuery(query))
@@ -489,7 +489,7 @@ final case class SearchResponderV2Live(
     query: ConstructQuery,
     schemaAndOptions: SchemaRendering,
     user: User,
-    offset: Option[Int] = None,
+    offset: Option[Int],
   ): Task[ReadResourcesSequenceV2] = {
 
     for {

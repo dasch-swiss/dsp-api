@@ -312,7 +312,7 @@ final case class SearchRestService(
   } yield response
 
   def gravsearch(query: String, opts: FormatOptions, user: User): Task[(RenderedResponse, MediaType)] = for {
-    searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user)
+    searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, None)
     response     <- renderer.render(searchResult, opts)
   } yield response
 
