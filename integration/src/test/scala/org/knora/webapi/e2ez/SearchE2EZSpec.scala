@@ -7,11 +7,13 @@ package org.knora.webapi.e2ez
 
 import zio.*
 import zio.json.*
+import zio.json.ast.Json
+import zio.json.ast.JsonCursor
 import zio.test.*
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
-import zio.json.ast.{Json, JsonCursor}
 
 object SearchE2EZSpec extends E2EZSpec {
 
