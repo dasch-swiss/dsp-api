@@ -108,7 +108,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .description("Search for incoming links using a Gravsearch query with offset..")
+    .description("Search for incoming links using a Gravsearch query with an offset.")
 
   val getSearchByLabel = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchbylabel" / path[String]("searchTerm"))

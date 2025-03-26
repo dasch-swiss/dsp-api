@@ -79,8 +79,7 @@ object SearchE2EZSpec extends E2EZSpec {
         response.isEmpty,
       )
     }
-//
-//
+
     test("Return empty result for resource with no incoming links") {
       val resourceIri = InputIri.unsafeFrom("http://rdfh.ch/0001/MAiNrOB1Q--rzAzdkqbHOw")
       val url         = s"/v2/searchIncomingLinks/${urlEncode(resourceIri.value)}?offset=0"
