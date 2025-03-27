@@ -92,16 +92,12 @@ trait SearchResponderV2 {
    * @param user             the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
-  def gravsearchV2(
-    query: ConstructQuery,
-    schemaAndOptions: SchemaRendering,
-    user: User,
-  ): Task[ReadResourcesSequenceV2]
-
-  def gravsearchV2(query: IRI, rendering: SchemaRendering, user: User): Task[ReadResourcesSequenceV2] = for {
-    q <- ZIO.attempt(GravsearchParser.parseQuery(query))
-    r <- gravsearchV2(q, rendering, user)
-  } yield r
+  def gravsearchV2(query: ConstructQuery, schemaAndOptions: SchemaRendering, user: User): Task[ReadResourcesSequenceV2]
+  def gravsearchV2(query: IRI, rendering: SchemaRendering, user: User): Task[ReadResourcesSequenceV2] =
+    for {
+      q <- ZIO.attempt(GravsearchParser.parseQuery(query))
+      r <- gravsearchV2(q, rendering, user)
+    } yield r
 
   /**
    * Performs a count query for a Gravsearch query provided by the user.
@@ -116,6 +112,21 @@ trait SearchResponderV2 {
       q <- ZIO.attempt(GravsearchParser.parseQuery(query))
       r <- gravsearchCountV2(q, user)
     } yield r
+
+  /**
+   * Performs a Gravsearchquery to find resources that link to the specified resource.
+   *
+   * @param resourceIri the IRI of the resource to which incoming links are to be found.
+   * @param offset      the offset to be used for paging.
+   * @param rendering   the schema of the response.
+   * @param user        the client making the request.
+   */
+  def searchIncomingLinksV2(
+    resourceIri: IRI,
+    offset: Int,
+    rendering: SchemaRendering,
+    user: User,
+  ): Task[ReadResourcesSequenceV2]
 
   /**
    * Performs a fulltext search and returns the resources count (how many resources match the search criteria),
@@ -232,6 +243,57 @@ final case class SearchResponderV2Live(
     with LazyLogging {
 
   private implicit val sf: StringFormatter = stringFormatter
+
+  /**
+   * Performs a Gravsearchquery to find resources that link to the specified resource.
+   *
+   * @param resourceIri the IRI of the resource to which incoming links are to be found.
+   * @param offset      the offset to be used for paging.
+   * @param rendering   the schema of the response.
+   * @param user        the client making the request.
+   */
+  def searchIncomingLinksV2(
+    resourceIri: IRI,
+    offset: Int,
+    rendering: SchemaRendering,
+    user: User,
+  ): Task[ReadResourcesSequenceV2] = {
+    val query: String =
+      s"""
+         |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+         |
+         |CONSTRUCT {
+         |?incomingRes knora-api:isMainResource true .
+         |
+         |?incomingRes ?incomingProp <$resourceIri> .
+         |
+         |} WHERE {
+         |
+         |?incomingRes a knora-api:Resource .
+         |
+         |?incomingRes ?incomingProp <$resourceIri> .
+         |
+         |<$resourceIri> a knora-api:Resource .
+         |
+         |?incomingProp knora-api:objectType knora-api:Resource .
+         |
+         |knora-api:isRegionOf knora-api:objectType knora-api:Resource .
+         |knora-api:isPartOf knora-api:objectType knora-api:Resource .
+         |
+         |FILTER NOT EXISTS {
+         |?incomingRes  knora-api:isRegionOf <$resourceIri> .
+         |}
+         |
+         |FILTER NOT EXISTS {
+         |?incomingRes  knora-api:isPartOf <$resourceIri> .
+         |?incomingRes knora-api:seqnum ?seqnum .
+         |}
+         |
+         |} OFFSET $offset
+         |""".stripMargin
+
+    gravsearchV2(query, rendering, user)
+  }
 
   /**
    * Performs a fulltext search and returns the resources count (how many resources match the search criteria),
@@ -495,14 +557,16 @@ final case class SearchResponderV2Live(
       // Create a Select prequery
       querySchema <-
         ZIO.fromOption(query.querySchema).orElseFail(AssertionException(s"InputQuery has no querySchema"))
-      gravsearchToPrequeryTransformer <- ZIO.attempt(
-                                           new GravsearchToPrequeryTransformer(
-                                             constructClause = query.constructClause,
-                                             typeInspectionResult = typeInspectionResult,
-                                             querySchema = querySchema,
-                                             appConfig = appConfig,
-                                           ),
-                                         )
+
+      gravsearchToPrequeryTransformer <-
+        ZIO.attempt(
+          new GravsearchToPrequeryTransformer(
+            constructClause = query.constructClause,
+            typeInspectionResult = typeInspectionResult,
+            querySchema = querySchema,
+            appConfig = appConfig,
+          ),
+        )
 
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
@@ -656,17 +720,18 @@ final case class SearchResponderV2Live(
           ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
         }
 
-      apiResponse <- constructResponseUtilV2.createApiResponse(
-                       mainResourcesAndValueRdfData = mainQueryResults,
-                       orderByResourceIri = mainResourceIris,
-                       pageSizeBeforeFiltering = pageSizeBeforeFiltering,
-                       mappings = mappingsAsMap,
-                       queryStandoff = queryStandoff,
-                       versionDate = None,
-                       calculateMayHaveMoreResults = true,
-                       targetSchema = schemaAndOptions.schema,
-                       requestingUser = user,
-                     )
+      apiResponse <-
+        constructResponseUtilV2.createApiResponse(
+          mainResourcesAndValueRdfData = mainQueryResults,
+          orderByResourceIri = mainResourceIris,
+          pageSizeBeforeFiltering = pageSizeBeforeFiltering,
+          mappings = mappingsAsMap,
+          queryStandoff = queryStandoff,
+          calculateMayHaveMoreResults = true,
+          versionDate = None,
+          targetSchema = schemaAndOptions.schema,
+          requestingUser = user,
+        )
     } yield apiResponse
   }
 
