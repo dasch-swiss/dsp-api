@@ -102,6 +102,14 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(header[MediaType](HeaderNames.ContentType))
     .description("Count resources using a Gravsearch query.")
 
+  val getSearchIncomingLinks = baseEndpoints.withUserEndpoint.get
+    .in("v2" / "searchIncomingLinks" / path[InputIri]("resourceIri").description("The IRI of the resource to retrieve"))
+    .in(SearchEndpointsInputs.offset)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Search for incoming links using a Gravsearch query with an offset.")
+
   val getSearchByLabel = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchbylabel" / path[String]("searchTerm"))
     .in(ApiV2.Inputs.formatOptions)
@@ -149,6 +157,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
       getGravsearch,
       postGravsearchCount,
       getGravsearchCount,
+      getSearchIncomingLinks,
       getSearchByLabel,
       getSearchByLabelCount,
       getFullTextSearch,
@@ -191,6 +200,14 @@ final case class SearchApiRoutes(
     SecuredEndpointHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearchCount,
       user => { case (query, opts) => searchRestService.gravsearchCount(query, opts, user) },
+    )
+
+  private val getSearchIncomingLinks =
+    SecuredEndpointHandler[(InputIri, Offset, FormatOptions), (RenderedResponse, MediaType)](
+      searchEndpoints.getSearchIncomingLinks,
+      user => { case (resourceIRI, offset, opts) =>
+        searchRestService.searchIncomingLinks(resourceIRI.value, offset, opts, user)
+      },
     )
 
   private val getSearchByLabel =
@@ -247,6 +264,7 @@ final case class SearchApiRoutes(
       getGravsearch,
       postGravsearchCount,
       getGravsearchCount,
+      getSearchIncomingLinks,
     )
       .map(it => mapper.mapSecuredEndpointHandler(it))
       .map(it => tapirToPekko.toRoute(it))
@@ -295,6 +313,16 @@ final case class SearchRestService(
 
   def gravsearchCount(query: String, opts: FormatOptions, user: User): Task[(RenderedResponse, MediaType)] = for {
     searchResult <- searchResponderV2.gravsearchCountV2(query, user)
+    response     <- renderer.render(searchResult, opts)
+  } yield response
+
+  def searchIncomingLinks(
+    resourceIri: String,
+    offset: Offset,
+    opts: FormatOptions,
+    user: User,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    searchResult <- searchResponderV2.searchIncomingLinksV2(resourceIri, offset.value, opts.schemaRendering, user)
     response     <- renderer.render(searchResult, opts)
   } yield response
 
