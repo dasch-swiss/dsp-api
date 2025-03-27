@@ -16,30 +16,6 @@ please contact us via the [DaSCH Help Center](https://www.dasch.swiss/help-cente
 
 ## Migration Guides
 
-<!--- 
-For the following list, I propose the structure `vXX to vYY: Title` 
-or if the version is not yet known: `Planned: Title`
---->
-
-### Planned: Removal of `knora-base:isSequenceOf` and `knora-base:hasSequenceBounds`
-
-If you have used `knora-base:isSequenceOf` and `knora-base:hasSequenceBounds` in your data,
-this should be replaced by `knora-base:isAudioSegmentOf` or `knora-base:isVideoSegmentOf` respectively,
-and `knora-base:hasSegmentBounds`.
-
-The issue with that is that these properties are only allowed
-on resources of type `knora-base:AudioSegment` and `knora-base:VideoSegment`,
-whereas previously `knora-base:isSequenceOf` could be added to any `knora-base:Resource`.
-This means that you will have to change the type of the resources that you have been using
-to be of type `knora-base:AudioSegment` or `knora-base:VideoSegment`.
-
-## Deprecation Warnings
-
-<!---
-These items should be removed, once the feature has been removed from the codebase.
-Then, only the migration guides should be kept.
---->
-
 ### `isSequenceOf` and `hasSequenceBounds`
 
 With the introduction of the new `Segment` concept in DSP-API v30.11.0,
