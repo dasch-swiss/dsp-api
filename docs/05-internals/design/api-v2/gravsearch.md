@@ -298,13 +298,13 @@ using `UNION` statements for all subclasses and subproperties from the ontologie
 Similarly, the API replaces `knora-api:standoffTagHasStartAncestor` with `knora-base:standoffTagHasStartParent*`.
 
 
-# Optimisation of generated SPARQL
+## Optimisation of generated SPARQL
 
 The triplestore-specific transformers in `SparqlTransformer.scala` can run optimisations on the generated SPARQL, in
 the method `optimiseQueryPatterns` inherited from `WhereTransformer`. For example, `moveLuceneToBeginning` moves
 Lucene queries to the beginning of the block in which they occur.
 
-## Query Optimization by Topological Sorting of Statements
+### Query Optimization by Topological Sorting of Statements
 
 In Jena Fuseki, the performance of a query highly depends on the order of the query statements. 
 For example, a query such as the one below:
