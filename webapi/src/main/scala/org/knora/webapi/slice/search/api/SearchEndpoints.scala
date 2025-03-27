@@ -206,7 +206,7 @@ final case class SearchApiRoutes(
     SecuredEndpointHandler[(InputIri, Offset, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.getSearchIncomingLinks,
       user => { case (resourceIRI, offset, opts) =>
-        searchRestService.incomingLinksSearch(resourceIRI.value, offset, opts, user)
+        searchRestService.searchIncomingLinks(resourceIRI.value, offset, opts, user)
       },
     )
 
@@ -316,7 +316,7 @@ final case class SearchRestService(
     response     <- renderer.render(searchResult, opts)
   } yield response
 
-  def incomingLinksSearch(
+  def searchIncomingLinks(
     resourceIri: String,
     offset: Offset,
     opts: FormatOptions,
