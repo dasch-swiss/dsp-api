@@ -84,7 +84,9 @@ docs-build: docs-build-dependent
 
 markdownlint:
     docker run \
-    -v $PWD:/workdir ghcr.io/igorshubovych/markdownlint-cli:latest \
+    --rm \
+    -v $PWD:/workdir \
+    ghcr.io/igorshubovych/markdownlint-cli:latest \
     --config .markdownlint.yml \
     --disable MD013 MD040 -- \
     "docs/**/*.md"

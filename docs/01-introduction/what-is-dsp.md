@@ -1,8 +1,3 @@
-<!---
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
- * SPDX-License-Identifier: Apache-2.0
--->
-
 # What is DSP and DSP-API?
 
 The DaSCH Service Platform (DSP) is 
