@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.18.8...v0.19.0) (2025-03-25)
+
+
+### Enhancements
+
+* Forward Sipi logs (DEV-4518) ([#352](https://github.com/dasch-swiss/dsp-ingest/issues/352)) ([52c8f8b](https://github.com/dasch-swiss/dsp-ingest/commit/52c8f8bf780867a6649918d267de409c4e641bde))
+
 ## [0.18.8](https://github.com/dasch-swiss/dsp-ingest/compare/v0.18.7...v0.18.8) (2025-03-24)
 
 
