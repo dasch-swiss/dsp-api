@@ -60,6 +60,18 @@ object ValuesEraseSpec extends E2EZSpec {
         currentValue       <- TestHelper.findValue(activeValueVersion.iri)
       } yield assertTrue(previousValues.isEmpty, currentValue.isDefined)
     },
+    test("erase a LinkValue") {
+      for {
+        res1 <- TestHelper.createResource
+        res2 <- TestHelper.createResource
+        res3 <- TestHelper.createResource
+        val0 <- TestHelper.createLinkValue(res1, res2)
+        vala <- TestHelper.createLinkValue(res1, res3)
+        _    <- Console.printLine(s"val0: $val0")
+        _    <- Console.printLine(s"second link: $vala")
+        _    <- Console.printLine(s"second link: $vala")
+      } yield assertCompletes
+    },
   ).provideSome[env](TestHelper.layer, ValueRepo.layer)
 }
 
@@ -77,7 +89,7 @@ final case class TestHelper(
 
   def findValue(valueIri: ValueIri): Task[Option[ValueModel]] = valueRepo.findById(valueIri)
 
-  def createLink(left: ActiveResource, right: ActiveResource): ZIO[Any, Throwable, ActiveValue] =
+  def createLinkValue(left: ActiveResource, right: ActiveResource): ZIO[Any, Throwable, ActiveValue] =
     val propertyIri = left.ontologyIri.makeProperty("hasOtherThingValue")
     for {
       uuid <- Random.nextUUID
@@ -92,6 +104,27 @@ final case class TestHelper(
                  .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
+
+  def updateLinkValue(
+    value: ActiveValue,
+    resource: ActiveResource,
+    linkedResource: ActiveResource,
+    newComment: String,
+  ): ZIO[Any, Throwable, ActiveValue] =
+    val hasOtherThingValue = resource.ontologyIri.makeProperty("hasOtherThingValue")
+    val update = UpdateValueContentV2(
+      resource.iri.toString,
+      resource.resourceClassIri.toComplexSchema,
+      hasOtherThingValue.toComplexSchema,
+      value.iri.toString,
+      LinkValueContentV2(ApiV2Complex, linkedResource.iri.toString, comment = Some(newComment)),
+    )
+    for {
+      response <- valuesResponder.updateValueV2(update, rootUser, UUID.randomUUID())
+      updated <- valueRepo
+                   .findActiveById(ValueIri.unsafeFrom(response.valueIri.toSmartIri))
+                   .someOrFail(IllegalStateException("Value not found"))
+    } yield updated
 
   def createIntegerValue(resource: ActiveResource): Task[ActiveValue] =
     val hasInteger = resource.ontologyIri.makeProperty("hasInteger")
@@ -160,6 +193,36 @@ final case class TestHelper(
       resp <- valuesResponder.eraseValue(erase, rootUser, project)
     } yield resp
 
+  def eraseLinkValue(value: ActiveValue, resource: ActiveResource): ZIO[Any, Throwable, Unit] =
+    val erase = EraseValueV2(
+      resource.iri,
+      resource.resourceClassIri,
+      resource.ontologyIri.makeProperty("hasOtherThingValue"),
+      value.iri,
+      value.valueClass.value.toSmartIri,
+      UUID.randomUUID(),
+    )
+    for {
+      project <-
+        knoraProjectService.findByShortcode(resource.shortcode).someOrFail(IllegalStateException("Project not found"))
+      resp <- valuesResponder.eraseValue(erase, rootUser, project)
+    } yield resp
+
+  def eraseLinkValueHistory(value: ActiveValue, resource: ActiveResource): ZIO[Any, Throwable, Unit] =
+    val erase = EraseValueHistoryV2(
+      resource.iri,
+      resource.resourceClassIri,
+      resource.ontologyIri.makeProperty("hasOtherThingValue"),
+      value.iri,
+      value.valueClass.value.toSmartIri,
+      UUID.randomUUID(),
+    )
+    for {
+      project <-
+        knoraProjectService.findByShortcode(resource.shortcode).someOrFail(IllegalStateException("Project not found"))
+      resp <- valuesResponder.eraseValueHistory(erase, rootUser, project)
+    } yield resp
+
   def eraseIntegerValueHistory(value: ActiveValue, resource: ActiveResource): ZIO[Any, Throwable, Unit] =
     val erase = EraseValueHistoryV2(
       resource.iri,
@@ -215,8 +278,28 @@ final case class TestHelper(
 object TestHelper {
   val layer = ZLayer.derive[TestHelper]
 
-  def createLink(left: ActiveResource, right: ActiveResource): ZIO[TestHelper, Throwable, ActiveValue] =
-    ZIO.serviceWithZIO[TestHelper](_.createLink(left, right))
+  def createLinkValue(left: ActiveResource, right: ActiveResource): ZIO[TestHelper, Throwable, ActiveValue] =
+    ZIO.serviceWithZIO[TestHelper](_.createLinkValue(left, right))
+
+  def updateLinkValue(
+    value: ActiveValue,
+    resource: ActiveResource,
+    linkedResource: ActiveResource,
+    newComment: String,
+  ): ZIO[TestHelper, Throwable, ActiveValue] =
+    ZIO.serviceWithZIO[TestHelper](_.updateLinkValue(value, resource, linkedResource, newComment))
+
+  def eraseLinkValue(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestHelper](_.eraseLinkValue(value, resource))
+
+  def eraseLinkValueHistory(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestHelper](_.eraseLinkValueHistory(value, resource))
+
+  def ensureLinkWasRemoved(res1: ActiveResource, res2: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
+    for {
+      links <- findLinks(res1.iri)
+      _     <- ZIO.fail(IllegalStateException(s"Link was not removed: $links")).when(links.nonEmpty)
+    } yield ()
 
   def findValue(valueIri: ValueIri): ZIO[TestHelper, Throwable, Option[ValueModel]] =
     ZIO.serviceWithZIO[TestHelper](_.findValue(valueIri))

@@ -9,7 +9,6 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
@@ -20,6 +19,7 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageExternalFileValue
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageFileValue
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.TextValue
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
@@ -1170,6 +1170,9 @@ final case class ValuesResponderV2(
     canRemoveValue(req, requestingUser).flatMap { case (_, _, value) =>
       val valueIri = ValueIri.unsafeFrom(value.valueIri.toSmartIri)
       for {
+        _ <- ZIO
+               .fail(BadRequestException("Erasing text values is not supported yet"))
+               .when(value.isInstanceOf[ReadTextValueV2])
         allPrevious <- valueRepo.findAllPrevious(valueIri)
         _           <- ZIO.foreachDiscard(allPrevious.reverse)(valueRepo.eraseValue(project))
         _           <- valueRepo.eraseValue(project)(valueIri)
@@ -1184,6 +1187,9 @@ final case class ValuesResponderV2(
     canRemoveValue(req, requestingUser).flatMap { case (_, _, value) =>
       val valueIri = ValueIri.unsafeFrom(value.valueIri.toSmartIri)
       for {
+        _ <- ZIO
+               .fail(BadRequestException("Erasing text values is not supported yet"))
+               .when(value.isInstanceOf[ReadTextValueV2])
         allPrevious <- valueRepo.findAllPrevious(valueIri)
         _           <- ZIO.foreachDiscard(allPrevious.reverse)(valueRepo.eraseValue(project))
       } yield ()
