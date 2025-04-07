@@ -19,7 +19,6 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageExternalFileValue
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageFileValue
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.TextValue
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
@@ -1170,9 +1169,7 @@ final case class ValuesResponderV2(
     canRemoveValue(req, requestingUser).flatMap { case (_, _, value) =>
       val valueIri = ValueIri.unsafeFrom(value.valueIri.toSmartIri)
       for {
-        _ <- ZIO
-               .fail(BadRequestException("Erasing text values is not supported yet"))
-               .when(value.isInstanceOf[ReadTextValueV2])
+        _           <- failBadRequestForStandoff(value)
         allPrevious <- valueRepo.findAllPrevious(valueIri)
         _           <- ZIO.foreachDiscard(allPrevious.reverse)(valueRepo.eraseValue(project))
         _           <- valueRepo.eraseValue(project)(valueIri)
@@ -1187,13 +1184,19 @@ final case class ValuesResponderV2(
     canRemoveValue(req, requestingUser).flatMap { case (_, _, value) =>
       val valueIri = ValueIri.unsafeFrom(value.valueIri.toSmartIri)
       for {
-        _ <- ZIO
-               .fail(BadRequestException("Erasing text values is not supported yet"))
-               .when(value.isInstanceOf[ReadTextValueV2])
+        _           <- failBadRequestForStandoff(value)
         allPrevious <- valueRepo.findAllPrevious(valueIri)
         _           <- ZIO.foreachDiscard(allPrevious.reverse)(valueRepo.eraseValue(project))
       } yield ()
     }.as(SuccessResponseV2("Not implemented yet"))
+
+  private def failBadRequestForStandoff(value: ReadValueV2) = ZIO
+    .fail(BadRequestException("Erasing text values with standoff is not supported yet"))
+    .when {
+      value match
+        case text: ReadTextValueV2 => text.valueContent.standoff.nonEmpty
+        case _                     => false
+    }
 
   private def canRemoveValue(
     deleteValue: ValueRemoval,
