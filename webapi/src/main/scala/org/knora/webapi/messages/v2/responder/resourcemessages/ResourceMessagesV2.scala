@@ -316,10 +316,12 @@ case class ReadResourceV2(
 ) extends ResourceV2
     with KnoraReadV2[ReadResourceV2] {
 
-  def findLinkValues(propertyIri: PropertyIri): Seq[ReadLinkValueV2] =
-    values
+  def findValues(propertyIri: PropertyIri): Seq[ReadValueV2] =
+    values.map { case (iri, vs) => iri.toInternalSchema -> vs }
       .getOrElse(propertyIri.toInternalSchema, Seq.empty)
-      .collect { case readLinkValueV2: ReadLinkValueV2 => readLinkValueV2 }
+
+  def findLinkValues(propertyIri: PropertyIri): Seq[ReadLinkValueV2] =
+    findValues(propertyIri).collect { case value: ReadLinkValueV2 => value }
 
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourceV2 =
     copy(
