@@ -172,7 +172,7 @@
             "@id": "knora-api:AudioRepresentation"
         },
         {
-            "rdfs:label": "Audiosegment",
+            "rdfs:label": "Audio Annotation",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:Segment"
@@ -262,7 +262,7 @@
                     "owl:cardinality": 1
                 }
             ],
-            "rdfs:comment": "A segment of an audio resource",
+            "rdfs:comment": "An annotation of an audio resource",
             "@type": "owl:Class",
             "@id": "knora-api:AudioSegment"
         },
@@ -1062,7 +1062,7 @@
             "rdfs:comment": "Indicates that a text value is unformatted in terms of its ontology and when instantiated."
         },
         {
-            "rdfs:label": "Videosegment",
+            "rdfs:label": "Video Annotation",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:Segment"
@@ -1152,7 +1152,7 @@
                     "owl:cardinality": 1
                 }
             ],
-            "rdfs:comment": "A segment of a video resource",
+            "rdfs:comment": "An annotation of a video resource",
             "@type": "owl:Class",
             "@id": "knora-api:VideoSegment"
         },
@@ -1501,11 +1501,11 @@
             "@id": "knora-api:hasRepresentation"
         },
         {
-            "rdfs:label": "Segment Bounds",
+            "rdfs:label": "Timespan",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasValue"
             },
-            "rdfs:comment": "Indicates the bounds of a segment, i.e. the start and end point in the containing resource.",
+            "rdfs:comment": "Indicates a timespan of a video or audio, i.e. the start and end point in the containing resource.",
             "@type": "owl:DatatypeProperty",
             "knora-api:subjectType": {
                 "@id": "knora-api:Segment"
@@ -1649,11 +1649,11 @@
             "@id": "knora-api:isAnnotationOf"
         },
         {
-            "rdfs:label": "Segment of",
+            "rdfs:label": "Annotation of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:isSegmentOf"
             },
-            "rdfs:comment": "Indicates that this resource is a segment of an audio resource",
+            "rdfs:comment": "Indicates that this resource is an annotation of a video or audio resource",
             "@type": "owl:ObjectProperty",
             "knora-api:subjectType": {
                 "@id": "knora-api:AudioSegment"
@@ -1691,7 +1691,7 @@
             "@id": "knora-api:isPartOf"
         },
         {
-            "rdfs:label": "is region of",
+            "rdfs:label": "Annotation of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkTo"
             },
@@ -1706,7 +1706,7 @@
             "@id": "knora-api:isRegionOf"
         },
         {
-            "rdfs:label": "Segment of",
+            "rdfs:label": "Annotation of",
             "rdfs:subPropertyOf": [
                 {
                     "@id": "knora-api:hasLinkTo"
@@ -1718,7 +1718,7 @@
                     "@id": "http://www.w3.org/ns/ma-ont#isFragmentOf"
                 }
             ],
-            "rdfs:comment": "Indicates that this resource is a segment of a video or audio resource",
+            "rdfs:comment": "Indicates that this resource is an annotation of a video or audio resource",
             "@type": "owl:ObjectProperty",
             "knora-api:subjectType": {
                 "@id": "knora-api:Segment"
@@ -1744,11 +1744,11 @@
             "@id": "knora-api:isSequenceOf"
         },
         {
-            "rdfs:label": "Segment of",
+            "rdfs:label": "Annotation of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:isSegmentOf"
             },
-            "rdfs:comment": "Indicates that this resource is a segment of a video resource",
+            "rdfs:comment": "Indicates that this resource is an annotation of a video or audio resource",
             "@type": "owl:ObjectProperty",
             "knora-api:subjectType": {
                 "@id": "knora-api:VideoSegment"

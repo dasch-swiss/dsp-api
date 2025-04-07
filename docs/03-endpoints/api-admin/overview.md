@@ -1,8 +1,3 @@
-<!---
- * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
- * SPDX-License-Identifier: Apache-2.0
--->
-
 # Admin Endpoint
 
 For the management of *users*, *projects*, *groups*, *lists*, and *permissions*, the DSP-API following a resource

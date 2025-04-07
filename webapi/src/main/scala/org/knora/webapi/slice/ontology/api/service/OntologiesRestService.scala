@@ -20,6 +20,7 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.ontology.api.LastModificationDate
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.api.model.IriDto
 
@@ -28,9 +29,119 @@ final case class OntologiesRestService(
   private val iriConverter: IriConverter,
   private val ontologiesRepo: OntologyRepo,
   private val ontologyResponder: OntologyResponderV2,
+  private val ontologyCacheHelpers: OntologyCacheHelpers,
   private val requestParser: OntologyV2RequestParser,
   private val renderer: KnoraResponseRenderer,
 ) {
+
+  def replaceCardinalities(
+    user: User,
+  )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
+    uuid <- Random.nextUUID()
+    updateReq <-
+      requestParser.replaceClassCardinalitiesRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    result   <- ontologyResponder.replaceClassCardinalities(updateReq)
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
+  def canDeleteCardinalitiesFromClass(
+    user: User,
+  )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
+    uuid <- Random.nextUUID()
+    updateReq <-
+      requestParser.canDeleteCardinalitiesFromClassRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    result   <- ontologyResponder.canDeleteCardinalitiesFromClass(updateReq)
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
+  def deleteCardinalitiesFromClass(
+    user: User,
+  )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
+    uuid <- Random.nextUUID()
+    updateReq <-
+      requestParser.deleteCardinalitiesFromClassRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    result   <- ontologyResponder.deleteCardinalitiesFromClass(updateReq)
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
+  def changeGuiOrder(user: User)(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
+    for {
+      uuid      <- Random.nextUUID()
+      updateReq <- requestParser.changeGuiOrderRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+      result    <- ontologyResponder.changeGuiOrder(updateReq)
+      response  <- renderer.render(result, formatOptions)
+    } yield response
+
+  def getClasses(user: User)(
+    classIris: List[String],
+    allLanguages: Boolean,
+    formatOptions: FormatOptions,
+  ) = for {
+    classIris             <- ZIO.foreach(classIris)(iriConverter.asResourceClassIri(_).mapError(BadRequestException.apply))
+    classIrisWithoutSchema = classIris.filter(_.smartIri.getOntologySchema.isEmpty)
+    _ <- ZIO.fail {
+           BadRequestException(s"Class IRIs found without ontology schema: ${classIrisWithoutSchema.mkString(", ")}")
+         }.unless(classIrisWithoutSchema.isEmpty)
+    ontologyIris = classIris.map(_.ontologyIri).toSet
+    _ <- ontologyIris.size match
+           case 1 =>
+             ZIO.fail(BadRequestException("Only external ontologies may be queried")).when(ontologyIris.head.isInternal)
+           case _ => ZIO.fail(BadRequestException("Only one ontology may be queried at once"))
+    schemas = ontologyIris.flatMap(_.smartIri.getOntologySchema).collect { case schema: ApiV2Schema => schema }
+    schema <- schemas.size match
+                case 1 => ZIO.succeed(schemas.head)
+                case _ => ZIO.fail(BadRequestException("Only one ontology schema may be queried at once"))
+    result   <- ontologyCacheHelpers.getClasses(classIris, allLanguages, user)
+    response <- renderer.render(result, formatOptions.copy(schema = schema))
+  } yield response
+
+  def canDeleteClass(user: User)(
+    resourceClassIri: IriDto,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    classIri <- iriConverter.asResourceClassIriApiV2Complex(resourceClassIri.value).mapError(BadRequestException.apply)
+    result   <- ontologyResponder.canDeleteClass(classIri, user)
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
+  def deleteClass(user: User)(
+    resourceClassIri: IriDto,
+    lastModificationDate: LastModificationDate,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    classIri <-
+      iriConverter
+        .asResourceClassIriApiV2Complex(resourceClassIri.value)
+        .mapError(BadRequestException.apply)
+        .filterOrFail(_.ontologyIri.isExternal)(BadRequestException("Only external ontologies can be modified"))
+    uuid     <- Random.nextUUID()
+    result   <- ontologyResponder.deleteClass(classIri, lastModificationDate.value, uuid, user)
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
+  def deleteOntologyComment(user: User)(
+    ontologyIri: IriDto,
+    lastModificationDate: LastModificationDate,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    uuid <- Random.nextUUID()
+    ontologyIri <- iriConverter
+                     .asOntologyIriApiV2Complex(ontologyIri.value)
+                     .mapError(BadRequestException.apply)
+                     .filterOrFail(_.isExternal)(BadRequestException("Only external ontologies can have comments"))
+    result   <- ontologyResponder.deleteOntologyComment(ontologyIri, lastModificationDate.value, uuid, user)
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
+  def createProperty(user: User)(
+    jsonLd: String,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    uuid      <- Random.nextUUID()
+    createReq <- requestParser.createPropertyRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    result    <- ontologyResponder.createProperty(createReq)
+    response  <- renderer.render(result, formatOptions)
+  } yield response
 
   def changePropertyLabelsOrComments(user: User)(
     jsonLd: String,

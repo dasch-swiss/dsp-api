@@ -1,5 +1,66 @@
 # Changelog
 
+## [31.10.0](https://github.com/dasch-swiss/dsp-api/compare/v31.9.1...v31.10.0) (2025-03-28)
+
+
+### Maintenances
+
+* Bump sipi to v3.16.0 ([#3548](https://github.com/dasch-swiss/dsp-api/issues/3548)) ([cea1faa](https://github.com/dasch-swiss/dsp-api/commit/cea1faac796e4a56fc4139c7aaf100f59b02cef4))
+* Update DSP-APP to v11.27.0 ([#3551](https://github.com/dasch-swiss/dsp-api/issues/3551)) ([10cc2df](https://github.com/dasch-swiss/dsp-api/commit/10cc2df5485600408199daf2d2d2600c398846e6))
+
+
+### Documentation
+
+* Copyright comments break markdownlint -&gt; broken docs not detected (DEV-4727) ([#3550](https://github.com/dasch-swiss/dsp-api/issues/3550)) ([2c672d1](https://github.com/dasch-swiss/dsp-api/commit/2c672d1c87f95c39636e11bae282dc1d2ac08690))
+
+
+### Enhancements
+
+* Add new route for incoming links (DEV-4722) ([#3547](https://github.com/dasch-swiss/dsp-api/issues/3547)) ([a73d132](https://github.com/dasch-swiss/dsp-api/commit/a73d132dd28ca1791922088fe16e572322ab5db7))
+* Unify resource annotations wording (DEV-4393) ([#3546](https://github.com/dasch-swiss/dsp-api/issues/3546)) ([71ad321](https://github.com/dasch-swiss/dsp-api/commit/71ad3218f4a3a5a5958f656c2705f9dc25085de7))
+
+## [31.9.1](https://github.com/dasch-swiss/dsp-api/compare/v31.9.0...v31.9.1) (2025-03-21)
+
+
+### Maintenances
+
+* Bump sipi to v3.15.2 ([#3545](https://github.com/dasch-swiss/dsp-api/issues/3545)) ([199777a](https://github.com/dasch-swiss/dsp-api/commit/199777aef4626a0c2abc08933ecf81c02d1aa000))
+* Dependency updates ([#3538](https://github.com/dasch-swiss/dsp-api/issues/3538)) ([db8ae37](https://github.com/dasch-swiss/dsp-api/commit/db8ae37676dbe2e40a048b8b1ac0cd56b03de6e5))
+* Migrate ontology endpoints to tapir pt. 3 (DEV-4657) ([#3539](https://github.com/dasch-swiss/dsp-api/issues/3539)) ([fce26ea](https://github.com/dasch-swiss/dsp-api/commit/fce26ea7c84c68a57db85e567fd0485014e925cb))
+* Minor dependency updates ([#3537](https://github.com/dasch-swiss/dsp-api/issues/3537)) ([d492ba3](https://github.com/dasch-swiss/dsp-api/commit/d492ba3d4d6caa4508ad4d86a59904457a8f07cb))
+* Patch dependency updates ([#3536](https://github.com/dasch-swiss/dsp-api/issues/3536)) ([851d587](https://github.com/dasch-swiss/dsp-api/commit/851d5873da99d7f757a18fb9bfce0e59a30f58e8))
+
+
+### Bug Fixes
+
+* Make data of our PagedResponses required in OpenAPI yaml ([#3543](https://github.com/dasch-swiss/dsp-api/issues/3543)) ([e87c696](https://github.com/dasch-swiss/dsp-api/commit/e87c696fb9e48a6b8c25a10fff18ee07208fe385))
+
+## [31.9.0](https://github.com/dasch-swiss/dsp-api/compare/v31.8.0...v31.9.0) (2025-03-17)
+
+
+### Maintenances
+
+* Add context to error failed to connect to Fuseki ([#3529](https://github.com/dasch-swiss/dsp-api/issues/3529)) ([ec1e96c](https://github.com/dasch-swiss/dsp-api/commit/ec1e96cf184e8f8798f0a40f3f325a450cac2f62))
+* Introduce CoreModule (DEV-4686) ([#3527](https://github.com/dasch-swiss/dsp-api/issues/3527)) ([94b5974](https://github.com/dasch-swiss/dsp-api/commit/94b597454ca1b84cfbb93b3a581e396323a36782))
+* Migrate resources routes to Tapir (DEV-4656) ([#3521](https://github.com/dasch-swiss/dsp-api/issues/3521)) ([e19ed17](https://github.com/dasch-swiss/dsp-api/commit/e19ed17e8b5c23a239cf53f893d4aee4f8737015))
+* Migrate some v2/ontologies endpoints to Tapir pt. 2 (DEV-4657) ([#3532](https://github.com/dasch-swiss/dsp-api/issues/3532)) ([e6ae9bc](https://github.com/dasch-swiss/dsp-api/commit/e6ae9bc984a28d5b4412b25af4c32afed2fc5820))
+* Migrate v2/ontologies routes to Tapir endpoints ([#3531](https://github.com/dasch-swiss/dsp-api/issues/3531)) ([7a56634](https://github.com/dasch-swiss/dsp-api/commit/7a5663466040b590741954cac79ca0b595a1fffa))
+* Migrate v2/values to Tapir (DEV-4634) ([#3520](https://github.com/dasch-swiss/dsp-api/issues/3520)) ([9805e5d](https://github.com/dasch-swiss/dsp-api/commit/9805e5d939d618a9a0850b24b634ddecd769bd96))
+* Replace SmartIri with ProjectIri in OntologyMetadataV2 ([#3530](https://github.com/dasch-swiss/dsp-api/issues/3530)) ([116ded5](https://github.com/dasch-swiss/dsp-api/commit/116ded5812dffb382c4aff2daefe251d5d9a6712))
+* Simplify delete value pre-checks ([#3524](https://github.com/dasch-swiss/dsp-api/issues/3524)) ([0672f98](https://github.com/dasch-swiss/dsp-api/commit/0672f98187d674afa93f47a2104285ab64b4f61f))
+* Update Sipi to 3.15.1 ([#3541](https://github.com/dasch-swiss/dsp-api/issues/3541)) ([bf60ee3](https://github.com/dasch-swiss/dsp-api/commit/bf60ee39e1a2393b4e82b746d028f72c6bd32901))
+
+
+### Enhancements
+
+* Rename LicenseDto label-en to labelEn ([#3535](https://github.com/dasch-swiss/dsp-api/issues/3535)) ([8ddcd2d](https://github.com/dasch-swiss/dsp-api/commit/8ddcd2df6554b82b77d69e6e7f23f91e56a5384b))
+* Use camel case in Pagination responses for json keys ([#3540](https://github.com/dasch-swiss/dsp-api/issues/3540)) ([2af2c36](https://github.com/dasch-swiss/dsp-api/commit/2af2c363de8bceb7cd8a10a9c989838836910048))
+
+
+### Bug Fixes
+
+* Ensure that legal info String value objects are rendered as String in OpenApi yml (DEV-4695) ([#3533](https://github.com/dasch-swiss/dsp-api/issues/3533)) ([deb09b9](https://github.com/dasch-swiss/dsp-api/commit/deb09b91c032dc7637f8122890d353773dbe4df6))
+
 ## [31.8.0](https://github.com/dasch-swiss/dsp-api/compare/v31.7.0...v31.8.0) (2025-03-03)
 
 

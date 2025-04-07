@@ -12,7 +12,7 @@ object Dependencies {
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
   val fusekiImage = "daschswiss/apache-jena-fuseki:5.2.0"
   // base image the knora-sipi image is created from
-  val sipiImage = "daschswiss/sipi:v3.15.0"
+  val sipiImage = "daschswiss/sipi:v3.16.0"
 
   val ScalaVersion = "3.3.5"
 
@@ -25,7 +25,7 @@ object Dependencies {
   val TopbraidShaclVersion = "1.4.4"
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
-  val ZioConfigVersion            = "4.0.3"
+  val ZioConfigVersion            = "4.0.4"
   val ZioLoggingVersion           = "2.5.0"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
@@ -39,10 +39,10 @@ object Dependencies {
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
 
-  // jwt-scala 10.0.1 depends on zio-json 0.7.36
+  // jwt-scala 10.0.1 depends on zio-json 0.7.39
   // though newer version compatible with a newer zio-json version is available
   // it is not yet published: https://github.com/jwt-scala/jwt-scala/issues/642
-  val ZioJsonVersion        = "0.7.36"
+  val ZioJsonVersion        = "0.7.39"
   val zioJson               = "dev.zio"                       %% "zio-json"                  % ZioJsonVersion
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
@@ -89,7 +89,7 @@ object Dependencies {
   val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.17" // the logging interface
 
   // Metrics
-  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.22.1"
+  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.23"
 
   // input validation
   val commonsValidator =
@@ -99,7 +99,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.4"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.4.3" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.4.4" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -111,11 +111,11 @@ object Dependencies {
   // other
   val diff           = "com.sksamuel.diff" % "diff"             % "1.1.11"
   val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"       % "icu4j"            % "76.1"
+  val icu4j          = "com.ibm.icu"       % "icu4j"            % "77.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.5"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "2.0.2"
-  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.5.0"
+  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.6.0"
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.10.0"
 
   // test
@@ -124,14 +124,14 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.5"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.6"
 
-  val wiremock = "org.wiremock" % "wiremock" % "3.12.0"
+  val wiremock = "org.wiremock" % "wiremock" % "3.12.1"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.16"
+  val tapirVersion = "1.11.20"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
