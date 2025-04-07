@@ -9,7 +9,6 @@ import zio.*
 import zio.test.*
 
 import java.util.UUID
-
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.StringFormatter
@@ -28,6 +27,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.resources.repo.service.ActiveValue
@@ -275,9 +275,9 @@ final case class TestHelper(
                  .someOrFail(IllegalStateException("Resource not found"))
   } yield created
 
-  def findValues(iri: ResourceIri): Task[Map[KnoraIris.PropertyIri, Seq[ValueIri]]] = resourceRepo.findValues(iri)
+  def findValues(iri: ResourceIri): Task[Map[PropertyIri, Seq[ValueIri]]] = resourceRepo.findValues(iri)
 
-  def findLinks(iri: ResourceIri): Task[Map[KnoraIris.PropertyIri, Seq[ResourceIri]]] = resourceRepo.findLinks(iri)
+  def findLinks(iri: ResourceIri): Task[Map[PropertyIri, Seq[ResourceIri]]] = resourceRepo.findLinks(iri)
 }
 
 object TestHelper {
@@ -325,10 +325,10 @@ object TestHelper {
   ): ZIO[TestHelper, Throwable, ActiveValue] =
     ZIO.serviceWithZIO[TestHelper](_.updateIntegerValue(value, resource, newValue))
 
-  def findValues(iri: ResourceIri): ZIO[TestHelper, Throwable, Map[KnoraIris.PropertyIri, Seq[ValueIri]]] =
+  def findValues(iri: ResourceIri): ZIO[TestHelper, Throwable, Map[PropertyIri, Seq[ValueIri]]] =
     ZIO.serviceWithZIO[TestHelper](_.findValues(iri))
 
-  def findLinks(iri: ResourceIri): ZIO[TestHelper, Throwable, Map[KnoraIris.PropertyIri, Seq[ResourceIri]]] =
+  def findLinks(iri: ResourceIri): ZIO[TestHelper, Throwable, Map[PropertyIri, Seq[ResourceIri]]] =
     ZIO.serviceWithZIO[TestHelper](_.findLinks(iri))
 
   def createResource: ZIO[TestHelper, Throwable, ActiveResource] =
