@@ -589,7 +589,11 @@ final case class SearchResponderV2Live(
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
       ontologiesForInferenceMaybe <-
-        inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause)
+        limitToProject.fold(
+          inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause),
+        )(
+          inferenceOptimizationService.getProjectOntologies,
+        )
 
       prequery <-
         queryTraverser.transformConstructToSelect(

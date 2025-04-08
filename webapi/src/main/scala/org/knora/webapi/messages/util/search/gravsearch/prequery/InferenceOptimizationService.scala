@@ -26,6 +26,8 @@ import org.knora.webapi.messages.util.search.WhereClause
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 final case class InferenceOptimizationService(
   private val projectService: ProjectService,
@@ -120,6 +122,20 @@ final case class InferenceOptimizationService(
         }
     } yield relevantOntologiesMaybe
   }
+
+  /**
+   * Returns the set of ontologies of a given project to which the search is limited.
+   *
+   * @param projectIri the IRI of the project.
+   * @return the set of ontology IRIs of the project.
+   */
+  def getProjectOntologies(projectIri: ProjectIri): Task[Option[Set[SmartIri]]] =
+    for {
+      ontoCache <- ontologyCache.getCacheData
+      ontologies = ontoCache.ontologies.filter { (_: SmartIri, onto: ReadOntologyV2) =>
+                     onto.projectIri.contains(projectIri)
+                   }.keySet
+    } yield Option.when(ontologies.nonEmpty)(ontologies)
 }
 
 object InferenceOptimizationService {
