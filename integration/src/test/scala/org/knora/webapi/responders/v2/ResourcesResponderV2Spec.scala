@@ -61,7 +61,6 @@ object ResourcesResponderV2Spec {
 
   private val aThingIri                  = "http://rdfh.ch/0001/a-thing"
   private var aThingLastModificationDate = Instant.now
-  private val aThingCreationDate         = Instant.parse("2016-03-02T15:05:10Z")
 
   private val resourceIriToErase                  = new MutableTestIri
   private val firstValueIriToErase                = new MutableTestIri
