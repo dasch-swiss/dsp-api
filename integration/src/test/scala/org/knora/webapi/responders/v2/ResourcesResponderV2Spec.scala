@@ -1819,18 +1819,36 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
     }
 
     "mark a resource as deleted" in {
+      // Create the resource.
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val createReq = CreateResourceRequestV2(
+        CreateResourceV2(
+          Some(resourceIri.toSmartIri),
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          "test label",
+          Map.empty,
+          SharedTestDataADM.anythingProject,
+        ),
+        SharedTestDataADM.anythingUser1,
+        UUID.randomUUID,
+      )
+      val response                    = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.createResource(createReq)))
+      val createdResourceIri          = response.resources.head.resourceIri
+      val createdResourceCreationDate = response.resources.head.creationDate
+
+      // Delete the resource
       val deleteRequest = DeleteOrEraseResourceRequestV2(
-        resourceIri = aThingIri,
+        resourceIri = createdResourceIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeDeleteComment = Some("This resource is too boring."),
-        maybeLastModificationDate = Some(aThingLastModificationDate),
+        maybeLastModificationDate = Some(createdResourceCreationDate),
         requestingUser = SharedTestDataADM.anythingUser1,
         apiRequestID = UUID.randomUUID,
       )
       val _ = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.markResourceAsDeletedV2(deleteRequest)))
 
       appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq(aThingIri),
+        resourceIris = Seq(createdResourceIri),
         targetSchema = ApiV2Complex,
         requestingUser = SharedTestDataADM.anythingUser1,
       )
@@ -1840,7 +1858,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
         resource.resourceClassIri should equal(OntologyConstants.KnoraBase.DeletedResource.toSmartIri)
         resource.deletionInfo should not be None
         resource.lastModificationDate should not be None
-        resource.creationDate should equal(aThingCreationDate)
+        resource.creationDate should equal(createdResourceCreationDate)
       }
     }
 
