@@ -535,7 +535,11 @@ final case class SearchResponderV2Live(
         )
 
       ontologiesForInferenceMaybe <-
-        inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause)
+        limitToProject.fold(
+          inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause),
+        )(
+          inferenceOptimizationService.getProjectOntologies,
+        )
 
       countQuery <- queryTraverser.transformSelectToSelect(
                       inputQuery = prequery,
