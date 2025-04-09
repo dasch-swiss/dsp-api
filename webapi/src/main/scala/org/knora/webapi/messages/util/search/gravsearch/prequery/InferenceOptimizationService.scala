@@ -23,11 +23,11 @@ import org.knora.webapi.messages.util.search.StatementPattern
 import org.knora.webapi.messages.util.search.UnionPattern
 import org.knora.webapi.messages.util.search.ValuesPattern
 import org.knora.webapi.messages.util.search.WhereClause
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 final case class InferenceOptimizationService(
   private val projectService: ProjectService,
