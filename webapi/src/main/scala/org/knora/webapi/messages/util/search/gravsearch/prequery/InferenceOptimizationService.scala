@@ -23,15 +23,16 @@ import org.knora.webapi.messages.util.search.StatementPattern
 import org.knora.webapi.messages.util.search.UnionPattern
 import org.knora.webapi.messages.util.search.ValuesPattern
 import org.knora.webapi.messages.util.search.WhereClause
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 final case class InferenceOptimizationService(
   private val projectService: ProjectService,
   private val ontologyCache: OntologyCache,
+  private val ontologyRepo: OntologyRepo,
 )(implicit private val stringFormatter: StringFormatter) {
 
   /**
@@ -130,12 +131,10 @@ final case class InferenceOptimizationService(
    * @return the set of ontology IRIs of the project.
    */
   def getProjectOntologies(projectIri: ProjectIri): Task[Option[Set[SmartIri]]] =
-    for {
-      ontoCache <- ontologyCache.getCacheData
-      ontologies = ontoCache.ontologies.filter { (_: SmartIri, onto: ReadOntologyV2) =>
-                     onto.projectIri.contains(projectIri)
-                   }.keySet
-    } yield Option.when(ontologies.nonEmpty)(ontologies)
+    ontologyRepo.findByProject(projectIri).map { ontologies =>
+      val ontologyIris = ontologies.map(_.ontologyMetadata.ontologyIri)
+      Option.when(ontologyIris.nonEmpty)(ontologyIris.toSet)
+    }
 }
 
 object InferenceOptimizationService {

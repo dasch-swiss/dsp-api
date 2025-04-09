@@ -22,10 +22,11 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
 object SearchResponderV2Module {
   type Dependencies = StandoffTagUtilV2 & AppConfig & TriplestoreService & ConstructResponseUtilV2 & OntologyCache &
-    IriConverter & MessageRelay & StringFormatter & ProjectService
+    OntologyRepo & IriConverter & MessageRelay & StringFormatter & ProjectService
 
   type Provided = SearchResponderV2Live & OntologyInferencer & QueryTraverser & GravsearchTypeInspectionRunner
 
