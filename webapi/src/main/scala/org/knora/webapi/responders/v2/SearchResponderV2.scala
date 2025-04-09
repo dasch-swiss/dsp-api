@@ -53,12 +53,12 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ApacheLuceneSupport.*
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
 /**
  * Represents the number of resources found by a search query.
