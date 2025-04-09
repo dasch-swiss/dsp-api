@@ -1,5 +1,22 @@
 # Changelog
 
+## [31.11.0](https://github.com/dasch-swiss/dsp-api/compare/v31.10.0...v31.11.0) (2025-04-09)
+
+
+### Maintenances
+
+* Patch dependency updates ([#3552](https://github.com/dasch-swiss/dsp-api/issues/3552)) ([5399015](https://github.com/dasch-swiss/dsp-api/commit/53990152ea574c647a7eacea4407fccd9f42824d))
+
+
+### Enhancements
+
+* Limit Gravsearch to a single project by query parameter ([#3557](https://github.com/dasch-swiss/dsp-api/issues/3557)) ([2140a0e](https://github.com/dasch-swiss/dsp-api/commit/2140a0eb8b587b05dfa42555a33c55e0d7a92a78))
+
+
+### Bug Fixes
+
+* Align erasing and deleting Resources, prevent deletion of a resource if it is in use (DEV-4767) ([#3556](https://github.com/dasch-swiss/dsp-api/issues/3556)) ([935a8c7](https://github.com/dasch-swiss/dsp-api/commit/935a8c7d42c6cfaf8bd01bc13cf951529dc2b04e))
+
 ## [31.10.0](https://github.com/dasch-swiss/dsp-api/compare/v31.9.1...v31.10.0) (2025-03-28)
 
 
