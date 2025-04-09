@@ -53,6 +53,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -92,11 +93,21 @@ trait SearchResponderV2 {
    * @param user             the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
-  def gravsearchV2(query: ConstructQuery, schemaAndOptions: SchemaRendering, user: User): Task[ReadResourcesSequenceV2]
-  def gravsearchV2(query: IRI, rendering: SchemaRendering, user: User): Task[ReadResourcesSequenceV2] =
+  def gravsearchV2(
+    query: ConstructQuery,
+    schemaAndOptions: SchemaRendering,
+    user: User,
+    limitToProject: Option[ProjectIri] = None,
+  ): Task[ReadResourcesSequenceV2]
+  def gravsearchV2(
+    query: IRI,
+    rendering: SchemaRendering,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[ReadResourcesSequenceV2] =
     for {
       q <- ZIO.attempt(GravsearchParser.parseQuery(query))
-      r <- gravsearchV2(q, rendering, user)
+      r <- gravsearchV2(q, rendering, user, limitToProject)
     } yield r
 
   /**
@@ -106,11 +117,11 @@ trait SearchResponderV2 {
    * @param user  the client making the request.
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
-  def gravsearchCountV2(query: ConstructQuery, user: User): Task[ResourceCountV2]
-  def gravsearchCountV2(query: IRI, user: User): Task[ResourceCountV2] =
+  def gravsearchCountV2(query: ConstructQuery, user: User, limitToProject: Option[ProjectIri]): Task[ResourceCountV2]
+  def gravsearchCountV2(query: IRI, user: User, limitToProject: Option[ProjectIri]): Task[ResourceCountV2] =
     for {
       q <- ZIO.attempt(GravsearchParser.parseQuery(query))
-      r <- gravsearchCountV2(q, user)
+      r <- gravsearchCountV2(q, user, limitToProject)
     } yield r
 
   /**
@@ -126,6 +137,7 @@ trait SearchResponderV2 {
     offset: Int,
     rendering: SchemaRendering,
     user: User,
+    limitToProject: Option[ProjectIri],
   ): Task[ReadResourcesSequenceV2]
 
   /**
@@ -239,6 +251,7 @@ final case class SearchResponderV2Live(
   private val stringFormatter: StringFormatter,
   private val iriConverter: IriConverter,
   private val constructTransformer: ConstructTransformer,
+  private val ontologyRepo: OntologyRepo,
 ) extends SearchResponderV2
     with LazyLogging {
 
@@ -257,6 +270,7 @@ final case class SearchResponderV2Live(
     offset: Int,
     rendering: SchemaRendering,
     user: User,
+    limitToProject: Option[ProjectIri],
   ): Task[ReadResourcesSequenceV2] = {
     val query: String =
       s"""
@@ -292,7 +306,7 @@ final case class SearchResponderV2Live(
          |} OFFSET $offset
          |""".stripMargin
 
-    gravsearchV2(query, rendering, user)
+    gravsearchV2(query, rendering, user, limitToProject)
   }
 
   /**
@@ -477,7 +491,11 @@ final case class SearchResponderV2Live(
     } yield apiResponse
   }
 
-  override def gravsearchCountV2(query: ConstructQuery, user: User): Task[ResourceCountV2] =
+  override def gravsearchCountV2(
+    query: ConstructQuery,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[ResourceCountV2] =
     for {
       _ <- // make sure that OFFSET is 0
         ZIO
@@ -519,7 +537,9 @@ final case class SearchResponderV2Live(
         )
 
       ontologiesForInferenceMaybe <-
-        inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause)
+        limitToProject.fold(
+          inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause),
+        )(getProjectOntologies)
 
       countQuery <- queryTraverser.transformSelectToSelect(
                       inputQuery = prequery,
@@ -544,6 +564,7 @@ final case class SearchResponderV2Live(
     query: ConstructQuery,
     schemaAndOptions: SchemaRendering,
     user: User,
+    limitToProject: Option[ProjectIri] = None,
   ): Task[ReadResourcesSequenceV2] = {
 
     for {
@@ -572,7 +593,9 @@ final case class SearchResponderV2Live(
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
       ontologiesForInferenceMaybe <-
-        inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause)
+        limitToProject.fold(
+          inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause),
+        )(getProjectOntologies)
 
       prequery <-
         queryTraverser.transformConstructToSelect(
@@ -1110,6 +1133,18 @@ final case class SearchResponderV2Live(
       results = SparqlSelectResultBody(prequeryRowsMerged),
     )
   }
+
+  /**
+   * Returns the set of ontologies of a given project to which the search is limited.
+   *
+   * @param projectIri the IRI of the project.
+   * @return the set of ontology IRIs of the project.
+   */
+  private def getProjectOntologies(projectIri: ProjectIri): Task[Option[Set[SmartIri]]] =
+    ontologyRepo.findByProject(projectIri).map { ontologies =>
+      val ontologyIris = ontologies.map(_.ontologyMetadata.ontologyIri)
+      Option.when(ontologyIris.nonEmpty)(ontologyIris.toSet)
+    }
 }
 
 object SearchResponderV2Live {

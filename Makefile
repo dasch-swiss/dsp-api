@@ -256,7 +256,7 @@ init-db-from-ls-test-server-dump: ## init local database with data from local du
 db-dump: ## Dump data from an env. Use as `make db-dump PW=database-password ENV=db.0000-test-server.dasch.swiss`
 	@echo $@
 	@echo dumping environment ${ENV}
-	@curl -X GET -H "Accept: application/trig" -u "admin:${PW}" "https://${ENV}/dsp-repo" > "${ENV}.trig"
+	@curl -f -X GET -H "Accept: application/trig" -u "admin:${PW}" "https://${ENV}/dsp-repo" > "${ENV}.trig"
 
 .PHONY: init-db-from-dump-file
 init-db-from-dump-file: ## init local database from a specified dump file. Use as `make init-db-from-dump-file DUMP=some-dump-file.trig`
