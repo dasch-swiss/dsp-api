@@ -58,6 +58,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ApacheLuceneSupport.*
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
 /**
  * Represents the number of resources found by a search query.
@@ -250,6 +251,7 @@ final case class SearchResponderV2Live(
   private val stringFormatter: StringFormatter,
   private val iriConverter: IriConverter,
   private val constructTransformer: ConstructTransformer,
+  private val ontologyRepo: OntologyRepo,
 ) extends SearchResponderV2
     with LazyLogging {
 
@@ -537,9 +539,7 @@ final case class SearchResponderV2Live(
       ontologiesForInferenceMaybe <-
         limitToProject.fold(
           inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause),
-        )(
-          inferenceOptimizationService.getProjectOntologies,
-        )
+        )(getProjectOntologies)
 
       countQuery <- queryTraverser.transformSelectToSelect(
                       inputQuery = prequery,
@@ -595,9 +595,7 @@ final case class SearchResponderV2Live(
       ontologiesForInferenceMaybe <-
         limitToProject.fold(
           inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause),
-        )(
-          inferenceOptimizationService.getProjectOntologies,
-        )
+        )(getProjectOntologies)
 
       prequery <-
         queryTraverser.transformConstructToSelect(
@@ -1135,6 +1133,18 @@ final case class SearchResponderV2Live(
       results = SparqlSelectResultBody(prequeryRowsMerged),
     )
   }
+
+  /**
+   * Returns the set of ontologies of a given project to which the search is limited.
+   *
+   * @param projectIri the IRI of the project.
+   * @return the set of ontology IRIs of the project.
+   */
+  private def getProjectOntologies(projectIri: ProjectIri): Task[Option[Set[SmartIri]]] =
+    ontologyRepo.findByProject(projectIri).map { ontologies =>
+      val ontologyIris = ontologies.map(_.ontologyMetadata.ontologyIri)
+      Option.when(ontologyIris.nonEmpty)(ontologyIris.toSet)
+    }
 }
 
 object SearchResponderV2Live {

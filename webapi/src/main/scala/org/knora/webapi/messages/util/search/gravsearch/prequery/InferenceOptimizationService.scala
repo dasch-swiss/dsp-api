@@ -23,16 +23,13 @@ import org.knora.webapi.messages.util.search.StatementPattern
 import org.knora.webapi.messages.util.search.UnionPattern
 import org.knora.webapi.messages.util.search.ValuesPattern
 import org.knora.webapi.messages.util.search.WhereClause
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 final case class InferenceOptimizationService(
   private val projectService: ProjectService,
   private val ontologyCache: OntologyCache,
-  private val ontologyRepo: OntologyRepo,
 )(implicit private val stringFormatter: StringFormatter) {
 
   /**
@@ -123,18 +120,6 @@ final case class InferenceOptimizationService(
         }
     } yield relevantOntologiesMaybe
   }
-
-  /**
-   * Returns the set of ontologies of a given project to which the search is limited.
-   *
-   * @param projectIri the IRI of the project.
-   * @return the set of ontology IRIs of the project.
-   */
-  def getProjectOntologies(projectIri: ProjectIri): Task[Option[Set[SmartIri]]] =
-    ontologyRepo.findByProject(projectIri).map { ontologies =>
-      val ontologyIris = ontologies.map(_.ontologyMetadata.ontologyIri)
-      Option.when(ontologyIris.nonEmpty)(ontologyIris.toSet)
-    }
 }
 
 object InferenceOptimizationService {
