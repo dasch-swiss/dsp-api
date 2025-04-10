@@ -16,11 +16,14 @@ import zio.test.*
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTestMock
 import org.knora.webapi.core.TestStartupUtils
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
 
 abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
+
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val testLayers =
     util.Logger.text() >>> LayersTestMock.layer()
@@ -198,4 +201,5 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       response <- sendGetRequest(replace(userIri, usersIriPath))
     } yield response
   }
+
 }

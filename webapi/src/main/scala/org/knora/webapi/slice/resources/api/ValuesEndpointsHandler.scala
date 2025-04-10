@@ -27,6 +27,8 @@ final class ValuesEndpointsHandler(
       SecuredEndpointHandler(endpoints.postValues, valuesRestService.createValue),
       SecuredEndpointHandler(endpoints.putValues, valuesRestService.updateValue),
       SecuredEndpointHandler(endpoints.deleteValues, valuesRestService.deleteValue),
+      SecuredEndpointHandler(endpoints.postValuesErase, valuesRestService.eraseValue),
+      SecuredEndpointHandler(endpoints.postValuesErasehistory, valuesRestService.eraseValueHistory),
     ).map(mapper.mapSecuredEndpointHandler(_))
 }
 

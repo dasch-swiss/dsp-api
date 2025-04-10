@@ -32,6 +32,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optic
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -314,6 +315,14 @@ case class ReadResourceV2(
   deletionInfo: Option[DeletionInfo],
 ) extends ResourceV2
     with KnoraReadV2[ReadResourceV2] {
+
+  def findValues(propertyIri: PropertyIri): Seq[ReadValueV2] =
+    values.map { case (iri, vs) => iri.toInternalSchema -> vs }
+      .getOrElse(propertyIri.toInternalSchema, Seq.empty)
+
+  def findLinkValues(propertyIri: PropertyIri): Seq[ReadLinkValueV2] =
+    findValues(propertyIri).collect { case value: ReadLinkValueV2 => value }
+
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourceV2 =
     copy(
       resourceClassIri = resourceClassIri.toOntologySchema(targetSchema),
