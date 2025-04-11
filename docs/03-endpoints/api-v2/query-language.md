@@ -156,6 +156,29 @@ Note that the virtually inserted link value inverts the relation by using `knora
 The source of the link is A and its target B is only represented by an IRI (`knora-api:linkValueHasTargetIri`)
 since B is the main resource.
 
+### Dedicated endpoint for querying the incoming links
+
+!!! warning "Internal use only"
+
+    This endpoint is intended for internal use only and may be subject to change.
+
+The dedicated endpoint for querying the incoming links was introduced in DSP-API
+version [v31.10.0](https://github.com/dasch-swiss/dsp-api/releases/tag/v31.10.0).
+
+```
+HTTP GET to http://host/v2/searchIncomingLinks/[resourceIri]?offset=[pageNumber]
+```
+
+The route have two parameters, the resource IRI and the page number which translates
+to the SPARQL `OFFSET`. The default value for the page numbers is 0. The entire query
+must be URL-encoded and included as the last element of the URL path.
+Here is an example of the request for the resource `http://rdfh.ch/0001/a-thing-picture`
+with the page number 1:
+
+```
+http://host/v2/searchIncomingLinks/http%3A%2F%2Frdfh.ch%2F0001%2Fa-thing-picture?offset=1
+```
+
 ## Graph Patterns and Result Graphs
 
 The WHERE clause of a Gravsearch query specifies a graph pattern. Each query

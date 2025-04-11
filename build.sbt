@@ -153,7 +153,7 @@ val customScalacOptions = Seq(
   "-Wvalue-discard",
   "-Xmax-inlines:64",
   "-Wunused:all",
-//  "-Xfatal-warnings",
+  "-Dotel.java.global-autoconfigure.enabled=true",
 )
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
