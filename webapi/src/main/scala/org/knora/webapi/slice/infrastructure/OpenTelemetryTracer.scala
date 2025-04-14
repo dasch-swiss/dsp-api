@@ -98,10 +98,10 @@ object OpenTelemetryTracerLive {
 
   val contextStorageLayer = OpenTelemetry.contextZIO
 
-  val tracingLayer = ZLayer.fromZIO(for {
-    appConfig <- ZIO.service[AppConfig]
-    tracing    = OpenTelemetry.tracing(appConfig.openTelemetryTracer.serviceName)
-  } yield tracing)
+  val tracingLayer =
+    ZLayer
+      .fromZIO(ZIO.service[AppConfig].map(_.openTelemetryTracer.serviceName))
+      .flatMap(env => OpenTelemetry.tracing(env.get))
 
   val sentryLayer: ZLayer[
     AppConfig & AutoConfiguredOpenTelemetrySdk & (ContextStorage & Tracing),
