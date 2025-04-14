@@ -12,7 +12,7 @@ object Dependencies {
   // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
   val fusekiImage = "daschswiss/apache-jena-fuseki:5.2.0"
   // base image the knora-sipi image is created from
-  val sipiImage = "daschswiss/sipi:v3.15.2"
+  val sipiImage = "daschswiss/sipi:v3.16.0"
 
   val ScalaVersion = "3.3.5"
 
@@ -25,7 +25,7 @@ object Dependencies {
   val TopbraidShaclVersion = "1.4.4"
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
-  val ZioConfigVersion            = "4.0.3"
+  val ZioConfigVersion            = "4.0.4"
   val ZioLoggingVersion           = "2.5.0"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
@@ -99,7 +99,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.4"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.4.3" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.4.4" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -131,7 +131,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.19"
+  val tapirVersion = "1.11.20"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,

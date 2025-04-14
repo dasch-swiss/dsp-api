@@ -1,5 +1,41 @@
 # Changelog
 
+## [31.11.0](https://github.com/dasch-swiss/dsp-api/compare/v31.10.0...v31.11.0) (2025-04-09)
+
+
+### Maintenances
+
+* Patch dependency updates ([#3552](https://github.com/dasch-swiss/dsp-api/issues/3552)) ([5399015](https://github.com/dasch-swiss/dsp-api/commit/53990152ea574c647a7eacea4407fccd9f42824d))
+
+
+### Enhancements
+
+* Limit Gravsearch to a single project by query parameter ([#3557](https://github.com/dasch-swiss/dsp-api/issues/3557)) ([2140a0e](https://github.com/dasch-swiss/dsp-api/commit/2140a0eb8b587b05dfa42555a33c55e0d7a92a78))
+
+
+### Bug Fixes
+
+* Align erasing and deleting Resources, prevent deletion of a resource if it is in use (DEV-4767) ([#3556](https://github.com/dasch-swiss/dsp-api/issues/3556)) ([935a8c7](https://github.com/dasch-swiss/dsp-api/commit/935a8c7d42c6cfaf8bd01bc13cf951529dc2b04e))
+
+## [31.10.0](https://github.com/dasch-swiss/dsp-api/compare/v31.9.1...v31.10.0) (2025-03-28)
+
+
+### Maintenances
+
+* Bump sipi to v3.16.0 ([#3548](https://github.com/dasch-swiss/dsp-api/issues/3548)) ([cea1faa](https://github.com/dasch-swiss/dsp-api/commit/cea1faac796e4a56fc4139c7aaf100f59b02cef4))
+* Update DSP-APP to v11.27.0 ([#3551](https://github.com/dasch-swiss/dsp-api/issues/3551)) ([10cc2df](https://github.com/dasch-swiss/dsp-api/commit/10cc2df5485600408199daf2d2d2600c398846e6))
+
+
+### Documentation
+
+* Copyright comments break markdownlint -&gt; broken docs not detected (DEV-4727) ([#3550](https://github.com/dasch-swiss/dsp-api/issues/3550)) ([2c672d1](https://github.com/dasch-swiss/dsp-api/commit/2c672d1c87f95c39636e11bae282dc1d2ac08690))
+
+
+### Enhancements
+
+* Add new route for incoming links (DEV-4722) ([#3547](https://github.com/dasch-swiss/dsp-api/issues/3547)) ([a73d132](https://github.com/dasch-swiss/dsp-api/commit/a73d132dd28ca1791922088fe16e572322ab5db7))
+* Unify resource annotations wording (DEV-4393) ([#3546](https://github.com/dasch-swiss/dsp-api/issues/3546)) ([71ad321](https://github.com/dasch-swiss/dsp-api/commit/71ad3218f4a3a5a5958f656c2705f9dc25085de7))
+
 ## [31.9.1](https://github.com/dasch-swiss/dsp-api/compare/v31.9.0...v31.9.1) (2025-03-21)
 
 

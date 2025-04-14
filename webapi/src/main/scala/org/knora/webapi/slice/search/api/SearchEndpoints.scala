@@ -76,6 +76,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in("v2" / "searchextended")
     .in(stringBody.description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
+    .in(SearchEndpointsInputs.limitToProject)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
     .description("Search for resources using a Gravsearch query.")
@@ -83,6 +84,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
   val getGravsearch = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchextended" / path[String].description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
+    .in(SearchEndpointsInputs.limitToProject)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
     .description("Search for resources using a Gravsearch query.")
@@ -91,6 +93,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in("v2" / "searchextended" / "count")
     .in(stringBody.description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
+    .in(SearchEndpointsInputs.limitToProject)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
     .description("Count resources using a Gravsearch query.")
@@ -98,9 +101,19 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
   val getGravsearchCount = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchextended" / "count" / path[String].description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
+    .in(SearchEndpointsInputs.limitToProject)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
     .description("Count resources using a Gravsearch query.")
+
+  val getSearchIncomingLinks = baseEndpoints.withUserEndpoint.get
+    .in("v2" / "searchIncomingLinks" / path[InputIri]("resourceIri").description("The IRI of the resource to retrieve"))
+    .in(SearchEndpointsInputs.offset)
+    .in(ApiV2.Inputs.formatOptions)
+    .in(SearchEndpointsInputs.limitToProject)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Search for incoming links using a Gravsearch query with an offset.")
 
   val getSearchByLabel = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchbylabel" / path[String]("searchTerm"))
@@ -149,6 +162,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
       getGravsearch,
       postGravsearchCount,
       getGravsearchCount,
+      getSearchIncomingLinks,
       getSearchByLabel,
       getSearchByLabelCount,
       getFullTextSearch,
@@ -170,27 +184,39 @@ final case class SearchApiRoutes(
   private type GravsearchQuery = String
 
   private val postGravsearch =
-    SecuredEndpointHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
+    SecuredEndpointHandler[(GravsearchQuery, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearch,
-      user => { case (query, opts) => searchRestService.gravsearch(query, opts, user) },
+      user => { case (query, opts, limitToProject) => searchRestService.gravsearch(query, opts, user, limitToProject) },
     )
 
   private val getGravsearch =
-    SecuredEndpointHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
+    SecuredEndpointHandler[(GravsearchQuery, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearch,
-      user => { case (query, opts) => searchRestService.gravsearch(query, opts, user) },
+      user => { case (query, opts, limitToProject) => searchRestService.gravsearch(query, opts, user, limitToProject) },
     )
 
   private val postGravsearchCount =
-    SecuredEndpointHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
+    SecuredEndpointHandler[(GravsearchQuery, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearchCount,
-      user => { case (query, opts) => searchRestService.gravsearchCount(query, opts, user) },
+      user => { case (query, opts, limitToProject) =>
+        searchRestService.gravsearchCount(query, opts, user, limitToProject)
+      },
     )
 
   private val getGravsearchCount =
-    SecuredEndpointHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
+    SecuredEndpointHandler[(GravsearchQuery, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearchCount,
-      user => { case (query, opts) => searchRestService.gravsearchCount(query, opts, user) },
+      user => { case (query, opts, limitToProject) =>
+        searchRestService.gravsearchCount(query, opts, user, limitToProject)
+      },
+    )
+
+  private val getSearchIncomingLinks =
+    SecuredEndpointHandler[(InputIri, Offset, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
+      searchEndpoints.getSearchIncomingLinks,
+      user => { case (resourceIRI, offset, opts, limitToProject) =>
+        searchRestService.searchIncomingLinks(resourceIRI.value, offset, opts, user, limitToProject)
+      },
     )
 
   private val getSearchByLabel =
@@ -247,6 +273,7 @@ final case class SearchApiRoutes(
       getGravsearch,
       postGravsearchCount,
       getGravsearchCount,
+      getSearchIncomingLinks,
     )
       .map(it => mapper.mapSecuredEndpointHandler(it))
       .map(it => tapirToPekko.toRoute(it))
@@ -288,14 +315,36 @@ final case class SearchRestService(
     response <- renderer.render(searchResult, opts)
   } yield response
 
-  def gravsearch(query: String, opts: FormatOptions, user: User): Task[(RenderedResponse, MediaType)] = for {
-    searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user)
+  def gravsearch(
+    query: String,
+    opts: FormatOptions,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[(RenderedResponse, MediaType)] = for {
+    searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, limitToProject)
     response     <- renderer.render(searchResult, opts)
   } yield response
 
-  def gravsearchCount(query: String, opts: FormatOptions, user: User): Task[(RenderedResponse, MediaType)] = for {
-    searchResult <- searchResponderV2.gravsearchCountV2(query, user)
+  def gravsearchCount(
+    query: String,
+    opts: FormatOptions,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[(RenderedResponse, MediaType)] = for {
+    searchResult <- searchResponderV2.gravsearchCountV2(query, user, limitToProject)
     response     <- renderer.render(searchResult, opts)
+  } yield response
+
+  def searchIncomingLinks(
+    resourceIri: String,
+    offset: Offset,
+    opts: FormatOptions,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[(RenderedResponse, MediaType)] = for {
+    searchResult <-
+      searchResponderV2.searchIncomingLinksV2(resourceIri, offset.value, opts.schemaRendering, user, limitToProject)
+    response <- renderer.render(searchResult, opts)
   } yield response
 
   def fullTextSearch(

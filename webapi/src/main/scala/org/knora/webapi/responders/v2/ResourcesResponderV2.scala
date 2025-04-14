@@ -49,6 +49,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.VersionDate
@@ -337,6 +338,14 @@ final case class ResourcesResponderV2(
 
         _ <- ensureNoConflictingChange(resource, deleteResourceV2.maybeLastModificationDate)
 
+        resourceIri = ResourceIri.unsafeFrom(deleteResourceV2.resourceIri.toSmartIri)
+        _ <- ZIO
+               .whenZIO(isResourceInUse(resourceIri)) {
+                 val msg =
+                   s"Resource $resourceIri cannot be deleted, because it is referred to by another resource"
+                 ZIO.fail(BadRequestException(msg))
+               }
+
         // If a custom delete date was provided, make sure it's later than the resource's most recent timestamp.
         _ <- ZIO.when(
                deleteResourceV2.maybeDeleteDate.exists(
@@ -389,6 +398,18 @@ final case class ResourcesResponderV2(
   }
 
   /**
+   * Check if the resource is not directly referred to by any other resources.
+   * Ignore rdf:subject (the resource's own links) and rdf:object properties, i.e. any LinkValue that refers to it.
+   * Deleted LinkValues may point to deleted Resources or may be pointing to non-existing Resources.
+   * Existing LinkValues that point to a resource always have a corresponding direct link property between Resource.
+   *
+   * @param resourceIri the Resource's IRI
+   * @return If there is a non-deleted link to the resource, a direct link then return true.
+   */
+  private def isResourceInUse(resourceIri: ResourceIri) =
+    iriService.isEntityUsed(resourceIri.smartIri, ignoreRdfSubjectAndObject = true)
+
+  /**
    * Erases a resource from the triplestore.
    *
    * @param eraseResourceV2 the request message.
@@ -427,15 +448,13 @@ final case class ResourcesResponderV2(
         // Check that the resource is not referred to by any other resources. We ignore rdf:subject (so we
         // can erase the resource's own links) and rdf:object (in case there is a deleted link value that
         // refers to it). Any such deleted link values will be erased along with the resource. If there
-        // is a non-deleted link to the resource, the direct link (rather than the link value) will case
-        // isEntityUsed() to fail with an exception.
-
-        resourceSmartIri = eraseResourceV2.resourceIri.toSmartIri
-
+        // is a non-deleted link to the resource, the direct link (rather than the link value) will cause
+        // to fail.
+        resourceIri = ResourceIri.unsafeFrom(eraseResourceV2.resourceIri.toSmartIri)
         _ <- ZIO
-               .whenZIO(iriService.isEntityUsed(resourceSmartIri, ignoreRdfSubjectAndObject = true)) {
+               .whenZIO(isResourceInUse(resourceIri)) {
                  val msg =
-                   s"Resource ${eraseResourceV2.resourceIri} cannot be erased, because it is referred to by another resource"
+                   s"Resource $resourceIri cannot be erased, because it is referred to by another resource"
                  ZIO.fail(BadRequestException(msg))
                }
 
@@ -452,7 +471,7 @@ final case class ResourcesResponderV2(
                 s"Resource <${eraseResourceV2.resourceIri}> was not erased. Please report this as a possible bug.",
               ),
             )
-            .whenZIO(iriService.checkIriExists(resourceSmartIri.toString))
+            .whenZIO(iriService.checkIriExists(resourceIri.toString))
       } yield SuccessResponseV2("Resource erased")
     IriLocker.runWithIriLock(eraseResourceV2.apiRequestID, eraseResourceV2.resourceIri, eraseTask)
   }

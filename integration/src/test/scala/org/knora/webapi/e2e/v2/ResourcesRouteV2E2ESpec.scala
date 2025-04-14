@@ -30,6 +30,7 @@ import scala.concurrent.duration.SECONDS
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.*
@@ -42,6 +43,7 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -947,6 +949,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(savedCreationDate == creationDate)
     }
 
+    def createResourceReqPayload() =
+      createResourceWithCustomIRI("http://rdfh.ch/0001/" + UuidUtil.makeRandomBase64EncodedUuid)
+
     def createResourceWithCustomIRI(iri: IRI): String =
       s"""{
          |  "@id" : "$iri",
@@ -1506,15 +1511,35 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "mark a resource as deleted" in {
+      // given a new resource
+      val request = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceReqPayload()),
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      val responseJsonDoc: JsonLDDocument = getResponseAsJsonLD(request)
+
+      val resourceIri = responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID).getOrElse {
+        throw BadRequestException("Resource IRI not found in response")
+      }
+      val lastModificationDate = UnsafeZioRun.runOrThrow(
+        responseJsonDoc.body
+          .getDataTypeValueInObject(
+            KnoraApiV2Complex.CreationDate,
+            OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+          )
+          .someOrFail("Last modification date not found"),
+      )
+
+      // when deleting it
       val jsonLDEntity =
         s"""|{
-            |  "@id" : "$aThingIri",
+            |  "@id" : "$resourceIri",
             |  "@type" : "anything:Thing",
             |  "knora-api:lastModificationDate" : {
             |    "@type" : "xsd:dateTimeStamp",
-            |    "@value" : "$aThingLastModificationDate"
+            |    "@value" : "$lastModificationDate"
             |  },
-            |  "knora-api:deleteComment" : "This resource is too boring.",
+            |  "knora-api:deleteComment" : "Comment on why it was deleted",
             |  "@context" : {
             |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -1523,18 +1548,19 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
             |  }
             |}""".stripMargin
-
       val updateRequest = Post(
         s"$baseApiUrl/v2/resources/delete",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val updateResponse: HttpResponse   = singleAwaitingRequest(updateRequest)
       val updateResponseAsString: String = responseToString(updateResponse)
+
+      // then it should be marked as deleted
       assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
       assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
 
       val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded",
+        s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
       previewResponse.status should equal(StatusCodes.OK)
