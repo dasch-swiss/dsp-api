@@ -1,14 +1,16 @@
 package org.knora.webapi.slice.infrastructure
 
-import zio._
-import zio.telemetry.opentelemetry.tracing.Tracing
-import zio.telemetry.opentelemetry.OpenTelemetry
-import io.sentry.Sentry
+import io.opentelemetry.api.OpenTelemetry as Otel
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk
-import java.util.HashMap
-import io.sentry.SentryLevel
-import org.knora.webapi.config.AppConfig
+import io.sentry.Sentry
+import zio.*
+import zio.telemetry.opentelemetry.OpenTelemetry
 import zio.telemetry.opentelemetry.context.ContextStorage
+import zio.telemetry.opentelemetry.tracing.Tracing
+
+import java.util.HashMap
+
+import org.knora.webapi.config.AppConfig
 
 // object OpenTelemetryTracer extends ZIOAppDefault {
 
@@ -78,11 +80,19 @@ import zio.telemetry.opentelemetry.context.ContextStorage
 trait SentryOpenTelemetryLayer
 object OpenTelemetryTracerLive {
 
-  val sdkLayer: ZLayer[AppConfig, Nothing, ZLayer[Any, Nothing, AutoConfiguredOpenTelemetrySdk]] =
+  val layer: ZLayer[AppConfig, Nothing, SentryOpenTelemetryLayer] =
+    ZLayer.fromZIO(
+      sentry.provideSome[AppConfig](
+        sdkLayer,
+        contextStorageLayer,
+        tracingLayer,
+      ),
+    )
+
+  private val sdkLayer: ZLayer[AppConfig, Nothing, Otel] =
     ZLayer.fromZIO(for {
-    appConfig <- ZIO.service[AppConfig]
-    sdk = ZLayer.succeed {
-            AutoConfiguredOpenTelemetrySdk
+      appConfig <- ZIO.service[AppConfig]
+      sdk = AutoConfiguredOpenTelemetrySdk
               .builder()
               .setResultAsGlobal()
               .addPropertiesSupplier { () =>
@@ -93,33 +103,28 @@ object OpenTelemetryTracerLive {
                 properties
               }
               .build()
-          }
-  } yield sdk)
+    } yield sdk.getOpenTelemetrySdk())
 
-  val contextStorageLayer = OpenTelemetry.contextZIO
+  private val contextStorageLayer: ULayer[ContextStorage] = OpenTelemetry.contextZIO
 
-  val tracingLayer =
+  private val tracingLayer: ZLayer[AppConfig & Otel & ContextStorage, Nothing, Tracing] =
     ZLayer
       .fromZIO(ZIO.service[AppConfig].map(_.openTelemetryTracer.serviceName))
       .flatMap(env => OpenTelemetry.tracing(env.get))
 
-  val sentryLayer: ZLayer[
-    AppConfig & AutoConfiguredOpenTelemetrySdk & (ContextStorage & Tracing),
+  private val sentry: ZIO[
+    AppConfig & Otel & (ContextStorage & Tracing),
     Nothing,
     SentryOpenTelemetryLayer,
   ] =
-    ZLayer.fromZIO(for {
+    for {
       appConfig <- ZIO.service[AppConfig]
-      sdk       <- ZIO.service[AutoConfiguredOpenTelemetrySdk]
+      sdk       <- ZIO.service[Otel]
       context   <- ZIO.service[ContextStorage]
       tracing   <- ZIO.service[Tracing]
       _ = Sentry.init { options =>
             options.setDsn(appConfig.openTelemetryTracer.dsn)
             options.setTracesSampleRate(1.0)
           }
-    } yield new SentryOpenTelemetryLayer {})
-
-  // ZLayer.succeed(OpenTelemetryTracer.sdkConfig) ++
-  // OpenTelemetry.tracing("foo-app") ++
-  // OpenTelemetry.contextZIO
+    } yield new SentryOpenTelemetryLayer {}
 }

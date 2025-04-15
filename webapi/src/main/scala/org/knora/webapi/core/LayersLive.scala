@@ -37,6 +37,8 @@ import org.knora.webapi.slice.common.BaseModule
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
+import org.knora.webapi.slice.infrastructure.OpenTelemetryTracerLive
+import org.knora.webapi.slice.infrastructure.SentryOpenTelemetryLayer
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiModule
@@ -63,9 +65,6 @@ import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.slice.infrastructure.SentryOpenTelemetryLayer
-import org.knora.webapi.slice.infrastructure.OpenTelemetryTracerLive
-import cats.data.Op
 
 object LayersLive {
 
@@ -160,10 +159,7 @@ object LayersLive {
       MessageRelayLive.layer,
       OntologyApiModule.layer,
       OntologyResponderV2.layer,
-      OpenTelemetryTracerLive.sdkLayer,
-      OpenTelemetryTracerLive.tracingLayer,
-      OpenTelemetryTracerLive.contextStorageLayer,
-      OpenTelemetryTracerLive.sentryLayer,
+      OpenTelemetryTracerLive.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PekkoActorSystem.layer,
