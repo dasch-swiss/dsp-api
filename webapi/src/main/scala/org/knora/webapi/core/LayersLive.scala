@@ -38,7 +38,6 @@ import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OpenTelemetryTracerLive
-import org.knora.webapi.slice.infrastructure.SentryOpenTelemetryLayer
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiModule
@@ -114,7 +113,6 @@ object LayersLive {
     SecurityModule.Provided &
     SearchApiRoutes &
     SearchResponderV2Module.Provided &
-    SentryOpenTelemetryLayer &
     ShaclApiModule.Provided &
     ShaclModule.Provided &
     SipiService &
