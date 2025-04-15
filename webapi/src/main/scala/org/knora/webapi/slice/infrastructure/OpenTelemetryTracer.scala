@@ -122,9 +122,12 @@ object OpenTelemetryTracerLive {
       sdk       <- ZIO.service[Otel]
       context   <- ZIO.service[ContextStorage]
       tracing   <- ZIO.service[Tracing]
-      _ = Sentry.init { options =>
-            options.setDsn(appConfig.openTelemetryTracer.dsn)
-            options.setTracesSampleRate(1.0)
+      dsn        = appConfig.openTelemetryTracer.dsn
+      _ = if (dsn.nonEmpty) {
+            Sentry.init { options =>
+              options.setDsn(appConfig.openTelemetryTracer.dsn)
+              options.setTracesSampleRate(1.0)
+            }
           }
     } yield new SentryOpenTelemetryLayer {}
 }
