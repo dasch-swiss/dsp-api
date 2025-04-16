@@ -33,7 +33,6 @@ object OpenTelemetryTracerLive {
       appConfig <- ZIO.service[AppConfig]
       sdk = AutoConfiguredOpenTelemetrySdk
               .builder()
-              .setResultAsGlobal()
               .addPropertiesSupplier { () =>
                 val properties = new HashMap[String, String]()
                 properties.put("otel.logs.exporter", "none");
