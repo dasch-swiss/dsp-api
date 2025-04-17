@@ -8,6 +8,8 @@ package org.knora.webapi.slice.search.api
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Greater
+import io.sentry.Sentry
+import io.sentry.SentryLevel
 import org.apache.pekko.http.scaladsl.server.Route
 import sttp.model.HeaderNames
 import sttp.model.MediaType
@@ -16,6 +18,7 @@ import sttp.tapir.codec.refined.*
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import dsp.valueobjects.Iri
 import org.knora.webapi.responders.v2.SearchResponderV2
@@ -287,6 +290,7 @@ final case class SearchRestService(
   searchResponderV2: SearchResponderV2,
   renderer: KnoraResponseRenderer,
   iriConverter: IriConverter,
+  tracing: Tracing,
 ) {
 
   def searchResourcesByLabelV2(
@@ -341,11 +345,26 @@ final case class SearchRestService(
     opts: FormatOptions,
     user: User,
     limitToProject: Option[ProjectIri],
-  ): Task[(RenderedResponse, MediaType)] = for {
-    searchResult <-
-      searchResponderV2.searchIncomingLinksV2(resourceIri, offset.value, opts.schemaRendering, user, limitToProject)
-    response <- renderer.render(searchResult, opts)
-  } yield response
+  ): Task[(RenderedResponse, MediaType)] =
+    for {
+      response <-
+        tracing.root("searchIncomingLinks") {
+          for {
+            searchResult <-
+              searchResponderV2
+                .searchIncomingLinksV2(
+                  resourceIri,
+                  offset.value,
+                  opts.schemaRendering,
+                  user,
+                  limitToProject,
+                )
+            response <- renderer.render(searchResult, opts)
+            _        <- ZIO.succeed(Sentry.captureMessage("searchIncomingLinks", SentryLevel.INFO))
+          } yield response
+        }
+
+    } yield response
 
   def fullTextSearch(
     query: RenderedResponse,

@@ -40,6 +40,7 @@ final case class AppConfig(
   jwt: JwtConfig,
   dspIngest: DspIngestConfig,
   features: Features,
+  openTelemetryTracer: OpenTelemetryTracer,
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
 }
@@ -180,9 +181,14 @@ final case class Features(
   triggerCompactionAfterProjectErasure: Boolean,
 )
 
+final case class OpenTelemetryTracer(
+  dsn: String,
+  serviceName: String,
+)
+
 object AppConfig {
   type AppConfigurations = AppConfig & DspIngestConfig & Features & GraphRoute & InstrumentationServerConfig &
-    JwtConfig & KnoraApi & Sipi & Triplestore
+    JwtConfig & KnoraApi & Sipi & Triplestore & OpenTelemetryTracer
 
   val parseConfig: UIO[AppConfig] = {
     val descriptor = deriveConfig[AppConfig].mapKey(toKebabCase)
@@ -211,6 +217,7 @@ object AppConfig {
       appConfigLayer.project(_.triplestore) ++
       appConfigLayer.project(_.instrumentationServerConfig) ++
       appConfigLayer.project(_.features) ++
+      appConfigLayer.project(_.openTelemetryTracer) ++
       appConfigLayer.project { appConfig =>
         val jwtConfig = appConfig.jwt
         val issuerFromConfigOrDefault: Option[String] =
