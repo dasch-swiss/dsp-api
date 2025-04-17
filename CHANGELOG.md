@@ -1,5 +1,14 @@
 # Changelog
 
+## [31.11.1](https://github.com/dasch-swiss/dsp-api/compare/v31.11.0...v31.11.1) (2025-04-17)
+
+
+### Maintenances
+
+* Enable telemetry on incoming links endpoint (DEV-4757) ([#3554](https://github.com/dasch-swiss/dsp-api/issues/3554)) ([a7e089a](https://github.com/dasch-swiss/dsp-api/commit/a7e089a392e25f0ff0517e0437fad98e168549c0))
+* Update app version in docker-compose.yml ([#3558](https://github.com/dasch-swiss/dsp-api/issues/3558)) ([633c952](https://github.com/dasch-swiss/dsp-api/commit/633c9523da87fa5270dc5c126fcfbf5697c56c32))
+* Update app version to v11.29.2 in docker-compose.yml ([#3560](https://github.com/dasch-swiss/dsp-api/issues/3560)) ([6ec5d24](https://github.com/dasch-swiss/dsp-api/commit/6ec5d244b986b4465fc2192362ec1f94cad46fb6))
+
 ## [31.11.0](https://github.com/dasch-swiss/dsp-api/compare/v31.10.0...v31.11.0) (2025-04-09)
 
 
