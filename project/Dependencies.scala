@@ -31,7 +31,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC39"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.1.16"
+  val ZioVersion                  = "2.1.17"
 
   // ZIO
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
@@ -89,7 +89,7 @@ object Dependencies {
   val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.17" // the logging interface
 
   // Metrics
-  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.23"
+  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.24"
 
   // input validation
   val commonsValidator =
@@ -131,7 +131,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.20"
+  val tapirVersion = "1.11.24"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
