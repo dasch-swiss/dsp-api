@@ -39,17 +39,17 @@ object Dependencies {
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
 
-  // jwt-scala 10.0.1 depends on zio-json 0.7.39
+  // jwt-scala 10.0.1 depends on zio-json 0.7.42
   // though newer version compatible with a newer zio-json version is available
   // it is not yet published: https://github.com/jwt-scala/jwt-scala/issues/642
-  val ZioJsonVersion        = "0.7.39"
+  val ZioJsonVersion        = "0.7.42"
   val zioJson               = "dev.zio"                       %% "zio-json"                  % ZioJsonVersion
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
   val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
-  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.10.3"
+  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.11.0"
 
   // refined
   val refined = Seq(
