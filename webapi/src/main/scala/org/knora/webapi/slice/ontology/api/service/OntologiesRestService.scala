@@ -37,6 +37,16 @@ final case class OntologiesRestService(
   private val renderer: KnoraResponseRenderer,
 ) {
 
+  def createClass(user: User)(
+    jsonLd: String,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    uuid      <- Random.nextUUID()
+    createReq <- requestParser.createClassRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    result    <- ontologyResponder.createClass(createReq)
+    response  <- renderer.render(result, formatOptions)
+  } yield response
+
   def changeClassLabelsOrComments(user: User)(
     jsonLd: String,
     formatOptions: FormatOptions,

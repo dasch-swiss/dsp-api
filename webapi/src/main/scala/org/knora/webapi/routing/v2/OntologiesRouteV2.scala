@@ -48,8 +48,7 @@ final case class OntologiesRouteV2()(
       getOntologyMetadata ~
       updateOntologyMetadata() ~
       getOntologyMetadataForProjects ~
-      getOntology ~
-      createClass()
+      getOntology
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -152,20 +151,5 @@ final case class OntologiesRouteV2()(
   private def getLanguages(requestContext: RequestContext) = {
     val params: Map[IRI, IRI] = requestContext.request.uri.query().toMap
     ValuesValidator.optionStringToBoolean(params.get(allLanguagesKey), fallback = false)
-  }
-
-  private def createClass(): Route = path(ontologiesBasePath / "classes") {
-    post {
-      // Create a new class.
-      entity(as[String]) { jsonRequest => requestContext =>
-        val requestMessageTask = for {
-          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-          apiRequestId   <- RouteUtilZ.randomUuid()
-          requestMessage <- requestParser(_.createClassRequestV2(jsonRequest, apiRequestId, requestingUser))
-                              .mapError(BadRequestException.apply)
-        } yield requestMessage
-        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-      }
-    }
   }
 }

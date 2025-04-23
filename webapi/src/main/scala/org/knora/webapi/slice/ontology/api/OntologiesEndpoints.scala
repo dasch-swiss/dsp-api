@@ -40,6 +40,14 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
 
+  val postOntologiesClasses = baseEndpoints.withUserEndpoint.post
+    .in(base / "classes")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Create a new class")
+
   val putOntologiesClasses = baseEndpoints.withUserEndpoint.put
     .in(base / "classes")
     .in(stringJsonBody)
@@ -253,6 +261,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 
   val endpoints =
     Seq(
+      postOntologiesClasses,
       putOntologiesClasses,
       deleteOntologiesClassesComment,
       postOntologiesCardinalities,
