@@ -15,6 +15,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteClassCommentRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.responders.v2.OntologyResponderV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
@@ -38,6 +39,17 @@ final case class OntologiesRestService(
   private val renderer: KnoraResponseRenderer,
   private val appConfig: AppConfig,
 ) {
+
+  def getOntologyMetadataByProjects(
+    projectIris: List[String],
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    projectIris <- ZIO.foreach(projectIris)(iri =>
+                     ZIO.fromEither(ProjectIri.from(iri)).orElseFail(BadRequestException(s"Invalid project IRI $iri")),
+                   )
+    result   <- ontologyResponder.getOntologyMetadataForProjectsV2(projectIris.toSet)
+    response <- renderer.render(result, formatOptions)
+  } yield response
 
   def getOntologyEntities(user: User)(
     ontologyIriDto: IriDto,

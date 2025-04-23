@@ -22,7 +22,6 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
@@ -46,8 +45,7 @@ final case class OntologiesRouteV2()(
   def makeRoute: Route =
     dereferenceOntologyIri() ~
       getOntologyMetadata ~
-      updateOntologyMetadata() ~
-      getOntologyMetadataForProjects
+      updateOntologyMetadata()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -120,17 +118,6 @@ final case class OntologiesRouteV2()(
           } yield requestMessage
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }
-      }
-    }
-
-  private def getOntologyMetadataForProjects: Route =
-    path(ontologiesBasePath / "metadata" / Segments) { (projectIris: List[IRI]) =>
-      get { requestContext =>
-        val requestTask = ZIO
-          .foreach(projectIris)(iri => ZIO.fromEither(ProjectIri.from(iri)).mapError(BadRequestException.apply))
-          .map(_.toSet)
-          .map(OntologyMetadataGetByProjectRequestV2(_))
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
 }

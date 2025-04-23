@@ -15,6 +15,7 @@ import java.time.Instant
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
@@ -39,6 +40,13 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val resourceClassIriPath = path[IriDto].name("resourceClassIri")
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
+  private val projectIrisPath      = paths.description("projectIris")
+
+  val getOntologiesMetadata = baseEndpoints.publicEndpoint.get
+    .in(base / "metadata" / projectIrisPath)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
 
   val getOntologiesAllentities = baseEndpoints.withUserEndpoint.get
     .in(base / "allentities" / ontologyIriPath)
