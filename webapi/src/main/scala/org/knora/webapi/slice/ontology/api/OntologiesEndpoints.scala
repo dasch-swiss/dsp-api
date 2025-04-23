@@ -40,6 +40,14 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
 
+  val getOntologiesAllentities = baseEndpoints.withUserEndpoint.get
+    .in(base / "allentities" / ontologyIriPath)
+    .in(allLanguages)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Get all entities of an ontology")
+
   val postOntologiesClasses = baseEndpoints.withUserEndpoint.post
     .in(base / "classes")
     .in(stringJsonBody)
@@ -261,6 +269,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 
   val endpoints =
     Seq(
+      getOntologiesAllentities,
       postOntologiesClasses,
       putOntologiesClasses,
       deleteOntologiesClassesComment,

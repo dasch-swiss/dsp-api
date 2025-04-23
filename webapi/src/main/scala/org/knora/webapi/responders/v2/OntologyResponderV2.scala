@@ -348,7 +348,7 @@ final case class OntologyResponderV2(
    * @param requestingUser the user making the request.
    * @return a [[ReadOntologyV2]].
    */
-  private def getOntologyEntitiesV2(
+  def getOntologyEntitiesV2(
     ontologyIri: OntologyIri,
     allLanguages: Boolean,
     requestingUser: User,

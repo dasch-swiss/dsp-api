@@ -47,8 +47,7 @@ final case class OntologiesRouteV2()(
     dereferenceOntologyIri() ~
       getOntologyMetadata ~
       updateOntologyMetadata() ~
-      getOntologyMetadataForProjects ~
-      getOntology
+      getOntologyMetadataForProjects
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -134,22 +133,4 @@ final case class OntologiesRouteV2()(
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
-
-  private def getOntology: Route =
-    path(ontologiesBasePath / "allentities" / Segment) { (externalOntologyIriStr: IRI) =>
-      get { requestContext =>
-        val ontologyIriTask = RouteUtilZ.externalOntologyIri(externalOntologyIriStr)
-        val requestMessageTask = for {
-          ontologyIri    <- ontologyIriTask
-          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield OntologyEntitiesGetRequestV2(ontologyIri, getLanguages(requestContext), requestingUser)
-        val targetSchema = ontologyIriTask.flatMap(getTargetSchemaFromOntology)
-        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext, targetSchema)
-      }
-    }
-
-  private def getLanguages(requestContext: RequestContext) = {
-    val params: Map[IRI, IRI] = requestContext.request.uri.query().toMap
-    ValuesValidator.optionStringToBoolean(params.get(allLanguagesKey), fallback = false)
-  }
 }

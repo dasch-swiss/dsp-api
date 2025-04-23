@@ -11,6 +11,7 @@ import zio.*
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.ApiV2Schema
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteClassCommentRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.responders.v2.OntologyResponderV2
@@ -35,7 +36,25 @@ final case class OntologiesRestService(
   private val restCardinalityService: RestCardinalityService,
   private val requestParser: OntologyV2RequestParser,
   private val renderer: KnoraResponseRenderer,
+  private val appConfig: AppConfig,
 ) {
+
+  def getOntologyEntities(user: User)(
+    ontologyIriDto: IriDto,
+    allLanguages: Boolean,
+    opts: FormatOptions,
+  ): Task[(String, MediaType)] = for {
+    ontologyIri <-
+      iriConverter
+        .asOntologyIri(ontologyIriDto.value)
+        .mapError(BadRequestException.apply)
+        .filterOrFail(_.isExternal)(BadRequestException(s"Invalid external ontology IRI: ${ontologyIriDto.value}"))
+    targetSchema <- ZIO
+                      .fromOption(ontologyIri.smartIri.getOntologySchema.collect { case schema: ApiV2Schema => schema })
+                      .orElseFail(BadRequestException(s"Invalid external ontology IRI: ${ontologyIriDto.value}"))
+    result  <- ontologyResponder.getOntologyEntitiesV2(ontologyIri, allLanguages, user)
+    response = result.format(opts.copy(schema = targetSchema), appConfig)
+  } yield (response, MediaType("application", "ld+json"))
 
   def createClass(user: User)(
     jsonLd: String,
