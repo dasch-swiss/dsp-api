@@ -38,6 +38,14 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
 
+  val getOntologiesCanreplacecardinalities = baseEndpoints.withUserEndpoint.get
+    .in(base / "canreplacecardinalities" / resourceClassIriPath)
+    .in(query[Option[IriDto]]("propertyIri"))
+    .in(query[Option[String]]("newCardinality"))
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
   val putOntologiesCardinalities = baseEndpoints.withUserEndpoint.put
     .in(base / "cardinalities")
     .in(stringJsonBody)
@@ -163,6 +171,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 
   val endpoints =
     Seq(
+      getOntologiesCanreplacecardinalities,
       putOntologiesCardinalities,
       postOntologiesCandeletecardinalities,
       patchOntologiesCardinalities,

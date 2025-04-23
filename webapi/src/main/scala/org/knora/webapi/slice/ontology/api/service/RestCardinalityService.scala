@@ -31,7 +31,15 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-trait RestCardinalityService {
+
+case class RestCardinalityService(
+  cardinalityService: CardinalityService,
+  iriConverter: IriConverter,
+  ontologyRepo: OntologyRepo,
+) {
+
+  private val permissionService: PermissionService = PermissionService(ontologyRepo)
+  private val canSetResponsePrefix: String         = s"${KnoraApiV2PrefixExpansion}canSetCardinality"
 
   def canChangeCardinality(
     classIri: String,
@@ -45,42 +53,6 @@ trait RestCardinalityService {
       case (None, None)                              => canReplaceCardinality(classIri, user)
       case (Some(propertyIri), Some(newCardinality)) => canSetCardinality(classIri, propertyIri, newCardinality, user)
     }
-
-  def canReplaceCardinality(classIri: String, user: User): Task[CanDoResponseV2]
-
-  def canSetCardinality(
-    classIri: String,
-    propertyIri: String,
-    cardinality: String,
-    user: User,
-  ): Task[CanDoResponseV2]
-}
-
-private final case class PermissionService(ontologyRepo: OntologyRepo) {
-  def hasOntologyWriteAccess(user: User, ontologyIri: InternalIri): Task[Boolean] = {
-    val permissions = user.permissions
-    for {
-      data           <- ontologyRepo.findById(ontologyIri)
-      projectIriMaybe = data.flatMap(_.projectIri)
-      hasPermission   = projectIriMaybe.exists(permissions.isSystemAdmin || permissions.isProjectAdmin(_))
-    } yield hasPermission
-  }
-}
-object RestCardinalityService {
-  val classIriKey: String       = "classIri"
-  val propertyIriKey: String    = "propertyIri"
-  val newCardinalityKey: String = "newCardinality"
-}
-
-case class RestCardinalityServiceLive(
-  cardinalityService: CardinalityService,
-  iriConverter: IriConverter,
-  ontologyRepo: OntologyRepo,
-) extends RestCardinalityService {
-
-  private val permissionService: PermissionService = PermissionService(ontologyRepo)
-  private val canSetResponsePrefix: String         = s"${KnoraApiV2PrefixExpansion}canSetCardinality"
-
   def canReplaceCardinality(classIri: String, user: User): Task[CanDoResponseV2] =
     for {
       classIri <- iriConverter.asInternalIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
@@ -176,7 +148,21 @@ case class RestCardinalityServiceLive(
   private def iriValue(iri: String) = JsonLDObject(Map("@id" -> JsonLDString(iri)))
 }
 
-object RestCardinalityServiceLive {
-  val layer: ZLayer[CardinalityService & IriConverter & OntologyRepo, Nothing, RestCardinalityService] =
-    ZLayer.fromFunction(RestCardinalityServiceLive.apply _)
+object RestCardinalityService {
+  val classIriKey: String       = "classIri"
+  val propertyIriKey: String    = "propertyIri"
+  val newCardinalityKey: String = "newCardinality"
+
+  val layer = ZLayer.derive[RestCardinalityService]
+}
+
+private final case class PermissionService(ontologyRepo: OntologyRepo) {
+  def hasOntologyWriteAccess(user: User, ontologyIri: InternalIri): Task[Boolean] = {
+    val permissions = user.permissions
+    for {
+      data           <- ontologyRepo.findById(ontologyIri)
+      projectIriMaybe = data.flatMap(_.projectIri)
+      hasPermission   = projectIriMaybe.exists(permissions.isSystemAdmin || permissions.isProjectAdmin(_))
+    } yield hasPermission
+  }
 }

@@ -41,8 +41,6 @@ import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.lists.domain.ListsService
 import org.knora.webapi.slice.ontology.CoreModule
 import org.knora.webapi.slice.ontology.api.OntologyApiModule
-import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
-import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
@@ -128,7 +126,6 @@ object LayersTestLive { self =>
       ResourcesApiModule.layer,
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
-      RestCardinalityServiceLive.layer,
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,

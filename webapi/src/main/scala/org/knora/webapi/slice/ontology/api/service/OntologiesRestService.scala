@@ -30,9 +30,23 @@ final case class OntologiesRestService(
   private val ontologiesRepo: OntologyRepo,
   private val ontologyResponder: OntologyResponderV2,
   private val ontologyCacheHelpers: OntologyCacheHelpers,
+  private val restCardinalityService: RestCardinalityService,
   private val requestParser: OntologyV2RequestParser,
   private val renderer: KnoraResponseRenderer,
 ) {
+
+  def canChangeCardinality(
+    user: User,
+  )(
+    classIri: IriDto,
+    propertyIri: Option[IriDto],
+    newCardinality: Option[String],
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    result <-
+      restCardinalityService.canChangeCardinality(classIri.value, user, propertyIri.map(_.value), newCardinality)
+    response <- renderer.render(result, formatOptions)
+  } yield response
 
   def replaceCardinalities(
     user: User,

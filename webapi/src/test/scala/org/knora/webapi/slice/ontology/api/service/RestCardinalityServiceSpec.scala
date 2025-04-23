@@ -14,8 +14,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
-import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLiveSpec.StubCardinalitiesService.replaceSuccess
-import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLiveSpec.StubCardinalitiesService.setSuccess
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceSpec.StubCardinalitiesService.replaceSuccess
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceSpec.StubCardinalitiesService.setSuccess
 import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
 import org.knora.webapi.slice.ontology.domain.ReadOntologyV2Builder
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
@@ -31,7 +31,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 import org.knora.webapi.util.JsonHelper.StringToJson
 import org.knora.webapi.util.JsonHelper.renderResponseJson
 
-object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
+object RestCardinalityServiceSpec extends ZIOSpecDefault {
   private val ontology = OntologyCacheDataBuilder.builder
     .addOntology(
       ReadOntologyV2Builder
@@ -168,7 +168,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
         },
       ),
     ).provide(
-      RestCardinalityServiceLive.layer,
+      RestCardinalityService.layer,
       IriConverter.layer,
       StringFormatter.test,
       OntologyRepoLive.layer,
