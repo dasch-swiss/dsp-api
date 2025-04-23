@@ -5,13 +5,13 @@
 
 package org.knora.webapi.slice.ontology.api
 
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
 import zio.ZLayer
 
 import java.time.Instant
-
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
 import org.knora.webapi.slice.common.Value
@@ -51,7 +51,12 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
         .example(Some(Cardinality.AtLeastOne.toString)),
     )
     .in(ApiV2.Inputs.formatOptions)
-    .out(stringBody)
+    .out(stringBody.example(s"""
+                               |{
+                               |  "${KnoraApiV2Complex.CanDo}": false,
+                               |  "${KnoraApiV2Complex.CannotDoReason}": "The new cardinality is not included in the cardinality of a super-class.",
+                               |}
+                               |""".stripMargin))
     .out(header[MediaType](HeaderNames.ContentType))
     .description(
       "If only a class IRI is provided, this endpoint checks if any cardinality of any of the class properties can " +
