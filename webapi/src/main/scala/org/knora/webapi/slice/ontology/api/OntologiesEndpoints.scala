@@ -40,6 +40,14 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
 
+  val putOntologiesClasses = baseEndpoints.withUserEndpoint.put
+    .in(base / "classes")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Change the labels or comments of a class")
+
   val deleteOntologiesClassesComment = baseEndpoints.withUserEndpoint.delete
     .in(base / "classes" / "comment" / resourceClassIriPath)
     .in(lastModificationDate)
@@ -245,6 +253,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 
   val endpoints =
     Seq(
+      putOntologiesClasses,
       deleteOntologiesClassesComment,
       postOntologiesCardinalities,
       getOntologiesCanreplacecardinalities,

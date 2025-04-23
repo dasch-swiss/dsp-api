@@ -17,6 +17,7 @@ final class OntologiesEndpointsHandler(
 ) {
 
   val allHandlers = Seq(
+    SecuredEndpointHandler(endpoints.putOntologiesClasses, restService.changeClassLabelsOrComments),
     SecuredEndpointHandler(endpoints.deleteOntologiesClassesComment, restService.deleteClassComment),
     SecuredEndpointHandler(endpoints.postOntologiesCardinalities, restService.addCardinalities),
     SecuredEndpointHandler(endpoints.getOntologiesCanreplacecardinalities, restService.canChangeCardinality),

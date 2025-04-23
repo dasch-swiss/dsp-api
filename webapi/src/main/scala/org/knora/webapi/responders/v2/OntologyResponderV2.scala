@@ -1919,7 +1919,7 @@ final case class OntologyResponderV2(
    * @param req the request to change the class's labels or comments.
    * @return a [[ReadOntologyV2]] containing the modified class definition.
    */
-  private def changeClassLabelsOrComments(req: ChangeClassLabelsOrCommentsRequestV2): Task[ReadOntologyV2] = {
+  def changeClassLabelsOrComments(req: ChangeClassLabelsOrCommentsRequestV2): Task[ReadOntologyV2] = {
     val internalClassIri    = req.classIri.toInternalSchema
     val internalOntologyIri = req.classIri.ontologyIri.toInternalSchema
     val externalClassIri    = req.classIri.toComplexSchema

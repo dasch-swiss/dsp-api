@@ -49,8 +49,7 @@ final case class OntologiesRouteV2()(
       updateOntologyMetadata() ~
       getOntologyMetadataForProjects ~
       getOntology ~
-      createClass() ~
-      updateClass()
+      createClass()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -169,21 +168,4 @@ final case class OntologiesRouteV2()(
       }
     }
   }
-
-  private def updateClass(): Route =
-    path(ontologiesBasePath / "classes") {
-      put {
-        // Change the labels or comments of a class.
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestMessageTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <-
-              requestParser(_.changeClassLabelsOrCommentsRequestV2(jsonRequest, apiRequestId, requestingUser))
-                .mapError(BadRequestException.apply)
-          } yield requestMessage
-          RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-        }
-      }
-    }
 }
