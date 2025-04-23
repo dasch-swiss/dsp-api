@@ -2064,7 +2064,7 @@ final case class OntologyResponderV2(
    * @param deleteClassCommentRequest the request to delete the class' comment
    * @return a [[ReadOntologyV2]] containing the modified class definition.
    */
-  private def deleteClassComment(
+  def deleteClassComment(
     deleteClassCommentRequest: DeleteClassCommentRequestV2,
   ): Task[ReadOntologyV2] = {
     def makeTaskFuture(

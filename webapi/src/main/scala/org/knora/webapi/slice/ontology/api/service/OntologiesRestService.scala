@@ -11,6 +11,7 @@ import zio.*
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.ApiV2Schema
+import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteClassCommentRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.slice.admin.domain.model.User
@@ -35,6 +36,18 @@ final case class OntologiesRestService(
   private val requestParser: OntologyV2RequestParser,
   private val renderer: KnoraResponseRenderer,
 ) {
+
+  def deleteClassComment(user: User)(
+    classIri: IriDto,
+    lastModificationDate: LastModificationDate,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    classIri <- iriConverter.asResourceClassIri(classIri.value).mapError(BadRequestException.apply)
+    uuid     <- Random.nextUUID()
+    request   = DeleteClassCommentRequestV2(classIri.smartIri, lastModificationDate.value, uuid, user)
+    result   <- ontologyResponder.deleteClassComment(request)
+    response <- renderer.render(result, formatOptions)
+  } yield response
 
   def addCardinalities(user: User)(
     jsonLd: String,
