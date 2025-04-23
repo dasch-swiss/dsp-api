@@ -23,14 +23,11 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.RouteUtilV2.completeResponse
-import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
-import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.security.Authenticator
 
@@ -39,8 +36,7 @@ import org.knora.webapi.slice.security.Authenticator
  */
 final case class OntologiesRouteV2()(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & MessageRelay & OntologyV2RequestParser & RestCardinalityService &
-      StringFormatter,
+    AppConfig & Authenticator & IriConverter & MessageRelay & OntologyV2RequestParser & StringFormatter,
   ],
 ) {
 
@@ -59,8 +55,7 @@ final case class OntologiesRouteV2()(
       createClass() ~
       updateClass() ~
       deleteClassComment() ~
-      addCardinalities() ~
-      canReplaceCardinalities
+      addCardinalities()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -229,22 +224,6 @@ final case class OntologiesRouteV2()(
           } yield requestMessage
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }
-      }
-    }
-
-  private def canReplaceCardinalities: Route =
-    // GET basePath/{iriEncode} or
-    // GET basePath/{iriEncode}?propertyIri={iriEncode}&newCardinality=[0-1|1|1-n|0-n]
-    path(ontologiesBasePath / "canreplacecardinalities" / Segment) { (classIri: IRI) =>
-      get { requestContext =>
-        val response = for {
-          user           <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-          property       <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.propertyIriKey))
-          newCardinality <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.newCardinalityKey))
-          canChange <-
-            ZIO.serviceWithZIO[RestCardinalityService](_.canChangeCardinality(classIri, user, property, newCardinality))
-        } yield canChange
-        completeResponse(response, requestContext)
       }
     }
 

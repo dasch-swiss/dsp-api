@@ -30,33 +30,14 @@ import ApiV2.Headers.xKnoraAcceptProject
 import ApiV2.Headers.xKnoraAcceptSchemaHeader
 import ApiV2.Headers.xKnoraJsonLdRendering
 import ApiV2.QueryParams
-import ApiV2.QueryParams.schema
 
 /**
  * Handles message formatting, content negotiation, and simple interactions with responders, on behalf of Knora routes.
  */
 object RouteUtilV2 {
 
-  def getStringQueryParam(ctx: RequestContext, key: String): Option[String] = getQueryParamsMap(ctx).get(key)
-  private def getQueryParamsMap(ctx: RequestContext): Map[String, String]   = ctx.request.uri.query().toMap
-
-  /**
-   * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
-   * either in the HTTP header "x-knora-accept-schema-header" or in the URL parameter "schema".
-   * If no schema is specified in the request, the default of [[ApiV2Complex]] is returned.
-   *
-   * @param ctx the pekko-http [[RequestContext]].
-   * @return the specified schema, or [[ApiV2Complex]] if no schema was specified in the request.
-   */
-  def getOntologySchema(ctx: RequestContext): IO[BadRequestException, ApiV2Schema] = {
-    def stringToSchema(str: String): IO[BadRequestException, ApiV2Schema] =
-      ZIO.fromEither(ApiV2Schema.from(str)).mapError(BadRequestException(_))
-    def fromQueryParams: Option[IO[BadRequestException, ApiV2Schema]] =
-      ctx.request.uri.query().get(schema).map(stringToSchema)
-    def fromHeaders: Option[IO[BadRequestException, ApiV2Schema]] =
-      ctx.request.headers.find(_.lowercaseName == xKnoraAcceptSchemaHeader).map(h => stringToSchema(h.value))
-    fromQueryParams.orElse(fromHeaders).getOrElse(ZIO.succeed(ApiV2Schema.default))
-  }
+  private def getStringQueryParam(ctx: RequestContext, key: String): Option[String] = getQueryParamsMap(ctx).get(key)
+  private def getQueryParamsMap(ctx: RequestContext): Map[String, String]           = ctx.request.uri.query().toMap
 
   /**
    * Gets the type of standoff rendering that should be used when returning text with standoff.
@@ -72,9 +53,7 @@ object RouteUtilV2 {
     fromQueryParam
       .orElse(fromHeader)
       .map(toMarkupRendering)
-      .fold[Validation[BadRequestException, Option[MarkupRendering]]](Validation.succeed(None))(
-        Validation.fromEither(_),
-      )
+      .fold[Validation[BadRequestException, Option[MarkupRendering]]](Validation.succeed(None))(Validation.fromEither)
   }
 
   private def firstHeaderValue(ctx: RequestContext, headerName: String): Option[String] =
@@ -93,7 +72,7 @@ object RouteUtilV2 {
    * @param requestContext the request context.
    * @return the set of schema options submitted in the request, including default options.
    */
-  def getSchemaOptions(requestContext: RequestContext): IO[BadRequestException, Set[Rendering]] =
+  private def getSchemaOptions(requestContext: RequestContext): IO[BadRequestException, Set[Rendering]] =
     Validation
       .validateWith(
         getStandoffRendering(requestContext),
@@ -155,7 +134,7 @@ object RouteUtilV2 {
    *
    * @return a [[Future]]     Containing the [[RouteResult]] for Pekko HTTP.
    */
-  def completeResponse[R](
+  private def completeResponse[R](
     responseTask: ZIO[R, Throwable, KnoraResponseV2],
     requestContext: RequestContext,
     targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
@@ -203,18 +182,6 @@ object RouteUtilV2 {
     } yield mediaRange
 
   }
-
-  /**
-   * Completes the HTTP request in the [[RequestContext]] by _unsafely_ running the ZIO.
-   * @param ctx The pekko-http [[RequestContext]].
-   * @param task The ZIO to run.
-   * @param runtime The [[zio.Runtime]] used for executing the ZIO.
-   * @tparam R The requirements for the ZIO, must be present in the [[zio.Runtime]].
-   * @return A [[Future]] containing the [[RouteResult]] for Pekko HTTP.
-   */
-  def complete[R](ctx: RequestContext, task: ZIO[R, Throwable, HttpResponse])(implicit
-    runtime: Runtime[R],
-  ): Future[RouteResult] = ctx.complete(UnsafeZioRun.runToFuture(task))
 
   /**
    * Chooses an RDF media type for the response, using content negotiation as per [[https://tools.ietf.org/html/rfc7231#section-5.3.2]].

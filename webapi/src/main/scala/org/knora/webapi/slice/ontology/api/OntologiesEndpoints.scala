@@ -12,11 +12,13 @@ import zio.ZLayer
 
 import java.time.Instant
 
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.resources.api.model.IriDto
 
 final case class LastModificationDate private (value: Instant) extends Value[Instant]
@@ -37,6 +39,34 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val resourceClassIriPath = path[IriDto].name("resourceClassIri")
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
+
+  val getOntologiesCanreplacecardinalities = baseEndpoints.withUserEndpoint.get
+    .in(base / "canreplacecardinalities" / resourceClassIriPath)
+    .in(query[Option[IriDto]]("propertyIri"))
+    .in(
+      query[Option[String]]("newCardinality")
+        .description(
+          "The new cardinality to be set for the property, must be provided when propertyIri is given. " +
+            "Valid values are: " + Cardinality.allCardinalities.mkString(", "),
+        )
+        .example(Some(Cardinality.AtLeastOne.toString)),
+    )
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody.example(s"""
+                               |{
+                               |  "${KnoraApiV2Complex.CanDo}": false,
+                               |  "${KnoraApiV2Complex.CannotDoReason}": "The new cardinality is not included in the cardinality of a super-class.",
+                               |}
+                               |""".stripMargin))
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description(
+      "If only a class IRI is provided, this endpoint checks if any cardinality of any of the class properties can " +
+        "be replaced. " +
+        "If a property IRI and a new cardinality are provided, it checks if the cardinality can be set for the property " +
+        "on the specific class. " +
+        "Fails if not both a property IRI and a new cardinality is provided. " +
+        "Fails if the user does not have write access to the ontology of the class.",
+    )
 
   val putOntologiesCardinalities = baseEndpoints.withUserEndpoint.put
     .in(base / "cardinalities")
@@ -163,6 +193,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 
   val endpoints =
     Seq(
+      getOntologiesCanreplacecardinalities,
       putOntologiesCardinalities,
       postOntologiesCandeletecardinalities,
       patchOntologiesCardinalities,
