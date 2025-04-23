@@ -54,8 +54,7 @@ final case class OntologiesRouteV2()(
       getOntology ~
       createClass() ~
       updateClass() ~
-      deleteClassComment() ~
-      addCardinalities()
+      deleteClassComment()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -207,23 +206,6 @@ final case class OntologiesRouteV2()(
           apiRequestId         <- RouteUtilZ.randomUuid()
         } yield DeleteClassCommentRequestV2(classIri, lastModificationDate, apiRequestId, requestingUser)
         RouteUtilV2.runRdfRouteZ(requestMessageFuture, requestContext)
-      }
-    }
-
-  private def addCardinalities(): Route =
-    path(ontologiesBasePath / "cardinalities") {
-      post {
-        // Add cardinalities to a class.
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestMessageTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <-
-              requestParser(_.addCardinalitiesToClassRequestV2(jsonRequest, apiRequestId, requestingUser))
-                .mapError(BadRequestException.apply)
-          } yield requestMessage
-          RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-        }
       }
     }
 

@@ -849,7 +849,7 @@ final case class OntologyResponderV2(
    * @param addCardinalitiesRequest the request to add the cardinalities.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  private def addCardinalitiesToClass(
+  def addCardinalitiesToClass(
     addCardinalitiesRequest: AddCardinalitiesToClassRequestV2,
   ): Task[ReadOntologyV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] = {

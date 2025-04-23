@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.slice.ontology.api.service
+
 import sttp.model.MediaType
 import zio.*
 
@@ -34,6 +35,16 @@ final case class OntologiesRestService(
   private val requestParser: OntologyV2RequestParser,
   private val renderer: KnoraResponseRenderer,
 ) {
+
+  def addCardinalities(user: User)(
+    jsonLd: String,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    uuid      <- Random.nextUUID()
+    createReq <- requestParser.addCardinalitiesToClassRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    result    <- ontologyResponder.addCardinalitiesToClass(createReq)
+    response  <- renderer.render(result, formatOptions)
+  } yield response
 
   def canChangeCardinality(
     user: User,
