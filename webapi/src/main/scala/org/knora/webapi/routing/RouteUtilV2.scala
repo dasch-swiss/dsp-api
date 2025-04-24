@@ -21,13 +21,9 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.ApiV2
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
 
 import ApiV2.Headers.xKnoraAcceptMarkup
-import ApiV2.Headers.xKnoraAcceptProject
-import ApiV2.Headers.xKnoraAcceptSchemaHeader
 import ApiV2.Headers.xKnoraJsonLdRendering
 import ApiV2.QueryParams
 
@@ -79,23 +75,6 @@ object RouteUtilV2 {
         getJsonLDRendering(requestContext),
       )((standoff, jsonLd) => Set(standoff, jsonLd).flatten)
       .toZIO
-
-  /**
-   * Gets the project IRI specified in a Knora-specific HTTP header.
-   *
-   * @param requestContext the pekko-http [[RequestContext]].
-   * @return The specified project IRI, or [[None]] if no project header was included in the request.
-   *         Fails with a [[BadRequestException]] if the project IRI is invalid.
-   */
-  def getProjectIri(requestContext: RequestContext): ZIO[IriConverter, BadRequestException, Option[ProjectIri]] = {
-    val maybeProjectIriStr =
-      requestContext.request.headers.find(_.lowercaseName == xKnoraAcceptProject).map(_.value())
-    ZIO.foreach(maybeProjectIriStr)(iri =>
-      ZIO
-        .fromEither(ProjectIri.from(iri))
-        .orElseFail(BadRequestException(s"Invalid project IRI: $iri in request header $xKnoraAcceptSchemaHeader")),
-    )
-  }
 
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotiation.

@@ -35,17 +35,16 @@ object LastModificationDate {
 final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val base = "v2" / "ontologies"
 
-  private val ontologyIriPath           = path[IriDto].name("ontologyIri")
-  private val propertyIriPath           = path[IriDto].name("propertyIri")
-  private val resourceClassIriPath      = path[IriDto].name("resourceClassIri")
-  private val lastModificationDate      = query[LastModificationDate]("lastModificationDate")
-  private val allLanguages              = query[Boolean]("allLanguages").default(false)
-  private val projectIrisPath           = paths.description("projectIris")
-  private val xKnoraAcceptProjectHeader = header[Option[ProjectIri]](ApiV2.Headers.xKnoraAcceptProject)
+  private val ontologyIriPath      = path[IriDto].name("ontologyIri")
+  private val propertyIriPath      = path[IriDto].name("propertyIri")
+  private val resourceClassIriPath = path[IriDto].name("resourceClassIri")
+  private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
+  private val allLanguages         = query[Boolean]("allLanguages").default(false)
+  private val projectIrisPath      = paths.description("projectIris")
 
   val getOntologiesMetadataProject = baseEndpoints.publicEndpoint.get
     .in(base / "metadata")
-    .in(xKnoraAcceptProjectHeader)
+    .in(header[Option[ProjectIri]](ApiV2.Headers.xKnoraAcceptProject))
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))

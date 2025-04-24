@@ -6,7 +6,6 @@
 package org.knora.webapi.routing.v2
 
 import org.apache.pekko.http.scaladsl.server.Directives.*
-import org.apache.pekko.http.scaladsl.server.PathMatcher
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
@@ -37,13 +36,9 @@ final case class OntologiesRouteV2()(
   ],
 ) {
 
-  private val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
-
   private val allLanguagesKey = "allLanguages"
 
-  def makeRoute: Route =
-    dereferenceOntologyIri() ~
-      getOntologyMetadata
+  def makeRoute: Route = dereferenceOntologyIri()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -91,15 +86,4 @@ final case class OntologiesRouteV2()(
       }
     }
   }
-
-  private def getOntologyMetadata: Route =
-    path(ontologiesBasePath / "metadata") {
-      get { requestContext =>
-        val requestTask = RouteUtilV2
-          .getProjectIri(requestContext)
-          .map(_.toSet)
-          .map(OntologyMetadataGetByProjectRequestV2(_))
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-      }
-    }
 }
