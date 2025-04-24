@@ -38,14 +38,12 @@ final case class OntologiesRouteV2()(
 ) {
 
   private val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
-  private val requestParser                         = ZIO.serviceWithZIO[OntologyV2RequestParser]
 
   private val allLanguagesKey = "allLanguages"
 
   def makeRoute: Route =
     dereferenceOntologyIri() ~
-      getOntologyMetadata ~
-      updateOntologyMetadata()
+      getOntologyMetadata
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -102,22 +100,6 @@ final case class OntologiesRouteV2()(
           .map(_.toSet)
           .map(OntologyMetadataGetByProjectRequestV2(_))
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-      }
-    }
-
-  private def updateOntologyMetadata(): Route =
-    path(ontologiesBasePath / "metadata") {
-      put {
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <-
-              requestParser(_.changeOntologyMetadataRequestV2(jsonRequest, apiRequestId, requestingUser))
-                .mapError(BadRequestException.apply)
-          } yield requestMessage
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-        }
       }
     }
 }

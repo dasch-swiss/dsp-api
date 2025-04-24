@@ -498,7 +498,7 @@ final case class OntologyResponderV2(
    * @param requestingUser        The user making the request.
    * @return a [[ReadOntologyMetadataV2]] containing the new metadata.
    */
-  private def changeOntologyMetadata(
+  def changeOntologyMetadata(
     ontologyIri: OntologyIri,
     label: Option[String] = None,
     comment: Option[String] = None,

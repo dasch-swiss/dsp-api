@@ -15,7 +15,6 @@ import java.time.Instant
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
@@ -41,6 +40,14 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
   private val projectIrisPath      = paths.description("projectIris")
+
+  val putOntologiesMetadata = baseEndpoints.securedEndpoint.put
+    .in(base / "metadata")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Change the metadata of an ontology")
 
   val getOntologiesMetadata = baseEndpoints.publicEndpoint.get
     .in(base / "metadata" / projectIrisPath)
@@ -277,6 +284,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 
   val endpoints =
     Seq(
+      putOntologiesMetadata,
       getOntologiesAllentities,
       postOntologiesClasses,
       putOntologiesClasses,

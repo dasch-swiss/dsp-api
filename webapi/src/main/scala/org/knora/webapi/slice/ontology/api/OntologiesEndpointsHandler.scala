@@ -23,6 +23,7 @@ final class OntologiesEndpointsHandler(
   ).map(mapper.mapPublicEndpointHandler(_))
 
   private val secureHandlers = Seq(
+    SecuredEndpointHandler(endpoints.putOntologiesMetadata, restService.changeOntologyMetadata),
     SecuredEndpointHandler(endpoints.getOntologiesAllentities, restService.getOntologyEntities),
     SecuredEndpointHandler(endpoints.postOntologiesClasses, restService.createClass),
     SecuredEndpointHandler(endpoints.putOntologiesClasses, restService.changeClassLabelsOrComments),

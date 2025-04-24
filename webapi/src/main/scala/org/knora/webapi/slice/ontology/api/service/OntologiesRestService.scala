@@ -40,6 +40,23 @@ final case class OntologiesRestService(
   private val appConfig: AppConfig,
 ) {
 
+  def changeOntologyMetadata(user: User)(
+    jsonLd: String,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    uuid <- Random.nextUUID()
+    req  <- requestParser.changeOntologyMetadataRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    result <- ontologyResponder.changeOntologyMetadata(
+                req.ontologyIri,
+                req.label,
+                req.comment,
+                req.lastModificationDate,
+                uuid,
+                user,
+              )
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
   def getOntologyMetadataByProjects(
     projectIris: List[String],
     formatOptions: FormatOptions,
