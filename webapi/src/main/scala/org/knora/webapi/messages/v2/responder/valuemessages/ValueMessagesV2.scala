@@ -14,6 +14,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.language.implicitConversions
 import scala.util.Try
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -55,7 +56,6 @@ import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.WithAsIs
-import zio.Random
 
 private def objectCommentOption(r: Resource): Either[String, Option[String]] =
   r.objectStringOption(ValueHasComment, str => Iri.toSparqlEncodedString(str).toRight(s"Invalid comment: $str"))
