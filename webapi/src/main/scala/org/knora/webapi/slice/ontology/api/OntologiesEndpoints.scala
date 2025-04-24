@@ -40,7 +40,6 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val resourceClassIriPath = path[IriDto].name("resourceClassIri")
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
-  private val projectIrisPath      = paths.description("projectIris")
 
   val getOntologiesMetadataProject = baseEndpoints.publicEndpoint.get
     .in(base / "metadata")
@@ -59,7 +58,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .description("Change the metadata of an ontology")
 
   val getOntologiesMetadataProjects = baseEndpoints.publicEndpoint.get
-    .in(base / "metadata" / projectIrisPath)
+    .in(base / "metadata" / paths.description("projectIris"))
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
