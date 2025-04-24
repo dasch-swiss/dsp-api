@@ -40,6 +40,74 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
 
+  val postOntologiesClasses = baseEndpoints.withUserEndpoint.post
+    .in(base / "classes")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Create a new class")
+
+  val putOntologiesClasses = baseEndpoints.withUserEndpoint.put
+    .in(base / "classes")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Change the labels or comments of a class")
+
+  val deleteOntologiesClassesComment = baseEndpoints.withUserEndpoint.delete
+    .in(base / "classes" / "comment" / resourceClassIriPath)
+    .in(lastModificationDate)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Delete the comment of a class definition.")
+
+  val postOntologiesCardinalities = baseEndpoints.withUserEndpoint.post
+    .in(base / "cardinalities")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(
+      stringBody
+        .example(
+          s"""
+             |{
+             |  "@id" : "ONTOLOGY_IRI",
+             |  "@type" : "owl:Ontology",
+             |  "knora-api:lastModificationDate" : {
+             |    "@type" : "xsd:dateTimeStamp",
+             |    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+             |  },
+             |  "@graph" : [
+             |    {
+             |      "@id" : "CLASS_IRI",
+             |      "@type" : "owl:Class",
+             |      "rdfs:subClassOf" : {
+             |        "@type": "owl:Restriction",
+             |        "OWL_CARDINALITY_PREDICATE": "OWL_CARDINALITY_VALUE",
+             |        "owl:onProperty": {
+             |          "@id" : "PROPERTY_IRI"
+             |        }
+             |      }
+             |    }
+             |  ],
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "owl" : "http://www.w3.org/2002/07/owl#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+             |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+             |  }
+             |}
+             |""".stripMargin,
+        ),
+    )
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description(
+      "Add cardinalities to a class. " +
+        "For more info check out the <a href=\"https://docs.dasch.swiss/knora-api-v2/ontologies.html#add-cardinalities-to-a-class\">documentation</a>.",
+    )
+
   val getOntologiesCanreplacecardinalities = baseEndpoints.withUserEndpoint.get
     .in(base / "canreplacecardinalities" / resourceClassIriPath)
     .in(query[Option[IriDto]]("propertyIri"))
@@ -193,6 +261,10 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 
   val endpoints =
     Seq(
+      postOntologiesClasses,
+      putOntologiesClasses,
+      deleteOntologiesClassesComment,
+      postOntologiesCardinalities,
       getOntologiesCanreplacecardinalities,
       putOntologiesCardinalities,
       postOntologiesCandeletecardinalities,

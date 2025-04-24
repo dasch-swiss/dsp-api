@@ -11,8 +11,6 @@ import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
-import java.time.Instant
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Schema.*
 import org.knora.webapi.*
@@ -43,19 +41,14 @@ final case class OntologiesRouteV2()(
   private val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
   private val requestParser                         = ZIO.serviceWithZIO[OntologyV2RequestParser]
 
-  private val allLanguagesKey         = "allLanguages"
-  private val lastModificationDateKey = "lastModificationDate"
+  private val allLanguagesKey = "allLanguages"
 
   def makeRoute: Route =
     dereferenceOntologyIri() ~
       getOntologyMetadata ~
       updateOntologyMetadata() ~
       getOntologyMetadataForProjects ~
-      getOntology ~
-      createClass() ~
-      updateClass() ~
-      deleteClassComment() ~
-      addCardinalities()
+      getOntology
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -159,80 +152,4 @@ final case class OntologiesRouteV2()(
     val params: Map[IRI, IRI] = requestContext.request.uri.query().toMap
     ValuesValidator.optionStringToBoolean(params.get(allLanguagesKey), fallback = false)
   }
-
-  private def createClass(): Route = path(ontologiesBasePath / "classes") {
-    post {
-      // Create a new class.
-      entity(as[String]) { jsonRequest => requestContext =>
-        val requestMessageTask = for {
-          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-          apiRequestId   <- RouteUtilZ.randomUuid()
-          requestMessage <- requestParser(_.createClassRequestV2(jsonRequest, apiRequestId, requestingUser))
-                              .mapError(BadRequestException.apply)
-        } yield requestMessage
-        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-      }
-    }
-  }
-
-  private def updateClass(): Route =
-    path(ontologiesBasePath / "classes") {
-      put {
-        // Change the labels or comments of a class.
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestMessageTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <-
-              requestParser(_.changeClassLabelsOrCommentsRequestV2(jsonRequest, apiRequestId, requestingUser))
-                .mapError(BadRequestException.apply)
-          } yield requestMessage
-          RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-        }
-      }
-    }
-
-  // delete the comment of a class definition
-  private def deleteClassComment(): Route =
-    path(ontologiesBasePath / "classes" / "comment" / Segment) { (classIriStr: IRI) =>
-      delete { requestContext =>
-        val requestMessageFuture = for {
-          classIri <- RouteUtilZ
-                        .toSmartIri(classIriStr, s"Invalid class IRI for request: $classIriStr")
-                        .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(
-                          BadRequestException(s"Invalid class IRI for request: $classIriStr"),
-                        )
-          lastModificationDate <- getLastModificationDate(requestContext)
-          requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-          apiRequestId         <- RouteUtilZ.randomUuid()
-        } yield DeleteClassCommentRequestV2(classIri, lastModificationDate, apiRequestId, requestingUser)
-        RouteUtilV2.runRdfRouteZ(requestMessageFuture, requestContext)
-      }
-    }
-
-  private def addCardinalities(): Route =
-    path(ontologiesBasePath / "cardinalities") {
-      post {
-        // Add cardinalities to a class.
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestMessageTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <-
-              requestParser(_.addCardinalitiesToClassRequestV2(jsonRequest, apiRequestId, requestingUser))
-                .mapError(BadRequestException.apply)
-          } yield requestMessage
-          RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
-        }
-      }
-    }
-
-  private def getLastModificationDate(ctx: RequestContext): IO[BadRequestException, Instant] =
-    ZIO
-      .fromOption(ctx.request.uri.query().toMap.get(lastModificationDateKey))
-      .mapBoth(
-        _ => BadRequestException(s"Missing parameter: $lastModificationDateKey"),
-        ValuesValidator.xsdDateTimeStampToInstant,
-      )
-      .flatMap(it => ZIO.fromOption(it).orElseFail(BadRequestException(s"Invalid timestamp: $it")))
 }

@@ -4,12 +4,14 @@
  */
 
 package org.knora.webapi.slice.ontology.api.service
+
 import sttp.model.MediaType
 import zio.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.ApiV2Schema
+import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteClassCommentRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.slice.admin.domain.model.User
@@ -34,6 +36,49 @@ final case class OntologiesRestService(
   private val requestParser: OntologyV2RequestParser,
   private val renderer: KnoraResponseRenderer,
 ) {
+
+  def createClass(user: User)(
+    jsonLd: String,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    uuid      <- Random.nextUUID()
+    createReq <- requestParser.createClassRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    result    <- ontologyResponder.createClass(createReq)
+    response  <- renderer.render(result, formatOptions)
+  } yield response
+
+  def changeClassLabelsOrComments(user: User)(
+    jsonLd: String,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    uuid <- Random.nextUUID()
+    updateReq <-
+      requestParser.changeClassLabelsOrCommentsRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    result   <- ontologyResponder.changeClassLabelsOrComments(updateReq)
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
+  def deleteClassComment(user: User)(
+    classIri: IriDto,
+    lastModificationDate: LastModificationDate,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    classIri <- iriConverter.asResourceClassIri(classIri.value).mapError(BadRequestException.apply)
+    uuid     <- Random.nextUUID()
+    request   = DeleteClassCommentRequestV2(classIri.smartIri, lastModificationDate.value, uuid, user)
+    result   <- ontologyResponder.deleteClassComment(request)
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
+  def addCardinalities(user: User)(
+    jsonLd: String,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    uuid      <- Random.nextUUID()
+    createReq <- requestParser.addCardinalitiesToClassRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    result    <- ontologyResponder.addCardinalitiesToClass(createReq)
+    response  <- renderer.render(result, formatOptions)
+  } yield response
 
   def canChangeCardinality(
     user: User,

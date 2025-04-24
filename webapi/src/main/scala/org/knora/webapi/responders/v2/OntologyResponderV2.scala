@@ -849,7 +849,7 @@ final case class OntologyResponderV2(
    * @param addCardinalitiesRequest the request to add the cardinalities.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  private def addCardinalitiesToClass(
+  def addCardinalitiesToClass(
     addCardinalitiesRequest: AddCardinalitiesToClassRequestV2,
   ): Task[ReadOntologyV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] = {
@@ -1919,7 +1919,7 @@ final case class OntologyResponderV2(
    * @param req the request to change the class's labels or comments.
    * @return a [[ReadOntologyV2]] containing the modified class definition.
    */
-  private def changeClassLabelsOrComments(req: ChangeClassLabelsOrCommentsRequestV2): Task[ReadOntologyV2] = {
+  def changeClassLabelsOrComments(req: ChangeClassLabelsOrCommentsRequestV2): Task[ReadOntologyV2] = {
     val internalClassIri    = req.classIri.toInternalSchema
     val internalOntologyIri = req.classIri.ontologyIri.toInternalSchema
     val externalClassIri    = req.classIri.toComplexSchema
@@ -2064,7 +2064,7 @@ final case class OntologyResponderV2(
    * @param deleteClassCommentRequest the request to delete the class' comment
    * @return a [[ReadOntologyV2]] containing the modified class definition.
    */
-  private def deleteClassComment(
+  def deleteClassComment(
     deleteClassCommentRequest: DeleteClassCommentRequestV2,
   ): Task[ReadOntologyV2] = {
     def makeTaskFuture(
