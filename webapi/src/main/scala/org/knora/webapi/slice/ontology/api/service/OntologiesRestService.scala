@@ -57,14 +57,23 @@ final case class OntologiesRestService(
     response <- renderer.render(result, formatOptions)
   } yield response
 
+  def getOntologyMetadataByProjectOption(
+    projectIri: Option[ProjectIri],
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] =
+    getOntologyMetadataBy(projectIri.toSet, formatOptions)
+
   def getOntologyMetadataByProjects(
     projectIris: List[String],
     formatOptions: FormatOptions,
-  ): Task[(RenderedResponse, MediaType)] = for {
-    projectIris <- ZIO.foreach(projectIris)(iri =>
-                     ZIO.fromEither(ProjectIri.from(iri)).orElseFail(BadRequestException(s"Invalid project IRI $iri")),
-                   )
-    result   <- ontologyResponder.getOntologyMetadataForProjectsV2(projectIris.toSet)
+  ): Task[(RenderedResponse, MediaType)] = ZIO
+    .foreach(projectIris.toSet)(iri =>
+      ZIO.fromEither(ProjectIri.from(iri)).orElseFail(BadRequestException(s"Invalid project IRI $iri")),
+    )
+    .flatMap(getOntologyMetadataBy(_, formatOptions))
+
+  private def getOntologyMetadataBy(projectIris: Set[ProjectIri], formatOptions: FormatOptions) = for {
+    result   <- ontologyResponder.getOntologyMetadataForProjectsV2(projectIris)
     response <- renderer.render(result, formatOptions)
   } yield response
 

@@ -19,7 +19,8 @@ final class OntologiesEndpointsHandler(
 ) {
 
   private val publicHandlers = Seq(
-    PublicEndpointHandler(endpoints.getOntologiesMetadata, restService.getOntologyMetadataByProjects),
+    PublicEndpointHandler(endpoints.getOntologiesMetadataProject, restService.getOntologyMetadataByProjectOption),
+    PublicEndpointHandler(endpoints.getOntologiesMetadataProjects, restService.getOntologyMetadataByProjects),
   ).map(mapper.mapPublicEndpointHandler(_))
 
   private val secureHandlers = Seq(

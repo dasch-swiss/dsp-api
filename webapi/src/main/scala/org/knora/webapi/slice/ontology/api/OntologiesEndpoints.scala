@@ -15,6 +15,7 @@ import java.time.Instant
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
@@ -34,12 +35,21 @@ object LastModificationDate {
 final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val base = "v2" / "ontologies"
 
-  private val ontologyIriPath      = path[IriDto].name("ontologyIri")
-  private val propertyIriPath      = path[IriDto].name("propertyIri")
-  private val resourceClassIriPath = path[IriDto].name("resourceClassIri")
-  private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
-  private val allLanguages         = query[Boolean]("allLanguages").default(false)
-  private val projectIrisPath      = paths.description("projectIris")
+  private val ontologyIriPath           = path[IriDto].name("ontologyIri")
+  private val propertyIriPath           = path[IriDto].name("propertyIri")
+  private val resourceClassIriPath      = path[IriDto].name("resourceClassIri")
+  private val lastModificationDate      = query[LastModificationDate]("lastModificationDate")
+  private val allLanguages              = query[Boolean]("allLanguages").default(false)
+  private val projectIrisPath           = paths.description("projectIris")
+  private val xKnoraAcceptProjectHeader = header[Option[ProjectIri]](ApiV2.Headers.xKnoraAcceptProject)
+
+  val getOntologiesMetadataProject = baseEndpoints.publicEndpoint.get
+    .in(base / "metadata")
+    .in(xKnoraAcceptProjectHeader)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Get the metadata of an ontology")
 
   val putOntologiesMetadata = baseEndpoints.securedEndpoint.put
     .in(base / "metadata")
@@ -49,7 +59,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(header[MediaType](HeaderNames.ContentType))
     .description("Change the metadata of an ontology")
 
-  val getOntologiesMetadata = baseEndpoints.publicEndpoint.get
+  val getOntologiesMetadataProjects = baseEndpoints.publicEndpoint.get
     .in(base / "metadata" / projectIrisPath)
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
@@ -282,7 +292,10 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
 
-  val endpoints =
+  private val publicEndpoints =
+    Seq(getOntologiesMetadataProject, getOntologiesMetadataProjects).map(_.tag("V2 Ontologies"))
+
+  private val secureEndpoints =
     Seq(
       putOntologiesMetadata,
       getOntologiesAllentities,
@@ -309,6 +322,8 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
       getOntologiesCandeleteontology,
       deleteOntologies,
     ).map(_.endpoint.tag("V2 Ontologies"))
+
+  val endpoints = publicEndpoints ++ secureEndpoints
 }
 
 object OntologiesEndpoints {
