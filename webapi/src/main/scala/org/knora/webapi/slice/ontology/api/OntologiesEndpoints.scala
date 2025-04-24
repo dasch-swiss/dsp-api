@@ -15,6 +15,7 @@ import java.time.Instant
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
@@ -39,6 +40,36 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val resourceClassIriPath = path[IriDto].name("resourceClassIri")
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
+
+  val getOntologiesMetadataProject = baseEndpoints.publicEndpoint.get
+    .in(base / "metadata")
+    .in(header[Option[ProjectIri]](ApiV2.Headers.xKnoraAcceptProject))
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Get the metadata of an ontology")
+
+  val putOntologiesMetadata = baseEndpoints.securedEndpoint.put
+    .in(base / "metadata")
+    .in(stringJsonBody)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Change the metadata of an ontology")
+
+  val getOntologiesMetadataProjects = baseEndpoints.publicEndpoint.get
+    .in(base / "metadata" / paths.description("projectIris"))
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+
+  val getOntologiesAllentities = baseEndpoints.withUserEndpoint.get
+    .in(base / "allentities" / ontologyIriPath)
+    .in(allLanguages)
+    .in(ApiV2.Inputs.formatOptions)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Get all entities of an ontology")
 
   val postOntologiesClasses = baseEndpoints.withUserEndpoint.post
     .in(base / "classes")
@@ -259,8 +290,13 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
 
-  val endpoints =
+  val endpoints = (
     Seq(
+      getOntologiesMetadataProject,
+      getOntologiesMetadataProjects,
+    ) ++ Seq(
+      putOntologiesMetadata,
+      getOntologiesAllentities,
       postOntologiesClasses,
       putOntologiesClasses,
       deleteOntologiesClassesComment,
@@ -283,7 +319,8 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
       postOntologies,
       getOntologiesCandeleteontology,
       deleteOntologies,
-    ).map(_.endpoint.tag("V2 Ontologies"))
+    ).map(_.endpoint)
+  ).map(_.tag("V2 Ontologies"))
 }
 
 object OntologiesEndpoints {

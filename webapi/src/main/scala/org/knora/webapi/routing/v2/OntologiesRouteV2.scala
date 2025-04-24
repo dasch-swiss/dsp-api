@@ -6,7 +6,6 @@
 package org.knora.webapi.routing.v2
 
 import org.apache.pekko.http.scaladsl.server.Directives.*
-import org.apache.pekko.http.scaladsl.server.PathMatcher
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
@@ -22,7 +21,6 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
@@ -38,17 +36,9 @@ final case class OntologiesRouteV2()(
   ],
 ) {
 
-  private val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
-  private val requestParser                         = ZIO.serviceWithZIO[OntologyV2RequestParser]
-
   private val allLanguagesKey = "allLanguages"
 
-  def makeRoute: Route =
-    dereferenceOntologyIri() ~
-      getOntologyMetadata ~
-      updateOntologyMetadata() ~
-      getOntologyMetadataForProjects ~
-      getOntology
+  def makeRoute: Route = dereferenceOntologyIri()
 
   private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
@@ -95,61 +85,5 @@ final case class OntologiesRouteV2()(
         } yield ontologyIri
       }
     }
-  }
-
-  private def getOntologyMetadata: Route =
-    path(ontologiesBasePath / "metadata") {
-      get { requestContext =>
-        val requestTask = RouteUtilV2
-          .getProjectIri(requestContext)
-          .map(_.toSet)
-          .map(OntologyMetadataGetByProjectRequestV2(_))
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-      }
-    }
-
-  private def updateOntologyMetadata(): Route =
-    path(ontologiesBasePath / "metadata") {
-      put {
-        entity(as[String]) { jsonRequest => requestContext =>
-          val requestTask = for {
-            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <-
-              requestParser(_.changeOntologyMetadataRequestV2(jsonRequest, apiRequestId, requestingUser))
-                .mapError(BadRequestException.apply)
-          } yield requestMessage
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-        }
-      }
-    }
-
-  private def getOntologyMetadataForProjects: Route =
-    path(ontologiesBasePath / "metadata" / Segments) { (projectIris: List[IRI]) =>
-      get { requestContext =>
-        val requestTask = ZIO
-          .foreach(projectIris)(iri => ZIO.fromEither(ProjectIri.from(iri)).mapError(BadRequestException.apply))
-          .map(_.toSet)
-          .map(OntologyMetadataGetByProjectRequestV2(_))
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-      }
-    }
-
-  private def getOntology: Route =
-    path(ontologiesBasePath / "allentities" / Segment) { (externalOntologyIriStr: IRI) =>
-      get { requestContext =>
-        val ontologyIriTask = RouteUtilZ.externalOntologyIri(externalOntologyIriStr)
-        val requestMessageTask = for {
-          ontologyIri    <- ontologyIriTask
-          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
-        } yield OntologyEntitiesGetRequestV2(ontologyIri, getLanguages(requestContext), requestingUser)
-        val targetSchema = ontologyIriTask.flatMap(getTargetSchemaFromOntology)
-        RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext, targetSchema)
-      }
-    }
-
-  private def getLanguages(requestContext: RequestContext) = {
-    val params: Map[IRI, IRI] = requestContext.request.uri.query().toMap
-    ValuesValidator.optionStringToBoolean(params.get(allLanguagesKey), fallback = false)
   }
 }

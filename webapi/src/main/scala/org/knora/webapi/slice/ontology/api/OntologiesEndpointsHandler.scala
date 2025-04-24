@@ -6,7 +6,9 @@
 package org.knora.webapi.slice.ontology.api
 import zio.ZLayer
 
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.HandlerMapper
+import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 import org.knora.webapi.slice.ontology.api.service.OntologiesRestService
 
@@ -16,7 +18,14 @@ final class OntologiesEndpointsHandler(
   private val mapper: HandlerMapper,
 ) {
 
-  val allHandlers = Seq(
+  private val publicHandlers = Seq(
+    PublicEndpointHandler(endpoints.getOntologiesMetadataProject, restService.getOntologyMetadataByProjectOption),
+    PublicEndpointHandler(endpoints.getOntologiesMetadataProjects, restService.getOntologyMetadataByProjects),
+  ).map(mapper.mapPublicEndpointHandler(_))
+
+  private val secureHandlers = Seq(
+    SecuredEndpointHandler(endpoints.putOntologiesMetadata, restService.changeOntologyMetadata),
+    SecuredEndpointHandler(endpoints.getOntologiesAllentities, restService.getOntologyEntities),
     SecuredEndpointHandler(endpoints.postOntologiesClasses, restService.createClass),
     SecuredEndpointHandler(endpoints.putOntologiesClasses, restService.changeClassLabelsOrComments),
     SecuredEndpointHandler(endpoints.deleteOntologiesClassesComment, restService.deleteClassComment),
@@ -41,6 +50,8 @@ final class OntologiesEndpointsHandler(
     SecuredEndpointHandler(endpoints.getOntologiesCandeleteontology, restService.canDeleteOntology),
     SecuredEndpointHandler(endpoints.deleteOntologies, restService.deleteOntology),
   ).map(mapper.mapSecuredEndpointHandler(_))
+
+  val allHandlers = publicHandlers ++ secureHandlers
 }
 
 object OntologiesEndpointsHandler {

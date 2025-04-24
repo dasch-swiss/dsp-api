@@ -348,7 +348,7 @@ final case class OntologyResponderV2(
    * @param requestingUser the user making the request.
    * @return a [[ReadOntologyV2]].
    */
-  private def getOntologyEntitiesV2(
+  def getOntologyEntitiesV2(
     ontologyIri: OntologyIri,
     allLanguages: Boolean,
     requestingUser: User,
@@ -498,7 +498,7 @@ final case class OntologyResponderV2(
    * @param requestingUser        The user making the request.
    * @return a [[ReadOntologyMetadataV2]] containing the new metadata.
    */
-  private def changeOntologyMetadata(
+  def changeOntologyMetadata(
     ontologyIri: OntologyIri,
     label: Option[String] = None,
     comment: Option[String] = None,
