@@ -14,7 +14,6 @@ import java.time.Instant
 import java.util.UUID
 import scala.language.implicitConversions
 import scala.util.Try
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -39,7 +38,6 @@ import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
-import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Authorship
@@ -57,6 +55,7 @@ import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.WithAsIs
+import zio.Random
 
 private def objectCommentOption(r: Resource): Either[String, Option[String]] =
   r.objectStringOption(ValueHasComment, str => Iri.toSparqlEncodedString(str).toRight(s"Invalid comment: $str"))
@@ -1228,7 +1227,9 @@ object TextValueContentV2 {
             } else {
               TextValueType.CustomFormattedText(InternalIri(mappingResponse.mappingIri))
             }
-          text <- RouteUtilZ.toSparqlEncodedString(textWithStandoffTags.text, "Text value contains invalid characters")
+          text <- ZIO
+                    .fromOption(Iri.toSparqlEncodedString(textWithStandoffTags.text))
+                    .orElseFail(BadRequestException("Text value contains invalid characters"))
         } yield TextValueContentV2(
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(text),

@@ -13,7 +13,6 @@ import zio.ZIO
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.*
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -21,16 +20,15 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestXMLV2
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.security.Authenticator
-
 import pekko.actor.ActorSystem
 import pekko.http.scaladsl.model.Multipart
 import pekko.http.scaladsl.model.Multipart.BodyPart
 import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.Route
+import zio.Random
 
 final case class StandoffRouteV2()(
   private implicit val runtime: Runtime[
@@ -89,7 +87,7 @@ final case class StandoffRouteV2()(
                   _ => BadRequestException(s"MultiPart POST request was sent without required '$xmlPartKey' part!"),
                   CreateMappingRequestXMLV2.apply,
                 )
-            apiRequestID <- RouteUtilZ.randomUuid()
+            apiRequestID <- Random.nextUUID
           } yield CreateMappingRequestV2(metadata, xml, requestingUser, apiRequestID)
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }
