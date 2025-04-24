@@ -292,11 +292,11 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
 
-  private val publicEndpoints =
-    Seq(getOntologiesMetadataProject, getOntologiesMetadataProjects).map(_.tag("V2 Ontologies"))
-
-  private val secureEndpoints =
+  val endpoints = (
     Seq(
+      getOntologiesMetadataProject,
+      getOntologiesMetadataProjects,
+    ) ++ Seq(
       putOntologiesMetadata,
       getOntologiesAllentities,
       postOntologiesClasses,
@@ -321,9 +321,8 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
       postOntologies,
       getOntologiesCandeleteontology,
       deleteOntologies,
-    ).map(_.endpoint.tag("V2 Ontologies"))
-
-  val endpoints = publicEndpoints ++ secureEndpoints
+    ).map(_.endpoint)
+  ).map(_.tag("V2 Ontologies"))
 }
 
 object OntologiesEndpoints {
