@@ -41,6 +41,19 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = query[Boolean]("allLanguages").default(false)
 
+  val getOntologyPathSegments = baseEndpoints.withUserEndpoint.get
+    .in("ontology" / paths)
+    .in(allLanguages)
+    .in(ApiV2.Inputs.formatOptions)
+    .in(extractFromRequest(_.uri))
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description(
+      "This is the route used to dereference an actual ontology IRI. " +
+        "If the URL path looks like it belongs to a built-in API ontology (which has to contain \"knora-api\"), prefix it with http://api.knora.org to get the ontology IRI. " +
+        "Otherwise, if it looks like it belongs to a project-specific API ontology, prefix it with routeData.appConfig.externalOntologyIriHostAndPort to get the ontology IRI.",
+    )
+
   val getOntologiesMetadataProject = baseEndpoints.publicEndpoint.get
     .in(base / "metadata")
     .in(header[Option[ProjectIri]](ApiV2.Headers.xKnoraAcceptProject))
@@ -295,6 +308,7 @@ final case class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
       getOntologiesMetadataProject,
       getOntologiesMetadataProjects,
     ) ++ Seq(
+      getOntologyPathSegments,
       putOntologiesMetadata,
       getOntologiesAllentities,
       postOntologiesClasses,
