@@ -13,7 +13,7 @@ import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.apache.pekko.util.Timeout
-import spray.json.jsonReader
+import zio.json.*
 
 import java.net.URLEncoder
 import scala.concurrent.Await
@@ -32,7 +32,6 @@ import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 
@@ -412,9 +411,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
-        val jsObject       = AkkaHttpUtils.httpResponseToJson(response)
-        val prjMembersResp = jsonReader[ProjectMembersGetResponseADM].read(jsObject)
-        val members        = prjMembersResp.members
+        val members = AkkaHttpUtils.httpResponseTo[ProjectMembersGetResponseADM](response).members
         members.size should be(4)
       }
 
@@ -425,8 +422,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[User] =
-          AkkaHttpUtils.httpResponseToJson(response).convertTo[ProjectMembersGetResponseADM].members
+        val members = AkkaHttpUtils.httpResponseTo[ProjectMembersGetResponseADM](response).members
         members.size should be(4)
       }
 
@@ -437,8 +433,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[User] =
-          AkkaHttpUtils.httpResponseToJson(response).convertTo[ProjectMembersGetResponseADM].members
+        val members = AkkaHttpUtils.httpResponseTo[ProjectMembersGetResponseADM](response).members
         members.size should be(4)
       }
 
@@ -449,8 +444,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[User] =
-          AkkaHttpUtils.httpResponseToJson(response).convertTo[ProjectAdminMembersGetResponseADM].members
+        val members = AkkaHttpUtils.httpResponseTo[ProjectAdminMembersGetResponseADM](response).members
         members.size should be(2)
       }
 
@@ -461,8 +455,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[User] =
-          AkkaHttpUtils.httpResponseToJson(response).convertTo[ProjectAdminMembersGetResponseADM].members
+        val members = AkkaHttpUtils.httpResponseTo[ProjectAdminMembersGetResponseADM](response).members
         members.size should be(2)
       }
 
@@ -473,8 +466,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[User] =
-          AkkaHttpUtils.httpResponseToJson(response).convertTo[ProjectAdminMembersGetResponseADM].members
+        val members = AkkaHttpUtils.httpResponseTo[ProjectAdminMembersGetResponseADM](response).members
         members.size should be(2)
       }
     }

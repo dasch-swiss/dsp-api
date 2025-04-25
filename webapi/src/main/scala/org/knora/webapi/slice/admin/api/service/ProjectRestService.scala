@@ -200,7 +200,7 @@ final case class ProjectRestService(
   def getProjectMembersByShortname(user: User, id: Shortname): Task[ProjectMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminByShortname(user, id).flatMap(findProjectMembers)
   private def findProjectMembers(project: KnoraProject) =
-    userService.findByProjectMembership(project).map(ProjectMembersGetResponseADM.apply).flatMap(format.toExternal)
+    userService.findByProjectMembership(project).map(ProjectMembersGetResponseADM.from).flatMap(format.toExternal)
 
   def getProjectAdminMembersById(user: User, id: ProjectIri): Task[ProjectAdminMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(findProjectAdminMembers)
@@ -211,7 +211,7 @@ final case class ProjectRestService(
   private def findProjectAdminMembers(project: KnoraProject) =
     userService
       .findByProjectAdminMembership(project)
-      .map(ProjectAdminMembersGetResponseADM.apply)
+      .map(ProjectAdminMembersGetResponseADM.from)
       .flatMap(format.toExternal)
 
   /**

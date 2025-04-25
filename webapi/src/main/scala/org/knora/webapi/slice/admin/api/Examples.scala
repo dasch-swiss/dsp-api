@@ -139,6 +139,6 @@ object Examples {
       projects = Seq(project),
       permissions = PermissionsDataADM.apply(Map.empty),
     )
-    val groupGetMembersResponse: GroupMembersGetResponseADM = GroupMembersGetResponseADM(Seq(user))
+    val groupGetMembersResponse: GroupMembersGetResponseADM = GroupMembersGetResponseADM.from(Seq(user))
   }
 }
