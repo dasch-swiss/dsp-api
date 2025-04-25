@@ -10,6 +10,7 @@ import zio.json.JsonCodec
 
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.slice.admin.api.model.Project
+import org.knora.webapi.slice.admin.api.model.UserDto
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.Group
 
@@ -18,9 +19,11 @@ import org.knora.webapi.slice.admin.domain.model.Group
  *
  * @param users a sequence of user profiles of the requested type.
  */
-case class UsersGetResponseADM(users: Seq[User]) extends AdminKnoraResponseADM
+case class UsersGetResponseADM(users: Seq[UserDto]) extends AdminKnoraResponseADM
 object UsersGetResponseADM {
-  implicit val codec: JsonCodec[UsersGetResponseADM] = DeriveJsonCodec.gen[UsersGetResponseADM]
+  given JsonCodec[UsersGetResponseADM] = DeriveJsonCodec.gen[UsersGetResponseADM]
+
+  def from(users: Seq[User]): UsersGetResponseADM = UsersGetResponseADM(users.map(UserDto.from))
 }
 
 /**
@@ -28,9 +31,11 @@ object UsersGetResponseADM {
  *
  * @param user the user's information of the requested type.
  */
-case class UserResponseADM(user: User) extends AdminKnoraResponseADM
+case class UserResponseADM(user: UserDto) extends AdminKnoraResponseADM
 object UserResponseADM {
-  implicit val codec: JsonCodec[UserResponseADM] = DeriveJsonCodec.gen[UserResponseADM]
+  given JsonCodec[UserResponseADM] = DeriveJsonCodec.gen[UserResponseADM]
+
+  def from(user: User): UserResponseADM = UserResponseADM(UserDto.from(user))
 }
 
 /**

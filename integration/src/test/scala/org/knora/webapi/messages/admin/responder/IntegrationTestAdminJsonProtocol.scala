@@ -37,8 +37,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetRe
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.model.ProjectAdminMembersGetResponseADM
@@ -269,10 +267,6 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
     jsonFormat11(User.apply)
   implicit val groupMembersGetResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] =
     jsonFormat(GroupMembersGetResponseADM.apply, "members")
-  implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] =
-    jsonFormat1(UsersGetResponseADM.apply)
-  implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM] =
-    jsonFormat1(UserResponseADM.apply)
   implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseADM] =
     jsonFormat1(UserProjectMembershipsGetResponseADM.apply)
   implicit val userProjectAdminMembershipsGetResponseADMFormat

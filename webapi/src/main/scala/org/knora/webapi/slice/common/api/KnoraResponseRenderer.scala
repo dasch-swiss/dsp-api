@@ -33,6 +33,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectGetResponse
 import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectsGetResponse
+import org.knora.webapi.slice.admin.api.model.UserDto
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
@@ -76,6 +77,12 @@ final class KnoraResponseRenderer(config: AppConfig, stringFormatter: StringForm
         user.copy(groups = groupsExternal, projects = projectsExternal)
       }
 
+      def userDtoAsExternalRepresentation(userDto: UserDto): UserDto = {
+        val groupsExternal   = userDto.groups.map(groupAsExternalRepresentation)
+        val projectsExternal = userDto.projects.map(projectAsExternalRepresentation)
+        userDto.copy(groups = groupsExternal, projects = projectsExternal)
+      }
+
       response match {
         case ProjectMembersGetResponseADM(members) =>
           ProjectMembersGetResponseADM(members.map(userAsExternalRepresentation))
@@ -92,8 +99,8 @@ final class KnoraResponseRenderer(config: AppConfig, stringFormatter: StringForm
         case GroupMembersGetResponseADM(members) =>
           GroupMembersGetResponseADM(members.map(userAsExternalRepresentation))
 
-        case UsersGetResponseADM(users) => UsersGetResponseADM(users.map(userAsExternalRepresentation))
-        case UserResponseADM(user)      => UserResponseADM(userAsExternalRepresentation(user))
+        case UsersGetResponseADM(users) => UsersGetResponseADM(users.map(userDtoAsExternalRepresentation))
+        case UserResponseADM(user)      => UserResponseADM(userDtoAsExternalRepresentation(user))
         case UserProjectMembershipsGetResponseADM(projects) =>
           UserProjectMembershipsGetResponseADM(projects.map(projectAsExternalRepresentation))
         case UserProjectAdminMembershipsGetResponseADM(projects) =>
