@@ -11,8 +11,8 @@ import zio.json.JsonCodec
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.model.UserDto
-import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * Represents an answer to a request for a list of all projects the user is member of.
@@ -21,8 +21,7 @@ import org.knora.webapi.slice.admin.domain.model.Group
  */
 case class UserProjectMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponseADM
 object UserProjectMembershipsGetResponseADM {
-  implicit val codec: JsonCodec[UserProjectMembershipsGetResponseADM] =
-    DeriveJsonCodec.gen[UserProjectMembershipsGetResponseADM]
+  given JsonCodec[UserProjectMembershipsGetResponseADM] = DeriveJsonCodec.gen[UserProjectMembershipsGetResponseADM]
 }
 
 /**
@@ -32,7 +31,7 @@ object UserProjectMembershipsGetResponseADM {
  */
 case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponseADM
 object UserProjectAdminMembershipsGetResponseADM {
-  implicit val codec: JsonCodec[UserProjectAdminMembershipsGetResponseADM] =
+  given JsonCodec[UserProjectAdminMembershipsGetResponseADM] =
     DeriveJsonCodec.gen[UserProjectAdminMembershipsGetResponseADM]
 }
 
@@ -43,8 +42,7 @@ object UserProjectAdminMembershipsGetResponseADM {
  */
 case class UserGroupMembershipsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponseADM
 object UserGroupMembershipsGetResponseADM {
-  implicit val codec: JsonCodec[UserGroupMembershipsGetResponseADM] =
-    DeriveJsonCodec.gen[UserGroupMembershipsGetResponseADM]
+  given JsonCodec[UserGroupMembershipsGetResponseADM] = DeriveJsonCodec.gen[UserGroupMembershipsGetResponseADM]
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
