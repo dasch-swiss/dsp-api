@@ -33,7 +33,6 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
-import org.knora.webapi.messages.twirl.queries.sparql.admin.txt.deleteNode.render
 
 object SearchEndpointsInputs {
 

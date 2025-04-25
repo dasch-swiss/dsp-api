@@ -371,7 +371,7 @@ final case class SearchResponderV2Live(
          |} OFFSET $offset
          |""".stripMargin
 
-      gravsearchV2(query, rendering, user, limitToProject)
+    gravsearchV2(query, rendering, user, limitToProject)
   }
 
   /**
