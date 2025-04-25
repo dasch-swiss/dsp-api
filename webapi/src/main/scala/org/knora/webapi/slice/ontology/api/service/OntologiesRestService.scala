@@ -12,6 +12,8 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteClassCommentRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.responders.v2.OntologyResponderV2
@@ -37,8 +39,34 @@ final case class OntologiesRestService(
   private val restCardinalityService: RestCardinalityService,
   private val requestParser: OntologyV2RequestParser,
   private val renderer: KnoraResponseRenderer,
+  private val sf: StringFormatter,
   private val appConfig: AppConfig,
 ) {
+
+  def dereferenceOntologyIri(user: User)(
+    ignored: List[String],
+    allLanguages: Boolean,
+    formatOptions: FormatOptions,
+    serverUri: sttp.model.Uri,
+  ): Task[(RenderedResponse, MediaType)] = {
+    val urlPath = serverUri.pathToString
+    for {
+      iri <- if (sf.isBuiltInApiV2OntologyUrlPath(urlPath)) {
+               ZIO.succeed(OntologyConstants.KnoraApi.ApiOntologyHostname + urlPath)
+             } else if (sf.isProjectSpecificApiV2OntologyUrlPath(urlPath)) {
+               ZIO.succeed("http://" + appConfig.knoraApi.externalOntologyIriHostAndPort + urlPath)
+             } else {
+               ZIO.fail(BadRequestException(s"Invalid or unknown URL path for external ontology: $urlPath"))
+             }
+      ontologyIri <- iriConverter.asOntologyIri(iri).mapError(BadRequestException.apply)
+      targetSchema <-
+        ZIO
+          .fromOption(ontologyIri.smartIri.getOntologySchema.collect { case schema: ApiV2Schema => schema })
+          .orElseFail(BadRequestException(s"Invalid external ontology IRI: ${serverUri.toString}"))
+      result   <- ontologyResponder.getOntologyEntitiesV2(ontologyIri, allLanguages, user)
+      response <- renderer.render(result, formatOptions.copy(schema = targetSchema))
+    } yield response
+  }
 
   def changeOntologyMetadata(user: User)(
     jsonLd: String,

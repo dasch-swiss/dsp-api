@@ -34,7 +34,6 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.*
-import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
@@ -44,7 +43,6 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.*
@@ -1929,8 +1927,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "correctly update the ontology cache when adding a resource, so that the resource can afterwards be found by gravsearch" in {
       val freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
-      DSPApiDirectives.handleErrors(appConfig)(OntologiesRouteV2().makeRoute)
-      val auth = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, SharedTestDataADM.testPass)
+      val auth                         = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, SharedTestDataADM.testPass)
 
       // create a new resource class and add a property with cardinality to it
       val createResourceClass =
