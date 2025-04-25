@@ -15,30 +15,6 @@ import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.Group
 
 /**
- * Represents an answer to a request for a list of all users.
- *
- * @param users a sequence of user profiles of the requested type.
- */
-case class UsersGetResponseADM(users: Seq[UserDto]) extends AdminKnoraResponseADM
-object UsersGetResponseADM {
-  given JsonCodec[UsersGetResponseADM] = DeriveJsonCodec.gen[UsersGetResponseADM]
-
-  def from(users: Seq[User]): UsersGetResponseADM = UsersGetResponseADM(users.map(UserDto.from))
-}
-
-/**
- * Represents an answer to a user profile request.
- *
- * @param user the user's information of the requested type.
- */
-case class UserResponseADM(user: UserDto) extends AdminKnoraResponseADM
-object UserResponseADM {
-  given JsonCodec[UserResponseADM] = DeriveJsonCodec.gen[UserResponseADM]
-
-  def from(user: User): UserResponseADM = UserResponseADM(UserDto.from(user))
-}
-
-/**
  * Represents an answer to a request for a list of all projects the user is member of.
  *
  * @param projects a sequence of projects the user is member of.
@@ -99,7 +75,9 @@ object UserInformationType {
  *
  * @param members the group's members.
  */
-case class GroupMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM
+case class GroupMembersGetResponseADM(members: Seq[UserDto]) extends AdminKnoraResponseADM
 object GroupMembersGetResponseADM {
-  implicit val codec: JsonCodec[GroupMembersGetResponseADM] = DeriveJsonCodec.gen[GroupMembersGetResponseADM]
+  given JsonCodec[GroupMembersGetResponseADM] = DeriveJsonCodec.gen[GroupMembersGetResponseADM]
+
+  def from(users: Seq[User]): GroupMembersGetResponseADM = GroupMembersGetResponseADM(users.map(UserDto.from))
 }

@@ -8,6 +8,8 @@ package org.knora.webapi.util
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.pekko
 import spray.json.*
+import zio.json.*
+import zio.json.JsonDecoder
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
@@ -43,4 +45,15 @@ object AkkaHttpUtils extends LazyLogging {
 
     Await.result(jsonFuture, Timeout(10.seconds).duration)
   }
+
+  def httpResponseToString(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem): String =
+    Await.result(Unmarshal(response.entity).to[String], Timeout(10.seconds).duration)
+
+  def httpResponseTo[A](
+    response: HttpResponse,
+  )(implicit ec: ExecutionContext, system: ActorSystem, decoder: JsonDecoder[A]): A =
+    httpResponseToString(response).fromJson[A] match {
+      case Left(error)  => throw new Exception(s"Failed to decode response: $error")
+      case Right(value) => value
+    }
 }
