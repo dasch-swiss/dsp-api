@@ -33,6 +33,7 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
+import org.knora.webapi.messages.twirl.queries.sparql.admin.txt.deleteNode.render
 
 object SearchEndpointsInputs {
 
@@ -118,6 +119,18 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(header[MediaType](HeaderNames.ContentType))
     .description("Search for incoming links using a Gravsearch query with an offset.")
 
+  val getSearchIncomingRegions = baseEndpoints.withUserEndpoint.get
+    .in(
+      ("v2" / "searchIncomingRegions" / path[InputIri]("resourceIri")
+        .description("The IRI of the resource to retrieve")),
+    )
+    .in(SearchEndpointsInputs.offset)
+    .in(ApiV2.Inputs.formatOptions)
+    .in(SearchEndpointsInputs.limitToProject)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Search for incoming regions using a Gravsearch query with an offset.")
+
   val getSearchByLabel = baseEndpoints.withUserEndpoint.get
     .in("v2" / "searchbylabel" / path[String]("searchTerm"))
     .in(ApiV2.Inputs.formatOptions)
@@ -166,6 +179,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
       postGravsearchCount,
       getGravsearchCount,
       getSearchIncomingLinks,
+      getSearchIncomingRegions,
       getSearchByLabel,
       getSearchByLabelCount,
       getFullTextSearch,
@@ -219,6 +233,14 @@ final case class SearchApiRoutes(
       searchEndpoints.getSearchIncomingLinks,
       user => { case (resourceIRI, offset, opts, limitToProject) =>
         searchRestService.searchIncomingLinks(resourceIRI.value, offset, opts, user, limitToProject)
+      },
+    )
+
+  private val getSearchIncomingRegions =
+    SecuredEndpointHandler[(InputIri, Offset, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
+      searchEndpoints.getSearchIncomingRegions,
+      user => { case (resourceIRI, offset, opts, limitToProject) =>
+        searchRestService.searchIncomingRegions(resourceIRI.value, offset, opts, user, limitToProject)
       },
     )
 
@@ -277,6 +299,7 @@ final case class SearchApiRoutes(
       postGravsearchCount,
       getGravsearchCount,
       getSearchIncomingLinks,
+      getSearchIncomingRegions,
     )
       .map(it => mapper.mapSecuredEndpointHandler(it))
       .map(it => tapirToPekko.toRoute(it))
@@ -364,6 +387,30 @@ final case class SearchRestService(
           } yield response
         }
 
+    } yield response
+
+  def searchIncomingRegions(
+    resourceIri: String,
+    offset: Offset,
+    opts: FormatOptions,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[(RenderedResponse, MediaType)] =
+    for {
+      response <-
+        tracing.root("searchIncomingRegions") {
+          for {
+            searchResult <-
+              searchResponderV2.searchIncomingRegionsV2(
+                resourceIri,
+                offset.value,
+                opts.schemaRendering,
+                user,
+                limitToProject,
+              )
+            response <- renderer.render(searchResult, opts)
+          } yield response
+        }
     } yield response
 
   def fullTextSearch(
