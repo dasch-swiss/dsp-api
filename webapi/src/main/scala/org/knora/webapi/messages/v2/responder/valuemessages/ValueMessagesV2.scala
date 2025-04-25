@@ -39,7 +39,6 @@ import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileInfo
-import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Authorship
@@ -1228,7 +1227,9 @@ object TextValueContentV2 {
             } else {
               TextValueType.CustomFormattedText(InternalIri(mappingResponse.mappingIri))
             }
-          text <- RouteUtilZ.toSparqlEncodedString(textWithStandoffTags.text, "Text value contains invalid characters")
+          text <- ZIO
+                    .fromOption(Iri.toSparqlEncodedString(textWithStandoffTags.text))
+                    .orElseFail(BadRequestException("Text value contains invalid characters"))
         } yield TextValueContentV2(
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some(text),

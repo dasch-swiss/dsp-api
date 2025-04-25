@@ -7,6 +7,7 @@ package org.knora.webapi.routing.v2
 
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.pekko
+import zio.Random
 import zio.Runtime
 import zio.ZIO
 
@@ -21,7 +22,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestXMLV2
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.security.Authenticator
@@ -89,7 +89,7 @@ final case class StandoffRouteV2()(
                   _ => BadRequestException(s"MultiPart POST request was sent without required '$xmlPartKey' part!"),
                   CreateMappingRequestXMLV2.apply,
                 )
-            apiRequestID <- RouteUtilZ.randomUuid()
+            apiRequestID <- Random.nextUUID
           } yield CreateMappingRequestV2(metadata, xml, requestingUser, apiRequestID)
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
         }

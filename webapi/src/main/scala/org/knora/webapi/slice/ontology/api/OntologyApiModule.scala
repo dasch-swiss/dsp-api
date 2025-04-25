@@ -7,6 +7,7 @@ package org.knora.webapi.slice.ontology.api
 import zio.*
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -24,7 +25,8 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 object OntologyApiModule
     extends URModule[
       AuthorizationRestService & AppConfig & BaseEndpoints & CardinalityService & HandlerMapper & IriConverter &
-        KnoraResponseRenderer & OntologyCacheHelpers & OntologyRepo & OntologyResponderV2 & TapirToPekkoInterpreter,
+        KnoraResponseRenderer & OntologyCacheHelpers & OntologyRepo & OntologyResponderV2 & StringFormatter &
+        TapirToPekkoInterpreter,
       OntologiesApiRoutes & OntologiesEndpoints & OntologyV2RequestParser,
     ] { self =>
 
