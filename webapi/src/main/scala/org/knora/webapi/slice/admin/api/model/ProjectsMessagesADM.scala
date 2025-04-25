@@ -77,9 +77,11 @@ object ProjectGetResponse {
  *
  * @param members a list of members.
  */
-case class ProjectMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM
+case class ProjectMembersGetResponseADM(members: Seq[UserDto]) extends AdminKnoraResponseADM
 object ProjectMembersGetResponseADM {
-  implicit val codec: JsonCodec[ProjectMembersGetResponseADM] = DeriveJsonCodec.gen[ProjectMembersGetResponseADM]
+  given JsonCodec[ProjectMembersGetResponseADM] = DeriveJsonCodec.gen[ProjectMembersGetResponseADM]
+
+  def from(members: Seq[User]): ProjectMembersGetResponseADM = ProjectMembersGetResponseADM(members.map(UserDto.from))
 }
 
 /**
@@ -87,10 +89,12 @@ object ProjectMembersGetResponseADM {
  *
  * @param members a list of admin members.
  */
-case class ProjectAdminMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM
+case class ProjectAdminMembersGetResponseADM(members: Seq[UserDto]) extends AdminKnoraResponseADM
 object ProjectAdminMembersGetResponseADM {
-  implicit val codec: JsonCodec[ProjectAdminMembersGetResponseADM] =
-    DeriveJsonCodec.gen[ProjectAdminMembersGetResponseADM]
+  given JsonCodec[ProjectAdminMembersGetResponseADM] = DeriveJsonCodec.gen[ProjectAdminMembersGetResponseADM]
+
+  def from(members: Seq[User]): ProjectAdminMembersGetResponseADM =
+    ProjectAdminMembersGetResponseADM(members.map(UserDto.from))
 }
 
 /**

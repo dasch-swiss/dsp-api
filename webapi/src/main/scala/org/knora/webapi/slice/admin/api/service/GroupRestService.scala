@@ -53,7 +53,7 @@ final case class GroupRestService(
       _ <- groupService
              .findById(iri)
              .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
-      internal <- userService.findByGroupMembership(iri).map(GroupMembersGetResponseADM.apply)
+      internal <- userService.findByGroupMembership(iri).map(GroupMembersGetResponseADM.from)
       external <- format.toExternal(internal)
     } yield external
 

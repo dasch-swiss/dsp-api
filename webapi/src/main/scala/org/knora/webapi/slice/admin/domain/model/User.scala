@@ -136,11 +136,6 @@ final case class User(
   def isActive: Boolean = status
 
   def isAnonymousUser: Boolean = id.equalsIgnoreCase(KnoraUserRepo.builtIn.AnonymousUser.id.value)
-
-  def filterUserInformation(requestingUser: User, infoType: UserInformationType): User =
-    if (requestingUser.permissions.isSystemAdmin || requestingUser.id == this.id || requestingUser.isSystemUser)
-      self.ofType(infoType)
-    else self.ofType(UserInformationType.Public)
 }
 object User {
   implicit val userCodec: JsonCodec[User] = DeriveJsonCodec.gen[User]

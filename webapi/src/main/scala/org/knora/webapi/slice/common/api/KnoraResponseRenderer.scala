@@ -23,8 +23,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetRe
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.slice.admin.api.model.Project
@@ -33,8 +31,10 @@ import org.knora.webapi.slice.admin.api.model.ProjectGetResponse
 import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectsGetResponse
+import org.knora.webapi.slice.admin.api.model.UserDto
+import org.knora.webapi.slice.admin.api.service.UserRestService.UserResponse
+import org.knora.webapi.slice.admin.api.service.UserRestService.UsersResponse
 import org.knora.webapi.slice.admin.domain.model.Group
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 
@@ -70,17 +70,17 @@ final class KnoraResponseRenderer(config: AppConfig, stringFormatter: StringForm
         group.copy(project = projectExternal)
       }
 
-      def userAsExternalRepresentation(user: User): User = {
-        val groupsExternal   = user.groups.map(groupAsExternalRepresentation)
-        val projectsExternal = user.projects.map(projectAsExternalRepresentation)
-        user.copy(groups = groupsExternal, projects = projectsExternal)
+      def userDtoAsExternalRepresentation(userDto: UserDto): UserDto = {
+        val groupsExternal   = userDto.groups.map(groupAsExternalRepresentation)
+        val projectsExternal = userDto.projects.map(projectAsExternalRepresentation)
+        userDto.copy(groups = groupsExternal, projects = projectsExternal)
       }
 
       response match {
         case ProjectMembersGetResponseADM(members) =>
-          ProjectMembersGetResponseADM(members.map(userAsExternalRepresentation))
+          ProjectMembersGetResponseADM(members.map(userDtoAsExternalRepresentation))
         case ProjectAdminMembersGetResponseADM(members) =>
-          ProjectAdminMembersGetResponseADM(members.map(userAsExternalRepresentation))
+          ProjectAdminMembersGetResponseADM(members.map(userDtoAsExternalRepresentation))
         case ProjectOperationResponseADM(project) =>
           ProjectOperationResponseADM(projectAsExternalRepresentation(project))
 
@@ -90,10 +90,10 @@ final class KnoraResponseRenderer(config: AppConfig, stringFormatter: StringForm
         case GroupsGetResponseADM(groups) => GroupsGetResponseADM(groups.map(groupAsExternalRepresentation))
         case GroupGetResponseADM(group)   => GroupGetResponseADM(groupAsExternalRepresentation(group))
         case GroupMembersGetResponseADM(members) =>
-          GroupMembersGetResponseADM(members.map(userAsExternalRepresentation))
+          GroupMembersGetResponseADM(members.map(userDtoAsExternalRepresentation))
 
-        case UsersGetResponseADM(users) => UsersGetResponseADM(users.map(userAsExternalRepresentation))
-        case UserResponseADM(user)      => UserResponseADM(userAsExternalRepresentation(user))
+        case UsersResponse(users) => UsersResponse(users.map(userDtoAsExternalRepresentation))
+        case UserResponse(user)   => UserResponse(userDtoAsExternalRepresentation(user))
         case UserProjectMembershipsGetResponseADM(projects) =>
           UserProjectMembershipsGetResponseADM(projects.map(projectAsExternalRepresentation))
         case UserProjectAdminMembershipsGetResponseADM(projects) =>

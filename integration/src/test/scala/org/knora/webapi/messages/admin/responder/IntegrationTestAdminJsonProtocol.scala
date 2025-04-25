@@ -33,16 +33,11 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionP
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType.Restricted
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.slice.admin.api.model.Project
-import org.knora.webapi.slice.admin.api.model.ProjectAdminMembersGetResponseADM
-import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.Group
@@ -256,23 +251,11 @@ object IntegrationTestAdminJsonProtocol extends TriplestoreJsonProtocol {
 
   implicit val groupFormat: JsonFormat[Group] = jsonFormat6(Group.apply)
 
-  implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM.apply, "members")),
-  )
-  implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectMembersGetResponseADM.apply, "members")),
-  )
   implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(
     lazyFormat(jsonFormat(ProjectOperationResponseADM.apply, "project")),
   )
   implicit val userADMFormat: JsonFormat[User] =
     jsonFormat11(User.apply)
-  implicit val groupMembersGetResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] =
-    jsonFormat(GroupMembersGetResponseADM.apply, "members")
-  implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] =
-    jsonFormat1(UsersGetResponseADM.apply)
-  implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM] =
-    jsonFormat1(UserResponseADM.apply)
   implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseADM] =
     jsonFormat1(UserProjectMembershipsGetResponseADM.apply)
   implicit val userProjectAdminMembershipsGetResponseADMFormat
