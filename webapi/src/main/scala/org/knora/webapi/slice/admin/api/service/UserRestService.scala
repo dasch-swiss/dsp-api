@@ -59,7 +59,7 @@ final case class UserRestService(
     _ <- auth.ensureSystemAdminOrProjectAdminInAnyProject(requestingUser)
     internal <- userService.findAllRegularUsers
                   .filterOrFail(_.nonEmpty)(NotFoundException("No users found"))
-                  .map(_.map(_.filterUserInformation(requestingUser, UserInformationType.Restricted)).sorted)
+                  .map(_.map(filterUserInformation(requestingUser, _, UserInformationType.Restricted)).sorted)
                   .map(UsersResponse.from)
     external <- format.toExternal(internal)
   } yield external
@@ -213,9 +213,20 @@ final case class UserRestService(
     knoraUserToUserConverter.toUser(kUser).flatMap(asExternalUserResponse(requestingUser, _))
 
   private def asExternalUserResponse(requestingUser: User, user: User): Task[UserResponse] = {
-    val userFiltered = UserDto.from(user.filterUserInformation(requestingUser, UserInformationType.Restricted))
+    val userFiltered = UserDto.from(filterUserInformation(requestingUser, user, UserInformationType.Restricted))
     format.toExternal(UserResponse(userFiltered))
   }
+
+  private def filterUserInformation(requestingUser: User, filteredUser: User, infoType: UserInformationType): User =
+    if (
+      requestingUser.permissions.isSystemAdmin ||
+      requestingUser.id == filteredUser.id ||
+      requestingUser.isSystemUser
+    ) {
+      filteredUser.ofType(infoType)
+    } else {
+      filteredUser.ofType(UserInformationType.Public)
+    }
 
   def addUserToProjectAsAdmin(requestingUser: User)(
     userIri: UserIri,
