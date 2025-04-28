@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.19.0...v0.19.1) (2025-04-28)
+
+
+### Maintenances
+
+* Update Sipi to 31.12.0 ([#355](https://github.com/dasch-swiss/dsp-ingest/issues/355)) ([9598194](https://github.com/dasch-swiss/dsp-ingest/commit/9598194c64c161a9bdd00c1531c923bfcd54c2fb))
+
 ## [0.19.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.18.8...v0.19.0) (2025-03-25)
 
 
