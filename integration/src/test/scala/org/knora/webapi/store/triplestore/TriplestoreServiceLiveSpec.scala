@@ -208,7 +208,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
             .serviceWithZIO[TriplestoreService](_.query(Select(textSearchQueryFusekiValueHasString)))
             .map(_.size),
         )
-        actual should ===(3)
+        actual should ===(4)
       }
     }
 
