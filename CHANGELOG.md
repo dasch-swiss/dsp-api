@@ -1,5 +1,30 @@
 # Changelog
 
+## [31.12.0](https://github.com/dasch-swiss/dsp-api/compare/v31.11.0...v31.12.0) (2025-04-28)
+
+
+### Maintenances
+
+* Enable telemetry on incoming links endpoint (DEV-4757) ([#3554](https://github.com/dasch-swiss/dsp-api/issues/3554)) ([a7e089a](https://github.com/dasch-swiss/dsp-api/commit/a7e089a392e25f0ff0517e0437fad98e168549c0))
+* Minor dependency updates ([#3562](https://github.com/dasch-swiss/dsp-api/issues/3562)) ([77fa860](https://github.com/dasch-swiss/dsp-api/commit/77fa860d98346798597f498219534e3329954cd6))
+* Patch dependency updates ([#3561](https://github.com/dasch-swiss/dsp-api/issues/3561)) ([c01e261](https://github.com/dasch-swiss/dsp-api/commit/c01e26167b6edf1ffb4da10f007edbcbb4bfd25c))
+* Update app version in docker-compose.yml ([#3558](https://github.com/dasch-swiss/dsp-api/issues/3558)) ([633c952](https://github.com/dasch-swiss/dsp-api/commit/633c9523da87fa5270dc5c126fcfbf5697c56c32))
+* Update app version to v11.29.2 in docker-compose.yml ([#3560](https://github.com/dasch-swiss/dsp-api/issues/3560)) ([6ec5d24](https://github.com/dasch-swiss/dsp-api/commit/6ec5d244b986b4465fc2192362ec1f94cad46fb6))
+
+
+### Enhancements
+
+* Add searchIncomingRegions endpoint (DEV-4824) ([#3567](https://github.com/dasch-swiss/dsp-api/issues/3567)) ([1526725](https://github.com/dasch-swiss/dsp-api/commit/1526725800d186976cb93b16db63c2c9eefc0374))
+* Migrate GET v2/ontologies/canreplacecardinalities/:classIri to Tapir ([#3563](https://github.com/dasch-swiss/dsp-api/issues/3563)) ([fdbdd43](https://github.com/dasch-swiss/dsp-api/commit/fdbdd43b2c14938fa62cd14b5797e60b0729ccf8))
+* Migrate more ontology api endpoinst to Tapir (DEV-4657) ([#3565](https://github.com/dasch-swiss/dsp-api/issues/3565)) ([5d22488](https://github.com/dasch-swiss/dsp-api/commit/5d22488387913d93e831de5d2a5cdda62c698738))
+* Migrate ontology dereferencing to Tapir (DEV-4657) ([#3566](https://github.com/dasch-swiss/dsp-api/issues/3566)) ([be70de6](https://github.com/dasch-swiss/dsp-api/commit/be70de6d3147b936411175691edcb78bf081cf3a))
+* Migrate some ontologies routes to Tapir, adds OpenAPI docs(DEV-4657) ([#3564](https://github.com/dasch-swiss/dsp-api/issues/3564)) ([7176dcd](https://github.com/dasch-swiss/dsp-api/commit/7176dcda7485a4956a61ac1d4b260eec3bf9bbab))
+
+
+### Bug Fixes
+
+* Remove password from user responses (DEV-4820) ([#3568](https://github.com/dasch-swiss/dsp-api/issues/3568)) ([72e70e6](https://github.com/dasch-swiss/dsp-api/commit/72e70e67fca2acd099df6329863cd4a6c81de984))
+
 ## [31.11.0](https://github.com/dasch-swiss/dsp-api/compare/v31.10.0...v31.11.0) (2025-04-09)
 
 
