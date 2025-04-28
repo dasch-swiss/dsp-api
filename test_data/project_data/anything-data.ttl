@@ -829,6 +829,67 @@
     knora-base:valueHasString    "http://rdfh.ch/0001/a-thing-with-picture/values/linkValue1" ;
     knora-base:valueHasRefCount  "1"^^xsd:int .
 
+<http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w>
+    rdf:type                      knora-base:Region;
+    rdfs:label                    "A test region";
+    knora-base:attachedToProject  <http://rdfh.ch/projects/0001>;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root>;
+    knora-base:creationDate       "2025-04-25T12:35:10.924413Z"^^xsd:dateTime;
+    knora-base:hasColor           <http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w/values/xwaYB2MnSRqCsMOn0RXZ2A>;
+    knora-base:hasComment         <http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w/values/n9MrUsKyTMq5-5s_bemIMw>;
+    knora-base:hasGeometry        <http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w/values/sAAnxjMOQG6s2Vke2001XQ>;
+    knora-base:hasPermissions     "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+    knora-base:isDeleted          false;
+    knora-base:isRegionOf         <http://rdfh.ch/0001/a-thing-picture>;
+    knora-base:isRegionOfValue    <http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w/values/_3iWOtCkQM-S10cgTEx-NA> .
+
+<http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w/values/_3iWOtCkQM-S10cgTEx-NA>
+    rdf:type                      knora-base:LinkValue;
+    rdf:object                    <http://rdfh.ch/0001/a-thing-picture>;
+    rdf:predicate                 knora-base:isRegionOf;
+    rdf:subject                   <http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w>;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root>;
+    knora-base:hasPermissions     "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+    knora-base:isDeleted          false;
+    knora-base:valueCreationDate  "2025-04-25T12:35:10.924413Z"^^xsd:dateTime;
+    knora-base:valueHasOrder      0;
+    knora-base:valueHasRefCount   1;
+    knora-base:valueHasString     "http://rdfh.ch/0001/a-thing-picture";
+    knora-base:valueHasUUID       "_3iWOtCkQM-S10cgTEx-NA" .
+
+<http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w/values/xwaYB2MnSRqCsMOn0RXZ2A>
+    rdf:type                      knora-base:ColorValue;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root>;
+    knora-base:hasPermissions     "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+    knora-base:isDeleted          false;
+    knora-base:valueCreationDate  "2025-04-25T12:35:10.924413Z"^^xsd:dateTime;
+    knora-base:valueHasColor      "#ff3333";
+    knora-base:valueHasOrder      0;
+    knora-base:valueHasString     "#ff3333";
+    knora-base:valueHasUUID       "xwaYB2MnSRqCsMOn0RXZ2A" .
+
+<http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w/values/n9MrUsKyTMq5-5s_bemIMw>
+    rdf:type                      knora-base:TextValue;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root>;
+    knora-base:hasPermissions     "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+    knora-base:hasTextValueType   knora-base:UnformattedText;
+    knora-base:isDeleted          false;
+    knora-base:valueCreationDate  "2025-04-25T12:35:10.924413Z"^^xsd:dateTime;
+    knora-base:valueHasOrder      0;
+    knora-base:valueHasString     "<p>A test label of the region.</p>";
+    knora-base:valueHasUUID       "n9MrUsKyTMq5-5s_bemIMw" .
+
+<http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w/values/sAAnxjMOQG6s2Vke2001XQ>
+    rdf:type                      knora-base:GeomValue;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root>;
+    knora-base:hasPermissions     "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+    knora-base:isDeleted          false;
+    knora-base:valueCreationDate  "2025-04-25T12:35:10.924413Z"^^xsd:dateTime;
+    knora-base:valueHasGeometry   "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.3979668674698795,\"y\":0.24423475150602414},{\"x\":0.4906285297439759,\"y\":0.42000423569277123}],\"type\":\"rectangle\"}";
+    knora-base:valueHasOrder      0;
+    knora-base:valueHasString     "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.3979668674698795,\"y\":0.24423475150602414},{\"x\":0.4906285297439759,\"y\":0.42000423569277123}],\"type\":\"rectangle\"}";
+    knora-base:valueHasUUID       "sAAnxjMOQG6s2Vke2001XQ" .
+
 <http://rdfh.ch/0001/a-thing-with-text-values>
     a                                 anything:Thing ;
     knora-base:isDeleted              false ;

@@ -141,6 +141,22 @@ trait SearchResponderV2 {
   ): Task[ReadResourcesSequenceV2]
 
   /**
+   * Performs a Gravsearchquery to find regions linked to the specified resource.
+   *
+   * @param resourceIri the IRI of the resource to which incoming regions are to be found.
+   * @param offset      the offset to be used for paging.
+   * @param rendering   the schema of the response.
+   * @param user        the client making the request.
+   */
+  def searchIncomingRegionsV2(
+    resourceIri: IRI,
+    offset: Int,
+    rendering: SchemaRendering,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[ReadResourcesSequenceV2]
+
+  /**
    * Performs a fulltext search and returns the resources count (how many resources match the search criteria),
    * without taking into consideration permission checking.
    *
@@ -303,6 +319,55 @@ final case class SearchResponderV2Live(
          |?incomingRes knora-api:seqnum ?seqnum .
          |}
          |
+         |} OFFSET $offset
+         |""".stripMargin
+
+    gravsearchV2(query, rendering, user, limitToProject)
+  }
+
+  def searchIncomingRegionsV2(
+    resourceIri: IRI,
+    offset: Int,
+    rendering: SchemaRendering,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[ReadResourcesSequenceV2] = {
+    val query: String =
+      s"""
+         |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+         |
+         |CONSTRUCT {
+         |?region knora-api:isMainResource true .
+         |
+         |?region knora-api:hasGeometry ?geom .
+         |
+         |?region knora-api:hasComment ?comment .
+         |
+         |?region knora-api:hasColor ?color .
+         |} WHERE {
+         |?region a knora-api:Region .
+         |?region a knora-api:Resource .
+         |
+         |?region knora-api:isRegionOf <$resourceIri> .
+         |knora-api:isRegionOf knora-api:objectType knora-api:Resource .
+         |
+         |<$resourceIri> a knora-api:Resource .
+         |
+         |?region knora-api:hasGeometry ?geom .
+         |knora-api:hasGeometry knora-api:objectType knora-api:Geom .
+         |
+         |?geom a knora-api:Geom .
+         |
+         |OPTIONAL {
+         |  ?region knora-api:hasComment ?comment .
+         |  knora-api:hasComment knora-api:objectType xsd:string .
+         |  ?comment a xsd:string .
+         |}
+         |
+         |?region knora-api:hasColor ?color .
+         |knora-api:hasColor knora-api:objectType knora-api:Color .
+         |
+         |?color a knora-api:Color .
          |} OFFSET $offset
          |""".stripMargin
 

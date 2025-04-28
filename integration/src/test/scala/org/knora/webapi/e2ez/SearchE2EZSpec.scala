@@ -95,8 +95,76 @@ object SearchE2EZSpec extends E2EZSpec {
     }
   }
 
+  private val searchIncomingRegionsSuite = suiteAll("Search Incoming Regions endpoint") {
+    val resourceIri = InputIri.unsafeFrom("http://rdfh.ch/0001/a-thing-picture")
+
+    test("Successfully retrieve incoming regions for a resource with offset=0") {
+      val url           = s"/v2/searchIncomingRegions/${urlEncode(resourceIri.value)}?offset=0"
+      val typeCursor    = JsonCursor.field("@type").isString
+      val labelCursor   = JsonCursor.field("rdfs:label").isString
+      val commentCursor = JsonCursor.field("knora-api:hasComment").isObject.field("knora-api:valueAsString").isString
+
+      for {
+        token       <- getRootToken
+        responseStr <- sendGetRequestStringOrFail(url, Some(token))
+        response    <- ZIO.fromEither(responseStr.fromJson[Json])
+        t           <- ZIO.fromEither(response.get(typeCursor))
+        l           <- ZIO.fromEither(response.get(labelCursor))
+        c           <- ZIO.fromEither(response.get(commentCursor))
+      } yield assertTrue(
+        t.value.contains("knora-api:Region"),
+        l.value.contains("A test region"),
+        c.value.contains("A test label of the region"),
+      )
+    }
+
+    test("Successfully retrieve incoming regions for a resource with the default offset") {
+      val url           = s"/v2/searchIncomingRegions/${urlEncode(resourceIri.value)}?offset=0"
+      val typeCursor    = JsonCursor.field("@type").isString
+      val labelCursor   = JsonCursor.field("rdfs:label").isString
+      val commentCursor = JsonCursor.field("knora-api:hasComment").isObject.field("knora-api:valueAsString").isString
+
+      for {
+        token       <- getRootToken
+        responseStr <- sendGetRequestStringOrFail(url, Some(token))
+        response    <- ZIO.fromEither(responseStr.fromJson[Json])
+        t           <- ZIO.fromEither(response.get(typeCursor))
+        l           <- ZIO.fromEither(response.get(labelCursor))
+        c           <- ZIO.fromEither(response.get(commentCursor))
+      } yield assertTrue(
+        t.value.contains("knora-api:Region"),
+        l.value.contains("A test region"),
+        c.value.contains("A test label of the region"),
+      )
+    }
+
+    test("Successfully retrieve incoming regions with non-zero offset") {
+      val url = s"/v2/searchIncomingRegions/${urlEncode(resourceIri.value)}?offset=1"
+      for {
+        token       <- getRootToken
+        responseStr <- sendGetRequestStringOrFail(url, Some(token))
+        response    <- ZIO.fromEither(responseStr.fromJson[Map[String, Json]])
+      } yield assertTrue(
+        response.isEmpty,
+      )
+    }
+
+    test("Return empty result for resource without incoming regions") {
+      val resourceIri = InputIri.unsafeFrom("http://rdfh.ch/0001/MAiNrOB1Q--rzAzdkqbHOw")
+      val url         = s"/v2/searchIncomingLinks/${urlEncode(resourceIri.value)}?offset=0"
+      for {
+        token       <- getRootToken
+        responseStr <- sendGetRequestStringOrFail(url, Some(token))
+        response    <- ZIO.fromEither(responseStr.fromJson[Map[String, Json]])
+      } yield assertTrue(
+        response.isEmpty,
+      )
+    }
+  }
+
   override def e2eSpec: Spec[env, Any] =
     suite("SearchIncomingLinksE2EZSpec")(
       searchIncomingLinksSuite,
+      searchIncomingRegionsSuite,
     )
 }
