@@ -19,15 +19,21 @@ import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
-final case class LicenseDto(id: String, uri: String, labelEn: String)
-object LicenseDto {
-  given JsonCodec[LicenseDto] = DeriveJsonCodec.gen[LicenseDto]
-  given Ordering[LicenseDto]  = Ordering.by(_.labelEn)
-  given Schema[PagedResponse[LicenseDto]] = Schema
-    .derived[PagedResponse[LicenseDto]]
+final case class ProjectLicenseDto(id: String, uri: String, labelEn: String, isRecommended: Boolean, isEnabled: Boolean)
+object ProjectLicenseDto {
+  given JsonCodec[ProjectLicenseDto] = DeriveJsonCodec.gen[ProjectLicenseDto]
+  given Ordering[ProjectLicenseDto]  = Ordering.by(_.labelEn)
+  given Schema[PagedResponse[ProjectLicenseDto]] = Schema
+    .derived[PagedResponse[ProjectLicenseDto]]
     .modify(_.data)(_.copy(isOptional = false))
 
-  def from(license: License): LicenseDto = LicenseDto(license.id.value, license.uri.toString, license.labelEn)
+  def from(license: License, isEnabled: Boolean): ProjectLicenseDto = {
+    val isRecommended = license.isRecommended match {
+      case IsDaschRecommended.Yes => true
+      case IsDaschRecommended.No  => false
+    }
+    ProjectLicenseDto(license.id.value, license.uri.toString, license.labelEn, isRecommended, isEnabled)
+  }
 }
 
 final case class CopyrightHolderAddRequest(data: Set[CopyrightHolder])
@@ -69,8 +75,8 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .in(PageAndSize.queryParams())
     .in(FilterAndOrder.queryParams)
     .out(
-      jsonBody[PagedResponse[LicenseDto]]
-        .example(Examples.PagedResponse.fromTotal(License.BUILT_IN.map(LicenseDto.from))),
+      jsonBody[PagedResponse[ProjectLicenseDto]]
+        .example(Examples.PagedResponse.fromTotal(License.BUILT_IN.map(l => ProjectLicenseDto.from(l, true)))),
     )
     .description(
       "Get the allowed licenses for use within this project. " +

@@ -40,8 +40,20 @@ case class LegalInfoService(
    * @param id the Project for which the licenses are retrieved.
    * @return Returns the licenses available in the project.
    */
-  def findLicenses(id: Shortcode): UIO[Chunk[License]] =
+  def findAvailableLicenses(id: Shortcode): UIO[Chunk[License]] =
     licenses.findAll().orDie
+
+  def findEnabledLicenses(id: Shortcode): UIO[Set[License]] = for {
+    enabled  <- projects.findByShortcode(id).orDie.map(_.map(_.enabledLicenses).getOrElse(Set.empty))
+    licenses <- ZIO.foreach(enabled)(licenses.findById).orDie
+    result    = licenses.flatten
+  } yield result
+
+  def enableLicense(license: LicenseIri, project: KnoraProject): UIO[KnoraProject] =
+    projects.enableLicense(license, project).orDie
+
+  def disableLicense(license: LicenseIri, project: KnoraProject): UIO[KnoraProject] =
+    projects.disableLicense(license, project).orDie
 
   def validateLegalInfo(fileValue: FileValueV2, id: Shortcode): IO[String, FileValueV2] =
     for {
@@ -60,7 +72,7 @@ case class LegalInfoService(
     licenseIri match
       case None => ZIO.succeed(Validation.unit)
       case Some(iri) =>
-        findLicenses(shortcode).map { licenses =>
+        findEnabledLicenses(shortcode).map { licenses =>
           if (licenses.map(_.id).contains(iri)) { Validation.unit }
           else { Validation.fail(s"License $iri is not allowed in project $shortcode") }
         }

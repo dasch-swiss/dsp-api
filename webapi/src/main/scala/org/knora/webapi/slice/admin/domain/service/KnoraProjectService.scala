@@ -20,13 +20,22 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
+import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontologyRepo: OntologyRepo) {
-  def findById(id: ProjectIri): Task[Option[KnoraProject]]         = knoraProjectRepo.findById(id)
-  def existsById(id: ProjectIri): Task[Boolean]                    = knoraProjectRepo.existsById(id)
+  def findById(id: ProjectIri): Task[Option[KnoraProject]] = knoraProjectRepo.findById(id)
+  def existsById(id: ProjectIri): Task[Boolean]            = knoraProjectRepo.existsById(id)
+  def enableLicense(license: LicenseIri, project: KnoraProject): Task[KnoraProject] =
+    withProjectFromDb(project.id) { project =>
+      knoraProjectRepo.save(project.copy(enabledLicenses = project.enabledLicenses.incl(license)))
+    }
+  def disableLicense(license: LicenseIri, project: KnoraProject): Task[KnoraProject] =
+    withProjectFromDb(project.id) { project =>
+      knoraProjectRepo.save(project.copy(enabledLicenses = project.enabledLicenses.excl(license)))
+    }
   def findByShortcode(code: Shortcode): Task[Option[KnoraProject]] = knoraProjectRepo.findByShortcode(code)
   def findByShortname(code: Shortname): Task[Option[KnoraProject]] = knoraProjectRepo.findByShortname(code)
   def findAll(): Task[Chunk[KnoraProject]]                         = knoraProjectRepo.findAll()

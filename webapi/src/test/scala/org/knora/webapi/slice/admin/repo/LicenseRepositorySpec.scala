@@ -10,6 +10,7 @@ import zio.test.*
 
 import java.net.URI
 
+import org.knora.webapi.slice.admin.domain.model.IsDaschRecommended
 import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 
@@ -29,6 +30,7 @@ object LicenseRepositorySpec extends ZIOSpecDefault {
               LicenseIri.unsafeFrom("http://rdfh.ch/licenses/cc-by-4.0"),
               URI.create("https://creativecommons.org/licenses/by/4.0/"),
               "CC BY 4.0",
+              IsDaschRecommended.Yes,
             ),
           ),
         )

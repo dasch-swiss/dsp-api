@@ -48,7 +48,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     SelfJoin.CannotJoin,
     RestrictedView.default,
     Set("foo", "bar").map(CopyrightHolder.unsafeFrom),
-    Set(LicenseIri.CC_BY_4_0),
+    Set(LicenseIri.CC_BY_4_0, LicenseIri.CC_BY_NC_4_0),
   )
 
   private val someProjectTrig =
@@ -69,7 +69,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |    knora-admin:hasSelfJoinEnabled false ;
         |    knora-admin:projectRestrictedViewSize "!128,128" ;
         |    knora-admin:hasAllowedCopyrightHolder "foo", "bar" ;
-        |    knora-admin:hasEnabledLicense <${LicenseIri.CC_BY_4_0}> .
+        |    knora-admin:hasEnabledLicense <${LicenseIri.CC_BY_4_0}>, <${LicenseIri.CC_BY_NC_4_0}> .
         |}
         |""".stripMargin
 

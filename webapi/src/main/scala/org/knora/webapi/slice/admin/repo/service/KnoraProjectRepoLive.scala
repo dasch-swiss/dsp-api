@@ -148,6 +148,9 @@ object KnoraProjectRepoLive {
       project.allowedCopyrightHolders.foreach(authorship =>
         pattern.andHas(Vocabulary.KnoraAdmin.hasAllowedCopyrightHolder, authorship.value),
       )
+      project.enabledLicenses.foreach(licenseIri =>
+        pattern.andHas(Vocabulary.KnoraAdmin.hasEnabledLicense, Rdf.iri(licenseIri.value)),
+      )
       pattern
     }
   }

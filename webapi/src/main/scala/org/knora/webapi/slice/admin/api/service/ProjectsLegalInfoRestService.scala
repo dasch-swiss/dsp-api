@@ -16,7 +16,7 @@ import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.api.CopyrightHolderAddRequest
 import org.knora.webapi.slice.admin.api.CopyrightHolderReplaceRequest
-import org.knora.webapi.slice.admin.api.LicenseDto
+import org.knora.webapi.slice.admin.api.ProjectLicenseDto
 import org.knora.webapi.slice.admin.api.model.FilterAndOrder
 import org.knora.webapi.slice.admin.api.model.PageAndSize
 import org.knora.webapi.slice.admin.api.model.PagedResponse
@@ -46,10 +46,12 @@ final case class ProjectsLegalInfoRestService(
     shortcode: Shortcode,
     pageAndSize: PageAndSize,
     filterAndOrder: FilterAndOrder,
-  ): IO[ForbiddenException, PagedResponse[LicenseDto]] =
+  ): IO[ForbiddenException, PagedResponse[ProjectLicenseDto]] =
     for {
-      _      <- auth.ensureProjectMember(user, shortcode)
-      result <- legalInfos.findLicenses(shortcode).map(_.map(LicenseDto.from))
+      prj <- auth.ensureProjectMember(user, shortcode)
+      result <- legalInfos
+                  .findAvailableLicenses(shortcode)
+                  .map(_.map(l => ProjectLicenseDto.from(l, prj.enabledLicenses.contains(l.id))))
     } yield slice(result, pageAndSize, filterAndOrder)
 
   private def slice[A: JsonCodec](

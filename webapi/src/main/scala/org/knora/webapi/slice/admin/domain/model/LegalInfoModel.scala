@@ -107,28 +107,72 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
   }
 }
 
-final case class License private (id: LicenseIri, uri: URI, labelEn: String)
+final case class License private (id: LicenseIri, uri: URI, labelEn: String, isRecommended: IsDaschRecommended)
+enum IsDaschRecommended {
+  case Yes extends IsDaschRecommended
+  case No  extends IsDaschRecommended
+}
 object License {
 
   val BUILT_IN: Chunk[License] = Chunk(
-    License(CC_BY_4_0, URI.create("https://creativecommons.org/licenses/by/4.0/"), "CC BY 4.0"),
-    License(CC_BY_SA_4_0, URI.create("https://creativecommons.org/licenses/by-sa/4.0/"), "CC BY-SA 4.0"),
-    License(CC_BY_NC_4_0, URI.create("https://creativecommons.org/licenses/by-nc/4.0/"), "CC BY-NC 4.0"),
-    License(CC_BY_NC_SA_4_0, URI.create("https://creativecommons.org/licenses/by-nc-sa/4.0/"), "CC BY-NC-SA 4.0"),
-    License(CC_BY_ND_4_0, URI.create("https://creativecommons.org/licenses/by-nd/4.0/"), "CC BY-ND 4.0"),
-    License(CC_BY_NC_ND_4_0, URI.create("https://creativecommons.org/licenses/by-nc-nd/4.0/"), "CC BY-NC-ND 4.0"),
-    License(AI_GENERATED, URI.create(AI_GENERATED.value), "AI-Generated Content - Not Protected by Copyright"),
-    License(UNKNOWN, URI.create(UNKNOWN.value), "Unknown License - Ask Copyright Holder for Permission"),
-    License(PUBLIC_DOMAIN, URI.create(PUBLIC_DOMAIN.value), "Public Domain - Not Protected by Copyright"),
+    License(CC_BY_4_0, URI.create("https://creativecommons.org/licenses/by/4.0/"), "CC BY 4.0", IsDaschRecommended.Yes),
+    License(
+      CC_BY_SA_4_0,
+      URI.create("https://creativecommons.org/licenses/by-sa/4.0/"),
+      "CC BY-SA 4.0",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      CC_BY_NC_4_0,
+      URI.create("https://creativecommons.org/licenses/by-nc/4.0/"),
+      "CC BY-NC 4.0",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      CC_BY_NC_SA_4_0,
+      URI.create("https://creativecommons.org/licenses/by-nc-sa/4.0/"),
+      "CC BY-NC-SA 4.0",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      CC_BY_ND_4_0,
+      URI.create("https://creativecommons.org/licenses/by-nd/4.0/"),
+      "CC BY-ND 4.0",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      CC_BY_NC_ND_4_0,
+      URI.create("https://creativecommons.org/licenses/by-nc-nd/4.0/"),
+      "CC BY-NC-ND 4.0",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      AI_GENERATED,
+      URI.create(AI_GENERATED.value),
+      "AI-Generated Content - Not Protected by Copyright",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      UNKNOWN,
+      URI.create(UNKNOWN.value),
+      "Unknown License - Ask Copyright Holder for Permission",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      PUBLIC_DOMAIN,
+      URI.create(PUBLIC_DOMAIN.value),
+      "Public Domain - Not Protected by Copyright",
+      IsDaschRecommended.Yes,
+    ),
   )
 
-  def from(id: LicenseIri, uri: URI, labelEn: String): Either[String, License] = {
+  def from(id: LicenseIri, uri: URI, labelEn: String, isRecommended: IsDaschRecommended): Either[String, License] = {
     val labelValidation = Validation
       .validate(nonEmpty(labelEn), maxLength(255)(labelEn), noLineBreaks(labelEn))
       .mapErrorAll(errs => NonEmptyChunk(s"Label en ${errs.mkString("; ")}"))
     Validation
       .validate(absoluteUri(uri), labelValidation)
-      .as(License(id, uri, labelEn))
+      .as(License(id, uri, labelEn, isRecommended))
       .flatMap(checkAgainstBuiltIn)
       .toEither
       .left
@@ -147,6 +191,6 @@ object License {
     }
   }
 
-  def unsafeFrom(id: LicenseIri, uri: URI, labelEn: String): License =
-    from(id, uri, labelEn).fold(e => throw new IllegalArgumentException(e), identity)
+  def unsafeFrom(id: LicenseIri, uri: URI, labelEn: String, isRecommended: IsDaschRecommended): License =
+    from(id, uri, labelEn, isRecommended).fold(e => throw new IllegalArgumentException(e), identity)
 }
