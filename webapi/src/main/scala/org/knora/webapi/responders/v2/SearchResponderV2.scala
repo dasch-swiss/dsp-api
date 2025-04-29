@@ -141,6 +141,22 @@ trait SearchResponderV2 {
   ): Task[ReadResourcesSequenceV2]
 
   /**
+   * Performs a Gravsearchquery to find StillImageRepresentations linked to the specified resource.
+   *
+   * @param resourceIri the IRI of the resource to which StillImageRepresentations are to be found.
+   * @param offset      the offset to be used for paging.
+   * @param rendering   the schema of the response.
+   * @param user        the client making the request.
+   */
+  def searchStillImageRepresentationsV2(
+    resourceIri: IRI,
+    offset: Int,
+    rendering: SchemaRendering,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[ReadResourcesSequenceV2]
+
+  /**
    * Performs a Gravsearchquery to find regions linked to the specified resource.
    *
    * @param resourceIri the IRI of the resource to which incoming regions are to be found.
@@ -320,6 +336,50 @@ final case class SearchResponderV2Live(
          |}
          |
          |} OFFSET $offset
+         |""".stripMargin
+
+    gravsearchV2(query, rendering, user, limitToProject)
+  }
+
+  def searchStillImageRepresentationsV2(
+    resourceIri: IRI,
+    offset: Int,
+    rendering: SchemaRendering,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[ReadResourcesSequenceV2] = {
+    val query: String =
+      s"""
+         |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+         |
+         |CONSTRUCT {
+         |?page knora-api:isMainResource true .
+         |
+         |?page knora-api:seqnum ?seqnum .
+         |
+         |?page knora-api:hasStillImageFile ?file .
+         |} WHERE {
+         |
+         |?page a knora-api:StillImageRepresentation .
+         |?page a knora-api:Resource .
+         |
+         |?page knora-api:isPartOf <$resourceIri> .
+         |knora-api:isPartOf knora-api:objectType knora-api:Resource .
+         |
+         |<$resourceIri> a knora-api:Resource .
+         |
+         |?page knora-api:seqnum ?seqnum .
+         |knora-api:seqnum knora-api:objectType xsd:integer .
+         |
+         |?seqnum a xsd:integer .
+         |
+         |?page knora-api:hasStillImageFile ?file .
+         |knora-api:hasStillImageFile knora-api:objectType knora-api:File .
+         |
+         |?file a knora-api:File .
+         |
+         |} ORDER BY ?seqnum
+         |OFFSET $offset
          |""".stripMargin
 
     gravsearchV2(query, rendering, user, limitToProject)
