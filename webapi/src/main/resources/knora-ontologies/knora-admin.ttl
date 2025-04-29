@@ -259,6 +259,16 @@
     knora-base:subjectClassConstraint   :knoraProject ;
     knora-base:objectDatatypeConstraint xsd:string .
 
+
+### http://www.knora.org/ontology/knora-admin#hasEnabledLicense
+
+:hasEnabledLicense
+    rdf:type                          rdf:Property ;
+    rdfs:comment                      "Indicates which license is enabled for a project."@en ;
+    knora-base:subjectClassConstraint :knoraProject ;
+    knora-base:objectClassConstraint  knora-base:License .
+
+
 ###  http://www.knora.org/ontology/knora-admin#username
 
 :username
@@ -394,6 +404,9 @@
                       owl:cardinality    "1"^^xsd:nonNegativeInteger ] ,
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :hasAllowedCopyrightHolder ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :hasEnabledLicense ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     rdfs:comment    "Represents a project that uses Knora."@en .
 
@@ -550,3 +563,4 @@
     rdf:type        owl:Class ;
     rdfs:comment    "Default Object Access Permission class used to create instances for storing default object access permission for a project and either groups, resource classes, or properties."@en ;
     rdfs:subClassOf :Permission .
+
