@@ -17,6 +17,7 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
@@ -50,6 +51,7 @@ final case class KnoraProjectRepoLive(
       Vocabulary.KnoraAdmin.projectRestrictedViewSize,
       Vocabulary.KnoraAdmin.projectRestrictedViewWatermark,
       Vocabulary.KnoraAdmin.hasAllowedCopyrightHolder,
+      Vocabulary.KnoraAdmin.hasEnabledLicense,
     ),
   )
 
@@ -104,7 +106,8 @@ object KnoraProjectRepoLive {
         selfjoin    <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
         allowedCopyrightHolders <-
           resource.getStringLiterals(hasAllowedCopyrightHolder)(CopyrightHolder.from).map(_.toSet)
-        restrictedView <- getRestrictedView
+        enabledLicenses <- resource.getObjectIrisConvert(hasEnabledLicense)(LicenseIri.from).map(_.toSet)
+        restrictedView  <- getRestrictedView
       } yield KnoraProject(
         id = ProjectIri.unsafeFrom(iri.value),
         shortcode = shortcode,
@@ -117,6 +120,7 @@ object KnoraProjectRepoLive {
         selfjoin = selfjoin,
         restrictedView = restrictedView,
         allowedCopyrightHolders = allowedCopyrightHolders,
+        enabledLicenses = enabledLicenses,
       )
     }
 

@@ -28,6 +28,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
+import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.infrastructure.CacheManager
@@ -47,6 +48,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     SelfJoin.CannotJoin,
     RestrictedView.default,
     Set("foo", "bar").map(CopyrightHolder.unsafeFrom),
+    Set(LicenseIri.CC_BY_4_0),
   )
 
   private val someProjectTrig =
@@ -66,7 +68,8 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |    knora-admin:status true ;
         |    knora-admin:hasSelfJoinEnabled false ;
         |    knora-admin:projectRestrictedViewSize "!128,128" ;
-        |    knora-admin:hasAllowedCopyrightHolder "foo", "bar" .
+        |    knora-admin:hasAllowedCopyrightHolder "foo", "bar" ;
+        |    knora-admin:hasEnabledLicense <${LicenseIri.CC_BY_4_0}> .
         |}
         |""".stripMargin
 

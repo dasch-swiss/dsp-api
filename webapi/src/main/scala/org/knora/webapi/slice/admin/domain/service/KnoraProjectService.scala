@@ -55,6 +55,7 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
                 req.selfjoin,
                 RestrictedView.default,
                 Set.empty,
+                Set.empty,
               )
     project <- knoraProjectRepo.save(project)
   } yield project

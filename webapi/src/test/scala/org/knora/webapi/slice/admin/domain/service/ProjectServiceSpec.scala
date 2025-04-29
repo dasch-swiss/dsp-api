@@ -56,6 +56,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           selfjoin = SelfJoin.CanJoin,
           restrictedView = RestrictedView.default,
           allowedCopyrightHolders = Set.empty,
+          enabledLicenses = Set.empty,
         )
         assertTrue(
           ProjectService
