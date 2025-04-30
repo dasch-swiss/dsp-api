@@ -37,6 +37,9 @@ final case class BaseEndpoints(authenticator: Authenticator)(implicit val r: zio
       // default
       oneOfVariant[NotFoundException](statusCode(StatusCode.NotFound).and(jsonBody[NotFoundException])),
       oneOfVariant[BadRequestException](statusCode(StatusCode.BadRequest).and(jsonBody[BadRequestException])),
+      oneOfVariant[EditConflictException](
+        statusCode(StatusCode.BadRequest).and(jsonBody[EditConflictException]),
+      ),
       oneOfVariant[OntologyConstraintException](
         statusCode(StatusCode.BadRequest).and(jsonBody[OntologyConstraintException]),
       ),
