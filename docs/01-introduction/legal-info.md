@@ -12,8 +12,8 @@ This metadata is stored in the [FileValue](../02-dsp-ontologies/knora-base.md#fi
 The copyright holder of the file.
 A copyright holder is a person or organization that holds the copyright to a file.
 
-Each project [references an allowed list of copyright holders](/03-endpoints/api-admin/#get-adminprojectsshortcodeprojectshortcodelegal-infocopyright-holders) that can be used.  
-System project administrators can [add new copyright holders](/03-endpoints/api-admin/#post-adminprojectsshortcodeprojectshortcodelegal-infocopyright-holders) to the list.
+Each project [references an allowed list of copyright holders](../../03-endpoints/api-admin/#get-adminprojectsshortcodeprojectshortcodelegal-infocopyright-holders) that can be used.  
+System project administrators can [add new copyright holders](../../03-endpoints/api-admin/#post-adminprojectsshortcodeprojectshortcodelegal-infocopyright-holders) to the list.
 
 ## Authorship
 
@@ -29,7 +29,7 @@ A license has the following properties:
 - `label-en` - this is a human-readable label for the license in English.
 - `id` - this is a unique identifier as an IRI for the license.
 
-Each project [restricts the licenses that can be used](/03-endpoints/api-admin/#get-adminprojectsshortcodeprojectshortcodelegal-infolicenses).
+Each project [restricts the licenses that can be used](../../03-endpoints/api-admin/#get-adminprojectsshortcodeprojectshortcodelegal-infolicenses).
 
 Currently, the set of allowed licenses is fixed to [our predefined licenses](#predefined-licenses) and cannot be changed by the project.
 
