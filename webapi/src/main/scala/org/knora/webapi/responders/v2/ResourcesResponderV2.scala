@@ -351,8 +351,8 @@ final case class ResourcesResponderV2(
 
         _ <- ensureNoConflictingChange(resource, deleteResourceV2.maybeLastModificationDate)
 
-        resourceIri = ResourceIri.unsafeFrom(deleteResourceV2.resourceIri.toSmartIri)
-        _          <- ensureResourceIsNotInUse(resourceIri)
+        resourceIri <- iriConverter.asResourceIri(deleteResourceV2.resourceIri).mapError(BadRequestException.apply)
+        _           <- ensureResourceIsNotInUse(resourceIri)
 
         // If a custom delete date was provided, make sure it's later than the resource's most recent timestamp.
         _ <- ZIO.when(
@@ -494,13 +494,8 @@ final case class ResourcesResponderV2(
 
         _ <- ensureNoConflictingChange(resource, eraseResourceV2.maybeLastModificationDate)
 
-        // Check that the resource is not referred to by any other resources. We ignore rdf:subject (so we
-        // can erase the resource's own links) and rdf:object (in case there is a deleted link value that
-        // refers to it). Any such deleted link values will be erased along with the resource. If there
-        // is a non-deleted link to the resource, the direct link (rather than the link value) will cause
-        // to fail.
-        resourceIri = ResourceIri.unsafeFrom(eraseResourceV2.resourceIri.toSmartIri)
-        _          <- ensureResourceIsNotInUse(resourceIri)
+        resourceIri <- iriConverter.asResourceIri(eraseResourceV2.resourceIri).mapError(BadRequestException.apply)
+        _           <- ensureResourceIsNotInUse(resourceIri)
 
         // Get the IRI of the named graph from which the resource will be erased.
         dataNamedGraph = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
