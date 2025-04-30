@@ -1257,6 +1257,7 @@ final case class OntologyResponderV2(
            .someOrFail(BadRequestException(s"Class $classIri does not exist"))
     userCanUpdateOntology <- ontologyCacheHelpers.canUserUpdateOntology(classIri.ontologyIri, requestingUser)
     classIsUsed           <- iriService.isEntityUsed(classIri.toInternalSchema)
+    _                     <- ZIO.logInfo(s"class ${classIri.toInternalSchema.toIri}, user $userCanUpdateOntology, classIsUsed $classIsUsed")
   } yield CanDoResponseV2.of(userCanUpdateOntology && !classIsUsed)
 
   /**
