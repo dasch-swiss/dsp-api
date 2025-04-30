@@ -384,6 +384,9 @@ final case class ResourcesResponderV2(
                          requestingUser = deleteResourceV2.requestingUser.id,
                        )
         // Do the update.
+        _ <- ZIO.logInfo(
+               s"User ${deleteResourceV2.requestingUser.id} is deleting resource ${deleteResourceV2.resourceIri}",
+             )
         _ <- triplestore.query(Update(sparqlUpdate))
 
         // Verify that the resource was deleted correctly.
@@ -503,6 +506,9 @@ final case class ResourcesResponderV2(
         dataNamedGraph = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Do the update.
+        _ <- ZIO.logInfo(
+               s"User ${eraseResourceV2.requestingUser.id} is erasing resource ${eraseResourceV2.resourceIri}",
+             )
         _ <- triplestore.query(Update(sparql.v2.txt.eraseResource(dataNamedGraph, eraseResourceV2.resourceIri)))
 
         _ <- // Verify that the resource was erased correctly.
