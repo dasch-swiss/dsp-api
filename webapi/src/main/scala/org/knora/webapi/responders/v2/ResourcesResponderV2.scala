@@ -416,7 +416,7 @@ final case class ResourcesResponderV2(
    *
    * @param resourceIri the IRI of the Resource to check.
    *
-   * @return `true` if the entity is used.
+   * @return The list of resources that are pointing to the resource to check.
    */
   private def isResourceInUse(resourceIri: ResourceIri): Task[Set[ResourceIri]] =
     for {
