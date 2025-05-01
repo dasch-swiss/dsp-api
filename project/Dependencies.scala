@@ -124,7 +124,7 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.6"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.21.0"
 
   val wiremock = "org.wiremock" % "wiremock" % "3.12.1"
 
