@@ -17,12 +17,15 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec
 import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.AI_GENERATED
-import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_4_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.BORIS
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_0_1_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_ND_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_SA_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_ND_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_SA_4_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_PDM_1_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.OPEN_LICENCE_2_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.PUBLIC_DOMAIN
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.UNKNOWN
 import org.knora.webapi.slice.common.StringValueCompanion
@@ -71,15 +74,19 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
    */
   private lazy val licenseIriRegEx = """^http://rdfh\.ch/licenses/[A-Za-z0-9_-]{22}$""".r
 
-  val CC_BY_4_0: LicenseIri       = LicenseIri("http://rdfh.ch/licenses/cc-by-4.0")
-  val CC_BY_SA_4_0: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/cc-by-sa-4.0")
-  val CC_BY_NC_4_0: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-4.0")
-  val CC_BY_NC_SA_4_0: LicenseIri = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-sa-4.0")
-  val CC_BY_ND_4_0: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/cc-by-nd-4.0")
-  val CC_BY_NC_ND_4_0: LicenseIri = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-nd-4.0")
-  val AI_GENERATED: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/ai-generated")
-  val UNKNOWN: LicenseIri         = LicenseIri("http://rdfh.ch/licenses/unknown")
-  val PUBLIC_DOMAIN: LicenseIri   = LicenseIri("http://rdfh.ch/licenses/public-domain")
+  val CC_BY_4_0: LicenseIri        = LicenseIri("http://rdfh.ch/licenses/cc-by-4.0")
+  val CC_BY_SA_4_0: LicenseIri     = LicenseIri("http://rdfh.ch/licenses/cc-by-sa-4.0")
+  val CC_BY_NC_4_0: LicenseIri     = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-4.0")
+  val CC_BY_NC_SA_4_0: LicenseIri  = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-sa-4.0")
+  val CC_BY_ND_4_0: LicenseIri     = LicenseIri("http://rdfh.ch/licenses/cc-by-nd-4.0")
+  val CC_BY_NC_ND_4_0: LicenseIri  = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-nd-4.0")
+  val AI_GENERATED: LicenseIri     = LicenseIri("http://rdfh.ch/licenses/ai-generated")
+  val UNKNOWN: LicenseIri          = LicenseIri("http://rdfh.ch/licenses/unknown")
+  val PUBLIC_DOMAIN: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/public-domain")
+  val CC_0_1_0: LicenseIri         = LicenseIri("http://rdfh.ch/licenses/cc-0-1.0")
+  val CC_PDM_1_0: LicenseIri       = LicenseIri("http://rdfh.ch/licenses/cc-pdm-1.0")
+  val BORIS: LicenseIri            = LicenseIri("http://rdfh.ch/licenses/boris")
+  val OPEN_LICENCE_2_0: LicenseIri = LicenseIri("http://rdfh.ch/licenses/open-licence-2.0")
 
   val BUILT_IN: Set[LicenseIri] =
     Set(
@@ -92,6 +99,10 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
       AI_GENERATED,
       UNKNOWN,
       PUBLIC_DOMAIN,
+      CC_0_1_0,
+      CC_PDM_1_0,
+      BORIS,
+      OPEN_LICENCE_2_0,
     )
 
   private def isLicenseIri(iri: String) = licenseIriRegEx.matches(iri) || BUILT_IN.map(_.value).contains(iri)
@@ -115,7 +126,6 @@ enum IsDaschRecommended {
 object License {
 
   val BUILT_IN: Chunk[License] = Chunk(
-    License(CC_BY_4_0, URI.create("https://creativecommons.org/licenses/by/4.0/"), "CC BY 4.0", IsDaschRecommended.Yes),
     License(
       CC_BY_SA_4_0,
       URI.create("https://creativecommons.org/licenses/by-sa/4.0/"),
@@ -163,6 +173,30 @@ object License {
       URI.create(PUBLIC_DOMAIN.value),
       "Public Domain - Not Protected by Copyright",
       IsDaschRecommended.Yes,
+    ),
+    License(
+      CC_0_1_0,
+      URI.create("https://creativecommons.org/publicdomain/zero/1.0/"),
+      "CC0 1.0",
+      IsDaschRecommended.No,
+    ),
+    License(
+      CC_PDM_1_0,
+      URI.create("https://creativecommons.org/publicdomain/mark/1.0/"),
+      "PDM 1.0",
+      IsDaschRecommended.No,
+    ),
+    License(
+      BORIS,
+      URI.create("https://www.ub.unibe.ch/services/open_science/boris_publications/index_eng.html#collapse_pane631832"),
+      "PDM 1.0",
+      IsDaschRecommended.No,
+    ),
+    License(
+      OPEN_LICENCE_2_0,
+      URI.create("https://www.etalab.gouv.fr/wp-content/uploads/2018/11/open-licence.pdf"),
+      "LICENCE OUVERTE 2.0",
+      IsDaschRecommended.No,
     ),
   )
 
