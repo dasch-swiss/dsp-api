@@ -19,6 +19,7 @@ import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.AI_GENERATED
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.BORIS
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_0_1_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_ND_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_SA_4_0
@@ -126,6 +127,7 @@ enum IsDaschRecommended {
 object License {
 
   val BUILT_IN: Chunk[License] = Chunk(
+    License(CC_BY_4_0, URI.create("https://creativecommons.org/licenses/by/4.0/"), "CC BY 4.0", IsDaschRecommended.Yes),
     License(
       CC_BY_SA_4_0,
       URI.create("https://creativecommons.org/licenses/by-sa/4.0/"),
