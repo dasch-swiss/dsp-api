@@ -29,7 +29,7 @@ object Dependencies {
   val ZioLoggingVersion           = "2.5.0"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC39"
+  val ZioPreludeVersion           = "1.0.0-RC40"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.1.17"
 
@@ -124,9 +124,9 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.20.6"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.21.0"
 
-  val wiremock = "org.wiremock" % "wiremock" % "3.12.1"
+  val wiremock = "org.wiremock" % "wiremock" % "3.13.0"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
@@ -149,13 +149,13 @@ object Dependencies {
 
   val openTelemetryWithSentry = Seq(
     "dev.zio"         %% "zio-opentelemetry"                   % "3.1.3",
-    "io.sentry"        % "sentry"                              % "8.7.0",
-    "io.sentry"        % "sentry-opentelemetry-core"           % "8.7.0",
-    "io.sentry"        % "sentry-opentelemetry-agentless"      % "8.7.0",
-    "io.opentelemetry" % "opentelemetry-sdk"                   % "1.33.0",
-    "io.opentelemetry" % "opentelemetry-exporter-otlp"         % "1.33.0",
-    "io.opentelemetry" % "opentelemetry-exporter-logging"      % "1.33.0",
-    "io.opentelemetry" % "opentelemetry-exporter-logging-otlp" % "1.33.0",
+    "io.sentry"        % "sentry"                              % "8.11.1",
+    "io.sentry"        % "sentry-opentelemetry-core"           % "8.11.1",
+    "io.sentry"        % "sentry-opentelemetry-agentless"      % "8.11.1",
+    "io.opentelemetry" % "opentelemetry-sdk"                   % "1.49.0",
+    "io.opentelemetry" % "opentelemetry-exporter-otlp"         % "1.49.0",
+    "io.opentelemetry" % "opentelemetry-exporter-logging"      % "1.49.0",
+    "io.opentelemetry" % "opentelemetry-exporter-logging-otlp" % "1.49.0",
     "io.opentelemetry" % "opentelemetry-semconv"               % "0.14.1",
   )
 
