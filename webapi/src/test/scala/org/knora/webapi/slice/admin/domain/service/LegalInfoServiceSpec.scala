@@ -41,12 +41,18 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
     ),
   )
 
-  private val licenseEnablingSuite = suite("enableLicense for FileValue in Project")(
-    test("A FileValue with a valid LicenseIri should be enabled") {
+  private val licenseEnablingSuite = suite("License enabling and disabling")(
+    test("enabling should work") {
       for {
         prj    <- setupProject
         actual <- service(_.enableLicense(disabledLicense, prj))
       } yield assertTrue(actual.enabledLicenses == Set(disabledLicense, enabledLicense))
+    },
+    test("disabling should work") {
+      for {
+        prj    <- setupProject
+        actual <- service(_.disableLicense(enabledLicense, prj))
+      } yield assertTrue(actual.enabledLicenses == Set.empty)
     },
   )
 
