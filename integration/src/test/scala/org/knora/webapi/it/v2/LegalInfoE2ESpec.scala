@@ -24,8 +24,13 @@ import java.io.ByteArrayInputStream
 import java.net.URLEncoder
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
-
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.it.v2.LegalInfoE2ESpec.resourceId
+import org.knora.webapi.it.v2.LegalInfoE2ESpec.resourceId
+import org.knora.webapi.it.v2.LegalInfoE2ESpec.resourceId
+import org.knora.webapi.it.v2.LegalInfoE2ESpec.resourceId
+import org.knora.webapi.it.v2.LegalInfoE2ESpec.resourceId
+import org.knora.webapi.it.v2.LegalInfoE2ESpec.suite
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
@@ -72,16 +77,16 @@ object LegalInfoE2ESpec extends E2EZSpec {
   private val enableLicenses = {
     val licensesToEnable = Set(enabledLicenseIri, anotherEnabledLicenseIri)
     for {
-      prj            <- projectService(_.findByShortcode(shortcode)).someOrFail(Exception("Project not found"))
-      _              <- ZIO.logInfo(s"=== Enabling licenses ${prj.shortcode} :: ${licensesToEnable.mkString(",")} ===")
-      _              <- ZIO.foreachDiscard(licensesToEnable)(iri => projectService(_.enableLicense(iri, prj)))
-      updated        <- projectService(_.findByShortcode(shortcode)).someOrFail(Exception("Project not found"))
-      enabledLicenses = updated.enabledLicenses
-      _ <- ZIO
-             .fail(Exception(s"Licenses not enabled: ${licensesToEnable.diff(enabledLicenses)}"))
-             .when(licensesToEnable.diff(enabledLicenses).nonEmpty)
+      prj <- projectService(_.findByShortcode(shortcode)).someOrFail(Exception("Project not found"))
+      _   <- ZIO.foreachDiscard(licensesToEnable)(iri => projectService(_.enableLicense(iri, prj)))
     } yield ()
   }
+
+  private val disableAllLicenses =
+    for {
+      prj <- projectService(_.findByShortcode(shortcode)).someOrFail(Exception("Project not found"))
+      _   <- ZIO.foreachDiscard(prj.enabledLicenses)(iri => projectService(_.disableLicense(iri, prj)))
+    } yield ()
 
   private val createResourceSuite = suite("Creating Resources")(
     test("without legal info should succeed and the creation response should not contain legal info") {
@@ -156,43 +161,59 @@ object LegalInfoE2ESpec extends E2EZSpec {
   )
 
   private val createValueSuite = suite("Values with legal info")(
-    suite("given the copyright holder is allowed")(
-      test("when updating a value with valid legal info the created value should contain the update") {
-        val newLicenseIri = LicenseIri.CC_BY_4_0
+    suite("given the license is not enabled")(
+      test("when creating a value with legal info the creation should fail") {
         for {
           resourceCreated <- createStillImageResource()
           resourceId      <- resourceId(resourceCreated)
           valueIdOld      <- valueId(resourceCreated)
-          _ <- putUpdateValue(resourceId, valueIdOld, aCopyrightHolder, someAuthorship, newLicenseIri)
-                 .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create value"))
-          createdResourceModel <- getResourceFromApi(resourceId)
-          info                 <- copyrightAndLicenseInfo(createdResourceModel)
+          response        <- putUpdateValue(resourceId, valueIdOld, aCopyrightHolder, someAuthorship, enabledLicenseIri)
+          body            <- response.body.asString
         } yield assertTrue(
-          info.licenseIri.contains(newLicenseIri),
-        ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
+          response.status.isClientError,
+          body.contains("License http://rdfh.ch/licenses/public-domain is not allowed in project 0001"),
+        )
       },
-      test("when updating a value with invalid LicenseIri the update should fail") {
-        val invalidLicenseIri = LicenseIri.makeNew
-        for {
-          resourceCreated <- createStillImageResource()
-          resourceId      <- resourceId(resourceCreated)
-          valueIdOld      <- valueId(resourceCreated)
-          response        <- putUpdateValue(resourceId, valueIdOld, aCopyrightHolder, someAuthorship, invalidLicenseIri)
-        } yield assertTrue(response.status.isClientError)
-      },
-    ) @@ TestAspect.before(allowCopyrightHolder),
-    suite("given the copyright holder is NOT allowed")(
-      test("when updating a value with valid legal info the created value should contain the update") {
-        val disallowedCopyrightHolder = CopyrightHolder.unsafeFrom("disallowed-copyright-holder")
-        for {
-          resourceCreated <- createStillImageResource()
-          resourceId      <- resourceId(resourceCreated)
-          valueIdOld      <- valueId(resourceCreated)
-          response <-
-            putUpdateValue(resourceId, valueIdOld, disallowedCopyrightHolder, someAuthorship, enabledLicenseIri)
-        } yield assertTrue(response.status.isClientError)
-      },
-    ) @@ TestAspect.before(disallowCopyrightHolder),
+    ) @@ TestAspect.before(disableAllLicenses) @@ TestAspect.before(allowCopyrightHolder),
+    suite("given the license is enabled")(
+      suite("given the copyright holder is allowed")(
+        test("when updating a value with valid legal info the created value should contain the update") {
+          val newLicenseIri = LicenseIri.CC_BY_4_0
+          for {
+            resourceCreated <- createStillImageResource()
+            resourceId      <- resourceId(resourceCreated)
+            valueIdOld      <- valueId(resourceCreated)
+            _ <- putUpdateValue(resourceId, valueIdOld, aCopyrightHolder, someAuthorship, newLicenseIri)
+                   .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create value"))
+            createdResourceModel <- getResourceFromApi(resourceId)
+            info                 <- copyrightAndLicenseInfo(createdResourceModel)
+          } yield assertTrue(
+            info.licenseIri.contains(newLicenseIri),
+          ) && assert(info.authorship.getOrElse(List.empty))(hasSameElements(someAuthorship))
+        },
+        test("when updating a value with invalid LicenseIri the update should fail") {
+          val invalidLicenseIri = LicenseIri.makeNew
+          for {
+            resourceCreated <- createStillImageResource()
+            resourceId      <- resourceId(resourceCreated)
+            valueIdOld      <- valueId(resourceCreated)
+            response        <- putUpdateValue(resourceId, valueIdOld, aCopyrightHolder, someAuthorship, invalidLicenseIri)
+          } yield assertTrue(response.status.isClientError)
+        },
+      ) @@ TestAspect.before(allowCopyrightHolder),
+      suite("given the copyright holder is NOT allowed")(
+        test("when updating a value with valid legal info the created value should contain the update") {
+          val disallowedCopyrightHolder = CopyrightHolder.unsafeFrom("disallowed-copyright-holder")
+          for {
+            resourceCreated <- createStillImageResource()
+            resourceId      <- resourceId(resourceCreated)
+            valueIdOld      <- valueId(resourceCreated)
+            response <-
+              putUpdateValue(resourceId, valueIdOld, disallowedCopyrightHolder, someAuthorship, enabledLicenseIri)
+          } yield assertTrue(response.status.isClientError)
+        },
+      ) @@ TestAspect.before(disallowCopyrightHolder),
+    ) @@ TestAspect.before(enableLicenses),
   )
 
   final case class UpdateStillImageFileValueRequest(
