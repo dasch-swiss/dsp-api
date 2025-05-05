@@ -125,22 +125,30 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
   }
 
   def eraseValue(project: KnoraProject)(valueIri: ValueIri): Task[Unit] = {
-    val value            = iri(valueIri.toString)
-    val (p, o)           = (variable("p"), variable("o"))
-    val (s, oo)          = (variable("s"), variable("oo"))
-    val delete           = value.has(p, o)
-    val deleteReverse    = s.has(oo, value)
+    val value         = iri(valueIri.toString)
+    val (p, o)        = (variable("p"), variable("o"))
+    val (s, oo)       = (variable("s"), variable("oo"))
+    val delete        = value.has(p, o)
+    val deleteReverse = s.has(oo, value)
+
+    val (soLink, soP, soO) = (variable("standoffLink"), variable("standoffProp"), variable("standoffObj"))
+    val standoffLinked     = value.has(KB.valueHasStandoff, soLink)
+    val standoffValues     = soLink.has(soP, soO)
+
     val projectDataGraph = Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value)
+    val queryStandoff = Queries
+      .DELETE(standoffValues)
+      .`with`(projectDataGraph)
+      .where(delete, deleteReverse, standoffLinked, standoffValues)
     val query = Queries
-      .DELETE(
-        delete,
-        deleteReverse,
-      )
+      .DELETE(delete, deleteReverse)
       .`with`(projectDataGraph)
       .where(delete, deleteReverse)
-    triplestore.query(Update(query))
+
+    triplestore.query(Update(queryStandoff)) *> triplestore.query(Update(query))
   }
 
+  /* Deletes the subject/predicate/object triple pointed to by a LinkValue. */
   def eraseValueDirectLink(project: KnoraProject)(valueIri: ValueIri): Task[Unit] = {
     val value            = iri(valueIri.toString)
     val (s, p, o)        = (variable("s"), variable("p"), variable("o"))
