@@ -113,13 +113,14 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, ontolog
       } yield updated
     }
 
-  def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] = {
-    val projectGraph = ProjectService.projectDataNamedGraphV2(project)
-    ontologyRepo
-      .findByProject(project.id)
-      .map(_.map(_.ontologyMetadata.ontologyIri.toInternalIri))
-      .map(_ :+ projectGraph)
-  }
+  def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] =
+    getOntologyGraphsForProject(project).map(_ :+ getDataGraphForProject(project))
+
+  def getDataGraphForProject(project: KnoraProject): InternalIri =
+    ProjectService.projectDataNamedGraphV2(project)
+
+  def getOntologyGraphsForProject(project: KnoraProject): Task[List[InternalIri]] =
+    ontologyRepo.findByProject(project.id).map(_.map(_.ontologyMetadata.ontologyIri.toInternalIri))
 
   def addCopyrightHolders(project: ProjectIri, addThese: Set[CopyrightHolder]): Task[KnoraProject] =
     withProjectFromDb(project) { project =>

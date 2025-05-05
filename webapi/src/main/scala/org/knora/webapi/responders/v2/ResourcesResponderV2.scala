@@ -6,6 +6,14 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
+import org.eclipse.rdf4j.model.vocabulary.RDFS
+import org.eclipse.rdf4j.model.vocabulary.XSD
+import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
+import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 import zio.Task
 import zio.ZIO
@@ -43,6 +51,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -50,6 +59,9 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.VersionDate
@@ -85,13 +97,14 @@ trait GetResources {
 final case class ResourcesResponderV2(
   appConfig: AppConfig,
   iriService: IriService,
+  iriConverter: IriConverter,
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
   constructResponseUtilV2: ConstructResponseUtilV2,
   standoffTagUtilV2: StandoffTagUtilV2,
   resourceUtilV2: ResourceUtilV2,
   permissionUtilADM: PermissionUtilADM,
-  knoraProjectService: KnoraProjectService,
+  projectService: KnoraProjectService,
   searchResponderV2: SearchResponderV2,
   ontologyRepo: OntologyRepo,
   permissionsResponder: PermissionsResponder,
@@ -338,13 +351,8 @@ final case class ResourcesResponderV2(
 
         _ <- ensureNoConflictingChange(resource, deleteResourceV2.maybeLastModificationDate)
 
-        resourceIri = ResourceIri.unsafeFrom(deleteResourceV2.resourceIri.toSmartIri)
-        _ <- ZIO
-               .whenZIO(isResourceInUse(resourceIri)) {
-                 val msg =
-                   s"Resource $resourceIri cannot be deleted, because it is referred to by another resource"
-                 ZIO.fail(BadRequestException(msg))
-               }
+        resourceIri <- iriConverter.asResourceIri(deleteResourceV2.resourceIri).mapError(BadRequestException.apply)
+        _           <- ensureResourceIsNotInUse(resourceIri)
 
         // If a custom delete date was provided, make sure it's later than the resource's most recent timestamp.
         _ <- ZIO.when(
@@ -376,6 +384,9 @@ final case class ResourcesResponderV2(
                          requestingUser = deleteResourceV2.requestingUser.id,
                        )
         // Do the update.
+        _ <- ZIO.logInfo(
+               s"User ${deleteResourceV2.requestingUser.id} is deleting resource ${deleteResourceV2.resourceIri}",
+             )
         _ <- triplestore.query(Update(sparqlUpdate))
 
         // Verify that the resource was deleted correctly.
@@ -398,16 +409,54 @@ final case class ResourcesResponderV2(
   }
 
   /**
-   * Check if the resource is not directly referred to by any other resources.
-   * Ignore rdf:subject (the resource's own links) and rdf:object properties, i.e. any LinkValue that refers to it.
-   * Deleted LinkValues may point to deleted Resources or may be pointing to non-existing Resources.
-   * Existing LinkValues that point to a resource always have a corresponding direct link property between Resource.
+   * Checks whether a knora-base:Resource is "in use", i.e. if the resource is not directly referred to by any other
+   * resource in the same project data graph.
    *
-   * @param resourceIri the Resource's IRI
-   * @return If there is a non-deleted link to the resource, a direct link then return true.
+   * "In use" is defined as follows:
+   *  * the resource "in used" is used in object position in a triplestore statement
+   *  * in subject position another knora-base:Resource is used
+   *  * the other knora-base:Resource is not deleted
+   *
+   * @param resourceIri the IRI of the Resource to check.
+   *
+   * @return The list of resources that are pointing to the resource to check.
    */
-  private def isResourceInUse(resourceIri: ResourceIri) =
-    iriService.isEntityUsed(resourceIri.smartIri, ignoreRdfSubjectAndObject = true)
+  private def isResourceInUse(resourceIri: ResourceIri): Task[Set[ResourceIri]] =
+    for {
+      prj <- projectService
+               .findByShortcode(resourceIri.shortcode)
+               .someOrFail(NotFoundException(s"Project ${resourceIri.shortcode} not found"))
+
+      (other, otherClass, p) = (variable("other"), variable("otherClass"), variable("p"))
+      inUsePattern = other
+                       .has(p, Rdf.iri(resourceIri.toString))
+                       .andHas(KB.isDeleted, false)
+                       .andIsA(otherClass)
+                       .from(Rdf.iri(projectService.getDataGraphForProject(prj).value))
+
+      subClassOfPropertyPath = PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build()
+      classConstraintPattern = otherClass.has(subClassOfPropertyPath, KB.Resource)
+
+      query = Queries
+                .SELECT(SparqlBuilder.select(other).distinct())
+                .where(inUsePattern, classConstraintPattern)
+                .prefix(prefix(RDFS.NS), prefix(KB.NS), prefix(XSD.NS))
+      result <- triplestore.query(Select(query))
+
+      otherResources <-
+        ZIO
+          .foreach(result.results.bindings.map(_.rowMap.get("other")).flatten.toSet)(iriConverter.asResourceIri)
+          .mapError(DataConversionException.apply)
+    } yield otherResources
+
+  private def ensureResourceIsNotInUse(resourceIri: ResourceIri): Task[Unit] =
+    isResourceInUse(resourceIri)
+      .flatMap(usingResources =>
+        ZIO
+          .fail(BadRequestException(s"Resource $resourceIri is used by: ${usingResources.mkString(",")}."))
+          .when(usingResources.nonEmpty),
+      )
+      .unit
 
   /**
    * Erases a resource from the triplestore.
@@ -445,23 +494,16 @@ final case class ResourcesResponderV2(
 
         _ <- ensureNoConflictingChange(resource, eraseResourceV2.maybeLastModificationDate)
 
-        // Check that the resource is not referred to by any other resources. We ignore rdf:subject (so we
-        // can erase the resource's own links) and rdf:object (in case there is a deleted link value that
-        // refers to it). Any such deleted link values will be erased along with the resource. If there
-        // is a non-deleted link to the resource, the direct link (rather than the link value) will cause
-        // to fail.
-        resourceIri = ResourceIri.unsafeFrom(eraseResourceV2.resourceIri.toSmartIri)
-        _ <- ZIO
-               .whenZIO(isResourceInUse(resourceIri)) {
-                 val msg =
-                   s"Resource $resourceIri cannot be erased, because it is referred to by another resource"
-                 ZIO.fail(BadRequestException(msg))
-               }
+        resourceIri <- iriConverter.asResourceIri(eraseResourceV2.resourceIri).mapError(BadRequestException.apply)
+        _           <- ensureResourceIsNotInUse(resourceIri)
 
         // Get the IRI of the named graph from which the resource will be erased.
         dataNamedGraph = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Do the update.
+        _ <- ZIO.logInfo(
+               s"User ${eraseResourceV2.requestingUser.id} is erasing resource ${eraseResourceV2.resourceIri}",
+             )
         _ <- triplestore.query(Update(sparql.v2.txt.eraseResource(dataNamedGraph, eraseResourceV2.resourceIri)))
 
         _ <- // Verify that the resource was erased correctly.
@@ -1537,7 +1579,7 @@ final case class ResourcesResponderV2(
     requestingUser: User,
   ): Task[ResourceAndValueVersionHistoryResponseV2] =
     for {
-      _ <- knoraProjectService.findById(projectId).someOrFail(NotFoundException(s"Project $projectId not found"))
+      _ <- projectService.findById(projectId).someOrFail(NotFoundException(s"Project $projectId not found"))
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
       prequery              = sparql.v2.txt.getAllResourcesInProjectPrequery(projectId.value)
@@ -1971,6 +2013,7 @@ object ResourcesResponderV2 {
     for {
       config <- ZIO.service[AppConfig]
       iriS   <- ZIO.service[IriService]
+      iriC   <- ZIO.service[IriConverter]
       mr     <- ZIO.service[MessageRelay]
       ts     <- ZIO.service[TriplestoreService]
       cu     <- ZIO.service[ConstructResponseUtilV2]
@@ -1985,7 +2028,7 @@ object ResourcesResponderV2 {
       rr     <- ZIO.service[ResourcesRepo]
       li     <- ZIO.service[LegalInfoService]
       handler <-
-        mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, kps, sr, or, pr, rr, li)(sf))
+        mr.subscribe(ResourcesResponderV2(config, iriS, iriC, mr, ts, cu, su, ru, pu, kps, sr, or, pr, rr, li)(sf))
     } yield handler
   }
 }
