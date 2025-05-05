@@ -52,12 +52,12 @@ object LegalInfoModelSpec extends ZIOSpecDefault {
     val validLabel = "CC BY 4.0"
 
     test("pass a valid object and successfully create value object") {
-      val actual = License.from(validIri, validUri, validLabel, IsDaschRecommended.No)
+      val actual = License.from(validIri, validUri, validLabel, IsDaschRecommended.Yes)
       assertTrue(
         actual.map(_.id).contains(validIri),
         actual.map(_.uri).contains(validUri),
         actual.map(_.labelEn).contains(validLabel),
-        actual.map(_.isRecommended).contains(IsDaschRecommended.No),
+        actual.map(_.isRecommended).contains(IsDaschRecommended.Yes),
       )
     }
     test("pass a relative URI and return an error") {
@@ -93,7 +93,7 @@ object LegalInfoModelSpec extends ZIOSpecDefault {
       )
       assertTrue(
         actual == Left(
-          "License: Found predefined license expected one of 'License(http://rdfh.ch/licenses/cc-by-4.0,https://creativecommons.org/licenses/by/4.0/,CC BY 4.0)'",
+          "License: Found predefined license expected one of 'License(http://rdfh.ch/licenses/cc-by-4.0,https://creativecommons.org/licenses/by/4.0/,CC BY 4.0,Yes)'",
         ),
       )
     }
