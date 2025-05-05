@@ -185,13 +185,13 @@ object License {
     License(
       CC_PDM_1_0,
       URI.create("https://creativecommons.org/publicdomain/mark/1.0/"),
-      "PDM 1.0",
+      "CC PDM 1.0",
       IsDaschRecommended.No,
     ),
     License(
       BORIS,
       URI.create("https://www.ub.unibe.ch/services/open_science/boris_publications/index_eng.html#collapse_pane631832"),
-      "PDM 1.0",
+      "BORIS Standard License",
       IsDaschRecommended.No,
     ),
     License(
