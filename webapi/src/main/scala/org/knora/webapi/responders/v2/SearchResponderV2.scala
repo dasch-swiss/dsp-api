@@ -131,6 +131,7 @@ trait SearchResponderV2 {
    * @param offset      the offset to be used for paging.
    * @param rendering   the schema of the response.
    * @param user        the client making the request.
+   * @return a [[ReadResourcesSequenceV2]] representing the linked resources that have been found.
    */
   def searchIncomingLinksV2(
     resourceIri: IRI,
@@ -147,6 +148,7 @@ trait SearchResponderV2 {
    * @param offset      the offset to be used for paging.
    * @param rendering   the schema of the response.
    * @param user        the client making the request.
+   * @return a [[ReadResourcesSequenceV2]] representing the StillImageRepresentations that have been found.
    */
   def searchStillImageRepresentationsV2(
     resourceIri: IRI,
@@ -157,12 +159,29 @@ trait SearchResponderV2 {
   ): Task[ReadResourcesSequenceV2]
 
   /**
+   * Performs a Gravsearchquery to find StillImageRepresentations count linked to the specified resource.
+   *
+   * @param resourceIri     the IRI of the resource to which StillImageRepresentations are to be found.
+   * @param offset          the offset to be used for paging.
+   * @param user            the client making the request.
+   * @param limitToProject  the option to limit the search to the specific project.
+   * @return a [[ResourceCountV2]] representing the number of StillImageRepresentations that have been found.
+   */
+  def searchStillImageRepresentationsCountV2(
+    resourceIri: IRI,
+    offset: Int,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[ResourceCountV2]
+
+  /**
    * Performs a Gravsearchquery to find regions linked to the specified resource.
    *
    * @param resourceIri the IRI of the resource to which incoming regions are to be found.
    * @param offset      the offset to be used for paging.
    * @param rendering   the schema of the response.
    * @param user        the client making the request.
+   * @return a [[ReadResourcesSequenceV2]] representing the regions that have been found.
    */
   def searchIncomingRegionsV2(
     resourceIri: IRI,
@@ -292,10 +311,12 @@ final case class SearchResponderV2Live(
   /**
    * Performs a Gravsearchquery to find resources that link to the specified resource.
    *
-   * @param resourceIri the IRI of the resource to which incoming links are to be found.
-   * @param offset      the offset to be used for paging.
-   * @param rendering   the schema of the response.
-   * @param user        the client making the request.
+   * @param resourceIri     the IRI of the resource to which incoming links are to be found.
+   * @param offset          the offset to be used for paging.
+   * @param rendering       the schema of the response.
+   * @param user            the client making the request.
+   * @param limitToProject  the option to limit the search to the specific project.
+   * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   def searchIncomingLinksV2(
     resourceIri: IRI,
@@ -341,6 +362,16 @@ final case class SearchResponderV2Live(
     gravsearchV2(query, rendering, user, limitToProject)
   }
 
+  /**
+   * Performs a Gravsearchquery to find StillImageRepresentations that link to the specified resource.
+   *
+   * @param resourceIri     the IRI of the resource to which StillImageRepresentations are to be found.
+   * @param offset          the offset to be used for paging.
+   * @param rendering       the schema of the response.
+   * @param user            the client making the request.
+   * @param limitToProject  the option to limit the search to the specific project.
+   * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+   */
   def searchStillImageRepresentationsV2(
     resourceIri: IRI,
     offset: Int,
@@ -385,6 +416,68 @@ final case class SearchResponderV2Live(
     gravsearchV2(query, rendering, user, limitToProject)
   }
 
+  /**
+   * Performs a Gravsearchquery to find StillImageRepresentations count linked to the specified resource.
+   *
+   * @param resourceIri     the IRI of the resource to which StillImageRepresentations are to be found.
+   * @param offset          the offset to be used for paging.
+   * @param user            the client making the request.
+   * @param limitToProject  the option to limit the search to the specific project.
+   * @return a [[ResourceCountV2]] representing the number of StillImageRepresentations that have been found.
+   */
+  def searchStillImageRepresentationsCountV2(
+    resourceIri: IRI,
+    offset: Int,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[ResourceCountV2] = {
+    val query: String =
+      s"""
+         |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+         |
+         |CONSTRUCT {
+         |?page knora-api:isMainResource true .
+         |
+         |?page knora-api:seqnum ?seqnum .
+         |
+         |?page knora-api:hasStillImageFile ?file .
+         |} WHERE {
+         |
+         |?page a knora-api:StillImageRepresentation .
+         |?page a knora-api:Resource .
+         |
+         |?page knora-api:isPartOf <$resourceIri> .
+         |knora-api:isPartOf knora-api:objectType knora-api:Resource .
+         |
+         |<$resourceIri> a knora-api:Resource .
+         |
+         |?page knora-api:seqnum ?seqnum .
+         |knora-api:seqnum knora-api:objectType xsd:integer .
+         |
+         |?seqnum a xsd:integer .
+         |
+         |?page knora-api:hasStillImageFile ?file .
+         |knora-api:hasStillImageFile knora-api:objectType knora-api:File .
+         |
+         |?file a knora-api:File .
+         |
+         |} ORDER BY ?seqnum
+         |OFFSET $offset
+         |""".stripMargin
+
+    gravsearchCountV2(query, user, limitToProject)
+  }
+
+  /**
+   * Performs a Gravsearchquery to find incoming Regions that link to the specified resource.
+   *
+   * @param resourceIri     the IRI of the resource to which incoming Regions are to be found.
+   * @param offset          the offset to be used for paging.
+   * @param rendering       the schema of the response.
+   * @param user            the client making the request.
+   * @param limitToProject  the option to limit the search to the specific project.
+   * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+   */
   def searchIncomingRegionsV2(
     resourceIri: IRI,
     offset: Int,
