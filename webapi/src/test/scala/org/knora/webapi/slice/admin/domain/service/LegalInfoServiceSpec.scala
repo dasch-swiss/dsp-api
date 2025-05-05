@@ -54,6 +54,13 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
         actual <- service(_.disableLicense(enabledLicense, prj))
       } yield assertTrue(actual.enabledLicenses == Set.empty)
     },
+    test("available licenses should return all built-in licenses, even if no license is enabled") {
+      for {
+        prj    <- setupProject
+        _      <- service(_.disableLicense(enabledLicense, prj))
+        actual <- service(_.findAvailableLicenses(prj.shortcode))
+      } yield assertTrue(actual == License.BUILT_IN)
+    },
   )
 
   private val validateLegalInfoSuite = suite("validateLegalInfo for FileValue in Project")(
