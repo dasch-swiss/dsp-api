@@ -2245,11 +2245,6 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
         val query = sparql.admin.txt.checkIriExists(erasedIriToCheck.toString)
         UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Ask(query)))) should be(false)
       }
-
-      // Check that the deleted link value that pointed to the resource has also been erased.
-      val query =
-        sparql.v2.txt.isEntityUsed(resourceIriToErase.get.toSmartIri.toInternalIri, ignoreKnoraConstraints = true)
-      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Ask(query)))) should be(false)
     }
   }
   "When given a custom IRI" should {

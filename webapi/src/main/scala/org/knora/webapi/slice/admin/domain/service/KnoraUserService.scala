@@ -203,17 +203,24 @@ case class KnoraUserService(
   def addUserToProjectAsAdmin(
     user: KnoraUser,
     project: Project,
-  ): IO[IsProjectAdminMember | NotProjectMember, KnoraUser] = for {
-    _ <- ZIO.fail(IsProjectAdminMember(user.id, project.id)).when(user.isInProjectAdminGroup.contains(project.id))
-    _ <- ZIO.fail(NotProjectMember(user.id, project.id)).unless(user.isInProject.contains(project.id))
-    _ <- addUserToProjectAsAdmin(user, project.id)
-  } yield user
-
-  def addUserToProjectAsAdmin(user: KnoraUser, project: KnoraProject): UIO[KnoraUser] =
+  ): IO[IsProjectAdminMember | NotProjectMember, KnoraUser] =
     addUserToProjectAsAdmin(user, project.id)
 
-  private def addUserToProjectAsAdmin(user: KnoraUser, projectIri: ProjectIri): UIO[KnoraUser] =
-    updateUser(user, UserChangeRequest(projectsAdmin = Some(user.isInProjectAdminGroup :+ projectIri))).orDie
+  def addUserToProjectAsAdmin(
+    user: KnoraUser,
+    project: KnoraProject,
+  ): IO[IsProjectAdminMember | NotProjectMember, KnoraUser] =
+    addUserToProjectAsAdmin(user, project.id)
+
+  private def addUserToProjectAsAdmin(
+    user: KnoraUser,
+    projectIri: ProjectIri,
+  ): IO[IsProjectAdminMember | NotProjectMember, KnoraUser] = for {
+    _      <- ZIO.fail(IsProjectAdminMember(user.id, projectIri)).when(user.isInProjectAdminGroup.contains(projectIri))
+    _      <- ZIO.fail(NotProjectMember(user.id, projectIri)).unless(user.isInProject.contains(projectIri))
+    request = UserChangeRequest(projectsAdmin = Some((user.isInProjectAdminGroup :+ projectIri).distinct))
+    user   <- updateUser(user, request).orDie
+  } yield user
 
   /**
    * Removes a user from the project admin group of a project.

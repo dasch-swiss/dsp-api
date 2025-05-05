@@ -436,40 +436,39 @@ final case class ApiComplexV2JsonLdRequestParser(
     v: ValueResource,
     shortcode: Shortcode,
   ): IO[String, ValueContentV2] =
-    def withFileInfo[T](fileInfo: Option[FileInfo], f: FileInfo => Either[String, T]): IO[String, T] =
-      fileInfo match
-        case None       => ZIO.fail("FileInfo is missing")
-        case Some(info) => ZIO.fromEither(f(info))
-    for {
+    def withFileInfo[T](v: ValueResource, f: (Resource, FileInfo) => Either[String, T]): IO[String, T] = for {
       maybeFileName <- v.fileValueHasFilenameOption
-      valueResource  = v.r
-      i <-
-        ValueContentV2
-          .fileInfoFromExternal(maybeFileName, shortcode)
-          .provide(ZLayer.succeed(sipiService))
-          .mapError(_.getMessage)
+      fileInfo <- ValueContentV2
+                    .fileInfoFromExternal(maybeFileName, shortcode)
+                    .provide(ZLayer.succeed(sipiService))
+                    .mapError(_.getMessage)
+                    .someOrFail(s"FileInfo from external is missing for $maybeFileName")
+      info <- ZIO.fromEither(f(v.r, fileInfo))
+    } yield info
+
+    for {
       content <-
         v.valueType.toString match
-          case AudioFileValue              => withFileInfo(i, AudioFileValueContentV2.from(valueResource, _))
-          case ArchiveFileValue            => withFileInfo(i, ArchiveFileValueContentV2.from(valueResource, _))
-          case BooleanValue                => ZIO.fromEither(BooleanValueContentV2.from(valueResource))
-          case ColorValue                  => ZIO.fromEither(ColorValueContentV2.from(valueResource))
-          case DateValue                   => ZIO.fromEither(DateValueContentV2.from(valueResource))
-          case DecimalValue                => ZIO.fromEither(DecimalValueContentV2.from(valueResource))
-          case DocumentFileValue           => withFileInfo(i, DocumentFileValueContentV2.from(valueResource, _))
-          case GeomValue                   => ZIO.fromEither(GeomValueContentV2.from(valueResource))
-          case GeonameValue                => ZIO.fromEither(GeonameValueContentV2.from(valueResource))
-          case IntValue                    => ZIO.fromEither(IntegerValueContentV2.from(valueResource))
-          case IntervalValue               => ZIO.fromEither(IntervalValueContentV2.from(valueResource))
-          case ListValue                   => HierarchicalListValueContentV2.from(valueResource, converter)
-          case LinkValue                   => LinkValueContentV2.from(valueResource, converter)
-          case MovingImageFileValue        => withFileInfo(i, MovingImageFileValueContentV2.from(valueResource, _))
-          case StillImageExternalFileValue => ZIO.fromEither(StillImageExternalFileValueContentV2.from(valueResource))
-          case StillImageFileValue         => withFileInfo(i, StillImageFileValueContentV2.from(valueResource, _))
-          case TextValue                   => TextValueContentV2.from(valueResource).provide(ZLayer.succeed(messageRelay))
-          case TextFileValue               => withFileInfo(i, TextFileValueContentV2.from(valueResource, _))
-          case TimeValue                   => ZIO.fromEither(TimeValueContentV2.from(valueResource))
-          case UriValue                    => ZIO.fromEither(UriValueContentV2.from(valueResource))
+          case AudioFileValue              => withFileInfo(v, AudioFileValueContentV2.from)
+          case ArchiveFileValue            => withFileInfo(v, ArchiveFileValueContentV2.from)
+          case BooleanValue                => ZIO.fromEither(BooleanValueContentV2.from(v.r))
+          case ColorValue                  => ZIO.fromEither(ColorValueContentV2.from(v.r))
+          case DateValue                   => ZIO.fromEither(DateValueContentV2.from(v.r))
+          case DecimalValue                => ZIO.fromEither(DecimalValueContentV2.from(v.r))
+          case DocumentFileValue           => withFileInfo(v, DocumentFileValueContentV2.from)
+          case GeomValue                   => ZIO.fromEither(GeomValueContentV2.from(v.r))
+          case GeonameValue                => ZIO.fromEither(GeonameValueContentV2.from(v.r))
+          case IntValue                    => ZIO.fromEither(IntegerValueContentV2.from(v.r))
+          case IntervalValue               => ZIO.fromEither(IntervalValueContentV2.from(v.r))
+          case ListValue                   => HierarchicalListValueContentV2.from(v.r, converter)
+          case LinkValue                   => LinkValueContentV2.from(v.r, converter)
+          case MovingImageFileValue        => withFileInfo(v, MovingImageFileValueContentV2.from)
+          case StillImageExternalFileValue => ZIO.fromEither(StillImageExternalFileValueContentV2.from(v.r))
+          case StillImageFileValue         => withFileInfo(v, StillImageFileValueContentV2.from)
+          case TextValue                   => TextValueContentV2.from(v.r).provide(ZLayer.succeed(messageRelay))
+          case TextFileValue               => withFileInfo(v, TextFileValueContentV2.from)
+          case TimeValue                   => ZIO.fromEither(TimeValueContentV2.from(v.r))
+          case UriValue                    => ZIO.fromEither(UriValueContentV2.from(v.r))
           case unsupported                 => ZIO.fail(s"Unsupported value type: $unsupported")
     } yield content
 
