@@ -46,13 +46,14 @@ final case class ProjectsLegalInfoRestService(
     shortcode: Shortcode,
     pageAndSize: PageAndSize,
     filterAndOrder: FilterAndOrder,
+    showEnabledOnly: Boolean,
   ): IO[ForbiddenException, PagedResponse[ProjectLicenseDto]] =
     for {
       prj <- auth.ensureProjectMember(user, shortcode)
-      result <- legalInfos
-                  .findAvailableLicenses(shortcode)
-                  .map(_.map(l => ProjectLicenseDto.from(l, prj.enabledLicenses.contains(l.id))))
-    } yield slice(result, pageAndSize, filterAndOrder)
+      licenses <- if (showEnabledOnly) { legalInfos.findEnabledLicenses(shortcode) }
+                  else { legalInfos.findAvailableLicenses(shortcode) }
+      licenseDtos = licenses.map(l => ProjectLicenseDto.from(l, prj.enabledLicenses.contains(l.id))).toSeq
+    } yield slice(licenseDtos, pageAndSize, filterAndOrder)
 
   private def slice[A: JsonCodec](
     all: Seq[A],

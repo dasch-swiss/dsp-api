@@ -74,12 +74,13 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base / "licenses")
     .in(PageAndSize.queryParams())
     .in(FilterAndOrder.queryParams)
+    .in(query[Boolean]("showEnabledOnly").description("Filter by enabled licenses").default(false))
     .out(
       jsonBody[PagedResponse[ProjectLicenseDto]]
         .example(Examples.PagedResponse.fromTotal(License.BUILT_IN.map(l => ProjectLicenseDto.from(l, true)))),
     )
     .description(
-      "Get the allowed licenses for use within this project. " +
+      "Get the available (enabled and disabled) licenses for use within this project. " +
         "The user must be project member, project admin or system admin.",
     )
 

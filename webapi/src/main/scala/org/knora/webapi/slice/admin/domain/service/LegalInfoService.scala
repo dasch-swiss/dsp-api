@@ -11,7 +11,6 @@ import zio.IO
 import zio.ZIO
 import zio.ZLayer
 import zio.prelude.Validation
-
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.admin.api.model.FilterAndOrder
@@ -27,6 +26,7 @@ import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Available
 
 case class LegalInfoService(
   private val licenses: LicenseRepo,
@@ -35,7 +35,7 @@ case class LegalInfoService(
 ) {
 
   /**
-   * Currently, the project is not used in the implementation and all allowed licenses are returned.
+   * Currently, the project is not used in the implementation and all built in licenses are returned.
    *
    * @param id the Project for which the licenses are retrieved.
    * @return Returns the licenses available in the project.
