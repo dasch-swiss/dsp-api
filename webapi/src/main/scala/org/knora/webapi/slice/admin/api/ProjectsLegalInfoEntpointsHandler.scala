@@ -18,6 +18,8 @@ final class ProjectsLegalInfoEndpointsHandler(
   val allHandlers = List(
     SecuredEndpointHandler(endpoints.getProjectAuthorships, restService.findAuthorships),
     SecuredEndpointHandler(endpoints.getProjectLicenses, restService.findLicenses),
+    SecuredEndpointHandler(endpoints.putProjectLicensesEnable, restService.enableLicense),
+    SecuredEndpointHandler(endpoints.putProjectLicensesDisable, restService.disableLicense),
     SecuredEndpointHandler(endpoints.getProjectCopyrightHolders, restService.findCopyrightHolders),
     SecuredEndpointHandler(endpoints.postProjectCopyrightHolders, restService.addCopyrightHolders),
     SecuredEndpointHandler(endpoints.putProjectCopyrightHolders, restService.replaceCopyrightHolder),

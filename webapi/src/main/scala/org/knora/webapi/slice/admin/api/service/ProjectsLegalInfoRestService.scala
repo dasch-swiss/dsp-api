@@ -11,7 +11,6 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.json.JsonCodec
-
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.api.CopyrightHolderAddRequest
@@ -24,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
@@ -65,6 +65,18 @@ final case class ProjectsLegalInfoRestService(
       .sorted(filterAndOrder.ordering[A])
     val slice = filtered.slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
     PagedResponse.from(slice, filtered.size, pageAndSize)
+
+  def enableLicense(user: User)(shortcode: Shortcode, licenseIri: LicenseIri): Task[Unit] =
+    for {
+      project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
+      _       <- legalInfos.enableLicense(licenseIri, project)
+    } yield ()
+
+  def disableLicense(user: User)(shortcode: Shortcode, licenseIri: LicenseIri): Task[Unit] =
+    for {
+      project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
+      _       <- legalInfos.disableLicense(licenseIri, project)
+    } yield ()
 
   def findCopyrightHolders(user: User)(
     shortcode: Shortcode,

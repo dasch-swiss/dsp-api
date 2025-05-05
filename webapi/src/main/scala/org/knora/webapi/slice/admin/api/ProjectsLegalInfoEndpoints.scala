@@ -11,8 +11,8 @@ import zio.Chunk
 import zio.ZLayer
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
-
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
+import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
 import org.knora.webapi.slice.admin.api.model.FilterAndOrder
 import org.knora.webapi.slice.admin.api.model.PageAndSize
 import org.knora.webapi.slice.admin.api.model.PagedResponse
@@ -50,6 +50,11 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
   private final val base = "admin" / "projects" / "shortcode" / projectShortcode / "legal-info"
 
+  private final val licenseIriPath = path[LicenseIri](TapirCodec.stringCodec(LicenseIri.from))
+    .name("licenseIri")
+    .description("The IRI of the license. Must be URL-encoded.")
+    .example(LicenseIri.CC_BY_NC_4_0)
+
   val getProjectAuthorships = baseEndpoints.securedEndpoint.get
     .in(base / "authorships")
     .in(PageAndSize.queryParams())
@@ -82,6 +87,20 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .description(
       "Get the available (enabled and disabled) licenses for use within this project. " +
         "The user must be project member, project admin or system admin.",
+    )
+
+  val putProjectLicensesEnable = baseEndpoints.securedEndpoint.put
+    .in(base / "licenses" / licenseIriPath / "enable")
+    .description(
+      "Enable a license for use within this project. " +
+        "The user must be a system admin.",
+    )
+
+  val putProjectLicensesDisable = baseEndpoints.securedEndpoint.put
+    .in(base / "licenses" / licenseIriPath / "disable")
+    .description(
+      "Disable a license for use within this project. " +
+        "The user must be a system admin.",
     )
 
   val getProjectCopyrightHolders = baseEndpoints.securedEndpoint.get
@@ -128,6 +147,8 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
   val endpoints: Seq[AnyEndpoint] = Seq(
     getProjectAuthorships,
     getProjectLicenses,
+    putProjectLicensesEnable,
+    putProjectLicensesDisable,
     getProjectCopyrightHolders,
     postProjectCopyrightHolders,
     putProjectCopyrightHolders,
