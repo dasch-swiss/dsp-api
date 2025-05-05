@@ -25,8 +25,6 @@ DELETE {
         <@resourceIri> ?resourcePred ?resourceObj .
         ?value ?valuePred ?valueObj .
         ?standoff ?standoffPred ?standoffObj .
-        ?otherResource ?otherResourceProp ?otherResourceCurrentLinkValue .
-        ?otherResourceLinkValue ?otherResourceLinkValuePred ?otherResourceLinkValueObj .
     }
 } WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
@@ -55,14 +53,5 @@ DELETE {
             knora-base:previousValue* ?textValue .
         ?textValue knora-base:valueHasStandoff ?standoff .
         ?standoff ?standoffPred ?standoffObj .
-    } UNION {
-        @* Collect all statements about marked-as-deleted link values that point to the resource. *@
-
-        ?otherResourceCurrentLinkValue rdf:object <@resourceIri> ;
-            a knora-base:LinkValue ;
-            knora-base:isDeleted true ;
-            knora-base:previousValue* ?otherResourceLinkValue .
-        ?otherResourceLinkValue ?otherResourceLinkValuePred ?otherResourceLinkValueObj .
-        ?otherResource ?otherResourceProp ?otherResourceCurrentLinkValue .
     }
 }
