@@ -9,6 +9,7 @@ import zio.*
 import zio.test.*
 
 import java.util.UUID
+import scala.collection.SortedSet
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.E2EZSpec
@@ -26,6 +27,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
@@ -41,6 +43,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 object ValuesEraseSpec extends E2EZSpec {
+  import TestHelper.DiffLib._
 
   override val e2eSpec = suite("ValuesEraseSpec")(
     test("erase an IntValue") {
@@ -73,13 +76,73 @@ object ValuesEraseSpec extends E2EZSpec {
         res1 <- TestHelper.createResource
         res2 <- TestHelper.createResource
         res3 <- TestHelper.createResource
-        _    <- TestHelper.createLinkValue(res1, res3)
-        t1   <- ZIO.serviceWith[TestHelper](_.getProjectTriples).flatten.map(_.toSet)
-        val0 <- TestHelper.createLinkValue(res1, res2)
-        _    <- TestHelper.eraseLinkValue(val0, res1)
-        t2   <- ZIO.serviceWith[TestHelper](_.getProjectTriples).flatten.map(_.toSet)
 
-      } yield assertTrue(t1 == t2) && assertCompletes
+        stInit <- ZIO.serviceWithZIO[TestHelper](_.getProjectActiveTriples())
+        val1   <- TestHelper.createLinkValue(res1, res2, Some("first"))
+        val2   <- TestHelper.updateLinkValue(val1, res1, res3, "updated value")
+
+        _     <- TestHelper.eraseLinkValue(val2, res1)
+        stEnd <- ZIO.serviceWithZIO[TestHelper](_.getProjectActiveTriples())
+
+        diff =
+          diffList(stInit, stEnd).map(
+            _.replaceAll(""",http://rdfh.ch/0001/([^/]+)/values/([^/]+)\)""", ",http://rdfh.ch/0001/.../values/...)"),
+          )
+
+        // This triple connects the value that overrided val1, which is marked deleted, so excluded from getProjectActiveTriples.
+        diffMatches =
+          diff == Set(
+            s"+ (${res1.iri},http://www.knora.org/ontology/0001/anything#hasOtherThingValue,http://rdfh.ch/0001/.../values/...)",
+          )
+      } yield assertTrue(diffMatches).label(diff.mkString("\n"))
+    },
+    test("erase a TextValue with standoff without links") {
+      def createAndErase(withUpdate: Boolean) =
+        for {
+          res1 <- TestHelper.createResource
+          res2 <- TestHelper.createResource
+
+          textValueAsXml1 =
+            s"""<?xml version="1.0" encoding="UTF-8"?><text documentType="html">This has <p>text</p></text>"""
+          textValueAsXml2 =
+            s"""<?xml version="1.0" encoding="UTF-8"?><text documentType="html">This has more <p>text</p></text>"""
+
+          // these shouldn't be deleted
+          _ <- TestHelper.createTextValueWithStandoff(res2, textValueAsXml1).flatMap {
+                 TestHelper.updateTextValueWithStandoff(_, res2, textValueAsXml2)
+               }
+
+          stInit <- ZIO.serviceWithZIO[TestHelper](_.getProjectTriples())
+
+          val1 <- TestHelper.createTextValueWithStandoff(res1, textValueAsXml1)
+          val2 <- if (withUpdate)
+                    TestHelper.updateTextValueWithStandoff(val1, res1, textValueAsXml2)
+                  else
+                    ZIO.succeed(val1)
+
+          _ <- TestHelper.eraseTextValue(val2, res1)
+
+          stEnd <- ZIO.serviceWithZIO[TestHelper](_.getProjectTriples())
+
+          initIsEnd = stInit == stEnd
+        } yield assertTrue(initIsEnd).label(diffList(stEnd, stInit).mkString("\n"))
+
+      createAndErase(false) && createAndErase(true)
+    },
+    test("erase a TextValue with standoff with links should not be supported") {
+      for {
+        res1 <- TestHelper.createResource
+        res2 <- TestHelper.createResource
+
+        textValueAsXml =
+          s"""<?xml version="1.0" encoding="UTF-8"?>
+             <text documentType="html">Link: <a class="salsah-link" href="${res2.iri}">resource</a>.|</text>"""
+        _           <- zio.Console.printLine(s"textValueAsXml: $textValueAsXml")
+        val1        <- TestHelper.createTextValueWithStandoff(res1, textValueAsXml)
+        eraseResult <- TestHelper.eraseTextValue(val1, res1).either
+      } yield assertTrue(
+        eraseResult.left.toOption.map(_.getMessage) == Some("Erasing standoff text values with links is not supported"),
+      )
     },
   ).provideSome[env](TestHelper.layer, ValueRepo.layer)
 }
@@ -92,26 +155,74 @@ final case class TestHelper(
   valueRepo: ValueRepo,
   valuesResponder: ValuesResponderV2,
   triplestoreService: TriplestoreService,
+  requestParser: ApiComplexV2JsonLdRequestParser,
 )(implicit
   val sf: StringFormatter,
 ) {
   import org.knora.webapi.messages.IriConversions.ConvertibleIri
 
-  def getProjectTriples: Task[Seq[(String, String, String)]] = for {
-    prj <- projectService.findByShortcode(shortcode).someOrFail(IllegalStateException("Project not found"))
-    r <- triplestoreService.query(Select(s"""SELECT * WHERE {
-      GRAPH <${ProjectService.projectDataNamedGraphV2(prj).value}> {
-        ?s ?p ?o .
-        FILTER(?p != <http://www.knora.org/ontology/knora-base#lastModificationDate>) .
+  // TODO: return SortedSet
+  def getProjectTriples(
+    selectForGraph: String => String = graph => s"""
+      SELECT * WHERE {
+        GRAPH <$graph> {
+          ?s ?p ?o .
+          FILTER(?p != knora-base:lastModificationDate) .
+        }
       }
-    }"""))
-  } yield r.results.bindings.map(x => (x.rowMap("s"), x.rowMap("p"), x.rowMap("o")))
+      """,
+  ): Task[SortedSet[TestHelper.Triple]] = for {
+    prj <- projectService.findByShortcode(shortcode).someOrFail(IllegalStateException("Project not found"))
+    query = s"""
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-  def printAll: Task[Unit] = getProjectTriples.map(_.length).flatMap(Console.printLine(_))
+      ${selectForGraph(ProjectService.projectDataNamedGraphV2(prj).value)}
+    """
+    // _ <- Console.printLine(s"query = $query")
+    r <- triplestoreService.query(Select(query))
+  } yield SortedSet.from(r.results.bindings.map(x => (x.rowMap("s"), x.rowMap("p"), x.rowMap("o"))).toSet)
+
+  def getProjectActiveTriples() = getProjectTriples(graph => s"""
+    SELECT DISTINCT ?s ?p ?o
+    WHERE {
+      ?rc rdf:type ?c .
+      ?c rdfs:subClassOf knora-base:Resource .
+      ?vt rdfs:subClassOf *knora-base:Value .
+      {
+        GRAPH <$graph> {
+          ?r rdf:type ?c .
+          ?r ?svp ?v.
+          BIND(?r as ?s).
+          BIND(?svp as ?p).
+          BIND(?v as ?o).
+        }
+      } UNION {
+        GRAPH <$graph> {
+          ?r rdf:type ?c .
+          ?r ?svp ?v.
+          ?v a ?vt .
+          ?v ?vp ?vo .
+          ?v knora-base:isDeleted false .
+          BIND(?v as ?s).
+          BIND(?vp as ?p).
+          BIND(?vo as ?o).
+        }
+      }
+      FILTER(?p != knora-base:lastModificationDate) .
+    }
+    """)
+
+  def printAll: Task[Unit] = getProjectTriples().map(_.size).flatMap(Console.printLine(_))
 
   def findValue(valueIri: ValueIri): Task[Option[ValueModel]] = valueRepo.findById(valueIri)
 
-  def createLinkValue(left: ActiveResource, right: ActiveResource): ZIO[Any, Throwable, ActiveValue] =
+  def createLinkValue(
+    left: ActiveResource,
+    right: ActiveResource,
+    comment: Option[String] = None,
+  ): ZIO[Any, Throwable, ActiveValue] =
     val propertyIri = left.ontologyIri.makeProperty("hasOtherThingValue")
     for {
       uuid <- Random.nextUUID
@@ -119,7 +230,7 @@ final case class TestHelper(
                     left.iri.toString,
                     left.resourceClassIri.toComplexSchema,
                     propertyIri.toComplexSchema,
-                    LinkValueContentV2(ApiV2Complex, right.iri.toString),
+                    LinkValueContentV2(ApiV2Complex, right.iri.toString, comment = comment),
                   )
       value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
       value <- valueRepo
@@ -212,8 +323,84 @@ final case class TestHelper(
     for {
       project <-
         knoraProjectService.findByShortcode(resource.shortcode).someOrFail(IllegalStateException("Project not found"))
-      resp <- valuesResponder.eraseValue(erase, rootUser, project)
-    } yield resp
+      _ <- valuesResponder.eraseValue(erase, rootUser, project)
+    } yield ()
+
+  def createTextValueWithStandoff(resource: ActiveResource, textValueAsXml: String): Task[ActiveValue] =
+    for {
+      textValueAsXmlEncoded <- ZIO.succeed(sf.toJsonEncodedString(textValueAsXml))
+      jsonLd = s"""{
+                  |  "@id" : "${resource.iri.toString}",
+                  |  "@type" : "${ontologyIri.makeClass("Thing").toComplexSchema.toIri}",
+                  |  "anything:hasText" : {
+                  |    "@type" : "knora-api:TextValue",
+                  |    "knora-api:textValueAsXml" : $textValueAsXmlEncoded,
+                  |    "knora-api:textValueHasMapping" : {
+                  |      "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                  |    }
+                  |  },
+                  |  "@context" : {
+                  |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                  |    "anything" : "${ontologyIri.toComplexSchema.toIri}#"
+                  |  }
+                  |}""".stripMargin
+
+      createVal <- requestParser.createValueV2FromJsonLd(jsonLd).mapError(Throwable(_))
+
+      uuid  <- Random.nextUUID
+      value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
+      value <- valueRepo
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .someOrFail(IllegalStateException("Value not found"))
+    } yield value
+
+  def updateTextValueWithStandoff(
+    value: ActiveValue,
+    resource: ActiveResource,
+    textValueAsXml: String,
+  ): Task[ActiveValue] =
+    for {
+      textValueAsXmlEncoded <- ZIO.succeed(sf.toJsonEncodedString(textValueAsXml))
+      jsonLd = s"""{
+                  |  "@id" : "${resource.iri.toString}",
+                  |  "@type" : "${ontologyIri.makeClass("Thing").toComplexSchema.toIri}",
+                  |  "anything:hasText" : {
+                  |    "@id" : "${value.iri}",
+                  |    "@type" : "knora-api:TextValue",
+                  |    "knora-api:textValueAsXml" : $textValueAsXmlEncoded,
+                  |    "knora-api:textValueHasMapping" : {
+                  |      "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                  |    }
+                  |  },
+                  |  "@context" : {
+                  |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                  |    "anything" : "${ontologyIri.toComplexSchema.toIri}#"
+                  |  }
+                  |}""".stripMargin
+
+      updateVal <- requestParser.updateValueV2fromJsonLd(jsonLd).mapError(Throwable(_))
+
+      uuid  <- Random.nextUUID
+      value <- valuesResponder.updateValueV2(updateVal, rootUser, uuid)
+      value <- valueRepo
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .someOrFail(IllegalStateException("Value not found"))
+    } yield value
+
+  def eraseTextValue(value: ActiveValue, resource: ActiveResource): ZIO[Any, Throwable, Unit] =
+    val erase = EraseValueV2(
+      resource.iri,
+      resource.resourceClassIri,
+      resource.ontologyIri.makeProperty("hasText"),
+      value.iri,
+      value.valueClass.value.toSmartIri,
+      UUID.randomUUID(),
+    )
+    for {
+      project <-
+        knoraProjectService.findByShortcode(resource.shortcode).someOrFail(IllegalStateException("Project not found"))
+      _ <- valuesResponder.eraseValue(erase, rootUser, project)
+    } yield ()
 
   def eraseLinkValue(value: ActiveValue, resource: ActiveResource): ZIO[Any, Throwable, Unit] =
     val erase = EraseValueV2(
@@ -227,8 +414,8 @@ final case class TestHelper(
     for {
       project <-
         knoraProjectService.findByShortcode(resource.shortcode).someOrFail(IllegalStateException("Project not found"))
-      resp <- valuesResponder.eraseValue(erase, rootUser, project)
-    } yield resp
+      _ <- valuesResponder.eraseValue(erase, rootUser, project)
+    } yield ()
 
   def eraseLinkValueHistory(value: ActiveValue, resource: ActiveResource): ZIO[Any, Throwable, Unit] =
     val erase = EraseValueHistoryV2(
@@ -242,8 +429,8 @@ final case class TestHelper(
     for {
       project <-
         knoraProjectService.findByShortcode(resource.shortcode).someOrFail(IllegalStateException("Project not found"))
-      resp <- valuesResponder.eraseValueHistory(erase, rootUser, project)
-    } yield resp
+      _ <- valuesResponder.eraseValueHistory(erase, rootUser, project)
+    } yield ()
 
   def eraseIntegerValueHistory(value: ActiveValue, resource: ActiveResource): ZIO[Any, Throwable, Unit] =
     val erase = EraseValueHistoryV2(
@@ -257,8 +444,8 @@ final case class TestHelper(
     for {
       project <-
         knoraProjectService.findByShortcode(resource.shortcode).someOrFail(IllegalStateException("Project not found"))
-      resp <- valuesResponder.eraseValueHistory(erase, rootUser, project)
-    } yield resp
+      _ <- valuesResponder.eraseValueHistory(erase, rootUser, project)
+    } yield ()
 
   def findAllPrevious(valueIri: ValueIri): Task[Seq[ValueIri]] = valueRepo.findAllPrevious(valueIri)
 
@@ -300,8 +487,12 @@ final case class TestHelper(
 object TestHelper {
   val layer = ZLayer.derive[TestHelper]
 
-  def createLinkValue(left: ActiveResource, right: ActiveResource): ZIO[TestHelper, Throwable, ActiveValue] =
-    ZIO.serviceWithZIO[TestHelper](_.createLinkValue(left, right))
+  def createLinkValue(
+    left: ActiveResource,
+    right: ActiveResource,
+    comment: Option[String] = None,
+  ): ZIO[TestHelper, Throwable, ActiveValue] =
+    ZIO.serviceWithZIO[TestHelper](_.createLinkValue(left, right, comment))
 
   def updateLinkValue(
     value: ActiveValue,
@@ -323,9 +514,6 @@ object TestHelper {
       _     <- ZIO.fail(IllegalStateException(s"Link was not removed: $links")).when(links.nonEmpty)
     } yield ()
 
-  def findValue(valueIri: ValueIri): ZIO[TestHelper, Throwable, Option[ValueModel]] =
-    ZIO.serviceWithZIO[TestHelper](_.findValue(valueIri))
-
   def deleteIntegerValue(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, ValueModel] =
     ZIO.serviceWithZIO[TestHelper](_.deleteIntegerValue(value, resource))
 
@@ -342,6 +530,15 @@ object TestHelper {
   ): ZIO[TestHelper, Throwable, ActiveValue] =
     ZIO.serviceWithZIO[TestHelper](_.updateIntegerValue(value, resource, newValue))
 
+  def eraseIntegerValue(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestHelper](_.eraseIntegerValue(value, resource))
+
+  def eraseIntegerValueHistory(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestHelper](_.eraseIntegerValueHistory(value, resource))
+
+  def findValue(valueIri: ValueIri): ZIO[TestHelper, Throwable, Option[ValueModel]] =
+    ZIO.serviceWithZIO[TestHelper](_.findValue(valueIri))
+
   def findValues(iri: ResourceIri): ZIO[TestHelper, Throwable, Map[PropertyIri, Seq[ValueIri]]] =
     ZIO.serviceWithZIO[TestHelper](_.findValues(iri))
 
@@ -351,12 +548,40 @@ object TestHelper {
   def createResource: ZIO[TestHelper, Throwable, ActiveResource] =
     ZIO.serviceWithZIO[TestHelper](_.createResource)
 
-  def eraseIntegerValue(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
-    ZIO.serviceWithZIO[TestHelper](_.eraseIntegerValue(value, resource))
+  def createTextValueWithStandoff(
+    resource: ActiveResource,
+    textValueAsXml: String,
+  ): ZIO[TestHelper, Throwable, ActiveValue] =
+    ZIO.serviceWithZIO[TestHelper](_.createTextValueWithStandoff(resource, textValueAsXml))
 
-  def eraseIntegerValueHistory(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
-    ZIO.serviceWithZIO[TestHelper](_.eraseIntegerValueHistory(value, resource))
+  def updateTextValueWithStandoff(
+    value: ActiveValue,
+    resource: ActiveResource,
+    textValueAsXml: String,
+  ): ZIO[TestHelper, Throwable, ActiveValue] =
+    ZIO.serviceWithZIO[TestHelper](_.updateTextValueWithStandoff(value, resource, textValueAsXml))
+
+  def eraseTextValue(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestHelper](_.eraseTextValue(value, resource))
 
   def findAllPrevious(valueIri: ValueIri): ZIO[TestHelper, Throwable, Seq[ValueIri]] =
     ZIO.serviceWithZIO[TestHelper](_.findAllPrevious(valueIri))
+
+  type Triple = (String, String, String)
+
+  def printAll: ZIO[TestHelper, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestHelper](_.printAll)
+
+  object DiffLib {
+    def diff[A](a: SortedSet[A], b: SortedSet[A]): (SortedSet[A], SortedSet[A]) =
+      (a.diff(b), b.diff(a))
+
+    def diffList[A](a: SortedSet[A], b: SortedSet[A]): SortedSet[String] = {
+      val (aa, bb) = diff(a, b)
+      aa.map(a => s"- ${a}") ++ bb.map(b => s"+ ${b}")
+    }
+
+    if (diffList(SortedSet(1), SortedSet(2)) != SortedSet("- 1", "+ 2"))
+      throw new Exception(s"!!! diffList(SortedSet(1), SortedSet(2)) != ${diffList(SortedSet(1), SortedSet(2))}")
+  }
 }

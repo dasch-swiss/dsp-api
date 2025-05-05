@@ -9,6 +9,7 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
+import scala.PartialFunction.cond
 
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
@@ -57,8 +58,6 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-
-import scala.PartialFunction.cond
 
 final case class ValuesResponderV2(
   appConfig: AppConfig,
@@ -1177,7 +1176,7 @@ final case class ValuesResponderV2(
     canRemoveValue(req, requestingUser).flatMap { case (_, _, value) =>
       for {
         valueIri         <- ZIO.succeed(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
-        _                <- failBadRequestForStandoff(value)
+        _                <- failBadRequestForStandoffWithLinks(value)
         allPrevious      <- valueRepo.findAllPrevious(valueIri)
         isLink            = cond(value) { case _: ReadLinkValueV2 => true }
         deletableValueIri = if (onlyHistory) List() else List(valueIri)
@@ -1195,11 +1194,11 @@ final case class ValuesResponderV2(
   ): Task[SuccessResponseV2] =
     eraseValue(req.toEraseValueV2, requestingUser, project, true)
 
-  private def failBadRequestForStandoff(value: ReadValueV2) = ZIO
-    .fail(BadRequestException("Erasing text values with standoff is not supported yet"))
+  private def failBadRequestForStandoffWithLinks(value: ReadValueV2) = ZIO
+    .fail(BadRequestException("Erasing standoff text values with links is not supported"))
     .when {
       value match
-        case text: ReadTextValueV2 => text.valueContent.standoff.nonEmpty
+        case text: ReadTextValueV2 => text.valueContent.standoffLinkTagTargetResourceIris.nonEmpty
         case _                     => false
     }
 
