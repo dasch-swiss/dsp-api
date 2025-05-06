@@ -31,6 +31,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin.CannotJoi
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status.Active
+import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
@@ -108,6 +109,7 @@ object Examples {
       status = Active,
       ontologies = Seq.empty,
       selfjoin = CannotJoin,
+      enabledLicenses = LicenseIri.BUILT_IN,
     )
 
     private val group = Group(

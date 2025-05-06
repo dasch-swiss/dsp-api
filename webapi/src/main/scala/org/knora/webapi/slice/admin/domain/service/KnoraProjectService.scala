@@ -11,6 +11,7 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
@@ -54,10 +55,18 @@ final case class KnoraProjectService(
     }
 
   def createProject(req: ProjectCreateRequest): Task[KnoraProject] = for {
-    _                   <- ensureShortcodeIsUnique(req.shortcode)
-    _                   <- ensureShortnameIsUnique(req.shortname)
-    descriptions        <- toNonEmptyChunk(req.description)
-    recommendedLicenses <- licenseRepo.findRecommendedLicenses()
+    _            <- ensureShortcodeIsUnique(req.shortcode)
+    _            <- ensureShortnameIsUnique(req.shortname)
+    descriptions <- toNonEmptyChunk(req.description)
+    licenses <- req.enabledLicenses match {
+                  case Some(iris) =>
+                    licenseRepo.findByIds(iris.toSeq).map(_.map(_.id)).flatMap { found =>
+                      val notFound = iris.diff(found.toSet)
+                      if (notFound.isEmpty) ZIO.succeed(found)
+                      else ZIO.fail(BadRequestException("Licenses not found: " + notFound.mkString(", ")))
+                    }
+                  case None => licenseRepo.findRecommendedLicenses().map(_.map(_.id))
+                }
     project = KnoraProject(
                 req.id.getOrElse(ProjectIri.makeNew),
                 req.shortname,
@@ -70,7 +79,7 @@ final case class KnoraProjectService(
                 req.selfjoin,
                 RestrictedView.default,
                 Set.empty,
-                recommendedLicenses.map(_.id).toSet,
+                licenses.toSet,
               )
     project <- projectRepo.save(project)
   } yield project

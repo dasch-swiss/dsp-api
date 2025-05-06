@@ -95,7 +95,7 @@ final case class ProjectRestService(
    *                    can be found, if one was provided with the [[ProjectCreateRequest]]
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def createProject(createReq: ProjectCreateRequest, user: User): Task[ProjectOperationResponseADM] = for {
+  def createProject(user: User)(createReq: ProjectCreateRequest): Task[ProjectOperationResponseADM] = for {
     _ <- auth.ensureSystemAdmin(user)
     _ <- ZIO.fail(BadRequestException("Project description is required.")).when(createReq.description.isEmpty)
     _ <- ZIO
