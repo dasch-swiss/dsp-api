@@ -24,12 +24,8 @@ import java.io.ByteArrayInputStream
 import java.net.URLEncoder
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
+
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.it.v2.LegalInfoE2ESpec.resourceId
-import org.knora.webapi.it.v2.LegalInfoE2ESpec.resourceId
-import org.knora.webapi.it.v2.LegalInfoE2ESpec.resourceId
-import org.knora.webapi.it.v2.LegalInfoE2ESpec.resourceId
-import org.knora.webapi.it.v2.LegalInfoE2ESpec.resourceId
 import org.knora.webapi.it.v2.LegalInfoE2ESpec.suite
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
