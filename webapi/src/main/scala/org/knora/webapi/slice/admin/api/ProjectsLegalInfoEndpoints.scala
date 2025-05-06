@@ -80,29 +80,23 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base / "licenses")
     .in(PageAndSize.queryParams())
     .in(FilterAndOrder.queryParams)
-    .in(query[Boolean]("showEnabledOnly").description("Filter by enabled licenses").default(false))
+    .in(query[Boolean]("showEnabledOnly").description("Show only enabled licenses if true.").default(false))
     .out(
       jsonBody[PagedResponse[ProjectLicenseDto]]
         .example(Examples.PagedResponse.fromTotal(License.BUILT_IN.map(l => ProjectLicenseDto.from(l, true)))),
     )
     .description(
-      "Get the available (enabled and disabled) licenses for use within this project. " +
+      "Get the available licenses for use within this project. " +
         "The user must be project member, project admin or system admin.",
     )
 
   val putProjectLicensesEnable = baseEndpoints.securedEndpoint.put
     .in(base / "licenses" / licenseIriPath / "enable")
-    .description(
-      "Enable a license for use within this project. " +
-        "The user must be a system admin.",
-    )
+    .description("Enable a license for use within this project. The user must be project admin or system admin.")
 
   val putProjectLicensesDisable = baseEndpoints.securedEndpoint.put
     .in(base / "licenses" / licenseIriPath / "disable")
-    .description(
-      "Disable a license for use within this project. " +
-        "The user must be a system admin.",
-    )
+    .description("Disable a license for use within this project. The user must be project admin or system admin.")
 
   val getProjectCopyrightHolders = baseEndpoints.securedEndpoint.get
     .in(base / "copyright-holders")
