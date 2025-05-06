@@ -28,13 +28,14 @@ object ProjectLicenseDto {
     .derived[PagedResponse[ProjectLicenseDto]]
     .modify(_.data)(_.copy(isOptional = false))
 
-  def from(license: License, isEnabled: Boolean): ProjectLicenseDto = {
-    val isRecommended = license.isRecommended match {
-      case IsDaschRecommended.Yes => true
-      case IsDaschRecommended.No  => false
-    }
-    ProjectLicenseDto(license.id.value, license.uri.toString, license.labelEn, isRecommended, isEnabled)
-  }
+  def from(license: License, isEnabled: Boolean): ProjectLicenseDto =
+    ProjectLicenseDto(
+      license.id.value,
+      license.uri.toString,
+      license.labelEn,
+      license.isRecommended.toBoolean,
+      isEnabled,
+    )
 }
 
 final case class CopyrightHolderAddRequest(data: Set[CopyrightHolder])
@@ -80,7 +81,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base / "licenses")
     .in(PageAndSize.queryParams())
     .in(FilterAndOrder.queryParams)
-    .in(query[Boolean]("showEnabledOnly").description("Show only enabled licenses if true.").default(false))
+    .in(query[Boolean]("showOnlyEnabled").description("Show only enabled licenses if true.").default(false))
     .out(
       jsonBody[PagedResponse[ProjectLicenseDto]]
         .example(Examples.PagedResponse.fromTotal(License.BUILT_IN.map(l => ProjectLicenseDto.from(l, true)))),

@@ -123,6 +123,7 @@ final case class License private (id: LicenseIri, uri: URI, labelEn: String, isR
 enum IsDaschRecommended {
   case Yes extends IsDaschRecommended
   case No  extends IsDaschRecommended
+  def toBoolean: Boolean = this == Yes
 }
 object License {
 
