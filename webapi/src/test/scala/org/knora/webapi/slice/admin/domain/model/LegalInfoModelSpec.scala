@@ -57,7 +57,7 @@ object LegalInfoModelSpec extends ZIOSpecDefault {
         actual.map(_.id).contains(validIri),
         actual.map(_.uri).contains(validUri),
         actual.map(_.labelEn).contains(validLabel),
-        actual.map(_.isRecommended).contains(IsDaschRecommended.Yes),
+        actual.map(_.isRecommended.toBoolean).contains(true),
       )
     }
     test("pass a relative URI and return an error") {
