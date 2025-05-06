@@ -75,6 +75,8 @@ object Vocabulary {
 
     val NS: Namespace = new SimpleNamespace("knora-base", kb)
 
+    val Resource: Iri = iri(kb + "Resource")
+
     val linkValue: Iri = iri(kb + "LinkValue")
 
     val isDeleted: Iri         = iri(kb + "isDeleted")
