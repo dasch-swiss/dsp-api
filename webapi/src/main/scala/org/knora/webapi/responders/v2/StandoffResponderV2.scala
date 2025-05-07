@@ -198,6 +198,21 @@ final case class StandoffResponderV2(
     } yield GetXSLTransformationResponseV2(xslt)
   }
 
+  def createMappingV2(
+    metadata: CreateMappingRequestMetadataV2,
+    xml: String,
+    requestingUser: User,
+    uuid: UUID,
+  ): Task[CreateMappingResponseV2] =
+    createMappingV2(
+      xml,
+      metadata.label,
+      metadata.projectIri,
+      metadata.mappingName,
+      requestingUser,
+      uuid,
+    )
+
   /**
    * Creates a mapping between XML elements and attributes to standoff classes and properties.
    * The mapping is used to convert XML documents to texts with standoff and back.
@@ -205,7 +220,7 @@ final case class StandoffResponderV2(
    * @param xml                  the provided mapping.
    * @param requestingUser       the client that made the request.
    */
-  private def createMappingV2(
+  def createMappingV2(
     xml: String,
     label: String,
     projectIri: ProjectIri,
