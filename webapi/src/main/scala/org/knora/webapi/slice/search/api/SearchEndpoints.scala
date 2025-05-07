@@ -273,7 +273,7 @@ final case class SearchApiRoutes(
 
   private val getSearchStillImageRepresentationsCount =
     SecuredEndpointHandler[(InputIri, Offset, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
-      searchEndpoints.getSearchStillImageRepresentations,
+      searchEndpoints.getSearchStillImageRepresentationsCount,
       user => { case (resourceIri, offset, opts, limitToProject) =>
         searchRestService.getSearchStillImageRepresentationsCount(resourceIri.value, offset, opts, user, limitToProject)
       },
