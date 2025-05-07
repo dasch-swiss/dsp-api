@@ -122,7 +122,7 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
         actual <- service(_.findAvailableLicenses(Shortcode.unsafeFrom("0001")))
       } yield assert(actual)(hasSameElements(License.BUILT_IN))
     },
-    test("given we have not enabled a licensed, then findEnabledLicenses should return no licenses for project") {
+    test("given we have not enabled a license, then findEnabledLicenses should return no licenses for project") {
       for {
         actual <- service(_.findEnabledLicenses(Shortcode.unsafeFrom("0001")))
       } yield assertTrue(actual.isEmpty)
