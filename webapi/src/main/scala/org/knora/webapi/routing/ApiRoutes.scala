@@ -22,7 +22,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing
-import org.knora.webapi.routing.v2.*
 import org.knora.webapi.slice.admin.api.AdminApiRoutes
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
@@ -79,7 +78,7 @@ final case class ApiRoutes(
                 resourceInfoRoutes.routes ++
                 resourcesApiRoutes.routes ++
                 searchApiRoutes.routes ++
-                shaclApiRoutes.routes).reduce(_ ~ _) ~ StandoffRouteV2().makeRoute
+                shaclApiRoutes.routes).reduce(_ ~ _)
             }
           }
         }
