@@ -84,15 +84,6 @@ final case class StandoffResponderV2(
    * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case CreateMappingRequestV2(metadata, xml, requestingUser, uuid) =>
-      createMappingV2(
-        xml.xml,
-        metadata.label,
-        metadata.projectIri,
-        metadata.mappingName,
-        requestingUser,
-        uuid,
-      )
     case GetMappingRequestV2(mappingIri) => getMappingV2(mappingIri)
     case GetXSLTransformationRequestV2(xsltTextReprIri, requestingUser) =>
       getXSLTransformation(xsltTextReprIri, requestingUser)
@@ -496,22 +487,9 @@ final case class StandoffResponderV2(
     }
 
     for {
-      // Don't allow anonymous users to create a mapping.
-      _ <-
-        ZIO.attempt {
-          if (requestingUser.isAnonymousUser) {
-            throw ForbiddenException("Anonymous users aren't allowed to create mappings")
-          } else {
-            requestingUser.id
-          }
-        }
-
       // check if the given project IRI represents an actual project
-      projectId <- ZIO
-                     .fromEither(KnoraProject.ProjectIri.from(projectIri.toString))
-                     .mapError(BadRequestException.apply)
       project <- projectService
-                   .findById(projectId)
+                   .findById(projectIri)
                    .someOrFail(BadRequestException(s"Project with Iri ${projectIri.toString} does not exist"))
 
       // TODO: make sure that has sufficient permissions to create a mapping in the given project

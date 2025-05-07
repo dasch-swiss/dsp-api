@@ -32,22 +32,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 sealed trait StandoffResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
 
 /**
- * Represents a request to create a mapping between XML elements and attributes and standoff classes and properties.
- * A successful response will be a [[CreateMappingResponseV2]].
- *
- * @param metadata             the metadata describing the mapping.
- * @param xml                  the mapping in XML syntax.
- * @param requestingUser       the the user making the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class CreateMappingRequestV2(
-  metadata: CreateMappingRequestMetadataV2,
-  xml: CreateMappingRequestXMLV2,
-  requestingUser: User,
-  apiRequestID: UUID,
-) extends StandoffResponderRequestV2
-
-/**
  * Represents the metadata describing the mapping that is to be created.
  *
  * @param label       the label describing the mapping.
@@ -56,13 +40,6 @@ case class CreateMappingRequestV2(
  */
 case class CreateMappingRequestMetadataV2(label: String, projectIri: ProjectIri, mappingName: String)
     extends StandoffResponderRequestV2
-
-/**
- * Represents the mapping as an XML document.
- *
- * @param xml the mapping to be created.
- */
-case class CreateMappingRequestXMLV2(xml: String) extends StandoffResponderRequestV2
 
 /**
  * Provides the IRI of the created mapping.

@@ -5,28 +5,21 @@
 
 package org.knora.webapi.responders.v2
 
-import org.apache.pekko
 import zio.ZIO
 
-import scala.concurrent.duration.*
+import java.util.UUID
 
-import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.v2.responder.standoffmessages.*
-import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
-import pekko.testkit.ImplicitSender
-
-class StandoffResponderV2Spec extends CoreSpec with ImplicitSender {
-
-  // The default timeout for receiving reply messages from actors.
-  override implicit val timeout: FiniteDuration = 30.seconds
+class StandoffResponderV2Spec extends CoreSpec {
 
   private def getMapping(iri: String): SparqlConstructResponse =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Construct(sparql.v2.txt.getMapping(iri)))))
@@ -34,7 +27,6 @@ class StandoffResponderV2Spec extends CoreSpec with ImplicitSender {
   "The standoff responder" should {
     "create a standoff mapping" in {
       val mappingName = "customMapping"
-      val mapping     = DefineStandoffMapping.make(mappingName)
       val xmlContent =
         s"""<?xml version="1.0" encoding="UTF-8"?>
            |<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -85,23 +77,26 @@ class StandoffResponderV2Spec extends CoreSpec with ImplicitSender {
            |
            |</mapping>
            |""".stripMargin
-      val message = mapping.toMessage(
-        xml = xmlContent,
-        user = SharedTestDataADM.rootUser,
-      )
-      appActor ! message
-      val response = expectMsgPF(timeout) {
-        case res: CreateMappingResponseV2 => res
-        case _                            => throw AssertionException("Could not create a mapping")
-      }
 
-      val expectedMappingIRI = f"${mapping.projectIRI}/mappings/$mappingName"
+      val projectIri = ProjectIri.unsafeFrom(anythingProjectIri)
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[StandoffResponderV2](
+          _.createMappingV2(
+            xmlContent,
+            "custom mapping",
+            projectIri,
+            mappingName,
+            SharedTestDataADM.rootUser,
+            UUID.randomUUID(),
+          ),
+        ),
+      )
+
+      val expectedMappingIRI = f"${projectIri.value}/mappings/$mappingName"
       response.mappingIri should equal(expectedMappingIRI)
       val mappingFromDB: SparqlConstructResponse = getMapping(response.mappingIri)
-      println(mappingFromDB)
       mappingFromDB.statements should not be Map.empty
       mappingFromDB.statements.get(expectedMappingIRI) should not be Map.empty
     }
-
   }
 }

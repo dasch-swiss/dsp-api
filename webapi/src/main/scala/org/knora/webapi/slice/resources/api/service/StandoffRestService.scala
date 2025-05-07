@@ -12,20 +12,23 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.responders.v2.StandoffResponderV2
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.resources.api.CreateStandoffMappingForm
 
 case class StandoffRestService(
+  private val auth: AuthorizationRestService,
+  private val renderer: KnoraResponseRenderer,
   private val requestParser: ApiComplexV2JsonLdRequestParser,
   private val standoffResponder: StandoffResponderV2,
-  private val renderer: KnoraResponseRenderer,
 ) {
   def createMapping(
     user: User,
   )(mappingForm: CreateStandoffMappingForm, opts: FormatOptions): ZIO[Any, Throwable, (RenderedResponse, MediaType)] =
     for {
+      _ <- auth.ensureUserIsNotAnonymous(user)
       metadata <- requestParser
                     .createMappingRequestMetadataV2(mappingForm.json)
                     .mapError(BadRequestException.apply)
