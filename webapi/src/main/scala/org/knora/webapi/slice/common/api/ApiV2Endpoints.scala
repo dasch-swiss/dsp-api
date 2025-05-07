@@ -12,6 +12,7 @@ import org.knora.webapi.slice.lists.api.ListsEndpointsV2
 import org.knora.webapi.slice.ontology.api.OntologiesEndpoints
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.resources.api.ResourcesEndpoints
+import org.knora.webapi.slice.resources.api.StandoffEndpoints
 import org.knora.webapi.slice.resources.api.ValuesEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2
@@ -23,6 +24,7 @@ final case class ApiV2Endpoints(
   private val resourceInfoEndpoints: ResourceInfoEndpoints,
   private val resourcesEndpoints: ResourcesEndpoints,
   private val searchEndpoints: SearchEndpoints,
+  private val standoffEndpoints: StandoffEndpoints,
   private val valuesEndpoints: ValuesEndpoints,
 ) {
 
@@ -33,6 +35,7 @@ final case class ApiV2Endpoints(
       resourceInfoEndpoints.endpoints ++
       resourcesEndpoints.endpoints ++
       searchEndpoints.endpoints ++
+      standoffEndpoints.endpoints ++
       valuesEndpoints.endpoints
 }
 
