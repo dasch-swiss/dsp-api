@@ -164,6 +164,38 @@ object SearchE2EZSpec extends E2EZSpec {
     }
   }
 
+  private val searchStillImageRepresentationsCountSuite = suiteAll("Search StillImageRepresentations Count endpoint") {
+    test("Successfully retrieve count for a resource that has StillImageRepresentations") {
+      val resourceIri = InputIri.unsafeFrom("http://rdfh.ch/0001/thing-with-pages")
+      val url         = s"/v2/searchStillImageRepresentationsCount/${urlEncode((resourceIri.value))}"
+      val countCursor = JsonCursor.field("schema:numberOfItems").isNumber
+
+      for {
+        token       <- getRootToken
+        responseStr <- sendGetRequestStringOrFail(url, Some(token))
+        response    <- ZIO.fromEither(responseStr.fromJson[Json])
+        count       <- ZIO.fromEither(response.get(countCursor))
+      } yield assertTrue(
+        count.value.intValue == 2,
+      )
+    }
+
+    test("Retrieve 0 count for a resource that has not any StillImageRepresentations") {
+      val resourceIri = InputIri.unsafeFrom("http://rdfh.ch/0001/a-thing")
+      val url         = s"/v2/searchStillImageRepresentationsCount/${urlEncode((resourceIri.value))}"
+      val countCursor = JsonCursor.field("schema:numberOfItems").isNumber
+
+      for {
+        token       <- getRootToken
+        responseStr <- sendGetRequestStringOrFail(url, Some(token))
+        response    <- ZIO.fromEither(responseStr.fromJson[Json])
+        count       <- ZIO.fromEither(response.get(countCursor))
+      } yield assertTrue(
+        count.value.intValue == 0,
+      )
+    }
+  }
+
   private val searchIncomingRegionsSuite = suiteAll("Search Incoming Regions endpoint") {
     val resourceIri = InputIri.unsafeFrom("http://rdfh.ch/0001/a-thing-picture")
 
@@ -235,6 +267,7 @@ object SearchE2EZSpec extends E2EZSpec {
     suite("SearchIncomingLinksE2EZSpec")(
       searchIncomingLinksSuite,
       searchStillImageRepresentationsSuite,
+      searchStillImageRepresentationsCountSuite,
       searchIncomingRegionsSuite,
     )
 }
