@@ -137,7 +137,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
         "The IRI of the resource to retrieve",
       ),
     )
-    .in(SearchEndpointsInputs.offset)
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.limitToProject)
     .out(stringBody)
@@ -272,10 +271,10 @@ final case class SearchApiRoutes(
     )
 
   private val getSearchStillImageRepresentationsCount =
-    SecuredEndpointHandler[(InputIri, Offset, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
+    SecuredEndpointHandler[(InputIri, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
       searchEndpoints.getSearchStillImageRepresentationsCount,
-      user => { case (resourceIri, offset, opts, limitToProject) =>
-        searchRestService.getSearchStillImageRepresentationsCount(resourceIri.value, offset, opts, user, limitToProject)
+      user => { case (resourceIri, opts, limitToProject) =>
+        searchRestService.getSearchStillImageRepresentationsCount(resourceIri.value, opts, user, limitToProject)
       },
     )
 
@@ -460,7 +459,6 @@ final case class SearchRestService(
 
   def getSearchStillImageRepresentationsCount(
     resourceIri: String,
-    offset: Offset,
     opts: FormatOptions,
     user: User,
     limitToProject: Option[ProjectIri],
@@ -472,7 +470,6 @@ final case class SearchRestService(
             result <-
               searchResponderV2.searchStillImageRepresentationsCountV2(
                 resourceIri,
-                offset.value,
                 user,
                 limitToProject,
               )

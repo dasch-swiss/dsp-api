@@ -162,14 +162,12 @@ trait SearchResponderV2 {
    * Performs a Gravsearchquery to find StillImageRepresentations count linked to the specified resource.
    *
    * @param resourceIri     the IRI of the resource to which StillImageRepresentations are to be found.
-   * @param offset          the offset to be used for paging.
    * @param user            the client making the request.
    * @param limitToProject  the option to limit the search to the specific project.
    * @return a [[ResourceCountV2]] representing the number of StillImageRepresentations that have been found.
    */
   def searchStillImageRepresentationsCountV2(
     resourceIri: IRI,
-    offset: Int,
     user: User,
     limitToProject: Option[ProjectIri],
   ): Task[ResourceCountV2]
@@ -420,14 +418,12 @@ final case class SearchResponderV2Live(
    * Performs a Gravsearchquery to find StillImageRepresentations count linked to the specified resource.
    *
    * @param resourceIri     the IRI of the resource to which StillImageRepresentations are to be found.
-   * @param offset          the offset to be used for paging.
    * @param user            the client making the request.
    * @param limitToProject  the option to limit the search to the specific project.
    * @return a [[ResourceCountV2]] representing the number of StillImageRepresentations that have been found.
    */
   def searchStillImageRepresentationsCountV2(
     resourceIri: IRI,
-    offset: Int,
     user: User,
     limitToProject: Option[ProjectIri],
   ): Task[ResourceCountV2] = {
@@ -462,7 +458,7 @@ final case class SearchResponderV2Live(
          |?file a knora-api:File .
          |
          |} ORDER BY ?seqnum
-         |OFFSET $offset
+         |OFFSET 0
          |""".stripMargin
 
     gravsearchCountV2(query, user, limitToProject)
