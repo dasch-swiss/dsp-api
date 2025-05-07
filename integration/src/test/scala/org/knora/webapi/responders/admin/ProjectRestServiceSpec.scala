@@ -150,7 +150,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         val shortcode = "111c"
         val received = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.createProject(
+            _.createProject(SharedTestDataADM.rootUser)(
               ProjectCreateRequest(
                 shortname = Shortname.unsafeFrom("newproject"),
                 shortcode = Shortcode.unsafeFrom(shortcode),
@@ -163,7 +163,6 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
                 status = Status.Active,
                 selfjoin = SelfJoin.CannotJoin,
               ),
-              SharedTestDataADM.rootUser,
             ),
           ),
         )
@@ -244,7 +243,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {
         val received = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.createProject(
+            _.createProject(SharedTestDataADM.rootUser)(
               ProjectCreateRequest(
                 shortname = Shortname.unsafeFrom("newproject2"),
                 shortcode = Shortcode.unsafeFrom("1112"),
@@ -257,7 +256,6 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
                 status = Status.Active,
                 selfjoin = SelfJoin.CannotJoin,
               ),
-              SharedTestDataADM.rootUser,
             ),
           ),
         )
@@ -276,7 +274,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         val keywordWithSpecialCharacter     = """new "keyword""""
         val received = UnsafeZioRun.runOrThrow(
           ProjectRestService(
-            _.createProject(
+            _.createProject(SharedTestDataADM.rootUser)(
               ProjectCreateRequest(
                 shortname = Shortname.unsafeFrom("project_with_char"),
                 shortcode = Shortcode.unsafeFrom("1312"),
@@ -291,7 +289,6 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
                 status = Status.Active,
                 selfjoin = SelfJoin.CannotJoin,
               ),
-              SharedTestDataADM.rootUser,
             ),
           ),
         )
@@ -311,7 +308,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' during creation if the supplied project shortname is not unique" in {
         val exit = UnsafeZioRun.run(
           ProjectRestService(
-            _.createProject(
+            _.createProject(SharedTestDataADM.rootUser)(
               ProjectCreateRequest(
                 shortname = Shortname.unsafeFrom("newproject"),
                 shortcode = Shortcode.unsafeFrom("111D"),
@@ -323,7 +320,6 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
                 status = Status.Active,
                 selfjoin = SelfJoin.CannotJoin,
               ),
-              SharedTestDataADM.rootUser,
             ),
           ),
         )
@@ -333,7 +329,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not" in {
         val exit = UnsafeZioRun.run(
           ProjectRestService(
-            _.createProject(
+            _.createProject(SharedTestDataADM.rootUser)(
               ProjectCreateRequest(
                 shortname = Shortname.unsafeFrom("newproject3"),
                 shortcode = Shortcode.unsafeFrom("111C"),
@@ -345,7 +341,6 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
                 status = Status.Active,
                 selfjoin = SelfJoin.CannotJoin,
               ),
-              SharedTestDataADM.rootUser,
             ),
           ),
         )

@@ -13,21 +13,29 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
+import org.knora.webapi.slice.admin.api.Codecs.TapirCodec
 import org.knora.webapi.slice.admin.api.model.FilterAndOrder
 import org.knora.webapi.slice.admin.api.model.PageAndSize
 import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
-final case class LicenseDto(id: String, uri: String, labelEn: String)
-object LicenseDto {
-  given JsonCodec[LicenseDto] = DeriveJsonCodec.gen[LicenseDto]
-  given Ordering[LicenseDto]  = Ordering.by(_.labelEn)
-  given Schema[PagedResponse[LicenseDto]] = Schema
-    .derived[PagedResponse[LicenseDto]]
+final case class ProjectLicenseDto(id: String, uri: String, labelEn: String, isRecommended: Boolean, isEnabled: Boolean)
+object ProjectLicenseDto {
+  given JsonCodec[ProjectLicenseDto] = DeriveJsonCodec.gen[ProjectLicenseDto]
+  given Ordering[ProjectLicenseDto]  = Ordering.by(_.labelEn)
+  given Schema[PagedResponse[ProjectLicenseDto]] = Schema
+    .derived[PagedResponse[ProjectLicenseDto]]
     .modify(_.data)(_.copy(isOptional = false))
 
-  def from(license: License): LicenseDto = LicenseDto(license.id.value, license.uri.toString, license.labelEn)
+  def from(license: License, isEnabled: Boolean): ProjectLicenseDto =
+    ProjectLicenseDto(
+      license.id.value,
+      license.uri.toString,
+      license.labelEn,
+      license.isRecommended.toBoolean,
+      isEnabled,
+    )
 }
 
 final case class CopyrightHolderAddRequest(data: Set[CopyrightHolder])
@@ -43,6 +51,11 @@ object CopyrightHolderReplaceRequest {
 final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
   private final val base = "admin" / "projects" / "shortcode" / projectShortcode / "legal-info"
+
+  private final val licenseIriPath = path[LicenseIri](TapirCodec.stringCodec(LicenseIri.from))
+    .name("licenseIri")
+    .description("The IRI of the license. Must be URL-encoded.")
+    .example(LicenseIri.CC_BY_NC_4_0)
 
   val getProjectAuthorships = baseEndpoints.securedEndpoint.get
     .in(base / "authorships")
@@ -68,14 +81,23 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base / "licenses")
     .in(PageAndSize.queryParams())
     .in(FilterAndOrder.queryParams)
+    .in(query[Boolean]("showOnlyEnabled").description("Show only enabled licenses if true.").default(false))
     .out(
-      jsonBody[PagedResponse[LicenseDto]]
-        .example(Examples.PagedResponse.fromTotal(License.BUILT_IN.map(LicenseDto.from))),
+      jsonBody[PagedResponse[ProjectLicenseDto]]
+        .example(Examples.PagedResponse.fromTotal(License.BUILT_IN.map(l => ProjectLicenseDto.from(l, true)))),
     )
     .description(
-      "Get the allowed licenses for use within this project. " +
+      "Get the available licenses for use within this project. " +
         "The user must be project member, project admin or system admin.",
     )
+
+  val putProjectLicensesEnable = baseEndpoints.securedEndpoint.put
+    .in(base / "licenses" / licenseIriPath / "enable")
+    .description("Enable a license for use within this project. The user must be project admin or system admin.")
+
+  val putProjectLicensesDisable = baseEndpoints.securedEndpoint.put
+    .in(base / "licenses" / licenseIriPath / "disable")
+    .description("Disable a license for use within this project. The user must be project admin or system admin.")
 
   val getProjectCopyrightHolders = baseEndpoints.securedEndpoint.get
     .in(base / "copyright-holders")
@@ -121,6 +143,8 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
   val endpoints: Seq[AnyEndpoint] = Seq(
     getProjectAuthorships,
     getProjectLicenses,
+    putProjectLicensesEnable,
+    putProjectLicensesDisable,
     getProjectCopyrightHolders,
     postProjectCopyrightHolders,
     putProjectCopyrightHolders,

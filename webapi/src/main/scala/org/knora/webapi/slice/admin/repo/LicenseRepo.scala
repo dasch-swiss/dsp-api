@@ -17,6 +17,7 @@ import org.knora.webapi.slice.common.repo.service.Repository
 final case class LicenseRepo(ref: Ref[Chunk[License]]) extends Repository[License, LicenseIri] {
   override def findById(id: LicenseIri): Task[Option[License]] = ref.get.map(_.find(_.id == id))
   override def findAll(): Task[Chunk[License]]                 = ref.get
+  def findRecommendedLicenses(): Task[Chunk[License]]          = ref.get.map(_.filter(_.isRecommended.toBoolean))
 }
 
 object LicenseRepo {

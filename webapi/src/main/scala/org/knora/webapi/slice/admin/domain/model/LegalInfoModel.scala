@@ -17,12 +17,16 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec
 import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.AI_GENERATED
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.BORIS
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_0_1_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_ND_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_NC_SA_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_ND_4_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_BY_SA_4_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_PDM_1_0
+import org.knora.webapi.slice.admin.domain.model.LicenseIri.OPEN_LICENCE_2_0
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.PUBLIC_DOMAIN
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.UNKNOWN
 import org.knora.webapi.slice.common.StringValueCompanion
@@ -71,15 +75,19 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
    */
   private lazy val licenseIriRegEx = """^http://rdfh\.ch/licenses/[A-Za-z0-9_-]{22}$""".r
 
-  val CC_BY_4_0: LicenseIri       = LicenseIri("http://rdfh.ch/licenses/cc-by-4.0")
-  val CC_BY_SA_4_0: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/cc-by-sa-4.0")
-  val CC_BY_NC_4_0: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-4.0")
-  val CC_BY_NC_SA_4_0: LicenseIri = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-sa-4.0")
-  val CC_BY_ND_4_0: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/cc-by-nd-4.0")
-  val CC_BY_NC_ND_4_0: LicenseIri = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-nd-4.0")
-  val AI_GENERATED: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/ai-generated")
-  val UNKNOWN: LicenseIri         = LicenseIri("http://rdfh.ch/licenses/unknown")
-  val PUBLIC_DOMAIN: LicenseIri   = LicenseIri("http://rdfh.ch/licenses/public-domain")
+  val CC_BY_4_0: LicenseIri        = LicenseIri("http://rdfh.ch/licenses/cc-by-4.0")
+  val CC_BY_SA_4_0: LicenseIri     = LicenseIri("http://rdfh.ch/licenses/cc-by-sa-4.0")
+  val CC_BY_NC_4_0: LicenseIri     = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-4.0")
+  val CC_BY_NC_SA_4_0: LicenseIri  = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-sa-4.0")
+  val CC_BY_ND_4_0: LicenseIri     = LicenseIri("http://rdfh.ch/licenses/cc-by-nd-4.0")
+  val CC_BY_NC_ND_4_0: LicenseIri  = LicenseIri("http://rdfh.ch/licenses/cc-by-nc-nd-4.0")
+  val AI_GENERATED: LicenseIri     = LicenseIri("http://rdfh.ch/licenses/ai-generated")
+  val UNKNOWN: LicenseIri          = LicenseIri("http://rdfh.ch/licenses/unknown")
+  val PUBLIC_DOMAIN: LicenseIri    = LicenseIri("http://rdfh.ch/licenses/public-domain")
+  val CC_0_1_0: LicenseIri         = LicenseIri("http://rdfh.ch/licenses/cc-0-1.0")
+  val CC_PDM_1_0: LicenseIri       = LicenseIri("http://rdfh.ch/licenses/cc-pdm-1.0")
+  val BORIS: LicenseIri            = LicenseIri("http://rdfh.ch/licenses/boris")
+  val OPEN_LICENCE_2_0: LicenseIri = LicenseIri("http://rdfh.ch/licenses/open-licence-2.0")
 
   val BUILT_IN: Set[LicenseIri] =
     Set(
@@ -92,6 +100,10 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
       AI_GENERATED,
       UNKNOWN,
       PUBLIC_DOMAIN,
+      CC_0_1_0,
+      CC_PDM_1_0,
+      BORIS,
+      OPEN_LICENCE_2_0,
     )
 
   private def isLicenseIri(iri: String) = licenseIriRegEx.matches(iri) || BUILT_IN.map(_.value).contains(iri)
@@ -107,28 +119,97 @@ object LicenseIri extends StringValueCompanion[LicenseIri] {
   }
 }
 
-final case class License private (id: LicenseIri, uri: URI, labelEn: String)
+final case class License private (id: LicenseIri, uri: URI, labelEn: String, isRecommended: IsDaschRecommended)
+enum IsDaschRecommended {
+  case Yes extends IsDaschRecommended
+  case No  extends IsDaschRecommended
+  def toBoolean: Boolean = this == Yes
+}
 object License {
 
   val BUILT_IN: Chunk[License] = Chunk(
-    License(CC_BY_4_0, URI.create("https://creativecommons.org/licenses/by/4.0/"), "CC BY 4.0"),
-    License(CC_BY_SA_4_0, URI.create("https://creativecommons.org/licenses/by-sa/4.0/"), "CC BY-SA 4.0"),
-    License(CC_BY_NC_4_0, URI.create("https://creativecommons.org/licenses/by-nc/4.0/"), "CC BY-NC 4.0"),
-    License(CC_BY_NC_SA_4_0, URI.create("https://creativecommons.org/licenses/by-nc-sa/4.0/"), "CC BY-NC-SA 4.0"),
-    License(CC_BY_ND_4_0, URI.create("https://creativecommons.org/licenses/by-nd/4.0/"), "CC BY-ND 4.0"),
-    License(CC_BY_NC_ND_4_0, URI.create("https://creativecommons.org/licenses/by-nc-nd/4.0/"), "CC BY-NC-ND 4.0"),
-    License(AI_GENERATED, URI.create(AI_GENERATED.value), "AI-Generated Content - Not Protected by Copyright"),
-    License(UNKNOWN, URI.create(UNKNOWN.value), "Unknown License - Ask Copyright Holder for Permission"),
-    License(PUBLIC_DOMAIN, URI.create(PUBLIC_DOMAIN.value), "Public Domain - Not Protected by Copyright"),
+    License(CC_BY_4_0, URI.create("https://creativecommons.org/licenses/by/4.0/"), "CC BY 4.0", IsDaschRecommended.Yes),
+    License(
+      CC_BY_SA_4_0,
+      URI.create("https://creativecommons.org/licenses/by-sa/4.0/"),
+      "CC BY-SA 4.0",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      CC_BY_NC_4_0,
+      URI.create("https://creativecommons.org/licenses/by-nc/4.0/"),
+      "CC BY-NC 4.0",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      CC_BY_NC_SA_4_0,
+      URI.create("https://creativecommons.org/licenses/by-nc-sa/4.0/"),
+      "CC BY-NC-SA 4.0",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      CC_BY_ND_4_0,
+      URI.create("https://creativecommons.org/licenses/by-nd/4.0/"),
+      "CC BY-ND 4.0",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      CC_BY_NC_ND_4_0,
+      URI.create("https://creativecommons.org/licenses/by-nc-nd/4.0/"),
+      "CC BY-NC-ND 4.0",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      AI_GENERATED,
+      URI.create(AI_GENERATED.value),
+      "AI-Generated Content - Not Protected by Copyright",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      UNKNOWN,
+      URI.create(UNKNOWN.value),
+      "Unknown License - Ask Copyright Holder for Permission",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      PUBLIC_DOMAIN,
+      URI.create(PUBLIC_DOMAIN.value),
+      "Public Domain - Not Protected by Copyright",
+      IsDaschRecommended.Yes,
+    ),
+    License(
+      CC_0_1_0,
+      URI.create("https://creativecommons.org/publicdomain/zero/1.0/"),
+      "CC0 1.0",
+      IsDaschRecommended.No,
+    ),
+    License(
+      CC_PDM_1_0,
+      URI.create("https://creativecommons.org/publicdomain/mark/1.0/"),
+      "CC PDM 1.0",
+      IsDaschRecommended.No,
+    ),
+    License(
+      BORIS,
+      URI.create("https://www.ub.unibe.ch/services/open_science/boris_publications/index_eng.html#collapse_pane631832"),
+      "BORIS Standard License",
+      IsDaschRecommended.No,
+    ),
+    License(
+      OPEN_LICENCE_2_0,
+      URI.create("https://www.etalab.gouv.fr/wp-content/uploads/2018/11/open-licence.pdf"),
+      "LICENCE OUVERTE 2.0",
+      IsDaschRecommended.No,
+    ),
   )
 
-  def from(id: LicenseIri, uri: URI, labelEn: String): Either[String, License] = {
+  def from(id: LicenseIri, uri: URI, labelEn: String, isRecommended: IsDaschRecommended): Either[String, License] = {
     val labelValidation = Validation
       .validate(nonEmpty(labelEn), maxLength(255)(labelEn), noLineBreaks(labelEn))
       .mapErrorAll(errs => NonEmptyChunk(s"Label en ${errs.mkString("; ")}"))
     Validation
       .validate(absoluteUri(uri), labelValidation)
-      .as(License(id, uri, labelEn))
+      .as(License(id, uri, labelEn, isRecommended))
       .flatMap(checkAgainstBuiltIn)
       .toEither
       .left
@@ -147,6 +228,6 @@ object License {
     }
   }
 
-  def unsafeFrom(id: LicenseIri, uri: URI, labelEn: String): License =
-    from(id, uri, labelEn).fold(e => throw new IllegalArgumentException(e), identity)
+  def unsafeFrom(id: LicenseIri, uri: URI, labelEn: String, isRecommended: IsDaschRecommended): License =
+    from(id, uri, labelEn, isRecommended).fold(e => throw new IllegalArgumentException(e), identity)
 }
