@@ -79,12 +79,12 @@ object LayersLive {
     ApiV2Endpoints &
     AppConfig.AppConfigurations &
     AssetPermissionsResponder &
-    AuthorizationRestService &
     AuthenticationApiModule.Provided &
+    AuthorizationRestService &
     BaseModule.Provided &
     CardinalityHandler &
-    CoreModule.Provided &
     ConstructResponseUtilV2 &
+    CoreModule.Provided &
     DefaultObjectAccessPermissionService &
     GroupRestService &
     HttpServer &
@@ -95,8 +95,8 @@ object LayersLive {
     ListsResponder &
     ListsService &
     MessageRelay &
-    OntologyInferencer &
     OntologyApiModule.Provided &
+    OntologyInferencer &
     OntologyResponderV2 &
     PermissionRestService &
     PermissionUtilADM &
@@ -110,8 +110,8 @@ object LayersLive {
     ResourcesApiRoutes &
     ResourcesResponderV2 &
     SearchApiRoutes &
-    SecurityModule.Provided &
     SearchResponderV2Module.Provided &
+    SecurityModule.Provided &
     ShaclApiModule.Provided &
     ShaclModule.Provided &
     SipiService &
