@@ -37,6 +37,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
+import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.admin.repo.service.AdministrativePermissionRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
@@ -172,6 +173,7 @@ object AuthenticatorLiveSpec extends ZIOSpecDefault {
     KnoraUserRepoLive.layer,
     KnoraUserService.layer,
     KnoraUserToUserConverter.layer,
+    LicenseRepo.layer,
     OntologyCacheFake.emptyCache,
     OntologyRepoLive.layer,
     PasswordService.layer,

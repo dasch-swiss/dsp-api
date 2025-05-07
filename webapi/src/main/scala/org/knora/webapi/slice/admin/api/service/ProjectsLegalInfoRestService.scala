@@ -16,7 +16,7 @@ import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.api.CopyrightHolderAddRequest
 import org.knora.webapi.slice.admin.api.CopyrightHolderReplaceRequest
-import org.knora.webapi.slice.admin.api.LicenseDto
+import org.knora.webapi.slice.admin.api.ProjectLicenseDto
 import org.knora.webapi.slice.admin.api.model.FilterAndOrder
 import org.knora.webapi.slice.admin.api.model.PageAndSize
 import org.knora.webapi.slice.admin.api.model.PagedResponse
@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
@@ -46,11 +47,14 @@ final case class ProjectsLegalInfoRestService(
     shortcode: Shortcode,
     pageAndSize: PageAndSize,
     filterAndOrder: FilterAndOrder,
-  ): IO[ForbiddenException, PagedResponse[LicenseDto]] =
+    showEnabledOnly: Boolean,
+  ): IO[ForbiddenException, PagedResponse[ProjectLicenseDto]] =
     for {
-      _      <- auth.ensureProjectMember(user, shortcode)
-      result <- legalInfos.findLicenses(shortcode).map(_.map(LicenseDto.from))
-    } yield slice(result, pageAndSize, filterAndOrder)
+      prj <- auth.ensureProjectMember(user, shortcode)
+      licenses <- if (showEnabledOnly) { legalInfos.findEnabledLicenses(shortcode) }
+                  else { legalInfos.findAvailableLicenses(shortcode) }
+      licenseDtos = licenses.map(l => ProjectLicenseDto.from(l, prj.enabledLicenses.contains(l.id))).toSeq
+    } yield slice(licenseDtos, pageAndSize, filterAndOrder)
 
   private def slice[A: JsonCodec](
     all: Seq[A],
@@ -62,6 +66,18 @@ final case class ProjectsLegalInfoRestService(
       .sorted(filterAndOrder.ordering[A])
     val slice = filtered.slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
     PagedResponse.from(slice, filtered.size, pageAndSize)
+
+  def enableLicense(user: User)(shortcode: Shortcode, licenseIri: LicenseIri): Task[Unit] =
+    for {
+      project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
+      _       <- legalInfos.enableLicense(licenseIri, project)
+    } yield ()
+
+  def disableLicense(user: User)(shortcode: Shortcode, licenseIri: LicenseIri): Task[Unit] =
+    for {
+      project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
+      _       <- legalInfos.disableLicense(licenseIri, project)
+    } yield ()
 
   def findCopyrightHolders(user: User)(
     shortcode: Shortcode,

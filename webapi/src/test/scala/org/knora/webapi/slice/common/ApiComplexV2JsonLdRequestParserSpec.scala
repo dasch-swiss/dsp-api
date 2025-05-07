@@ -50,6 +50,7 @@ import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.repo.*
 import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.admin.repo.service.*
 import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.KnoraIris.*
@@ -806,6 +807,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     KnoraUserRepoInMemory.layer,
     KnoraUserService.layer,
     KnoraUserToUserConverter.layer,
+    LicenseRepo.layer,
     MessageRelayLive.layer,
     OntologyRepoInMemory.emptyLayer,
     PasswordService.layer,

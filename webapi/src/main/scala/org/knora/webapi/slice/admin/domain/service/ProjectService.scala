@@ -56,6 +56,7 @@ final case class ProjectService(
         ontologies,
         knoraProject.status,
         knoraProject.selfjoin,
+        knoraProject.enabledLicenses,
       ),
     )
 
@@ -74,6 +75,7 @@ final case class ProjectService(
       selfjoin = project.selfjoin,
       restrictedView,
       Set.empty,
+      project.enabledLicenses,
     )
 
   def setProjectRestrictedView(project: Project, settings: RestrictedView): Task[RestrictedView] =

@@ -52,31 +52,32 @@ object LegalInfoModelSpec extends ZIOSpecDefault {
     val validLabel = "CC BY 4.0"
 
     test("pass a valid object and successfully create value object") {
-      val actual = License.from(validIri, validUri, validLabel)
+      val actual = License.from(validIri, validUri, validLabel, IsDaschRecommended.Yes)
       assertTrue(
         actual.map(_.id).contains(validIri),
         actual.map(_.uri).contains(validUri),
         actual.map(_.labelEn).contains(validLabel),
+        actual.map(_.isRecommended.toBoolean).contains(true),
       )
     }
     test("pass a relative URI and return an error") {
-      val actual = License.from(validIri, invalidUri, validLabel)
+      val actual = License.from(validIri, invalidUri, validLabel, IsDaschRecommended.Yes)
       assertTrue(actual == Left("License: URI must be absolute"))
     }
     test("pass an empty label and return an error") {
-      val actual = License.from(validIri, validUri, "")
+      val actual = License.from(validIri, validUri, "", IsDaschRecommended.Yes)
       assertTrue(actual == Left("License: Label en cannot be empty"))
     }
     test("pass a new line in labelEn and return an error") {
-      val actual = License.from(validIri, validUri, "some\nlabel")
+      val actual = License.from(validIri, validUri, "some\nlabel", IsDaschRecommended.Yes)
       assertTrue(actual == Left("License: Label en must not contain line breaks"))
     }
     test("pass a too long labelEn and return an error") {
-      val actual = License.from(validIri, validUri, "s" * 256)
+      val actual = License.from(validIri, validUri, "s" * 256, IsDaschRecommended.Yes)
       assertTrue(actual == Left("License: Label en must be maximum 255 characters long"))
     }
     test("errors are combined") {
-      val actual = License.from(validIri, invalidUri, "s\n" * 256)
+      val actual = License.from(validIri, invalidUri, "s\n" * 256, IsDaschRecommended.Yes)
       assertTrue(
         actual == Left(
           "License: URI must be absolute, Label en must be maximum 255 characters long; must not contain line breaks",
@@ -88,10 +89,11 @@ object LegalInfoModelSpec extends ZIOSpecDefault {
         LicenseIri.unsafeFrom("http://rdfh.ch/licenses/cc-by-4.0"),
         URI.create("http://rdfh.ch/licenses/cc-by-4.0"),
         "Wrong label",
+        IsDaschRecommended.Yes,
       )
       assertTrue(
         actual == Left(
-          "License: Found predefined license expected one of 'License(http://rdfh.ch/licenses/cc-by-4.0,https://creativecommons.org/licenses/by/4.0/,CC BY 4.0)'",
+          "License: Found predefined license expected one of 'License(http://rdfh.ch/licenses/cc-by-4.0,https://creativecommons.org/licenses/by/4.0/,CC BY 4.0,Yes)'",
         ),
       )
     }
