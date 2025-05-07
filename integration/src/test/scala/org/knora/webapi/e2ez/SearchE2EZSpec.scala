@@ -95,6 +95,75 @@ object SearchE2EZSpec extends E2EZSpec {
     }
   }
 
+  private val searchStillImageRepresentationsSuite = suiteAll("Search StillImageRepresentations endpoint") {
+    val resourceIri = InputIri.unsafeFrom("http://rdfh.ch/0001/thing-with-pages")
+
+    test("Successfully retrieve StillImageRepresentations for a resource with offset=0") {
+      val url         = s"/v2/searchStillImageRepresentations/${urlEncode((resourceIri.value))}?offset=0"
+      val idCursor    = JsonCursor.field("@id").isString
+      val labelCursor = JsonCursor.field("rdfs:label").isString
+      val filenameCursor =
+        JsonCursor.field("knora-api:hasStillImageFileValue").isObject.field("knora-api:fileValueHasFilename").isString
+
+      for {
+        token       <- getRootToken
+        responseStr <- sendGetRequestStringOrFail(url, Some(token))
+        response    <- ZIO.fromEither(responseStr.fromJson[Json])
+        id          <- ZIO.fromEither(response.get(idCursor))
+        label       <- ZIO.fromEither(response.get(labelCursor))
+        filename    <- ZIO.fromEither(response.get(filenameCursor))
+      } yield assertTrue(
+        id.value.contains("thing-page-1"),
+        label.value.contains("page 1"),
+        filename.value.contains("page1.jp2"),
+      )
+    }
+
+    test("Successfully retrieve StillImageRepresentations for a resource with default offset") {
+      val url         = s"/v2/searchStillImageRepresentations/${urlEncode((resourceIri.value))}"
+      val idCursor    = JsonCursor.field("@id").isString
+      val labelCursor = JsonCursor.field("rdfs:label").isString
+      val filenameCursor =
+        JsonCursor.field("knora-api:hasStillImageFileValue").isObject.field("knora-api:fileValueHasFilename").isString
+
+      for {
+        token       <- getRootToken
+        responseStr <- sendGetRequestStringOrFail(url, Some(token))
+        response    <- ZIO.fromEither(responseStr.fromJson[Json])
+        id          <- ZIO.fromEither(response.get(idCursor))
+        label       <- ZIO.fromEither(response.get(labelCursor))
+        filename    <- ZIO.fromEither(response.get(filenameCursor))
+      } yield assertTrue(
+        id.value.contains("thing-page-1"),
+        label.value.contains("page 1"),
+        filename.value.contains("page1.jp2"),
+      )
+    }
+
+    test("Successfully retrieve StillImageRepresentations with non-zero offset") {
+      val url = s"/v2/searchStillImageRepresentations/${urlEncode((resourceIri.value))}?offset=1"
+      for {
+        token       <- getRootToken
+        responseStr <- sendGetRequestStringOrFail(url, Some(token))
+        response    <- ZIO.fromEither(responseStr.fromJson[Map[String, Json]])
+      } yield assertTrue(
+        response.isEmpty,
+      )
+    }
+
+    test("Return empty result for resource with no StillImageRepresentations") {
+      val resourceIri = InputIri.unsafeFrom("http://rdfh.ch/0001/MAiNrOB1Q--rzAzdkqbHOw")
+      val url         = s"/v2/searchStillImageRepresentations/${urlEncode(resourceIri.value)}?offset=0"
+      for {
+        token       <- getRootToken
+        responseStr <- sendGetRequestStringOrFail(url, Some(token))
+        response    <- ZIO.fromEither(responseStr.fromJson[Map[String, Json]])
+      } yield assertTrue(
+        response.isEmpty,
+      )
+    }
+  }
+
   private val searchIncomingRegionsSuite = suiteAll("Search Incoming Regions endpoint") {
     val resourceIri = InputIri.unsafeFrom("http://rdfh.ch/0001/a-thing-picture")
 
@@ -165,6 +234,7 @@ object SearchE2EZSpec extends E2EZSpec {
   override def e2eSpec: Spec[env, Any] =
     suite("SearchIncomingLinksE2EZSpec")(
       searchIncomingLinksSuite,
+      searchStillImageRepresentationsSuite,
       searchIncomingRegionsSuite,
     )
 }
