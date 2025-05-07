@@ -164,6 +164,9 @@ object OntologyConstraintException {
  * @param message a description of the error.
  */
 case class EditConflictException(message: String) extends RequestRejectedException(message)
+object EditConflictException {
+  given codec: JsonCodec[EditConflictException] = DeriveJsonCodec.gen[EditConflictException]
+}
 
 /**
  * An exception indicating that the submitted standoff is not valid.

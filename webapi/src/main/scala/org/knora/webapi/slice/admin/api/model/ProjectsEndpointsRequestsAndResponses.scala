@@ -13,6 +13,7 @@ import zio.json.JsonCodec
 import dsp.errors.BadRequestException
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 
 object ProjectsEndpointsRequestsAndResponses {
@@ -27,6 +28,7 @@ object ProjectsEndpointsRequestsAndResponses {
     logo: Option[Logo] = None,
     status: Status = Status.Active,
     selfjoin: SelfJoin = SelfJoin.CannotJoin,
+    enabledLicenses: Option[Set[LicenseIri]] = None,
   )
   object ProjectCreateRequest {
     implicit val codec: JsonCodec[ProjectCreateRequest] = DeriveJsonCodec.gen[ProjectCreateRequest]

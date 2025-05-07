@@ -17,8 +17,9 @@ import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
-import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.repo.LicenseRepo
+import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
+import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
@@ -29,14 +30,37 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
   private val projectRepo = ZIO.serviceWithZIO[KnoraProjectRepo]
 
   private val validCopyrightHolder = CopyrightHolder.unsafeFrom("DaSCH")
-  private val validLicense         = LicenseIri.AI_GENERATED
+  private val enabledLicense       = LicenseIri.CC_BY_4_0
+  private val disabledLicense      = LicenseIri.AI_GENERATED
   private val fileValueValid =
-    FileValueV2("unused", "unused", None, None, Some(validCopyrightHolder), None, Some(validLicense))
+    FileValueV2("unused", "unused", None, None, Some(validCopyrightHolder), None, Some(enabledLicense))
   private val setupProject = projectRepo(
     _.save(
       TestDataFactory.someProject
-        .copy(allowedCopyrightHolders = Set(validCopyrightHolder)),
+        .copy(allowedCopyrightHolders = Set(validCopyrightHolder), enabledLicenses = Set(enabledLicense)),
     ),
+  )
+
+  private val licenseEnablingSuite = suite("License enabling and disabling")(
+    test("enabling should work") {
+      for {
+        prj    <- setupProject
+        actual <- service(_.enableLicense(disabledLicense, prj))
+      } yield assertTrue(actual.enabledLicenses == Set(disabledLicense, enabledLicense))
+    },
+    test("disabling should work") {
+      for {
+        prj    <- setupProject
+        actual <- service(_.disableLicense(enabledLicense, prj))
+      } yield assertTrue(actual.enabledLicenses == Set.empty)
+    },
+    test("available licenses should return all built-in licenses, even if no license is enabled") {
+      for {
+        prj    <- setupProject
+        _      <- service(_.disableLicense(enabledLicense, prj))
+        actual <- service(_.findAvailableLicenses(prj.shortcode))
+      } yield assertTrue(actual == License.BUILT_IN)
+    },
   )
 
   private val validateLegalInfoSuite = suite("validateLegalInfo for FileValue in Project")(
@@ -47,19 +71,18 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
         actual        <- service(_.validateLegalInfo(emptyFileValue, prj.shortcode))
       } yield assertTrue(actual == emptyFileValue)
     },
-    test("A FileValue with valid LicenseIri and Copyright Holder should be valid") {
+    test("A FileValue with enabled LicenseIri and valid Copyright Holder should be valid") {
       for {
         prj    <- setupProject
         actual <- service(_.validateLegalInfo(fileValueValid, prj.shortcode))
       } yield assertTrue(actual == fileValueValid)
     },
-    test("A FileValue with invalid LicenseIri should be invalid") {
+    test("A FileValue with not enabled LicenseIri should be invalid") {
       for {
-        prj       <- setupProject
-        invalidIri = LicenseIri.makeNew
+        prj <- setupProject
         actual <-
-          service(_.validateLegalInfo(fileValueValid.copy(licenseIri = Some(invalidIri)), prj.shortcode)).exit
-      } yield assert(actual)(fails(equalTo(s"License $invalidIri is not allowed in project ${prj.shortcode}")))
+          service(_.validateLegalInfo(fileValueValid.copy(licenseIri = Some(disabledLicense)), prj.shortcode)).exit
+      } yield assert(actual)(fails(equalTo(s"License $disabledLicense is not allowed in project ${prj.shortcode}")))
     },
     test("A FileValue with invalid CopyrightHolder should be invalid") {
       for {
@@ -92,20 +115,27 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
   )
 
   def spec = suite("LegalInfoService")(
+    licenseEnablingSuite,
     validateLegalInfoSuite,
-    test("findLicenses should return all licenses for project") {
+    test("findAvailableLicenses should return all licenses for project") {
       for {
-        actual <- service(_.findLicenses(Shortcode.unsafeFrom("0001")))
+        actual <- service(_.findAvailableLicenses(Shortcode.unsafeFrom("0001")))
       } yield assert(actual)(hasSameElements(License.BUILT_IN))
+    },
+    test("given we have not enabled a license, then findEnabledLicenses should return no licenses for project") {
+      for {
+        actual <- service(_.findEnabledLicenses(Shortcode.unsafeFrom("0001")))
+      } yield assertTrue(actual.isEmpty)
     },
   ).provide(
     LegalInfoService.layer,
     LicenseRepo.layer,
     KnoraProjectService.layer,
-    KnoraProjectRepoInMemory.layer,
+    KnoraProjectRepoLive.layer,
     OntologyRepoInMemory.emptyLayer,
     IriConverter.layer,
     StringFormatter.test,
     TriplestoreServiceInMemory.emptyLayer,
+    CacheManager.layer,
   )
 }

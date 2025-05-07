@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
+import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.infrastructure.CacheManager
@@ -76,6 +77,7 @@ object GroupServiceSpec extends ZIOSpecDefault {
       KnoraProjectService.layer,
       KnoraUserRepoLive.layer,
       KnoraUserService.layer,
+      LicenseRepo.layer,
       OntologyCacheLive.layer,
       OntologyRepoLive.layer,
       PasswordService.layer,

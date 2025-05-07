@@ -164,10 +164,7 @@ final case class ProjectsEndpointsHandler(
     SecuredEndpointHandler(projectsEndpoints.Secured.postAdminProjectsByShortcodeImport, restService.importProject)
 
   val postAdminProjectsHandler =
-    SecuredEndpointHandler(
-      projectsEndpoints.Secured.postAdminProjects,
-      user => (createReq: ProjectCreateRequest) => restService.createProject(createReq, user),
-    )
+    SecuredEndpointHandler(projectsEndpoints.Secured.postAdminProjects, restService.createProject)
 
   val putAdminProjectsByIriHandler =
     SecuredEndpointHandler[(ProjectIri, ProjectUpdateRequest), ProjectOperationResponseADM](

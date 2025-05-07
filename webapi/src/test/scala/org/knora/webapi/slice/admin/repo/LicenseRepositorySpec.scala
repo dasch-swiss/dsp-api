@@ -10,6 +10,7 @@ import zio.test.*
 
 import java.net.URI
 
+import org.knora.webapi.slice.admin.domain.model.IsDaschRecommended
 import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 
@@ -17,7 +18,7 @@ object LicenseRepositorySpec extends ZIOSpecDefault {
   private val repo = ZIO.serviceWithZIO[LicenseRepo]
   val spec = suite("LicenseRepository")(
     test("findAll returns nine supported licenses") {
-      repo(_.findAll()).map(actual => assertTrue(actual.size == 9))
+      repo(_.findAll()).map(actual => assertTrue(actual.size == 13))
     },
     test("should find license by id") {
       for {
@@ -29,6 +30,7 @@ object LicenseRepositorySpec extends ZIOSpecDefault {
               LicenseIri.unsafeFrom("http://rdfh.ch/licenses/cc-by-4.0"),
               URI.create("https://creativecommons.org/licenses/by/4.0/"),
               "CC BY 4.0",
+              IsDaschRecommended.Yes,
             ),
           ),
         )

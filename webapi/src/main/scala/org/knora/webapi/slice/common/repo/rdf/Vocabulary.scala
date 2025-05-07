@@ -59,6 +59,7 @@ object Vocabulary {
     val projectShortcode: Iri               = Rdf.iri(ka, "projectShortcode")
     val projectShortname: Iri               = Rdf.iri(ka, "projectShortname")
     val hasAllowedCopyrightHolder: Iri      = Rdf.iri(ka, "hasAllowedCopyrightHolder")
+    val hasEnabledLicense: Iri              = Rdf.iri(ka, "hasEnabledLicense")
 
     // permission properties
     val AdministrativePermission: Iri      = Rdf.iri(ka, "AdministrativePermission")
@@ -73,6 +74,8 @@ object Vocabulary {
     private val kb = KnoraBasePrefixExpansion
 
     val NS: Namespace = new SimpleNamespace("knora-base", kb)
+
+    val Resource: Iri = iri(kb + "Resource")
 
     val linkValue: Iri = iri(kb + "LinkValue")
 
