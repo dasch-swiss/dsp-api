@@ -44,8 +44,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.CreateMappingRequestV2
@@ -202,303 +200,270 @@ final case class StandoffResponderV2(
     requestingUser: User,
     uuid: UUID,
   ): Task[CreateMappingResponseV2] = {
-    val xml: String            = request.xml
-    val label: String          = request.label
-    val projectIri: ProjectIri = request.projectIri
-    val mappingName: String    = request.mappingName
-    def createMappingAndCheck(
-      xml: String,
-      label: String,
-      mappingIri: IRI,
-      namedGraph: String,
-      requestingUser: User,
-    ): Task[CreateMappingResponseV2] = {
+    val createMappingAndCheck: Task[CreateMappingResponseV2] = (for {
+      // check if the given project IRI represents an actual project
+      project <- projectService
+                   .findById(request.projectIri)
+                   .someOrFail(BadRequestException(s"Project with Iri ${request.projectIri.toString} does not exist"))
 
-      val createMappingFuture = for {
+      // create the mapping IRI from the project IRI and the name provided by the user
+      mappingIri = stringFormatter.makeProjectMappingIri(request.projectIri.toString, request.mappingName)
+      // put the mapping into the named graph of the project
+      namedGraph = ProjectService.projectDataNamedGraphV2(project).value
 
-        factory <- ZIO.attempt(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI))
+      factory <- ZIO.attempt(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI))
 
-        // get the schema the mapping has to be validated against
-        schemaFile = FileUtil.readTextResource("mappingXMLToStandoff.xsd")
+      // get the schema the mapping has to be validated against
+      schemaFile = FileUtil.readTextResource("mappingXMLToStandoff.xsd")
 
-        schemaSource = new StreamSource(new StringReader(schemaFile))
+      schemaSource = new StreamSource(new StringReader(schemaFile))
 
-        // create a schema instance
-        schemaInstance = factory.newSchema(schemaSource)
-        validator      = schemaInstance.newValidator()
+      // create a schema instance
+      schemaInstance = factory.newSchema(schemaSource)
+      validator      = schemaInstance.newValidator()
 
-        // validate the provided mapping
-        _ = validator.validate(new StreamSource(new StringReader(xml)))
+      // validate the provided mapping
+      _ = validator.validate(new StreamSource(new StringReader(request.xml)))
 
-        // the mapping conforms to the XML schema "src/main/resources/mappingXMLToStandoff.xsd"
-        mappingXML = XML.loadString(xml)
+      // the mapping conforms to the XML schema "src/main/resources/mappingXMLToStandoff.xsd"
+      mappingXML = XML.loadString(request.xml)
 
-        // get the default XSL transformation, if given (optional)
-        defaultXSLTransformation <-
-          mappingXML \ "defaultXSLTransformation" match {
-            case defaultTrans: NodeSeq if defaultTrans.length == 1 =>
-              // check if the IRI is valid
-              val transIri = Iri
-                .validateAndEscapeIri(
-                  defaultTrans.headOption
-                    .getOrElse(throw BadRequestException("could not access <defaultXSLTransformation>"))
-                    .text,
-                )
-                .getOrElse(
-                  throw BadRequestException(s"XSL transformation ${defaultTrans.head.text} is not a valid IRI"),
-                )
-
-              // try to obtain the XSL transformation to make sure that it really exists
-              for {
-                _ <- getXSLTransformation(
-                       xslTransformationIri = transIri,
-                       requestingUser = requestingUser,
-                     )
-              } yield Some(transIri)
-            case _ => ZIO.none
-          }
-
-        // create a collection of a all elements mappingElement
-        mappingElementsXML = mappingXML \ "mappingElement"
-
-        mappingElements: Seq[MappingElement] =
-          mappingElementsXML.map { (curMappingEle: Node) =>
-            // get the name of the XML tag
-            val tagName = (curMappingEle \ "tag" \ "name").headOption
-              .getOrElse(throw BadRequestException(s"no '<name>' given for node $curMappingEle"))
-              .text
-
-            // get the namespace the tag is defined in
-            val tagNamespace = (curMappingEle \ "tag" \ "namespace").headOption
-              .getOrElse(throw BadRequestException(s"no '<namespace>' given for node $curMappingEle"))
-              .text
-
-            // get the class the tag is combined with
-            val className = (curMappingEle \ "tag" \ "class").headOption
-              .getOrElse(throw BadRequestException(s"no '<classname>' given for node $curMappingEle"))
-              .text
-
-            // get the boolean indicating if the element requires a separator in the text once it is converted to standoff
-            val separatorBooleanAsString =
-              (curMappingEle \ "tag" \ "separatesWords").headOption
-                .getOrElse(throw BadRequestException(s"no '<separatesWords>' given for node $curMappingEle"))
-                .text
-
-            val separatorRequired: Boolean = ValuesValidator
-              .validateBoolean(separatorBooleanAsString)
+      // get the default XSL transformation, if given (optional)
+      defaultXSLTransformation <-
+        mappingXML \ "defaultXSLTransformation" match {
+          case defaultTrans: NodeSeq if defaultTrans.length == 1 =>
+            // check if the IRI is valid
+            val transIri = Iri
+              .validateAndEscapeIri(
+                defaultTrans.headOption
+                  .getOrElse(throw BadRequestException("could not access <defaultXSLTransformation>"))
+                  .text,
+              )
               .getOrElse(
-                throw BadRequestException(
-                  s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString",
-                ),
+                throw BadRequestException(s"XSL transformation ${defaultTrans.head.text} is not a valid IRI"),
               )
 
-            // get the standoff class IRI
-            val standoffClassIri =
-              (curMappingEle \ "standoffClass" \ "classIri").headOption
-                .getOrElse(throw BadRequestException(s"no '<classIri>' given for node $curMappingEle"))
+            // try to obtain the XSL transformation to make sure that it really exists
+            for {
+              _ <- getXSLTransformation(
+                     xslTransformationIri = transIri,
+                     requestingUser = requestingUser,
+                   )
+            } yield Some(transIri)
+          case _ => ZIO.none
+        }
+
+      // create a collection of a all elements mappingElement
+      mappingElementsXML = mappingXML \ "mappingElement"
+
+      mappingElements: Seq[MappingElement] =
+        mappingElementsXML.map { (curMappingEle: Node) =>
+          // get the name of the XML tag
+          val tagName = (curMappingEle \ "tag" \ "name").headOption
+            .getOrElse(throw BadRequestException(s"no '<name>' given for node $curMappingEle"))
+            .text
+
+          // get the namespace the tag is defined in
+          val tagNamespace = (curMappingEle \ "tag" \ "namespace").headOption
+            .getOrElse(throw BadRequestException(s"no '<namespace>' given for node $curMappingEle"))
+            .text
+
+          // get the class the tag is combined with
+          val className = (curMappingEle \ "tag" \ "class").headOption
+            .getOrElse(throw BadRequestException(s"no '<classname>' given for node $curMappingEle"))
+            .text
+
+          // get the boolean indicating if the element requires a separator in the text once it is converted to standoff
+          val separatorBooleanAsString =
+            (curMappingEle \ "tag" \ "separatesWords").headOption
+              .getOrElse(throw BadRequestException(s"no '<separatesWords>' given for node $curMappingEle"))
+              .text
+
+          val separatorRequired: Boolean = ValuesValidator
+            .validateBoolean(separatorBooleanAsString)
+            .getOrElse(
+              throw BadRequestException(
+                s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString",
+              ),
+            )
+
+          // get the standoff class IRI
+          val standoffClassIri =
+            (curMappingEle \ "standoffClass" \ "classIri").headOption
+              .getOrElse(throw BadRequestException(s"no '<classIri>' given for node $curMappingEle"))
+              .text
+
+          // get a collection containing all the attributes
+          val attributeNodes: NodeSeq =
+            curMappingEle \ "standoffClass" \ "attributes" \ "attribute"
+
+          val attributes: Seq[MappingXMLAttribute] = attributeNodes.map { curAttributeNode =>
+            // get the current attribute's name
+            val attrName = (curAttributeNode \ "attributeName").headOption
+              .getOrElse(throw BadRequestException(s"no '<attributeName>' given for attribute $curAttributeNode"))
+              .text
+
+            val attributeNamespace =
+              (curAttributeNode \ "namespace").headOption
+                .getOrElse(throw BadRequestException(s"no '<namespace>' given for attribute $curAttributeNode"))
                 .text
 
-            // get a collection containing all the attributes
-            val attributeNodes: NodeSeq =
-              curMappingEle \ "standoffClass" \ "attributes" \ "attribute"
+            // get the standoff property IRI for the current attribute
+            val propIri = (curAttributeNode \ "propertyIri").headOption
+              .getOrElse(throw BadRequestException(s"no '<propertyIri>' given for attribute $curAttributeNode"))
+              .text
 
-            val attributes: Seq[MappingXMLAttribute] = attributeNodes.map { curAttributeNode =>
-              // get the current attribute's name
-              val attrName = (curAttributeNode \ "attributeName").headOption
-                .getOrElse(throw BadRequestException(s"no '<attributeName>' given for attribute $curAttributeNode"))
-                .text
-
-              val attributeNamespace =
-                (curAttributeNode \ "namespace").headOption
-                  .getOrElse(throw BadRequestException(s"no '<namespace>' given for attribute $curAttributeNode"))
-                  .text
-
-              // get the standoff property IRI for the current attribute
-              val propIri = (curAttributeNode \ "propertyIri").headOption
-                .getOrElse(throw BadRequestException(s"no '<propertyIri>' given for attribute $curAttributeNode"))
-                .text
-
-              MappingXMLAttribute(
-                attributeName = Iri
-                  .toSparqlEncodedString(attrName)
-                  .getOrElse(
-                    throw BadRequestException(s"tagname $attrName contains invalid characters"),
-                  ),
-                namespace = Iri
-                  .toSparqlEncodedString(attributeNamespace)
-                  .getOrElse(
-                    throw BadRequestException(s"tagname $attributeNamespace contains invalid characters"),
-                  ),
-                standoffProperty = Iri
-                  .validateAndEscapeIri(propIri)
-                  .getOrElse(
-                    throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI"),
-                  ),
-                mappingXMLAttributeElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri),
-              )
-
-            }
-
-            // get the optional element datatype
-            val datatypeMaybe: NodeSeq =
-              curMappingEle \ "standoffClass" \ "datatype"
-
-            // if "datatype" is given, get the the standoff class data type and the name of the XML data type attribute
-            val standoffDataTypeOption: Option[MappingStandoffDatatypeClass] =
-              if (datatypeMaybe.nonEmpty) {
-                val dataTypeXML = (datatypeMaybe \ "type").headOption
-                  .getOrElse(
-                    throw BadRequestException(s"no '<type>' given for datatype"),
-                  )
-                  .text
-
-                val dataType: StandoffDataTypeClasses.Value =
-                  StandoffDataTypeClasses.lookup(
-                    dataTypeXML,
-                    throw BadRequestException(s"Invalid data type provided for $tagName"),
-                  )
-                val dataTypeAttribute: String =
-                  (datatypeMaybe \ "attributeName").headOption
-                    .getOrElse(throw BadRequestException(s"no '<attributeName>' given for datatype"))
-                    .text
-
-                Some(
-                  MappingStandoffDatatypeClass(
-                    datatype = dataType.toString, // safe because it is an enumeration
-                    attributeName = Iri
-                      .toSparqlEncodedString(dataTypeAttribute)
-                      .getOrElse(
-                        throw BadRequestException(s"tagname $dataTypeAttribute contains invalid characters"),
-                      ),
-                    mappingStandoffDataTypeClassElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri),
-                  ),
-                )
-              } else {
-                None
-              }
-
-            MappingElement(
-              tagName = Iri
-                .toSparqlEncodedString(tagName)
+            MappingXMLAttribute(
+              attributeName = Iri
+                .toSparqlEncodedString(attrName)
                 .getOrElse(
-                  throw BadRequestException(
-                    s"tagname $tagName contains invalid characters",
-                  ),
+                  throw BadRequestException(s"tagname $attrName contains invalid characters"),
                 ),
               namespace = Iri
-                .toSparqlEncodedString(tagNamespace)
+                .toSparqlEncodedString(attributeNamespace)
                 .getOrElse(
-                  throw BadRequestException(
-                    s"namespace $tagNamespace contains invalid characters",
-                  ),
+                  throw BadRequestException(s"tagname $attributeNamespace contains invalid characters"),
                 ),
-              className = Iri
-                .toSparqlEncodedString(className)
+              standoffProperty = Iri
+                .validateAndEscapeIri(propIri)
                 .getOrElse(
-                  throw BadRequestException(
-                    s"classname $className contains invalid characters",
-                  ),
+                  throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI"),
                 ),
-              standoffClass = Iri
-                .validateAndEscapeIri(standoffClassIri)
-                .getOrElse(
-                  throw BadRequestException(
-                    s"standoff class IRI $standoffClassIri is not a valid IRI",
-                  ),
-                ),
-              attributes = attributes,
-              standoffDataTypeClass = standoffDataTypeOption,
-              mappingElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri),
-              separatorRequired = separatorRequired,
+              mappingXMLAttributeElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri),
             )
 
           }
 
-        // transform mappingElements to the structure that is used internally to convert to or from standoff
-        // in order to check for duplicates (checks are done during transformation)
-        mappingXMLToStandoff: MappingXMLtoStandoff = transformMappingElementsToMappingXMLtoStandoff(
-                                                       mappingElements,
-                                                       None,
-                                                     )
+          // get the optional element datatype
+          val datatypeMaybe: NodeSeq =
+            curMappingEle \ "standoffClass" \ "datatype"
 
-        // get the standoff entities used in the mapping
-        // checks if the standoff classes exist in the ontology
-        // checks if the standoff properties exist in the ontology
-        // checks if the attributes defined for XML elements have cardinalities for the standoff properties defined on the standoff class
-        _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff)
+          // if "datatype" is given, get the the standoff class data type and the name of the XML data type attribute
+          val standoffDataTypeOption: Option[MappingStandoffDatatypeClass] =
+            if (datatypeMaybe.nonEmpty) {
+              val dataTypeXML = (datatypeMaybe \ "type").headOption
+                .getOrElse(
+                  throw BadRequestException(s"no '<type>' given for datatype"),
+                )
+                .text
 
-        // check if the mapping IRI already exists
-        getExistingMappingSparql = sparql.v2.txt.getMapping(mappingIri)
-        existingMappingResponse <- triplestore.query(Construct(getExistingMappingSparql))
+              val dataType: StandoffDataTypeClasses.Value =
+                StandoffDataTypeClasses.lookup(
+                  dataTypeXML,
+                  throw BadRequestException(s"Invalid data type provided for $tagName"),
+                )
+              val dataTypeAttribute: String =
+                (datatypeMaybe \ "attributeName").headOption
+                  .getOrElse(throw BadRequestException(s"no '<attributeName>' given for datatype"))
+                  .text
 
-        _ = if (existingMappingResponse.statements.nonEmpty) {
-              throw BadRequestException(s"mapping IRI $mappingIri already exists")
+              Some(
+                MappingStandoffDatatypeClass(
+                  datatype = dataType.toString, // safe because it is an enumeration
+                  attributeName = Iri
+                    .toSparqlEncodedString(dataTypeAttribute)
+                    .getOrElse(
+                      throw BadRequestException(s"tagname $dataTypeAttribute contains invalid characters"),
+                    ),
+                  mappingStandoffDataTypeClassElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri),
+                ),
+              )
+            } else {
+              None
             }
 
-        createNewMappingSparql = sparql.v2.txt.createNewMapping(
-                                   dataNamedGraph = namedGraph,
-                                   mappingIri = mappingIri,
-                                   label = label,
-                                   defaultXSLTransformation = defaultXSLTransformation,
-                                   mappingElements = mappingElements,
-                                 )
-        _ <- triplestore.query(Update(createNewMappingSparql))
+          MappingElement(
+            tagName = Iri
+              .toSparqlEncodedString(tagName)
+              .getOrElse(
+                throw BadRequestException(
+                  s"tagname $tagName contains invalid characters",
+                ),
+              ),
+            namespace = Iri
+              .toSparqlEncodedString(tagNamespace)
+              .getOrElse(
+                throw BadRequestException(
+                  s"namespace $tagNamespace contains invalid characters",
+                ),
+              ),
+            className = Iri
+              .toSparqlEncodedString(className)
+              .getOrElse(
+                throw BadRequestException(
+                  s"classname $className contains invalid characters",
+                ),
+              ),
+            standoffClass = Iri
+              .validateAndEscapeIri(standoffClassIri)
+              .getOrElse(
+                throw BadRequestException(
+                  s"standoff class IRI $standoffClassIri is not a valid IRI",
+                ),
+              ),
+            attributes = attributes,
+            standoffDataTypeClass = standoffDataTypeOption,
+            mappingElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri),
+            separatorRequired = separatorRequired,
+          )
 
-        // check if the mapping has been created
-        newMappingResponse <- triplestore.query(Construct(getExistingMappingSparql))
+        }
 
-        _ = if (newMappingResponse.statements.isEmpty) {
-              logger.error(
-                s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$newMappingResponse",
-              )
-              throw UpdateNotPerformedException(
-                s"Resource $mappingIri was not created. Please report this as a possible bug.",
-              )
-            }
+      // transform mappingElements to the structure that is used internally to convert to or from standoff
+      // in order to check for duplicates (checks are done during transformation)
+      mappingXMLToStandoff: MappingXMLtoStandoff = transformMappingElementsToMappingXMLtoStandoff(
+                                                     mappingElements,
+                                                     None,
+                                                   )
 
-        // get the mapping from the triplestore and cache it thereby
-        _ <- getMappingFromTriplestore(mappingIri)
-      } yield CreateMappingResponseV2(mappingIri, label, projectIri)
+      // get the standoff entities used in the mapping
+      // checks if the standoff classes exist in the ontology
+      // checks if the standoff properties exist in the ontology
+      // checks if the attributes defined for XML elements have cardinalities for the standoff properties defined on the standoff class
+      _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff)
 
-      createMappingFuture.mapError {
-        case validationException: SAXException =>
-          BadRequestException(s"the provided mapping is invalid: ${validationException.getMessage}")
+      // check if the mapping IRI already exists
+      getExistingMappingSparql = sparql.v2.txt.getMapping(mappingIri)
+      existingMappingResponse <- triplestore.query(Construct(getExistingMappingSparql))
 
-        case _: IOException => NotFoundException(s"The schema could not be found")
+      _ = if (existingMappingResponse.statements.nonEmpty) {
+            throw BadRequestException(s"mapping IRI $mappingIri already exists")
+          }
 
-        case unknown: Exception =>
-          BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
+      createNewMappingSparql = sparql.v2.txt.createNewMapping(
+                                 dataNamedGraph = namedGraph,
+                                 mappingIri = mappingIri,
+                                 label = request.label,
+                                 defaultXSLTransformation = defaultXSLTransformation,
+                                 mappingElements = mappingElements,
+                               )
+      _ <- triplestore.query(Update(createNewMappingSparql))
 
-      }
+      // check if the mapping has been created
+      newMappingResponse <- triplestore.query(Construct(getExistingMappingSparql))
+
+      _ = if (newMappingResponse.statements.isEmpty) {
+            logger.error(
+              s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$newMappingResponse",
+            )
+            throw UpdateNotPerformedException(
+              s"Resource $mappingIri was not created. Please report this as a possible bug.",
+            )
+          }
+
+      // get the mapping from the triplestore and cache it thereby
+      _ <- getMappingFromTriplestore(mappingIri)
+    } yield CreateMappingResponseV2(mappingIri, request.label, request.projectIri)).mapError {
+      case validationException: SAXException =>
+        BadRequestException(s"the provided mapping is invalid: ${validationException.getMessage}")
+
+      case _: IOException => NotFoundException(s"The schema could not be found")
+
+      case unknown: Exception =>
+        BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
     }
 
-    for {
-      // check if the given project IRI represents an actual project
-      project <- projectService
-                   .findById(projectIri)
-                   .someOrFail(BadRequestException(s"Project with Iri ${projectIri.toString} does not exist"))
-
-      // TODO: make sure that has sufficient permissions to create a mapping in the given project
-
-      // create the mapping IRI from the project IRI and the name provided by the user
-      mappingIri = stringFormatter.makeProjectMappingIri(projectIri.toString, mappingName)
-      // put the mapping into the named graph of the project
-      namedGraph = ProjectService.projectDataNamedGraphV2(project).value
-
-      result <-
-        IriLocker.runWithIriLock(
-          uuid,
-          s"${projectIri.toString}/mappings",
-          createMappingAndCheck(
-            xml = xml,
-            label = label,
-            mappingIri = mappingIri,
-            namedGraph = namedGraph,
-            requestingUser = requestingUser,
-          ),
-        )
-
-    } yield result
+    IriLocker.runWithIriLock(uuid, s"${request.projectIri.value}/mappings", createMappingAndCheck)
   }
 
   /**
