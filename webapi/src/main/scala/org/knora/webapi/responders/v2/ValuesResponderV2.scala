@@ -236,15 +236,6 @@ final case class ValuesResponderV2(
             ),
           )
 
-        // Check that the new value would not duplicate an existing value.
-        unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
-
-        _ <- ZIO.when(
-               currentValuesForProp.exists(currentVal =>
-                 unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent),
-               ),
-             )(ZIO.fail(DuplicateValueException()))
-
         // If this is a text value, check that the resources pointed to by any standoff link tags exist
         // and that the user has permission to see them.
         _ <- submittedInternalValueContent match {
@@ -712,7 +703,6 @@ final case class ValuesResponderV2(
            )
 
       // Convert the submitted value content to the internal schema.
-      project                       = resourceInfo.projectADM
       submittedInternalValueContent = updateValue.valueContent.toOntologySchema(InternalSchema)
 
       // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
@@ -724,25 +714,6 @@ final case class ValuesResponderV2(
            )
 
       _ <- ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(submittedInternalValueContent)
-
-      // Check that the updated value would not duplicate the current value version.
-      unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
-
-      _ <- ZIO.when(unescapedSubmittedInternalValueContent.wouldDuplicateCurrentVersion(currentValue.valueContent))(
-             ZIO.fail(DuplicateValueException("The submitted value is the same as the current version")),
-           )
-
-      // Check that the updated value would not duplicate another existing value of the resource.
-      currentValuesForProp: Seq[ReadValueV2] =
-        resourceInfo.values
-          .getOrElse(updateValue.propertyIri.toInternalSchema, Seq.empty[ReadValueV2])
-          .filter(_.valueIri != updateValue.valueIri)
-
-      _ <- ZIO.when(
-             currentValuesForProp.exists(currentVal =>
-               unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent),
-             ),
-           )(ZIO.fail(DuplicateValueException()))
 
       _ <- submittedInternalValueContent match {
              case textValueContent: TextValueContentV2 =>
@@ -1469,7 +1440,6 @@ final case class ValuesResponderV2(
    * @param submittedPropertyIri             the submitted property IRI, in the API v2 complex schema.
    * @param maybeSubmittedValueType          the submitted value type, if provided, in the API v2 complex schema.
    * @param propertyInfoForSubmittedProperty ontology information about the submitted property, in the internal schema.
-   * @param requestingUser                   the requesting user.
    * @return ontology information about the adjusted property.
    */
   private def getAdjustedInternalPropertyInfo(
