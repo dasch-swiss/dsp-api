@@ -38,7 +38,7 @@ sealed trait StandoffResponderRequestV2 extends KnoraRequestV2 with RelayedMessa
  * @param projectIri  the IRI of the project the mapping belongs to.
  * @param mappingName the name of the mapping to be created.
  */
-case class CreateMappingRequestMetadataV2(label: String, projectIri: ProjectIri, mappingName: String)
+case class CreateMappingRequestMetadataV2(label: String, projectIri: ProjectIri, mappingName: String, xml: String)
     extends StandoffResponderRequestV2
 
 /**

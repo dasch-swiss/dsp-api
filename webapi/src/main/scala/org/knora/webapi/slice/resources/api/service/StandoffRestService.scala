@@ -29,11 +29,11 @@ case class StandoffRestService(
   )(mappingForm: CreateStandoffMappingForm, opts: FormatOptions): ZIO[Any, Throwable, (RenderedResponse, MediaType)] =
     for {
       _ <- auth.ensureUserIsNotAnonymous(user)
-      metadata <- requestParser
-                    .createMappingRequestMetadataV2(mappingForm.json)
-                    .mapError(BadRequestException.apply)
+      createRequest <- requestParser
+                         .createMappingRequestMetadataV2(mappingForm)
+                         .mapError(BadRequestException.apply)
       uuid     <- Random.nextUUID
-      result   <- standoffResponder.createMappingV2(metadata, mappingForm.xml, user, uuid)
+      result   <- standoffResponder.createMappingV2(createRequest, user, uuid)
       response <- renderer.render(result, opts)
     } yield response
 }

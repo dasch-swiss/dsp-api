@@ -189,37 +189,22 @@ final case class StandoffResponderV2(
     } yield GetXSLTransformationResponseV2(xslt)
   }
 
-  def createMappingV2(
-    metadata: CreateMappingRequestMetadataV2,
-    xml: String,
-    requestingUser: User,
-    uuid: UUID,
-  ): Task[CreateMappingResponseV2] =
-    createMappingV2(
-      xml,
-      metadata.label,
-      metadata.projectIri,
-      metadata.mappingName,
-      requestingUser,
-      uuid,
-    )
-
   /**
    * Creates a mapping between XML elements and attributes to standoff classes and properties.
    * The mapping is used to convert XML documents to texts with standoff and back.
    *
-   * @param xml                  the provided mapping.
-   * @param requestingUser       the client that made the request.
+   * @param request               the mapping creation request.
+   * @param requestingUser        the client that made the request.
    */
   def createMappingV2(
-    xml: String,
-    label: String,
-    projectIri: ProjectIri,
-    mappingName: String,
+    request: CreateMappingRequestMetadataV2,
     requestingUser: User,
-    apiRequestID: UUID,
+    uuid: UUID,
   ): Task[CreateMappingResponseV2] = {
-
+    val xml: String            = request.xml
+    val label: String          = request.label
+    val projectIri: ProjectIri = request.projectIri
+    val mappingName: String    = request.mappingName
     def createMappingAndCheck(
       xml: String,
       label: String,
@@ -501,7 +486,7 @@ final case class StandoffResponderV2(
 
       result <-
         IriLocker.runWithIriLock(
-          apiRequestID,
+          uuid,
           s"${projectIri.toString}/mappings",
           createMappingAndCheck(
             xml = xml,

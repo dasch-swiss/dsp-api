@@ -57,6 +57,7 @@ import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
+import org.knora.webapi.slice.resources.api.CreateStandoffMappingForm
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceMock
@@ -136,18 +137,24 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     val expectedProjectIri  = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
     val expectedLabel       = "My Label"
     val expectedMappingName = "MyCustomMapping"
+    val someXml             = "<xml>...</xml>"
 
-    val jsonLd = Json.Obj(
-      (OntologyConstants.KnoraApiV2Complex.MappingHasName, Json.Str(expectedMappingName)),
-      (RDFS.label.toString, Json.Str(expectedLabel)),
-      (
-        OntologyConstants.KnoraApiV2Complex.AttachedToProject,
-        Json.Obj(("@id", Json.Str(expectedProjectIri.toString))),
-      ),
-    )
+    val jsonLd = Json
+      .Obj(
+        (OntologyConstants.KnoraApiV2Complex.MappingHasName, Json.Str(expectedMappingName)),
+        (RDFS.label.toString, Json.Str(expectedLabel)),
+        (
+          OntologyConstants.KnoraApiV2Complex.AttachedToProject,
+          Json.Obj(("@id", Json.Str(expectedProjectIri.toString))),
+        ),
+      )
+      .toJson
+    val form = CreateStandoffMappingForm(jsonLd, someXml)
     for {
-      req <- service(_.createMappingRequestMetadataV2(jsonLd.toString()))
-    } yield assertTrue(req == CreateMappingRequestMetadataV2(expectedLabel, expectedProjectIri, expectedMappingName))
+      req <- service(_.createMappingRequestMetadataV2(form))
+    } yield assertTrue(
+      req == CreateMappingRequestMetadataV2(expectedLabel, expectedProjectIri, expectedMappingName, someXml),
+    )
   })
 
   val spec = suite("KnoraApiValueModel")(

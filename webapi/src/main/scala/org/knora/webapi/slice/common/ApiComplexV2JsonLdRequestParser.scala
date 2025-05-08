@@ -47,6 +47,7 @@ import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.resources.api.CreateStandoffMappingForm
 import org.knora.webapi.store.iiif.api.SipiService
 
 final case class ApiComplexV2JsonLdRequestParser(
@@ -472,7 +473,7 @@ final case class ApiComplexV2JsonLdRequestParser(
           case unsupported                 => ZIO.fail(s"Unsupported value type: $unsupported")
     } yield content
 
-  def createMappingRequestMetadataV2(jsonlLd: String): IO[String, CreateMappingRequestMetadataV2] =
+  def createMappingRequestMetadataV2(form: CreateStandoffMappingForm): IO[String, CreateMappingRequestMetadataV2] =
     def findSingle[A](m: Model, p: Property, mapper: Resource => Property => Either[String, A]): IO[String, A] = {
       m.listSubjectsWithProperty(p).asScala.toList match {
         case Nil      => ZIO.fail(s"No $p found")
@@ -482,11 +483,11 @@ final case class ApiComplexV2JsonLdRequestParser(
     }.map(r => mapper.apply(r)(p)).flatMap(ZIO.fromEither)
     ZIO.scoped {
       for {
-        m           <- ModelOps.fromJsonLd(jsonlLd).logError
+        m           <- ModelOps.fromJsonLd(form.json).logError
         label       <- findSingle(m, RDFS.label, _.objectString)
         projectIri  <- findSingle(m, KA.AttachedToProject, r => r.objectUri(_, ProjectIri.from))
         mappingName <- findSingle(m, KA.MappingHasName, _.objectString)
-      } yield CreateMappingRequestMetadataV2(label, projectIri, mappingName)
+      } yield CreateMappingRequestMetadataV2(label, projectIri, mappingName, form.xml)
     }
 }
 

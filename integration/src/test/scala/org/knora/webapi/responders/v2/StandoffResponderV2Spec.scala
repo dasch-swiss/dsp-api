@@ -12,6 +12,7 @@ import java.util.UUID
 import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestMetadataV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
@@ -82,10 +83,12 @@ class StandoffResponderV2Spec extends CoreSpec {
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[StandoffResponderV2](
           _.createMappingV2(
-            xmlContent,
-            "custom mapping",
-            projectIri,
-            mappingName,
+            CreateMappingRequestMetadataV2(
+              "custom mapping",
+              projectIri,
+              mappingName,
+              xmlContent,
+            ),
             SharedTestDataADM.rootUser,
             UUID.randomUUID(),
           ),
