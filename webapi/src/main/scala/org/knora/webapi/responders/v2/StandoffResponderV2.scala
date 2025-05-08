@@ -48,6 +48,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.CreateMappingRequestV2
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.EhCache
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
@@ -197,7 +198,7 @@ final case class StandoffResponderV2(
    * @param requestingUser        the client that made the request.
    */
   def createMappingV2(
-    request: CreateMappingRequestMetadataV2,
+    request: CreateMappingRequestV2,
     requestingUser: User,
     uuid: UUID,
   ): Task[CreateMappingResponseV2] = {

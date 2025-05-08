@@ -21,7 +21,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
-import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestMetadataV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ArchiveFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.BooleanValueContentV2
@@ -153,7 +152,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     for {
       req <- service(_.createMappingRequestMetadataV2(form))
     } yield assertTrue(
-      req == CreateMappingRequestMetadataV2(expectedLabel, expectedProjectIri, expectedMappingName, someXml),
+      req == CreateMappingRequestV2(expectedLabel, expectedProjectIri, expectedMappingName, someXml),
     )
   })
 
