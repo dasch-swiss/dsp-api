@@ -64,22 +64,6 @@ object RdfFormat {
 
   def from(mediaType: model.MediaType): Option[RdfFormat] = values
     .find(_.mediaType.equalsIgnoreParameters(mediaType))
-
-  /**
-   * Converts a [[MediaType]] to an [[RdfFormat]].
-   *
-   * @param mediaType a [[MediaType]].
-   * @return the corresponding [[RdfFormat]].
-   */
-  def fromMediaType(mediaType: MediaType): RdfFormat =
-    mediaType match {
-      case RdfMediaTypes.`application/ld+json` => JsonLD
-      case RdfMediaTypes.`text/turtle`         => Turtle
-      case RdfMediaTypes.`application/trig`    => TriG
-      case RdfMediaTypes.`application/rdf+xml` => RdfXml
-      case RdfMediaTypes.`application/n-quads` => NQuads
-      case other                               => throw InvalidRdfException(s"Unsupported RDF media type: $other")
-    }
 }
 
 /**
