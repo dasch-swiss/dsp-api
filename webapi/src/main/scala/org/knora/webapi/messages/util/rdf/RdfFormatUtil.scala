@@ -22,7 +22,6 @@ import java.nio.file.StandardOpenOption
 import scala.util.Try
 
 import dsp.errors.BadRequestException
-import dsp.errors.InvalidRdfException
 import org.knora.webapi.IRI
 import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.Rendering
