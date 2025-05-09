@@ -49,6 +49,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
+import org.knora.webapi.slice.resources.api.ResourcesApiRoutes
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
@@ -78,12 +79,12 @@ object LayersLive {
     ApiV2Endpoints &
     AppConfig.AppConfigurations &
     AssetPermissionsResponder &
-    AuthorizationRestService &
     AuthenticationApiModule.Provided &
+    AuthorizationRestService &
     BaseModule.Provided &
     CardinalityHandler &
-    CoreModule.Provided &
     ConstructResponseUtilV2 &
+    CoreModule.Provided &
     DefaultObjectAccessPermissionService &
     GroupRestService &
     HttpServer &
@@ -94,8 +95,8 @@ object LayersLive {
     ListsResponder &
     ListsService &
     MessageRelay &
-    OntologyInferencer &
     OntologyApiModule.Provided &
+    OntologyInferencer &
     OntologyResponderV2 &
     PermissionRestService &
     PermissionUtilADM &
@@ -106,10 +107,11 @@ object LayersLive {
     ProjectRestService &
     RepositoryUpdater &
     ResourceUtilV2 &
+    ResourcesApiRoutes &
     ResourcesResponderV2 &
-    SecurityModule.Provided &
     SearchApiRoutes &
     SearchResponderV2Module.Provided &
+    SecurityModule.Provided &
     ShaclApiModule.Provided &
     ShaclModule.Provided &
     SipiService &
@@ -155,9 +157,9 @@ object LayersLive {
       OntologyApiModule.layer,
       OntologyResponderV2.layer,
       OpenTelemetryTracerLive.layer,
+      PekkoActorSystem.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
-      PekkoActorSystem.layer,
       PredicateObjectMapper.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
@@ -168,10 +170,10 @@ object LayersLive {
       ResourcesApiModule.layer,
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
-      SecurityModule.layer,
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,
+      SecurityModule.layer,
       ShaclApiModule.layer,
       ShaclModule.layer,
       SipiServiceLive.layer,

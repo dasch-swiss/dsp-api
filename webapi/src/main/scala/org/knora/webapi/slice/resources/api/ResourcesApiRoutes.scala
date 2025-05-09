@@ -12,10 +12,11 @@ import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 class ResourcesApiRoutes(
   valuesEndpoints: ValuesEndpointsHandler,
   resourcesEndpoints: ResourcesEndpointsHandler,
+  standoffEndpoints: StandoffEndpointsHandler,
   tapirToPekko: TapirToPekkoInterpreter,
 ) {
 
-  private val handlers = valuesEndpoints.allHandlers ++ resourcesEndpoints.allHandlers
+  private val handlers = valuesEndpoints.allHandlers ++ resourcesEndpoints.allHandlers ++ standoffEndpoints.allHandlers
 
   val routes: Seq[Route] = handlers.map(tapirToPekko.toRoute(_))
 }

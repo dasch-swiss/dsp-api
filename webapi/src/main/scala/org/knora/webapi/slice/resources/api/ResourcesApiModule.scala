@@ -11,22 +11,26 @@ import zio.ZLayer
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
+import org.knora.webapi.responders.v2.StandoffResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
+import org.knora.webapi.slice.resources.api.service.StandoffRestService
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
 
 object ResourcesApiModule
     extends URModule[
-      ApiComplexV2JsonLdRequestParser & BaseEndpoints & GraphRoute & HandlerMapper & IriConverter &
-        KnoraResponseRenderer & ResourcesResponderV2 & SearchResponderV2 & TapirToPekkoInterpreter & ValuesResponderV2,
-      ResourcesApiRoutes & ValuesEndpoints & ResourcesEndpoints,
+      AuthorizationRestService & ApiComplexV2JsonLdRequestParser & BaseEndpoints & GraphRoute & HandlerMapper &
+        IriConverter & KnoraResponseRenderer & ResourcesResponderV2 & SearchResponderV2 & StandoffResponderV2 &
+        TapirToPekkoInterpreter & ValuesResponderV2,
+      ResourcesApiRoutes & ResourcesEndpoints & StandoffEndpoints & ValuesEndpoints,
     ] { self =>
 
   override def layer: URLayer[self.Dependencies, self.Provided] =
@@ -38,5 +42,8 @@ object ResourcesApiModule
       ResourcesEndpointsHandler.layer,
       ResourcesRestService.layer,
       ResourcesApiRoutes.layer,
+      StandoffEndpoints.layer,
+      StandoffEndpointsHandler.layer,
+      StandoffRestService.layer,
     )
 }
