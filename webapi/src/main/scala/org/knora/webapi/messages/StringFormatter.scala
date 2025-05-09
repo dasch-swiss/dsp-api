@@ -141,9 +141,8 @@ object StringFormatter {
    */
 
   /**
-   * The instance of [[StringFormatter]] that is initialised after the ActorSystem starts,
-   * and can parse project-specific API v2 ontology IRIs. This instance is used almost
-   * everywhere in the API server.
+   * The instance of [[StringFormatter]] that can parse project-specific API v2 ontology IRIs.
+   * This instance is used almost everywhere in the API server.
    */
   private var generalInstance: Option[StringFormatter] = None
 
@@ -294,9 +293,8 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
   /*
 
     The smart IRI implementation, SmartIriImpl, is nested in the StringFormatter
-    class because it uses the Knora API server's hostname, which isn't available
-    until the Akka ActorSystem has started. However, this means that the type of a
-    SmartIriImpl instance is dependent on the instance of StringFormatter that
+    class because it uses the Knora API server's hostname. This means that the type of
+    the SmartIriImpl instance is dependent on the instance of StringFormatter that
     constructed it. Therefore, you can't compare two instances of SmartIriImpl
     created by two different instances of StringFormatter.
 
