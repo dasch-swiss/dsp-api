@@ -130,14 +130,11 @@ object StringFormatter {
   val IriDomain: String = "rdfh.ch"
 
   /*
-
     In order to parse project-specific API v2 ontology IRIs, the StringFormatter
     class needs the Knora API server's hostname, which is set in application.conf,
-    which is not read until the Akka ActorSystem starts. Therefore, IRI parsing is
-    done in the StringFormatter class, rather than in the StringFormatter object.
+    Therefore, IRI parsing is done in the StringFormatter class, rather than in the StringFormatter object.
 
     There are two instances of StringFormatter, defined below.
-
    */
 
   /**
