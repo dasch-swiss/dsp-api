@@ -180,8 +180,6 @@ final case class CreateResourceV2Handler(
         ZIO
           .fail(DuplicateValueException(s"Resource IRI: '$resourceIri' already exists."))
           .whenZIO(iriService.checkIriExists(resourceIri))
-      project = createResourceRequestV2.createResource.projectADM
-
       // Convert the resource to the internal ontology schema.
       internalCreateResource <- ZIO.attempt(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
 
@@ -379,9 +377,6 @@ final case class CreateResourceV2Handler(
             )
         }
 
-      // Check that the submitted values do not contain duplicates.
-      _ <- checkForDuplicateValues(internalCreateResource.values, resourceIDForErrorMsg)
-
       // Validate and reformat any custom permissions in the request, and set all permissions to defaults if custom
       // permissions are not provided.
 
@@ -516,14 +511,7 @@ final case class CreateResourceV2Handler(
                   ZIO.succeed(OtherFileValueInfo(fileValue))
                 case MovingImageFileValueContentV2(_, fileValue, _) =>
                   ZIO.succeed(OtherFileValueInfo(fileValue))
-                case LinkValueContentV2(
-                      _,
-                      referredResourceIri,
-                      referredResourceExists,
-                      isIncomingLink,
-                      nestedResource,
-                      _,
-                    ) =>
+                case LinkValueContentV2(_, referredResourceIri, _, _, _, _) =>
                   ZIO.succeed(LinkValueInfo(InternalIri(referredResourceIri)))
                 case _: DeletedValueContentV2 => ZIO.fail(BadRequestException("Deleted values cannot be created"))
 
@@ -532,7 +520,7 @@ final case class CreateResourceV2Handler(
             propertyIri = InternalIri(propertyIri.toIri),
             value = valueInfo,
             valueIri = InternalIri(newValueIri),
-            valueTypeIri = InternalIri(valueToCreate.valueContent.valueType.toString()),
+            valueTypeIri = InternalIri(valueToCreate.valueContent.valueType.toString),
             valueUUID = newValueUUID,
             creator = InternalIri(requestingUser.id),
             permissions = valueToCreate.permissions,
@@ -569,10 +557,10 @@ final case class CreateResourceV2Handler(
             case StandoffTagDecimalAttributeV2(_, value) => StandoffAttributeValue.DecimalAttribute(value)
             case StandoffTagBooleanAttributeV2(_, value) => StandoffAttributeValue.BooleanAttribute(value)
             case StandoffTagTimeAttributeV2(_, value)    => StandoffAttributeValue.TimeAttribute(value)
-          StandoffAttribute(InternalIri(attr.standoffPropertyIri.toString()), v)
+          StandoffAttribute(InternalIri(attr.standoffPropertyIri.toString), v)
         }
         StandoffTagInfo(
-          standoffTagClassIri = InternalIri(standoffTag.standoffNode.standoffTagClassIri.toString()),
+          standoffTagClassIri = InternalIri(standoffTag.standoffNode.standoffTagClassIri.toString),
           standoffTagInstanceIri = InternalIri(standoffTag.standoffTagInstanceIri),
           startParentIri = standoffTag.startParentIri.map(InternalIri.apply),
           endParentIri = standoffTag.endParentIri.map(InternalIri.apply),
@@ -668,33 +656,6 @@ final case class CreateResourceV2Handler(
           .toMap
     } yield classesOfNewTargets ++ classesOfExistingTargets
   }
-
-  /**
-   * Checks that values to be created in a new resource do not contain duplicates.
-   *
-   * @param values                a map of property IRIs to values to be created (in the internal schema).
-   * @param resourceIDForErrorMsg something that can be prepended to an error message to specify the client's ID for the
-   *                              resource to be created, if any.
-   */
-  private def checkForDuplicateValues(
-    values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
-    resourceIDForErrorMsg: IRI,
-  ): Task[Unit] =
-    ZIO.foreachDiscard(values) { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
-      // Given the values for a property, compute all possible combinations of two of those values.
-      ZIO.foreachDiscard(valuesToCreate.combinations(2).toSeq) { valueCombination =>
-        // valueCombination must have two elements.
-
-        val firstValue: ValueContentV2  = valueCombination.head.valueContent
-        val secondValue: ValueContentV2 = valueCombination(1).valueContent
-
-        ZIO.when(firstValue.wouldDuplicateOtherValue(secondValue)) {
-          val msg =
-            s"${resourceIDForErrorMsg}Duplicate values for property <${propertyIri.toOntologySchema(ApiV2Complex)}>"
-          ZIO.fail(DuplicateValueException(msg))
-        }
-      }
-    }
 
   /**
    * Given a sequence of values to be created in a new resource, checks the targets of standoff links in text

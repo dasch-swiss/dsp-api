@@ -513,7 +513,6 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
         case (inputValue: CreateValueInNewResourceV2, outputValue: ReadValueV2) =>
           val expectedPermissions = inputValue.permissions.getOrElse(defaultValuePermissions)
           assert(outputValue.permissions == expectedPermissions)
-          assert(inputValue.valueContent.wouldDuplicateCurrentVersion(outputValue.valueContent))
       }
     }
   }
@@ -1329,51 +1328,6 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
         ),
       )
       assertFailsWithA[OntologyConstraintException](exit)
-    }
-
-    "not create a resource with duplicate values" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 1"),
-              textValueType = TextValueType.UnformattedText,
-            ),
-          ),
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 2"),
-              textValueType = TextValueType.UnformattedText,
-            ),
-          ),
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 1"),
-              textValueType = TextValueType.UnformattedText,
-            ),
-          ),
-        ),
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        label = "invalid book",
-        values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject,
-      )
-
-      val exit = UnsafeZioRun.run(
-        resourcesResponderV2(
-          _.createResource(CreateResourceRequestV2(inputResource, incunabulaUserProfile, UUID.randomUUID)),
-        ),
-      )
-      assertFailsWithA[DuplicateValueException](exit)
     }
 
     "not create a resource if the user doesn't have permission to create resources in the project" in {
