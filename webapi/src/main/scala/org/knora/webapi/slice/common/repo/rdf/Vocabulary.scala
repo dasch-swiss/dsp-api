@@ -77,13 +77,21 @@ object Vocabulary {
 
     val Resource: Iri = iri(kb + "Resource")
 
-    val linkValue: Iri = iri(kb + "LinkValue")
+    val Value              = iri(kb + "Value")
+    val linkValue: Iri     = iri(kb + "LinkValue")
+    val previousValue: Iri = iri(kb + "previousValue")
 
-    val isDeleted: Iri         = iri(kb + "isDeleted")
-    val attachedToUser: Iri    = iri(kb + "attachedToUser")
-    val attachedToProject: Iri = iri(kb + "attachedToProject")
-    val hasPermissions: Iri    = iri(kb + "hasPermissions")
-    val creationDate: Iri      = iri(kb + "creationDate")
+    val isDeleted: Iri              = iri(kb + "isDeleted")
+    val attachedToUser: Iri         = iri(kb + "attachedToUser")
+    val attachedToProject: Iri      = iri(kb + "attachedToProject")
+    val hasPermissions: Iri         = iri(kb + "hasPermissions")
+    val creationDate: Iri           = iri(kb + "creationDate")
+    val lastModificationDate: Iri   = iri(kb + "lastModificationDate")
+    val hasStandoffLinkTo: Iri      = iri(kb + "hasStandoffLinkTo")
+    val hasStandoffLinkToValue: Iri = iri(kb + "hasStandoffLinkToValue")
+    val deleteDate: Iri             = iri(kb + "deleteDate")
+    val deletedBy: Iri              = iri(kb + "deletedBy")
+    val deleteComment: Iri          = iri(kb + "deleteComment")
 
     val valueHasString: Iri    = iri(kb + "valueHasString")
     val valueHasUUID: Iri      = iri(kb + "valueHasUUID")

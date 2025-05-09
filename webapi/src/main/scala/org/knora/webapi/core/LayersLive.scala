@@ -49,6 +49,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
+import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
@@ -107,6 +108,7 @@ object LayersLive {
     RepositoryUpdater &
     ResourceUtilV2 &
     ResourcesResponderV2 &
+    ResourcesRepo &
     SecurityModule.Provided &
     SearchApiRoutes &
     SearchResponderV2Module.Provided &

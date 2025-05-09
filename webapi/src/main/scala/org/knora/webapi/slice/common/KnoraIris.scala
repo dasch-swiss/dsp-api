@@ -23,11 +23,21 @@ object KnoraIris {
 
   trait KnoraIri { self =>
     def smartIri: SmartIri
-    override def toString: String                           = self.smartIri.toString
     final def toInternalIri: InternalIri                    = self.smartIri.toInternalIri
     final def toComplexSchema: SmartIri                     = self.smartIri.toComplexSchema
     final def toInternalSchema: SmartIri                    = self.smartIri.toInternalSchema
     final def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
+
+    override def toString: String = self.smartIri.toString
+
+    override def equals(other: Any): Boolean =
+      other match {
+        case that: KnoraIri => self.toInternalSchema.toString == that.toInternalSchema.toString
+        case that: SmartIri => self.toInternalSchema.toString == that.toInternalSchema.toString
+        case _              => false
+      }
+
+    override def hashCode(): Int = toInternalSchema.hashCode
   }
 
   // PropertyIri and ResourceClassIri currently have the same constraint
@@ -42,6 +52,9 @@ object KnoraIris {
     def ontologyIri: OntologyIri                 = OntologyIri.unsafeFrom(smartIri.getOntologyFromEntity)
     def fromLinkValuePropToLinkProp: PropertyIri = PropertyIri.unsafeFrom(smartIri.fromLinkValuePropToLinkProp)
     def fromLinkPropToLinkValueProp: PropertyIri = PropertyIri.unsafeFrom(smartIri.fromLinkPropToLinkValueProp)
+
+    override def equals(other: Any): Boolean = super.equals(other)
+    override def hashCode(): Int             = super.hashCode()
   }
 
   object PropertyIri {
@@ -63,10 +76,16 @@ object KnoraIris {
   ) extends KnoraIri {
     def sameResourceAs(other: ValueIri): Boolean =
       this.shortcode == other.shortcode && this.resourceId == other.resourceId
+
+    override def equals(other: Any): Boolean = super.equals(other)
+    override def hashCode(): Int             = super.hashCode()
   }
 
   final case class ResourceClassIri private (smartIri: SmartIri) extends KnoraIri {
     def ontologyIri: OntologyIri = OntologyIri.unsafeFrom(smartIri.getOntologyFromEntity)
+
+    override def equals(other: Any): Boolean = super.equals(other)
+    override def hashCode(): Int             = super.hashCode()
   }
 
   object ResourceClassIri {
@@ -98,7 +117,10 @@ object KnoraIris {
   }
 
   final case class ResourceIri private (smartIri: SmartIri, shortcode: Shortcode, resourceId: ResourceId)
-      extends KnoraIri
+      extends KnoraIri {
+    override def equals(other: Any): Boolean = super.equals(other)
+    override def hashCode(): Int             = super.hashCode()
+  }
   object ResourceIri {
 
     def unsafeFrom(iri: SmartIri): ResourceIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
@@ -124,6 +146,9 @@ object KnoraIris {
     def isExternal: Boolean        = !isInternal
     def isBuiltIn: Boolean         = ontologyName.isBuiltIn
     def isShared: Boolean          = toInternalSchema.toIri.split("/")(4) == "shared"
+
+    override def equals(other: Any): Boolean = super.equals(other)
+    override def hashCode(): Int             = super.hashCode()
   }
   object OntologyIri {
     def makeNew(

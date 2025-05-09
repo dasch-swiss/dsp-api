@@ -32,6 +32,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optic
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -314,6 +315,14 @@ case class ReadResourceV2(
   deletionInfo: Option[DeletionInfo],
 ) extends ResourceV2
     with KnoraReadV2[ReadResourceV2] {
+
+  def findValues(propertyIri: PropertyIri): Seq[ReadValueV2] =
+    values.map { case (iri, vs) => iri.toInternalSchema -> vs }
+      .getOrElse(propertyIri.toInternalSchema, Seq.empty)
+
+  def findLinkValues(propertyIri: PropertyIri): Seq[ReadLinkValueV2] =
+    findValues(propertyIri).collect { case value: ReadLinkValueV2 => value }
+
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourceV2 =
     copy(
       resourceClassIri = resourceClassIri.toOntologySchema(targetSchema),
@@ -683,6 +692,7 @@ case class UpdateResourceMetadataResponseV2(
 
 /**
  * Represents a request to mark a resource as deleted or to erase it from the triplestore.
+ * This request deletes or erases depending on which http route it was sent through.
  *
  * @param resourceIri               the IRI of the resource.
  * @param resourceClassIri          the IRI of the resource class.
@@ -690,7 +700,6 @@ case class UpdateResourceMetadataResponseV2(
  * @param maybeDeleteDate           a timestamp indicating when the resource was marked as deleted. If not supplied,
  *                                  the current time will be used.
  * @param maybeLastModificationDate the resource's last modification date, if any.
- * @param erase                     if `true`, the resource will be erased from the triplestore, otherwise it will be marked as deleted.
  */
 case class DeleteOrEraseResourceRequestV2(
   resourceIri: IRI,
