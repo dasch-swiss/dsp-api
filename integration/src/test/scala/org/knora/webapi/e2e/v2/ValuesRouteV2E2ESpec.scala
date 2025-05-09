@@ -1624,9 +1624,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       // create standoff from XML
-      val mappingRequest = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      val mappingRequest = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~>
+        addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val mappingResponse: HttpResponse = singleAwaitingRequest(mappingRequest)
       assert(mappingResponse.status == StatusCodes.OK, mappingResponse.toString)
 

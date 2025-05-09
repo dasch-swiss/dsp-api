@@ -20,7 +20,6 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.*
-import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -30,8 +29,8 @@ import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.routing.v2.StandoffRouteV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.resources.api.ResourcesApiRoutes
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
@@ -54,7 +53,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     .reduce(_ ~ _)
 
   private val standoffPath =
-    DSPApiDirectives.handleErrors(appConfig)(StandoffRouteV2().makeRoute)
+    UnsafeZioRun
+      .runOrThrow(ZIO.serviceWith[ResourcesApiRoutes](_.routes))
+      .reduce(_ ~ _)
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 

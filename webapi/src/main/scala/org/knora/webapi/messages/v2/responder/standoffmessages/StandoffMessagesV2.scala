@@ -32,39 +32,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 sealed trait StandoffResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
 
 /**
- * Represents a request to create a mapping between XML elements and attributes and standoff classes and properties.
- * A successful response will be a [[CreateMappingResponseV2]].
- *
- * @param metadata             the metadata describing the mapping.
- * @param xml                  the mapping in XML syntax.
- * @param requestingUser       the the user making the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class CreateMappingRequestV2(
-  metadata: CreateMappingRequestMetadataV2,
-  xml: CreateMappingRequestXMLV2,
-  requestingUser: User,
-  apiRequestID: UUID,
-) extends StandoffResponderRequestV2
-
-/**
- * Represents the metadata describing the mapping that is to be created.
- *
- * @param label       the label describing the mapping.
- * @param projectIri  the IRI of the project the mapping belongs to.
- * @param mappingName the name of the mapping to be created.
- */
-case class CreateMappingRequestMetadataV2(label: String, projectIri: ProjectIri, mappingName: String)
-    extends StandoffResponderRequestV2
-
-/**
- * Represents the mapping as an XML document.
- *
- * @param xml the mapping to be created.
- */
-case class CreateMappingRequestXMLV2(xml: String) extends StandoffResponderRequestV2
-
-/**
  * Provides the IRI of the created mapping.
  *
  * @param mappingIri the IRI of the resource (knora-base:XMLToStandoffMapping) representing the mapping that has been created.
@@ -127,7 +94,7 @@ case class GetMappingResponseV2(
   mappingIri: IRI,
   mapping: MappingXMLtoStandoff,
   standoffEntities: StandoffEntityInfoGetResponseV2,
-) // TODO: there should be a route to obtain a mapping
+)
 
 /**
  * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
