@@ -32,7 +32,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.AddCardinalitiesT
 import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeGuiOrderRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeOntologyMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyGuiElementRequest
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
@@ -60,6 +59,26 @@ import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+
+/**
+ * Requests a change in the metadata of an ontology.
+ *
+ * @param ontologyIri          the external ontology IRI.
+ * @param label                the ontology's new label.
+ * @param comment              the ontology's new comment.
+ * @param lastModificationDate the ontology's last modification date, returned in a previous operation.
+ * @param apiRequestID         the ID of the API request.
+ * @param requestingUser       the user making the request.
+ */
+case class ChangeOntologyMetadataRequestV2(
+  ontologyIri: OntologyIri,
+  label: Option[String] = None,
+  comment: Option[String] = None,
+  lastModificationDate: Instant,
+  apiRequestID: UUID,
+  requestingUser: User,
+)
+
 final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private final case class OntologyMetadata(

@@ -5,27 +5,25 @@
 
 package org.knora.webapi.core
 
-import org.apache.pekko.actor
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.actor.Terminated
 import zio.*
 
 import scala.concurrent.ExecutionContext
 
 object PekkoActorSystem {
 
-  private def acquire(executionContext: ExecutionContext): URIO[Any, actor.ActorSystem] =
-    ZIO
-      .attempt(actor.ActorSystem("webapi", None, None, Some(executionContext)))
-      .zipLeft(ZIO.logInfo(">>> Acquire Actor System <<<"))
-      .orDie
+  private def acquire(executionContext: ExecutionContext): UIO[ActorSystem] =
+    ZIO.attempt(ActorSystem("webapi", None, None, Some(executionContext))).orDie <*
+      ZIO.logInfo(">>> Acquire Actor System <<<")
 
-  private def release(system: actor.ActorSystem): URIO[Any, actor.Terminated] =
-    ZIO.fromFuture(_ => system.terminate()).zipLeft(ZIO.logInfo(">>> Release Actor System <<<")).orDie
+  private def release(system: ActorSystem): UIO[Terminated] =
+    ZIO.fromFuture(_ => system.terminate()).orDie <* ZIO.logInfo(">>> Release Actor System <<<")
 
-  val layer: ZLayer[Any, Nothing, actor.ActorSystem] =
-    ZLayer.scoped(
-      for {
-        context <- ZIO.executor.map(_.asExecutionContext)
-        system  <- ZIO.acquireRelease(acquire(context))(release)
-      } yield system,
-    )
+  val layer: ULayer[ActorSystem] = ZLayer.scoped(
+    for {
+      context <- ZIO.executor.map(_.asExecutionContext)
+      system  <- ZIO.acquireRelease(acquire(context))(release)
+    } yield system,
+  )
 }

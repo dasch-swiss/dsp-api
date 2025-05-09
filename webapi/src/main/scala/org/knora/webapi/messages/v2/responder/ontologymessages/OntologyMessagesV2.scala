@@ -289,25 +289,6 @@ case class ChangeGuiOrderRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Requests a change in the metadata of an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
- *
- * @param ontologyIri          the external ontology IRI.
- * @param label                the ontology's new label.
- * @param comment              the ontology's new comment.
- * @param lastModificationDate the ontology's last modification date, returned in a previous operation.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class ChangeOntologyMetadataRequestV2(
-  ontologyIri: OntologyIri,
-  label: Option[String] = None,
-  comment: Option[String] = None,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
  * Deletes the comment from an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
  *
  * @param ontologyIri          the external ontology IRI.
