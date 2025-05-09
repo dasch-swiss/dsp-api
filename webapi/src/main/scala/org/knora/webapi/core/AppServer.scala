@@ -24,8 +24,6 @@ final case class AppServer(
   ts: TriplestoreService,
   ru: RepositoryUpdater,
   ontologyCache: OntologyCache,
-  sipiService: SipiService,
-  hs: HttpServer,
   appConfig: AppConfig,
 ) {
 
@@ -40,7 +38,7 @@ final case class AppServer(
     } yield ()
 
   /**
-   * Initiates repository upgrade if `requiresRepository` is `true` an logs the result.
+   * Initiates repository upgrade if `requiresRepository` is `true` and logs the result.
    *
    * @param requiresRepository If `true`, calls the RepositoryUpdater to initiate the repository, otherwise returns ()
    */
@@ -83,7 +81,6 @@ final case class AppServer(
       _ <- upgradeRepository(requiresAdditionalRepositoryChecks)
       _ <- populateOntologyCaches(requiresAdditionalRepositoryChecks)
       _ <- ZIO.logInfo("=> Startup checks finished")
-      _ <- ZIO.logInfo(s"DSP-API Server started: ${appConfig.knoraApi.internalKnoraApiBaseUrl}")
       _ <- ZIO.logWarning("Resetting DB over HTTP is turned ON").when(appConfig.allowReloadOverHttp)
       _ <- state.set(AppState.Running)
     } yield ()
@@ -91,8 +88,7 @@ final case class AppServer(
 
 object AppServer {
 
-  type AppServerEnvironment = AppConfig & HttpServer & OntologyCache & RepositoryUpdater & SipiService & State &
-    TriplestoreService
+  type AppServerEnvironment = AppConfig & OntologyCache & RepositoryUpdater & SipiService & State & TriplestoreService
 
   /**
    * Initializes the AppServer instance with the required services
@@ -103,10 +99,8 @@ object AppServer {
       ts       <- ZIO.service[TriplestoreService]
       ru       <- ZIO.service[RepositoryUpdater]
       oc       <- ZIO.service[OntologyCache]
-      iiifs    <- ZIO.service[SipiService]
-      hs       <- ZIO.service[HttpServer]
       c        <- ZIO.service[AppConfig]
-      appServer = AppServer(state, ts, ru, oc, iiifs, hs, c)
+      appServer = AppServer(state, ts, ru, oc, c)
     } yield appServer
 
   /**
@@ -122,7 +116,7 @@ object AppServer {
    * The test AppServer with or without Sipi, which initiates the startup checks. Before this effect does what it does,
    * the complete server should have already been started.
    */
-  val test: ZIO[AppServerEnvironment, Nothing, Unit] =
+  val test: URIO[AppServerEnvironment, Unit] =
     for {
       appServer <- AppServer.init()
       _         <- appServer.start(requiresAdditionalRepositoryChecks = false).orDie
