@@ -645,26 +645,6 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] with WithAsIs
    * @return the same [[ValueContentV2]] with its strings unescaped.
    */
   def unescape: ValueContentV2
-
-  /**
-   * Returns `true` if creating this [[ValueContentV2]] as a new value would duplicate the specified other value.
-   * This means that if resource `R` has property `P` with value `V1`, and `V1` would duplicate `V2`, the API server
-   * should not add another instance of property `P` with value `V2`. It does not necessarily mean that `V1 == V2`.
-   *
-   * @param that a [[ValueContentV2]] in the same resource, as read from the triplestore.
-   * @return `true` if `other` would duplicate `this`.
-   */
-  def wouldDuplicateOtherValue(that: ValueContentV2): Boolean
-
-  /**
-   * Returns `true` if this [[ValueContentV2]] would be redundant as a new version of an existing value. This means
-   * that if resource `R` has property `P` with value `V1`, and `V2` would duplicate `V1`, we should not add `V2`
-   * as a new version of `V1`. It does not necessarily mean that `V1 == V2`.
-   *
-   * @param currentVersion the current version of the value, as read from the triplestore.
-   * @return `true` if this [[ValueContentV2]] would duplicate `currentVersion`.
-   */
-  def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean
 }
 
 /**
@@ -798,31 +778,6 @@ case class DateValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatDateValue: DateValueContentV2 =>
-        valueHasStartJDN == thatDateValue.valueHasStartJDN &&
-        valueHasEndJDN == thatDateValue.valueHasEndJDN &&
-        valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
-        valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
-        valueHasCalendar == thatDateValue.valueHasCalendar
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatDateValue: DateValueContentV2 =>
-        valueHasStartJDN == thatDateValue.valueHasStartJDN &&
-        valueHasEndJDN == thatDateValue.valueHasEndJDN &&
-        valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
-        valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
-        valueHasCalendar == thatDateValue.valueHasCalendar &&
-        comment == thatDateValue.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -1158,34 +1113,6 @@ case class TextValueContentV2(
       comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)),
     )
   }
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    // It doesn't make sense for a resource to have two different text values associated with the same property,
-    // containing the same text but different markup.
-    that match {
-      case other: TextValueContentV2 =>
-        self.valueHasString == other.valueHasString &&
-        self.valueHasLanguage == other.valueHasLanguage
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    // It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup
-    // or the comment.
-    currentVersion match {
-      case other: TextValueContentV2 =>
-        // compare standoff nodes (sort them first by index) and the XML-to-standoff mapping IRI
-        val standoffIdentical = StandoffTagUtilV2.makeComparableStandoffCollection(standoff) == StandoffTagUtilV2
-          .makeComparableStandoffCollection(other.standoff)
-
-        wouldDuplicateOtherValue(currentVersion) &&
-        self.mappingIri == other.mappingIri &&
-        self.comment == other.comment &&
-        standoffIdentical
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -1309,21 +1236,6 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema, valueHasInteger
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatIntegerValue: IntegerValueContentV2 => valueHasInteger == thatIntegerValue.valueHasInteger
-      case _                                       => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatIntegerValue: IntegerValueContentV2 =>
-        valueHasInteger == thatIntegerValue.valueHasInteger &&
-        comment == thatIntegerValue.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -1380,21 +1292,6 @@ case class DecimalValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatDecimalValue: DecimalValueContentV2 => valueHasDecimal == thatDecimalValue.valueHasDecimal
-      case _                                       => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatDecimalValue: DecimalValueContentV2 =>
-        valueHasDecimal == thatDecimalValue.valueHasDecimal &&
-        comment == thatDecimalValue.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -1444,19 +1341,6 @@ case class BooleanValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    // Always returns true, because it doesn't make sense to have two instances of the same boolean property.
-    true
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatBooleanValue: BooleanValueContentV2 =>
-        valueHasBoolean == thatBooleanValue.valueHasBoolean &&
-        comment == thatBooleanValue.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -1508,21 +1392,6 @@ case class GeomValueContentV2(ontologySchema: OntologySchema, valueHasGeometry: 
       valueHasGeometry = Iri.fromSparqlEncodedString(valueHasGeometry),
       comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)),
     )
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatGeomValue: GeomValueContentV2 => valueHasGeometry == thatGeomValue.valueHasGeometry
-      case _                                 => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatGeomValue: GeomValueContentV2 =>
-        valueHasGeometry == thatGeomValue.valueHasGeometry &&
-        comment == thatGeomValue.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -1591,25 +1460,6 @@ case class IntervalValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatIntervalValueContent: IntervalValueContentV2 =>
-        valueHasIntervalStart == thatIntervalValueContent.valueHasIntervalStart &&
-        valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatIntervalValueContent: IntervalValueContentV2 =>
-        valueHasIntervalStart == thatIntervalValueContent.valueHasIntervalStart &&
-        valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd &&
-        comment == thatIntervalValueContent.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -1671,23 +1521,6 @@ case class TimeValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatTimeValueContent: TimeValueContentV2 =>
-        valueHasTimeStamp == thatTimeValueContent.valueHasTimeStamp
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatTimeValueContent: TimeValueContentV2 =>
-        valueHasTimeStamp == thatTimeValueContent.valueHasTimeStamp &&
-        comment == thatTimeValueContent.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -1755,21 +1588,6 @@ case class HierarchicalListValueContentV2(
       listNodeLabel = listNodeLabel.map(labelStr => Iri.fromSparqlEncodedString(labelStr)),
       comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)),
     )
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatListContent: HierarchicalListValueContentV2 => valueHasListNode == thatListContent.valueHasListNode
-      case _                                               => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatListContent: HierarchicalListValueContentV2 =>
-        valueHasListNode == thatListContent.valueHasListNode &&
-        comment == thatListContent.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -1825,20 +1643,6 @@ case class ColorValueContentV2(ontologySchema: OntologySchema, valueHasColor: St
       comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)),
     )
 
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatColorContent: ColorValueContentV2 => valueHasColor == thatColorContent.valueHasColor
-      case _                                     => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatColorContent: ColorValueContentV2 =>
-        valueHasColor == thatColorContent.valueHasColor &&
-        comment == thatColorContent.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -1893,20 +1697,6 @@ case class UriValueContentV2(ontologySchema: OntologySchema, valueHasUri: String
       comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)),
     )
 
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatUriContent: UriValueContentV2 => valueHasUri == thatUriContent.valueHasUri
-      case _                                 => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatUriContent: UriValueContentV2 =>
-        valueHasUri == thatUriContent.valueHasUri &&
-        comment == thatUriContent.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -1965,20 +1755,6 @@ case class GeonameValueContentV2(
       comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)),
     )
 
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatGeonameContent: GeonameValueContentV2 => valueHasGeonameCode == thatGeonameContent.valueHasGeonameCode
-      case _                                         => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatGeonameContent: GeonameValueContentV2 =>
-        valueHasGeonameCode == thatGeonameContent.valueHasGeonameCode &&
-        comment == thatGeonameContent.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -2117,25 +1893,6 @@ case class StillImageFileValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatStillImage: StillImageFileValueContentV2 =>
-        fileValue == thatStillImage.fileValue &&
-        dimX == thatStillImage.dimX &&
-        dimY == thatStillImage.dimY
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatStillImage: StillImageFileValueContentV2 =>
-        wouldDuplicateOtherValue(thatStillImage) && comment == thatStillImage.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
-
 }
 
 /**
@@ -2203,25 +1960,6 @@ case class StillImageExternalFileValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatStillImage: StillImageExternalFileValueContentV2 =>
-        externalUrl == thatStillImage.externalUrl
-      case _: StillImageFileValueContentV2 => false
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatStillImage: StillImageExternalFileValueContentV2 =>
-        wouldDuplicateOtherValue(thatStillImage) && comment == thatStillImage.comment
-      case _: StillImageFileValueContentV2 => false
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
-
 }
 
 /**
@@ -2299,22 +2037,6 @@ case class DocumentFileValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatDocumentFile: DocumentFileValueContentV2 =>
-        fileValue == thatDocumentFile.fileValue
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatDocumentFile: DocumentFileValueContentV2 =>
-        wouldDuplicateOtherValue(thatDocumentFile) && comment == thatDocumentFile.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -2360,22 +2082,6 @@ case class ArchiveFileValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatArchiveFile: ArchiveFileValueContentV2 =>
-        fileValue == thatArchiveFile.fileValue
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatArchiveFile: ArchiveFileValueContentV2 =>
-        wouldDuplicateOtherValue(thatArchiveFile) && comment == thatArchiveFile.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -2439,23 +2145,6 @@ case class TextFileValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatTextFile: TextFileValueContentV2 =>
-        fileValue == thatTextFile.fileValue
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatTextFile: TextFileValueContentV2 =>
-        fileValue == thatTextFile.fileValue &&
-        comment == thatTextFile.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -2508,23 +2197,6 @@ case class AudioFileValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatAudioFile: AudioFileValueContentV2 =>
-        fileValue == thatAudioFile.fileValue
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatAudioFile: AudioFileValueContentV2 =>
-        fileValue == thatAudioFile.fileValue &&
-        comment == thatAudioFile.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -2579,23 +2251,6 @@ case class MovingImageFileValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatVideoFile: MovingImageFileValueContentV2 =>
-        fileValue == thatVideoFile.fileValue
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatVideoFile: MovingImageFileValueContentV2 =>
-        fileValue == thatVideoFile.fileValue &&
-        comment == thatVideoFile.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -2698,25 +2353,6 @@ case class LinkValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
-    that match {
-      case thatLinkValue: LinkValueContentV2 =>
-        referredResourceIri == thatLinkValue.referredResourceIri &&
-        isIncomingLink == thatLinkValue.isIncomingLink
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
-    }
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
-    currentVersion match {
-      case thatLinkValue: LinkValueContentV2 =>
-        referredResourceIri == thatLinkValue.referredResourceIri &&
-        isIncomingLink == thatLinkValue.isIncomingLink &&
-        comment == thatLinkValue.comment
-
-      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
-    }
 }
 
 /**
@@ -2758,10 +2394,6 @@ case class DeletedValueContentV2(ontologySchema: OntologySchema, comment: Option
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
-
-  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = false
-
-  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = false
 
   override def valueHasString: String = "Deleted Value"
 }
