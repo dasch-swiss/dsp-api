@@ -5,7 +5,6 @@
 
 package org.knora.webapi.core
 
-import org.apache.pekko.actor
 import zio.*
 
 import org.knora.webapi.config.AppConfig
@@ -14,6 +13,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Available
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 
 /**
@@ -23,7 +23,6 @@ final case class AppServer(
   state: State,
   ts: TriplestoreService,
   ru: RepositoryUpdater,
-  as: actor.ActorSystem,
   ontologyCache: OntologyCache,
   sipiService: SipiService,
   hs: HttpServer,
@@ -35,13 +34,8 @@ final case class AppServer(
    */
   private val checkTriplestoreService: Task[Unit] =
     for {
-      _      <- state.set(AppState.WaitingForTriplestore)
-      status <- ts.checkTriplestore()
-      _ <- status match {
-             case TriplestoreStatus.Available           => ZIO.unit
-             case TriplestoreStatus.NotInitialized(msg) => ZIO.die(new Exception(msg))
-             case TriplestoreStatus.Unavailable(msg)    => ZIO.die(new Exception(msg))
-           }
+      _ <- state.set(AppState.WaitingForTriplestore)
+      _ <- ts.checkTriplestore().filterOrDieWith(_ == Available)(s => new Exception(s.msg))
       _ <- state.set(AppState.TriplestoreReady)
     } yield ()
 
@@ -79,7 +73,6 @@ final case class AppServer(
    *
    * @param requiresAdditionalRepositoryChecks  If `true`, checks if repository service is running, updates data if necessary and loads ontology cache.
    *                                            If `false`, checks if repository service is running but doesn't run upgrades and doesn't load ontology cache.
-   * @param requiresIIIFService                 If `true`, ensures that the IIIF service is running.
    */
   def start(
     requiresAdditionalRepositoryChecks: Boolean,
@@ -98,9 +91,8 @@ final case class AppServer(
 
 object AppServer {
 
-  type AppServerEnvironment =
-    actor.ActorSystem & AppConfig & HttpServer & OntologyCache & RepositoryUpdater & SipiService & State &
-      TriplestoreService
+  type AppServerEnvironment = AppConfig & HttpServer & OntologyCache & RepositoryUpdater & SipiService & State &
+    TriplestoreService
 
   /**
    * Initializes the AppServer instance with the required services
@@ -110,12 +102,11 @@ object AppServer {
       state    <- ZIO.service[State]
       ts       <- ZIO.service[TriplestoreService]
       ru       <- ZIO.service[RepositoryUpdater]
-      as       <- ZIO.service[actor.ActorSystem]
       oc       <- ZIO.service[OntologyCache]
       iiifs    <- ZIO.service[SipiService]
       hs       <- ZIO.service[HttpServer]
       c        <- ZIO.service[AppConfig]
-      appServer = AppServer(state, ts, ru, as, oc, iiifs, hs, c)
+      appServer = AppServer(state, ts, ru, oc, iiifs, hs, c)
     } yield appServer
 
   /**
