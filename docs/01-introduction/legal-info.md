@@ -34,7 +34,7 @@ From the set of available licenses a project must enable the licenses it need.
 New projects will be created with the DaSCH recommended licenses enabled.
 Only enabled licenses are not allowed to be used for project data.
 
-Currently, the [set of available licenses is fixed to](#available-licenses) and cannot be changed by the project.
+Currently, the [set of available licenses is fixed](#available-licenses) and cannot be changed by the project.
 
 ### Available Licenses
 
