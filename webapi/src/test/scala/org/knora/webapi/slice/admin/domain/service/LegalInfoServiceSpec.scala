@@ -58,7 +58,7 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
         prj    <- setupProject
         _      <- service(_.disableLicense(enabledLicense, prj))
         actual <- service(_.findAvailableLicenses(prj.shortcode))
-      } yield assertTrue(actual == License.BUILT_IN)
+      } yield assertTrue(actual == License.BUILT_IN.toSet)
     },
   )
 
