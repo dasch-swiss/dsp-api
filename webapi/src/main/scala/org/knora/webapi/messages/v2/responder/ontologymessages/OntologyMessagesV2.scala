@@ -170,21 +170,6 @@ case class ChangePropertyGuiElementRequest(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Deletes the comment from a property. A successful response will be a [[ReadOntologyV2]].
- *
- * @param propertyIri          the IRI of the property.
- * @param lastModificationDate the ontology's last modification date
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class DeletePropertyCommentRequestV2(
-  propertyIri: SmartIri,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
  * Requests that a class's labels or comments are changed. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classIri             the IRI of the property.

@@ -18,6 +18,7 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -297,6 +298,13 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo
              requestingUser = requestingUser,
            )
     } yield ()
+
+  def checkOntologyAndPropertyIrisForUpdate(
+    ontologyIri: OntologyIri,
+    propertyIri: PropertyIri,
+    requestingUser: User,
+  ): Task[Unit] =
+    checkOntologyAndEntityIrisForUpdate(ontologyIri.toComplexSchema, propertyIri.toComplexSchema, requestingUser)
 
   def checkPermissionsForOntologyUpdate(ontologyIri: OntologyIri, requestingUser: User): Task[ProjectIri] =
     checkPermissionsForOntologyUpdate(ontologyIri.toInternalSchema, requestingUser)

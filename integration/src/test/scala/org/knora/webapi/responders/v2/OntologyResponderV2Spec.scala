@@ -95,7 +95,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   private val ExampleSharedOntologyIri     = "http://api.knora.org/ontology/shared/example-box/v2".toSmartIri
   private val IncunabulaOntologyIri        = "http://0.0.0.0:3333/ontology/0803/incunabula/v2".toSmartIri
   private val AnythingOntologyIri          = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-  private val FreeTestOntologyIri          = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
+  private val FreeTestOntologyIri          = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri)
   private var fooLastModDate: Instant      = Instant.now
   private var barLastModDate: Instant      = Instant.now
   private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
@@ -960,7 +960,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       freetestLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
         .ontologies
-        .find(_.ontologyIri == FreeTestOntologyIri)
+        .find(_.ontologyIri == FreeTestOntologyIri.toComplexSchema)
         .get
         .lastModificationDate
         .get
@@ -2217,54 +2217,44 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "delete the comment of a property that has a comment" in {
-      val propertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasPropertyWithComment")
-      appActor ! DeletePropertyCommentRequestV2(
-        propertyIri = propertyIri,
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val propertyIri = FreeTestOntologyIri.makeProperty("hasPropertyWithComment")
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(_.deletePropertyComment(propertyIri, freetestLastModDate, UUID.randomUUID, anythingAdminUser)),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
-        readPropertyInfo.entityInfoContent.predicates.contains(
-          Rdfs.Comment.toSmartIri,
-        ) should ===(false)
-        val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
-        val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newFreeTestLastModDate.isAfter(freetestLastModDate))
-        freetestLastModDate = newFreeTestLastModDate
-      }
+      val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.properties.size == 1)
+      val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri.toComplexSchema)
+      readPropertyInfo.entityInfoContent.predicates.contains(
+        Rdfs.Comment.toSmartIri,
+      ) should ===(false)
+      val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
+      val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newFreeTestLastModDate.isAfter(freetestLastModDate))
+      freetestLastModDate = newFreeTestLastModDate
     }
 
     "not update the ontology when trying to delete a comment of a property that has no comment" in {
-      val propertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasPropertyWithoutComment")
-      appActor ! DeletePropertyCommentRequestV2(
-        propertyIri = propertyIri,
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val propertyIri = FreeTestOntologyIri.makeProperty("hasPropertyWithoutComment")
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(_.deletePropertyComment(propertyIri, freetestLastModDate, UUID.randomUUID, anythingAdminUser)),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
-        readPropertyInfo.entityInfoContent.predicates.contains(
-          Rdfs.Comment.toSmartIri,
-        ) should ===(false)
-        val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
-        val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        // the ontology was not changed and thus should not have a new last modification date
-        assert(newFreeTestLastModDate == freetestLastModDate)
-        freetestLastModDate = newFreeTestLastModDate
-      }
+      val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.properties.size == 1)
+      val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri.toComplexSchema)
+      readPropertyInfo.entityInfoContent.predicates.contains(
+        Rdfs.Comment.toSmartIri,
+      ) should ===(false)
+      val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
+      val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      // the ontology was not changed and thus should not have a new last modification date
+      assert(newFreeTestLastModDate == freetestLastModDate)
+      freetestLastModDate = newFreeTestLastModDate
     }
 
     "delete the comment of a class that has a comment" in {
@@ -2319,22 +2309,20 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "delete the comment of a link property and remove the comment of the link value property as well" in {
-      val linkPropertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasLinkPropertyWithComment")
-      val linkValueIri: SmartIri    = linkPropertyIri.fromLinkPropToLinkValueProp
+      val linkPropertyIri = FreeTestOntologyIri.makeProperty("hasLinkPropertyWithComment")
+      val linkValueIri    = linkPropertyIri.fromLinkPropToLinkValueProp
 
       // delete the comment of the link property
-      appActor ! DeletePropertyCommentRequestV2(
-        propertyIri = linkPropertyIri,
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.deletePropertyComment(linkPropertyIri, freetestLastModDate, UUID.randomUUID, anythingAdminUser),
+          ),
+        )
         val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
 
-        val propertyReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(linkPropertyIri)
+        val propertyReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(linkPropertyIri.toComplexSchema)
         propertyReadPropertyInfo.entityInfoContent.predicates.contains(
           Rdfs.Comment.toSmartIri,
         ) should ===(false)
@@ -2351,14 +2339,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val msg = UnsafeZioRun.runOrThrow(
         ontologyResponder(
           _.getPropertiesFromOntologyV2(
-            propertyIris = Set(PropertyIri.unsafeFrom(linkValueIri)),
+            propertyIris = Set(linkValueIri),
             allLanguages = true,
             requestingUser = anythingAdminUser,
           ),
         ),
       )
       val externalOntology: ReadOntologyV2              = msg.toOntologySchema(ApiV2Complex)
-      val linkValueReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(linkValueIri)
+      val linkValueReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(linkValueIri.toComplexSchema)
 
       linkValueReadPropertyInfo.entityInfoContent.predicates.contains(
         Rdfs.Comment.toSmartIri,
