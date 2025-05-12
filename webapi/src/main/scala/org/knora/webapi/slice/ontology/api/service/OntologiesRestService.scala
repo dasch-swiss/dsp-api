@@ -101,7 +101,7 @@ final case class OntologiesRestService(
     .flatMap(getOntologyMetadataBy(_, formatOptions))
 
   private def getOntologyMetadataBy(projectIris: Set[ProjectIri], formatOptions: FormatOptions) = for {
-    result   <- ontologyResponder.getOntologyMetadataForProjectsV2(projectIris)
+    result   <- ontologyResponder.getOntologyMetadataForProjects(projectIris)
     response <- renderer.render(result, formatOptions)
   } yield response
 

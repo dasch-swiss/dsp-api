@@ -106,8 +106,6 @@ final case class OntologyResponderV2(
       ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(resourceClassIris, allLanguages, requestingUser)
     case PropertiesGetRequestV2(propertyIris, allLanguages, requestingUser) =>
       getPropertyDefinitionsFromOntologyV2(propertyIris, allLanguages, requestingUser)
-    case OntologyMetadataGetByProjectRequestV2(projectIris) =>
-      getOntologyMetadataForProjectsV2(projectIris)
     case OntologyMetadataGetByIriRequestV2(ontologyIris) =>
       getOntologyMetadataByIriV2(ontologyIris)
     case createOntologyRequest: CreateOntologyRequestV2 => createOntology(createOntologyRequest)
@@ -290,15 +288,16 @@ final case class OntologyResponderV2(
    * @param projectIris    the IRIs of the projects selected, or an empty set if all projects are selected.
    * @return a [[ReadOntologyMetadataV2]].
    */
-  def getOntologyMetadataForProjectsV2(projectIris: Set[ProjectIri]): Task[ReadOntologyMetadataV2] = {
-    val returnAllOntologies = projectIris.isEmpty
-    for {
-      allOntologies <- ontologyCache.getCacheData.map(_.ontologies.values.map(_.ontologyMetadata).toSet)
-      ontologies =
-        if (returnAllOntologies) { allOntologies }
-        else { allOntologies.filter(ontology => projectIris.contains(ontology.projectIri.orNull)) }
-    } yield ReadOntologyMetadataV2(ontologies)
-  }
+  def getOntologyMetadataForProjects(projectIris: Set[ProjectIri]): Task[ReadOntologyMetadataV2] = for {
+    allOntologies <- ontologyRepo.findAll().map(_.map(_.ontologyMetadata).toSet)
+    ontologies     = allOntologies.filter(ontology => projectIris.contains(ontology.projectIri.orNull))
+  } yield ReadOntologyMetadataV2(ontologies)
+
+  def getOntologyMetadataForProject(projectIris: ProjectIri): Task[ReadOntologyMetadataV2] =
+    getOntologyMetadataForProjects(Set(projectIris))
+
+  def getOntologyMetadataForAllProjects: Task[ReadOntologyMetadataV2] =
+    ontologyRepo.findAll().map(_.map(_.ontologyMetadata).toSet).map(ReadOntologyMetadataV2.apply)
 
   /**
    * Gets the metadata describing the specified ontologies, or all ontologies.

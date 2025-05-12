@@ -321,7 +321,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "delete the comment from 'foo'" in {
       val response = UnsafeZioRun.runOrThrow(
         ontologyResponder(_.deleteOntologyComment(fooIri.asOntologyIri, fooLastModDate, UUID.randomUUID, imagesUser)),
-     )
+      )
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri == fooIri.get.toSmartIri)
@@ -441,25 +441,18 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       // Request the metadata of all ontologies to check that 'foo' isn't listed.
-
-      appActor ! OntologyMetadataGetByProjectRequestV2()
-
-      val cachedMetadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
+      val cachedMetadataResponse = UnsafeZioRun.runOrThrow(ontologyResponder(_.getOntologyMetadataForAllProjects))
       assert(!cachedMetadataResponse.ontologies.exists(_.ontologyIri == fooIri.get.toSmartIri))
 
       // Reload the ontologies from the triplestore and check again.
       UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[OntologyCache](_.refreshCache()))
-
-      appActor ! OntologyMetadataGetByProjectRequestV2()
-
-      val loadedMetadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
+      val loadedMetadataResponse = UnsafeZioRun.runOrThrow(ontologyResponder(_.getOntologyMetadataForAllProjects))
       assert(!loadedMetadataResponse.ontologies.exists(_.ontologyIri == fooIri.get.toSmartIri))
     }
 
     "not delete the 'anything' ontology, because it is used in data and in the 'something' ontology" in {
-      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
-
-      val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
+      val metadataResponse =
+        UnsafeZioRun.runOrThrow(ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri)))
       assert(metadataResponse.ontologies.size == 3)
       anythingLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
@@ -683,10 +676,8 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not allow a user to create a property if they are not a sysadmin or an admin in the ontology's project" in {
-
-      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
-
-      val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
+      val metadataResponse =
+        UnsafeZioRun.runOrThrow(ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri)))
       assert(metadataResponse.ontologies.size == 3)
       anythingLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
@@ -742,10 +733,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name" in {
-
-      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
-
-      val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
+      val metadataResponse = UnsafeZioRun.runOrThrow(
+        ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri)),
+      )
       assert(metadataResponse.ontologies.size == 3)
       anythingLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
@@ -831,10 +821,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a link property in the 'anything' ontology, and automatically create the corresponding link value property" in {
-
-      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
-
-      val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
+      val metadataResponse = UnsafeZioRun.runOrThrow(
+        ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri)),
+      )
       assert(metadataResponse.ontologies.size == 3)
       anythingLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
@@ -962,7 +951,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "create a subproperty of an existing custom link property and add it to a resource class, check if the correct link and link value properties were added to the class" in {
       val metadataResponse = UnsafeZioRun.runOrThrow(
-        ontologyResponder(_.getOntologyMetadataForProjectsV2(Set(anythingProjectIri))),
+        ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri)),
       )
       assert(metadataResponse.ontologies.size == 3)
       freetestLastModDate = metadataResponse
@@ -6194,9 +6183,8 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val classIri: SmartIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
 
       // create the property anything:hasFoafName
-      appActor ! OntologyMetadataGetByProjectRequestV2(projectIris = Set(anythingProjectIri))
-
-      val metadataResponse: ReadOntologyMetadataV2 = expectMsgType[ReadOntologyMetadataV2](timeout)
+      val metadataResponse: ReadOntologyMetadataV2 =
+        UnsafeZioRun.runOrThrow(ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri)))
       assert(metadataResponse.ontologies.size == 3)
       anythingLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
