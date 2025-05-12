@@ -1,5 +1,38 @@
 # Changelog
 
+## [31.13.0](https://github.com/dasch-swiss/dsp-api/compare/v31.12.0...v31.13.0) (2025-05-12)
+
+
+### Maintenances
+
+* Align dsp-app app version with prod ([#3571](https://github.com/dasch-swiss/dsp-api/issues/3571)) ([69e10c9](https://github.com/dasch-swiss/dsp-api/commit/69e10c9906f6431fd782ca1a283ee115f9c5ed49))
+* Dependency updates ([#3581](https://github.com/dasch-swiss/dsp-api/issues/3581)) ([eaf7e69](https://github.com/dasch-swiss/dsp-api/commit/eaf7e69180e413aae471f77e933da0867fd65656))
+* Minor dependency updates ([#3580](https://github.com/dasch-swiss/dsp-api/issues/3580)) ([a40d68f](https://github.com/dasch-swiss/dsp-api/commit/a40d68f19f3ce12e7c94ef1a47c27d8fadb6f6a7))
+
+
+### Documentation
+
+* Fix broken links in documentation ([#3575](https://github.com/dasch-swiss/dsp-api/issues/3575)) ([cd23ebe](https://github.com/dasch-swiss/dsp-api/commit/cd23ebe73983d307dd0267cd61beee91926e1371))
+* Update documentation for allowing duplicate Values (DEV-4861) ([#3586](https://github.com/dasch-swiss/dsp-api/issues/3586)) ([8b234e2](https://github.com/dasch-swiss/dsp-api/commit/8b234e261d581a219f8f88d144f8935b0857f20a))
+* Update documentations on licenses ([#3589](https://github.com/dasch-swiss/dsp-api/issues/3589)) ([fd43bdc](https://github.com/dasch-swiss/dsp-api/commit/fd43bdcba53d7ebee12cdc899d9c9d6dc0005d28))
+
+
+### Enhancements
+
+* Add allowing to enable licenses on projects (DEV-4851) ([#3574](https://github.com/dasch-swiss/dsp-api/issues/3574)) ([07d5252](https://github.com/dasch-swiss/dsp-api/commit/07d5252bc8cfce01bccdc38d0f1aa80d43b369c1))
+* Add feature flag for full license check during asset creation ([#3588](https://github.com/dasch-swiss/dsp-api/issues/3588)) ([be689bb](https://github.com/dasch-swiss/dsp-api/commit/be689bbbb3e8decd0660e4132de9ee13706545b3))
+* Allow duplicate Values (DEV-4861) ([#3585](https://github.com/dasch-swiss/dsp-api/issues/3585)) ([7edb0d2](https://github.com/dasch-swiss/dsp-api/commit/7edb0d29b0764d73d5f63d6fe65cd3c6bfc7292d))
+* Migrate standoffmapping route to Tapir (DEV-4825) ([#3584](https://github.com/dasch-swiss/dsp-api/issues/3584)) ([1b63885](https://github.com/dasch-swiss/dsp-api/commit/1b638857453eda695aea5ccff1ae5100facd5918))
+
+
+### Bug Fixes
+
+* Align constraints for adding user to admin group for all service methods ([#3570](https://github.com/dasch-swiss/dsp-api/issues/3570)) ([8033b03](https://github.com/dasch-swiss/dsp-api/commit/8033b03532350043e9e36222a36b4834d35916f9))
+* Allow to delete or erase a kb:Resource only if no other non-deleted kb:Resource in the same project points to it ([#3577](https://github.com/dasch-swiss/dsp-api/issues/3577)) ([5df7c10](https://github.com/dasch-swiss/dsp-api/commit/5df7c10066a4f9e4b110f3ff0b2dadd9b8bc9802))
+* Do not eagerly evaluate the filename when it is not needed when creating a FileValue ([#3582](https://github.com/dasch-swiss/dsp-api/issues/3582)) ([c9a24ca](https://github.com/dasch-swiss/dsp-api/commit/c9a24ca5d38e2b6a234cd0320fd30de136cb5893))
+* Do not remove values from other `kb:Resource`s when erasing another `kb:Resource` ([#3578](https://github.com/dasch-swiss/dsp-api/issues/3578)) ([cc4f378](https://github.com/dasch-swiss/dsp-api/commit/cc4f378c17b855510ac55ec3b24fe00839c326a1))
+* When an EditConflictException is returned it is rendered as 400 ([#3576](https://github.com/dasch-swiss/dsp-api/issues/3576)) ([2db19df](https://github.com/dasch-swiss/dsp-api/commit/2db19df60a176efef17f95180c77f875689d32ea))
+
 ## [31.12.0](https://github.com/dasch-swiss/dsp-api/compare/v31.11.0...v31.12.0) (2025-04-28)
 
 
