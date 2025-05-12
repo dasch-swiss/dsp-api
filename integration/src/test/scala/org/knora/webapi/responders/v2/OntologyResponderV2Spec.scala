@@ -4295,7 +4295,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
                 classInfoContent,
                 anythingLastModDate,
                 UUID.randomUUID,
-                anythingNonAdminUser,
+                anythingAdminUser,
               ),
             ),
           ),
@@ -4343,7 +4343,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
               classInfoContent,
               anythingLastModDate,
               UUID.randomUUID,
-              anythingNonAdminUser,
+              anythingAdminUser,
             ),
           ),
         ),
@@ -4402,7 +4402,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
                 classInfoContent,
                 anythingLastModDate,
                 UUID.randomUUID,
-                anythingNonAdminUser,
+                anythingAdminUser,
               ),
             ),
           ),
@@ -4446,7 +4446,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
               classInfoContent,
               anythingLastModDate,
               UUID.randomUUID,
-              anythingNonAdminUser,
+              anythingAdminUser,
             ),
           ),
         ),
@@ -4471,13 +4471,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! AddCardinalitiesToClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
       {
         val msg = UnsafeZioRun.runOrThrow(
           ontologyResponder(
@@ -4486,7 +4479,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
                 classInfoContent,
                 anythingLastModDate,
                 UUID.randomUUID,
-                anythingNonAdminUser,
+                anythingAdminUser,
               ),
             ),
           ),
@@ -4607,32 +4600,26 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         AnythingOntologyIri.makeEntityIri("hasEmptiness"),
       )
 
-      {
-        val msg = UnsafeZioRun.runOrThrow(
-          ontologyResponder(
-            _.addCardinalitiesToClass(
-              AddCardinalitiesToClassRequestV2(
-                classInfoContent,
-                anythingLastModDate,
-                UUID.randomUUID,
-                anythingNonAdminUser,
-              ),
-            ),
-          ),
-        )
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri)
-        readClassInfo.entityInfoContent.directCardinalities should ===(expectedDirectCardinalities)
-        readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
+      val addReq = AddCardinalitiesToClassRequestV2(
+        classInfoContent,
+        anythingLastModDate,
+        UUID.randomUUID,
+        anythingAdminUser,
+      )
+      val msg = UnsafeZioRun.runOrThrow(ontologyResponder(_.addCardinalitiesToClass(addReq)))
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val externalOntology = msg.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo = externalOntology.classes(classIri)
+      readClassInfo.entityInfoContent.directCardinalities should ===(expectedDirectCardinalities)
+      readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
+
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not allow a user to change the cardinalities of a class if they are not a sysadmin or an admin in the user's project" in {
