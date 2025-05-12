@@ -30,7 +30,7 @@ A license has the following properties:
 - `id` - this is a unique identifier as an IRI for the license.
 
 Each project knows which [licenses](../../03-endpoints/api-admin/#get-adminprojectsshortcodeprojectshortcodelegal-infolicenses) are available.
-From the set of available licenses a project must enable the licenses it need.
+From the set of available licenses a project must enable the licenses it needs.
 New projects will be created with the DaSCH recommended licenses enabled.
 Only enabled licenses are not allowed to be used for project data.
 
