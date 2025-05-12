@@ -9,6 +9,7 @@ import zio.URLayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.Features
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.admin.domain.service.*
@@ -32,6 +33,7 @@ object AdminDomainModule
       AppConfig &
       CacheManager &
       DspIngestClient &
+      Features &
       IriConverter &
       IriService &
       OntologyCache &
