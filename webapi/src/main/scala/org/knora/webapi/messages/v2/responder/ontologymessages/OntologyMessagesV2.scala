@@ -202,21 +202,6 @@ object LabelOrComment {
     LabelOrComment.values.find(_.toString == str)
 }
 
-/**
- * Deletes the comment from a class. A successful response will be a [[ReadOntologyV2]].
- *
- * @param classIri             the IRI of the class.
- * @param lastModificationDate the ontology's last modification date
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class DeleteClassCommentRequestV2(
-  classIri: SmartIri,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
 case class ChangeGuiOrderRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,

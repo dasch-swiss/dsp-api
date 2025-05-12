@@ -122,10 +122,8 @@ final case class OntologyResponderV2(
     case changeGuiOrderRequest: ChangeGuiOrderRequestV2 => changeGuiOrder(changeGuiOrderRequest)
     case deleteClassRequest: DeleteClassRequestV2       => deleteClass(deleteClassRequest)
     case createPropertyRequest: CreatePropertyRequestV2 => createProperty(createPropertyRequest)
-    case deleteClassCommentRequest: DeleteClassCommentRequestV2 =>
-      deleteClassComment(deleteClassCommentRequest)
-    case req: ChangePropertyGuiElementRequest => changePropertyGuiElement(req)
-    case other                                => Responder.handleUnexpectedMessage(other, this.getClass.getName)
+    case req: ChangePropertyGuiElementRequest           => changePropertyGuiElement(req)
+    case other                                          => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -1958,90 +1956,42 @@ final case class OntologyResponderV2(
    * @return a [[ReadOntologyV2]] containing the modified class definition.
    */
   def deleteClassComment(
-    deleteClassCommentRequest: DeleteClassCommentRequestV2,
+    classIri: ResourceClassIri,
+    lastModificationDate: Instant,
+    apiRequestID: UUID,
+    requestingUser: User,
   ): Task[ReadOntologyV2] = {
-    def makeTaskFuture(
-      internalClassIri: SmartIri,
-      internalOntologyIri: SmartIri,
-      ontology: ReadOntologyV2,
-      classToUpdate: ReadClassInfoV2,
-    ) =
-      for {
-
-        // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-               internalOntologyIri,
-               deleteClassCommentRequest.lastModificationDate,
-             )
-
-        currentTime <- Clock.instant
-
-        // Delete the comment
-        updateSparql = sparql.v2.txt
-                         .deleteClassComment(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           classIri = internalClassIri,
-                           lastModificationDate = deleteClassCommentRequest.lastModificationDate,
-                           currentTime = currentTime,
-                         )
-        _ <- save(Update(updateSparql))
-
-        // Read the data back from the cache.
-        response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
-                      classIris = Set(internalClassIri),
-                      allLanguages = true,
-                      requestingUser = deleteClassCommentRequest.requestingUser,
-                    )
-      } yield response
+    val ontologyIri = classIri.ontologyIri
+    val deleteCommentTask = for {
+      currentTime <- Clock.instant
+      updateSparql = sparql.v2.txt
+                       .deleteClassComment(
+                         ontologyNamedGraphIri = ontologyIri.toInternalSchema,
+                         ontologyIri = ontologyIri.toInternalSchema,
+                         classIri = classIri.toInternalSchema,
+                         lastModificationDate = lastModificationDate,
+                         currentTime = currentTime,
+                       )
+      _ <- save(Update(updateSparql))
+    } yield ()
 
     for {
-      requestingUser <- ZIO.succeed(deleteClassCommentRequest.requestingUser)
-
-      externalClassIri: SmartIri    = deleteClassCommentRequest.classIri
-      externalOntologyIri: SmartIri = externalClassIri.getOntologyFromEntity
-
-      _ <-
-        ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
-
-      internalClassIri: SmartIri    = externalClassIri.toOntologySchema(InternalSchema)
-      internalOntologyIri: SmartIri = externalOntologyIri.toOntologySchema(InternalSchema)
-
-      cacheData <- ontologyCache.getCacheData
-
-      ontology: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
-
-      classToUpdate <- ZIO
-                         .fromOption(ontology.classes.get(internalClassIri))
-                         .orElseFail(NotFoundException(s"Class ${deleteClassCommentRequest.classIri} not found"))
-
-      hasComment: Boolean = classToUpdate.entityInfoContent.predicates.contains(
-                              OntologyConstants.Rdfs.Comment.toSmartIri,
-                            )
-
-      taskResult <-
-        if (hasComment) for {
-          // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-          taskResult <- IriLocker.runWithIriLock(
-                          deleteClassCommentRequest.apiRequestID,
-                          ONTOLOGY_CACHE_LOCK_IRI,
-                          makeTaskFuture(
-                            internalClassIri = internalClassIri,
-                            internalOntologyIri = internalOntologyIri,
-                            ontology = ontology,
-                            classToUpdate = classToUpdate,
-                          ),
-                        )
-        } yield taskResult
-        else {
-          // not change anything if class has no comment
-          ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
-            classIris = Set(internalClassIri),
-            allLanguages = true,
-            requestingUser = deleteClassCommentRequest.requestingUser,
-          )
-        }
-    } yield taskResult
+      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
+      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
+             ontologyIri.toComplexSchema,
+             classIri.toComplexSchema,
+             requestingUser,
+           )
+      classToUpdate <- ontologyRepo
+                         .findClassBy(classIri)
+                         .someOrFail(NotFoundException(s"Class ${classIri.toComplexSchema} not found"))
+      hasComment = classToUpdate.entityInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)
+      _ <- IriLocker
+             .runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteCommentTask)
+             .when(hasComment)
+      response <-
+        ontologyCacheHelpers.getClasses(classIris = Seq(classIri), allLanguages = true, requestingUser = requestingUser)
+    } yield response
   }
 }
 

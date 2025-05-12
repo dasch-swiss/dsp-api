@@ -2258,54 +2258,42 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "delete the comment of a class that has a comment" in {
-      val classIri: SmartIri = FreeTestOntologyIri.makeEntityIri("BookWithComment")
-      appActor ! DeleteClassCommentRequestV2(
-        classIri = classIri,
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val classIri = FreeTestOntologyIri.makeClass("BookWithComment")
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(_.deleteClassComment(classIri, freetestLastModDate, UUID.randomUUID, anythingAdminUser)),
       )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri)
-        readClassInfo.entityInfoContent.predicates.contains(
-          Rdfs.Comment.toSmartIri,
-        ) should ===(false)
-        val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
-        val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newFreeTestLastModDate.isAfter(freetestLastModDate))
-        freetestLastModDate = newFreeTestLastModDate
-      }
+      val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri.toComplexSchema)
+      readClassInfo.entityInfoContent.predicates.contains(
+        Rdfs.Comment.toSmartIri,
+      ) should ===(false)
+      val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
+      val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newFreeTestLastModDate.isAfter(freetestLastModDate))
+      freetestLastModDate = newFreeTestLastModDate
     }
 
     "not update the ontology when trying to delete a comment of a class that has no comment" in {
-      val classIri: SmartIri = FreeTestOntologyIri.makeEntityIri("BookWithoutComment")
-      appActor ! DeleteClassCommentRequestV2(
-        classIri = classIri,
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val classIri = FreeTestOntologyIri.makeClass("BookWithoutComment")
+      val msg = UnsafeZioRun.runOrThrow(
+        ontologyResponder(_.deleteClassComment(classIri, freetestLastModDate, UUID.randomUUID, anythingAdminUser)),
       )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri)
-        readClassInfo.entityInfoContent.predicates.contains(
-          Rdfs.Comment.toSmartIri,
-        ) should ===(false)
-        val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
-        val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        // the ontology was not changed and thus should not have a new last modification date
-        assert(newFreeTestLastModDate == freetestLastModDate)
-        freetestLastModDate = newFreeTestLastModDate
-      }
+      val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri.toComplexSchema)
+      readClassInfo.entityInfoContent.predicates.contains(
+        Rdfs.Comment.toSmartIri,
+      ) should ===(false)
+      val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
+      val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      // the ontology was not changed and thus should not have a new last modification date
+      assert(newFreeTestLastModDate == freetestLastModDate)
+      freetestLastModDate = newFreeTestLastModDate
     }
 
     "delete the comment of a link property and remove the comment of the link value property as well" in {
