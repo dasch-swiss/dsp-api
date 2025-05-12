@@ -35,7 +35,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeGuiOrderReq
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyGuiElementRequest
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreatePropertyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinalitiesFromClassRequestV2
@@ -74,6 +73,21 @@ case class ChangeOntologyMetadataRequestV2(
   ontologyIri: OntologyIri,
   label: Option[String] = None,
   comment: Option[String] = None,
+  lastModificationDate: Instant,
+  apiRequestID: UUID,
+  requestingUser: User,
+)
+
+/**
+ * Requests the addition of a class to an ontology. A successful response will be a [[ReadOntologyV2]].
+ *
+ * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
+ * @param lastModificationDate the ontology's last modification date.
+ * @param apiRequestID         the ID of the API request.
+ * @param requestingUser       the user making the request.
+ */
+case class CreateClassRequestV2(
+  classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,

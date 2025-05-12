@@ -91,21 +91,6 @@ case class CreatePropertyRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Requests the addition of a class to an ontology. A successful response will be a [[ReadOntologyV2]].
- *
- * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class CreateClassRequestV2(
-  classInfoContent: ClassInfoContentV2,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
  * Requests the addition of cardinalities to a class. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.

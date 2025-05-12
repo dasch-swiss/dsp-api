@@ -39,6 +39,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.ontology.api.CreateClassRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -987,14 +988,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = comicBookClassInfoContent,
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(comicBookClassInfoContent, freetestLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         val metadata         = externalOntology.ontologyMetadata
         val newFreetestLastModDate = metadata.lastModificationDate.getOrElse(
@@ -1029,14 +1031,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = comicAuthorClassInfoContent,
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(comicAuthorClassInfoContent, freetestLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         val metadata         = externalOntology.ontologyMetadata
         val newFreetestLastModDate = metadata.lastModificationDate.getOrElse(
@@ -2370,17 +2372,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createClass(
+            CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingNonAdminUser),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
-
+      assertFailsWithA[ForbiddenException](exit)
     }
 
     "not allow a user to create a class with cardinalities both on property P and on a subproperty of P" in {
@@ -2413,17 +2412,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not allow the user to submit a direct cardinality on anything:hasInterestingThingValue" in {
@@ -2452,16 +2446,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a class if rdfs:label is missing" in {
@@ -2536,14 +2526,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
@@ -2588,14 +2578,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = partThingClassInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg: ReadOntologyV2 = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(partThingClassInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         val metadata         = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
@@ -2628,14 +2618,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = wholeThingClassInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(wholeThingClassInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         val metadata         = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
@@ -2811,13 +2801,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
       val expectedProperties: Set[SmartIri] = Set(
         anythingHasBoolean,
         anythingHasColor,
@@ -2852,7 +2835,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
@@ -2897,13 +2887,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
       val expectedProperties: Set[SmartIri] = Set(
         anythingHasBoolean,
         anythingHasColor,
@@ -2938,7 +2921,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
+
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         val readClassInfo    = externalOntology.classes(classIri)
         readClassInfo.allBaseClasses should ===(expectedAllBaseClasses)
@@ -3016,13 +3007,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
       val expectedProperties: Set[SmartIri] = Set(
         anythingHasBoolean,
         anythingHasColor,
@@ -3057,7 +3041,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         val readClassInfo    = externalOntology.classes(classIri)
         readClassInfo.allBaseClasses should ===(expectedAllBaseClasses)
@@ -3138,19 +3129,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
       val expectedProperties = Set(
         anythingHasStandoffLinkTo,
         anythingHasStandoffLinkToValue,
       ).map(_.toSmartIri)
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
@@ -3387,16 +3378,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a class that already exists" in {
@@ -3426,16 +3413,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a class with a nonexistent base class" in {
@@ -3465,16 +3448,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a class that is not a subclass of knora-api:Resource" in {
@@ -3504,16 +3483,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a class with a cardinality for a Knora property that doesn't exist" in {
@@ -3545,16 +3520,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
+      assertFailsWithA[NotFoundException](exit)
     }
 
     "not create a class that has a cardinality for anything:hasInteger but is not a subclass of anything:Thing" in {
@@ -3585,16 +3556,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser)),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "create a subclass of anything:Thing that has cardinality 1 for anything:hasBoolean" in {
@@ -3625,14 +3592,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
@@ -3678,16 +3645,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createClass(
+            CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "reject a request to delete a link value property directly" in {
@@ -4029,16 +3994,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createClass(
+            CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "create a class anything:Void as a subclass of anything:Nothing" in {
@@ -4064,14 +4027,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
@@ -5002,16 +4965,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createClass(
+            CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a class with a cardinality on a property defined in a non-shared ontology in another project" in {
@@ -5039,16 +5000,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.createClass(
+            CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a subproperty of a property defined in a non-shared ontology in another project" in {
@@ -5198,14 +5157,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
@@ -5265,14 +5224,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
@@ -5514,42 +5473,47 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "create a class with several cardinalities, then remove one of the cardinalities" in {
       // Create a class with no cardinalities.
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = ClassInfoContentV2(
-          predicates = Map(
-            "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "test class",
-                  language = Some("en"),
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(
+                classInfoContent = ClassInfoContentV2(
+                  predicates = Map(
+                    "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+                      predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                      objects = Vector(
+                        StringLiteralV2.from(
+                          value = "test class",
+                          language = Some("en"),
+                        ),
+                      ),
+                    ),
+                    "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+                      predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+                      objects = Vector(
+                        StringLiteralV2.from(
+                          value = "A test class",
+                          language = Some("en"),
+                        ),
+                      ),
+                    ),
+                    "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                      predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                      objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+                    ),
+                  ),
+                  classIri = (anythingOntology + "TestClass").toSmartIri,
+                  ontologySchema = ApiV2Complex,
+                  subClassOf = Set("http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri),
                 ),
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser,
               ),
-            ),
-            "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "A test class",
-                  language = Some("en"),
-                ),
-              ),
-            ),
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
             ),
           ),
-          classIri = (anythingOntology + "TestClass").toSmartIri,
-          ontologySchema = ApiV2Complex,
-          subClassOf = Set("http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri),
-        ),
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        )
         val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
           .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -5557,7 +5521,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Create a text property.
-
       val msg = UnsafeZioRun.runOrThrow(
         ontologyResponder(
           _.createProperty(
@@ -5819,42 +5782,48 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Create a class with no cardinalities.
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = ClassInfoContentV2(
-          predicates = Map(
-            "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "A Blue Free Test class",
-                  language = Some("en"),
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(
+                classInfoContent = ClassInfoContentV2(
+                  predicates = Map(
+                    "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+                      predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                      objects = Vector(
+                        StringLiteralV2.from(
+                          value = "A Blue Free Test class",
+                          language = Some("en"),
+                        ),
+                      ),
+                    ),
+                    "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+                      predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+                      objects = Vector(
+                        StringLiteralV2.from(
+                          value = "A Blue Free Test class used for testing cardinalities",
+                          language = Some("en"),
+                        ),
+                      ),
+                    ),
+                    "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                      predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                      objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+                    ),
+                  ),
+                  classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
+                  ontologySchema = ApiV2Complex,
+                  subClassOf = Set("http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri),
                 ),
+                lastModificationDate = freetestLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser,
               ),
-            ),
-            "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-              objects = Vector(
-                StringLiteralV2.from(
-                  value = "A Blue Free Test class used for testing cardinalities",
-                  language = Some("en"),
-                ),
-              ),
-            ),
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
             ),
           ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
-          ontologySchema = ApiV2Complex,
-          subClassOf = Set("http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri),
-        ),
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
+        )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val newFreetestLastModDate = msg.ontologyMetadata.lastModificationDate
           .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
         assert(newFreetestLastModDate.isAfter(freetestLastModDate))
@@ -6154,15 +6123,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CreateClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      // check if class was created correctly
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.createClass(
+              CreateClassRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+            ),
+          ),
+        )
+        // check if class was created correctly
         val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
         val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri)

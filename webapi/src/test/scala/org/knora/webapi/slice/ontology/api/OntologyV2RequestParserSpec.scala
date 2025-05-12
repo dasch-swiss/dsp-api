@@ -20,7 +20,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreatePropertyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
@@ -34,6 +33,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.jena.DatasetOps.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+
 object OntologyV2RequestParserSpec extends ZIOSpecDefault {
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

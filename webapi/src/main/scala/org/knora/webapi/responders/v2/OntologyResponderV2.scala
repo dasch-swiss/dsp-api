@@ -39,6 +39,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.ontology.api.CreateClassRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -109,7 +110,6 @@ final case class OntologyResponderV2(
     case OntologyMetadataGetByIriRequestV2(ontologyIris) =>
       getOntologyMetadataByIriV2(ontologyIris)
     case createOntologyRequest: CreateOntologyRequestV2 => createOntology(createOntologyRequest)
-    case createClassRequest: CreateClassRequestV2       => createClass(createClassRequest)
     case changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2 =>
       changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest)
     case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 =>
@@ -578,9 +578,25 @@ final case class OntologyResponderV2(
    * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new class.
    */
   def createClass(createClassRequest: CreateClassRequestV2): Task[ReadOntologyV2] = {
-    def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] = {
-      val predicates = createClassRequest.classInfoContent.predicates.values
+    val task =
       for {
+        requestingUser <- ZIO.succeed(createClassRequest.requestingUser)
+
+        predicates          = createClassRequest.classInfoContent.predicates.values
+        externalClassIri    = createClassRequest.classInfoContent.classIri
+        externalOntologyIri = externalClassIri.getOntologyFromEntity
+
+        _ <-
+          ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
+            externalOntologyIri,
+            externalClassIri,
+            requestingUser,
+          )
+
+        internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
+        internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+
+        // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
         _ <- Validation
                .validate(
                  PredicateInfoV2.checkRequiredStringLiteralWithLanguageTag(Rdfs.Label, predicates),
@@ -686,27 +702,7 @@ final case class OntologyResponderV2(
                       requestingUser = createClassRequest.requestingUser,
                     )
       } yield response
-    }
-
-    for {
-      requestingUser <- ZIO.succeed(createClassRequest.requestingUser)
-
-      externalClassIri    = createClassRequest.classInfoContent.classIri
-      externalOntologyIri = externalClassIri.getOntologyFromEntity
-
-      _ <-
-        ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
-
-      internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
-      internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
-
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      createClassRequest.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
-                      makeTaskFuture(internalClassIri, internalOntologyIri),
-                    )
-    } yield taskResult
+    IriLocker.runWithIriLock(createClassRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, task)
   }
 
   /**
