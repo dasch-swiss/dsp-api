@@ -179,6 +179,7 @@ final case class Features(
   allowEraseProjects: Boolean,
   disableLastModificationDateCheck: Boolean,
   triggerCompactionAfterProjectErasure: Boolean,
+  enableFullLicenseCheck: Boolean,
 )
 
 final case class OpenTelemetryTracer(
