@@ -1924,49 +1924,31 @@ final case class OntologyResponderV2(
     requestingUser: User,
   ): Task[ReadOntologyV2] = {
     val ontologyIri = propertyIri.ontologyIri
-    def deleteCommentTask(propertyToUpdate: ReadPropertyInfoV2) =
-      for {
-        currentTime <- Clock.instant
-        maybeLinkValueOfPropertyToUpdateIri =
-          if (propertyToUpdate.isLinkProp) { Some(propertyIri.fromLinkPropToLinkValueProp) }
-          else { None }
-
-        // Delete the comment
-        updateSparql = sparql.v2.txt.deletePropertyComment(
-                         ontologyNamedGraphIri = ontologyIri.toInternalSchema,
-                         ontologyIri = ontologyIri.toInternalSchema,
-                         propertyIri = propertyIri.toInternalSchema,
-                         maybeLinkValuePropertyIri = maybeLinkValueOfPropertyToUpdateIri.map(_.toInternalSchema),
-                         lastModificationDate = lastModificationDate,
-                         currentTime = currentTime,
-                       )
-        _        <- save(Update(updateSparql))
-        response <- getPropertiesFromOntologyV2(Set(propertyIri), allLanguages = true, requestingUser = requestingUser)
-      } yield response
+    def deleteCommentTask(propertyToUpdate: ReadPropertyInfoV2) = for {
+      currentTime <- Clock.instant
+      updateSparql = sparql.v2.txt.deletePropertyComment(
+                       ontologyNamedGraphIri = ontologyIri.toInternalSchema,
+                       ontologyIri = ontologyIri.toInternalSchema,
+                       propertyIri = propertyToUpdate.propertyIri.toInternalSchema,
+                       maybeLinkValuePropertyIri = propertyToUpdate.linkValueProperty.map(_.toInternalSchema),
+                       lastModificationDate = lastModificationDate,
+                       currentTime = currentTime,
+                     )
+      _ <- save(Update(updateSparql))
+    } yield ()
 
     for {
       _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
       _ <- ontologyCacheHelpers.checkOntologyAndPropertyIrisForUpdate(ontologyIri, propertyIri, requestingUser)
-      propertyToUpdate <-
-        ontologyRepo
-          .findProperty(propertyIri)
-          .someOrFail(NotFoundException(s"Ontology ${propertyIri.ontologyIri.toComplexSchema.toIri} not found"))
-
-      hasComment: Boolean =
-        propertyToUpdate.entityInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)
-
-      taskResult <-
-        if (hasComment) {
-          IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteCommentTask(propertyToUpdate))
-        } else {
-          // not change anything if property has no comment
-          getPropertiesFromOntologyV2(
-            propertyIris = Set(propertyIri),
-            allLanguages = true,
-            requestingUser = requestingUser,
-          )
-        }
-    } yield taskResult
+      propertyToUpdate <- ontologyRepo
+                            .findProperty(propertyIri)
+                            .someOrFail(NotFoundException(s"Ontology ${ontologyIri.toComplexSchema.toIri} not found"))
+      hasComment = propertyToUpdate.entityInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)
+      _ <- IriLocker
+             .runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteCommentTask(propertyToUpdate))
+             .when(hasComment)
+      response <- getPropertiesFromOntologyV2(Set(propertyIri), allLanguages = true, requestingUser = requestingUser)
+    } yield response
   }
 
   /**

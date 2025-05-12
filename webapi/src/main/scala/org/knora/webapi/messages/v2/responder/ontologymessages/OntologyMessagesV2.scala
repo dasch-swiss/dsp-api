@@ -1644,6 +1644,9 @@ case class ReadPropertyInfoV2(
 
   def propertyIri: PropertyIri = PropertyIri.unsafeFrom(entityInfoContent.propertyIri)
 
+  def linkValueProperty: Option[PropertyIri] =
+    if this.isLinkProp then Some(propertyIri.fromLinkPropToLinkValueProp) else None
+
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadPropertyInfoV2 = copy(
     entityInfoContent = entityInfoContent.toOntologySchema(targetSchema),
   )
