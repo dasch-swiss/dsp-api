@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin
 import zio.URLayer
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.Features
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.admin.domain.AdminDomainModule
@@ -26,6 +27,7 @@ object AdminModule
       AppConfig &
       CacheManager &
       DspIngestClient &
+      Features &
       IriConverter &
       IriService &
       OntologyCache &
