@@ -32,7 +32,7 @@ A license has the following properties:
 Each project knows which [licenses](../../03-endpoints/api-admin/#get-adminprojectsshortcodeprojectshortcodelegal-infolicenses) are available.
 From the set of available licenses a project must enable the licenses it needs.
 New projects will be created with the DaSCH recommended licenses enabled.
-Only enabled licenses are not allowed to be used for project data.
+Only enabled licenses are allowed to be used for project data.
 
 Currently, the [set of available licenses is fixed](#available-licenses) and cannot be changed by the project.
 
