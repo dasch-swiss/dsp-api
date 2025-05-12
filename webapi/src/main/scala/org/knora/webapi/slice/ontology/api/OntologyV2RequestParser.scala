@@ -28,7 +28,6 @@ import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeGuiOrderRequestV2
@@ -79,7 +78,7 @@ case class ChangeOntologyMetadataRequestV2(
 )
 
 /**
- * Requests the addition of a class to an ontology. A successful response will be a [[ReadOntologyV2]].
+ * Requests the addition of a class to an ontology.
  *
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
  * @param lastModificationDate the ontology's last modification date.
@@ -87,6 +86,21 @@ case class ChangeOntologyMetadataRequestV2(
  * @param requestingUser       the user making the request.
  */
 case class CreateClassRequestV2(
+  classInfoContent: ClassInfoContentV2,
+  lastModificationDate: Instant,
+  apiRequestID: UUID,
+  requestingUser: User,
+)
+
+/**
+ * Requests the addition of cardinalities to a class.
+ *
+ * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
+ * @param lastModificationDate the ontology's last modification date.
+ * @param apiRequestID         the ID of the API request.
+ * @param requestingUser       the user making the request.
+ */
+case class AddCardinalitiesToClassRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,

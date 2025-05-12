@@ -39,6 +39,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.ontology.api.CreateClassRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -1105,29 +1106,34 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       freetestLastModDate = newFreetestLastModDate
 
       // Add new subproperty freetest:hasComicBookAuthor to class freetest:ComicBook
-
-      appActor ! AddCardinalitiesToClassRequestV2(
-        classInfoContent = ClassInfoContentV2(
-          predicates = Map(
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.addCardinalitiesToClass(
+              AddCardinalitiesToClassRequestV2(
+                classInfoContent = ClassInfoContentV2(
+                  predicates = Map(
+                    "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                      predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                      objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+                    ),
+                  ),
+                  classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#ComicBook".toSmartIri,
+                  ontologySchema = ApiV2Complex,
+                  directCardinalities = Map(
+                    "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasComicAuthor".toSmartIri -> KnoraCardinalityInfo(
+                      cardinality = ZeroOrOne,
+                    ),
+                  ),
+                ),
+                lastModificationDate = freetestLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser,
+              ),
             ),
           ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#ComicBook".toSmartIri,
-          ontologySchema = ApiV2Complex,
-          directCardinalities = Map(
-            "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasComicAuthor".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne,
-            ),
-          ),
-        ),
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
+        )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val comicBookClass =
           msg.classes("http://www.knora.org/ontology/0001/freetest#ComicBook".toSmartIri)
         val linkProperties      = comicBookClass.linkProperties
@@ -4066,14 +4072,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! AddCardinalitiesToClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.addCardinalitiesToClass(
+              AddCardinalitiesToClassRequestV2(
+                classInfoContent,
+                anythingLastModDate,
+                UUID.randomUUID,
+                anythingAdminUser,
+              ),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
 
@@ -4160,17 +4171,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! AddCardinalitiesToClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.addCardinalitiesToClass(
+            AddCardinalitiesToClassRequestV2(
+              classInfoContent,
+              anythingLastModDate,
+              UUID.randomUUID,
+              anythingNonAdminUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
-
+      assertFailsWithA[ForbiddenException](exit)
     }
 
     "create a link property, anything:hasOtherNothing, and add a cardinality for it to the class anything:Nothing" in {
@@ -4236,13 +4249,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! AddCardinalitiesToClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
       val expectedDirectCardinalities = Map(
         propertyIri -> KnoraCardinalityInfo(cardinality = ZeroOrOne, guiOrder = Some(0)),
         propertyIri.fromLinkPropToLinkValueProp -> KnoraCardinalityInfo(
@@ -4263,7 +4269,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.addCardinalitiesToClass(
+              AddCardinalitiesToClassRequestV2(
+                classInfoContent,
+                anythingLastModDate,
+                UUID.randomUUID,
+                anythingNonAdminUser,
+              ),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
@@ -4300,16 +4318,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! AddCardinalitiesToClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.addCardinalitiesToClass(
+            AddCardinalitiesToClassRequestV2(
+              classInfoContent,
+              anythingLastModDate,
+              UUID.randomUUID,
+              anythingNonAdminUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "add a cardinality for the property anything:hasNothingness to the class anything:Nothing" in {
@@ -4330,13 +4351,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
         ),
         ontologySchema = ApiV2Complex,
-      )
-
-      appActor ! AddCardinalitiesToClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
       )
 
       val expectedDirectCardinalities = Map(
@@ -4362,7 +4376,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         AnythingOntologyIri.makeEntityIri("hasNothingness"),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.addCardinalitiesToClass(
+              AddCardinalitiesToClassRequestV2(
+                classInfoContent,
+                anythingLastModDate,
+                UUID.randomUUID,
+                anythingNonAdminUser,
+              ),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
@@ -4395,16 +4421,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! AddCardinalitiesToClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.addCardinalitiesToClass(
+            AddCardinalitiesToClassRequestV2(
+              classInfoContent,
+              anythingLastModDate,
+              UUID.randomUUID,
+              anythingNonAdminUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "add a maxCardinality=1 for property anything:hasName to class anything:BlueThing even though the class is used in data" in {
@@ -4431,7 +4460,20 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.addCardinalitiesToClass(
+              AddCardinalitiesToClassRequestV2(
+                classInfoContent,
+                anythingLastModDate,
+                UUID.randomUUID,
+                anythingNonAdminUser,
+              ),
+            ),
+          ),
+        )
+
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
 
@@ -4519,13 +4561,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! AddCardinalitiesToClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
       val expectedDirectCardinalities = Map(
         AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
@@ -4554,7 +4589,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         AnythingOntologyIri.makeEntityIri("hasEmptiness"),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.addCardinalitiesToClass(
+              AddCardinalitiesToClassRequestV2(
+                classInfoContent,
+                anythingLastModDate,
+                UUID.randomUUID,
+                anythingNonAdminUser,
+              ),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
@@ -5683,35 +5730,39 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       anythingLastModDate = newAnythingLastModDate3
 
       // Add cardinalities to the class.
-
-      appActor ! AddCardinalitiesToClassRequestV2(
-        classInfoContent = ClassInfoContentV2(
-          predicates = Map(
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.addCardinalitiesToClass(
+              AddCardinalitiesToClassRequestV2(
+                classInfoContent = ClassInfoContentV2(
+                  predicates = Map(
+                    "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                      predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                      objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+                    ),
+                  ),
+                  classIri = (anythingOntology + "TestClass").toSmartIri,
+                  ontologySchema = ApiV2Complex,
+                  directCardinalities = Map(
+                    (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
+                      cardinality = ZeroOrOne,
+                    ),
+                    (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
+                      cardinality = ZeroOrOne,
+                    ),
+                    (anythingOntology + "testLinkProp").toSmartIri -> KnoraCardinalityInfo(
+                      cardinality = ZeroOrOne,
+                    ),
+                  ),
+                ),
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser,
+              ),
             ),
           ),
-          classIri = (anythingOntology + "TestClass").toSmartIri,
-          ontologySchema = ApiV2Complex,
-          directCardinalities = Map(
-            (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne,
-            ),
-            (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne,
-            ),
-            (anythingOntology + "testLinkProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne,
-            ),
-          ),
-        ),
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        )
         val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
           .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -5947,32 +5998,37 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       freetestLastModDate = newFreetestLastModDate2
 
       // Add cardinalities to the class.
-
-      appActor ! AddCardinalitiesToClassRequestV2(
-        classInfoContent = ClassInfoContentV2(
-          predicates = Map(
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.addCardinalitiesToClass(
+              AddCardinalitiesToClassRequestV2(
+                classInfoContent = ClassInfoContentV2(
+                  predicates = Map(
+                    "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                      predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                      objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+                    ),
+                  ),
+                  classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
+                  ontologySchema = ApiV2Complex,
+                  directCardinalities = Map(
+                    "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
+                      cardinality = ZeroOrOne,
+                    ),
+                    "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestIntProp".toSmartIri -> KnoraCardinalityInfo(
+                      cardinality = ZeroOrOne,
+                    ),
+                  ),
+                ),
+                lastModificationDate = freetestLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser,
+              ),
             ),
           ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
-          ontologySchema = ApiV2Complex,
-          directCardinalities = Map(
-            "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne,
-            ),
-            "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestIntProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne,
-            ),
-          ),
-        ),
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
+        )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val newFreetestLastModDate = msg.ontologyMetadata.lastModificationDate
           .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
         assert(newFreetestLastModDate.isAfter(freetestLastModDate))
@@ -6241,13 +6297,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! AddCardinalitiesToClassRequestV2(
-        classInfoContent = classWithNewCardinalityInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
       // check if cardinality was added correctly
       val expectedDirectCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map(
         propertyIri -> KnoraCardinalityInfo(
@@ -6266,7 +6315,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.addCardinalitiesToClass(
+              AddCardinalitiesToClassRequestV2(
+                classWithNewCardinalityInfoContent,
+                anythingLastModDate,
+                UUID.randomUUID,
+                anythingAdminUser,
+              ),
+            ),
+          ),
+        )
         val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
         val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri)

@@ -39,6 +39,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.ontology.api.CreateClassRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
@@ -112,8 +113,6 @@ final case class OntologyResponderV2(
     case createOntologyRequest: CreateOntologyRequestV2 => createOntology(createOntologyRequest)
     case changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2 =>
       changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest)
-    case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 =>
-      addCardinalitiesToClass(addCardinalitiesToClassRequest)
     case r: ReplaceClassCardinalitiesRequestV2 => replaceClassCardinalities(r)
     case canDeleteCardinalitiesFromClassRequestV2: CanDeleteCardinalitiesFromClassRequestV2 =>
       canDeleteCardinalitiesFromClass(canDeleteCardinalitiesFromClassRequestV2)
@@ -831,156 +830,143 @@ final case class OntologyResponderV2(
    * @param addCardinalitiesRequest the request to add the cardinalities.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  def addCardinalitiesToClass(
-    addCardinalitiesRequest: AddCardinalitiesToClassRequestV2,
-  ): Task[ReadOntologyV2] = {
-    def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] = {
-      for {
-        cacheData                           <- ontologyCache.getCacheData
-        internalClassDef: ClassInfoContentV2 = addCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
-
-        // Check that the ontology exists and has not been updated by another user since the client last read it.
-        _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
-               internalOntologyIri,
-               addCardinalitiesRequest.lastModificationDate,
-             )
-
-        // Check that the class's rdf:type is owl:Class.
-        rdfType <- ZIO
-                     .fromOption(internalClassDef.getIriObject(OntologyConstants.Rdf.Type.toSmartIri))
-                     .orElseFail(BadRequestException(s"No rdf:type specified"))
-        _ <- ZIO.when(rdfType != OntologyConstants.Owl.Class.toSmartIri) {
-               ZIO.fail(BadRequestException(s"Invalid rdf:type for property: $rdfType"))
-             }
-
-        // Check that cardinalities were submitted.
-        _ <- ZIO.when(internalClassDef.directCardinalities.isEmpty) {
-               ZIO.fail(BadRequestException("No cardinalities specified"))
-             }
-
-        // Check that the class exists, that it's a Knora resource class, and that the submitted cardinalities aren't for properties that already have cardinalities
-        // directly defined on the class.
-        ontology = cacheData.ontologies(internalOntologyIri)
-        existingReadClassInfo <-
-          ZIO
-            .fromOption(ontology.classes.get(internalClassIri))
-            .orElseFail(
-              BadRequestException(s"Class ${addCardinalitiesRequest.classInfoContent.classIri} does not exist"),
-            )
-
-        existingClassDef: ClassInfoContentV2 = existingReadClassInfo.entityInfoContent
-
-        redundantCardinalities = existingClassDef.directCardinalities.keySet
-                                   .intersect(internalClassDef.directCardinalities.keySet)
-
-        _ <- ZIO.when(redundantCardinalities.nonEmpty) {
-               val msg =
-                 s"The cardinalities of ${addCardinalitiesRequest.classInfoContent.classIri} already include the following property or properties: ${redundantCardinalities
-                     .mkString(", ")}"
-               ZIO.fail(BadRequestException(msg))
-             }
-
-        // Is there any property with minCardinality>0 or Cardinality=1?
-        hasCardinality: Option[(SmartIri, KnoraCardinalityInfo)] =
-          addCardinalitiesRequest.classInfoContent.directCardinalities.find {
-            case (_, constraint: KnoraCardinalityInfo) => constraint.cardinality.min > 0
-          }
-
-        _ <- hasCardinality match {
-               case Some((propIri: SmartIri, cardinality: KnoraCardinalityInfo)) =>
-                 ZIO
-                   .fail(
-                     BadRequestException(
-                       s"Cardinality ${cardinality.toString} for $propIri cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data",
-                     ),
-                   )
-                   .whenZIO(iriService.isClassUsedInData(internalClassIri))
-               case None => ZIO.unit
-             }
-
-        // Make an updated class definition.
-        newInternalClassDef = existingClassDef.copy(
-                                directCardinalities =
-                                  existingClassDef.directCardinalities ++ internalClassDef.directCardinalities,
-                              )
-
-        // Check that the new cardinalities are valid, and add any inherited cardinalities.
-
-        allBaseClassIrisWithoutInternal = newInternalClassDef.subClassOf.toSeq.flatMap { baseClassIri =>
-                                            cacheData.classToSuperClassLookup.getOrElse(
-                                              baseClassIri,
-                                              Seq.empty[SmartIri],
-                                            )
-                                          }
-
-        allBaseClassIris = internalClassIri +: allBaseClassIrisWithoutInternal
-        existingLinkPropsToKeep: Set[SmartIri] =
-          existingReadClassInfo.entityInfoContent.directCardinalities.keySet
-            .flatMap(p => cacheData.ontologies(p.getOntologyFromEntity).properties.get(p))
-            .filter(_.isLinkProp)
-            .map(_.entityInfoContent.propertyIri)
-
-        cardinalityCheckResult <- OntologyHelpers
-                                    .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
-                                      internalClassDef = newInternalClassDef,
-                                      allBaseClassIris = allBaseClassIris.toSet,
-                                      cacheData = cacheData,
-                                      existingLinkPropsToKeep = existingLinkPropsToKeep,
-                                    )
-                                    .toZIO
-        (newInternalClassDefWithLinkValueProps, _) = cardinalityCheckResult
-
-        // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
-        _ <- ZIO.attempt(
-               OntologyCache.checkOntologyReferencesInClassDef(
-                 cacheData,
-                 newInternalClassDefWithLinkValueProps,
-                 (msg: String) => throw BadRequestException(msg),
-               ),
-             )
-
-        // Add the cardinalities to the class definition in the triplestore.
-        currentTime = Instant.now
-        cardinalitiesToAdd =
-          newInternalClassDefWithLinkValueProps.directCardinalities -- existingClassDef.directCardinalities.keySet
-
-        updateSparql = sparql.v2.txt.addCardinalitiesToClass(
-                         ontologyNamedGraphIri = internalOntologyIri,
-                         ontologyIri = internalOntologyIri,
-                         classIri = internalClassIri,
-                         cardinalitiesToAdd = cardinalitiesToAdd,
-                         lastModificationDate = addCardinalitiesRequest.lastModificationDate,
-                         currentTime = currentTime,
-                       )
-        _ <- save(Update(updateSparql))
-        // Read the data back from the cache.
-        response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
-                      classIris = Set(internalClassIri),
-                      allLanguages = true,
-                      requestingUser = addCardinalitiesRequest.requestingUser,
-                    )
-      } yield response
-    }
-
-    for {
+  def addCardinalitiesToClass(addCardinalitiesRequest: AddCardinalitiesToClassRequestV2): Task[ReadOntologyV2] = {
+    val task = for {
       requestingUser <- ZIO.succeed(addCardinalitiesRequest.requestingUser)
 
       externalClassIri    = addCardinalitiesRequest.classInfoContent.classIri
+      internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
       externalOntologyIri = externalClassIri.getOntologyFromEntity
+      internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
       _ <-
         ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
 
-      internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
-      internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+      cacheData                           <- ontologyCache.getCacheData
+      internalClassDef: ClassInfoContentV2 = addCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
 
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-                      addCardinalitiesRequest.apiRequestID,
-                      ONTOLOGY_CACHE_LOCK_IRI,
-                      makeTaskFuture(internalClassIri, internalOntologyIri),
-                    )
-    } yield taskResult
+      // Check that the ontology exists and has not been updated by another user since the client last read it.
+      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(
+             internalOntologyIri,
+             addCardinalitiesRequest.lastModificationDate,
+           )
+
+      // Check that the class's rdf:type is owl:Class.
+      rdfType <- ZIO
+                   .fromOption(internalClassDef.getIriObject(OntologyConstants.Rdf.Type.toSmartIri))
+                   .orElseFail(BadRequestException(s"No rdf:type specified"))
+      _ <- ZIO.when(rdfType != OntologyConstants.Owl.Class.toSmartIri) {
+             ZIO.fail(BadRequestException(s"Invalid rdf:type for property: $rdfType"))
+           }
+
+      // Check that cardinalities were submitted.
+      _ <- ZIO.when(internalClassDef.directCardinalities.isEmpty) {
+             ZIO.fail(BadRequestException("No cardinalities specified"))
+           }
+
+      // Check that the class exists, that it's a Knora resource class, and that the submitted cardinalities aren't for properties that already have cardinalities
+      // directly defined on the class.
+      ontology = cacheData.ontologies(internalOntologyIri)
+      existingReadClassInfo <-
+        ZIO
+          .fromOption(ontology.classes.get(internalClassIri))
+          .orElseFail(
+            BadRequestException(s"Class ${addCardinalitiesRequest.classInfoContent.classIri} does not exist"),
+          )
+
+      existingClassDef: ClassInfoContentV2 = existingReadClassInfo.entityInfoContent
+
+      redundantCardinalities = existingClassDef.directCardinalities.keySet
+                                 .intersect(internalClassDef.directCardinalities.keySet)
+
+      _ <- ZIO.when(redundantCardinalities.nonEmpty) {
+             val msg =
+               s"The cardinalities of ${addCardinalitiesRequest.classInfoContent.classIri} already include the following property or properties: ${redundantCardinalities
+                   .mkString(", ")}"
+             ZIO.fail(BadRequestException(msg))
+           }
+
+      // Is there any property with minCardinality>0 or Cardinality=1?
+      hasCardinality: Option[(SmartIri, KnoraCardinalityInfo)] =
+        addCardinalitiesRequest.classInfoContent.directCardinalities.find {
+          case (_, constraint: KnoraCardinalityInfo) => constraint.cardinality.min > 0
+        }
+
+      _ <- hasCardinality match {
+             case Some((propIri: SmartIri, cardinality: KnoraCardinalityInfo)) =>
+               ZIO
+                 .fail(
+                   BadRequestException(
+                     s"Cardinality ${cardinality.toString} for $propIri cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data",
+                   ),
+                 )
+                 .whenZIO(iriService.isClassUsedInData(internalClassIri))
+             case None => ZIO.unit
+           }
+
+      // Make an updated class definition.
+      newInternalClassDef = existingClassDef.copy(
+                              directCardinalities =
+                                existingClassDef.directCardinalities ++ internalClassDef.directCardinalities,
+                            )
+
+      // Check that the new cardinalities are valid, and add any inherited cardinalities.
+
+      allBaseClassIrisWithoutInternal = newInternalClassDef.subClassOf.toSeq.flatMap { baseClassIri =>
+                                          cacheData.classToSuperClassLookup.getOrElse(
+                                            baseClassIri,
+                                            Seq.empty[SmartIri],
+                                          )
+                                        }
+
+      allBaseClassIris = internalClassIri +: allBaseClassIrisWithoutInternal
+      existingLinkPropsToKeep: Set[SmartIri] =
+        existingReadClassInfo.entityInfoContent.directCardinalities.keySet
+          .flatMap(p => cacheData.ontologies(p.getOntologyFromEntity).properties.get(p))
+          .filter(_.isLinkProp)
+          .map(_.entityInfoContent.propertyIri)
+
+      cardinalityCheckResult <- OntologyHelpers
+                                  .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
+                                    internalClassDef = newInternalClassDef,
+                                    allBaseClassIris = allBaseClassIris.toSet,
+                                    cacheData = cacheData,
+                                    existingLinkPropsToKeep = existingLinkPropsToKeep,
+                                  )
+                                  .toZIO
+      (newInternalClassDefWithLinkValueProps, _) = cardinalityCheckResult
+
+      // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
+      _ <- ZIO.attempt(
+             OntologyCache.checkOntologyReferencesInClassDef(
+               cacheData,
+               newInternalClassDefWithLinkValueProps,
+               (msg: String) => throw BadRequestException(msg),
+             ),
+           )
+
+      // Add the cardinalities to the class definition in the triplestore.
+      currentTime = Instant.now
+      cardinalitiesToAdd =
+        newInternalClassDefWithLinkValueProps.directCardinalities -- existingClassDef.directCardinalities.keySet
+
+      updateSparql = sparql.v2.txt.addCardinalitiesToClass(
+                       ontologyNamedGraphIri = internalOntologyIri,
+                       ontologyIri = internalOntologyIri,
+                       classIri = internalClassIri,
+                       cardinalitiesToAdd = cardinalitiesToAdd,
+                       lastModificationDate = addCardinalitiesRequest.lastModificationDate,
+                       currentTime = currentTime,
+                     )
+      _ <- save(Update(updateSparql))
+      // Read the data back from the cache.
+      response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
+                    classIris = Set(internalClassIri),
+                    allLanguages = true,
+                    requestingUser = addCardinalitiesRequest.requestingUser,
+                  )
+    } yield response
+    IriLocker.runWithIriLock(addCardinalitiesRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, task)
   }
 
   /**
