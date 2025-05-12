@@ -345,9 +345,7 @@ final case class OntologyResponderV2(
     requestingUser: User,
   ): Task[ReadOntologyV2] =
     for {
-      ontology <- ontologyRepo
-                    .findById(ontologyIri)
-                    .someOrFail(NotFoundException(s"Ontology not found: $ontologyIri"))
+      ontology <- getOntologyOrFailNotFound(ontologyIri)
       _ <- ZIO
              .fail(BadRequestException(s"The standoff ontology is not available in the API v2 simple schema"))
              .when(
@@ -382,7 +380,7 @@ final case class OntologyResponderV2(
                        .succeed(propertyIris.map(_.ontologyIri))
                        .filterOrFail(_.size == 1)(BadRequestException(s"Only one ontology may be queried per request"))
                        .map(_.head)
-      ontology             <- ontologyRepo.findById(ontologyIri).someOrFail(NotFoundException(s"Ontology not found: $ontologyIri"))
+      ontology             <- getOntologyOrFailNotFound(ontologyIri)
       propertyInfoResponse <- getEntityInfoResponseV2(propertyIris = propertyIris, requestingUser = requestingUser)
       userLang              = if allLanguages then None else Some(requestingUser.lang)
     } yield ReadOntologyV2(
@@ -497,19 +495,17 @@ final case class OntologyResponderV2(
     apiRequestID: UUID,
     requestingUser: User,
   ): Task[ReadOntologyMetadataV2] = {
-    val internalOntologyIri = ontologyIri.toInternalSchema
-
     val changeTask: Task[ReadOntologyMetadataV2] = for {
-      _                 <- OntologyHelpers.checkExternalOntologyIriForUpdate(ontologyIri.smartIri)
-      ontology          <- ontologyRepo.findById(ontologyIri).someOrFail(NotFoundException(s"Ontology not found: $ontologyIri"))
-      projectIri        <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(internalOntologyIri, requestingUser)
-      _                 <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
+      _                 <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
+      ontology          <- getOntologyOrFailNotFound(ontologyIri)
+      projectIri        <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(ontologyIri, requestingUser)
+      _                 <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
       oldMetadata        = ontology.ontologyMetadata
       ontologyHasComment = oldMetadata.comment.nonEmpty
       currentTime       <- Clock.instant
       updateSparql = sparql.v2.txt.changeOntologyMetadata(
-                       ontologyNamedGraphIri = internalOntologyIri,
-                       ontologyIri = internalOntologyIri,
+                       ontologyNamedGraphIri = ontologyIri.toInternalSchema,
+                       ontologyIri = ontologyIri.toInternalSchema,
                        newLabel = label,
                        hasOldComment = ontologyHasComment,
                        deleteOldComment = ontologyHasComment && comment.nonEmpty,
@@ -521,7 +517,7 @@ final case class OntologyResponderV2(
     } yield ReadOntologyMetadataV2(
       Set(
         OntologyMetadataV2(
-          ontologyIri = internalOntologyIri,
+          ontologyIri = ontologyIri.toInternalSchema,
           projectIri = Some(projectIri),
           label = label.orElse(oldMetadata.label),
           comment = comment.orElse(oldMetadata.comment),
@@ -533,26 +529,28 @@ final case class OntologyResponderV2(
     IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, changeTask)
   }
 
+  private def getOntologyOrFailNotFound(iri: OntologyIri) =
+    ontologyRepo.findById(iri).someOrFail(NotFoundException(s"Ontology not found: ${iri.toComplexSchema}"))
+
   def deleteOntologyComment(
     ontologyIri: OntologyIri,
     lastModificationDate: Instant,
     apiRequestID: UUID,
     requestingUser: User,
   ): Task[ReadOntologyMetadataV2] = {
-    val internalOntologyIri: SmartIri = ontologyIri.toInternalSchema
     val deleteComment = for {
-      _          <- OntologyHelpers.checkExternalOntologyIriForUpdate(ontologyIri.smartIri)
-      projectIri <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(internalOntologyIri, requestingUser)
-      _          <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
-      ontology   <- ontologyRepo.findById(ontologyIri).someOrFail(NotFoundException(s"Ontology not found: $ontologyIri"))
+      _          <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
+      projectIri <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(ontologyIri, requestingUser)
+      _          <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
+      ontology   <- getOntologyOrFailNotFound(ontologyIri)
 
       oldMetadata        = ontology.ontologyMetadata
       ontologyHasComment = oldMetadata.comment.nonEmpty
 
       currentTime <- Clock.instant
       updateSparql = sparql.v2.txt.changeOntologyMetadata(
-                       ontologyNamedGraphIri = internalOntologyIri,
-                       ontologyIri = internalOntologyIri,
+                       ontologyNamedGraphIri = ontologyIri.toInternalSchema,
+                       ontologyIri = ontologyIri.toInternalSchema,
                        newLabel = None,
                        hasOldComment = ontologyHasComment,
                        deleteOldComment = true,
@@ -564,7 +562,7 @@ final case class OntologyResponderV2(
     } yield ReadOntologyMetadataV2(
       Set(
         OntologyMetadataV2(
-          ontologyIri = internalOntologyIri,
+          ontologyIri = ontologyIri.toInternalSchema,
           projectIri = Some(projectIri),
           label = oldMetadata.label,
           comment = None,
@@ -1461,20 +1459,19 @@ final case class OntologyResponderV2(
     lastModificationDate: Instant,
     apiRequestID: UUID,
   ): Task[SuccessResponseV2] = {
-    val internalOntologyIri = ontologyIri.toInternalSchema
     val deleteTask: Task[SuccessResponseV2] =
       for {
-        _                     <- OntologyHelpers.checkExternalOntologyIriForUpdate(ontologyIri.toComplexSchema)
-        ontology              <- ontologyRepo.findById(ontologyIri).someOrFail(NotFoundException(s"Ontology $ontologyIri not found"))
-        _                     <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
+        _                     <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
+        ontology              <- getOntologyOrFailNotFound(ontologyIri)
+        _                     <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
         subjectsUsingOntology <- ontologyTriplestoreHelpers.getSubjectsUsingOntology(ontology)
         _ <- ZIO.when(subjectsUsingOntology.nonEmpty) {
                val sortedSubjects = subjectsUsingOntology.map(s => "<" + s + ">").toVector.sorted.mkString(", ")
                val msg =
-                 s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} cannot be deleted, because of subjects that refer to it: $sortedSubjects"
+                 s"Ontology ${ontologyIri.toComplexSchema} cannot be deleted, because of subjects that refer to it: $sortedSubjects"
                ZIO.fail(BadRequestException(msg))
              }
-        _ <- save(Update(sparql.v2.txt.deleteOntology(internalOntologyIri)))
+        _ <- save(Update(sparql.v2.txt.deleteOntology(ontologyIri.toInternalSchema)))
       } yield SuccessResponseV2(s"Ontology ${ontologyIri.toComplexSchema} has been deleted")
     IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI, deleteTask)
   }

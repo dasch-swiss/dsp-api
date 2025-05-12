@@ -7,11 +7,14 @@ package org.knora.webapi.util
 
 import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 
 /**
  * Holds an optional, mutable IRI for use in tests.
  */
-class MutableTestIri {
+class MutableTestIri { self =>
   private var maybeIri: Option[IRI] = None
 
   /**
@@ -37,6 +40,8 @@ class MutableTestIri {
    */
   def get: IRI =
     maybeIri.getOrElse(throw TestIriException("This test could not be run because a previous test failed"))
+
+  def asOntologyIri(implicit sf: StringFormatter): OntologyIri = OntologyIri.unsafeFrom(self.get.toSmartIri)
 }
 
 /**

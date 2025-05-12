@@ -298,6 +298,9 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo
            )
     } yield ()
 
+  def checkPermissionsForOntologyUpdate(ontologyIri: OntologyIri, requestingUser: User): Task[ProjectIri] =
+    checkPermissionsForOntologyUpdate(ontologyIri.toInternalSchema, requestingUser)
+
   /**
    * Throws an exception if the requesting user does not have permission to update an ontology.
    *

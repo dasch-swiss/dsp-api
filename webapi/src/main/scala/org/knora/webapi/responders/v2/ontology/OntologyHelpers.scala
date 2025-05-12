@@ -27,6 +27,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 
@@ -46,8 +47,11 @@ object OntologyHelpers {
     } else if (externalOntologyIri.isKnoraBuiltInDefinitionIri) {
       ZIO.fail(BadRequestException(s"Ontology $externalOntologyIri cannot be modified via the Knora API"))
     } else {
-      ZIO.succeed(())
+      ZIO.unit
     }
+
+  def checkOntologyIriForUpdate(ontologyIri: OntologyIri): Task[Unit] =
+    checkExternalOntologyIriForUpdate(ontologyIri.toComplexSchema)
 
   /**
    * Checks whether an entity IRI is valid for an update.

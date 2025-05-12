@@ -216,7 +216,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val response = UnsafeZioRun.runOrThrow(
         ontologyResponder(
           _.changeOntologyMetadata(
-            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            ontologyIri = fooIri.asOntologyIri,
             label = Some(newLabel),
             lastModificationDate = fooLastModDate,
             apiRequestID = UUID.randomUUID,
@@ -242,7 +242,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val response = UnsafeZioRun.runOrThrow(
         ontologyResponder(
           _.changeOntologyMetadata(
-            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            ontologyIri = fooIri.asOntologyIri,
             comment = Some(aComment),
             lastModificationDate = fooLastModDate,
             apiRequestID = UUID.randomUUID,
@@ -269,7 +269,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val response = UnsafeZioRun.runOrThrow(
         ontologyResponder(
           _.changeOntologyMetadata(
-            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            ontologyIri = fooIri.asOntologyIri,
             label = Some(aLabel),
             comment = Some(aComment),
             lastModificationDate = fooLastModDate,
@@ -297,7 +297,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val response = UnsafeZioRun.runOrThrow(
         ontologyResponder(
           _.changeOntologyMetadata(
-            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            ontologyIri = fooIri.asOntologyIri,
             label = Some(newLabel),
             lastModificationDate = fooLastModDate,
             apiRequestID = UUID.randomUUID,
@@ -320,7 +320,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "delete the comment from 'foo'" in {
       appActor ! DeleteOntologyCommentRequestV2(
-        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+        ontologyIri = fooIri.asOntologyIri,
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser,
@@ -442,13 +442,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "delete the 'foo' ontology" in {
       val _ = UnsafeZioRun.runOrThrow(
-        ontologyResponder(
-          _.deleteOntology(
-            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
-            lastModificationDate = fooLastModDate,
-            apiRequestID = UUID.randomUUID,
-          ),
-        ),
+        ontologyResponder(_.deleteOntology(fooIri.asOntologyIri, fooLastModDate, UUID.randomUUID)),
       )
 
       // Request the metadata of all ontologies to check that 'foo' isn't listed.
