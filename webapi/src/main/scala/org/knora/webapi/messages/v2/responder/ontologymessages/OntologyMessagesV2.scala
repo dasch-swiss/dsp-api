@@ -289,21 +289,6 @@ case class ChangeGuiOrderRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Deletes the comment from an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
- *
- * @param ontologyIri          the external ontology IRI.
- * @param lastModificationDate the ontology's last modification date, returned in a previous operation.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class DeleteOntologyCommentRequestV2(
-  ontologyIri: OntologyIri,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
  * Requests all available information about a list of ontology entities (classes and/or properties). A successful response will be an
  * [[EntityInfoGetResponseV2]].
  *

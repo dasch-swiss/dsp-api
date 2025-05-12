@@ -111,9 +111,7 @@ final case class OntologyResponderV2(
     case OntologyMetadataGetByIriRequestV2(ontologyIris) =>
       getOntologyMetadataByIriV2(ontologyIris)
     case createOntologyRequest: CreateOntologyRequestV2 => createOntology(createOntologyRequest)
-    case req: DeleteOntologyCommentRequestV2 =>
-      deleteOntologyComment(req.ontologyIri, req.lastModificationDate, req.apiRequestID, req.requestingUser)
-    case createClassRequest: CreateClassRequestV2 => createClass(createClassRequest)
+    case createClassRequest: CreateClassRequestV2       => createClass(createClassRequest)
     case changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2 =>
       changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest)
     case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 =>

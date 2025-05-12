@@ -319,14 +319,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "delete the comment from 'foo'" in {
-      appActor ! DeleteOntologyCommentRequestV2(
-        ontologyIri = fooIri.asOntologyIri,
-        lastModificationDate = fooLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
-      )
-
-      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+      val response = UnsafeZioRun.runOrThrow(
+        ontologyResponder(_.deleteOntologyComment(fooIri.asOntologyIri, fooLastModDate, UUID.randomUUID, imagesUser)),
+     )
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri == fooIri.get.toSmartIri)
