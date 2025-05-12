@@ -170,25 +170,6 @@ case class ChangePropertyGuiElementRequest(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Requests that a property's labels or comments are changed. A successful response will be a [[ReadOntologyV2]].
- *
- * @param propertyIri          the IRI of the property.
- * @param predicateToUpdate    `rdfs:label` or `rdfs:comment`.
- * @param newObjects           the property's new labels or comments.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class ChangePropertyLabelsOrCommentsRequestV2(
-  propertyIri: PropertyIri,
-  predicateToUpdate: LabelOrComment,
-  newObjects: Seq[StringLiteralV2],
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
  * Deletes the comment from a property. A successful response will be a [[ReadOntologyV2]].
  *
  * @param propertyIri          the IRI of the property.

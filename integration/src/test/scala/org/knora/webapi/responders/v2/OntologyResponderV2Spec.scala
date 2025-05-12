@@ -40,6 +40,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
+import org.knora.webapi.slice.ontology.api.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.slice.ontology.api.CreateClassRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -1999,19 +2000,21 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         StringLiteralV2.from("hat Namen", Some("de")),
       )
 
-      appActor ! ChangePropertyLabelsOrCommentsRequestV2(
-        propertyIri = propertyIri,
-        predicateToUpdate = LabelOrComment.Label,
-        newObjects = newObjects,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.changePropertyLabelsOrComments(
+            ChangePropertyLabelsOrCommentsRequestV2(
+              propertyIri,
+              LabelOrComment.Label,
+              newObjects,
+              anythingLastModDate,
+              UUID.randomUUID,
+              anythingNonAdminUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
-
+      assertFailsWithA[ForbiddenException](exit)
     }
 
     "change the labels of a property" in {
@@ -2023,16 +2026,21 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         StringLiteralV2.from("a nom", Some("fr")),
       )
 
-      appActor ! ChangePropertyLabelsOrCommentsRequestV2(
-        propertyIri = propertyIri,
-        predicateToUpdate = LabelOrComment.Label,
-        newObjects = newObjects,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.changePropertyLabelsOrComments(
+              ChangePropertyLabelsOrCommentsRequestV2(
+                propertyIri,
+                LabelOrComment.Label,
+                newObjects,
+                anythingLastModDate,
+                UUID.randomUUID,
+                anythingAdminUser,
+              ),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo = externalOntology.properties(propertyIri.smartIri)
@@ -2058,30 +2066,27 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         StringLiteralV2.from("a nom", Some("fr")),
       )
 
-      appActor ! ChangePropertyLabelsOrCommentsRequestV2(
-        propertyIri = propertyIri,
-        predicateToUpdate = LabelOrComment.Label,
-        newObjects = newObjects,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val changeReq = ChangePropertyLabelsOrCommentsRequestV2(
+        propertyIri,
+        LabelOrComment.Label,
+        newObjects,
+        anythingLastModDate,
+        UUID.randomUUID,
+        anythingAdminUser,
       )
+      val msg = UnsafeZioRun.runOrThrow(ontologyResponder(_.changePropertyLabelsOrComments(changeReq)))
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val readPropertyInfo = externalOntology.properties(propertyIri.smartIri)
-        readPropertyInfo.entityInfoContent.predicates(Rdfs.Label.toSmartIri).objects should ===(
-          newObjects,
-        )
+      val externalOntology = msg.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.properties.size == 1)
+      val readPropertyInfo = externalOntology.properties(propertyIri.smartIri)
+      readPropertyInfo.entityInfoContent.predicates(Rdfs.Label.toSmartIri).objects should ===(newObjects)
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not allow a user to change the comments of a property if they are not a sysadmin or an admin in the ontology's project" in {
@@ -2097,19 +2102,21 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         StringLiteralV2.from("Der Name eines Dinges", Some("de")),
       )
 
-      appActor ! ChangePropertyLabelsOrCommentsRequestV2(
-        propertyIri = propertyIri,
-        predicateToUpdate = LabelOrComment.Comment,
-        newObjects = newObjects,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser,
+      val exit = UnsafeZioRun.run(
+        ontologyResponder(
+          _.changePropertyLabelsOrComments(
+            ChangePropertyLabelsOrCommentsRequestV2(
+              propertyIri,
+              LabelOrComment.Comment,
+              newObjects,
+              anythingLastModDate,
+              UUID.randomUUID,
+              anythingNonAdminUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
-
+      assertFailsWithA[ForbiddenException](exit)
     }
 
     "change the comments of a property" in {
@@ -2129,16 +2136,21 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
       }
 
-      appActor ! ChangePropertyLabelsOrCommentsRequestV2(
-        propertyIri = propertyIri,
-        predicateToUpdate = LabelOrComment.Comment,
-        newObjects = newObjects,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.changePropertyLabelsOrComments(
+              ChangePropertyLabelsOrCommentsRequestV2(
+                propertyIri,
+                LabelOrComment.Comment,
+                newObjects,
+                anythingLastModDate,
+                UUID.randomUUID,
+                anythingAdminUser,
+              ),
+            ),
+          ),
+        )
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo = externalOntology.properties(propertyIri.smartIri)
@@ -2172,16 +2184,22 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
       }
 
-      appActor ! ChangePropertyLabelsOrCommentsRequestV2(
-        propertyIri = propertyIri,
-        predicateToUpdate = LabelOrComment.Comment,
-        newObjects = newObjects,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
+      {
+        val msg = UnsafeZioRun.runOrThrow(
+          ontologyResponder(
+            _.changePropertyLabelsOrComments(
+              ChangePropertyLabelsOrCommentsRequestV2(
+                propertyIri,
+                LabelOrComment.Comment,
+                newObjects,
+                anythingLastModDate,
+                UUID.randomUUID,
+                anythingAdminUser,
+              ),
+            ),
+          ),
+        )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo = externalOntology.properties(propertyIri.smartIri)

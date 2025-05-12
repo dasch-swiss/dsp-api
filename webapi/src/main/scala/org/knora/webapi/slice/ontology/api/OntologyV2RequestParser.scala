@@ -32,7 +32,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinal
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeGuiOrderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyGuiElementRequest
-import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreatePropertyRequestV2
@@ -102,6 +101,25 @@ case class CreateClassRequestV2(
  */
 case class AddCardinalitiesToClassRequestV2(
   classInfoContent: ClassInfoContentV2,
+  lastModificationDate: Instant,
+  apiRequestID: UUID,
+  requestingUser: User,
+)
+
+/**
+ * Requests that a property's labels or comments are changed.
+ *
+ * @param propertyIri          the IRI of the property.
+ * @param predicateToUpdate    `rdfs:label` or `rdfs:comment`.
+ * @param newObjects           the property's new labels or comments.
+ * @param lastModificationDate the ontology's last modification date.
+ * @param apiRequestID         the ID of the API request.
+ * @param requestingUser       the user making the request.
+ */
+case class ChangePropertyLabelsOrCommentsRequestV2(
+  propertyIri: PropertyIri,
+  predicateToUpdate: LabelOrComment,
+  newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
