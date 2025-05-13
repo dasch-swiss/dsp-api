@@ -6,6 +6,7 @@
 @import org.knora.webapi.messages.SmartIri
 @import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 @import java.time.Instant
+@import eu.timepit.refined.types.string.NonEmptyString
 
 @*
  * Creates a new, empty ontology. If the ontology already exists, this update does nothing.
@@ -20,7 +21,7 @@
   projectIri: ProjectIri,
   isShared: Boolean,
   ontologyLabel: String,
-  ontologyComment: Option[String],
+  ontologyComment: Option[NonEmptyString],
   currentTime: Instant)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -36,7 +37,7 @@ INSERT {
             knora-base:isShared @isShared ;
             rdfs:label """@ontologyLabel"""^^xsd:string ;
             @if(ontologyComment.nonEmpty) {
-                rdfs:comment """@ontologyComment.get"""^^xsd:string ;
+                rdfs:comment """@ontologyComment.get.value"""^^xsd:string ;
             }
             knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
     }
