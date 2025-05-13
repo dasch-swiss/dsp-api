@@ -1145,24 +1145,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValueAsString should ===(valueAsString)
     }
 
-    "not update a text value without a comment without changing it" in {
-      val resourceIri: IRI      = AThing.iri
-      val valueAsString: String = "text without standoff"
-
-      val jsonLDEntity = updateTextValueWithoutStandoffRequest(
-        resourceIri = resourceIri,
-        valueIri = textValueWithoutStandoffIri.get,
-        valueAsString = valueAsString,
-      )
-
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
-    }
-
     "not update a text value so it's empty" in {
       val resourceIri: IRI      = AThing.iri
       val valueAsString: String = ""
@@ -1260,25 +1242,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         .getRequiredString(KnoraApiV2Complex.ValueAsString)
         .fold(msg => throw BadRequestException(msg), identity)
       savedValueAsString should ===(valueAsString)
-    }
-
-    "not update a text value without standoff and with a comment without changing it" in {
-      val resourceIri: IRI      = AThing.iri
-      val valueAsString: String = "text without standoff updated"
-
-      val jsonLDEntity = updateTextValueWithCommentRequest(
-        resourceIri = resourceIri,
-        valueIri = textValueWithoutStandoffIri.get,
-        valueAsString = valueAsString,
-        valueHasComment = "Adding a comment",
-      )
-
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
     }
 
     "update a text value without standoff, changing only the a comment" in {
@@ -1661,9 +1624,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       // create standoff from XML
-      val mappingRequest = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      val mappingRequest = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~>
+        addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val mappingResponse: HttpResponse = singleAwaitingRequest(mappingRequest)
       assert(mappingResponse.status == StatusCodes.OK, mappingResponse.toString)
 
@@ -4524,24 +4486,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedTargetIri should ===(linkTargetIri)
     }
 
-    "not update a link without a comment without changing it" in {
-      val resourceIri: IRI   = AThing.iri
-      val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
-
-      val jsonLDEntity = updateLinkValueRequest(
-        resourceIri = resourceIri,
-        valueIri = linkValueIri.get,
-        targetResourceIri = linkTargetIri,
-      )
-
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
-    }
-
     "update a link between two resources, adding a comment" in {
       val resourceIri: IRI                          = AThing.iri
       val linkPropertyIri: SmartIri                 = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
@@ -4646,26 +4590,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         .getRequiredString(KnoraApiV2Complex.ValueHasComment)
         .fold(msg => throw BadRequestException(msg), identity)
       savedComment should ===(comment)
-    }
-
-    "not update a link with a comment without changing it" in {
-      val resourceIri: IRI   = AThing.iri
-      val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
-      val comment            = "changing only the comment"
-
-      val jsonLDEntity = updateLinkValueRequest(
-        resourceIri = resourceIri,
-        valueIri = linkValueIri.get,
-        targetResourceIri = linkTargetIri,
-        comment = Some(comment),
-      )
-
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
     }
 
     "create a link between two resources, with a comment" in {

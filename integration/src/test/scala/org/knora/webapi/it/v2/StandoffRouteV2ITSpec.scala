@@ -28,7 +28,6 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
-import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
 import org.knora.webapi.util.FileUtil
@@ -73,23 +72,26 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
   )
 
   def createMapping(mappingPath: String, mappingName: String): HttpResponse = {
-    val mappingFile   = Paths.get(mappingPath)
-    val mappingParams = DefineStandoffMapping.make(mappingName = mappingName).toJSONLD()
+    val jsonPart =
+      Map(
+        "knora-api:mappingHasName"    -> mappingName.toJson,
+        "knora-api:attachedToProject" -> Map(JsonLDKeywords.ID -> anythingProjectIri).toJson,
+        "rdfs:label"                  -> "custom mapping".toJson,
+        JsonLDKeywords.CONTEXT -> Map(
+          "rdfs"      -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+          "knora-api" -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
+        ).toJson,
+      ).toJson.prettyPrint
 
-    val formDataMapping = Multipart.FormData(
-      Multipart.FormData.BodyPart(
-        "json",
-        HttpEntity(ContentTypes.`application/json`, mappingParams),
-      ),
-      Multipart.FormData.BodyPart(
-        "xml",
-        HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), mappingFile),
-      ),
+    val xmlPart = Paths.get(mappingPath)
+
+    val formData = Multipart.FormData(
+      Multipart.FormData.BodyPart("json", HttpEntity(ContentTypes.`application/json`, jsonPart)),
+      Multipart.FormData.BodyPart("xml", HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, xmlPart)),
     )
     singleAwaitingRequest(
-      Post(baseApiUrl + "/v2/mapping", formDataMapping) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
-      ),
+      Post(baseApiUrl + "/v2/mapping", formData) ~>
+        addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
     )
   }
 

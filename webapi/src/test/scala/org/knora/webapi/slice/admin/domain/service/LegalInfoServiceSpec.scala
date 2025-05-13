@@ -5,8 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import zio.Exit
-import zio.ZIO
+import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -59,7 +58,7 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
         prj    <- setupProject
         _      <- service(_.disableLicense(enabledLicense, prj))
         actual <- service(_.findAvailableLicenses(prj.shortcode))
-      } yield assertTrue(actual == License.BUILT_IN)
+      } yield assertTrue(actual == License.BUILT_IN.toSet)
     },
   )
 
@@ -137,5 +136,13 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
     StringFormatter.test,
     TriplestoreServiceInMemory.emptyLayer,
     CacheManager.layer,
+    ZLayer.succeed(
+      org.knora.webapi.config.Features(
+        allowEraseProjects = false,
+        disableLastModificationDateCheck = false,
+        triggerCompactionAfterProjectErasure = false,
+        enableFullLicenseCheck = true,
+      ),
+    ),
   )
 }

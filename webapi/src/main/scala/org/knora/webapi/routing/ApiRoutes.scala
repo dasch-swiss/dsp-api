@@ -14,32 +14,18 @@ import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing
-import org.knora.webapi.routing.v2.*
 import org.knora.webapi.slice.admin.api.AdminApiRoutes
-import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.admin.domain.service.UserService
-import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiV2Routes
 import org.knora.webapi.slice.ontology.api.OntologiesApiRoutes
-import org.knora.webapi.slice.ontology.api.OntologyV2RequestParser
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
 import org.knora.webapi.slice.resources.api.ResourcesApiRoutes
 import org.knora.webapi.slice.search.api.SearchApiRoutes
-import org.knora.webapi.slice.security.Authenticator as WebApiAuthenticator
 import org.knora.webapi.slice.security.api.AuthenticationApiRoutes
 import org.knora.webapi.slice.shacl.api.ShaclApiRoutes
-import org.knora.webapi.store.iiif.api.SipiService
 
 /**
  * All routes composed together and CORS activated based on the
@@ -59,9 +45,8 @@ final case class ApiRoutes(
   shaclApiRoutes: ShaclApiRoutes,
   managementRoutes: ManagementRoutes,
   ontologiesRoutes: OntologiesApiRoutes,
-)(implicit val runtime: Runtime[ApiRoutes.ApiRoutesRuntime], system: ActorSystem)
+)(implicit val system: ActorSystem)
     extends AroundDirectives {
-
   val routes: Route =
     logDuration {
       ServerVersion.addServerHeader {
@@ -79,54 +64,13 @@ final case class ApiRoutes(
                 resourceInfoRoutes.routes ++
                 resourcesApiRoutes.routes ++
                 searchApiRoutes.routes ++
-                shaclApiRoutes.routes).reduce(_ ~ _) ~ StandoffRouteV2().makeRoute
+                shaclApiRoutes.routes).reduce(_ ~ _)
             }
           }
         }
       }
     }
 }
-
 object ApiRoutes {
-
-  private type ApiRoutesRuntime =
-    ApiComplexV2JsonLdRequestParser & AppConfig & AuthenticationApiRoutes & AuthorizationRestService & core.State &
-      IriConverter & ListsApiV2Routes & MessageRelay & OntologyV2RequestParser & ProjectService & SearchApiRoutes &
-      SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2 & WebApiAuthenticator
-
-  /**
-   * All routes composed together.
-   */
-  val layer: URLayer[
-    ActorSystem & AdminApiRoutes & ApiRoutesRuntime & ManagementRoutes & OntologiesApiRoutes & ResourceInfoRoutes &
-      ResourcesApiRoutes & ShaclApiRoutes,
-    ApiRoutes,
-  ] =
-    ZLayer {
-      for {
-        system                  <- ZIO.service[ActorSystem]
-        appConfig               <- ZIO.service[AppConfig]
-        adminApiRoutes          <- ZIO.service[AdminApiRoutes]
-        authenticationApiRoutes <- ZIO.service[AuthenticationApiRoutes]
-        listsApiV2Routes        <- ZIO.service[ListsApiV2Routes]
-        resourceInfoRoutes      <- ZIO.service[ResourceInfoRoutes]
-        resourcesApiRoutes      <- ZIO.service[ResourcesApiRoutes]
-        searchApiRoutes         <- ZIO.service[SearchApiRoutes]
-        shaclApiRoutes          <- ZIO.service[ShaclApiRoutes]
-        managementRoutes        <- ZIO.service[ManagementRoutes]
-        ontologiesApiRoutes     <- ZIO.service[OntologiesApiRoutes]
-        runtime                 <- ZIO.runtime[ApiRoutesRuntime]
-      } yield ApiRoutes(
-        appConfig,
-        adminApiRoutes,
-        authenticationApiRoutes,
-        listsApiV2Routes,
-        resourceInfoRoutes,
-        resourcesApiRoutes,
-        searchApiRoutes,
-        shaclApiRoutes,
-        managementRoutes,
-        ontologiesApiRoutes,
-      )(runtime, system)
-    }
+  val layer = ZLayer.derive[ApiRoutes]
 }

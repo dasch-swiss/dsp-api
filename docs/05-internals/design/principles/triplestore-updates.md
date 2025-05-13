@@ -74,26 +74,6 @@ case of a property that points to a resource, Knora must ensure that the
 target resource belongs to the OWL class specified in the property's
 `knora-base:objectClassConstraint`, or to a subclass of that class.
 
-### Duplicate and Redundant Values
-
-When creating a new value, or changing an existing value, Knora checks
-whether the submitted value would duplicate an existing value for the
-same property in the resource. The definition of 'duplicate' depends on
-the type of value; it does not necessarily mean that the two values are
-strictly equal. For example, if two text values contain the same Unicode
-string, they are considered duplicates, even if they have different
-Standoff markup. If resource `R` has property `P` with value `V1`, and
-`V1` is a duplicate of `V2`, the API server must not add another
-instance of property `P` with value `V2`. However, if the requesting
-user does not have permission to see `V2`, the duplicate is allowed,
-because forbidding it would reveal the contents of `V2` to the user.
-
-When creating a new version of a value, Knora also checks whether the
-new version is redundant, given the existing value. It is possible for
-the definition of 'redundant' can depend on the type of value, but in
-practice, it means that the values are strictly equal: any change,
-however trivial, is allowed.
-
 ### Versioning
 
 Each Knora value (i.e. something belonging to an OWL class derived from
@@ -270,7 +250,7 @@ conditions of the WHERE clause were not met, the only way to find out is
 to do a `SELECT` afterwards. Moreover, in this case, there is no
 straightforward way to find out which conditions was not met. This is
 one reason why Knora does pre-update checks using separate `SELECT`
-queries and/or cached ontology data, *before* performing the update.
+queries and/or cached ontology data, _before_ performing the update.
 This makes it possible to return specific error messages to the user to
 indicate why an update cannot be performed.
 

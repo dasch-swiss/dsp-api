@@ -43,6 +43,7 @@ import org.knora.webapi.slice.lists.api.ListsEndpointsV2
 import org.knora.webapi.slice.ontology.api.OntologiesEndpoints
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.resources.api.ResourcesEndpoints
+import org.knora.webapi.slice.resources.api.StandoffEndpoints
 import org.knora.webapi.slice.resources.api.ValuesEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.slice.security.Authenticator
@@ -104,6 +105,7 @@ object DocsGenerator extends ZIOAppDefault {
     ResourceInfoEndpoints.layer,
     ResourcesEndpoints.layer,
     SearchEndpoints.layer,
+    StandoffEndpoints.layer,
     ShaclEndpoints.layer,
     StoreEndpoints.layer,
     UsersEndpoints.layer,

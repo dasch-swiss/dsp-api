@@ -5,29 +5,7 @@
 
 package org.knora.webapi.util
 
-import org.apache.pekko
 import zio.*
-
-import dsp.errors.*
-
-import pekko.actor.ActorRef
-
-object ActorUtil {
-
-  /**
-   * An actor that expects to receive messages sent using the `ask` pattern can use this method to handle
-   * unexpected request messages in a consistent way.
-   *
-   * @param sender  the actor that made the request in the `ask` pattern.
-   * @param message the message that was received.
-   */
-  def handleUnexpectedMessage(sender: ActorRef, message: Any, who: String): Unit = {
-    val unexpectedMessageException = UnexpectedMessageException(
-      s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}",
-    )
-    sender ! pekko.actor.Status.Failure(unexpectedMessageException)
-  }
-}
 
 /**
  * Represents the result of a task in a sequence of tasks.

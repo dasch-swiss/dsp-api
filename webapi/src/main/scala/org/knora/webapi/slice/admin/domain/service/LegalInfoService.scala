@@ -13,6 +13,7 @@ import zio.ZLayer
 import zio.prelude.Validation
 
 import dsp.errors.InconsistentRepositoryDataException
+import org.knora.webapi.config.Features
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.admin.api.model.FilterAndOrder
 import org.knora.webapi.slice.admin.api.model.PageAndSize
@@ -32,6 +33,7 @@ case class LegalInfoService(
   private val licenses: LicenseRepo,
   private val projects: KnoraProjectService,
   private val triplestore: TriplestoreService,
+  private val features: Features,
 ) {
 
   /**
@@ -40,8 +42,8 @@ case class LegalInfoService(
    * @param id the Project for which the licenses are retrieved.
    * @return Returns the licenses available in the project.
    */
-  def findAvailableLicenses(id: Shortcode): UIO[Chunk[License]] =
-    licenses.findAll().orDie
+  def findAvailableLicenses(id: Shortcode): UIO[Set[License]] =
+    licenses.findAll().map(_.toSet).orDie
 
   def findEnabledLicenses(id: Shortcode): UIO[Set[License]] = for {
     enabled  <- projects.findByShortcode(id).orDie.map(_.map(_.enabledLicenses).getOrElse(Set.empty))
@@ -72,10 +74,12 @@ case class LegalInfoService(
     licenseIri match
       case None => ZIO.succeed(Validation.unit)
       case Some(iri) =>
-        findEnabledLicenses(shortcode).map { licenses =>
-          if (licenses.map(_.id).contains(iri)) { Validation.unit }
-          else { Validation.fail(s"License $iri is not allowed in project $shortcode") }
-        }
+        for {
+          licenses <- if (features.enableFullLicenseCheck) { findEnabledLicenses(shortcode) }
+                      else { findAvailableLicenses(shortcode) }
+          result = if (licenses.map(_.id).contains(iri)) { Validation.unit }
+                   else { Validation.fail(s"License $iri is not allowed in project $shortcode") }
+        } yield result
 
   private def copyrightHolderValidation(
     copyrightHolder: Option[CopyrightHolder],

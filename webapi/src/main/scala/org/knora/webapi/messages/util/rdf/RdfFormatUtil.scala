@@ -6,8 +6,7 @@
 package org.knora.webapi.messages.util.rdf
 
 import org.apache.jena
-import org.apache.pekko.http.scaladsl.model.MediaType
-import sttp.model
+import sttp.model.MediaType
 
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -22,9 +21,7 @@ import java.nio.file.StandardOpenOption
 import scala.util.Try
 
 import dsp.errors.BadRequestException
-import dsp.errors.InvalidRdfException
 import org.knora.webapi.IRI
-import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.Rendering
 import org.knora.webapi.SchemaOptions
 
@@ -32,12 +29,7 @@ import org.knora.webapi.SchemaOptions
  * A trait for supported RDF formats.
  */
 sealed trait RdfFormat {
-
-  /**
-   * The [[MediaType]] that represents this format.
-   */
-  val toMediaType: MediaType
-  def mediaType: model.MediaType
+  def mediaType: MediaType
 }
 
 /**
@@ -62,24 +54,8 @@ object RdfFormat {
 
   val values: Seq[RdfFormat] = Seq(JsonLD, Turtle, TriG, RdfXml, NQuads)
 
-  def from(mediaType: model.MediaType): Option[RdfFormat] = values
+  def from(mediaType: MediaType): Option[RdfFormat] = values
     .find(_.mediaType.equalsIgnoreParameters(mediaType))
-
-  /**
-   * Converts a [[MediaType]] to an [[RdfFormat]].
-   *
-   * @param mediaType a [[MediaType]].
-   * @return the corresponding [[RdfFormat]].
-   */
-  def fromMediaType(mediaType: MediaType): RdfFormat =
-    mediaType match {
-      case RdfMediaTypes.`application/ld+json` => JsonLD
-      case RdfMediaTypes.`text/turtle`         => Turtle
-      case RdfMediaTypes.`application/trig`    => TriG
-      case RdfMediaTypes.`application/rdf+xml` => RdfXml
-      case RdfMediaTypes.`application/n-quads` => NQuads
-      case other                               => throw InvalidRdfException(s"Unsupported RDF media type: $other")
-    }
 }
 
 /**
@@ -88,8 +64,7 @@ object RdfFormat {
 case object JsonLD extends RdfFormat {
   override def toString: String = "JSON-LD"
 
-  override val toMediaType: MediaType     = RdfMediaTypes.`application/ld+json`
-  override val mediaType: model.MediaType = model.MediaType("application", "ld+json", None, Map.empty)
+  override val mediaType: MediaType = MediaType("application", "ld+json", None, Map.empty)
 }
 
 /**
@@ -98,8 +73,7 @@ case object JsonLD extends RdfFormat {
 case object Turtle extends NonJsonLD {
   override def toString: String = "Turtle"
 
-  override val toMediaType: MediaType     = RdfMediaTypes.`text/turtle`
-  override val mediaType: model.MediaType = sttp.model.MediaType.unsafeApply("text", "turtle")
+  override val mediaType: MediaType = MediaType.unsafeApply("text", "turtle")
 
   override val supportsPrettyPrinting: Boolean = true
 }
@@ -110,9 +84,7 @@ case object Turtle extends NonJsonLD {
 case object TriG extends QuadFormat {
   override def toString: String = "TriG"
 
-  override val toMediaType: MediaType = RdfMediaTypes.`application/trig`
-
-  override val mediaType: model.MediaType = sttp.model.MediaType.unsafeApply("application", "trig")
+  override val mediaType: MediaType = MediaType.unsafeApply("application", "trig")
 
   override val supportsPrettyPrinting: Boolean = true
 }
@@ -123,8 +95,7 @@ case object TriG extends QuadFormat {
 case object RdfXml extends NonJsonLD {
   override def toString: String = "RDF/XML"
 
-  override val toMediaType: MediaType     = RdfMediaTypes.`application/rdf+xml`
-  override val mediaType: model.MediaType = sttp.model.MediaType.unsafeApply("application", "rdf+xml")
+  override val mediaType: MediaType = MediaType.unsafeApply("application", "rdf+xml")
 
   override val supportsPrettyPrinting: Boolean = true
 }
@@ -135,8 +106,7 @@ case object RdfXml extends NonJsonLD {
 case object NQuads extends QuadFormat {
   override def toString: String = "N-Quads"
 
-  override val toMediaType: MediaType     = RdfMediaTypes.`application/n-quads`
-  override val mediaType: model.MediaType = sttp.model.MediaType.unsafeApply("application", "n-quads")
+  override val mediaType: MediaType = MediaType.unsafeApply("application", "n-quads")
 
   override val supportsPrettyPrinting: Boolean = false
 }
@@ -150,21 +120,6 @@ trait RdfStreamProcessor {
    * Signals the start of the RDF data.
    */
   def start(): Unit
-
-  /**
-   * Processes a namespace declaration.
-   *
-   * @param prefix    the prefix.
-   * @param namespace the namespace.
-   */
-  def processNamespace(prefix: String, namespace: IRI): Unit
-
-  /**
-   * Processes a statement.
-   *
-   * @param statement the statement.
-   */
-  def processStatement(statement: Statement): Unit
 
   /**
    * Signals the end of the RDF data.
