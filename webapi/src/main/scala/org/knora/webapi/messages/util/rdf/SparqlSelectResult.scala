@@ -68,14 +68,12 @@ case class SparqlSelectResultHeader(vars: Seq[String])
  * Represents the body of the result of a SPARQL SELECT query.
  *
  * @param bindings the bindings of values to the variables used in the SPARQL SELECT statement.
- *                 Empty rows are not allowed.
  */
 case class SparqlSelectResultBody(bindings: Seq[VariableResultsRow])
 
 /**
  * Represents a row of results in the result of a SPARQL SELECT query.
  *
- * @param rowMap a map of variable names to values in the row. An empty string is not allowed as a variable
- *               name or value.
+ * @param rowMap a map of variable names to values in the row.
  */
 case class VariableResultsRow(rowMap: Map[String, String])
