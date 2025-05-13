@@ -6,6 +6,11 @@
 package org.knora.webapi.store.triplestore
 
 import org.apache.pekko
+import org.apache.pekko.testkit.ImplicitSender
+import org.eclipse.rdf4j.model.vocabulary.RDFS
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
+import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.ZIO
 
 import scala.concurrent.duration.*
@@ -16,8 +21,6 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-
-import pekko.testkit.ImplicitSender
 
 class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
 
@@ -220,6 +223,31 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
             .map(_.size),
         )
         actual should ===(1)
+      }
+    }
+
+    "should allow empty Strings a values" in {
+      val iri          = Rdf.iri("http://example.com/test")
+      val emptyString  = ""
+      val emptyComment = "emptyComment"
+
+      val insertQuery = Queries
+        .INSERT_DATA(iri.has(RDFS.COMMENT, emptyString))
+        .into(Rdf.iri("http://example.com/graph"))
+
+      val selectQuery = Queries
+        .SELECT(SparqlBuilder.`var`(emptyComment))
+        .where(iri.has(RDFS.COMMENT, SparqlBuilder.`var`(emptyComment)))
+
+      val actual = UnsafeZioRun.runOrThrow(
+        ZIO.logWarning(insertQuery.getQueryString) *>
+          ZIO.serviceWithZIO[TriplestoreService](ts => ts.query(Update(insertQuery)) *> ts.query(Select(selectQuery))),
+      )
+      actual.results.bindings.headOption match {
+        case Some(row) =>
+          row.rowMap.get(emptyComment) should ===(Some(emptyString))
+        case None =>
+          fail("Expected a result, but got none")
       }
     }
   }

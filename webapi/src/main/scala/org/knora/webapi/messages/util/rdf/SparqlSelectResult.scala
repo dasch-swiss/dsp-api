@@ -70,13 +70,7 @@ case class SparqlSelectResultHeader(vars: Seq[String])
  * @param bindings the bindings of values to the variables used in the SPARQL SELECT statement.
  *                 Empty rows are not allowed.
  */
-case class SparqlSelectResultBody(bindings: Seq[VariableResultsRow]) {
-  require(bindings.forall(_.rowMap.nonEmpty), "Empty rows are not allowed in a SparqlSelectResponseBody")
-}
-
-case class SparqlSelectResultBodyUnchecked(bindings: Seq[VariableResultsRow]) {
-  def asChecked = SparqlSelectResultBody(bindings.filter(_.rowMap.keySet.nonEmpty))
-}
+case class SparqlSelectResultBody(bindings: Seq[VariableResultsRow])
 
 /**
  * Represents a row of results in the result of a SPARQL SELECT query.
@@ -84,11 +78,4 @@ case class SparqlSelectResultBodyUnchecked(bindings: Seq[VariableResultsRow]) {
  * @param rowMap a map of variable names to values in the row. An empty string is not allowed as a variable
  *               name or value.
  */
-case class VariableResultsRow(rowMap: Map[String, String]) {
-  require(
-    rowMap.forall { case (key, value) =>
-      key.nonEmpty && value.nonEmpty
-    },
-    "An empty string is not allowed as a variable name or value in a VariableResultsRow",
-  )
-}
+case class VariableResultsRow(rowMap: Map[String, String])
