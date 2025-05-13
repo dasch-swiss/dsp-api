@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.slice.ontology.api
+import eu.timepit.refined.types.string.NonEmptyString
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -83,7 +84,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
             req == ChangeOntologyMetadataRequestV2(
               ontologyIri,
               Some("Some Label"),
-              Some("Some Comment"),
+              Some(NonEmptyString.unsafeFrom("Some Comment")),
               lastModified,
               uuid,
               user,

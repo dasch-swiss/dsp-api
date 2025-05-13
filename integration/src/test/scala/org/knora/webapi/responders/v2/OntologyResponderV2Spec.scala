@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
+import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.pattern.ask
 import org.apache.pekko.testkit.ImplicitSender
@@ -216,11 +217,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val response = UnsafeZioRun.runOrThrow(
         ontologyResponder(
           _.changeOntologyMetadata(
-            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
-            label = Some(newLabel),
-            lastModificationDate = fooLastModDate,
-            apiRequestID = UUID.randomUUID,
-            requestingUser = imagesUser,
+            OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            Some(newLabel),
+            None,
+            fooLastModDate,
+            UUID.randomUUID,
+            imagesUser,
           ),
         ),
       )
@@ -237,16 +239,17 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "add a comment to the metadata of 'foo' ontology" in {
-      val aComment = "a comment"
+      val aComment = NonEmptyString.unsafeFrom("a comment")
 
       val response = UnsafeZioRun.runOrThrow(
         ontologyResponder(
           _.changeOntologyMetadata(
-            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
-            comment = Some(aComment),
-            lastModificationDate = fooLastModDate,
-            apiRequestID = UUID.randomUUID,
-            requestingUser = imagesUser,
+            OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            None,
+            Some(aComment),
+            fooLastModDate,
+            UUID.randomUUID,
+            imagesUser,
           ),
         ),
       )
@@ -264,17 +267,17 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "change both the label and the comment of the 'foo' ontology" in {
       val aLabel   = "a changed label"
-      val aComment = "a changed comment"
+      val aComment = NonEmptyString.unsafeFrom("a changed comment")
 
       val response = UnsafeZioRun.runOrThrow(
         ontologyResponder(
           _.changeOntologyMetadata(
-            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
-            label = Some(aLabel),
-            comment = Some(aComment),
-            lastModificationDate = fooLastModDate,
-            apiRequestID = UUID.randomUUID,
-            requestingUser = imagesUser,
+            OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            Some(aLabel),
+            Some(aComment),
+            fooLastModDate,
+            UUID.randomUUID,
+            imagesUser,
           ),
         ),
       )
@@ -297,11 +300,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val response = UnsafeZioRun.runOrThrow(
         ontologyResponder(
           _.changeOntologyMetadata(
-            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
-            label = Some(newLabel),
-            lastModificationDate = fooLastModDate,
-            apiRequestID = UUID.randomUUID,
-            requestingUser = imagesUser,
+            OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            Some(newLabel),
+            None,
+            fooLastModDate,
+            UUID.randomUUID,
+            imagesUser,
           ),
         ),
       )
@@ -385,16 +389,17 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "change the existing comment in the metadata of 'bar' ontology" in {
-      val newComment = "a new comment"
+      val newComment = NonEmptyString.unsafeFrom("a new comment")
 
       val response = UnsafeZioRun.runOrThrow(
         ontologyResponder(
           _.changeOntologyMetadata(
-            ontologyIri = OntologyIri.unsafeFrom(barIri.get.toSmartIri.toComplexSchema),
-            comment = Some(newComment),
-            lastModificationDate = barLastModDate,
-            apiRequestID = UUID.randomUUID,
-            requestingUser = imagesUser,
+            OntologyIri.unsafeFrom(barIri.get.toSmartIri.toComplexSchema),
+            None,
+            Some(newComment),
+            barLastModDate,
+            UUID.randomUUID,
+            imagesUser,
           ),
         ),
       )
@@ -2762,11 +2767,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val response = UnsafeZioRun.runOrThrow(
         ontologyResponder(
           _.changeOntologyMetadata(
-            ontologyIri = AnythingOntologyIri,
-            label = Some(newLabel),
-            lastModificationDate = anythingLastModDate,
-            apiRequestID = UUID.randomUUID,
-            requestingUser = anythingAdminUser,
+            AnythingOntologyIri,
+            Some(newLabel),
+            None,
+            anythingLastModDate,
+            UUID.randomUUID,
+            anythingAdminUser,
           ),
         ),
       )

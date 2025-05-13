@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.ontology.api
 
+import cats.syntax.traverse.*
+import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.jena.query.Dataset
 import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.OWL2 as OWL
@@ -73,7 +75,7 @@ import org.knora.webapi.slice.ontology.domain.service.IriConverter
 case class ChangeOntologyMetadataRequestV2(
   ontologyIri: OntologyIri,
   label: Option[String] = None,
-  comment: Option[String] = None,
+  comment: Option[NonEmptyString] = None,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
@@ -84,7 +86,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
   private final case class OntologyMetadata(
     ontologyIri: OntologyIri,
     label: Option[String],
-    comment: Option[String],
+    comment: Option[NonEmptyString],
     lastModificationDate: Instant,
   )
 
@@ -108,10 +110,16 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private def extractOntologyMetadata(m: Model): ZIO[Scope, String, OntologyMetadata] =
     for {
-      r                    <- ZIO.fromEither(m.singleRootResource).orElseFail("No root resource found")
-      ontologyIri          <- uriAsOntologyIri(r)
-      label                <- ZIO.fromEither(r.objectStringOption(RDFS.label))
-      comment              <- ZIO.fromEither(r.objectStringOption(RDFS.comment))
+      r           <- ZIO.fromEither(m.singleRootResource).orElseFail("No root resource found")
+      ontologyIri <- uriAsOntologyIri(r)
+      label       <- ZIO.fromEither(r.objectStringOption(RDFS.label))
+      comment <-
+        ZIO.fromEither(
+          r.objectStringOption(
+            RDFS.comment,
+            s => NonEmptyString.from(s).left.map(_ => "Ontology comment may not be empty"),
+          ),
+        )
       lastModificationDate <- ZIO.fromEither(r.objectInstant(KA.LastModificationDate))
     } yield OntologyMetadata(ontologyIri, label, comment, lastModificationDate)
 
@@ -137,13 +145,13 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
             isShared   <- r.objectBooleanOption(KA.IsShared).map(_.getOrElse(false))
             label      <- r.objectString(RDFS.label)
             comment <- r.objectStringOption(RDFS.comment)
-                         .filterOrElse(_.map(_.nonEmpty).getOrElse(true), "Ontology comment cannot be empty")
+                         .flatMap(_.traverse(NonEmptyString.from).left.map(_ => "Ontology comment may not be empty"))
           } yield CreateOntologyRequestV2(
             name,
             projectIri,
             isShared,
             label,
-            comment,
+            comment.map(_.value),
             apiRequestId,
             requestingUser,
           )
