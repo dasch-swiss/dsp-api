@@ -24,12 +24,13 @@ import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 import org.knora.webapi.slice.resources.api.service.StandoffRestService
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 
 object ResourcesApiModule
     extends URModule[
       AuthorizationRestService & ApiComplexV2JsonLdRequestParser & BaseEndpoints & GraphRoute & HandlerMapper &
-        IriConverter & KnoraResponseRenderer & ResourcesResponderV2 & SearchResponderV2 & StandoffResponderV2 &
-        TapirToPekkoInterpreter & ValuesResponderV2,
+        IriConverter & KnoraProjectService & KnoraResponseRenderer & ResourcesResponderV2 & SearchResponderV2 &
+        StandoffResponderV2 & TapirToPekkoInterpreter & ValuesResponderV2,
       ResourcesApiRoutes & ResourcesEndpoints & StandoffEndpoints & ValuesEndpoints,
     ] { self =>
 
