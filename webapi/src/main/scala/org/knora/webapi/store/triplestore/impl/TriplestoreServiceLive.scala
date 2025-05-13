@@ -35,7 +35,6 @@ import scala.io.Source
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.Triplestore
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol.fusekiServerFormat
 import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.*
@@ -57,8 +56,7 @@ import org.knora.webapi.util.FileUtil
 case class TriplestoreServiceLive(
   triplestoreConfig: Triplestore,
   sttp: SttpBackend[Task, ZioStreams],
-)(implicit val sf: StringFormatter)
-    extends TriplestoreService
+) extends TriplestoreService
     with FusekiTriplestore {
 
   private val targetHostUri = {
@@ -512,7 +510,7 @@ case class TriplestoreServiceLive(
 object TriplestoreServiceLive {
   import scala.concurrent.duration._
 
-  val layer: URLayer[Triplestore & StringFormatter, TriplestoreService] =
+  val layer: URLayer[Triplestore, TriplestoreService] =
     HttpClientZioBackend
       .layer(
         SttpBackendOptions.connectionTimeout(2.hours),
@@ -520,9 +518,8 @@ object TriplestoreServiceLive {
       .orDie >+>
       ZLayer.scoped {
         for {
-          sf     <- ZIO.service[StringFormatter]
           config <- ZIO.service[Triplestore]
           sttp   <- ZIO.service[SttpBackend[Task, ZioStreams]]
-        } yield TriplestoreServiceLive(config, sttp)(sf)
+        } yield TriplestoreServiceLive(config, sttp)
       }
 }
