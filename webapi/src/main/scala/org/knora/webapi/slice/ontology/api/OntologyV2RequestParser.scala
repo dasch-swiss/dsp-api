@@ -182,7 +182,8 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
             projectIri <- r.objectUri(KA.AttachedToProject, ProjectIri.from)
             isShared   <- r.objectBooleanOption(KA.IsShared).map(_.getOrElse(false))
             label      <- r.objectString(RDFS.label)
-            comment    <- r.objectStringOption(RDFS.comment)
+            comment <- r.objectStringOption(RDFS.comment)
+                         .filterOrElse(_.map(_.nonEmpty).getOrElse(true), "Ontology comment cannot be empty")
           } yield CreateOntologyRequestV2(
             name,
             projectIri,
