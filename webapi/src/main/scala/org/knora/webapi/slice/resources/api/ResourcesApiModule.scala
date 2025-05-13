@@ -14,6 +14,7 @@ import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.responders.v2.StandoffResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.URModule
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
@@ -24,7 +25,6 @@ import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 import org.knora.webapi.slice.resources.api.service.StandoffRestService
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 
 object ResourcesApiModule
     extends URModule[

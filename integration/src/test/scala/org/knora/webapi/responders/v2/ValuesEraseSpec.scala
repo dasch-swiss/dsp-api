@@ -77,7 +77,7 @@ object ValuesEraseSpec extends E2EZSpec {
         res2 <- TestHelper.createResource
         res3 <- TestHelper.createResource
 
-        _   <- TestHelper.createLinkValue(res2, res3, Some("res2 to res3"))
+        _ <- TestHelper.createLinkValue(res2, res3, Some("res2 to res3"))
 
         stInit <- ZIO.serviceWithZIO[TestHelper](_.getProjectActiveTriples())
         val1   <- TestHelper.createLinkValue(res1, res2, Some("first"))
