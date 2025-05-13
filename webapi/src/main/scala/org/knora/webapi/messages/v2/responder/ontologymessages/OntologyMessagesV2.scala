@@ -5,6 +5,7 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
+import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.eclipse.rdf4j.model.IRI as Rdf4jIRI
 import org.eclipse.rdf4j.model.vocabulary.OWL
@@ -68,9 +69,9 @@ sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 with RelayedMes
 case class CreateOntologyRequestV2(
   ontologyName: String,
   projectIri: ProjectIri,
-  isShared: Boolean = false,
+  isShared: Boolean,
   label: String,
-  comment: Option[String] = None,
+  comment: Option[NonEmptyString],
   apiRequestID: UUID,
   requestingUser: User,
 )
@@ -2365,7 +2366,7 @@ case class OntologyMetadataV2(
   ontologyIri: SmartIri,
   projectIri: Option[ProjectIri] = None,
   label: Option[String] = None,
-  comment: Option[String] = None,
+  comment: Option[NonEmptyString] = None,
   lastModificationDate: Option[Instant] = None,
   ontologyVersion: Option[String] = None,
 ) extends KnoraContentV2[OntologyMetadataV2] {
@@ -2393,7 +2394,10 @@ case class OntologyMetadataV2(
    * @return a copy of this [[OntologyMetadataV2]] with the `rdfs:label` and `rdfs:comment` unescaped.
    */
   def unescape: OntologyMetadataV2 =
-    copy(label = label.map(Iri.fromSparqlEncodedString), comment = comment.map(Iri.fromSparqlEncodedString))
+    copy(
+      label = label.map(Iri.fromSparqlEncodedString),
+      comment = comment.map(s => NonEmptyString.unsafeFrom(Iri.fromSparqlEncodedString(s.value))),
+    )
 
   def toJsonLD(targetSchema: ApiV2Schema): Map[String, JsonLDValue] = {
 
@@ -2426,7 +2430,7 @@ case class OntologyMetadataV2(
     }
 
     val commentStatement: Option[(IRI, JsonLDString)] = comment.map { commentStr =>
-      Rdfs.Comment -> JsonLDString(commentStr)
+      Rdfs.Comment -> JsonLDString(commentStr.value)
     }
 
     val lastModDateStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2Complex) {

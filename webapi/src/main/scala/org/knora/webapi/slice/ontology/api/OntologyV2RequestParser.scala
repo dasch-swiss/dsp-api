@@ -141,15 +141,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
             isShared   <- r.objectBooleanOption(KA.IsShared).map(_.getOrElse(false))
             label      <- r.objectString(RDFS.label)
             comment    <- ontologyRdfsComment(r)
-          } yield CreateOntologyRequestV2(
-            name,
-            projectIri,
-            isShared,
-            label,
-            comment.map(_.value),
-            apiRequestId,
-            requestingUser,
-          )
+          } yield CreateOntologyRequestV2(name, projectIri, isShared, label, comment, apiRequestId, requestingUser)
         }
       }
     }

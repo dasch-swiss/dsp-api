@@ -188,19 +188,17 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "The ontology responder v2" should {
     "create an empty ontology called 'foo' with a project code" in {
-      val response = UnsafeZioRun.runOrThrow(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "foo",
-              projectIri = imagesProjectIri,
-              label = "The foo ontology",
-              apiRequestID = UUID.randomUUID,
-              requestingUser = imagesUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2(
+          "foo",
+          imagesProjectIri,
+          false,
+          "The foo ontology",
+          None,
+          UUID.randomUUID,
+          imagesUser,
+        )
+      val response = UnsafeZioRun.runOrThrow(ontologyResponder(_.createOntology(createReq)))
 
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
@@ -344,44 +342,36 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not create an ontology if the given name matches NCName pattern but is not URL safe" in {
-      val exit = UnsafeZioRun.run(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "bär",
-              projectIri = imagesProjectIri,
-              label = "The bär ontology",
-              comment = Some("some comment"),
-              apiRequestID = UUID.randomUUID,
-              requestingUser = imagesUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2(
+          "bär",
+          imagesProjectIri,
+          false,
+          "The bär ontology",
+          Some(NonEmptyString.unsafeFrom("some comment")),
+          UUID.randomUUID,
+          imagesUser,
+        )
+      val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "create an empty ontology called 'bar' with a comment" in {
-      val response = UnsafeZioRun.runOrThrow(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "bar",
-              projectIri = imagesProjectIri,
-              label = "The bar ontology",
-              comment = Some("some comment"),
-              apiRequestID = UUID.randomUUID,
-              requestingUser = imagesUser,
-            ),
-          ),
-        ),
+      val comment = NonEmptyString.unsafeFrom("some comment")
+      val createReq = CreateOntologyRequestV2(
+        "bar",
+        imagesProjectIri,
+        false,
+        "The bar ontology",
+        Some(comment),
+        UUID.randomUUID,
+        imagesUser,
       )
+      val response = UnsafeZioRun.runOrThrow(ontologyResponder(_.createOntology(createReq)))
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/bar")
-      val returnedComment: String =
-        metadata.comment.getOrElse(throw AssertionException("The bar ontology has no comment!"))
-      assert(returnedComment == "some comment")
+      assert(metadata.comment.contains(comment))
       barIri.set(metadata.ontologyIri.toString)
       barLastModDate = metadata.lastModificationDate.getOrElse(
         throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
@@ -416,19 +406,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not create 'foo' again" in {
-      val exit = UnsafeZioRun.run(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "foo",
-              projectIri = imagesProjectIri,
-              label = "The foo ontology",
-              apiRequestID = UUID.randomUUID,
-              requestingUser = imagesUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2("foo", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser)
+      val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
@@ -504,191 +484,95 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not create an ontology called 'rdfs'" in {
-      val exit = UnsafeZioRun.run(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "rdfs",
-              projectIri = imagesProjectIri,
-              label = "The rdfs ontology",
-              apiRequestID = UUID.randomUUID,
-              requestingUser = imagesUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2("rdfs", imagesProjectIri, false, "The rdfs ontology", None, UUID.randomUUID, imagesUser)
+      val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called '0000'" in {
-      val exit = UnsafeZioRun.run(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "0000",
-              projectIri = imagesProjectIri,
-              label = "The 0000 ontology",
-              apiRequestID = UUID.randomUUID,
-              requestingUser = imagesUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2("0000", imagesProjectIri, false, "The 0000 ontology", None, UUID.randomUUID, imagesUser)
+      val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called '-foo'" in {
-      val exit = UnsafeZioRun.run(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "-foo",
-              projectIri = imagesProjectIri,
-              label = "The -foo ontology",
-              apiRequestID = UUID.randomUUID,
-              requestingUser = imagesUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2("-foo", imagesProjectIri, false, "The -foo ontology", None, UUID.randomUUID, imagesUser)
+      val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'v3'" in {
-      val exit = UnsafeZioRun.run(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "v3",
-              projectIri = imagesProjectIri,
-              label = "The v3 ontology",
-              apiRequestID = UUID.randomUUID,
-              requestingUser = imagesUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2("v3", imagesProjectIri, false, "The v3 ontology", None, UUID.randomUUID, imagesUser)
+      val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'ontology'" in {
-      val exit = UnsafeZioRun.run(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "ontology",
-              projectIri = imagesProjectIri,
-              label = "The ontology ontology",
-              apiRequestID = UUID.randomUUID,
-              requestingUser = imagesUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2("ontology", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser)
+      val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'knora'" in {
-      val exit = UnsafeZioRun.run(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "knora",
-              projectIri = imagesProjectIri,
-              label = "The wrong knora ontology",
-              apiRequestID = UUID.randomUUID,
-              requestingUser = imagesUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2("knora", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser)
+      val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'simple'" in {
-      val exit = UnsafeZioRun.run(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "simple",
-              projectIri = imagesProjectIri,
-              label = "The simple ontology",
-              apiRequestID = UUID.randomUUID,
-              requestingUser = imagesUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2("simple", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser)
+      val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create an ontology called 'shared'" in {
-      val exit = UnsafeZioRun.run(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "shared",
-              projectIri = imagesProjectIri,
-              label = "The invalid shared ontology",
-              apiRequestID = UUID.randomUUID,
-              requestingUser = imagesUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2("shared", imagesProjectIri, false, "ignored", None, UUID.randomUUID, imagesUser)
+      val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a shared ontology in the wrong project" in {
-      val exit = UnsafeZioRun.run(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "misplaced",
-              projectIri = imagesProjectIri,
-              isShared = true,
-              label = "The invalid shared ontology",
-              apiRequestID = UUID.randomUUID,
-              requestingUser = imagesUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2("misplaced", imagesProjectIri, true, "ignored", None, UUID.randomUUID, imagesUser)
+      val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "not create a non-shared ontology in the shared ontologies project" in {
-      val exit = UnsafeZioRun.run(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "misplaced",
-              projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
-              label = "The invalid non-shared ontology",
-              apiRequestID = UUID.randomUUID,
-              requestingUser = SharedTestDataADM.superUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2(
+          "misplaced",
+          OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
+          false,
+          "ignored",
+          None,
+          UUID.randomUUID,
+          imagesUser,
+        )
+      val exit = UnsafeZioRun.run(ontologyResponder(_.createOntology(createReq)))
       assertFailsWithA[BadRequestException](exit)
     }
 
     "create a shared ontology" in {
-      val response = UnsafeZioRun.runOrThrow(
-        ontologyResponder(
-          _.createOntology(
-            CreateOntologyRequestV2(
-              ontologyName = "chair",
-              projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
-              isShared = true,
-              label = "a chaired ontology",
-              apiRequestID = UUID.randomUUID,
-              requestingUser = SharedTestDataADM.superUser,
-            ),
-          ),
-        ),
-      )
+      val createReq =
+        CreateOntologyRequestV2(
+          "chair",
+          OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
+          true,
+          "a chaired ontology",
+          None,
+          UUID.randomUUID,
+          SharedTestDataADM.superUser,
+        )
+      val response = UnsafeZioRun.runOrThrow(ontologyResponder(_.createOntology(createReq)))
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/shared/chair")

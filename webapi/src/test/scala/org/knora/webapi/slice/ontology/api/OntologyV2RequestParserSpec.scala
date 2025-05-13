@@ -135,6 +135,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
   private val createOntologySuite = suite("CreateOntologyRequestV2")(
     test("should succeed") {
       val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+      val comment    = NonEmptyString.unsafeFrom("Comment")
       val reqStr: String =
         s"""
            |{
@@ -144,7 +145,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
            |  },
            |  "knora-api:isShared": true,
            |  "rdfs:label": "Label",
-           |  "rdfs:comment": "Comment",
+           |  "rdfs:comment": "${comment.value}",
            |  "@context": {
            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
@@ -154,7 +155,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
         uuid   <- Random.nextUUID
         actual <- parser(_.createOntologyRequestV2(reqStr, uuid, user))
       } yield assertTrue(
-        actual == CreateOntologyRequestV2("useless", projectIri, true, "Label", Some("Comment"), uuid, user),
+        actual == CreateOntologyRequestV2("useless", projectIri, true, "Label", Some(comment), uuid, user),
       )
     },
     test("should reject an empty comment") {
@@ -177,7 +178,7 @@ object OntologyV2RequestParserSpec extends ZIOSpecDefault {
       for {
         uuid   <- Random.nextUUID
         either <- parser(_.createOntologyRequestV2(reqStr, uuid, user)).either
-      } yield assertTrue(either == Left("Ontology comment cannot be empty"))
+      } yield assertTrue(either == Left("Ontology comment may not be empty"))
     },
   )
 

@@ -514,7 +514,7 @@ final case class OntologyResponderV2(
                        newLabel = label,
                        hasOldComment = ontologyHasComment,
                        deleteOldComment = ontologyHasComment && comment.nonEmpty,
-                       newComment = comment.map(_.value),
+                       newComment = comment,
                        lastModificationDate = lastModificationDate,
                        currentTime = currentTime,
                      )
@@ -525,7 +525,7 @@ final case class OntologyResponderV2(
           ontologyIri = internalOntologyIri,
           projectIri = Some(projectIri),
           label = label.orElse(oldMetadata.label),
-          comment = comment.map(_.value).orElse(oldMetadata.comment),
+          comment = comment.orElse(oldMetadata.comment),
           lastModificationDate = Some(currentTime),
         ).unescape,
       ),
