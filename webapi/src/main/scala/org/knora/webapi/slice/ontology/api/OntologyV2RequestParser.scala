@@ -110,18 +110,16 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
   private def extractOntologyMetadata(m: Model): ZIO[Scope, String, OntologyMetadata] =
     for {
-      r           <- ZIO.fromEither(m.singleRootResource).orElseFail("No root resource found")
-      ontologyIri <- uriAsOntologyIri(r)
-      label       <- ZIO.fromEither(r.objectStringOption(RDFS.label))
-      comment <-
-        ZIO.fromEither(
-          r.objectStringOption(
-            RDFS.comment,
-            s => NonEmptyString.from(s).left.map(_ => "Ontology comment may not be empty"),
-          ),
-        )
+      r                    <- ZIO.fromEither(m.singleRootResource).orElseFail("No root resource found")
+      ontologyIri          <- uriAsOntologyIri(r)
+      label                <- ZIO.fromEither(r.objectStringOption(RDFS.label))
+      comment              <- ZIO.fromEither(rdfsComment(r))
       lastModificationDate <- ZIO.fromEither(r.objectInstant(KA.LastModificationDate))
     } yield OntologyMetadata(ontologyIri, label, comment, lastModificationDate)
+
+  private def rdfsComment(r: Resource): Either[String, Option[NonEmptyString]] = r
+    .objectStringOption(RDFS.comment)
+    .flatMap(_.traverse(NonEmptyString.from).left.map(_ => "Ontology comment may not be empty"))
 
   private def uriAsOntologyIri(r: Resource): ZIO[Scope, String, OntologyIri] = ZIO
     .fromOption(r.uri)
@@ -144,8 +142,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
             projectIri <- r.objectUri(KA.AttachedToProject, ProjectIri.from)
             isShared   <- r.objectBooleanOption(KA.IsShared).map(_.getOrElse(false))
             label      <- r.objectString(RDFS.label)
-            comment <- r.objectStringOption(RDFS.comment)
-                         .flatMap(_.traverse(NonEmptyString.from).left.map(_ => "Ontology comment may not be empty"))
+            comment    <- rdfsComment(r)
           } yield CreateOntologyRequestV2(
             name,
             projectIri,
