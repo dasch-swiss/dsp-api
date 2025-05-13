@@ -5,7 +5,6 @@
 
 package org.knora.webapi.core
 
-import org.apache.pekko.actor
 import zio.*
 
 import org.knora.webapi.config.AppConfig
@@ -14,6 +13,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Available
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 
 /**
@@ -23,10 +23,7 @@ final case class AppServer(
   state: State,
   ts: TriplestoreService,
   ru: RepositoryUpdater,
-  as: actor.ActorSystem,
   ontologyCache: OntologyCache,
-  sipiService: SipiService,
-  hs: HttpServer,
   appConfig: AppConfig,
 ) {
 
@@ -35,18 +32,13 @@ final case class AppServer(
    */
   private val checkTriplestoreService: Task[Unit] =
     for {
-      _      <- state.set(AppState.WaitingForTriplestore)
-      status <- ts.checkTriplestore()
-      _ <- status match {
-             case TriplestoreStatus.Available           => ZIO.unit
-             case TriplestoreStatus.NotInitialized(msg) => ZIO.die(new Exception(msg))
-             case TriplestoreStatus.Unavailable(msg)    => ZIO.die(new Exception(msg))
-           }
+      _ <- state.set(AppState.WaitingForTriplestore)
+      _ <- ts.checkTriplestore().filterOrDieWith(_ == Available)(s => new Exception(s.msg))
       _ <- state.set(AppState.TriplestoreReady)
     } yield ()
 
   /**
-   * Initiates repository upgrade if `requiresRepository` is `true` an logs the result.
+   * Initiates repository upgrade if `requiresRepository` is `true` and logs the result.
    *
    * @param requiresRepository If `true`, calls the RepositoryUpdater to initiate the repository, otherwise returns ()
    */
@@ -79,7 +71,6 @@ final case class AppServer(
    *
    * @param requiresAdditionalRepositoryChecks  If `true`, checks if repository service is running, updates data if necessary and loads ontology cache.
    *                                            If `false`, checks if repository service is running but doesn't run upgrades and doesn't load ontology cache.
-   * @param requiresIIIFService                 If `true`, ensures that the IIIF service is running.
    */
   def start(
     requiresAdditionalRepositoryChecks: Boolean,
@@ -90,7 +81,6 @@ final case class AppServer(
       _ <- upgradeRepository(requiresAdditionalRepositoryChecks)
       _ <- populateOntologyCaches(requiresAdditionalRepositoryChecks)
       _ <- ZIO.logInfo("=> Startup checks finished")
-      _ <- ZIO.logInfo(s"DSP-API Server started: ${appConfig.knoraApi.internalKnoraApiBaseUrl}")
       _ <- ZIO.logWarning("Resetting DB over HTTP is turned ON").when(appConfig.allowReloadOverHttp)
       _ <- state.set(AppState.Running)
     } yield ()
@@ -98,9 +88,7 @@ final case class AppServer(
 
 object AppServer {
 
-  type AppServerEnvironment =
-    actor.ActorSystem & AppConfig & HttpServer & OntologyCache & RepositoryUpdater & SipiService & State &
-      TriplestoreService
+  type AppServerEnvironment = AppConfig & OntologyCache & RepositoryUpdater & SipiService & State & TriplestoreService
 
   /**
    * Initializes the AppServer instance with the required services
@@ -110,12 +98,9 @@ object AppServer {
       state    <- ZIO.service[State]
       ts       <- ZIO.service[TriplestoreService]
       ru       <- ZIO.service[RepositoryUpdater]
-      as       <- ZIO.service[actor.ActorSystem]
       oc       <- ZIO.service[OntologyCache]
-      iiifs    <- ZIO.service[SipiService]
-      hs       <- ZIO.service[HttpServer]
       c        <- ZIO.service[AppConfig]
-      appServer = AppServer(state, ts, ru, as, oc, iiifs, hs, c)
+      appServer = AppServer(state, ts, ru, oc, c)
     } yield appServer
 
   /**
@@ -131,7 +116,7 @@ object AppServer {
    * The test AppServer with or without Sipi, which initiates the startup checks. Before this effect does what it does,
    * the complete server should have already been started.
    */
-  val test: ZIO[AppServerEnvironment, Nothing, Unit] =
+  val test: URIO[AppServerEnvironment, Unit] =
     for {
       appServer <- AppServer.init()
       _         <- appServer.start(requiresAdditionalRepositoryChecks = false).orDie

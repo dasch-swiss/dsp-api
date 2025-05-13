@@ -188,7 +188,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   "The ontology responder v2" should {
     "create an empty ontology called 'foo' with a project code" in {
       val response = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "foo",
@@ -213,15 +213,18 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "change the label in the metadata of 'foo'" in {
       val newLabel = "The modified foo ontology"
 
-      appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
-        label = Some(newLabel),
-        lastModificationDate = fooLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.changeOntologyMetadata(
+            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            label = Some(newLabel),
+            lastModificationDate = fooLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = imagesUser,
+          ),
+        ),
       )
 
-      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri == fooIri.get.toSmartIri)
@@ -236,15 +239,18 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "add a comment to the metadata of 'foo' ontology" in {
       val aComment = "a comment"
 
-      appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
-        comment = Some(aComment),
-        lastModificationDate = fooLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.changeOntologyMetadata(
+            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            comment = Some(aComment),
+            lastModificationDate = fooLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = imagesUser,
+          ),
+        ),
       )
 
-      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri == fooIri.get.toSmartIri)
@@ -260,16 +266,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val aLabel   = "a changed label"
       val aComment = "a changed comment"
 
-      appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
-        label = Some(aLabel),
-        comment = Some(aComment),
-        lastModificationDate = fooLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.changeOntologyMetadata(
+            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            label = Some(aLabel),
+            comment = Some(aComment),
+            lastModificationDate = fooLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = imagesUser,
+          ),
+        ),
       )
 
-      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri == fooIri.get.toSmartIri)
@@ -285,15 +294,18 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "change the label of 'foo' again" in {
       val newLabel = "a label changed again"
 
-      appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
-        label = Some(newLabel),
-        lastModificationDate = fooLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.changeOntologyMetadata(
+            ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
+            label = Some(newLabel),
+            lastModificationDate = fooLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = imagesUser,
+          ),
+        ),
       )
 
-      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri == fooIri.get.toSmartIri)
@@ -329,7 +341,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create an ontology if the given name matches NCName pattern but is not URL safe" in {
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "bär",
@@ -347,7 +359,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "create an empty ontology called 'bar' with a comment" in {
       val response = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "bar",
@@ -375,15 +387,18 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "change the existing comment in the metadata of 'bar' ontology" in {
       val newComment = "a new comment"
 
-      appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = OntologyIri.unsafeFrom(barIri.get.toSmartIri.toComplexSchema),
-        comment = Some(newComment),
-        lastModificationDate = barLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.changeOntologyMetadata(
+            ontologyIri = OntologyIri.unsafeFrom(barIri.get.toSmartIri.toComplexSchema),
+            comment = Some(newComment),
+            lastModificationDate = barLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = imagesUser,
+          ),
+        ),
       )
 
-      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri == barIri.get.toSmartIri)
@@ -397,7 +412,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create 'foo' again" in {
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "foo",
@@ -414,7 +429,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not delete an ontology that doesn't exist" in {
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.deleteOntology(
             ontologyIri = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri),
             lastModificationDate = fooLastModDate,
@@ -427,7 +442,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "delete the 'foo' ontology" in {
       val _ = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.deleteOntology(
             ontologyIri = OntologyIri.unsafeFrom(fooIri.get.toSmartIri.toComplexSchema),
             lastModificationDate = fooLastModDate,
@@ -466,7 +481,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         .get
 
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.deleteOntology(
             ontologyIri = AnythingOntologyIri,
             lastModificationDate = anythingLastModDate,
@@ -485,7 +500,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create an ontology called 'rdfs'" in {
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "rdfs",
@@ -502,7 +517,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create an ontology called '0000'" in {
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "0000",
@@ -519,7 +534,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create an ontology called '-foo'" in {
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "-foo",
@@ -536,7 +551,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create an ontology called 'v3'" in {
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "v3",
@@ -553,7 +568,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create an ontology called 'ontology'" in {
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "ontology",
@@ -570,7 +585,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create an ontology called 'knora'" in {
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "knora",
@@ -587,7 +602,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create an ontology called 'simple'" in {
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "simple",
@@ -604,7 +619,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create an ontology called 'shared'" in {
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "shared",
@@ -621,7 +636,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create a shared ontology in the wrong project" in {
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "misplaced",
@@ -639,7 +654,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create a non-shared ontology in the shared ontologies project" in {
       val exit = UnsafeZioRun.run(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "misplaced",
@@ -656,7 +671,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "create a shared ontology" in {
       val response = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[OntologyResponderV2](
+        ontologyResponder(
           _.createOntology(
             CreateOntologyRequestV2(
               ontologyName = "chair",
@@ -2744,15 +2759,18 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "change the metadata of the 'anything' ontology" in {
       val newLabel = "The modified anything ontology"
 
-      appActor ! ChangeOntologyMetadataRequestV2(
-        ontologyIri = AnythingOntologyIri,
-        label = Some(newLabel),
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ontologyResponder(
+          _.changeOntologyMetadata(
+            ontologyIri = AnythingOntologyIri,
+            label = Some(newLabel),
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
 
-      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(response.ontologies.size == 1)
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri.toOntologySchema(ApiV2Complex) == AnythingOntologyIri.smartIri)
