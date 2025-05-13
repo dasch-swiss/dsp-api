@@ -306,6 +306,40 @@ final case class SearchResponderV2Live(
 
   private implicit val sf: StringFormatter = stringFormatter
 
+  private def stillImageRepresentationsPreQueryBuilder(resourceIri: IRI, offset: RuntimeFlags = 0) =
+    s"""
+       |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+       |
+       |CONSTRUCT {
+       |?page knora-api:isMainResource true .
+       |
+       |?page knora-api:seqnum ?seqnum .
+       |
+       |?page knora-api:hasStillImageFile ?file .
+       |} WHERE {
+       |
+       |?page a knora-api:StillImageRepresentation .
+       |?page a knora-api:Resource .
+       |
+       |?page knora-api:isPartOf <$resourceIri> .
+       |knora-api:isPartOf knora-api:objectType knora-api:Resource .
+       |
+       |<$resourceIri> a knora-api:Resource .
+       |
+       |?page knora-api:seqnum ?seqnum .
+       |knora-api:seqnum knora-api:objectType xsd:integer .
+       |
+       |?seqnum a xsd:integer .
+       |
+       |?page knora-api:hasStillImageFile ?file .
+       |knora-api:hasStillImageFile knora-api:objectType knora-api:File .
+       |
+       |?file a knora-api:File .
+       |
+       |} ORDER BY ?seqnum
+       |OFFSET $offset
+       |""".stripMargin
+
   /**
    * Performs a Gravsearchquery to find resources that link to the specified resource.
    *
@@ -377,39 +411,7 @@ final case class SearchResponderV2Live(
     user: User,
     limitToProject: Option[ProjectIri],
   ): Task[ReadResourcesSequenceV2] = {
-    val query: String =
-      s"""
-         |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-         |
-         |CONSTRUCT {
-         |?page knora-api:isMainResource true .
-         |
-         |?page knora-api:seqnum ?seqnum .
-         |
-         |?page knora-api:hasStillImageFile ?file .
-         |} WHERE {
-         |
-         |?page a knora-api:StillImageRepresentation .
-         |?page a knora-api:Resource .
-         |
-         |?page knora-api:isPartOf <$resourceIri> .
-         |knora-api:isPartOf knora-api:objectType knora-api:Resource .
-         |
-         |<$resourceIri> a knora-api:Resource .
-         |
-         |?page knora-api:seqnum ?seqnum .
-         |knora-api:seqnum knora-api:objectType xsd:integer .
-         |
-         |?seqnum a xsd:integer .
-         |
-         |?page knora-api:hasStillImageFile ?file .
-         |knora-api:hasStillImageFile knora-api:objectType knora-api:File .
-         |
-         |?file a knora-api:File .
-         |
-         |} ORDER BY ?seqnum
-         |OFFSET $offset
-         |""".stripMargin
+    val query: IRI = stillImageRepresentationsPreQueryBuilder(resourceIri, offset)
 
     gravsearchV2(query, rendering, user, limitToProject)
   }
@@ -427,39 +429,7 @@ final case class SearchResponderV2Live(
     user: User,
     limitToProject: Option[ProjectIri],
   ): Task[ResourceCountV2] = {
-    val query: String =
-      s"""
-         |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-         |
-         |CONSTRUCT {
-         |?page knora-api:isMainResource true .
-         |
-         |?page knora-api:seqnum ?seqnum .
-         |
-         |?page knora-api:hasStillImageFile ?file .
-         |} WHERE {
-         |
-         |?page a knora-api:StillImageRepresentation .
-         |?page a knora-api:Resource .
-         |
-         |?page knora-api:isPartOf <$resourceIri> .
-         |knora-api:isPartOf knora-api:objectType knora-api:Resource .
-         |
-         |<$resourceIri> a knora-api:Resource .
-         |
-         |?page knora-api:seqnum ?seqnum .
-         |knora-api:seqnum knora-api:objectType xsd:integer .
-         |
-         |?seqnum a xsd:integer .
-         |
-         |?page knora-api:hasStillImageFile ?file .
-         |knora-api:hasStillImageFile knora-api:objectType knora-api:File .
-         |
-         |?file a knora-api:File .
-         |
-         |} ORDER BY ?seqnum
-         |OFFSET 0
-         |""".stripMargin
+    val query: String = stillImageRepresentationsPreQueryBuilder(resourceIri)
 
     gravsearchCountV2(query, user, limitToProject)
   }
