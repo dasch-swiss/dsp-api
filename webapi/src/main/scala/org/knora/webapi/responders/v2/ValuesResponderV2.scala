@@ -1156,7 +1156,7 @@ final case class ValuesResponderV2(
                  valueRepo.eraseValue(project)(deletableIri)
              }
       } yield ()
-    }.as(SuccessResponseV2("Not implemented yet"))
+    }.as(SuccessResponseV2(s"Value <$req.propertyIri}> deleted"))
 
   def eraseValueHistory(
     req: EraseValueHistoryV2,
