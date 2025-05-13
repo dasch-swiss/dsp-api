@@ -24,9 +24,6 @@ final case class ProjectLicenseDto(id: String, uri: String, labelEn: String, isR
 object ProjectLicenseDto {
   given JsonCodec[ProjectLicenseDto] = DeriveJsonCodec.gen[ProjectLicenseDto]
   given Ordering[ProjectLicenseDto]  = Ordering.by(_.labelEn)
-  given Schema[PagedResponse[ProjectLicenseDto]] = Schema
-    .derived[PagedResponse[ProjectLicenseDto]]
-    .modify(_.data)(_.copy(isOptional = false))
 
   def from(license: License, isEnabled: Boolean): ProjectLicenseDto =
     ProjectLicenseDto(
