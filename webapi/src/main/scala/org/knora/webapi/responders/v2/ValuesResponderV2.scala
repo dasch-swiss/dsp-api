@@ -57,7 +57,7 @@ import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Update, Select}
 
 final case class ValuesResponderV2(
   appConfig: AppConfig,
@@ -1165,13 +1165,29 @@ final case class ValuesResponderV2(
   ): Task[SuccessResponseV2] =
     eraseValue(req.toEraseValueV2, requestingUser, project, true)
 
-  private def failBadRequestForStandoffWithLinks(value: ReadValueV2) = ZIO
-    .fail(BadRequestException("Erasing standoff text values with links is not supported"))
-    .when {
-      value match
-        case text: ReadTextValueV2 => text.valueContent.standoffLinkTagTargetResourceIris.nonEmpty
-        case _                     => false
-    }
+  private def failBadRequestForStandoffWithLinks(value: ReadValueV2) =
+    for {
+      query <- ZIO.succeed(s"""
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+        SELECT * WHERE {
+          <${value.valueIri}> knora-base:previousValue ?previousValue .
+          ?previousValue knora-base:valueHasStandoff ?pvStandoff .
+          ?pvStandoff rdf:type knora-base:StandoffLinkTag .
+        }
+      """)
+      historyHasLinks <- triplestoreService.query(Select(query)).map(_.results.bindings.size > 0)
+      result <- ZIO
+                  .fail(BadRequestException("Erasing standoff text values with links is not supported"))
+                  .when {
+                    (historyHasLinks, value) match
+                      case (hhL, _) if hhL            => true
+                      case (_, text: ReadTextValueV2) => text.valueContent.standoffLinkTagTargetResourceIris.nonEmpty
+                      case _                          => false
+                  }
+    } yield result
 
   private def canRemoveValue(
     deleteValue: ValueRemoval,

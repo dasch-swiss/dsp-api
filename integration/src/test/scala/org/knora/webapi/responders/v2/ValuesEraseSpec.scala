@@ -130,19 +130,24 @@ object ValuesEraseSpec extends E2EZSpec {
       createAndErase(false) && createAndErase(true)
     },
     test("erase a TextValue with standoff with links should not be supported") {
-      for {
+      def textValueAsXml(link: Option[ResourceIri], suffix: String) = {
+        val linkXml = link.map(l => s"""<a class="salsah-link" href="$l">resource</a>""").getOrElse("")
+        s"""<?xml version="1.0" encoding="UTF-8"?>
+            <text documentType="html">Link: $linkXml, $suffix</text>"""
+      }
+
+      def testCase(lastVersionHasLink: Boolean) = for {
         res1 <- TestHelper.createResource
         res2 <- TestHelper.createResource
 
-        textValueAsXml =
-          s"""<?xml version="1.0" encoding="UTF-8"?>
-             <text documentType="html">Link: <a class="salsah-link" href="${res2.iri}">resource</a>.|</text>"""
-        _           <- zio.Console.printLine(s"textValueAsXml: $textValueAsXml")
-        val1        <- TestHelper.createTextValueWithStandoff(res1, textValueAsXml)
-        eraseResult <- TestHelper.eraseTextValue(val1, res1).either
+        val1        <- TestHelper.createTextValueWithStandoff(res1, textValueAsXml(Some(res2.iri), "123"))
+        val2        <- TestHelper.updateTextValueWithStandoff(val1, res1, textValueAsXml(None, "456"))
+        eraseResult <- TestHelper.eraseTextValue(val2, res1).either
       } yield assertTrue(
         eraseResult.left.toOption.map(_.getMessage) == Some("Erasing standoff text values with links is not supported"),
       )
+
+      testCase(lastVersionHasLink = false) && testCase(lastVersionHasLink = true)
     },
   ).provideSome[env](TestHelper.layer, ValueRepo.layer)
 }
@@ -161,7 +166,6 @@ final case class TestHelper(
 ) {
   import org.knora.webapi.messages.IriConversions.ConvertibleIri
 
-  // TODO: return SortedSet
   def getProjectTriples(
     selectForGraph: String => String = graph => s"""
       SELECT * WHERE {
