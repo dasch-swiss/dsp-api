@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.ontology.api
 
-import cats.syntax.traverse.*
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.jena.query.Dataset
 import org.apache.jena.rdf.model.*
@@ -113,13 +112,12 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       r                    <- ZIO.fromEither(m.singleRootResource).orElseFail("No root resource found")
       ontologyIri          <- uriAsOntologyIri(r)
       label                <- ZIO.fromEither(r.objectStringOption(RDFS.label))
-      comment              <- ZIO.fromEither(rdfsComment(r))
+      comment              <- ZIO.fromEither(ontologyRdfsComment(r))
       lastModificationDate <- ZIO.fromEither(r.objectInstant(KA.LastModificationDate))
     } yield OntologyMetadata(ontologyIri, label, comment, lastModificationDate)
 
-  private def rdfsComment(r: Resource): Either[String, Option[NonEmptyString]] = r
-    .objectStringOption(RDFS.comment)
-    .flatMap(_.traverse(NonEmptyString.from).left.map(_ => "Ontology comment may not be empty"))
+  private def ontologyRdfsComment(r: Resource): Either[String, Option[NonEmptyString]] = r
+    .objectStringOption(RDFS.comment, s => NonEmptyString.from(s).left.map(_ => "Ontology comment may not be empty"))
 
   private def uriAsOntologyIri(r: Resource): ZIO[Scope, String, OntologyIri] = ZIO
     .fromOption(r.uri)
@@ -142,7 +140,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
             projectIri <- r.objectUri(KA.AttachedToProject, ProjectIri.from)
             isShared   <- r.objectBooleanOption(KA.IsShared).map(_.getOrElse(false))
             label      <- r.objectString(RDFS.label)
-            comment    <- rdfsComment(r)
+            comment    <- ontologyRdfsComment(r)
           } yield CreateOntologyRequestV2(
             name,
             projectIri,
