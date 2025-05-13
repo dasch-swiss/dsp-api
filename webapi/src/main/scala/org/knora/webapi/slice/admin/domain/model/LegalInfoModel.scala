@@ -15,7 +15,6 @@ import java.net.URI
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec
-import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.AI_GENERATED
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.BORIS
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.CC_0_1_0
@@ -38,8 +37,6 @@ final case class CopyrightHolder private (override val value: String) extends St
 object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
   given JsonCodec[CopyrightHolder] = ZioJsonCodec.stringCodec(CopyrightHolder.from)
   given Schema[CopyrightHolder]    = Schema.string
-  given Schema[PagedResponse[CopyrightHolder]] =
-    Schema.derived[PagedResponse[CopyrightHolder]].modify(_.data)(_.copy(isOptional = false))
 
   given Ordering[CopyrightHolder] = Ordering.by(_.value)
   def from(str: String): Either[String, CopyrightHolder] =
@@ -54,8 +51,6 @@ final case class Authorship private (override val value: String) extends StringV
 object Authorship extends StringValueCompanion[Authorship] {
   given JsonCodec[Authorship] = ZioJsonCodec.stringCodec(Authorship.from)
   given Schema[Authorship]    = Schema.string
-  given Schema[PagedResponse[Authorship]] =
-    Schema.derived[PagedResponse[Authorship]].modify(_.data)(_.copy(isOptional = false))
   def from(str: String): Either[String, Authorship] =
     fromValidations("Authorship", Authorship.apply, List(nonEmpty, noLineBreaks, maxLength(1_000)))(str)
 }
@@ -63,9 +58,7 @@ object Authorship extends StringValueCompanion[Authorship] {
 final case class LicenseIri private (override val value: String) extends StringValue
 object LicenseIri extends StringValueCompanion[LicenseIri] {
   given JsonCodec[LicenseIri] = ZioJsonCodec.stringCodec(LicenseIri.from)
-  given Schema[PagedResponse[LicenseIri]] =
-    Schema.derived[PagedResponse[LicenseIri]].modify(_.data)(_.copy(isOptional = false))
-  given Schema[LicenseIri] = Schema.string
+  given Schema[LicenseIri]    = Schema.string
 
   /**
    * Explanation of the IRI regex:
