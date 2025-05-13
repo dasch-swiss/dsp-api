@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
+import eu.timepit.refined.types.string.NonEmptyString
 import zio.*
 import zio.prelude.Validation
 
@@ -491,8 +492,8 @@ final case class OntologyResponderV2(
    */
   def changeOntologyMetadata(
     ontologyIri: OntologyIri,
-    label: Option[String] = None,
-    comment: Option[String] = None,
+    label: Option[String],
+    comment: Option[NonEmptyString],
     lastModificationDate: Instant,
     apiRequestID: UUID,
     requestingUser: User,

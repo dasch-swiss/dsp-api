@@ -5,6 +5,8 @@
 
 package org.knora.webapi.e2e.v2.ontology
 
+import eu.timepit.refined.types.string.NonEmptyString
+
 import java.time.Instant
 
 import dsp.constants.SalsahGui
@@ -153,8 +155,9 @@ object InputOntologyV2 {
     val ontologyLabel: Option[String] =
       ontologyObj.maybeStringWithValidation(Rdfs.Label, validationFun)
 
-    val ontologyComment: Option[String] =
-      ontologyObj.maybeStringWithValidation(Rdfs.Comment, validationFun)
+    val ontologyComment = ontologyObj
+      .maybeStringWithValidation(Rdfs.Comment, validationFun)
+      .map(NonEmptyString.unsafeFrom)
 
     val lastModificationDate: Option[Instant] = ontologyObj.maybeDatatypeValueInObject(
       key = KnoraApiV2Complex.LastModificationDate,

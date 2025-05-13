@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.api
 
+import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.jena.query.Dataset
 import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.OWL2 as OWL
@@ -73,7 +74,7 @@ import org.knora.webapi.slice.ontology.domain.service.IriConverter
 case class ChangeOntologyMetadataRequestV2(
   ontologyIri: OntologyIri,
   label: Option[String] = None,
-  comment: Option[String] = None,
+  comment: Option[NonEmptyString] = None,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
@@ -84,7 +85,7 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
   private final case class OntologyMetadata(
     ontologyIri: OntologyIri,
     label: Option[String],
-    comment: Option[String],
+    comment: Option[NonEmptyString],
     lastModificationDate: Instant,
   )
 
@@ -111,9 +112,12 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
       r                    <- ZIO.fromEither(m.singleRootResource).orElseFail("No root resource found")
       ontologyIri          <- uriAsOntologyIri(r)
       label                <- ZIO.fromEither(r.objectStringOption(RDFS.label))
-      comment              <- ZIO.fromEither(r.objectStringOption(RDFS.comment))
+      comment              <- ZIO.fromEither(ontologyRdfsComment(r))
       lastModificationDate <- ZIO.fromEither(r.objectInstant(KA.LastModificationDate))
     } yield OntologyMetadata(ontologyIri, label, comment, lastModificationDate)
+
+  private def ontologyRdfsComment(r: Resource): Either[String, Option[NonEmptyString]] = r
+    .objectStringOption(RDFS.comment, s => NonEmptyString.from(s).left.map(_ => "Ontology comment may not be empty"))
 
   private def uriAsOntologyIri(r: Resource): ZIO[Scope, String, OntologyIri] = ZIO
     .fromOption(r.uri)
@@ -136,17 +140,8 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
             projectIri <- r.objectUri(KA.AttachedToProject, ProjectIri.from)
             isShared   <- r.objectBooleanOption(KA.IsShared).map(_.getOrElse(false))
             label      <- r.objectString(RDFS.label)
-            comment <- r.objectStringOption(RDFS.comment)
-                         .filterOrElse(_.map(_.nonEmpty).getOrElse(true), "Ontology comment cannot be empty")
-          } yield CreateOntologyRequestV2(
-            name,
-            projectIri,
-            isShared,
-            label,
-            comment,
-            apiRequestId,
-            requestingUser,
-          )
+            comment    <- ontologyRdfsComment(r)
+          } yield CreateOntologyRequestV2(name, projectIri, isShared, label, comment, apiRequestId, requestingUser)
         }
       }
     }
