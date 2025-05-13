@@ -130,20 +130,16 @@ object StringFormatter {
   val IriDomain: String = "rdfh.ch"
 
   /*
-
     In order to parse project-specific API v2 ontology IRIs, the StringFormatter
     class needs the Knora API server's hostname, which is set in application.conf,
-    which is not read until the Akka ActorSystem starts. Therefore, IRI parsing is
-    done in the StringFormatter class, rather than in the StringFormatter object.
+    Therefore, IRI parsing is done in the StringFormatter class, rather than in the StringFormatter object.
 
     There are two instances of StringFormatter, defined below.
-
    */
 
   /**
-   * The instance of [[StringFormatter]] that is initialised after the ActorSystem starts,
-   * and can parse project-specific API v2 ontology IRIs. This instance is used almost
-   * everywhere in the API server.
+   * The instance of [[StringFormatter]] that can parse project-specific API v2 ontology IRIs.
+   * This instance is used almost everywhere in the API server.
    */
   private var generalInstance: Option[StringFormatter] = None
 
@@ -294,9 +290,8 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
   /*
 
     The smart IRI implementation, SmartIriImpl, is nested in the StringFormatter
-    class because it uses the Knora API server's hostname, which isn't available
-    until the Akka ActorSystem has started. However, this means that the type of a
-    SmartIriImpl instance is dependent on the instance of StringFormatter that
+    class because it uses the Knora API server's hostname. This means that the type of
+    the SmartIriImpl instance is dependent on the instance of StringFormatter that
     constructed it. Therefore, you can't compare two instances of SmartIriImpl
     created by two different instances of StringFormatter.
 

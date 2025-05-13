@@ -118,6 +118,31 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(header[MediaType](HeaderNames.ContentType))
     .description("Search for incoming links using a Gravsearch query with an offset.")
 
+  val getSearchStillImageRepresentations = baseEndpoints.withUserEndpoint.get
+    .in(
+      "v2" / "searchStillImageRepresentations" / path[InputIri]("resourceIri").description(
+        "The IRI of the resource to retrieve",
+      ),
+    )
+    .in(SearchEndpointsInputs.offset)
+    .in(ApiV2.Inputs.formatOptions)
+    .in(SearchEndpointsInputs.limitToProject)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Search for StillImageRepresentations using a Gravsearch query with an offset.")
+
+  val getSearchStillImageRepresentationsCount = baseEndpoints.withUserEndpoint.get
+    .in(
+      "v2" / "searchStillImageRepresentationsCount" / path[InputIri]("resourceIri").description(
+        "The IRI of the resource to retrieve",
+      ),
+    )
+    .in(ApiV2.Inputs.formatOptions)
+    .in(SearchEndpointsInputs.limitToProject)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .description("Count SearchStillImageRepresentations using a Gravsearch query.")
+
   val getSearchIncomingRegions = baseEndpoints.withUserEndpoint.get
     .in(
       ("v2" / "searchIncomingRegions" / path[InputIri]("resourceIri")
@@ -178,6 +203,8 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
       postGravsearchCount,
       getGravsearchCount,
       getSearchIncomingLinks,
+      getSearchStillImageRepresentations,
+      getSearchStillImageRepresentationsCount,
       getSearchIncomingRegions,
       getSearchByLabel,
       getSearchByLabelCount,
@@ -230,16 +257,32 @@ final case class SearchApiRoutes(
   private val getSearchIncomingLinks =
     SecuredEndpointHandler[(InputIri, Offset, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
       searchEndpoints.getSearchIncomingLinks,
-      user => { case (resourceIRI, offset, opts, limitToProject) =>
-        searchRestService.searchIncomingLinks(resourceIRI.value, offset, opts, user, limitToProject)
+      user => { case (resourceIri, offset, opts, limitToProject) =>
+        searchRestService.searchIncomingLinks(resourceIri.value, offset, opts, user, limitToProject)
+      },
+    )
+
+  private val getSearchStillImageRepresentations =
+    SecuredEndpointHandler[(InputIri, Offset, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
+      searchEndpoints.getSearchStillImageRepresentations,
+      user => { case (resourceIri, offset, opts, limitToProject) =>
+        searchRestService.getSearchStillImageRepresentations(resourceIri.value, offset, opts, user, limitToProject)
+      },
+    )
+
+  private val getSearchStillImageRepresentationsCount =
+    SecuredEndpointHandler[(InputIri, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
+      searchEndpoints.getSearchStillImageRepresentationsCount,
+      user => { case (resourceIri, opts, limitToProject) =>
+        searchRestService.getSearchStillImageRepresentationsCount(resourceIri.value, opts, user, limitToProject)
       },
     )
 
   private val getSearchIncomingRegions =
     SecuredEndpointHandler[(InputIri, Offset, FormatOptions, Option[ProjectIri]), (RenderedResponse, MediaType)](
       searchEndpoints.getSearchIncomingRegions,
-      user => { case (resourceIRI, offset, opts, limitToProject) =>
-        searchRestService.searchIncomingRegions(resourceIRI.value, offset, opts, user, limitToProject)
+      user => { case (resourceIri, offset, opts, limitToProject) =>
+        searchRestService.searchIncomingRegions(resourceIri.value, offset, opts, user, limitToProject)
       },
     )
 
@@ -298,6 +341,8 @@ final case class SearchApiRoutes(
       postGravsearchCount,
       getGravsearchCount,
       getSearchIncomingLinks,
+      getSearchStillImageRepresentations,
+      getSearchStillImageRepresentationsCount,
       getSearchIncomingRegions,
     )
       .map(it => mapper.mapSecuredEndpointHandler(it))
@@ -386,6 +431,51 @@ final case class SearchRestService(
           } yield response
         }
 
+    } yield response
+
+  def getSearchStillImageRepresentations(
+    resourceIri: String,
+    offset: Offset,
+    opts: FormatOptions,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[(RenderedResponse, MediaType)] =
+    for {
+      response <-
+        tracing.root("searchStillImageRepresentations") {
+          for {
+            result <-
+              searchResponderV2.searchStillImageRepresentationsV2(
+                resourceIri,
+                offset.value,
+                opts.schemaRendering,
+                user,
+                limitToProject,
+              )
+            rr <- renderer.render(result, opts)
+          } yield rr
+        }
+    } yield response
+
+  def getSearchStillImageRepresentationsCount(
+    resourceIri: String,
+    opts: FormatOptions,
+    user: User,
+    limitToProject: Option[ProjectIri],
+  ): Task[(RenderedResponse, MediaType)] =
+    for {
+      response <-
+        tracing.root("searchStillImageRepresentationsCount") {
+          for {
+            result <-
+              searchResponderV2.searchStillImageRepresentationsCountV2(
+                resourceIri,
+                user,
+                limitToProject,
+              )
+            rr <- renderer.render(result, opts)
+          } yield rr
+        }
     } yield response
 
   def searchIncomingRegions(
