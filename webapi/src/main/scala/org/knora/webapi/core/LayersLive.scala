@@ -111,7 +111,6 @@ object LayersLive {
     ResourcesApiRoutes &
     ResourcesResponderV2 &
     ResourcesRepo &
-    // RestCardinalityService &
     SecurityModule.Provided &
     SearchApiRoutes &
     SearchResponderV2Module.Provided &
