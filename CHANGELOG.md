@@ -1,5 +1,24 @@
 # Changelog
 
+## [31.14.0](https://github.com/dasch-swiss/dsp-api/compare/v31.13.0...v31.14.0) (2025-05-13)
+
+
+### Maintenances
+
+* Clean up some Pekko usages ([#3587](https://github.com/dasch-swiss/dsp-api/issues/3587)) ([653aebc](https://github.com/dasch-swiss/dsp-api/commit/653aebcedcc7e74e9ce829e0aa5d0d8f398f0314))
+* Combine PagedResponse schemas into a single given ([#3590](https://github.com/dasch-swiss/dsp-api/issues/3590)) ([a63f2c3](https://github.com/dasch-swiss/dsp-api/commit/a63f2c32fdfedad07a5be432bad5369750581e59))
+
+
+### Enhancements
+
+* Add dedicated endpoints for getting StillImageRepresentations (DEV-4836) ([#3573](https://github.com/dasch-swiss/dsp-api/issues/3573)) ([d01ed62](https://github.com/dasch-swiss/dsp-api/commit/d01ed62e9c9ebb05ca344818423fbc546c9b8efc))
+
+
+### Bug Fixes
+
+* Do not allow empty comment when creating an ontology (DEV-4881) ([#3593](https://github.com/dasch-swiss/dsp-api/issues/3593)) ([052b3f6](https://github.com/dasch-swiss/dsp-api/commit/052b3f610b09a4fce70b0fac2f5b25293a83d268))
+* Do not allow empty comment when updating an ontology (DEV-4881) ([#3594](https://github.com/dasch-swiss/dsp-api/issues/3594)) ([c9bac49](https://github.com/dasch-swiss/dsp-api/commit/c9bac495f2c08a3647640b5203d59241884d7394))
+
 ## [31.13.0](https://github.com/dasch-swiss/dsp-api/compare/v31.12.0...v31.13.0) (2025-05-12)
 
 

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.v2.ontology
 
+import eu.timepit.refined.types.string.NonEmptyString
 import zio.*
 import zio.prelude.Validation
 
@@ -739,7 +740,9 @@ object OntologyHelpers {
         val ontologyLabel: String =
           ontologyMetadataMap.getOrElse(OntologyConstants.Rdfs.Label, ontologySmartIri.getOntologyName.value)
 
-        val ontologyComment = ontologyMetadataMap.get(OntologyConstants.Rdfs.Comment)
+        val ontologyComment = ontologyMetadataMap
+          .get(OntologyConstants.Rdfs.Comment)
+          .map(s => NonEmptyString.unsafeFrom(s))
         val lastModificationDate: Option[Instant] = ontologyMetadataMap
           .get(OntologyConstants.KnoraBase.LastModificationDate)
           .map(instant =>

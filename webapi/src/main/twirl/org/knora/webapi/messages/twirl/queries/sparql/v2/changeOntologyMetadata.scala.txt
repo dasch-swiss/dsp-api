@@ -5,6 +5,7 @@
 
 @import org.knora.webapi.messages.SmartIri
 @import java.time.Instant
+@import eu.timepit.refined.types.string.NonEmptyString
 
 @*
  * Changes the metadata attached to an ontology.
@@ -23,7 +24,7 @@
   newLabel: Option[String],
   hasOldComment: Boolean,
   deleteOldComment: Boolean,
-  newComment: Option[String],
+  newComment: Option[NonEmptyString],
   lastModificationDate: Instant,
   currentTime: Instant)
 
@@ -50,7 +51,7 @@ DELETE {
             ?ontology rdfs:label """@newLabel.get"""^^xsd:string .
         }
         @if(newComment.nonEmpty) {
-            ?ontology rdfs:comment """@newComment.get"""^^xsd:string .
+            ?ontology rdfs:comment """@newComment.get.value"""^^xsd:string .
         }
         ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
     }
