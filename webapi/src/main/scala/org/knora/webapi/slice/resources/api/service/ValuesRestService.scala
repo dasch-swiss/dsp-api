@@ -84,7 +84,7 @@ final class ValuesRestService(
   def eraseValue(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
       eraseReq      <- requestParser.eraseValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
-      project       <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, eraseReq.shortcode)
+      project       <- auth.ensureSystemAdmin(user)
       knoraResponse <- valuesService.eraseValue(eraseReq, user, project)
       response      <- render(knoraResponse)
     } yield response
@@ -92,7 +92,7 @@ final class ValuesRestService(
   def eraseValueHistory(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
       eraseReq      <- requestParser.eraseValueHistoryV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
-      project       <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, eraseReq.shortcode)
+      project       <- auth.ensureSystemAdmin(user)
       knoraResponse <- valuesService.eraseValueHistory(eraseReq, user, project)
       response      <- render(knoraResponse)
     } yield response
