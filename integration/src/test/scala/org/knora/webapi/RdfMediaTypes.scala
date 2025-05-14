@@ -5,19 +5,10 @@
 
 package org.knora.webapi
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model.HttpCharsets
+import org.apache.pekko.http.scaladsl.model.MediaType
 
-import pekko.http.scaladsl.model.HttpCharsets
-import pekko.http.scaladsl.model.MediaType
-import pekko.http.scaladsl.model.MediaTypes
-
-/**
- * Represents media types supported by the Knora API server for representing RDF data, and provides
- * convenience methods for transforming media types.
- */
 object RdfMediaTypes {
-  val `application/json`: MediaType.WithFixedCharset = MediaTypes.`application/json`
-
   val `application/ld+json`: MediaType.WithFixedCharset = MediaType.customWithFixedCharset(
     mainType = "application",
     subType = "ld+json",
