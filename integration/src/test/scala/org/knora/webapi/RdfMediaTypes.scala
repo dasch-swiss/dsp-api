@@ -28,4 +28,11 @@ object RdfMediaTypes {
     subType = "rdf+xml",
     fileExtensions = List("rdf"),
   )
+
+  val `application/sparql-query`: MediaType.WithFixedCharset = MediaType.customWithFixedCharset(
+    mainType = "application",
+    subType = "sparql-query",
+    charset = HttpCharsets.`UTF-8`,
+    fileExtensions = List("rq"),
+  )
 }

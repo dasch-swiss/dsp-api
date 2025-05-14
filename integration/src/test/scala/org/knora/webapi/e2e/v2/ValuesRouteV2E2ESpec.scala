@@ -35,7 +35,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.*
@@ -141,7 +140,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     val request = Post(
       baseApiUrl + "/v2/searchextended",
-      HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery),
+      HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
     ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
     val response: HttpResponse = singleAwaitingRequest(request)
     assert(response.status == StatusCodes.OK, response.toString)
