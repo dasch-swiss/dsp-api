@@ -234,7 +234,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
         .where(iri.has(RDFS.COMMENT, SparqlBuilder.`var`(emptyComment)))
 
       val actual =
-        UnsafeZioRun.runOrThrow(triplestore(ts => ts.query(Update(insertQuery)) *> ts.query(Select(selectQuery))))
+        UnsafeZioRun.runOrThrow(triplestore(t => t.insert(insertQuery) *> t.select(selectQuery)))
       actual.getCol(emptyComment) shouldBe Seq(emptyString)
     }
   }
