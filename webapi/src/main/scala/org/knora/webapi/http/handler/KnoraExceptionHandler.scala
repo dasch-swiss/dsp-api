@@ -11,14 +11,15 @@ import spray.json.JsObject
 import spray.json.JsString
 import spray.json.JsValue
 
+import dsp.errors.*
 import dsp.errors.InternalServerException
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.http.status.ApiStatusCodesV2
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
+import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
 import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.server.Directives.complete
@@ -79,6 +80,35 @@ object KnoraExceptionHandler extends LazyLogging {
   }
 
   /**
+   * Converts an exception to a similar HTTP status code.
+   *
+   * @param ex an exception.
+   * @return an HTTP status code.
+   */
+  private def fromException(ex: Throwable): StatusCode =
+    ex match {
+      // Subclasses of RequestRejectedException
+      case NotFoundException(_)           => StatusCodes.NotFound
+      case ForbiddenException(_)          => StatusCodes.Forbidden
+      case BadCredentialsException(_)     => StatusCodes.Unauthorized
+      case DuplicateValueException(_)     => StatusCodes.BadRequest
+      case OntologyConstraintException(_) => StatusCodes.BadRequest
+      case EditConflictException(_)       => StatusCodes.Conflict
+      case BadRequestException(_)         => StatusCodes.BadRequest
+      case ValidationException(_)         => StatusCodes.BadRequest
+      case RequestRejectedException(_)    => StatusCodes.BadRequest
+      // RequestRejectedException must be the last one in this group
+
+      // Subclasses of InternalServerException
+      case UpdateNotPerformedException(_)    => StatusCodes.Conflict
+      case TriplestoreTimeoutException(_, _) => StatusCodes.GatewayTimeout
+      case InternalServerException(_)        => StatusCodes.InternalServerError
+      // InternalServerException must be the last one in this group
+
+      case _ => StatusCodes.InternalServerError
+    }
+
+  /**
    * Converts an exception to an HTTP response in JSON format specific to `V2`.
    *
    * @param ex the exception to be converted.
@@ -86,7 +116,7 @@ object KnoraExceptionHandler extends LazyLogging {
    */
   private def exceptionToJsonHttpResponseV2(ex: Throwable, appConfig: AppConfig): HttpResponse = {
     // Get the HTTP status code that corresponds to the exception.
-    val httpStatus: StatusCode = ApiStatusCodesV2.fromException(ex)
+    val httpStatus: StatusCode = fromException(ex)
 
     // Generate an HTTP response containing the error message...
 
@@ -119,7 +149,7 @@ object KnoraExceptionHandler extends LazyLogging {
   private def exceptionToJsonHttpResponseADM(ex: Throwable, appConfig: AppConfig): HttpResponse = {
 
     // Get the HTTP status code that corresponds to the exception.
-    val httpStatus: StatusCode = ApiStatusCodesV2.fromException(ex)
+    val httpStatus: StatusCode = fromException(ex)
 
     // Generate an HTTP response containing the error message ...
     val responseFields: Map[String, JsValue] = Map(
