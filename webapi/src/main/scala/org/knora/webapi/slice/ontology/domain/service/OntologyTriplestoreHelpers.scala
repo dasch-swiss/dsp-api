@@ -66,7 +66,7 @@ final case class OntologyTriplestoreHelpers(
         classIris = ontology.classes.keySet,
         propertyIris = ontology.properties.keySet,
       )
-    triplestore.query(Select(query)).map(_.getColOrThrow("s").toSet)
+    triplestore.query(Select(query)).map(_.getCol("s").toSet)
   }
 }
 
