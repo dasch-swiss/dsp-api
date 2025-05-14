@@ -5,19 +5,9 @@
 
 package org.knora.webapi.slice.shacl.api
 
-import org.apache.pekko.actor.*
-import org.apache.pekko.stream.Materializer
-import org.apache.pekko.stream.scaladsl.Sink
-import org.apache.pekko.stream.scaladsl.Source
-import org.apache.pekko.util.ByteString
 import zio.*
-import zio.Scope
 import zio.nio.file.Files
 import zio.test.*
-
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContextExecutor
-import scala.concurrent.Future
 
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 
@@ -32,19 +22,7 @@ object ShaclApiServiceSpec extends ZIOSpecDefault {
         shacl   <- Files.createTempFile("shacl.ttl", None, Seq.empty)
         formData = ValidationFormData(data.toFile, shacl.toFile, None, None, None)
         result  <- shaclApiService(_.validate(formData))
-      } yield assertTrue(reportConforms(result))
+      } yield assertTrue(result.contains("sh:conforms  true"))
     },
   ).provide(ShaclApiService.layer, ShaclValidator.layer)
-
-  private def reportConforms(result: Source[ByteString, Any]): Boolean = {
-    implicit val system: ActorSystem          = ActorSystem.create()
-    implicit val ec: ExecutionContextExecutor = system.dispatcher
-    implicit val mat: Materializer            = Materializer(system)
-
-    val str: Future[String] = result
-      .runWith(Sink.fold(ByteString.empty)(_ ++ _)) // Accumulate ByteString
-      .map(_.utf8String)
-    val reportStr = Await.result(str, 5.seconds.asScala)
-    reportStr.contains("sh:conforms  true")
-  }
 }

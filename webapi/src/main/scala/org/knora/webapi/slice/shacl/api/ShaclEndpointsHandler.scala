@@ -16,10 +16,7 @@ case class ShaclEndpointsHandler(
   mapper: HandlerMapper,
 ) {
 
-  val validate = PublicEndpointHandler(
-    shaclEndpoints.validate,
-    shaclApiService.validate,
-  )
+  val validate = PublicEndpointHandler(shaclEndpoints.validate, shaclApiService.validate)
 
   val allHandlers = List(validate).map(mapper.mapPublicEndpointHandler)
 }

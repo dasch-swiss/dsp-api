@@ -5,10 +5,6 @@
 
 package org.knora.webapi.slice.shacl.api
 
-import org.apache.pekko.stream.scaladsl.Source
-import org.apache.pekko.util.ByteString
-import sttp.capabilities.pekko.PekkoStreams
-import sttp.model.MediaType
 import sttp.tapir.*
 import sttp.tapir.Schema.annotations.description
 import sttp.tapir.generic.auto.*
@@ -34,25 +30,23 @@ case class ValidationFormData(
 
 case class ShaclEndpoints(baseEndpoints: BaseEndpoints) {
 
-  val validate: Endpoint[Unit, ValidationFormData, RequestRejectedException, Source[ByteString, Any], PekkoStreams] =
-    baseEndpoints.publicEndpoint.post
-      .in("shacl" / "validate")
-      .description("foo")
-      .in(multipartBody[ValidationFormData])
-      .out(streamTextBody(PekkoStreams)(new CodecFormat {
-        override val mediaType: MediaType = MediaType("text", "turtle")
-      }).description("""
-                       |The validation report in Turtle format.
-                       |
-                       |```turtle
-                       |@prefix sh:      <http://www.w3.org/ns/shacl#> .
-                       |@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-                       |
-                       |[ rdf:type     sh:ValidationReport;
-                       |  sh:conforms  true
-                       |] .
-                       |```
-                       |""".stripMargin))
+  val validate = baseEndpoints.publicEndpoint.post
+    .in("shacl" / "validate")
+    .description("An endpoint for validating data against SHACL shapes.")
+    .in(multipartBody[ValidationFormData])
+    .out(stringBody.description("""
+                                  |The validation report in Turtle format.
+                                  |
+                                  |```turtle
+                                  |@prefix sh:      <http://www.w3.org/ns/shacl#> .
+                                  |@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                                  |
+                                  |[ rdf:type     sh:ValidationReport;
+                                  |  sh:conforms  true
+                                  |] .
+                                  |```
+                                  |""".stripMargin))
+    .out(header("Content-Type", "text/turtle"))
 
   val endpoints: Seq[AnyEndpoint] =
     Seq(validate).map(_.tag("Shacl"))
