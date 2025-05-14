@@ -221,21 +221,21 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
     }
 
     "should allow empty Strings as values" in {
-      val iri          = Rdf.iri("http://example.com/test")
-      val emptyString  = ""
-      val emptyComment = "emptyComment"
+      val iri         = Rdf.iri("http://example.com/resource-with-comment")
+      val emptyString = ""
+      val commentVar  = "emptyComment"
 
       val insertQuery = Queries
         .INSERT_DATA(iri.has(RDFS.COMMENT, emptyString))
-        .into(Rdf.iri("http://example.com/allowemptystringgraph"))
+        .into(Rdf.iri("allowemptystringgraph"))
 
       val selectQuery = Queries
-        .SELECT(SparqlBuilder.`var`(emptyComment))
-        .where(iri.has(RDFS.COMMENT, SparqlBuilder.`var`(emptyComment)))
+        .SELECT(SparqlBuilder.`var`(commentVar))
+        .where(iri.has(RDFS.COMMENT, SparqlBuilder.`var`(commentVar)))
 
       val actual =
         UnsafeZioRun.runOrThrow(triplestore(t => t.insert(insertQuery) *> t.select(selectQuery)))
-      actual.getCol(emptyComment) shouldBe Seq(emptyString)
+      actual.getCol(commentVar) shouldBe Seq(emptyString)
     }
   }
 }
