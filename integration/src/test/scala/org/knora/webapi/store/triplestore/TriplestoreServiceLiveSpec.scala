@@ -226,14 +226,14 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
       }
     }
 
-    "should allow empty Strings a values" in {
+    "should allow empty Strings as values" in {
       val iri          = Rdf.iri("http://example.com/test")
       val emptyString  = ""
       val emptyComment = "emptyComment"
 
       val insertQuery = Queries
         .INSERT_DATA(iri.has(RDFS.COMMENT, emptyString))
-        .into(Rdf.iri("http://example.com/graph"))
+        .into(Rdf.iri("http://example.com/allowemptystringgraph"))
 
       val selectQuery = Queries
         .SELECT(SparqlBuilder.`var`(emptyComment))
@@ -243,12 +243,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
         ZIO.logWarning(insertQuery.getQueryString) *>
           ZIO.serviceWithZIO[TriplestoreService](ts => ts.query(Update(insertQuery)) *> ts.query(Select(selectQuery))),
       )
-      actual.results.bindings.headOption match {
-        case Some(row) =>
-          row.rowMap.get(emptyComment) should ===(Some(emptyString))
-        case None =>
-          fail("Expected a result, but got none")
-      }
+      actual.getCol(emptyComment) shouldBe Seq(emptyString)
     }
   }
 }
