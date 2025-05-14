@@ -20,7 +20,6 @@ import zio.ZIO
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTestLive
