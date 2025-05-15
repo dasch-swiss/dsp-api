@@ -5,27 +5,25 @@
 
 package org.knora.webapi.slice.admin.api
 import zio.ZLayer
-
 import org.knora.webapi.slice.admin.api.service.ProjectsLegalInfoRestService
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
+import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.ZServerEndpoint
 
-final class ProjectsLegalInfoEndpointsHandler(
+final class ProjectsLegalInfoServerEndpoints(
   endpoints: ProjectsLegalInfoEndpoints,
   restService: ProjectsLegalInfoRestService,
-  mapper: HandlerMapper,
 ) {
-  val allHandlers = List(
-    SecuredEndpointHandler(endpoints.getProjectAuthorships, restService.findAuthorships),
-    SecuredEndpointHandler(endpoints.getProjectLicenses, restService.findLicenses),
-    SecuredEndpointHandler(endpoints.putProjectLicensesEnable, restService.enableLicense),
-    SecuredEndpointHandler(endpoints.putProjectLicensesDisable, restService.disableLicense),
-    SecuredEndpointHandler(endpoints.getProjectCopyrightHolders, restService.findCopyrightHolders),
-    SecuredEndpointHandler(endpoints.postProjectCopyrightHolders, restService.addCopyrightHolders),
-    SecuredEndpointHandler(endpoints.putProjectCopyrightHolders, restService.replaceCopyrightHolder),
-  ).map(mapper.mapSecuredEndpointHandler)
+  val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] = List(
+    endpoints.getProjectAuthorships.serverLogic(restService.findAuthorships),
+    endpoints.getProjectLicenses.serverLogic(restService.findLicenses),
+    endpoints.putProjectLicensesEnable.serverLogic(restService.enableLicense),
+    endpoints.putProjectLicensesDisable.serverLogic(restService.disableLicense),
+    endpoints.getProjectCopyrightHolders.serverLogic(restService.findCopyrightHolders),
+    endpoints.postProjectCopyrightHolders.serverLogic(restService.addCopyrightHolders),
+    endpoints.putProjectCopyrightHolders.serverLogic(restService.replaceCopyrightHolder),
+  )
 }
 
-object ProjectsLegalInfoEndpointsHandler {
-  val layer = ZLayer.derive[ProjectsLegalInfoEndpointsHandler]
+object ProjectsLegalInfoServerEndpoints {
+  val layer = ZLayer.derive[ProjectsLegalInfoServerEndpoints]
 }

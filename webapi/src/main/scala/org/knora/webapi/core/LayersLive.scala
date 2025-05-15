@@ -9,7 +9,6 @@ import org.apache.pekko.actor.ActorSystem
 import zio.*
 import zio.ULayer
 import zio.ZLayer
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.InstrumentationServerConfig
 import org.knora.webapi.messages.util.*
@@ -39,7 +38,7 @@ import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OpenTelemetryTracerLive
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
-import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
+import org.knora.webapi.slice.infrastructure.api.ManagementServerEndpoints
 import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.lists.domain.ListsService
 import org.knora.webapi.slice.ontology.CoreModule
@@ -49,15 +48,15 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
-import org.knora.webapi.slice.resources.api.ResourcesApiRoutes
+import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
-import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
+import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.security.api.AuthenticationApiModule
 import org.knora.webapi.slice.shacl.ShaclModule
 import org.knora.webapi.slice.shacl.api.ShaclApiModule
-import org.knora.webapi.slice.shacl.api.ShaclApiRoutes
+import org.knora.webapi.slice.shacl.api.ShaclServerEndpoints
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -75,7 +74,6 @@ object LayersLive {
     AdminApiEndpoints &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
-    ApiRoutes &
     ApiV2Endpoints &
     AppConfig.AppConfigurations &
     AssetPermissionsResponder &
@@ -87,7 +85,6 @@ object LayersLive {
     CoreModule.Provided &
     DefaultObjectAccessPermissionService &
     GroupRestService &
-    HttpServer &
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
     InstrumentationServerConfig &
@@ -107,10 +104,10 @@ object LayersLive {
     ProjectRestService &
     RepositoryUpdater &
     ResourceUtilV2 &
-    ResourcesApiRoutes &
+    ResourcesApiServerEndpoints&
     ResourcesResponderV2 &
-    SearchApiRoutes &
     SearchResponderV2Module.Provided &
+    SearchServerEndpoints &
     SecurityModule.Provided &
     ShaclApiModule.Provided &
     ShaclModule.Provided &
@@ -130,7 +127,6 @@ object LayersLive {
       AdminApiModule.layer,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
-      ApiRoutes.layer,
       ApiV2Endpoints.layer,
       AppConfig.layer,
       AssetPermissionsResponder.layer,
@@ -141,9 +137,8 @@ object LayersLive {
       CardinalityHandler.layer,
       ConstructResponseUtilV2.layer,
       CoreModule.layer,
+      DspApiServerEndpoints.layer,
       DspIngestClientLive.layer,
-      HandlerMapper.layer,
-      HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
       IriService.layer,
@@ -152,7 +147,7 @@ object LayersLive {
       ListsResponder.layer,
       ListsService.layer,
       ManagementEndpoints.layer,
-      ManagementRoutes.layer,
+      ManagementServerEndpoints.layer,
       MessageRelayLive.layer,
       OntologyApiModule.layer,
       OntologyResponderV2.layer,
@@ -170,9 +165,9 @@ object LayersLive {
       ResourcesApiModule.layer,
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
-      SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,
+      SearchServerEndpoints.layer,
       SecurityModule.layer,
       ShaclApiModule.layer,
       ShaclModule.layer,

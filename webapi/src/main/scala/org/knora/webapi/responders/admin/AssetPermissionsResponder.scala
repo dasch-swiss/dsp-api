@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.admin
 
 import zio.*
-
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.SmartIri
@@ -21,6 +20,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.common.domain.SparqlEncodedString
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
@@ -34,13 +34,11 @@ final case class AssetPermissionsResponder(
 )(private implicit val sf: StringFormatter) {
 
   def getPermissionCodeAndProjectRestrictedViewSettings(
-    shortcode: Shortcode,
-    filename: String,
-    requestingUser: User,
-  ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
+    user: User,
+  )(shortcode: Shortcode, filename: SparqlEncodedString): Task[PermissionCodeAndProjectRestrictedViewSettings] =
     for {
-      queryResponse  <- queryForFileValue(filename)
-      permissionCode <- getPermissionCode(queryResponse, filename, requestingUser)
+      queryResponse  <- queryForFileValue(filename.value)
+      permissionCode <- getPermissionCode(queryResponse, filename.value, user)
       response       <- buildResponse(shortcode, permissionCode)
     } yield response
 

@@ -9,32 +9,26 @@ import zio.ZIO
 import zio.ZLayer
 import zio.json.*
 import zio.json.ast.Json
-
+import sttp.tapir.ztapir.*
 import dsp.errors.BadRequestException
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
+import sttp.capabilities.zio.ZioStreams
 
-final case class MaintenanceEndpointsHandlers(
-  endpoints: MaintenanceEndpoints,
-  restService: MaintenanceRestService,
-  mapper: HandlerMapper,
+final case class MaintenanceServerEndpoints(
+  private val endpoints: MaintenanceEndpoints,
+  private val restService: MaintenanceRestService,
 ) {
 
-  private val postMaintenanceHandler =
-    SecuredEndpointHandler[(String, Option[String]), Unit](
-      endpoints.postMaintenance,
-      (user: User) => { case (action: String, jsonMaybe: Option[String]) =>
-        ZIO
-          .foreach(jsonMaybe)(str => ZIO.fromEither(str.fromJson[Json]).orElseFail(BadRequestException("Invalid JSON")))
-          .flatMap(restService.executeMaintenanceAction(user, action, _))
-      },
-    )
-
-  val allHandlers = List(postMaintenanceHandler).map(mapper.mapSecuredEndpointHandler(_))
+  val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] = List(
+    endpoints.postMaintenance.serverLogic((user: User) => { case (action: String, jsonMaybe: Option[String]) =>
+      ZIO
+        .foreach(jsonMaybe)(str => ZIO.fromEither(str.fromJson[Json]).orElseFail(BadRequestException("Invalid JSON")))
+        .flatMap(restService.executeMaintenanceAction(user, action, _))
+    }),
+  )
 }
 
-object MaintenanceEndpointsHandlers {
-  val layer = ZLayer.derive[MaintenanceEndpointsHandlers]
+object MaintenanceServerEndpoints {
+  val layer = ZLayer.derive[MaintenanceServerEndpoints]
 }

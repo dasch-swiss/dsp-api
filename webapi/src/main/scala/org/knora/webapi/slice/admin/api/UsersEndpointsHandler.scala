@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.api
 
 import zio.ZLayer
-
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
@@ -19,51 +18,39 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.PublicEndpointHandler
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
+import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.*
 
-case class UsersEndpointsHandler(
-  usersEndpoints: UsersEndpoints,
-  restService: UserRestService,
-  mapper: HandlerMapper,
+case class UsersServerEndpoints(
+  private val usersEndpoints: UsersEndpoints,
+  private val restService: UserRestService,
 ) {
 
-  // Deletes
-  private val public = List(
-    PublicEndpointHandler(usersEndpoints.get.usersByIriProjectMemberShips, restService.getProjectMemberShipsByUserIri),
-    PublicEndpointHandler(
-      usersEndpoints.get.usersByIriProjectAdminMemberShips,
-      restService.getProjectAdminMemberShipsByUserIri,
-    ),
-    PublicEndpointHandler(usersEndpoints.get.usersByIriGroupMemberships, restService.getGroupMemberShipsByIri),
-  ).map(mapper.mapPublicEndpointHandler(_))
-
-  private val secured = List(
-    SecuredEndpointHandler(usersEndpoints.get.users, user => _ => restService.getAllUsers(user)),
-    SecuredEndpointHandler(usersEndpoints.get.userByIri, restService.getUserByIri),
-    SecuredEndpointHandler(usersEndpoints.get.userByEmail, restService.getUserByEmail),
-    SecuredEndpointHandler(usersEndpoints.get.userByUsername, restService.getUserByUsername),
-    SecuredEndpointHandler(usersEndpoints.post.users, restService.createUser),
-    SecuredEndpointHandler(usersEndpoints.post.usersByIriProjectMemberShips, restService.addUserToProject),
-    SecuredEndpointHandler(usersEndpoints.post.usersByIriProjectAdminMemberShips, restService.addUserToProjectAsAdmin),
-    SecuredEndpointHandler(usersEndpoints.post.usersByIriGroupMemberShips, restService.addUserToGroup),
-    SecuredEndpointHandler(usersEndpoints.put.usersIriBasicInformation, restService.updateUser),
-    SecuredEndpointHandler(usersEndpoints.put.usersIriPassword, restService.changePassword),
-    SecuredEndpointHandler(usersEndpoints.put.usersIriStatus, restService.changeStatus),
-    SecuredEndpointHandler(usersEndpoints.put.usersIriSystemAdmin, restService.changeSystemAdmin),
-    SecuredEndpointHandler(usersEndpoints.delete.deleteUser, restService.deleteUser),
-    SecuredEndpointHandler(usersEndpoints.delete.usersByIriProjectMemberShips, restService.removeUserFromProject),
-    SecuredEndpointHandler(
-      usersEndpoints.delete.usersByIriProjectAdminMemberShips,
+  val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] = List(
+    usersEndpoints.get.usersByIriProjectMemberShips.zServerLogic(restService.getProjectMemberShipsByUserIri),
+    usersEndpoints.get.usersByIriProjectAdminMemberShips.zServerLogic(restService.getProjectAdminMemberShipsByUserIri),
+    usersEndpoints.get.usersByIriGroupMemberships.zServerLogic(restService.getGroupMemberShipsByIri),
+    usersEndpoints.get.users.serverLogic(user => _ => restService.getAllUsers(user)),
+    usersEndpoints.get.userByIri.serverLogic(restService.getUserByIri),
+    usersEndpoints.get.userByEmail.serverLogic(restService.getUserByEmail),
+    usersEndpoints.get.userByUsername.serverLogic(restService.getUserByUsername),
+    usersEndpoints.post.users.serverLogic(restService.createUser),
+    usersEndpoints.post.usersByIriProjectMemberShips.serverLogic(restService.addUserToProject),
+    usersEndpoints.post.usersByIriProjectAdminMemberShips.serverLogic(restService.addUserToProjectAsAdmin),
+    usersEndpoints.post.usersByIriGroupMemberShips.serverLogic(restService.addUserToGroup),
+    usersEndpoints.put.usersIriBasicInformation.serverLogic(restService.updateUser),
+    usersEndpoints.put.usersIriPassword.serverLogic(restService.changePassword),
+    usersEndpoints.put.usersIriStatus.serverLogic(restService.changeStatus),
+    usersEndpoints.put.usersIriSystemAdmin.serverLogic(restService.changeSystemAdmin),
+    usersEndpoints.delete.deleteUser.serverLogic(restService.deleteUser),
+    usersEndpoints.delete.usersByIriProjectMemberShips.serverLogic(restService.removeUserFromProject),
+    usersEndpoints.delete.usersByIriProjectAdminMemberShips.serverLogic(
       restService.removeUserFromProjectAsAdmin,
     ),
-    SecuredEndpointHandler(usersEndpoints.delete.usersByIriGroupMemberShips, restService.removeUserFromGroup),
-  ).map(mapper.mapSecuredEndpointHandler(_))
-
-  val allHanders = public ++ secured
+    usersEndpoints.delete.usersByIriGroupMemberShips.serverLogic(restService.removeUserFromGroup),
+  )
 }
 
-object UsersEndpointsHandler {
-  val layer = ZLayer.derive[UsersEndpointsHandler]
+object UsersServerEndpoints {
+  val layer = ZLayer.derive[UsersServerEndpoints]
 }

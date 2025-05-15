@@ -7,10 +7,7 @@ package org.knora.webapi.slice.resourceinfo.api
 
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.ZLayer
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Asc
@@ -18,31 +15,26 @@ import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.LastModificatio
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Order
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.OrderBy
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
+import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.*
 
-final case class ResourceInfoRoutes(
-  endpoints: ResourceInfoEndpoints,
-  resourceInfoService: RestResourceInfoService,
-  mapper: HandlerMapper,
-  interpreter: TapirToPekkoInterpreter,
+final case class ResourceInfoServerEndpoints(
+  private val endpoints: ResourceInfoEndpoints,
+  private val resourceInfoService: RestResourceInfoService,
 ) {
 
-  val getResourcesInfoHandler =
-    PublicEndpointHandler[(ProjectIri, String, Option[Order], Option[OrderBy]), ListResponseDto](
-      endpoints.getResourcesInfo,
-      { case (projectIri: ProjectIri, resourceClass: String, order: Option[Order], orderBy: Option[OrderBy]) =>
+  val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] = List(
+    endpoints.getResourcesInfo.zServerLogic {
+      case (projectIri: ProjectIri, resourceClass: String, order: Option[Order], orderBy: Option[OrderBy]) =>
         resourceInfoService.findByProjectAndResourceClass(
           projectIri,
           resourceClass,
           order.getOrElse(Asc),
           orderBy.getOrElse(LastModificationDate),
         )
-      },
-    )
-
-  val routes: Seq[Route] = List(getResourcesInfoHandler)
-    .map(it => mapper.mapPublicEndpointHandler(it))
-    .map(interpreter.toRoute(_))
+    },
+  )
 }
-object ResourceInfoRoutes {
-  val layer = ZLayer.derive[ResourceInfoRoutes]
+object ResourceInfoServerEndpoints {
+  val layer = ZLayer.derive[ResourceInfoServerEndpoints]
 }

@@ -49,21 +49,18 @@ final case class PermissionRestService(
   administrativePermissionService: AdministrativePermissionService,
 ) {
   def createAdministrativePermission(
-    request: CreateAdministrativePermissionAPIRequestADM,
     user: User,
-  ): Task[AdministrativePermissionCreateResponseADM] =
-    for {
-      _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
-      uuid   <- Random.nextUUID
-      result <- responder.createAdministrativePermission(request, user, uuid)
-      ext    <- format.toExternal(result)
-    } yield ext
+  )(request: CreateAdministrativePermissionAPIRequestADM): Task[AdministrativePermissionCreateResponseADM] = for {
+    _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
+    uuid   <- Random.nextUUID
+    result <- responder.createAdministrativePermission(request, user, uuid)
+    ext    <- format.toExternal(result)
+  } yield ext
 
-  private def ensureProjectIriStrExistsAndUserHasAccess(projectIri: String, user: User): Task[KnoraProject] =
-    for {
-      projectIri <- ZIO.fromEither(ProjectIri.from(projectIri)).mapError(BadRequestException.apply)
-      project    <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-    } yield project
+  private def ensureProjectIriStrExistsAndUserHasAccess(projectIri: String, user: User): Task[KnoraProject] = for {
+    projectIri <- ZIO.fromEither(ProjectIri.from(projectIri)).mapError(BadRequestException.apply)
+    project    <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
+  } yield project
 
   private def ensureProjectIriExistsAndUserHasAccess(projectIri: ProjectIri, user: User): Task[KnoraProject] =
     knoraProjectService
@@ -72,149 +69,117 @@ final case class PermissionRestService(
       .tap(auth.ensureSystemAdminOrProjectAdmin(user, _))
 
   def getPermissionsApByProjectIri(
-    value: ProjectIri,
     user: User,
-  ): Task[AdministrativePermissionsForProjectGetResponseADM] =
-    for {
-      _      <- ensureProjectIriExistsAndUserHasAccess(value, user)
-      result <- responder.getPermissionsApByProjectIri(value.value)
-      ext    <- format.toExternal(result)
-    } yield ext
+  )(value: ProjectIri): Task[AdministrativePermissionsForProjectGetResponseADM] = for {
+    _      <- ensureProjectIriExistsAndUserHasAccess(value, user)
+    result <- responder.getPermissionsApByProjectIri(value.value)
+    ext    <- format.toExternal(result)
+  } yield ext
 
-  def getPermissionsByProjectIri(projectIri: ProjectIri, user: User): Task[PermissionsForProjectGetResponseADM] =
-    for {
-      _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-      result <- responder.getPermissionsByProjectIri(projectIri)
-      ext    <- format.toExternal(result)
-    } yield ext
+  def getPermissionsByProjectIri(user: User)(projectIri: ProjectIri): Task[PermissionsForProjectGetResponseADM] = for {
+    _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
+    result <- responder.getPermissionsByProjectIri(projectIri)
+    ext    <- format.toExternal(result)
+  } yield ext
 
-  def deletePermission(permissionIri: PermissionIri, user: User): Task[PermissionDeleteResponseADM] =
-    for {
-      _      <- auth.ensureSystemAdmin(user)
-      uuid   <- Random.nextUUID
-      result <- responder.deletePermission(permissionIri, user, uuid)
-      ext    <- format.toExternal(result)
-    } yield ext
+  def deletePermission(user: User)(permissionIri: PermissionIri): Task[PermissionDeleteResponseADM] = for {
+    _      <- auth.ensureSystemAdmin(user)
+    uuid   <- Random.nextUUID
+    result <- responder.deletePermission(permissionIri, user, uuid)
+    ext    <- format.toExternal(result)
+  } yield ext
 
-  def createDefaultObjectAccessPermission(
+  def createDefaultObjectAccessPermission(user: User)(
     request: CreateDefaultObjectAccessPermissionAPIRequestADM,
-    user: User,
-  ): Task[DefaultObjectAccessPermissionCreateResponseADM] =
-    for {
-      _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
-      uuid   <- Random.nextUUID
-      result <- responder.createDefaultObjectAccessPermission(request, uuid)
-      ext    <- format.toExternal(result)
-    } yield ext
+  ): Task[DefaultObjectAccessPermissionCreateResponseADM] = for {
+    _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
+    uuid   <- Random.nextUUID
+    result <- responder.createDefaultObjectAccessPermission(request, uuid)
+    ext    <- format.toExternal(result)
+  } yield ext
 
-  def updatePermissionHasPermissions(
+  def updatePermissionHasPermissions(user: User)(
     permissionIri: PermissionIri,
     request: ChangePermissionHasPermissionsApiRequestADM,
-    user: User,
-  ): Task[PermissionGetResponseADM] =
-    for {
-      _    <- auth.ensureSystemAdmin(user)
-      uuid <- Random.nextUUID
-      newHasPermissions <- ZIO
-                             .fromOption(NonEmptyChunk.fromIterableOption(request.hasPermissions))
-                             .mapBoth(_ => BadRequestException("hasPermissions must not be empty"), identity)
-      result <- responder.updatePermissionHasPermissions(permissionIri, newHasPermissions, user, uuid)
-      ext    <- format.toExternal(result)
-    } yield ext
+  ): Task[PermissionGetResponseADM] = for {
+    _    <- auth.ensureSystemAdmin(user)
+    uuid <- Random.nextUUID
+    newHasPermissions <- ZIO
+                           .fromOption(NonEmptyChunk.fromIterableOption(request.hasPermissions))
+                           .mapBoth(_ => BadRequestException("hasPermissions must not be empty"), identity)
+    result <- responder.updatePermissionHasPermissions(permissionIri, newHasPermissions, user, uuid)
+    ext    <- format.toExternal(result)
+  } yield ext
 
-  def updatePermissionProperty(
+  def updatePermissionProperty(user: User)(
     permissionIri: PermissionIri,
     request: ChangePermissionPropertyApiRequestADM,
-    user: User,
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] =
-    for {
-      _      <- auth.ensureSystemAdmin(user)
-      uuid   <- Random.nextUUID
-      result <- responder.updatePermissionProperty(permissionIri, request, uuid)
-      ext    <- format.toExternal(result)
-    } yield ext
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] = for {
+    _      <- auth.ensureSystemAdmin(user)
+    uuid   <- Random.nextUUID
+    result <- responder.updatePermissionProperty(permissionIri, request, uuid)
+    ext    <- format.toExternal(result)
+  } yield ext
 
-  def updatePermissionResourceClass(
+  def updatePermissionResourceClass(user: User)(
     permissionIri: PermissionIri,
     request: ChangePermissionResourceClassApiRequestADM,
-    user: User,
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] =
-    for {
-      _      <- auth.ensureSystemAdmin(user)
-      uuid   <- Random.nextUUID
-      result <- responder.updatePermissionResourceClass(permissionIri, request, uuid)
-      ext    <- format.toExternal(result)
-    } yield ext
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] = for {
+    _      <- auth.ensureSystemAdmin(user)
+    uuid   <- Random.nextUUID
+    result <- responder.updatePermissionResourceClass(permissionIri, request, uuid)
+    ext    <- format.toExternal(result)
+  } yield ext
 
-  def updateDoapForWhat(
+  def updateDoapForWhat(user: User)(
     iri: PermissionIri,
     req: ChangeDoapRequest,
-    user: User,
-  ): Task[DefaultObjectAccessPermissionGetResponseADM] =
-    for {
-      _      <- auth.ensureSystemAdmin(user)
-      _      <- ZIO.fail(BadRequestException("No update provided.")).when(req.isEmpty)
-      uuid   <- Random.nextUUID
-      result <- responder.updateDoap(iri, req, uuid)
-      ext    <- format.toExternal(result)
-    } yield ext
+  ): Task[DefaultObjectAccessPermissionGetResponseADM] = for {
+    _      <- auth.ensureSystemAdmin(user)
+    _      <- ZIO.fail(BadRequestException("No update provided.")).when(req.isEmpty)
+    uuid   <- Random.nextUUID
+    result <- responder.updateDoap(iri, req, uuid)
+    ext    <- format.toExternal(result)
+  } yield ext
 
-  def updatePermissionGroup(
+  def updatePermissionGroup(user: User)(
     permissionIri: PermissionIri,
     request: ChangePermissionGroupApiRequestADM,
-    user: User,
-  ): Task[PermissionGetResponseADM] =
-    for {
-      _        <- auth.ensureSystemAdmin(user)
-      groupIri <- ZIO.fromEither(GroupIri.from(request.forGroup)).mapError(BadRequestException(_))
-      uuid     <- Random.nextUUID
-      result   <- responder.updatePermissionsGroup(permissionIri, groupIri, user, uuid)
-      ext      <- format.toExternal(result)
-    } yield ext
+  ): Task[PermissionGetResponseADM] = for {
+    _        <- auth.ensureSystemAdmin(user)
+    groupIri <- ZIO.fromEither(GroupIri.from(request.forGroup)).mapError(BadRequestException(_))
+    uuid     <- Random.nextUUID
+    result   <- responder.updatePermissionsGroup(permissionIri, groupIri, user, uuid)
+    ext      <- format.toExternal(result)
+  } yield ext
 
   def getPermissionsDaopByProjectIri(
-    projectIri: ProjectIri,
     user: User,
-  ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
-    for {
-      _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-      result <- responder.getPermissionsDaopByProjectIri(projectIri)
-      ext    <- format.toExternal(result)
-    } yield ext
+  )(projectIri: ProjectIri): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] = for {
+    _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
+    result <- responder.getPermissionsDaopByProjectIri(projectIri)
+    ext    <- format.toExternal(result)
+  } yield ext
 
-  def getPermissionsApByProjectAndGroupIri(
+  def getPermissionsApByProjectAndGroupIri(user: User)(
     projectIri: ProjectIri,
     groupIri: GroupIri,
-    user: User,
-  ): Task[AdministrativePermissionGetResponseADM] =
-    for {
-      _ <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-      result <-
-        administrativePermissionService
-          .findByGroupAndProject(groupIri, projectIri)
-          .map(_.map(AdministrativePermissionADM.from))
-          .someOrFail(
-            NotFoundException(
-              s"No Administrative Permission found for project: ${projectIri.value}, group: ${groupIri.value} combination",
-            ),
-          )
-          .map(AdministrativePermissionGetResponseADM.apply)
-      ext <- format.toExternal(result)
-    } yield ext
+  ): Task[AdministrativePermissionGetResponseADM] = for {
+    _ <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
+    result <-
+      administrativePermissionService
+        .findByGroupAndProject(groupIri, projectIri)
+        .map(_.map(AdministrativePermissionADM.from))
+        .someOrFail(
+          NotFoundException(
+            s"No Administrative Permission found for project: ${projectIri.value}, group: ${groupIri.value} combination",
+          ),
+        )
+        .map(AdministrativePermissionGetResponseADM.apply)
+    ext <- format.toExternal(result)
+  } yield ext
 }
 
 object PermissionRestService {
-  def createAdministrativePermission(
-    request: CreateAdministrativePermissionAPIRequestADM,
-    user: User,
-  ): ZIO[PermissionRestService, Throwable, AdministrativePermissionCreateResponseADM] =
-    ZIO.serviceWithZIO(_.createAdministrativePermission(request, user))
-
-  def createDefaultObjectAccessPermission(
-    request: CreateDefaultObjectAccessPermissionAPIRequestADM,
-    user: User,
-  ): ZIO[PermissionRestService, Throwable, DefaultObjectAccessPermissionCreateResponseADM] =
-    ZIO.serviceWithZIO(_.createDefaultObjectAccessPermission(request, user))
-
   val layer = ZLayer.derive[PermissionRestService]
 }
