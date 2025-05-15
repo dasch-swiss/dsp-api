@@ -102,7 +102,7 @@ final case class ApiComplexV2JsonLdRequestParser(
       } yield RootResource(resource, resourceIriOption, resourceClassIri)
 
     private def resourceClassIri(r: Resource): IO[String, ResourceClassIri] = ZIO
-      .fromOption(r.rdfsType)
+      .fromOption(r.rdfType)
       .orElseFail("No root resource class IRI found")
       .flatMap(converter.asResourceClassIriApiV2Complex)
   }
@@ -159,19 +159,64 @@ final case class ApiComplexV2JsonLdRequestParser(
   def deleteValueV2FromJsonLd(str: String): IO[String, DeleteValueV2] = ZIO.scoped {
     for {
       r                  <- RootResource.fromJsonLd(str)
-      resourceIri        <- r.resourceIriOrFail
       v                  <- ValueResource.from(r)
+      resourceIri        <- r.resourceIriOrFail
       valueIri           <- v.valueIriOrFail
+      _                  <- ensureSameProject(valueIri, resourceIri)
       valueDeleteDate    <- v.deleteDateOption
       valueDeleteComment <- v.deleteCommentOption
+      uuid               <- Random.nextUUID
     } yield DeleteValueV2(
-      resourceIri.smartIri.toString,
-      r.resourceClassSmartIri,
-      v.propertySmartIri,
-      valueIri.smartIri.toString,
+      resourceIri,
+      r.resourceClassIri,
+      v.propertyIri,
+      valueIri,
       v.valueType,
       valueDeleteComment,
       valueDeleteDate,
+      uuid,
+    )
+  }
+
+  private def ensureSameProject(v: ValueIri, r: ResourceIri): IO[String, Unit] =
+    ZIO
+      .fail(s"Resource IRI and value IRI must reference the same project")
+      .when(v.shortcode != r.shortcode)
+      .unit
+
+  def eraseValueV2FromJsonLd(str: String): IO[String, EraseValueV2] = ZIO.scoped {
+    for {
+      r           <- RootResource.fromJsonLd(str)
+      v           <- ValueResource.from(r)
+      resourceIri <- r.resourceIriOrFail
+      valueIri    <- v.valueIriOrFail
+      _           <- ensureSameProject(valueIri, resourceIri)
+      uuid        <- Random.nextUUID
+    } yield EraseValueV2(
+      resourceIri,
+      r.resourceClassIri,
+      v.propertyIri,
+      valueIri,
+      v.valueType,
+      uuid,
+    )
+  }
+
+  def eraseValueHistoryV2FromJsonLd(str: String): IO[String, EraseValueHistoryV2] = ZIO.scoped {
+    for {
+      r           <- RootResource.fromJsonLd(str)
+      v           <- ValueResource.from(r)
+      resourceIri <- r.resourceIriOrFail
+      valueIri    <- v.valueIriOrFail
+      _           <- ensureSameProject(valueIri, resourceIri)
+      uuid        <- Random.nextUUID
+    } yield EraseValueHistoryV2(
+      resourceIri,
+      r.resourceClassIri,
+      v.propertyIri,
+      valueIri,
+      v.valueType,
+      uuid,
     )
   }
 
@@ -226,7 +271,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         .flatMap(iri => ZIO.fromEither(PropertyIri.fromApiV2Complex(iri)))
 
     private def valueType(resource: Resource) = ZIO
-      .fromEither(resource.rdfsType.toRight("No rdf:type found for value."))
+      .fromEither(resource.rdfType.toRight("No rdf:type found for value."))
       .orElseFail(s"No value type found for value.")
       .flatMap(converter.asSmartIri(_).mapError(_.getMessage))
 

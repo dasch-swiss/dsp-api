@@ -90,7 +90,7 @@ object ResourceOps {
     def objectDataTypeOption[A](p: Property, dt: String, f: String => Either[String, A]): Either[String, Option[A]] =
       objectDataTypeOption(p, dt).flatMap(_.traverse(f))
 
-    def rdfsType: Option[String] = Option(res.getPropertyResourceValue(RDF.`type`)).flatMap(_.uri)
-    def uri: Option[String]      = Option(res.getURI)
+    def rdfType: Option[String] = Option(res.getPropertyResourceValue(RDF.`type`)).flatMap(_.uri)
+    def uri: Option[String]     = Option(res.getURI)
   }
 }
