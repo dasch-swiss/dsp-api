@@ -5,18 +5,16 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
-import org.apache.pekko.http.scaladsl.server.Route
+import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.*
 import zio.ZLayer
+
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
-import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Asc
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.LastModificationDate
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Order
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.OrderBy
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
-import sttp.capabilities.zio.ZioStreams
-import sttp.tapir.ztapir.*
 
 final case class ResourceInfoServerEndpoints(
   private val endpoints: ResourceInfoEndpoints,

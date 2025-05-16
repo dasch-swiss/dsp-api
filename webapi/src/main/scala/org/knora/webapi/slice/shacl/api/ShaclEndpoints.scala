@@ -12,7 +12,6 @@ import zio.ZLayer
 
 import java.io.File
 
-import dsp.errors.RequestRejectedException
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 case class ValidationFormData(

@@ -5,10 +5,10 @@
 
 package org.knora.webapi.slice.admin.api
 
-import sttp.tapir.ztapir.*
 import sttp.tapir.EndpointInput.PathCapture
 import sttp.tapir.generic.auto.schemaForCaseClass
 import sttp.tapir.json.zio.jsonBody
+import sttp.tapir.ztapir.*
 import zio.ZLayer
 
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode

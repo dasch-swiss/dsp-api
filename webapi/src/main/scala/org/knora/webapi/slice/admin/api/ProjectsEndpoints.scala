@@ -5,12 +5,15 @@
 
 package org.knora.webapi.slice.admin.api
 
+import sttp.capabilities.zio.ZioStreams
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
+import sttp.tapir.ztapir.ZPartialServerEndpoint
 import zio.Chunk
 import zio.ZLayer
+
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortname
@@ -25,9 +28,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import sttp.capabilities.zio.ZioStreams
-import sttp.tapir.model.UsernamePassword
-import sttp.tapir.ztapir.ZPartialServerEndpoint
 
 final case class ProjectsEndpoints(
   baseEndpoints: BaseEndpoints,

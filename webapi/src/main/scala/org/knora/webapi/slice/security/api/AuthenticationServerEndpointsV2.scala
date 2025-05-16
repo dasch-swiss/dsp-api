@@ -4,11 +4,14 @@
  */
 
 package org.knora.webapi.slice.security.api
+import sttp.capabilities.zio.ZioStreams
 import sttp.model.headers.CookieValueWithMeta
+import sttp.tapir.ztapir.*
 import zio.ZIO
 import zio.ZLayer
 
 import java.time.Instant
+
 import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
@@ -24,8 +27,6 @@ import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayloa
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload.UsernamePassword
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LogoutResponse
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
-import sttp.capabilities.zio.ZioStreams
-import sttp.tapir.ztapir.*
 
 case class AuthenticationServerEndpointsV2(
   private val appConfig: AppConfig,

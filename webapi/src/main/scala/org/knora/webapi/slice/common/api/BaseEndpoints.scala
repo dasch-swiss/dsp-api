@@ -5,30 +5,22 @@
 
 package org.knora.webapi.slice.common.api
 
-import zio.*
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
 import sttp.tapir.Endpoint
 import sttp.tapir.EndpointOutput
-import sttp.tapir.auth
-import sttp.tapir.cookie
-import sttp.tapir.endpoint
+import sttp.tapir.PublicEndpoint
+import sttp.tapir.Validator
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.model.UsernamePassword
-import sttp.tapir.oneOf
-import sttp.tapir.oneOfVariant
-import sttp.tapir.statusCode
-import sttp.tapir.{EndpointOutput, PublicEndpoint, Validator}
+import sttp.tapir.ztapir.*
+import zio.*
 import zio.ZIO
 import zio.ZLayer
-import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.ztapir.*
 
-import scala.concurrent.Future
 import dsp.errors.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.security.Authenticator

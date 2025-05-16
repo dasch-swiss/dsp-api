@@ -9,6 +9,7 @@ import org.apache.pekko.actor.ActorSystem
 import zio.*
 import zio.ULayer
 import zio.ZLayer
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.InstrumentationServerConfig
 import org.knora.webapi.messages.util.*
@@ -22,7 +23,6 @@ import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.api.AdminApiModule

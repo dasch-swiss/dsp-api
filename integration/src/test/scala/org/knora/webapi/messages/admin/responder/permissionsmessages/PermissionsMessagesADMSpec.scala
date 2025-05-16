@@ -7,6 +7,8 @@ package org.knora.webapi.messages.admin.responder.permissionsmessages
 
 import zio.ZIO
 
+import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import org.knora.webapi.CoreSpec
@@ -15,8 +17,8 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.*
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
-import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
@@ -24,6 +26,19 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
  * This spec is used to test subclasses of the [[PermissionsResponderRequestADM]] class.
  */
 class PermissionsMessagesADMSpec extends CoreSpec {
+
+  object PermissionRestService {
+    def createAdministrativePermission(
+      request: CreateAdministrativePermissionAPIRequestADM,
+      user: User,
+    ): ZIO[PermissionsResponder, Throwable, AdministrativePermissionCreateResponseADM] =
+      ZIO.serviceWithZIO[PermissionsResponder](_.createAdministrativePermission(request, user, UUID.randomUUID()))
+
+    def createDefaultObjectAccessPermission(
+      req: CreateDefaultObjectAccessPermissionAPIRequestADM,
+    ): ZIO[PermissionsResponder, Throwable, DefaultObjectAccessPermissionCreateResponseADM] =
+      ZIO.serviceWithZIO[PermissionsResponder](_.createDefaultObjectAccessPermission(req, UUID.randomUUID()))
+  }
 
   "Administrative Permission Create Requests" should {
     "return 'BadRequest' if the supplied project IRI for AdministrativePermissionCreateRequestADM is not valid" in {
@@ -142,7 +157,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
               PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
             ),
           ),
-          SharedTestDataADM.imagesUser01,
         ),
       )
       assertFailsWithA[BadRequestException](exit, s"Project IRI is invalid.")
@@ -159,7 +173,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
               PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
             ),
           ),
-          SharedTestDataADM.imagesUser01,
         ),
       )
       assertFailsWithA[BadRequestException](exit, s"Group IRI is invalid: $groupIri")
@@ -177,7 +190,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
               PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
             ),
           ),
-          SharedTestDataADM.imagesUser01,
         ),
       )
       assertFailsWithA[BadRequestException](exit, s"Couldn't parse IRI: $permissionIri")
@@ -191,7 +203,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set.empty[PermissionADM],
           ),
-          SharedTestDataADM.imagesUser01,
         ),
       )
       assertFailsWithA[BadRequestException](exit, "Permissions needs to be supplied.")
@@ -294,7 +305,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             hasPermissions =
               Set(PermissionADM.from(Permission.ObjectAccess.RestrictedView, SharedTestDataADM.thingSearcherGroup.id)),
           ),
-          SharedTestDataADM.anythingUser2,
         ),
       )
       assertFailsWithA[ForbiddenException](
@@ -314,7 +324,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
               PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
             ),
           ),
-          SharedTestDataADM.rootUser,
         ),
       )
       assertFailsWithA[BadRequestException](
@@ -335,7 +344,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
               PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
             ),
           ),
-          SharedTestDataADM.rootUser,
         ),
       )
       assertFailsWithA[BadRequestException](
@@ -355,7 +363,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
               PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
             ),
           ),
-          SharedTestDataADM.rootUser,
         ),
       )
       assertFailsWithA[BadRequestException](
@@ -373,7 +380,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
               PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
             ),
           ),
-          SharedTestDataADM.rootUser,
         ),
       )
       assertFailsWithA[BadRequestException](

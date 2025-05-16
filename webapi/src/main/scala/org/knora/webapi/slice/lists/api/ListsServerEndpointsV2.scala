@@ -4,8 +4,11 @@
  */
 
 package org.knora.webapi.slice.lists.api
+import sttp.capabilities.zio.ZioStreams
 import sttp.model.MediaType
+import sttp.tapir.ztapir.*
 import zio.*
+
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
@@ -13,8 +16,6 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.lists.domain.ListsService
-import sttp.capabilities.zio.ZioStreams
-import sttp.tapir.ztapir.*
 
 final case class ListsServerEndpointsV2(
   private val appConfig: AppConfig,

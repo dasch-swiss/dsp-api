@@ -5,12 +5,13 @@
 
 package org.knora.webapi.slice.admin.api
 
+import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.*
 import zio.ZLayer
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.admin.api.service.StoreRestService
-import sttp.capabilities.zio.ZioStreams
-import sttp.tapir.ztapir.*
 
 final case class StoreServerEndpoints(
   private val endpoints: StoreEndpoints,

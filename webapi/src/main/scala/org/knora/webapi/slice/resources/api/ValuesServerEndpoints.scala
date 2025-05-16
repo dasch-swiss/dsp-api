@@ -5,14 +5,14 @@
 
 package org.knora.webapi.slice.resources.api
 
+import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.ztapir.*
-import sttp.model.MediaType
 import zio.ZLayer
+
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.resources.api.model.ValueUuid
 import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
-import sttp.capabilities.zio.ZioStreams
 
 final class ValuesServerEndpoints(
   private val endpoints: ValuesEndpoints,

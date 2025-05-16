@@ -4,11 +4,12 @@
  */
 
 package org.knora.webapi.slice.ontology.api
-import zio.ZLayer
+import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.ztapir.*
+import zio.ZLayer
+
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.api.service.OntologiesRestService
-import sttp.capabilities.zio.ZioStreams
 
 final class OntologiesServerEndpoints(
   private val endpoints: OntologiesEndpoints,

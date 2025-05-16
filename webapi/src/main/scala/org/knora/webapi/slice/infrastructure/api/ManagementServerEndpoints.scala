@@ -5,16 +5,14 @@
 
 package org.knora.webapi.slice.infrastructure.api
 
-import sttp.tapir.ztapir.*
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import sttp.capabilities.zio.ZioStreams
 import sttp.model.StatusCode
-import org.knora.webapi.core.State
-import zio.UIO
-import sttp.model.StatusCode
-import zio.ZIO
-import org.knora.webapi.store.triplestore.api.TriplestoreService
+import sttp.tapir.ztapir.*
 import zio.*
+
+import org.knora.webapi.core.State
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class ManagementServerEndpoints(
   private val auth: AuthorizationRestService,

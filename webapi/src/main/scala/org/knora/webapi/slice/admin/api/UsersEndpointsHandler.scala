@@ -5,21 +5,21 @@
 
 package org.knora.webapi.slice.admin.api
 
+import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.*
 import zio.ZLayer
+
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UserRestService
-import org.knora.webapi.slice.admin.api.service.UserRestService.UserResponse
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
-import sttp.capabilities.zio.ZioStreams
-import sttp.tapir.ztapir.*
 
 case class UsersServerEndpoints(
   private val usersEndpoints: UsersEndpoints,

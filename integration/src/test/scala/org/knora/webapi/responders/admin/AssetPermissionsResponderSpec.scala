@@ -16,15 +16,16 @@ import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestricted
 import org.knora.webapi.slice.admin.api.model.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
 /**
  * Tests [[AssetPermissionsResponder]].
  */
 class AssetPermissionsResponderSpec extends CoreSpec with ImplicitSender {
 
-  private def getFileInfoForSipiADM(shortcode: Shortcode, filename: String, user: User) =
+  private def getFileInfoForSipiADM(shortcode: Shortcode, filename: SparqlEncodedString, user: User) =
     ZIO.serviceWithZIO[AssetPermissionsResponder](
-      _.getPermissionCodeAndProjectRestrictedViewSettings(shortcode, filename, user),
+      _.getPermissionCodeAndProjectRestrictedViewSettings(user)(shortcode, filename),
     )
 
   override lazy val rdfDataObjects = List(
@@ -40,7 +41,7 @@ class AssetPermissionsResponderSpec extends CoreSpec with ImplicitSender {
       val actual = UnsafeZioRun.runOrThrow(
         getFileInfoForSipiADM(
           Shortcode.unsafeFrom("0803"),
-          "incunabula_0000003328.jp2",
+          SparqlEncodedString.unsafeFrom("incunabula_0000003328.jp2"),
           SharedTestDataADM.incunabulaMemberUser,
         ),
       )
@@ -53,7 +54,7 @@ class AssetPermissionsResponderSpec extends CoreSpec with ImplicitSender {
       val actual = UnsafeZioRun.runOrThrow(
         getFileInfoForSipiADM(
           Shortcode.unsafeFrom("0803"),
-          "incunabula_0000003328.jp2",
+          SparqlEncodedString.unsafeFrom("incunabula_0000003328.jp2"),
           SharedTestDataADM.anonymousUser,
         ),
       )

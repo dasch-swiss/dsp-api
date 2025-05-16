@@ -5,11 +5,9 @@
 
 package org.knora.webapi.slice.resources.api
 
-import org.apache.pekko.http.scaladsl.server.Route
-import zio.ZLayer
-import sttp.tapir.ztapir.*
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.*
+import zio.ZLayer
 
 final case class ResourcesApiServerEndpoints(
   private val valuesEndpoints: ValuesServerEndpoints,

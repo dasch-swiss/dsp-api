@@ -5,29 +5,24 @@
 
 package org.knora.webapi.slice.admin.api
 
-import org.apache.pekko.stream.scaladsl.FileIO
-import zio.ZLayer
+import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.ztapir.*
+import zio.RIO
+import zio.ZIO
+import zio.ZLayer
+import zio.stream
+import zio.stream.ZStream
 
 import java.nio.file.Files
-import scala.concurrent.ExecutionContext
-import org.knora.webapi.slice.admin.api.model.*
+
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
-import sttp.capabilities.zio.ZioStreams
-import sttp.tapir.model.UsernamePassword
-import sttp.tapir.server.ServerEndpoint.Full
-import zio.RIO
-import zio.ZIO
-import zio.stream
-import zio.stream.ZStream
 
 final case class ProjectsServerEndpoints(
   private val projectsEndpoints: ProjectsEndpoints,

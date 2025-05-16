@@ -5,15 +5,16 @@
 
 package org.knora.webapi.slice.admin.api
 
+import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.*
 import zio.ZIO
 import zio.ZLayer
 import zio.json.*
 import zio.json.ast.Json
-import sttp.tapir.ztapir.*
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.domain.model.User
-import sttp.capabilities.zio.ZioStreams
 
 final case class MaintenanceServerEndpoints(
   private val endpoints: MaintenanceEndpoints,

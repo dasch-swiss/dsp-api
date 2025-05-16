@@ -5,14 +5,14 @@
 
 package org.knora.webapi.slice.admin.api
 
+import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.*
 import zio.ZLayer
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
+
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
-import sttp.capabilities.zio.ZioStreams
-import sttp.tapir.ztapir.*
 
 case class GroupsServerEndpoints(
   private val endpoints: GroupsEndpoints,

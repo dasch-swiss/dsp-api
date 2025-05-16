@@ -5,11 +5,9 @@
 
 package org.knora.webapi.slice.admin.api
 
-import org.apache.pekko.http.scaladsl.server.Route
-import zio.ZLayer
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.ztapir.ZServerEndpoint
+import zio.ZLayer
 
 final case class AdminApiServerEndpoints(
   files: FilesServerEndpoints,

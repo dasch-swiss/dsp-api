@@ -6,8 +6,8 @@
 package org.knora.webapi.slice.shacl.api
 
 import sttp.capabilities.zio.ZioStreams
-import zio.ZLayer
 import sttp.tapir.ztapir.*
+import zio.ZLayer
 
 case class ShaclServerEndpoints(
   private val shaclEndpoints: ShaclEndpoints,

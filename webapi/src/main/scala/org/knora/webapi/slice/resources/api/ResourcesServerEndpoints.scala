@@ -4,10 +4,11 @@
  */
 
 package org.knora.webapi.slice.resources.api
-import zio.*
-import sttp.tapir.ztapir.*
-import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.*
+import zio.*
+
+import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 
 final class ResourcesServerEndpoints(
   private val resourcesEndpoints: ResourcesEndpoints,

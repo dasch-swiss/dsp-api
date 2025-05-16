@@ -4,10 +4,9 @@
  */
 
 package org.knora.webapi.slice.search.api
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import sttp.capabilities.zio.ZioStreams
-import sttp.tapir.ztapir.*
 import sttp.tapir.*
+import sttp.tapir.ztapir.*
 import zio.*
 
 final case class SearchServerEndpoints(

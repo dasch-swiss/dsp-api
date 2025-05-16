@@ -5,10 +5,11 @@
 
 package org.knora.webapi.slice.resources.api
 
-import zio.ZLayer
-import org.knora.webapi.slice.resources.api.service.StandoffRestService
 import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.ztapir.*
+import zio.ZLayer
+
+import org.knora.webapi.slice.resources.api.service.StandoffRestService
 
 final case class StandoffServerEndpoints(
   private val endpoints: StandoffEndpoints,

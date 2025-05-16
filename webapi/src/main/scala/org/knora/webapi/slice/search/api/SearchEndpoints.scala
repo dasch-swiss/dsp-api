@@ -5,26 +5,9 @@
 
 package org.knora.webapi.slice.search.api
 
-import dsp.valueobjects.Iri
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Greater
-import io.sentry.Sentry
-import io.sentry.SentryLevel
-import org.apache.pekko.http.scaladsl.server.Route
-import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.StringValueCompanion
-import org.knora.webapi.slice.common.Value.StringValue
-import org.knora.webapi.slice.common.api.*
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
-import sttp.capabilities.zio.ZioStreams
 import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.Codec
@@ -33,7 +16,16 @@ import sttp.tapir.EndpointInput
 import sttp.tapir.codec.refined.*
 import sttp.tapir.ztapir.*
 import zio.*
-import zio.telemetry.opentelemetry.tracing.Tracing
+
+import dsp.valueobjects.Iri
+import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.api.*
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
+import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 
 object SearchEndpointsInputs {
 

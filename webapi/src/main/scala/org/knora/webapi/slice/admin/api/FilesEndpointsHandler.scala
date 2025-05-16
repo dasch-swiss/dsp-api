@@ -5,14 +5,15 @@
 
 package org.knora.webapi.slice.admin.api
 
+import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.ZServerEndpoint
 import zio.ZLayer
+
 import org.knora.webapi.responders.admin.AssetPermissionsResponder
 import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
-import sttp.capabilities.zio.ZioStreams
-import sttp.tapir.ztapir.ZServerEndpoint
 
 final case class FilesServerEndpoints(
   private val filesEndpoints: FilesEndpoints,

@@ -4,10 +4,11 @@
  */
 
 package org.knora.webapi.slice.admin.api
-import zio.ZLayer
-import org.knora.webapi.slice.admin.api.service.ProjectsLegalInfoRestService
 import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.ztapir.ZServerEndpoint
+import zio.ZLayer
+
+import org.knora.webapi.slice.admin.api.service.ProjectsLegalInfoRestService
 
 final class ProjectsLegalInfoServerEndpoints(
   endpoints: ProjectsLegalInfoEndpoints,
