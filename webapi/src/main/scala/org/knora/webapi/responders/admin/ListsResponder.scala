@@ -1101,7 +1101,7 @@ final case class ListsResponder(
   /**
    * Deletes all comments from requested list node (only child).
    */
-  def deleteListNodeCommentsADM(nodeIri: ListIri): Task[ListNodeCommentsDeleteResponseADM] =
+  def deleteListNodeCommentsADM(user: User)(nodeIri: ListIri): Task[ListNodeCommentsDeleteResponseADM] =
     for {
       node <- listNodeInfoGetADM(nodeIri.value).someOrFail(NotFoundException(s"Node ${nodeIri.value} not found."))
       _ <- ZIO
@@ -1587,7 +1587,7 @@ object ListsResponder {
     ZIO.serviceWithZIO[ListsResponder](_.deleteListItemRequestADM(iri, user, uuid))
 
   def deleteListNodeCommentsADM(iri: ListIri): ZIO[ListsResponder, Throwable, ListNodeCommentsDeleteResponseADM] =
-    ZIO.serviceWithZIO[ListsResponder](_.deleteListNodeCommentsADM(iri))
+    ZIO.serviceWithZIO[ListsResponder](_.deleteListNodeCommentsADM(null)(iri))
 
   def canDeleteListRequestADM(iri: ListIri): ZIO[ListsResponder, Throwable, CanDeleteListResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.canDeleteListRequestADM(iri))

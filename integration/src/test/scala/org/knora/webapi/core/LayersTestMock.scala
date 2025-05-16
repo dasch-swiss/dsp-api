@@ -17,7 +17,6 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.api.AdminApiModule
@@ -35,7 +34,7 @@ import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OpenTelemetryTracerLive
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
-import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
+import org.knora.webapi.slice.infrastructure.api.ManagementServerEndpoints
 import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.lists.domain.ListsService
 import org.knora.webapi.slice.ontology.CoreModule
@@ -48,12 +47,11 @@ import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
-import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
+import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.security.api.AuthenticationApiModule
-import org.knora.webapi.slice.security.api.AuthenticationApiRoutes
 import org.knora.webapi.slice.shacl.ShaclModule
 import org.knora.webapi.slice.shacl.api.ShaclApiModule
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
@@ -89,13 +87,12 @@ object LayersTestMock { self =>
     val temp = system.map(ActorSystemTest.layer).getOrElse(PekkoActorSystem.layer)
     ZLayer.make[self.Environment](
       temp,
-      TestContainerLayers.fusekiOnly,
       SipiServiceMock.layer,
+      TestContainerLayers.fusekiOnly,
       /// common
       AdminApiModule.layer,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
-      ApiRoutes.layer,
       ApiV2Endpoints.layer,
       AssetPermissionsResponder.layer,
       AuthenticationApiModule.layer,
@@ -103,11 +100,10 @@ object LayersTestMock { self =>
       BaseEndpoints.layer,
       BaseModule.layer,
       CardinalityHandler.layer,
-      CoreModule.layer,
       ConstructResponseUtilV2.layer,
+      CoreModule.layer,
+      DspApiServerEndpoints.layer,
       DspIngestClientLive.layer,
-      HandlerMapper.layer,
-      HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
       IriService.layer,
@@ -116,7 +112,7 @@ object LayersTestMock { self =>
       ListsResponder.layer,
       ListsService.layer,
       ManagementEndpoints.layer,
-      ManagementRoutes.layer,
+      ManagementServerEndpoints.layer,
       MessageRelayActorRef.layer,
       MessageRelayLive.layer,
       OntologyApiModule.layer,
@@ -134,9 +130,9 @@ object LayersTestMock { self =>
       ResourcesApiModule.layer,
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
-      SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,
+      SearchServerEndpoints.layer,
       SecurityModule.layer,
       ShaclApiModule.layer,
       ShaclModule.layer,

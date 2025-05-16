@@ -51,7 +51,6 @@ object AdminApiModule
       CacheManager &
       Features &
       GroupService &
-      HandlerMapper &
       KnoraGroupService &
       KnoraProjectService &
       KnoraResponseRenderer &
@@ -72,7 +71,7 @@ object AdminApiModule
       UserService
       ,
       AdminApiEndpoints &
-      AdminApiRoutes &
+      AdminApiServerEndpoints &
       // the `*RestService`s are only exposed for the integration tests
       GroupRestService &
       PermissionRestService &
@@ -83,32 +82,32 @@ object AdminApiModule
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       AdminApiEndpoints.layer,
-      AdminApiRoutes.layer,
+      AdminApiServerEndpoints.layer,
       FilesEndpoints.layer,
-      FilesEndpointsHandler.layer,
+      FilesServerEndpoints.layer,
       GroupsEndpoints.layer,
-      GroupsEndpointsHandler.layer,
+      GroupsServerEndpoints.layer,
       GroupRestService.layer,
       ListRestService.layer,
       ListsEndpoints.layer,
-      ListsEndpointsHandlers.layer,
+      ListsServerEndpoints.layer,
       MaintenanceRestService.layer,
       MaintenanceEndpoints.layer,
-      MaintenanceEndpointsHandlers.layer,
+      MaintenanceServerEndpoints.layer,
       PermissionsEndpoints.layer,
-      PermissionsEndpointsHandlers.layer,
+      PermissionsServerEndpoints.layer,
       PermissionRestService.layer,
       ProjectsLegalInfoEndpoints.layer,
-      ProjectsLegalInfoEndpointsHandler.layer,
+      ProjectsLegalInfoServerEndpoints.layer,
       ProjectsLegalInfoRestService.layer,
       ProjectRestService.layer,
       ProjectsEndpoints.layer,
-      ProjectsEndpointsHandler.layer,
+      ProjectsServerEndpoints.layer,
       StoreRestService.layer,
       StoreEndpoints.layer,
-      StoreEndpointsHandler.layer,
+      StoreServerEndpoints.layer,
       UserRestService.layer,
       UsersEndpoints.layer,
-      UsersEndpointsHandler.layer,
+      UsersServerEndpoints.layer,
     )
 }

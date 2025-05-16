@@ -18,7 +18,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
@@ -28,23 +27,23 @@ import org.knora.webapi.slice.resources.api.service.ValuesRestService
 
 object ResourcesApiModule
     extends URModule[
-      AuthorizationRestService & ApiComplexV2JsonLdRequestParser & BaseEndpoints & GraphRoute & HandlerMapper &
-        IriConverter & KnoraProjectService & KnoraResponseRenderer & ResourcesResponderV2 & SearchResponderV2 &
-        StandoffResponderV2 & TapirToPekkoInterpreter & ValuesResponderV2,
-      ResourcesApiRoutes & ResourcesEndpoints & StandoffEndpoints & ValuesEndpoints,
+      ApiComplexV2JsonLdRequestParser & AuthorizationRestService & BaseEndpoints & GraphRoute & IriConverter &
+        KnoraProjectService & KnoraResponseRenderer & ResourcesResponderV2 & SearchResponderV2 & StandoffResponderV2 &
+        TapirToPekkoInterpreter & ValuesResponderV2,
+      ResourcesApiServerEndpoints & ResourcesEndpoints & StandoffEndpoints & ValuesEndpoints,
     ] { self =>
 
   override def layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
-      ValuesEndpointsHandler.layer,
+      ResourcesApiServerEndpoints.layer,
+      ResourcesEndpoints.layer,
+      ResourcesRestService.layer,
+      ResourcesServerEndpoints.layer,
+      StandoffEndpoints.layer,
+      StandoffRestService.layer,
+      StandoffServerEndpoints.layer,
       ValuesEndpoints.layer,
       ValuesRestService.layer,
-      ResourcesEndpoints.layer,
-      ResourcesEndpointsHandler.layer,
-      ResourcesRestService.layer,
-      ResourcesApiRoutes.layer,
-      StandoffEndpoints.layer,
-      StandoffEndpointsHandler.layer,
-      StandoffRestService.layer,
+      ValuesServerEndpoints.layer,
     )
 }

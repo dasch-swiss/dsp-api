@@ -5,10 +5,10 @@
 
 package org.knora.webapi.slice.admin.api
 
-import sttp.tapir.*
 import sttp.tapir.EndpointInput.PathCapture
 import sttp.tapir.generic.auto.schemaForCaseClass
 import sttp.tapir.json.zio.jsonBody
+import sttp.tapir.ztapir.*
 import zio.ZLayer
 
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
@@ -30,7 +30,7 @@ final case class FilesEndpoints(base: BaseEndpoints) {
       "Returns the permission code and the project's restricted view settings for a given shortcode and filename.",
     )
 
-  val endpoints: Seq[AnyEndpoint] = Seq(
+  val endpoints = Seq(
     getAdminFilesShortcodeFileIri,
   ).map(_.endpoint.tag("Admin Files"))
 }

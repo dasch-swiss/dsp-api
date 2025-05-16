@@ -5,25 +5,22 @@
 
 package org.knora.webapi.slice.resourceinfo
 
-import zio.ZLayer
+import zio.*
 
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
-import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
+import org.knora.webapi.slice.resourceinfo.api.ResourceInfoServerEndpoints
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object ResourceInfoLayers {
 
-  val live: ZLayer[
-    TriplestoreService & IriConverter & BaseEndpoints & HandlerMapper & TapirToPekkoInterpreter,
-    Nothing,
-    RestResourceInfoService & ResourceInfoEndpoints & ResourceInfoRoutes,
+  val live: URLayer[
+    TriplestoreService & IriConverter & BaseEndpoints & TapirToPekkoInterpreter,
+    RestResourceInfoService & ResourceInfoEndpoints & ResourceInfoServerEndpoints,
   ] =
-    ResourceInfoRepoLive.layer >>> RestResourceInfoService.layer >+> ResourceInfoEndpoints.layer >+> ResourceInfoRoutes.layer
-
+    ResourceInfoRepoLive.layer >>> RestResourceInfoService.layer >+> ResourceInfoEndpoints.layer >+> ResourceInfoServerEndpoints.layer
 }

@@ -76,10 +76,9 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
       "return Permission.Administrative for project and group" in {
         val result = UnsafeZioRun.runOrThrow(
           permissionRestService(
-            _.getPermissionsApByProjectAndGroupIri(
+            _.getPermissionsApByProjectAndGroupIri(rootUser)(
               imagesProjectIri,
               KnoraGroupRepo.builtIn.ProjectMember.id,
-              rootUser,
             ),
           ),
         )

@@ -5,11 +5,12 @@
 
 package org.knora.webapi.slice.admin.api
 
-import sttp.capabilities.pekko.PekkoStreams
+import sttp.capabilities.zio.ZioStreams
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
+import sttp.tapir.ztapir.ZPartialServerEndpoint
 import zio.Chunk
 import zio.ZLayer
 
@@ -23,7 +24,9 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class ProjectsEndpoints(
@@ -44,7 +47,7 @@ final case class ProjectsEndpoints(
 
   object Public {
 
-    val getAdminProjects = baseEndpoints.publicEndpoint.get
+    val getAdminProjects: Endpoint[Unit, Unit, Throwable, ProjectsGetResponse, Any] = baseEndpoints.publicEndpoint.get
       .in(projectsBase)
       .out(jsonBody[ProjectsGetResponse])
       .description("Returns all projects.")
@@ -207,7 +210,7 @@ final case class ProjectsEndpoints(
       .in(projectsByIri / "AllData")
       .out(header[String]("Content-Disposition"))
       .out(header[String]("Content-Type"))
-      .out(streamBinaryBody(PekkoStreams)(CodecFormat.OctetStream()))
+      .out(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
       .description("Returns all ontologies, data, and configuration belonging to a project identified by the IRI.")
   }
 

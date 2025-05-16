@@ -5,45 +5,58 @@
 
 package org.knora.webapi.slice.common.api
 
-import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.http.scaladsl.server.Route
 import sttp.capabilities.WebSockets
-import sttp.capabilities.pekko.PekkoStreams
+import sttp.capabilities.zio.ZioStreams
+import sttp.model.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.server.ServerEndpoint
+import sttp.tapir.server.interceptor.cors.CORSConfig
+import sttp.tapir.server.interceptor.cors.CORSConfig.*
+import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.metrics.zio.ZioMetrics
 import sttp.tapir.server.model.ValuedEndpointOutput
-import sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter
-import sttp.tapir.server.pekkohttp.PekkoHttpServerOptions
+import sttp.tapir.server.ziohttp.ZioHttpInterpreter
+import sttp.tapir.server.ziohttp.ZioHttpServerOptions
+import sttp.tapir.ztapir.*
+import zio.Task
 import zio.ZLayer
+import zio.http.Response
+import zio.http.Routes
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+final case class TapirToPekkoInterpreter() {
 
-final case class TapirToPekkoInterpreter()(system: ActorSystem) {
-  implicit val executionContext: ExecutionContext = system.dispatcher
   private case class GenericErrorResponse(error: String)
   private object GenericErrorResponse {
-    implicit val codec: JsonCodec[GenericErrorResponse] = DeriveJsonCodec.gen[GenericErrorResponse]
+    given JsonCodec[GenericErrorResponse] = DeriveJsonCodec.gen[GenericErrorResponse]
   }
 
   private def customizedErrorResponse(m: String): ValuedEndpointOutput[?] =
     ValuedEndpointOutput(jsonBody[GenericErrorResponse], GenericErrorResponse(m))
 
   private val serverOptions =
-    PekkoHttpServerOptions.customiseInterceptors
+    ZioHttpServerOptions.customiseInterceptors
       .defaultHandlers(customizedErrorResponse)
-      .metricsInterceptor(ZioMetrics.default[Future]().metricsInterceptor())
+      .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
+      .corsInterceptor(
+        CORSInterceptor.customOrThrow(
+          CORSConfig.default
+            .copy(
+              allowedOrigin = AllowedOrigin.Matching(_ => true),
+              allowedMethods = AllowedMethods.Some(
+                Set(Method.GET, Method.PUT, Method.POST, Method.DELETE, Method.PATCH, Method.HEAD, Method.OPTIONS),
+              ),
+              allowedCredentials = AllowedCredentials.Allow,
+            )
+            .exposeAllHeaders,
+        ),
+      )
       .notAcceptableInterceptor(None)
       .options
 
-  private val interpreter: PekkoHttpServerInterpreter = PekkoHttpServerInterpreter(serverOptions)
-
-  def toRoute(endpoint: ServerEndpoint[PekkoStreams & WebSockets, Future]): Route =
-    interpreter.toRoute(endpoint)
+  def toHttp[R2](ses: List[ZServerEndpoint[R2, ZioStreams with WebSockets]]): Routes[R2, Response] =
+    ZioHttpInterpreter(serverOptions).toHttp(ses)
 }
 
 object TapirToPekkoInterpreter {

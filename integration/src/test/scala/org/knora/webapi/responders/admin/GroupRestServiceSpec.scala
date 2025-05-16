@@ -33,7 +33,7 @@ class GroupRestServiceSpec extends CoreSpec {
   "The GroupsResponder " when {
     "asked about all groups" should {
       "return a list" in {
-        val response = UnsafeZioRun.runOrThrow(groupRestService(_.getGroups))
+        val response = UnsafeZioRun.runOrThrow(groupRestService(_.getGroups(())))
         assert(response.groups.nonEmpty)
         assert(response.groups.size == 2)
       }
@@ -60,7 +60,7 @@ class GroupRestServiceSpec extends CoreSpec {
       "CREATE the group and return the group's info if the supplied group name is unique" in {
         val response = UnsafeZioRun.runOrThrow(
           groupRestService(
-            _.postGroup(
+            _.postGroup(rootUser)(
               GroupCreateRequest(
                 id = None,
                 name = GroupName.unsafeFrom("NewGroup"),
@@ -77,7 +77,6 @@ class GroupRestServiceSpec extends CoreSpec {
                 status = GroupStatus.active,
                 selfjoin = GroupSelfJoin.disabled,
               ),
-              rootUser,
             ),
           ),
         )
@@ -99,7 +98,7 @@ class GroupRestServiceSpec extends CoreSpec {
         val groupName = GroupName.unsafeFrom("NewGroup")
         val exit = UnsafeZioRun.run(
           groupRestService(
-            _.postGroup(
+            _.postGroup(rootUser)(
               GroupCreateRequest(
                 id = Some(GroupIri.unsafeFrom(imagesReviewerGroup.id)),
                 name = groupName,
@@ -109,7 +108,6 @@ class GroupRestServiceSpec extends CoreSpec {
                 status = GroupStatus.active,
                 selfjoin = GroupSelfJoin.disabled,
               ),
-              rootUser,
             ),
           ),
         )
@@ -122,7 +120,7 @@ class GroupRestServiceSpec extends CoreSpec {
       "UPDATE a group" in {
         val response = UnsafeZioRun.runOrThrow(
           groupRestService(
-            _.putGroup(
+            _.putGroup(rootUser)(
               GroupIri.unsafeFrom(newGroupIri.get),
               GroupUpdateRequest(
                 name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
@@ -134,7 +132,6 @@ class GroupRestServiceSpec extends CoreSpec {
                 status = Some(GroupStatus.active),
                 selfjoin = Some(GroupSelfJoin.disabled),
               ),
-              rootUser,
             ),
           ),
         )
@@ -152,7 +149,7 @@ class GroupRestServiceSpec extends CoreSpec {
         val groupIri = "http://rdfh.ch/groups/0000/notexisting"
         val exit = UnsafeZioRun.run(
           groupRestService(
-            _.putGroup(
+            _.putGroup(rootUser)(
               GroupIri.unsafeFrom(groupIri),
               GroupUpdateRequest(
                 name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
@@ -163,7 +160,6 @@ class GroupRestServiceSpec extends CoreSpec {
                 status = Some(GroupStatus.active),
                 selfjoin = Some(GroupSelfJoin.disabled),
               ),
-              rootUser,
             ),
           ),
         )
@@ -177,7 +173,7 @@ class GroupRestServiceSpec extends CoreSpec {
         val groupName = GroupName.unsafeFrom("Image reviewer")
         val exit = UnsafeZioRun.run(
           groupRestService(
-            _.putGroup(
+            _.putGroup(rootUser)(
               GroupIri.unsafeFrom(newGroupIri.get),
               GroupUpdateRequest(
                 name = Some(groupName),
@@ -188,7 +184,6 @@ class GroupRestServiceSpec extends CoreSpec {
                 status = Some(GroupStatus.active),
                 selfjoin = Some(GroupSelfJoin.disabled),
               ),
-              rootUser,
             ),
           ),
         )
@@ -201,10 +196,9 @@ class GroupRestServiceSpec extends CoreSpec {
       "return 'BadRequestException' if nothing would be changed during the update" in {
         val exit = UnsafeZioRun.run(
           groupRestService(
-            _.putGroup(
+            _.putGroup(rootUser)(
               GroupIri.unsafeFrom(newGroupIri.get),
               GroupUpdateRequest(None, None, None, None),
-              rootUser,
             ),
           ),
         )
@@ -219,7 +213,7 @@ class GroupRestServiceSpec extends CoreSpec {
       "return all members of a group identified by IRI" in {
         val iri = GroupIri.unsafeFrom(imagesReviewerGroup.id)
         val received = UnsafeZioRun.runOrThrow(
-          groupRestService(_.getGroupMembers(iri, rootUser)),
+          groupRestService(_.getGroupMembers(rootUser)(iri)),
         )
 
         received.members.map(_.id) should contain allElementsOf Seq(
@@ -230,33 +224,22 @@ class GroupRestServiceSpec extends CoreSpec {
 
       "remove all members when group is deactivated" in {
         val group = UnsafeZioRun.runOrThrow(
-          groupRestService(
-            _.getGroupMembers(
-              GroupIri.unsafeFrom(imagesReviewerGroup.id),
-              rootUser,
-            ),
-          ),
+          groupRestService(_.getGroupMembers(rootUser)(GroupIri.unsafeFrom(imagesReviewerGroup.id))),
         )
         group.members.size shouldBe 2
 
         val statusChangeResponse = UnsafeZioRun.runOrThrow(
           groupRestService(
-            _.putGroupStatus(
+            _.putGroupStatus(rootUser)(
               GroupIri.unsafeFrom(imagesReviewerGroup.id),
               GroupStatusUpdateRequest(GroupStatus.inactive),
-              rootUser,
             ),
           ),
         )
         statusChangeResponse.group.status shouldBe false
 
         val deactivatedGroup = UnsafeZioRun.runOrThrow(
-          groupRestService(
-            _.getGroupMembers(
-              GroupIri.unsafeFrom(imagesReviewerGroup.id),
-              rootUser,
-            ),
-          ),
+          groupRestService(_.getGroupMembers(rootUser)(GroupIri.unsafeFrom(imagesReviewerGroup.id))),
         )
         deactivatedGroup.members.size shouldBe 0
       }
@@ -264,12 +247,7 @@ class GroupRestServiceSpec extends CoreSpec {
       "return 'ForbiddenException' when the group IRI is unknown" in {
         val groupIri = "http://rdfh.ch/groups/0000/notexisting"
         val exit = UnsafeZioRun.run(
-          groupRestService(
-            _.getGroupMembers(
-              GroupIri.unsafeFrom(groupIri),
-              rootUser,
-            ),
-          ),
+          groupRestService(_.getGroupMembers(rootUser)(GroupIri.unsafeFrom(groupIri))),
         )
         assertFailsWithA[ForbiddenException](
           exit,

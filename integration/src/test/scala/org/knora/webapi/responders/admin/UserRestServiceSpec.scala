@@ -363,9 +363,7 @@ class UserRestServiceSpec extends CoreSpec {
         membershipsAfterUpdate.projects.map(_.id) should equal(Chunk(imagesProject.id))
 
         val received = UnsafeZioRun.runOrThrow(
-          projectRestService(
-            _.getProjectMembersById(KnoraSystemInstances.Users.SystemUser, imagesProject.id),
-          ),
+          projectRestService(_.getProjectMembersById(KnoraSystemInstances.Users.SystemUser)(imagesProject.id)),
         )
         received.members.map(_.id) should contain(normalUser.id)
       }
@@ -388,9 +386,7 @@ class UserRestServiceSpec extends CoreSpec {
         )
 
         val received = UnsafeZioRun.runOrThrow(
-          projectRestService(
-            _.getProjectMembersById(KnoraSystemInstances.Users.SystemUser, incunabulaProject.id),
-          ),
+          projectRestService(_.getProjectMembersById(KnoraSystemInstances.Users.SystemUser)(incunabulaProject.id)),
         )
         received.members.map(_.id) should contain(normalUser.id)
       }
@@ -430,7 +426,7 @@ class UserRestServiceSpec extends CoreSpec {
 
         // also check that the user has been removed from the project's list of users
         val received = UnsafeZioRun.runOrThrow(
-          projectRestService(_.getProjectMembersById(rootUser, imagesProject.id)),
+          projectRestService(_.getProjectMembersById(rootUser)(imagesProject.id)),
         )
         received.members should not contain normalUser.ofType(UserInformationType.Restricted)
       }
@@ -476,7 +472,7 @@ class UserRestServiceSpec extends CoreSpec {
 
         // get project admins for images project (should contain normal user)
         val received = UnsafeZioRun.runOrThrow(
-          projectRestService(_.getProjectAdminMembersById(rootUser, imagesProject.id)),
+          projectRestService(_.getProjectAdminMembersById(rootUser)(imagesProject.id)),
         )
         received.members.map(_.id) should contain(normalUser.id)
       }
@@ -495,7 +491,7 @@ class UserRestServiceSpec extends CoreSpec {
         membershipsAfterUpdate.projects should equal(Seq())
 
         val received = UnsafeZioRun.runOrThrow(
-          projectRestService(_.getProjectAdminMembersById(rootUser, imagesProject.id)),
+          projectRestService(_.getProjectAdminMembersById(rootUser)(imagesProject.id)),
         )
         received.members should not contain normalUser.ofType(UserInformationType.Restricted)
       }
@@ -519,12 +515,7 @@ class UserRestServiceSpec extends CoreSpec {
         membershipsAfterUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
         val received = UnsafeZioRun.runOrThrow(
-          groupRestService(
-            _.getGroupMembers(
-              GroupIri.unsafeFrom(imagesReviewerGroup.id),
-              rootUser,
-            ),
-          ),
+          groupRestService(_.getGroupMembers(rootUser)(GroupIri.unsafeFrom(imagesReviewerGroup.id))),
         )
         received.members.map(_.id) should contain(normalUser.id)
       }
@@ -541,12 +532,7 @@ class UserRestServiceSpec extends CoreSpec {
         membershipsAfterUpdate should equal(Seq())
 
         val received = UnsafeZioRun.runOrThrow(
-          groupRestService(
-            _.getGroupMembers(
-              GroupIri.unsafeFrom(imagesReviewerGroup.id),
-              rootUser,
-            ),
-          ),
+          groupRestService(_.getGroupMembers(rootUser)(GroupIri.unsafeFrom(imagesReviewerGroup.id))),
         )
         received.members.map(_.id) should not contain normalUser
       }

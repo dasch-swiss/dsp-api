@@ -6,7 +6,6 @@
 package org.knora.webapi.e2e.v2
 
 import org.apache.pekko
-import org.apache.pekko.http.scaladsl.server.RouteConcatenation.*
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -24,13 +23,9 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.resources.api.ResourcesApiRoutes
-import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
@@ -45,18 +40,9 @@ import pekko.http.scaladsl.model.headers.BasicHttpCredentials
  * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
  * here: http://spray.io/documentation/1.2.2/spray-testkit/
  */
-class SearchRouteV2R2RSpec extends R2RSpec {
+class SearchEndpointsE2ESpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val searchPath = UnsafeZioRun
-    .runOrThrow(ZIO.serviceWith[SearchApiRoutes](_.routes))
-    .reduce(_ ~ _)
-
-  private val standoffPath =
-    UnsafeZioRun
-      .runOrThrow(ZIO.serviceWith[ResourcesApiRoutes](_.routes))
-      .reduce(_ ~ _)
-
-  implicit val ec: ExecutionContextExecutor = system.dispatcher
+  implicit val ec: ExecutionContextExecutor             = system.dispatcher
 
   private val anythingUser       = SharedTestDataADM.anythingUser1
   private val anythingUserEmail  = anythingUser.email
@@ -69,9 +55,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
   private val hamletResourceIri  = new MutableTestIri
   private val timeTagResourceIri = new MutableTestIri
-
-  // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
-  private val writeTestDataFiles = false
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
@@ -99,105 +82,84 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     ),
   )
 
-  private def testData(contents: String, fileName: String): String = {
-    val path = Paths.get("searchR2RV2", fileName)
-    if (writeTestDataFiles) writeTestData(contents, path)
-    else readTestData(path)
-  }
+  private def testData(filename: String): String = readTestData(Paths.get("searchR2RV2", filename))
 
   "The Search v2 Endpoint" should {
     "perform a fulltext search for 'Narr'" in {
-      Get("/v2/search/Narr") ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "NarrFulltextSearch.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual   = getResponseAsString(Get(s"$baseApiUrl/v2/search/Narr"))
+      val expected = testData("NarrFulltextSearch.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a count query for a fulltext search for 'Narr'" in {
-      Get("/v2/search/count/Narr") ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        checkCountResponse(responseAs[String], 136)
-      }
+      val actual = getResponseAsString(Get(s"$baseApiUrl/v2/search/count/Narr"))
+      checkCountResponse(actual, 136)
     }
 
     "perform a fulltext search for 'Ding'" in {
-      Get("/v2/search/Ding") ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        // the response involves forbidden resource
-        val expectedAnswerJSONLD = testData(responseAs[String], "searchResponseWithHiddenResource.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(Get(s"$baseApiUrl/v2/search/Ding"))
+      // the response involves forbidden resource
+      val expected = testData("searchResponseWithHiddenResource.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a fulltext search for 'Dinge' (in the complex schema)" in {
-      Get("/v2/search/Dinge") ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "DingeFulltextSearch.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Get(s"$baseApiUrl/v2/search/Dinge") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("DingeFulltextSearch.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a fulltext search for 'Dinge' (in the simple schema)" in {
-      Get("/v2/search/Dinge").addHeader(SchemaHeader.simple) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "DingeFulltextSearchSimple.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Get(s"$baseApiUrl/v2/search/Dinge").addHeader(SchemaHeader.simple) ~>
+          addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("DingeFulltextSearchSimple.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a count query for a fulltext search for 'Dinge'" in {
-      Get("/v2/search/count/Dinge") ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        checkCountResponse(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Get(s"$baseApiUrl/v2/search/count/Dinge") ~>
+          addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      checkCountResponse(actual, 1)
     }
 
     "perform a fulltext query for a search value containing a single character wildcard" in {
-      Get("/v2/search/Unif%3Frm") ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingUniform.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Get(s"$baseApiUrl/v2/search/Unif%3Frm") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingUniform.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a fulltext query for a search value containing a multiple character wildcard" in {
-      Get("/v2/search/Unif*m") ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingUniform.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Get(s"$baseApiUrl/v2/search/Unif*m") ~>
+          addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingUniform.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "return files attached to full-text search results" in {
-      Get("/v2/search/p7v?returnFiles=true") ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "FulltextSearchWithImage.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual   = getResponseAsString(Get(s"$baseApiUrl/v2/search/p7v?returnFiles=true"))
+      val expected = testData("FulltextSearchWithImage.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "not accept a fulltext query containing http://api.knora.org" in {
       val invalidSearchString: String =
         URLEncoder.encode("PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>", "UTF-8")
 
-      Get(s"/v2/search/$invalidSearchString") ~> searchPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.BAD_REQUEST, responseStr)
-        assert(
-          responseStr.contains("It looks like you are submitting a Gravsearch request to a full-text search route"),
-        )
-      }
+      val actual      = singleAwaitingRequest(Get(s"$baseApiUrl/v2/search/$invalidSearchString"))
+      val responseStr = responseToString(actual)
+
+      assert(actual.status == StatusCodes.BAD_REQUEST)
+      assert(responseStr.contains("It looks like you are submitting a Gravsearch request to a full-text search route"))
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -219,10 +181,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |ORDER BY (?exLink)
           |""".stripMargin
 
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, query),
-      ) ~> searchPath ~> check(assert(status == StatusCodes.OK))
+      val response = singleAwaitingRequest(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, query),
+        ),
+      )
+      assert(response.status == StatusCodes.OK)
     }
 
     "perform a Gravsearch query using complex schema which allows to sort the results by external link" in {
@@ -241,14 +206,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |ORDER BY (?exLink)
           |""".stripMargin
 
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, query),
-      ) ~> searchPath ~> check(assert(status == StatusCodes.OK))
+      val response = singleAwaitingRequest(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, query),
+        ),
+      )
+      assert(response.status == StatusCodes.OK)
     }
 
     "perform a Gravsearch query for an anything:Thing with an optional date and sort by date" in {
-
       val gravsearchQuery =
         """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -276,21 +243,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |ORDER BY DESC(?date)
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
-        val expectedAnswerJSONLD = testData(responseStr, "thingWithOptionalDateSortedDesc.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("thingWithOptionalDateSortedDesc.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch count query for an anything:Thing with an optional date used as a sort criterion" in {
-
       val gravsearchQuery =
         """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -317,18 +280,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |ORDER BY DESC(?date)
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkCountResponse(responseAs[String], 44)
-
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      checkCountResponse(actual, 44)
     }
 
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)" in {
@@ -355,16 +313,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)" in {
@@ -390,17 +346,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
           |
-          |    }
-                """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+          |    }""".stripMargin
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)" in {
@@ -427,14 +381,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post("/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery))
-        .addHeader(SchemaHeader.simple) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD =
-          testData(responseAs[String], "ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery))
+          .addHeader(SchemaHeader.simple),
+      )
+      val expected = testData("ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)" in {
@@ -462,14 +414,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post("/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery))
-        .addHeader(SchemaHeader.simple) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD =
-          testData(responseAs[String], "ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery))
+          .addHeader(SchemaHeader.simple),
+      )
+      val expected = testData("ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
@@ -496,18 +446,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkCountResponse(responseAs[String], 2)
-
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      checkCountResponse(actual, 2)
     }
 
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer" in {
@@ -532,15 +477,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that do not have the title 'Zeitglöcklein des Lebens'" in {
@@ -567,15 +511,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "NotZeitgloeckleinExtendedSearch.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("NotZeitgloeckleinExtendedSearch.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch count query for books that do not have the title 'Zeitglöcklein des Lebens'" in {
@@ -602,27 +545,20 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        // 19 - 2 = 18 :-)
-        // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
-        // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
-        // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
-
-        checkCountResponse(responseAs[String], 18)
-
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      // 19 - 2 = 18 :-)
+      // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
+      // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
+      // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
+      checkCountResponse(actual, 18)
     }
 
     "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum and the link value" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -652,15 +588,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning only the seqnum" in {
@@ -692,19 +627,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "PageWithSeqnum10OnlySeqnuminAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("PageWithSeqnum10OnlySeqnuminAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -734,20 +667,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?seqnum
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD =
-          testData(responseAs[String], "pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -775,19 +705,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?seqnum
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "PagesOfNarrenschiffOrderedBySeqnum.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("PagesOfNarrenschiffOrderedBySeqnum.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum and get the next OFFSET" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -816,15 +744,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    } ORDER BY ?seqnum
           |    OFFSET 1
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have been published on the first of March 1497 (Julian Calendar) (2)" in {
@@ -857,15 +784,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksPublishedOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar)" in {
@@ -899,16 +825,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    } ORDER BY ?pubdate
                 """.stripMargin
 
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksNotPublishedOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 17)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksNotPublishedOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 17)
     }
 
     "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar) 2" in {
@@ -941,17 +867,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksNotPublishedOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 17)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksNotPublishedOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 17)
     }
 
     "perform a Gravsearch query for books that have been published before 1497 (Julian Calendar)" in {
@@ -983,17 +908,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedBeforeDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
-        checkSearchResponseNumberOfResults(responseAs[String], 15)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksPublishedBeforeDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
+      checkSearchResponseNumberOfResults(actual, 15)
     }
 
     "perform a Gravsearch query for books that have been published 1497 or later (Julian Calendar)" in {
@@ -1025,17 +949,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedAfterOrOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 4)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksPublishedAfterOrOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 4)
     }
 
     "perform a Gravsearch query for books that have been published after 1497 (Julian Calendar)" in {
@@ -1067,17 +990,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedAfterDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksPublishedAfterDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "perform a Gravsearch query for books that have been published 1497 or before (Julian Calendar)" in {
@@ -1109,17 +1031,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedBeforeOrOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 18)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksPublishedBeforeOrOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 18)
     }
 
     "perform a Gravsearch query for books that have been published after 1486 and before 1491 (Julian Calendar)" in {
@@ -1152,16 +1073,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedBetweenDates.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 5)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksPublishedBetweenDates.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 5)
     }
 
     "get the regions belonging to a page" in {
@@ -1206,16 +1126,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "RegionsForPage.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("RegionsForPage.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "get a book a page points to and include the page in the results (all properties present in WHERE clause)" in {
@@ -1263,15 +1182,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |} OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "bookWithIncomingPagesWithAllRequestedProps.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("bookWithIncomingPagesWithAllRequestedProps.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "get a book a page points to and only include the page's partOf link in the results (none of the other properties)" in {
@@ -1315,15 +1233,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |} OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "bookWithIncomingPagesOnlyLink.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("bookWithIncomingPagesOnlyLink.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf" in {
@@ -1360,15 +1277,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |} OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "IncomingLinksForBook.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("IncomingLinksForBook.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for an anything:Thing that has a decimal value of 2.1 2" in {
@@ -1395,16 +1311,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingEqualsDecimal.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingEqualsDecimal.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "search for an anything:Thing that has a decimal value bigger than 2.0" in {
@@ -1431,16 +1346,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingBiggerThanDecimal.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingBiggerThanDecimal.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "search for an anything:Thing that has a decimal value smaller than 3.0" in {
@@ -1467,16 +1381,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingSmallerThanDecimal.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingSmallerThanDecimal.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for an anything:Thing that has a specific URI value" in {
@@ -1500,16 +1413,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "thingWithURI.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("thingWithURI.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "search for an anything:Thing that has a Boolean value that is true" in {
@@ -1537,16 +1449,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithBoolean.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithBoolean.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for an anything:Thing that may have a Boolean value that is true" in {
@@ -1581,17 +1492,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |         FILTER(?intVal = 123454321 || ?intVal = 999999999)
           |     }
           |} OFFSET 0""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithBooleanOptionalOffset0.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the first page of results
-        checkSearchResponseNumberOfResults(responseAs[String], 25)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithBooleanOptionalOffset0.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the first page of results
+      checkSearchResponseNumberOfResults(actual, 25)
     }
 
     "search for an anything:Thing that may have a Boolean value that is true using an increased offset" in {
@@ -1629,22 +1539,19 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |} OFFSET 1
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithBooleanOptionalOffset1.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the second page of results
-        checkSearchResponseNumberOfResults(responseAs[String], 19)
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithBooleanOptionalOffset1.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the second page of results
+      checkSearchResponseNumberOfResults(actual, 19)
     }
 
     "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both)" in {
-
       val gravsearchQuery =
         """
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -1680,20 +1587,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |} OFFSET 0
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithBooleanOrDecimal.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithBooleanOrDecimal.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for a book whose title contains 'Zeit' using the regex function" in {
-
       val gravsearchQuery =
         """
           |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1718,20 +1623,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |     }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksWithTitleContainingZeit.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("BooksWithTitleContainingZeit.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for a book whose title contains 'Zeitglöcklein' using the match function" in {
-
       val gravsearchQuery =
         """
           |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1755,20 +1658,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |     }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksWithTitleContainingZeitgloecklein.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("BooksWithTitleContainingZeitgloecklein.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function" in {
-
       val gravsearchQuery =
         """
           |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1792,20 +1693,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |     }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksWithTitleContainingZeitgloecklein.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("BooksWithTitleContainingZeitgloecklein.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for 'Zeitglöcklein des Lebens' using dcterms:title" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1829,20 +1728,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksWithTitleContainingZeitgloecklein.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("BooksWithTitleContainingZeitgloecklein.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for an anything:Thing with a list value" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1864,20 +1761,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithListValue.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 3)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithListValue.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 3)
     }
 
     "search for a text using the lang function" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1901,20 +1796,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |     FILTER(lang(?text) = "fr")
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "LanguageFulltextSearch.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("LanguageFulltextSearch.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "search for a specific text using the lang function" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1938,119 +1831,100 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |     FILTER(lang(?text) = "fr" && ?text = "Bonjour")
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "LanguageFulltextSearch.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("LanguageFulltextSearch.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "perform a fulltext search for 'Bonjour'" in {
-      Get("/v2/search/Bonjour") ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "LanguageFulltextSearch.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Get(s"$baseApiUrl/v2/search/Bonjour") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("LanguageFulltextSearch.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a fulltext search for the term 'text' marked up as a paragraph" in {
-      Get(
-        "/v2/search/text?limitToStandoffClass=" + URLEncoder
-          .encode("http://api.knora.org/ontology/standoff/v2#StandoffParagraphTag", "UTF-8"),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithRichtextWithTermTextInParagraph.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Get(
+          s"$baseApiUrl/v2/search/text?limitToStandoffClass=" + URLEncoder
+            .encode("http://api.knora.org/ontology/standoff/v2#StandoffParagraphTag", "UTF-8"),
+        ),
+      )
+      val expected = testData("ThingWithRichtextWithTermTextInParagraph.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a fulltext search count query for the term 'text' marked up as a paragraph" in {
-
-      Get(
-        "/v2/search/count/text?limitToStandoffClass=" + URLEncoder
-          .encode("http://api.knora.org/ontology/standoff/v2#StandoffParagraphTag", "UTF-8"),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkCountResponse(responseAs[String], 1)
-
-      }
-
+      val actual = getResponseAsString(
+        Get(
+          s"$baseApiUrl/v2/search/count/text?limitToStandoffClass=" + URLEncoder
+            .encode("http://api.knora.org/ontology/standoff/v2#StandoffParagraphTag", "UTF-8"),
+        ),
+      )
+      checkCountResponse(actual, 1)
     }
 
     "do a fulltext search for the term 'text' marked up as italic" in {
-      Get(
-        "/v2/search/text?limitToStandoffClass=" + URLEncoder
-          .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        // FIXME: file name evidently wrong
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithRichtextWithTermTextInParagraph.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Get(
+          s"$baseApiUrl/v2/search/text?limitToStandoffClass=" + URLEncoder
+            .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
+        ),
+      )
+      val expected = testData("ThingWithRichtextWithTermTextInParagraph.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a fulltext search count query for the term 'text' marked up as italic" in {
-
-      Get(
-        "/v2/search/count/text?limitToStandoffClass=" + URLEncoder
-          .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkCountResponse(responseAs[String], 1)
-      }
-
+      val actual = getResponseAsString(
+        Get(
+          s"$baseApiUrl/v2/search/count/text?limitToStandoffClass=" + URLEncoder
+            .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
+        ),
+      )
+      checkCountResponse(actual, 1)
     }
 
     "do a fulltext search for the terms 'interesting' and 'text' marked up as italic" in {
-      Get(
-        "/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder
-          .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithRichtextWithTermTextInParagraph.jsonld")
-        // FIXME: filename can't be right
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Get(
+          s"$baseApiUrl/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder
+            .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
+        ),
+      )
+      val expected = testData("ThingWithRichtextWithTermTextInParagraph.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a fulltext search count query for the terms 'interesting' and 'text' marked up as italic" in {
-
-      Get(
-        "/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder
-          .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
-
+      val actual = getResponseAsString(
+        Get(
+          s"$baseApiUrl/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder
+            .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
+        ),
+      )
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a fulltext search for the terms 'interesting' and 'boring' marked up as italic" in {
-      Get(
-        "/v2/search/interesting%20boring?limitToStandoffClass=" + URLEncoder
-          .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        // there is no single italic element that contains both 'interesting' and 'boring':
-        checkSearchResponseNumberOfResults(responseAs[String], 0)
-      }
+      val actual = getResponseAsString(
+        Get(
+          s"$baseApiUrl/v2/search/interesting%20boring?limitToStandoffClass=" + URLEncoder
+            .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8"),
+        ),
+      )
+      // there is no single italic element that contains both 'interesting' and 'boring':
+      checkSearchResponseNumberOfResults(actual, 0)
     }
 
     "do a Gravsearch query for link objects that link to an incunabula book" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -2079,20 +1953,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "LinkObjectsToBooks.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 3)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("LinkObjectsToBooks.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 3)
     }
 
     "do a Gravsearch query for a letter that links to a specific person via two possible properties" in {
-
       val gravsearchQuery =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -2128,20 +2000,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithAuthor.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("letterWithAuthor.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch count query for a letter that links to a specific person via two possible properties" in {
-
       val gravsearchQuery =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -2177,21 +2047,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkCountResponse(responseAs[String], 1)
-
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      checkCountResponse(actual, 1)
     }
 
     "do a Gravsearch query for a letter that links to a person with a specified name" in {
-
       val gravsearchQuery =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -2236,20 +2101,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("letterWithPersonWithName.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch count query for a letter that links to a person with a specified name" in {
-
       val gravsearchQuery =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -2294,21 +2157,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkCountResponse(responseAs[String], 1)
-
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      checkCountResponse(actual, 1)
     }
 
     "do a Gravsearch query for a letter that links to another person with a specified name" in {
-
       val gravsearchQuery =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -2353,20 +2211,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName2.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("letterWithPersonWithName2.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "run a Gravsearch query that searches for a person using foaf classes and properties" in {
-
       val gravsearchQuery =
         """
           |      PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -2398,16 +2254,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |      }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "foafPerson.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("foafPerson.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "run a Gravsearch query that searches for a single resource specified by its IRI" in {
@@ -2434,15 +2289,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |     ?integer a xsd:integer.
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingByIriWithRequestedValues.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingByIriWithRequestedValues.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a Gravsearch query for a letter and get information about the persons associated with it" in {
@@ -2490,19 +2344,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithAuthorWithInformation.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("letterWithAuthorWithInformation.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10, with the book as the main resource" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -2536,15 +2388,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "incomingPagesForBook.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      val expected = testData("incomingPagesForBook.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY" in {
@@ -2581,19 +2432,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?seqnum
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.BAD_REQUEST, response.toString)
-
-      }
+      val actual = singleAwaitingRequest(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      assert(actual.status == StatusCodes.BAD_REQUEST)
     }
 
     "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi'" in {
-
       val gravsearchQuery =
         """
           |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -2636,15 +2484,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "regionsOfZeitgloecklein.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      val expected = testData("regionsOfZeitgloecklein.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a Gravsearch query containing a UNION nested in an OPTIONAL" in {
@@ -2668,15 +2515,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |  }
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ProjectsWithOptionalPersonOrBiblio.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("ProjectsWithOptionalPersonOrBiblio.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2709,16 +2555,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
           |} ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName2.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("letterWithPersonWithName2.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch query in which the object types of property IRIs are inferred (with type inference)" in {
@@ -2746,16 +2591,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
           |} ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName2.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("letterWithPersonWithName2.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch query in which the types of property objects are inferred from the knora-api:objectType of each property (with type inference)" in {
@@ -2781,16 +2625,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
           |} ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName2.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("letterWithPersonWithName2.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch query in which a property's knora-api:objectType is inferred from its object (with type inference)" in {
@@ -2815,16 +2658,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
           |} ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName2.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("letterWithPersonWithName2.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch query in which the types of property subjects are inferred from the knora-api:subjectType of each property (with type inference)" in {
@@ -2849,16 +2691,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |} ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName2.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("letterWithPersonWithName2.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch query in which the knora-api:objectType of a property variable is inferred from a FILTER (with type inference)" in {
@@ -2880,16 +2721,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |} ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithoutName.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("letterWithPersonWithoutName.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch query that finds all the books that have a page with seqnum 100, inferring types (with type inference)" in {
@@ -2914,15 +2754,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "booksWithPage100.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("booksWithPage100.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a Gravsearch query that finds all the letters sent by someone called Meier, ordered by date, inferring types (with type inference)" in {
@@ -2951,15 +2790,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |} ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "lettersByMeier.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("lettersByMeier.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema) (with type inference)" in {
@@ -2981,15 +2819,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema) (with type inference)" in {
@@ -3013,15 +2850,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema) (with type inference)" in {
@@ -3044,14 +2877,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post("/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery))
-        .addHeader(SchemaHeader.simple) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD =
-          testData(responseAs[String], "ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery))
+          .addHeader(SchemaHeader.simple),
+      )
+      val expected = testData("ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema) (with type inference)" in {
@@ -3075,14 +2906,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post("/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery))
-        .addHeader(SchemaHeader.simple) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD =
-          testData(responseAs[String], "ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery))
+          .addHeader(SchemaHeader.simple),
+      )
+      val expected = testData("ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (with type inference)" in {
@@ -3105,18 +2934,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkCountResponse(responseAs[String], 2)
-
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      checkCountResponse(actual, 2)
     }
 
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer (with type inference)" in {
@@ -3137,15 +2961,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that do not have the title 'Zeitglöcklein des Lebens' (with type inference)" in {
@@ -3168,15 +2991,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "NotZeitgloeckleinExtendedSearch.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("NotZeitgloeckleinExtendedSearch.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch count query for books that do not have the title 'Zeitglöcklein des Lebens' (with type inference)" in {
@@ -3199,27 +3021,20 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        // 19 - 2 = 18 :-)
-        // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
-        // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
-        // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
-
-        checkCountResponse(responseAs[String], 18)
-
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      // 19 - 2 = 18 :-)
+      // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
+      // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
+      // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
+      checkCountResponse(actual, 18)
     }
 
     "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum and the link value (with type inference)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -3242,19 +3057,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch count query for the page of a book whose seqnum equals 10, returning the seqnum and the link value (with type inference)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -3277,22 +3090,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning only the seqnum (with type inference)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -3313,19 +3120,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "PageWithSeqnum10OnlySeqnuminAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("PageWithSeqnum10OnlySeqnuminAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10 (with type inference)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -3348,20 +3153,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?seqnum
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD =
-          testData(responseAs[String], "pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum (with type inference)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -3382,19 +3184,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?seqnum
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "PagesOfNarrenschiffOrderedBySeqnum.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("PagesOfNarrenschiffOrderedBySeqnum.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum and get the next OFFSET (with type inference)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -3416,15 +3216,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    } ORDER BY ?seqnum
           |    OFFSET 1
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have been published on the first of March 1497 (Julian Calendar) (2) (with type inference)" in {
@@ -3450,15 +3249,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksPublishedOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar) (with type inference)" in {
@@ -3484,17 +3282,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksNotPublishedOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 17)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksNotPublishedOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 17)
     }
 
     "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar) 2 (with type inference)" in {
@@ -3520,17 +3317,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksNotPublishedOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 17)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksNotPublishedOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 17)
     }
 
     "perform a Gravsearch query for books that have been published before 1497 (Julian Calendar) (with type inference)" in {
@@ -3556,17 +3352,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedBeforeDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
-        checkSearchResponseNumberOfResults(responseAs[String], 15)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksPublishedBeforeDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
+      checkSearchResponseNumberOfResults(actual, 15)
     }
 
     "perform a Gravsearch query for books that have been published 1497 or later (Julian Calendar) (with type inference)" in {
@@ -3592,17 +3387,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedAfterOrOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 4)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksPublishedAfterOrOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 4)
     }
 
     "perform a Gravsearch query for books that have been published after 1497 (Julian Calendar) (with type inference)" in {
@@ -3628,17 +3422,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedAfterDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksPublishedAfterDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "perform a Gravsearch query for books that have been published 1497 or before (Julian Calendar) (with type inference)" in {
@@ -3664,17 +3457,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedBeforeOrOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 18)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksPublishedBeforeOrOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 18)
     }
 
     "perform a Gravsearch query for books that have been published after 1486 and before 1491 (Julian Calendar) (with type inference)" in {
@@ -3700,16 +3492,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedBetweenDates.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 5)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("BooksPublishedBetweenDates.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 5)
     }
 
     "get the regions belonging to a page (with type inference)" in {
@@ -3741,16 +3532,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "RegionsForPage.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("RegionsForPage.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "get a book a page points to and include the page in the results (all properties present in WHERE clause) (with type inference)" in {
@@ -3785,15 +3575,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |} OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "bookWithIncomingPagesWithAllRequestedProps.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("bookWithIncomingPagesWithAllRequestedProps.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "get a book a page points to and only include the page's partOf link in the results (none of the other properties) (with type inference)" in {
@@ -3824,15 +3613,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |} OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "bookWithIncomingPagesOnlyLink.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("bookWithIncomingPagesOnlyLink.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "get incoming links pointing to an incunbaula:book, excluding isPartOf (with type inference)" in {
@@ -3860,15 +3648,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |} OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "IncomingLinksForBook.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("IncomingLinksForBook.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for an anything:Thing that has a decimal value of 2.1 2 (with type inference)" in {
@@ -3891,16 +3678,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingEqualsDecimal.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingEqualsDecimal.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "search for an anything:Thing that has a decimal value bigger than 2.0 (with type inference)" in {
@@ -3923,16 +3709,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingBiggerThanDecimal.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingBiggerThanDecimal.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "search for an anything:Thing that has a decimal value smaller than 3.0 (with type inference)" in {
@@ -3955,16 +3740,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingSmallerThanDecimal.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingSmallerThanDecimal.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for an anything:Thing that has a Boolean value that is true 2 (with type inference)" in {
@@ -3988,16 +3772,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithBoolean.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithBoolean.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for an anything:Thing that may have a Boolean value that is true (with type inference)" in {
@@ -4025,21 +3808,19 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |         FILTER(?intVal = 123454321 || ?intVal = 999999999)
           |     }
           |} OFFSET 1""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithBooleanOptionalOffset1.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the second page of results
-        checkSearchResponseNumberOfResults(responseAs[String], 19)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithBooleanOptionalOffset1.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the second page of results
+      checkSearchResponseNumberOfResults(actual, 19)
     }
 
     "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both) (with type inference)" in {
-
       val gravsearchQuery =
         """
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -4069,20 +3850,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |} OFFSET 0
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithBooleanOrDecimal.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithBooleanOrDecimal.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for a book whose title contains 'Zeit' using the regex function (with type inference)" in {
-
       val gravsearchQuery =
         """
           |    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -4104,20 +3883,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |     }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksWithTitleContainingZeit.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("BooksWithTitleContainingZeit.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for a book whose title contains 'Zeitglöcklein' using the match function (with type inference)" in {
-
       val gravsearchQuery =
         """
           |    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -4139,20 +3916,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |     }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksWithTitleContainingZeitgloecklein.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("BooksWithTitleContainingZeitgloecklein.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function (with type inference)" in {
-
       val gravsearchQuery =
         """
           |    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -4174,20 +3949,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |     }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksWithTitleContainingZeitgloecklein.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("BooksWithTitleContainingZeitgloecklein.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for 'Zeitglöcklein des Lebens' using dcterms:title (with type inference)" in {
-
       val gravsearchQuery =
         """
           |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -4207,20 +3980,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksWithTitleContainingZeitgloecklein.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("BooksWithTitleContainingZeitgloecklein.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for an anything:Thing with a list value (with type inference)" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -4238,20 +4009,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithListValue.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 3)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithListValue.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 3)
     }
 
     "search for a text using the lang function (with type inference)" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -4269,20 +4038,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |     FILTER(lang(?text) = "fr")
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "LanguageFulltextSearch.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("LanguageFulltextSearch.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "search for a specific text using the lang function (with type inference)" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -4300,20 +4067,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |     FILTER(lang(?text) = "fr" && ?text = "Bonjour")
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "LanguageFulltextSearch.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("LanguageFulltextSearch.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch query for link objects that link to an incunabula book (with type inference)" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -4335,21 +4100,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "LinkObjectsToBooks.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 3)
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("LinkObjectsToBooks.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 3)
     }
 
     "do a Gravsearch query for a letter that links to a specific person via two possible properties (with type inference)" in {
-
       val gravsearchQuery =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -4376,20 +4138,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithAuthor.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("letterWithAuthor.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch query for a letter that links to a person with a specified name (with type inference)" in {
-
       val gravsearchQuery =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -4421,20 +4181,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("letterWithPersonWithName.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch query for a letter that links to another person with a specified name (with type inference)" in {
-
       val gravsearchQuery =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -4466,20 +4224,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName2.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("letterWithPersonWithName2.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "run a Gravsearch query that searches for a person using foaf classes and propertie (with type inference)" in {
-
       val gravsearchQuery =
         """
           |      PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -4509,16 +4265,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |      }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "foafPerson.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("foafPerson.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "run a Gravsearch query that searches for a single resource specified by its IRI (with type inference)" in {
@@ -4540,15 +4295,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |     ?thing anything:hasInteger ?integer .
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingByIriWithRequestedValues.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingByIriWithRequestedValues.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a Gravsearch query for a letter and get information about the persons associated with it (with type inference)" in {
@@ -4582,19 +4336,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithAuthorWithInformation.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("letterWithAuthorWithInformation.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10, with the book as the main resource (with type inference)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -4621,15 +4373,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "incomingPagesForBook.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      val expected = testData("incomingPagesForBook.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY (with type inference)" in {
@@ -4658,19 +4409,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?seqnum
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.BAD_REQUEST, response.toString)
-
-      }
+      val actual = singleAwaitingRequest(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      assert(actual.status == StatusCodes.BAD_REQUEST)
     }
 
     "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi (with type inference)'" in {
-
       val gravsearchQuery =
         """
           |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -4702,15 +4450,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "regionsOfZeitgloecklein.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      val expected = testData("regionsOfZeitgloecklein.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a Gravsearch query containing a UNION nested in an OPTIONAL (with type inference)" in {
@@ -4731,15 +4478,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |  }
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ProjectsWithOptionalPersonOrBiblio.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ProjectsWithOptionalPersonOrBiblio.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a Gravsearch query that searches for a list node (with type inference)" in {
@@ -4764,15 +4507,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithListNodeLabel.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ThingWithListNodeLabel.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a Gravsearch count query that searches for a list node (with type inference)" in {
@@ -4797,24 +4536,19 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkCountResponse(responseAs[String], 1)
-
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      checkCountResponse(actual, 1)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries that submit the complex schema
 
     "perform a Gravsearch query for an anything:Thing with an optional date and sort by date (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
@@ -4843,19 +4577,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |ORDER BY DESC(?date)
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "thingWithOptionalDateSortedDesc.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("thingWithOptionalDateSortedDesc.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch count query for an anything:Thing with an optional date used as a sort criterion (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
@@ -4884,22 +4616,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |ORDER BY DESC(?date)
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkCountResponse(responseAs[String], 44)
-
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      checkCountResponse(actual, 44)
     }
 
     "perform a Gravsearch query for an anything:Thing that has an optional decimal value greater than 2 and sort by the decimal value (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
@@ -4931,15 +4657,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |     }
           |} ORDER BY DESC(?decimal)
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingsWithOptionalDecimalGreaterThan1.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ThingsWithOptionalDecimalGreaterThan1.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a Gravsearch query that finds all the books that have a page with seqnum 100 (submitting the complex schema)" in {
@@ -4964,15 +4686,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "booksWithPage100.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("booksWithPage100.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a Gravsearch query that finds all the letters sent by someone called Meier, ordered by date (submitting the complex schema)" in {
@@ -5001,15 +4719,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |} ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "lettersByMeier.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("lettersByMeier.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (submitting the complex schema)" in {
@@ -5031,15 +4745,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (submitting the complex schema)" in {
@@ -5062,18 +4772,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkCountResponse(responseAs[String], 2)
-
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      checkCountResponse(actual, 2)
     }
 
     "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer (submitting the complex schema)" in {
@@ -5094,15 +4799,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that do not have the title 'Zeitglöcklein des Lebens' (submitting the complex schema)" in {
@@ -5127,15 +4828,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "NotZeitgloeckleinExtendedSearch.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("NotZeitgloeckleinExtendedSearch.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch count query for books that do not have the title 'Zeitglöcklein des Lebens' (submitting the complex schema)" in {
@@ -5160,27 +4857,20 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        // 19 - 2 = 18 :-)
-        // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
-        // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
-        // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
-
-        checkCountResponse(responseAs[String], 18)
-
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      // 19 - 2 = 18 :-)
+      // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
+      // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
+      // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
+      checkCountResponse(actual, 18)
     }
 
     "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum and the link value (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -5203,19 +4893,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch count query for the page of a book whose seqnum equals 10, returning the seqnum and the link value (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -5237,22 +4922,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |        ?seqnum knora-api:intValueAsInt 10 .
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-
-      }
-
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning only the seqnum (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -5273,19 +4949,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "PageWithSeqnum10OnlySeqnuminAnswer.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("PageWithSeqnum10OnlySeqnuminAnswer.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10 (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -5310,20 +4981,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?seqnum
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD =
-          testData(responseAs[String], "pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -5344,19 +5009,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?seqnum
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "PagesOfNarrenschiffOrderedBySeqnum.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("PagesOfNarrenschiffOrderedBySeqnum.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum and get the next OFFSET (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -5378,15 +5038,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    } ORDER BY ?seqnum
           |    OFFSET 1
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have been published on the first of March 1497 (Julian Calendar) (submitting the complex schema)" in {
@@ -5413,15 +5069,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("BooksPublishedOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar) (submitting the complex schema)" in {
@@ -5448,17 +5100,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksNotPublishedOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 17)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("BooksNotPublishedOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 17)
     }
 
     "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar) 2 (submitting the complex schema)" in {
@@ -5485,17 +5133,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksNotPublishedOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 17)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("BooksNotPublishedOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 17)
     }
 
     "perform a Gravsearch query for books that have been published before 1497 (Julian Calendar) (submitting the complex schema)" in {
@@ -5522,17 +5166,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedBeforeDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
-        checkSearchResponseNumberOfResults(responseAs[String], 15)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("BooksPublishedBeforeDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
+      checkSearchResponseNumberOfResults(actual, 15)
     }
 
     "perform a Gravsearch query for books that have been published 1497 or later (Julian Calendar) (submitting the complex schema)" in {
@@ -5559,17 +5199,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedAfterOrOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 4)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("BooksPublishedAfterOrOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 4)
     }
 
     "perform a Gravsearch query for books that have been published after 1497 (Julian Calendar) (submitting the complex schema)" in {
@@ -5596,17 +5232,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedAfterDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("BooksPublishedAfterDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "perform a Gravsearch query for books that have been published 1497 or before (Julian Calendar) (submitting the complex schema)" in {
@@ -5633,17 +5265,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedBeforeOrOnDate.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
-        checkSearchResponseNumberOfResults(responseAs[String], 18)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("BooksPublishedBeforeOrOnDate.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
+      checkSearchResponseNumberOfResults(actual, 18)
     }
 
     "perform a Gravsearch query for books that have been published after 1486 and before 1491 (Julian Calendar) (submitting the complex schema)" in {
@@ -5670,16 +5298,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?pubdate
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksPublishedBetweenDates.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 5)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("BooksPublishedBetweenDates.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 5)
     }
 
     "get the regions belonging to a page (submitting the complex schema)" in {
@@ -5700,16 +5324,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?region knora-api:hasComment ?comment .
           |    ?region knora-api:hasColor ?color .
           |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "RegionsForPage.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("RegionsForPage.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "get a book a page points to and include the page in the results (all properties present in WHERE clause) (submitting the complex schema)" in {
@@ -5744,15 +5364,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |} OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "bookWithIncomingPagesWithAllRequestedProps.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("bookWithIncomingPagesWithAllRequestedProps.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "get a book a page points to and only include the page's partOf link in the results (none of the other properties) (submitting the complex schema)" in {
@@ -5783,15 +5399,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |} OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "bookWithIncomingPagesOnlyLink.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("bookWithIncomingPagesOnlyLink.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "get incoming links pointing to an incunbaula:book, excluding isPartOf (submitting the complex schema)" in {
@@ -5818,15 +5430,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |} OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "IncomingLinksForBook.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("IncomingLinksForBook.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for an anything:Thing that has a decimal value of 2.1 (submitting the complex schema)" in {
@@ -5849,16 +5457,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingEqualsDecimal.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingEqualsDecimal.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "search for an anything:Thing that has a decimal value of 2.1 (submitting the complex schema), without inference" in {
@@ -5875,16 +5482,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?thing anything:hasDecimal ?decimal .
           |    ?decimal knora-api:decimalValueAsDecimal "2.1"^^xsd:decimal .
           |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingEqualsDecimal.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingEqualsDecimal.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "search for an anything:Thing that has a decimal value bigger than 2.0 (submitting the complex schema)" in {
@@ -5909,17 +5515,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingBiggerThanDecimal.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingBiggerThanDecimal.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "search for an anything:Thing that has a decimal value smaller than 3.0 (submitting the complex schema)" in {
@@ -5936,16 +5540,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |     ?decimal knora-api:decimalValueAsDecimal ?decimalDec .
           |     FILTER(?decimalDec < "3"^^xsd:decimal)
           |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD: String = testData(responseAs[String], "ThingSmallerThanDecimal.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected: String = testData("ThingSmallerThanDecimal.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for an anything:Thing that has a link to a specified other thing" in {
@@ -5960,16 +5563,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?thing a anything:Thing .
           |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
           |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD: String = testData(responseAs[String], "ThingWithLinkToStart.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected: String = testData("ThingWithLinkToStart.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "return a page of anything:Thing resources" in {
@@ -5982,15 +5584,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |} WHERE {
           |    ?thing a anything:Thing .
           |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD: String = testData(responseAs[String], "PageOfThings.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected: String = testData("PageOfThings.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for an anything:Thing that has a Boolean value that is true (submitting the complex schema)" in {
@@ -6014,16 +5615,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithBoolean.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithBoolean.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for an anything:Thing that may have a Boolean value that is true (submitting the complex schema)" in {
@@ -6057,21 +5657,19 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |     }
           |
           |} OFFSET 1""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithBooleanOptionalOffset1.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        // this is the second page of results
-        checkSearchResponseNumberOfResults(responseAs[String], 19)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithBooleanOptionalOffset1.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      // this is the second page of results
+      checkSearchResponseNumberOfResults(actual, 19)
     }
 
     "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both) (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
@@ -6102,20 +5700,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |} OFFSET 0
           |
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithBooleanOrDecimal.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithBooleanOrDecimal.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for a book whose title contains 'Zeit' using the regex function (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
@@ -6139,20 +5735,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |     }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksWithTitleContainingZeit.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("BooksWithTitleContainingZeit.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for a book whose title contains 'Zeitglöcklein' using the match function (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
@@ -6174,20 +5768,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |     }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksWithTitleContainingZeitgloecklein.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("BooksWithTitleContainingZeitgloecklein.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
@@ -6209,20 +5801,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |     }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "BooksWithTitleContainingZeitgloecklein.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("BooksWithTitleContainingZeitgloecklein.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 2)
     }
 
     "search for an anything:Thing with a list value (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -6240,20 +5830,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } OFFSET 0
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithListValue.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 3)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithListValue.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 3)
     }
 
     "search for a text in a particular language (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -6271,20 +5859,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |     ?text knora-api:textValueHasLanguage "fr" .
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "LanguageFulltextSearch.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("LanguageFulltextSearch.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "search for a specific text using the lang function (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -6304,20 +5890,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |     ?text knora-api:textValueHasLanguage "fr" .
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "LanguageFulltextSearch.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("LanguageFulltextSearch.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch query for link objects that link to an incunabula book (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -6339,21 +5923,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "LinkObjectsToBooks.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 3)
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("LinkObjectsToBooks.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 3)
     }
 
     "do a Gravsearch query for a letter that links to a specific person via two possible properties (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
@@ -6380,20 +5961,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithAuthor.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("letterWithAuthor.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch query for a letter that links to a person with a specified name (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
@@ -6424,20 +6003,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("letterWithPersonWithName.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "do a Gravsearch query for a letter that links to another person with a specified name (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
@@ -6468,16 +6045,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName2.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-        checkSearchResponseNumberOfResults(responseAs[String], 1)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("letterWithPersonWithName2.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
+      checkSearchResponseNumberOfResults(actual, 1)
     }
 
     "run a Gravsearch query that searches for a single resource specified by its IRI (submitting the complex schema)" in {
@@ -6499,15 +6072,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |     ?thing anything:hasInteger ?integer .
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingByIriWithRequestedValues.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingByIriWithRequestedValues.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a Gravsearch query for a letter and get information about the persons associated with it (submitting the complex schema)" in {
@@ -6541,19 +6113,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?date
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithAuthorWithInformation.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("letterWithAuthorWithInformation.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "do a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10, with the book as the main resource (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -6582,15 +6152,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "incomingPagesForBook.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      val expected = testData("incomingPagesForBook.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY (submitting the complex schema)" in {
@@ -6621,19 +6190,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    } ORDER BY ?seqnum
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.BAD_REQUEST, response.toString)
-
-      }
+      val actual = singleAwaitingRequest(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      assert(actual.status == StatusCodes.BAD_REQUEST)
     }
 
     "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi' (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
@@ -6665,15 +6231,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "regionsOfZeitgloecklein.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      val expected = testData("regionsOfZeitgloecklein.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "reject a Gravsearch query in the complex schema that uses knora-api:isMainResource in the simple schema" in {
@@ -6709,15 +6274,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.BAD_REQUEST, response.toString)
-
-      }
+      val actual = singleAwaitingRequest(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      assert(actual.status == StatusCodes.BAD_REQUEST)
     }
 
     "reject a Gravsearch query in the complex schema that uses a Knora property in the simple schema" in {
@@ -6753,16 +6316,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.BAD_REQUEST, response.toString)
-
-      }
-
+      val actual = singleAwaitingRequest(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      assert(actual.status == StatusCodes.BAD_REQUEST)
     }
 
     "reject a Gravsearch query that uses a string literal in the CONSTRUCT clause" in {
@@ -6789,14 +6349,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
                 """.stripMargin
 
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.BAD_REQUEST, response.toString)
-
-      }
+      val actual = singleAwaitingRequest(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      assert(actual.status == StatusCodes.BAD_REQUEST)
     }
 
     "reject a Gravsearch query in the complex schema with a variable in the CONSTRUCT clause referring to a non-property entity that isn't a resource or value" in {
@@ -6824,15 +6383,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.BAD_REQUEST, response.toString)
-
-      }
+      val actual = singleAwaitingRequest(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      assert(actual.status == StatusCodes.BAD_REQUEST)
     }
 
     "search for a list value that refers to a particular list node (submitting the complex schema)" in {
@@ -6853,15 +6410,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "thingReferringToSpecificListNode.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      val expected = testData("thingReferringToSpecificListNode.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for a list value that does not refer to a particular list node (submitting the complex schema)" in {
@@ -6886,15 +6442,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "thingNotReferringToSpecificListNode.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      val expected = testData("thingNotReferringToSpecificListNode.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for a list value that does not refer to a particular list node, performing a count query (submitting the complex schema)" in {
@@ -6919,16 +6474,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkCountResponse(responseAs[String], 2)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      checkCountResponse(actual, 2)
     }
 
     "search for a list value that refers to a particular list node that has subnodes (submitting the complex schema)" in {
@@ -6949,15 +6501,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "thingReferringToSpecificListNodeWithSubnodes.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      val expected = testData("thingReferringToSpecificListNodeWithSubnodes.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for a beol:letter with list value that refers to a particular list node (submitting the complex schema)" in {
@@ -6980,15 +6531,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
           |    }
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithSubject.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      val expected = testData("letterWithSubject.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for a standoff link using the knora-api:standoffLink function (submitting the complex schema)" in {
@@ -7010,15 +6560,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?otherThing a anything:Thing .
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "thingsWithStandoffLinks.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("thingsWithStandoffLinks.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for a standoff link using the knora-api:standoffLink function, referring to the target resource in the function call only (submitting the complex schema)" in {
@@ -7041,15 +6590,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    # Note that ?otherThing is only used as a argument in the function, not in any other statement
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "thingsWithStandoffLinks.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("thingsWithStandoffLinks.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for a standoff link using the knora-api:standoffLink function specifying an Iri for the target resource (submitting the complex schema)" in {
@@ -7071,15 +6619,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    <http://rdfh.ch/0001/a-thing> a anything:Thing .
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "thingsWithStandoffLinksToSpecificThing.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("thingsWithStandoffLinksToSpecificThing.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for a standoff link using the knora-api:standoffLink function specifying an Iri for the target resource, referring to the target resource in the function call only (submitting the complex schema)" in {
@@ -7102,15 +6649,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    # Note that <http://rdfh.ch/0001/a-thing> is only used as a argument in the function, not in any other statement
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "thingsWithStandoffLinksToSpecificThing.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("thingsWithStandoffLinksToSpecificThing.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for matching words in a particular type of standoff tag (submitting the complex schema)" in {
@@ -7131,22 +6677,19 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    FILTER knora-api:matchTextInStandoff(?text, ?standoffTag, "interesting text")
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithRichtextWithTermTextInParagraph.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("ThingWithRichtextWithTermTextInParagraph.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for a standoff date tag indicating a date in a particular range (submitting the complex schema)" in {
       // First, create a standoff-to-XML mapping that can handle standoff date tags.
-
       val mappingFileToSend = Paths.get("..", "test_data/test_route/texts/mappingForHTML.xml")
-
       val paramsCreateHTMLMappingFromXML =
         s"""
            |{
@@ -7175,13 +6718,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       )
 
       // send mapping xml to route
-      Post("/v2/mapping", formDataMapping) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
-      ) ~> standoffPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-      }
+      val _ = getResponseAsString(
+        Post(s"$baseApiUrl/v2/mapping", formDataMapping) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password),
+        ),
+      )
 
       // Next, create a resource with a text value containing a standoff date tag.
       val xmlForJson = stringFormatter.toJsonEncodedString(
@@ -7204,15 +6745,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[TestClientService](
-          _.singleAwaitingRequest(
-            Post(
-              appConfig.knoraApi.internalKnoraApiBaseUrl + "/v2/values",
-              HttpEntity(RdfMediaTypes.`application/ld+json`, requestBody),
-            ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-          ).filterOrFail(_.status.isSuccess)(Exception("Value creation failed")),
-        ),
+      val _ = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/values",
+          HttpEntity(RdfMediaTypes.`application/ld+json`, requestBody),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
       )
 
       // Finally, do a Gravsearch query that finds the date tag.
@@ -7235,21 +6772,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
                 """.stripMargin
 
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        assert(responseAs[String].contains("we will have a party"))
-
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      assert(actual.contains("we will have a party"))
     }
 
     "search for a standoff tag using knora-api:standoffTagHasStartAncestor (submitting the complex schema)" in {
-
       val gravsearchQuery =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -7270,18 +6802,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?standoffParagraphTag a standoff:StandoffParagraphTag .
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        assert(responseAs[String].contains("we will have a party"))
-
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      assert(actual.contains("we will have a party"))
     }
 
     "reject a link value property in a query in the simple schema" in {
@@ -7301,24 +6828,19 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?page incunabula:partOfValue ?book .
           |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
-
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.NOT_FOUND, responseStr)
-        assert(responseStr.contains("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOfValue"))
-
-      }
+      val actual = singleAwaitingRequest(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)),
+      )
+      assert(actual.status == StatusCodes.NOT_FOUND)
+      assert(responseToString(actual).contains("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOfValue"))
     }
 
     "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" ignore { // uses too much memory for GitHub CI
       // Create a resource containing the text of Hamlet.
-
       val hamletXml = FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/hamlet.xml"))
-
       val jsonLDEntity =
         s"""{
            |  "@type" : "anything:Thing",
@@ -7341,20 +6863,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-
-      val resourceCreateResponseStr = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[TestClientService](
-          _.getResponseString(
-            Post(
-              appConfig.knoraApi.internalKnoraApiBaseUrl + "/v2/resources",
-              HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-            ) ~> addCredentials(
-              BasicHttpCredentials(anythingUserEmail, password),
-            ),
-          ),
-        ),
+      val resourceCreateResponseAsJsonLD = getResponseAsJsonLD(
+        Post(
+          s"$baseApiUrl/v2/resources",
+          HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
       )
-      val resourceCreateResponseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceCreateResponseStr)
       val validationFun: (String, => Nothing) => String =
         (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI =
@@ -7365,7 +6879,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     "search for the large text and its markup and receive it as XML, and check that it matches the original XML" ignore { // depends on previous test
       val hamletXml = FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/hamlet.xml"))
-
       val gravsearchQuery =
         s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
            |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
@@ -7379,25 +6892,21 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |    ?thing a anything:Thing .
            |    ?thing anything:hasRichtext ?text .
            |}""".stripMargin
+      val searchResponseAsJsonLD = getResponseAsJsonLD(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val xmlFromResponse: String = searchResponseAsJsonLD.body
+        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
+        .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml))
+        .fold(e => throw BadRequestException(e), identity)
 
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val searchResponseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(searchResponseStr)
-        val xmlFromResponse: String = searchResponseAsJsonLD.body
-          .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
-          .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml))
-          .fold(e => throw BadRequestException(e), identity)
-
-        // Compare it to the original XML.
-        val xmlDiff: Diff =
-          DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
-        xmlDiff.hasDifferences should be(false)
-      }
+      // Compare it to the original XML.
+      val xmlDiff: Diff =
+        DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
+      xmlDiff.hasDifferences should be(false)
     }
 
     "find a resource with two different incoming links" in {
@@ -7421,7 +6930,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         ZIO.serviceWithZIO[TestClientService](
           _.getResponseJsonLD(
             Post(
-              appConfig.knoraApi.internalKnoraApiBaseUrl + s"/v2/resources",
+              s"$baseApiUrl/v2/resources",
               HttpEntity(RdfMediaTypes.`application/ld+json`, targetResource),
             ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
           ).map(_.body.getRequiredString(JsonLDKeywords.ID).getOrElse(throw AssertionError("No IRI returned"))),
@@ -7449,15 +6958,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-      val _ = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[TestClientService](
-          _.checkResponseOK(
-            Post(
-              appConfig.knoraApi.internalKnoraApiBaseUrl + "/v2/resources",
-              HttpEntity(RdfMediaTypes.`application/ld+json`, sourceResource1),
-            ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-          ),
-        ),
+      val _ = checkResponseOK(
+        Post(
+          s"$baseApiUrl/v2/resources",
+          HttpEntity(RdfMediaTypes.`application/ld+json`, sourceResource1),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
       )
 
       val sourceResource2: String =
@@ -7482,15 +6987,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      val _ = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[TestClientService](
-          _.checkResponseOK(
-            Post(
-              appConfig.knoraApi.internalKnoraApiBaseUrl + "/v2/resources",
-              HttpEntity(RdfMediaTypes.`application/ld+json`, sourceResource2),
-            ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-          ),
-        ),
+      val _ = checkResponseOK(
+        Post(
+          s"$baseApiUrl/v2/resources",
+          HttpEntity(RdfMediaTypes.`application/ld+json`, sourceResource2),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
       )
 
       val gravsearchQuery =
@@ -7510,18 +7011,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |}
                 """.stripMargin
 
-      val searchResultIri: IRI = Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-        val validationFun: (String, => Nothing) => String =
-          (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-      }
-
+      val responseJsonDoc = getResponseAsJsonLD(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val validationFun: (String, => Nothing) => String =
+        (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
+      val searchResultIri = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(searchResultIri == targetResourceIri)
     }
 
@@ -7540,16 +7038,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |    FILTER(?timeStamp > "2019-08-30T10:45:26.365863Z"^^xsd:dateTimeStamp)
            |}
                 """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithTimeStamp.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val expected = testData("ThingWithTimeStamp.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "get a resource with a link to another resource that the user doesn't have permission to see" in {
@@ -7572,16 +7068,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |    ?visibleThing anything:hasInteger ?intValInVisibleThing .
            |    ?intValInVisibleThing knora-api:intValueAsInt 543212345 .
            |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithHiddenThing.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ThingWithHiddenThing.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "not return duplicate results when there are UNION branches with different variables" in {
@@ -7614,25 +7105,23 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
       val expectedCount = 1
 
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        checkCountResponse(searchResponseStr, expectedCount)
-      }
+      val actualCount = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      checkCountResponse(actualCount, expectedCount)
 
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        checkSearchResponseNumberOfResults(searchResponseStr, expectedCount)
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingFromQueryWithUnion.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      checkSearchResponseNumberOfResults(actual, expectedCount)
+      val expected = testData("ThingFromQueryWithUnion.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "reject an ORDER by containing a variable that's not bound at the top level of the WHERE clause" in {
@@ -7665,19 +7154,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |    }
            |}
            |ORDER BY (?int)""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.BAD_REQUEST, responseStr)
-        assert(
-          responseStr.contains(
-            "Variable ?int is used in ORDER by, but is not bound at the top level of the WHERE clause",
-          ),
-        )
-      }
+      val actual = singleAwaitingRequest(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      assert(actual.status == StatusCodes.BAD_REQUEST)
+      assert(
+        responseToString(actual).contains(
+          "Variable ?int is used in ORDER by, but is not bound at the top level of the WHERE clause",
+        ),
+      )
     }
 
     "reject a FILTER in a UNION that uses a variable that's out of scope" in {
@@ -7706,19 +7194,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |    }
            |}
            |ORDER BY (?int)""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.BAD_REQUEST, responseStr)
-        assert(
-          responseStr.contains(
-            "One or more variables used in a filter have not been bound in the same UNION block: ?richtext",
-          ),
-        )
-      }
+      val actual = singleAwaitingRequest(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      assert(actual.status == StatusCodes.BAD_REQUEST)
+      assert(
+        responseToString(actual).contains(
+          "One or more variables used in a filter have not been bound in the same UNION block: ?richtext",
+        ),
+      )
     }
 
     "search for a resource containing a time value tag" in {
@@ -7757,7 +7244,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         ZIO.serviceWithZIO[TestClientService](
           _.getResponseJsonLD(
             Post(
-              appConfig.knoraApi.internalKnoraApiBaseUrl + s"/v2/resources",
+              s"$baseApiUrl/v2/resources",
               HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
             ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
           ).map(_.body.getRequiredString(JsonLDKeywords.ID).getOrElse(throw AssertionError("No IRI returned"))),
@@ -7784,29 +7271,26 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
                 """.stripMargin
 
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-        val responseStr = responseAs[String]
-        assert(status == StatusCodes.OK, responseStr)
+      val actual = getResponseAsJsonLD(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val validationFun: (String, => Nothing) => String =
+        (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
+      val actualResourceIri: IRI = actual.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      assert(actualResourceIri == timeTagResourceIri.get)
 
-        val responseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
-        val validationFun: (String, => Nothing) => String =
-          (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
-        val resourceIri: IRI = responseAsJsonLD.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-        assert(resourceIri == timeTagResourceIri.get)
+      val xmlFromResponse: String = actual.body
+        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText")
+        .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml))
+        .fold(e => throw BadRequestException(e), identity)
 
-        val xmlFromResponse: String = responseAsJsonLD.body
-          .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText")
-          .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml))
-          .fold(e => throw BadRequestException(e), identity)
-
-        // Compare it to the original XML.
-        val xmlDiff: Diff =
-          DiffBuilder.compare(Input.fromString(xmlStr)).withTest(Input.fromString(xmlFromResponse)).build()
-        xmlDiff.hasDifferences should be(false)
-      }
+      // Compare it to the original XML.
+      val xmlDiff: Diff =
+        DiffBuilder.compare(Input.fromString(xmlStr)).withTest(Input.fromString(xmlFromResponse)).build()
+      xmlDiff.hasDifferences should be(false)
     }
 
     "search for an rdfs:label using a literal in the simple schema" in {
@@ -7822,16 +7306,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?book rdf:type incunabula:book .
           |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
           |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinViaLabel.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ZeitgloeckleinViaLabel.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for an rdfs:label using a literal in the complex schema" in {
@@ -7847,16 +7326,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?book rdf:type incunabula:book .
           |    ?book rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
           |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinViaLabel.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ZeitgloeckleinViaLabel.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for an rdfs:label using a variable in the simple schema" in {
@@ -7873,16 +7347,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?book rdfs:label ?label .
           |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
           |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinViaLabel.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ZeitgloeckleinViaLabel.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for an rdfs:label using a variable in the complex schema" in {
@@ -7899,16 +7368,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?book rdfs:label ?label .
           |    FILTER(?label = "Zeitglöcklein des Lebens und Leidens Christi")
           |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinViaLabel.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ZeitgloeckleinViaLabel.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for an rdfs:label using knora-api:matchLabel in the simple schema" in {
@@ -7924,16 +7388,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?book rdf:type incunabula:book .
           |    FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
           |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinViaLabel.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ZeitgloeckleinViaLabel.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for an rdfs:label using knora-api:matchLabel in the complex schema" in {
@@ -7949,16 +7408,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?book rdf:type incunabula:book .
           |    FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
           |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinViaLabel.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ),
+      )
+      val expected = testData("ZeitgloeckleinViaLabel.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for an rdfs:label using the regex function in the simple schema" in {
@@ -7974,16 +7431,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?book rdfs:label ?bookLabel .
           |    FILTER regex(?bookLabel, "Zeit", "i")
           |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinViaLabel.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ZeitgloeckleinViaLabel.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "search for an rdfs:label using the regex function in the complex schema" in {
@@ -7999,16 +7451,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    ?book rdfs:label ?bookLabel .
           |    FILTER regex(?bookLabel, "Zeit", "i")
           |}""".stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "ZeitgloeckleinViaLabel.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("ZeitgloeckleinViaLabel.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a search that compares two variables representing resources (in the simple schema)" in {
@@ -8027,18 +7474,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    FILTER(?person1 != ?person2) .
           |}
           |OFFSET 0""".stripMargin
-
       // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "LetterNotToSelf.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("LetterNotToSelf.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a search that compares two variables representing resources (in the complex schema)" in {
@@ -8057,18 +7498,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    FILTER(?person1 != ?person2) .
           |}
           |OFFSET 0""".stripMargin
-
       // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "LetterNotToSelf.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("LetterNotToSelf.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a search that compares a variable with a resource IRI (in the simple schema)" in {
@@ -8087,18 +7522,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
           |}
           |OFFSET 0""".stripMargin
-
       // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "LetterNotToSelf.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("LetterNotToSelf.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a search that compares a variable with a resource IRI (in the complex schema)" in {
@@ -8117,22 +7546,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
           |}
           |OFFSET 0""".stripMargin
-
       // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> searchPath ~> check {
-        val searchResponseStr = responseAs[String]
-        assert(status == StatusCodes.OK, searchResponseStr)
-        val expectedAnswerJSONLD = testData(responseAs[String], "LetterNotToSelf.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
-      }
+      val actual = getResponseAsString(
+        Post(s"$baseApiUrl/v2/searchextended", HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery)),
+      )
+      val expected = testData("LetterNotToSelf.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a searchbylabel search for the label 'Treasure Island' with search string 'Treasure Island'" in {
-
       val searchValueUriEncoded: String = "Treasure%20Island"
       val limitToResourceClassUriEncoded: String = URLEncoder.encode(
         "http://0.0.0.0:3333/ontology/0001/books/v2#Book",
@@ -8141,15 +7563,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       val offset: Int = 0
 
       val request =
-        "/v2/searchbylabel/" + searchValueUriEncoded +
+        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
           "?limitToResourceClass=" + limitToResourceClassUriEncoded +
           "&offset=" + offset
 
-      Get(request) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "SearchbylabelSimple.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual   = getResponseAsString(Get(request))
+      val expected = testData("SearchbylabelSimple.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a searchbylabel search for the label 'Treasure Island' with search string 'Treasure'" in {
@@ -8162,15 +7582,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       val offset: Int = 0
 
       val request =
-        "/v2/searchbylabel/" + searchValueUriEncoded +
+        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
           "?limitToResourceClass=" + limitToResourceClassUriEncoded +
           "&offset=" + offset
 
-      Get(request) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "SearchbylabelSimple.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual   = getResponseAsString(Get(request))
+      val expected = testData("SearchbylabelSimple.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a searchbylabel search for a label with special characters" in {
@@ -8187,15 +7605,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       val offset: Int = 0
 
       val request =
-        "/v2/searchbylabel/" + searchValueUriEncoded +
+        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
           "?limitToResourceClass=" + limitToResourceClassUriEncoded +
           "&offset=" + offset
 
-      Get(request) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "SearchbylabelSpecialCharacters.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual   = getResponseAsString(Get(request))
+      val expected = testData("SearchbylabelSpecialCharacters.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a searchbylabel search for a label that starts with a slash `/`" in {
@@ -8207,19 +7623,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       val offset: Int = 0
 
       val request =
-        "/v2/searchbylabel/" + searchValueUriEncoded +
+        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
           "?limitToResourceClass=" + limitToResourceClassUriEncoded +
           "&offset=" + offset
 
-      Get(request) ~> searchPath ~> check {
-        assert(status == StatusCodes.OK, responseAs[String])
-        val expectedAnswerJSONLD = testData(responseAs[String], "SearchbylabelSlashes.jsonld")
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-      }
+      val actual   = getResponseAsString(Get(request))
+      val expected = testData("SearchbylabelSlashes.jsonld")
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "perform a searchbylabel search for the label 'Treasure Island' but providing the wrong class" in {
-
       val searchValueUriEncoded: String = URLEncoder.encode(
         "Treasure",
         "UTF-8",
@@ -8231,19 +7644,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       val offset: Int = 0
 
       val request =
-        "/v2/searchbylabel/" + searchValueUriEncoded +
+        s"$baseApiUrl/v2/searchbylabel/" + searchValueUriEncoded +
           "?limitToResourceClass=" + limitToResourceClassUriEncoded +
           "&offset=" + offset
 
-      Get(request) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        val expectedAnswerJSONLD = "{}"
-
-        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-
-      }
+      val actual   = getResponseAsString(Get(request))
+      val expected = "{}"
+      compareJSONLDForResourcesResponse(expected, actual)
     }
 
     "count anything:Thing that doesn't have a boolean property (MINUS)" in {
@@ -8264,21 +7671,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |
         """.stripMargin
 
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        val responseDocument = responseToJsonLDDocument(response)
-        val numberOfResults = responseDocument.body
-          .getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems)
-          .fold(e => throw BadRequestException(e), identity)
-
-        assert(numberOfResults != 0)
-      }
-
+      val actual = getResponseAsJsonLD(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val numberOfResults = actual.body
+        .getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems)
+        .fold(e => throw AssertionError(e), identity)
+      assert(numberOfResults != 0)
     }
 
     "count anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)" in {
@@ -8298,22 +7700,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
             """.stripMargin
-
-      Post(
-        "/v2/searchextended/count",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        val responseDocument = responseToJsonLDDocument(response)
-        val numberOfResults = responseDocument.body
-          .getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems)
-          .fold(e => throw BadRequestException(e), identity)
-
-        assert(numberOfResults != 0)
-      }
-
+      val actual = getResponseAsJsonLD(
+        Post(
+          s"$baseApiUrl/v2/searchextended/count",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      val numberOfResults = actual.body
+        .getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems)
+        .fold(e => throw AssertionError(e), identity)
+      assert(numberOfResults != 0)
     }
 
     "search for anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)" in {
@@ -8333,17 +7729,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
             """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkSearchResponseNumberOfResults(responseAs[String], 24)
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      checkSearchResponseNumberOfResults(actual, 24)
     }
 
     "search for anything:Thing that doesn't have a link property (FILTER NOT EXISTS)" in {
@@ -8363,19 +7755,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |}
           |
             """.stripMargin
-
-      Post(
-        "/v2/searchextended",
-        HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-        assert(status == StatusCodes.OK, responseAs[String])
-
-        checkSearchResponseNumberOfResults(responseAs[String], 24)
-      }
-
+      val actual = getResponseAsString(
+        Post(
+          s"$baseApiUrl/v2/searchextended",
+          HttpEntity(RdfMediaTypes.`application/sparql-query`, gravsearchQuery),
+        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
+      )
+      checkSearchResponseNumberOfResults(actual, 24)
     }
-
   }
-
 }
