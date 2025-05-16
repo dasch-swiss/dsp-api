@@ -9,6 +9,7 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
+import scala.PartialFunction.cond
 
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
@@ -36,6 +37,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValueMessagesV2Optic
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
@@ -44,14 +46,18 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class ValuesResponderV2(
@@ -66,6 +72,7 @@ final case class ValuesResponderV2(
   triplestoreService: TriplestoreService,
   permissionsResponder: PermissionsResponder,
   legalInfoService: LegalInfoService,
+  valueRepo: ValueRepo,
   ontologyRepo: OntologyRepo,
   auth: AuthorizationRestService,
 )(implicit val stringFormatter: StringFormatter) {
@@ -1132,144 +1139,189 @@ final case class ValuesResponderV2(
       )
     }
 
+  def eraseValue(
+    req: EraseValueV2,
+    requestingUser: User,
+    project: KnoraProject,
+    onlyHistory: Boolean = false,
+  ): Task[SuccessResponseV2] =
+    canRemoveValue(req, requestingUser).flatMap { case (_, _, value) =>
+      for {
+        valueIri         <- ZIO.succeed(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+        _                <- failBadRequestForStandoffWithLinks(value)
+        allPrevious      <- valueRepo.findAllPrevious(valueIri)
+        isLink            = cond(value) { case _: ReadLinkValueV2 => true }
+        deletableValueIri = if (onlyHistory) List() else List(valueIri)
+        _ <- ZIO.foreachDiscard(allPrevious.reverse ++ deletableValueIri) { deletableIri =>
+               ZIO.when(isLink)(valueRepo.eraseValueDirectLink(project)(deletableIri)) *>
+                 valueRepo.eraseValue(project)(deletableIri)
+             }
+      } yield ()
+    }.as(SuccessResponseV2(s"Value <$req.propertyIri}> deleted"))
+
+  def eraseValueHistory(
+    req: EraseValueHistoryV2,
+    requestingUser: User,
+    project: KnoraProject,
+  ): Task[SuccessResponseV2] =
+    eraseValue(req.toEraseValueV2, requestingUser, project, true)
+
+  private def failBadRequestForStandoffWithLinks(value: ReadValueV2) =
+    for {
+      query <- ZIO.succeed(s"""
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+        SELECT * WHERE {
+          <${value.valueIri}> knora-base:previousValue ?previousValue .
+          ?previousValue knora-base:valueHasStandoff ?pvStandoff .
+          ?pvStandoff rdf:type knora-base:StandoffLinkTag .
+        }
+      """)
+      historyHasLinks <- triplestoreService.query(Select(query)).map(_.results.bindings.size > 0)
+      result <- ZIO
+                  .fail(BadRequestException("Erasing standoff text values with links is not supported"))
+                  .when {
+                    (historyHasLinks, value) match
+                      case (hhL, _) if hhL            => true
+                      case (_, text: ReadTextValueV2) => text.valueContent.standoffLinkTagTargetResourceIris.nonEmpty
+                      case _                          => false
+                  }
+    } yield result
+
+  private def canRemoveValue(
+    deleteValue: ValueRemoval,
+    requestingUser: User,
+  ): IO[Throwable, (ReadResourceV2, ReadPropertyInfoV2, ReadValueV2)] = for {
+    _ <- auth.ensureUserIsNotAnonymous(requestingUser)
+    propertyIri <-
+      ZIO
+        .succeed(deleteValue.propertyIri)
+        // Don't accept knora-api:hasStandoffLinkToValue.
+        .filterOrFail(_.toComplexSchema.toIri != KA.HasStandoffLinkToValue)(
+          BadRequestException(s"Values of <${KA.HasStandoffLinkToValue}> cannot be deleted directly"),
+        )
+
+    propertyInfoForSubmittedProperty <-
+      ontologyRepo
+        .findProperty(propertyIri)
+        .someOrFail(NotFoundException(s"Property not found: $propertyIri"))
+        // Don't accept link properties.
+        .filterOrFail(!_.isLinkProp)(
+          BadRequestException(s"Invalid property <$propertyIri>. Use a link value property to submit a link."),
+        )
+
+    // Make an adjusted version of the submitted property: if it's a link value property, substitute the
+    // corresponding link property, whose objects we will need to query.
+    adjustedInternalPropertyInfo <- linkPropertyIfLinkValue(propertyInfoForSubmittedProperty)
+
+    // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
+    // so we can see objects that the user doesn't have permission to see.
+    resourceInfo <- getResourceWithPropertyValues(
+                      deleteValue.resourceIri.toString,
+                      adjustedInternalPropertyInfo,
+                      KnoraSystemInstances.Users.SystemUser,
+                    )
+
+    // Check that the resource belongs to the class that the client submitted.
+    _ <- ZIO.when(resourceInfo.resourceClassIri != deleteValue.resourceClassIri.toInternalSchema) {
+           ZIO.fail(
+             BadRequestException(
+               s"Resource <${deleteValue.resourceIri}> does not belong to class <${deleteValue.resourceClassIri}>",
+             ),
+           )
+         }
+
+    // Check that the resource has the value that the user wants to delete, as an object of the submitted property.
+    // Check that the user has permission to delete the value.
+    submittedInternalPropertyIri = propertyIri.toInternalSchema
+    currentValue <-
+      ZIO
+        .fromOption(for {
+          values <- resourceInfo.values.get(submittedInternalPropertyIri)
+          curVal <- values.find(_.valueIri == deleteValue.valueIri.toString)
+        } yield curVal)
+        .orElseFail(
+          NotFoundException(
+            s"Resource <${deleteValue.resourceIri}> does not have value <${deleteValue.valueIri}> as an object of property <${deleteValue.propertyIri}>",
+          ),
+        )
+
+    // Check that the value is of the type that the client submitted.
+    _ <-
+      ZIO.when(currentValue.valueContent.valueType != deleteValue.valueTypeIri.toOntologySchema(InternalSchema))(
+        ZIO.fail(
+          BadRequestException(
+            s"Value <${deleteValue.valueIri}> in resource <${deleteValue.resourceIri}> is not of type <${deleteValue.valueTypeIri}>",
+          ),
+        ),
+      )
+
+    // Check the user's permissions on the value.
+    _ <- resourceUtilV2.checkValuePermission(
+           resourceInfo = resourceInfo,
+           valueInfo = currentValue,
+           permissionNeeded = Permission.ObjectAccess.Delete,
+           requestingUser,
+         )
+
+    // Get the definition of the resource class.
+    // Check that the resource class's cardinality for the submitted property allows this value to be deleted.
+    cardinalityInfo <-
+      ontologyRepo
+        .findClassBy(resourceInfo.resourceClassIri.toInternalIri)
+        .someOrFail(NotFoundException(s"Resource class not found: ${resourceInfo.resourceClassIri}"))
+        .map(_.allCardinalities)
+        .flatMap(c =>
+          ZIO
+            .fromOption(c.get(submittedInternalPropertyIri))
+            .orElseFail(
+              InconsistentRepositoryDataException(
+                s"Resource <${deleteValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri.toComplexSchema}>, which has no cardinality for property <${deleteValue.propertyIri}>",
+              ),
+            ),
+        )
+
+    currentValuesForProp: Seq[ReadValueV2] =
+      resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
+
+    _ <-
+      ZIO.when(cardinalityInfo.cardinality.min == 1 && currentValuesForProp.size == 1)(
+        ZIO.fail(
+          OntologyConstraintException(
+            s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of " +
+              s"${cardinalityInfo.cardinality} on property <${deleteValue.propertyIri}>, " +
+              s"and this does not allow a value to be deleted for that property from resource <${deleteValue.resourceIri}>",
+          ),
+        ),
+      )
+  } yield (resourceInfo, adjustedInternalPropertyInfo, currentValue)
+
   /**
    * Marks a value as deleted.
    *
    * @param deleteValue the information about value to be deleted.
    * @param requestingUser the user making the request.
-   * @param apiRequestId the API request ID.
    */
-  def deleteValueV2(
-    deleteValue: DeleteValueV2,
-    requestingUser: User,
-    apiRequestId: UUID,
-  ): Task[SuccessResponseV2] = {
-    val deleteTask: Task[SuccessResponseV2] = for {
-      _ <- auth.ensureUserIsNotAnonymous(requestingUser)
-      propertyIri <-
-        iriConverter
-          .asPropertyIri(deleteValue.propertyIri.toIri)
-          .mapError(BadRequestException.apply)
-          // Don't accept knora-api:hasStandoffLinkToValue.
-          .filterOrFail(_.toComplexSchema.toIri != KA.HasStandoffLinkToValue)(
-            BadRequestException(s"Values of <${KA.HasStandoffLinkToValue}> cannot be deleted directly"),
-          )
-
-      propertyInfoForSubmittedProperty <-
-        ontologyRepo
-          .findProperty(propertyIri)
-          .someOrFail(NotFoundException(s"Property not found: $propertyIri"))
-          // Don't accept link properties.
-          .filterOrFail(!_.isLinkProp)(
-            BadRequestException(s"Invalid property <$propertyIri>. Use a link value property to submit a link."),
-          )
-
-      // Make an adjusted version of the submitted property: if it's a link value property, substitute the
-      // corresponding link property, whose objects we will need to query.
-      adjustedInternalPropertyInfo <- linkPropertyIfLinkValue(propertyInfoForSubmittedProperty)
-
-      // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
-      // so we can see objects that the user doesn't have permission to see.
-      resourceInfo <- getResourceWithPropertyValues(
-                        deleteValue.resourceIri,
-                        adjustedInternalPropertyInfo,
-                        KnoraSystemInstances.Users.SystemUser,
-                      )
-
-      // Check that the resource belongs to the class that the client submitted.
-      _ <- ZIO.when(resourceInfo.resourceClassIri != deleteValue.resourceClassIri.toInternalSchema) {
-             ZIO.fail(
-               BadRequestException(
-                 s"Resource <${deleteValue.resourceIri}> does not belong to class <${deleteValue.resourceClassIri}>",
-               ),
-             )
-           }
-
-      // Check that the resource has the value that the user wants to delete, as an object of the submitted property.
-      // Check that the user has permission to delete the value.
-      submittedInternalPropertyIri = propertyIri.toInternalSchema
-      currentValue <-
-        ZIO
-          .fromOption(for {
-            values <- resourceInfo.values.get(submittedInternalPropertyIri)
-            curVal <- values.find(_.valueIri == deleteValue.valueIri)
-          } yield curVal)
-          .orElseFail(
-            NotFoundException(
-              s"Resource <${deleteValue.resourceIri}> does not have value <${deleteValue.valueIri}> as an object of property <${deleteValue.propertyIri}>",
-            ),
-          )
-
-      // Check that the value is of the type that the client submitted.
-      _ <-
-        ZIO.when(currentValue.valueContent.valueType != deleteValue.valueTypeIri.toOntologySchema(InternalSchema))(
-          ZIO.fail(
-            BadRequestException(
-              s"Value <${deleteValue.valueIri}> in resource <${deleteValue.resourceIri}> is not of type <${deleteValue.valueTypeIri}>",
-            ),
-          ),
-        )
-
-      // Check the user's permissions on the value.
-      _ <- resourceUtilV2.checkValuePermission(
-             resourceInfo = resourceInfo,
-             valueInfo = currentValue,
-             permissionNeeded = Permission.ObjectAccess.Delete,
-             requestingUser,
-           )
-
-      // Get the definition of the resource class.
-      // Check that the resource class's cardinality for the submitted property allows this value to be deleted.
-      cardinalityInfo <-
-        ontologyRepo
-          .findClassBy(resourceInfo.resourceClassIri.toInternalIri)
-          .someOrFail(NotFoundException(s"Resource class not found: ${resourceInfo.resourceClassIri}"))
-          .map(_.allCardinalities)
-          .flatMap(c =>
-            ZIO
-              .fromOption(c.get(submittedInternalPropertyIri))
-              .orElseFail(
-                InconsistentRepositoryDataException(
-                  s"Resource <${deleteValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri.toComplexSchema}>, which has no cardinality for property <${deleteValue.propertyIri}>",
-                ),
-              ),
-          )
-
-      currentValuesForProp: Seq[ReadValueV2] =
-        resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
-
-      _ <-
-        ZIO.when(cardinalityInfo.cardinality.min == 1 && currentValuesForProp.size == 1)(
-          ZIO.fail(
-            OntologyConstraintException(
-              s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of " +
-                s"${cardinalityInfo.cardinality} on property <${deleteValue.propertyIri}>, " +
-                s"and this does not allow a value to be deleted for that property from resource <${deleteValue.resourceIri}>",
-            ),
-          ),
-        )
-
-      // If a custom delete date was submitted, make sure it's later than the date of the current version.
-      _ <- ZIO.when(deleteValue.deleteDate.exists(!_.isAfter(currentValue.valueCreationDate)))(
-             ZIO.fail(BadRequestException("A custom delete date must be later than the value's creation date")),
-           )
-
+  def deleteValueV2(deleteValue: DeleteValueV2, requestingUser: User): Task[SuccessResponseV2] = {
+    val deleteTask = for {
+      rac                                                       <- canRemoveValue(deleteValue, requestingUser)
+      (resourceInfo, adjustedInternalPropertyInfo, currentValue) = rac
       // Get information about the project that the resource is in, so we know which named graph to do the update in.
       dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
-
       // Do the update.
-      deletedValueIri <-
-        deleteValueV2AfterChecks(
-          dataNamedGraph,
-          resourceInfo,
-          adjustedInternalPropertyInfo.propertyIri.toInternalSchema,
-          deleteValue.deleteComment,
-          deleteValue.deleteDate,
-          currentValue,
-          requestingUser,
-        )
+      deletedValueIri <- deleteValueV2AfterChecks(
+                           dataNamedGraph,
+                           resourceInfo,
+                           adjustedInternalPropertyInfo.propertyIri.toInternalSchema,
+                           deleteValue.deleteComment,
+                           deleteValue.deleteDate,
+                           currentValue,
+                           requestingUser,
+                         )
     } yield SuccessResponseV2(s"Value <$deletedValueIri> marked as deleted")
-    IriLocker.runWithIriLock(apiRequestId, deleteValue.resourceIri, deleteTask)
+    IriLocker.runWithIriLock(deleteValue.apiRequestId, deleteValue.resourceIri, deleteTask)
   }
 
   /**
