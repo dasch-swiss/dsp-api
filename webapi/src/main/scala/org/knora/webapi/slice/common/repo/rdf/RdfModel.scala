@@ -35,7 +35,7 @@ final case class LangString(value: String, lang: Option[String])
  * Exposes access to the resource's properties.
  * Should be created via [[RdfModel.getResourceOrFail]].
  */
-final case class RdfResource(private val res: Resource) {
+final case class RdfResource(val res: Resource) {
 
   private val model = res.getModel
 

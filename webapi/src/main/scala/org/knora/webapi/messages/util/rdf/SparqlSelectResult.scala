@@ -5,6 +5,8 @@
 
 package org.knora.webapi.messages.util.rdf
 
+import cats.syntax.traverse.*
+
 import dsp.errors.InconsistentRepositoryDataException
 
 /**
@@ -68,27 +70,22 @@ case class SparqlSelectResultHeader(vars: Seq[String])
  * Represents the body of the result of a SPARQL SELECT query.
  *
  * @param bindings the bindings of values to the variables used in the SPARQL SELECT statement.
- *                 Empty rows are not allowed.
  */
-case class SparqlSelectResultBody(bindings: Seq[VariableResultsRow]) {
-  require(bindings.forall(_.rowMap.nonEmpty), "Empty rows are not allowed in a SparqlSelectResponseBody")
-}
-
-case class SparqlSelectResultBodyUnchecked(bindings: Seq[VariableResultsRow]) {
-  def asChecked = SparqlSelectResultBody(bindings.filter(_.rowMap.keySet.nonEmpty))
-}
+case class SparqlSelectResultBody(bindings: Seq[VariableResultsRow])
 
 /**
  * Represents a row of results in the result of a SPARQL SELECT query.
  *
- * @param rowMap a map of variable names to values in the row. An empty string is not allowed as a variable
- *               name or value.
+ * @param rowMap a map of variable names to values in the row.
  */
 case class VariableResultsRow(rowMap: Map[String, String]) {
-  require(
-    rowMap.forall { case (key, value) =>
-      key.nonEmpty && value.nonEmpty
-    },
-    "An empty string is not allowed as a variable name or value in a VariableResultsRow",
-  )
+  def get(v: String): Option[String] = rowMap.get(v)
+  def getRequired(v: String): String =
+    get(v).getOrElse(throw InconsistentRepositoryDataException(s"Variable '$v' not found"))
+  def get[A](v: String, mapper: String => Either[String, A]): Option[A] = rowMap
+    .get(v)
+    .traverse(mapper)
+    .fold(err => throw InconsistentRepositoryDataException(s"Failed mapping variable '$v': $err"), identity)
+  def getRequired[A](v: String, mapper: String => Either[String, A]): A =
+    get(v, mapper).getOrElse(throw InconsistentRepositoryDataException(s"Variable '$v' not found"))
 }

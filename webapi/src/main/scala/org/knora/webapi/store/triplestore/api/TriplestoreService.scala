@@ -67,6 +67,7 @@ trait TriplestoreService {
    * @return a [[Unit]].
    */
   def query(sparql: Update): Task[Unit]
+  final def insert(q: InsertDataQuery): Task[Unit] = query(Update(q))
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.

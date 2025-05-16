@@ -46,6 +46,10 @@ import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ResourceOps
@@ -159,14 +163,44 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
  *                             the current time will be used.
  */
 case class DeleteValueV2(
-  resourceIri: IRI,
-  resourceClassIri: SmartIri,
-  propertyIri: SmartIri,
-  valueIri: IRI,
+  resourceIri: ResourceIri,
+  resourceClassIri: ResourceClassIri,
+  propertyIri: PropertyIri,
+  valueIri: ValueIri,
   valueTypeIri: SmartIri,
   deleteComment: Option[String] = None,
   deleteDate: Option[Instant] = None,
-)
+  apiRequestId: UUID,
+) extends ValueRemoval
+
+trait ValueRemoval {
+  def resourceIri: ResourceIri
+  def resourceClassIri: ResourceClassIri
+  def propertyIri: PropertyIri
+  def valueIri: ValueIri
+  def valueTypeIri: SmartIri
+  final def shortcode: Shortcode = resourceIri.shortcode
+}
+
+case class EraseValueV2(
+  resourceIri: ResourceIri,
+  resourceClassIri: ResourceClassIri,
+  propertyIri: PropertyIri,
+  valueIri: ValueIri,
+  valueTypeIri: SmartIri,
+  apiRequestId: UUID,
+) extends ValueRemoval
+
+case class EraseValueHistoryV2(
+  resourceIri: ResourceIri,
+  resourceClassIri: ResourceClassIri,
+  propertyIri: PropertyIri,
+  valueIri: ValueIri,
+  valueTypeIri: SmartIri,
+  apiRequestId: UUID,
+) extends ValueRemoval {
+  def toEraseValueV2 = EraseValueV2(resourceIri, resourceClassIri, propertyIri, valueIri, valueTypeIri, apiRequestId)
+}
 
 case class GenerateSparqlForValueInNewResourceV2(
   valueContent: ValueContentV2,

@@ -30,6 +30,7 @@ import org.knora.webapi.messages.util.rdf.*
  * @param statements a map of subject IRIs to statements about each subject.
  */
 case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]], rdfModel: RdfModel) {
+  def isEmpty: Boolean = statements.isEmpty
   def asExtended(implicit sf: StringFormatter): IO[DataConversionException, SparqlExtendedConstructResponse] =
     SparqlExtendedConstructResponse.make(rdfModel)
 }
@@ -393,7 +394,7 @@ object SparqlResultProtocol extends DefaultJsonProtocol {
   implicit val VariableResultsZioJsonFormat: JsonDecoder[VariableResultsRow] =
     JsonDecoder[Json.Obj].map { obj =>
       val mapToWrap: Map[String, String] = obj.fields.toList.foldMap { case (key, value) =>
-        value.asObject.foldMap(_.get("value").flatMap(_.asString).filter(_.nonEmpty).foldMap(s => Map(key -> s)))
+        value.asObject.foldMap(_.get("value").flatMap(_.asString).foldMap(s => Map(key -> s)))
       }
 
       // Wrapped in an ErrorHandlingMap which gracefully reports errors about accessing missing values.
@@ -402,7 +403,7 @@ object SparqlResultProtocol extends DefaultJsonProtocol {
     }
 
   implicit val SparqlSelectResponseBodyFormatZ: JsonDecoder[SparqlSelectResultBody] =
-    DeriveJsonDecoder.gen[SparqlSelectResultBodyUnchecked].map(_.asChecked)
+    DeriveJsonDecoder.gen[SparqlSelectResultBody]
 
   implicit val headerDecoder: JsonDecoder[SparqlSelectResultHeader] = DeriveJsonDecoder.gen[SparqlSelectResultHeader]
   implicit val responseDecoder: JsonDecoder[SparqlSelectResult]     = DeriveJsonDecoder.gen[SparqlSelectResult]

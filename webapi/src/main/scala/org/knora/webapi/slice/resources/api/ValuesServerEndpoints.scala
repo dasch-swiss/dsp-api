@@ -24,6 +24,8 @@ final class ValuesServerEndpoints(
     endpoints.postValues.serverLogic(valuesRestService.createValue),
     endpoints.putValues.serverLogic(valuesRestService.updateValue),
     endpoints.deleteValues.serverLogic(valuesRestService.deleteValue),
+    endpoints.postValuesErase.serverLogic(valuesRestService.eraseValue),
+    endpoints.postValuesErasehistory.serverLogic(valuesRestService.eraseValueHistory),
   )
 }
 object ValuesServerEndpoints {

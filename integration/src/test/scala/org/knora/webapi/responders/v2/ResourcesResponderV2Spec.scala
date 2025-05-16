@@ -39,6 +39,10 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
+import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -2111,13 +2115,16 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
 
     "not erase a resource if another resource has a link to it" in {
       // Create a resource with a link to the resource that is to be deleted.
-
-      val resourceWithLinkIri: IRI       = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
-      val resourceClassIri: SmartIri     = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
-      val linkValuePropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri
+      val resourceWithLinkIri = ResourceIri.unsafeFrom(
+        stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode).toSmartIri,
+      )
+      val resourceClassIri =
+        ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
+      val linkValuePropertyIri =
+        PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        linkValuePropertyIri -> Seq(
+        linkValuePropertyIri.smartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
@@ -2128,8 +2135,8 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
       )
 
       val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceWithLinkIri.toSmartIri),
-        resourceClassIri = resourceClassIri,
+        resourceIri = Some(resourceWithLinkIri.smartIri),
+        resourceClassIri = resourceClassIri.smartIri,
         label = "thing with link",
         values = inputValues,
         projectADM = SharedTestDataADM.anythingProject,
@@ -2141,9 +2148,8 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
         ),
       )
 
-      val outputResource: ReadResourceV2 =
-        getResource(resourceWithLinkIri)
-      val linkValue: ReadLinkValueV2 = outputResource.values(linkValuePropertyIri).head.asInstanceOf[ReadLinkValueV2]
+      val outputResource: ReadResourceV2 = getResource(resourceWithLinkIri.toString)
+      val linkValue: ReadLinkValueV2     = outputResource.findLinkValues(linkValuePropertyIri).head
 
       // Try to erase the first resource.
 
@@ -2163,14 +2169,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
         ZIO.serviceWithZIO[ValuesResponderV2](
           _.deleteValueV2(
             DeleteValueV2(
-              resourceIri = resourceWithLinkIri,
-              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-              propertyIri = linkValuePropertyIri,
-              valueIri = linkValue.valueIri,
+              resourceWithLinkIri,
+              ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
+              linkValuePropertyIri,
+              ValueIri.unsafeFrom(linkValue.valueIri.toSmartIri),
               valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
+              apiRequestId = UUID.randomUUID,
             ),
             anythingUserProfile,
-            UUID.randomUUID(),
           ),
         ),
       )
@@ -2408,8 +2414,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
     }
 
     "delete the newly created value to check the delete value event of resource history" in {
-      val resourceIri   = "http://rdfh.ch/0001/thing-with-history"
-      val valueToDelete = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
+      val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history".toSmartIri)
+      val valueToDelete =
+        ValueIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A".toSmartIri)
+      val resourceClassIri =
+        ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
+      val propertyIri   = PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri)
       val deleteComment = "delete value test"
 
       // delete the new value.
@@ -2417,30 +2427,29 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
         ZIO.serviceWithZIO[ValuesResponderV2](
           _.deleteValueV2(
             DeleteValueV2(
-              resourceIri = resourceIri,
-              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-              propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
-              valueIri = valueToDelete,
+              resourceIri,
+              resourceClassIri,
+              propertyIri,
+              valueToDelete,
               valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
               deleteComment = Some(deleteComment),
+              apiRequestId = UUID.randomUUID,
             ),
             anythingUserProfile,
-            UUID.randomUUID,
           ),
         ),
       )
 
       val events = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourceHistoryEvents(resourceIri, anythingUserProfile).map(_.historyEvents),
+          _.getResourceHistoryEvents(resourceIri.toString, anythingUserProfile).map(_.historyEvents),
         ),
       )
       events.size should be(12)
       val deleteValueEvent: Option[ResourceAndValueHistoryEvent] =
         events.find(event =>
-          event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT && event.eventBody
-            .asInstanceOf[ValueEventBody]
-            .valueIri == valueToDelete,
+          event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT &&
+            event.eventBody.asInstanceOf[ValueEventBody].valueIri == valueToDelete.toString,
         )
       assert(deleteValueEvent.isDefined)
     }
