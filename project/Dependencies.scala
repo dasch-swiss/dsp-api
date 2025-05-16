@@ -134,7 +134,6 @@ object Dependencies {
   val tapirVersion = "1.11.24"
 
   val tapir = Seq(
-    "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
