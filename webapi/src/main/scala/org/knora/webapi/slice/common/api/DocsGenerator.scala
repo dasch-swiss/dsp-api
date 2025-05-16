@@ -5,14 +5,12 @@
 
 package org.knora.webapi.slice.common.api
 
-import org.apache.pekko.http.scaladsl.server.RequestContext
 import sttp.apispec.openapi.Server
 import sttp.apispec.openapi.circe.yaml.RichOpenAPI
 import sttp.tapir.AnyEndpoint
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import zio.Chunk
 import zio.IO
-import zio.Task
 import zio.UIO
 import zio.ZIO
 import zio.ZIOAppArgs
@@ -53,8 +51,7 @@ import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2
 import org.knora.webapi.slice.shacl.api.ShaclEndpoints
 
 final case class DocsNoopAuthenticator() extends Authenticator {
-  override def getUserADM(requestContext: RequestContext): Task[User] = ???
-  override def calculateCookieName(): String                          = "KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9"
+  override def calculateCookieName(): String = "KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9"
 
   override def authenticate(userIri: UserIri, password: String): IO[AuthenticatorError, (User, Jwt)]   = ???
   override def authenticate(username: Username, password: String): IO[AuthenticatorError, (User, Jwt)] = ???

@@ -5,33 +5,12 @@
 
 package org.knora.webapi.messages.util.search
 
-import org.apache.pekko
-
 import dsp.errors.GravsearchException
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-
-import pekko.http.scaladsl.model.HttpCharsets
-import pekko.http.scaladsl.model.MediaType
-
-/**
- * Constants used in processing SPARQL queries.
- */
-object SparqlQueryConstants {
-
-  /**
-   * The media type of SPARQL queries.
-   */
-  val `application/sparql-query`: MediaType.WithFixedCharset = MediaType.customWithFixedCharset(
-    mainType = "application",
-    subType = "sparql-query",
-    charset = HttpCharsets.`UTF-8`,
-    fileExtensions = List("rq"),
-  )
-}
 
 /**
  * Represents something that can generate SPARQL source code.

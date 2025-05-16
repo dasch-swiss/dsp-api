@@ -14,7 +14,6 @@ import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteClassCommentRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -101,7 +100,7 @@ final case class OntologiesRestService(
     .flatMap(getOntologyMetadataBy(_, formatOptions))
 
   private def getOntologyMetadataBy(projectIris: Set[ProjectIri], formatOptions: FormatOptions) = for {
-    result   <- ontologyResponder.getOntologyMetadataForProjectsV2(projectIris)
+    result   <- ontologyResponder.getOntologyMetadataForProjects(projectIris)
     response <- renderer.render(result, formatOptions)
   } yield response
 
@@ -150,8 +149,7 @@ final case class OntologiesRestService(
   ): Task[(RenderedResponse, MediaType)] = for {
     classIri <- iriConverter.asResourceClassIri(classIri.value).mapError(BadRequestException.apply)
     uuid     <- Random.nextUUID()
-    request   = DeleteClassCommentRequestV2(classIri.smartIri, lastModificationDate.value, uuid, user)
-    result   <- ontologyResponder.deleteClassComment(request)
+    result   <- ontologyResponder.deleteClassComment(classIri, lastModificationDate.value, uuid, user)
     response <- renderer.render(result, formatOptions)
   } yield response
 

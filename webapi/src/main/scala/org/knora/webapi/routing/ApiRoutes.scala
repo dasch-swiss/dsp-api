@@ -13,8 +13,6 @@ import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.routing
 import org.knora.webapi.slice.admin.api.AdminApiRoutes
@@ -35,7 +33,6 @@ import org.knora.webapi.slice.shacl.api.ShaclApiRoutes
  * The FIRST matching route is used for handling a request.
  */
 final case class ApiRoutes(
-  appConfig: AppConfig,
   adminApiRoutes: AdminApiRoutes,
   authenticationApiRoutes: AuthenticationApiRoutes,
   listsApiV2Routes: ListsApiV2Routes,
@@ -45,29 +42,22 @@ final case class ApiRoutes(
   shaclApiRoutes: ShaclApiRoutes,
   managementRoutes: ManagementRoutes,
   ontologiesRoutes: OntologiesApiRoutes,
-)(implicit val system: ActorSystem)
-    extends AroundDirectives {
+  system: ActorSystem,
+) {
   val routes: Route =
-    logDuration {
-      ServerVersion.addServerHeader {
-        DSPApiDirectives.handleErrors(appConfig) {
-          CorsDirectives.cors(
-            CorsSettings(system)
-              .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS)),
-          ) {
-            DSPApiDirectives.handleErrors(appConfig) {
-              (adminApiRoutes.routes ++
-                authenticationApiRoutes.routes ++
-                listsApiV2Routes.routes ++
-                managementRoutes.routes ++
-                ontologiesRoutes.routes ++
-                resourceInfoRoutes.routes ++
-                resourcesApiRoutes.routes ++
-                searchApiRoutes.routes ++
-                shaclApiRoutes.routes).reduce(_ ~ _)
-            }
-          }
-        }
+    ServerVersion.addServerHeader {
+      CorsDirectives.cors(
+        CorsSettings(system).withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS)),
+      ) {
+        (adminApiRoutes.routes ++
+          authenticationApiRoutes.routes ++
+          listsApiV2Routes.routes ++
+          managementRoutes.routes ++
+          ontologiesRoutes.routes ++
+          resourceInfoRoutes.routes ++
+          resourcesApiRoutes.routes ++
+          searchApiRoutes.routes ++
+          shaclApiRoutes.routes).reduce(_ ~ _)
       }
     }
 }

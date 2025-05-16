@@ -92,36 +92,6 @@ case class CreatePropertyRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Requests the addition of a class to an ontology. A successful response will be a [[ReadOntologyV2]].
- *
- * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class CreateClassRequestV2(
-  classInfoContent: ClassInfoContentV2,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
- * Requests the addition of cardinalities to a class. A successful response will be a [[ReadOntologyV2]].
- *
- * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class AddCardinalitiesToClassRequestV2(
-  classInfoContent: ClassInfoContentV2,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
  * Requests the replacement of a class's cardinalities with new ones. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.
@@ -201,40 +171,6 @@ case class ChangePropertyGuiElementRequest(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Requests that a property's labels or comments are changed. A successful response will be a [[ReadOntologyV2]].
- *
- * @param propertyIri          the IRI of the property.
- * @param predicateToUpdate    `rdfs:label` or `rdfs:comment`.
- * @param newObjects           the property's new labels or comments.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class ChangePropertyLabelsOrCommentsRequestV2(
-  propertyIri: PropertyIri,
-  predicateToUpdate: LabelOrComment,
-  newObjects: Seq[StringLiteralV2],
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
- * Deletes the comment from a property. A successful response will be a [[ReadOntologyV2]].
- *
- * @param propertyIri          the IRI of the property.
- * @param lastModificationDate the ontology's last modification date
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class DeletePropertyCommentRequestV2(
-  propertyIri: SmartIri,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
  * Requests that a class's labels or comments are changed. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classIri             the IRI of the property.
@@ -267,38 +203,8 @@ object LabelOrComment {
     LabelOrComment.values.find(_.toString == str)
 }
 
-/**
- * Deletes the comment from a class. A successful response will be a [[ReadOntologyV2]].
- *
- * @param classIri             the IRI of the class.
- * @param lastModificationDate the ontology's last modification date
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class DeleteClassCommentRequestV2(
-  classIri: SmartIri,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
 case class ChangeGuiOrderRequestV2(
   classInfoContent: ClassInfoContentV2,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
- * Deletes the comment from an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
- *
- * @param ontologyIri          the external ontology IRI.
- * @param lastModificationDate the ontology's last modification date, returned in a previous operation.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class DeleteOntologyCommentRequestV2(
-  ontologyIri: OntologyIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
@@ -416,15 +322,6 @@ case class SubClassesGetRequestV2(resourceClassIri: SmartIri, requestingUser: Us
  * @param subClasses a list of [[SubClassInfoV2]] representing the subclasses of the specified class.
  */
 case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
-
-/**
- * Requests metadata about ontologies by project.
- *
- * @param projectIris    the IRIs of the projects for which ontologies should be returned. If this set is empty, information
- *                       about all ontologies is returned.
- */
-case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[ProjectIri] = Set.empty)
-    extends OntologiesResponderRequestV2
 
 /**
  * Requests metadata about ontologies by ontology IRI.
@@ -1732,6 +1629,9 @@ case class ReadPropertyInfoV2(
     with KnoraReadV2[ReadPropertyInfoV2] {
 
   def propertyIri: PropertyIri = PropertyIri.unsafeFrom(entityInfoContent.propertyIri)
+
+  def linkValueProperty: Option[PropertyIri] =
+    if this.isLinkProp then Some(propertyIri.fromLinkPropToLinkValueProp) else None
 
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadPropertyInfoV2 = copy(
     entityInfoContent = entityInfoContent.toOntologySchema(targetSchema),
