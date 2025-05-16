@@ -87,8 +87,8 @@ object LayersTestMock { self =>
     val temp = system.map(ActorSystemTest.layer).getOrElse(PekkoActorSystem.layer)
     ZLayer.make[self.Environment](
       temp,
-      TestContainerLayers.fusekiOnly,
       SipiServiceMock.layer,
+      TestContainerLayers.fusekiOnly,
       /// common
       AdminApiModule.layer,
       AdminModule.layer,
@@ -100,8 +100,9 @@ object LayersTestMock { self =>
       BaseEndpoints.layer,
       BaseModule.layer,
       CardinalityHandler.layer,
-      CoreModule.layer,
       ConstructResponseUtilV2.layer,
+      CoreModule.layer,
+      DspApiServerEndpoints.layer,
       DspIngestClientLive.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
@@ -129,9 +130,9 @@ object LayersTestMock { self =>
       ResourcesApiModule.layer,
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
-      SearchServerEndpoints.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,
+      SearchServerEndpoints.layer,
       SecurityModule.layer,
       ShaclApiModule.layer,
       ShaclModule.layer,

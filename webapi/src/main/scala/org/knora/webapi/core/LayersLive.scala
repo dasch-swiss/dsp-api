@@ -83,6 +83,7 @@ object LayersLive {
     CardinalityHandler &
     ConstructResponseUtilV2 &
     CoreModule.Provided &
+    DspApiServerEndpoints &
     DefaultObjectAccessPermissionService &
     GroupRestService &
     IIIFRequestMessageHandler &
@@ -115,6 +116,7 @@ object LayersLive {
     StandoffResponderV2 &
     StandoffTagUtilV2 &
     State &
+    TapirToPekkoInterpreter &
     UserRestService &
     ValuesResponderV2
     // format: on
