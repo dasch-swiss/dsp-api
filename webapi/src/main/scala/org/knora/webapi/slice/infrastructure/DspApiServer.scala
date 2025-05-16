@@ -17,7 +17,7 @@ object DspApiServer {
   val make: ZIO[KnoraApi & TapirToPekkoInterpreter & DspApiServerEndpoints, Throwable, Unit] = for {
     endpoints <- ZIO.service[DspApiServerEndpoints]
     tapir     <- ZIO.service[TapirToPekkoInterpreter]
-    routes     = tapir.interpreter.toHttp(endpoints.serverEndpoints)
+    routes     = tapir.toHttp(endpoints.serverEndpoints)
     _         <- Server.serve(routes).provideSome[KnoraApi](ApiHttpServer.layer)
   } yield ()
 }
