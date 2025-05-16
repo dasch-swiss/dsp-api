@@ -74,15 +74,5 @@ class CORSSupportE2ESpec extends E2ESpec {
         `Access-Control-Allow-Origin`(exampleOrigin),
       )
     }
-
-    "send `Access-Control-Allow-Origin` header when the api endpoint route is NOT found " in {
-      val request  = Get(baseApiUrl + "/NotFound") ~> Origin(exampleOrigin)
-      val response = singleAwaitingRequest(request)
-      response.status should equal(StatusCodes.NotFound)
-      response.headers should contain allElementsOf Seq(
-        `Access-Control-Allow-Origin`(exampleOrigin),
-      )
-    }
-
   }
 }

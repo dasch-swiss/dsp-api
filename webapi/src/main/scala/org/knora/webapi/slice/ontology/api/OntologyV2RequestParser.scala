@@ -29,14 +29,11 @@ import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeGuiOrderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyGuiElementRequest
-import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.CreateClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreatePropertyRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.DeleteCardinalitiesFromClassRequestV2
@@ -75,6 +72,55 @@ case class ChangeOntologyMetadataRequestV2(
   ontologyIri: OntologyIri,
   label: Option[String] = None,
   comment: Option[NonEmptyString] = None,
+  lastModificationDate: Instant,
+  apiRequestID: UUID,
+  requestingUser: User,
+)
+
+/**
+ * Requests the addition of a class to an ontology.
+ *
+ * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
+ * @param lastModificationDate the ontology's last modification date.
+ * @param apiRequestID         the ID of the API request.
+ * @param requestingUser       the user making the request.
+ */
+case class CreateClassRequestV2(
+  classInfoContent: ClassInfoContentV2,
+  lastModificationDate: Instant,
+  apiRequestID: UUID,
+  requestingUser: User,
+)
+
+/**
+ * Requests the addition of cardinalities to a class.
+ *
+ * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
+ * @param lastModificationDate the ontology's last modification date.
+ * @param apiRequestID         the ID of the API request.
+ * @param requestingUser       the user making the request.
+ */
+case class AddCardinalitiesToClassRequestV2(
+  classInfoContent: ClassInfoContentV2,
+  lastModificationDate: Instant,
+  apiRequestID: UUID,
+  requestingUser: User,
+)
+
+/**
+ * Requests that a property's labels or comments are changed.
+ *
+ * @param propertyIri          the IRI of the property.
+ * @param predicateToUpdate    `rdfs:label` or `rdfs:comment`.
+ * @param newObjects           the property's new labels or comments.
+ * @param lastModificationDate the ontology's last modification date.
+ * @param apiRequestID         the ID of the API request.
+ * @param requestingUser       the user making the request.
+ */
+case class ChangePropertyLabelsOrCommentsRequestV2(
+  propertyIri: PropertyIri,
+  predicateToUpdate: LabelOrComment,
+  newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,

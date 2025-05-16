@@ -18,6 +18,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
@@ -27,6 +28,9 @@ final case class OntologyTriplestoreHelpers(
   triplestore: TriplestoreService,
   stringFormatter: StringFormatter,
 ) {
+
+  def checkOntologyLastModificationDate(ontologyIri: OntologyIri, expectedLastModificationDate: Instant): Task[Unit] =
+    checkOntologyLastModificationDate(ontologyIri.toInternalSchema, expectedLastModificationDate)
 
   /**
    * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return
@@ -66,7 +70,7 @@ final case class OntologyTriplestoreHelpers(
         classIris = ontology.classes.keySet,
         propertyIris = ontology.properties.keySet,
       )
-    triplestore.query(Select(query)).map(_.getColOrThrow("s").toSet)
+    triplestore.query(Select(query)).map(_.getCol("s").toSet)
   }
 }
 

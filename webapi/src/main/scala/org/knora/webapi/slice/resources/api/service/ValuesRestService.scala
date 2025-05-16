@@ -10,12 +10,14 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
-import dsp.errors.BadRequestException
+import dsp.errors.*
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
@@ -23,10 +25,12 @@ import org.knora.webapi.slice.resources.api.model.ValueUuid
 import org.knora.webapi.slice.resources.api.model.VersionDate
 
 final class ValuesRestService(
+  private val auth: AuthorizationRestService,
   private val valuesService: ValuesResponderV2,
   private val resourcesService: ResourcesResponderV2,
   private val requestParser: ApiComplexV2JsonLdRequestParser,
   private val renderer: KnoraResponseRenderer,
+  private val knoraProjectService: KnoraProjectService,
 ) {
 
   def getValue(user: User)(
@@ -69,8 +73,7 @@ final class ValuesRestService(
   def deleteValue(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
       valueToDelete <- requestParser.deleteValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
-      apiRequestId  <- Random.nextUUID
-      knoraResponse <- valuesService.deleteValueV2(valueToDelete, user, apiRequestId)
+      knoraResponse <- valuesService.deleteValueV2(valueToDelete, user)
       response      <- render(knoraResponse)
     } yield response
 
@@ -79,6 +82,30 @@ final class ValuesRestService(
 
   private def render(resp: KnoraResponseV2): Task[(RenderedResponse, MediaType)] =
     renderer.render(resp, FormatOptions.default)
+
+  def eraseValue(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
+    for {
+      eraseReq <- requestParser.eraseValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
+      _        <- auth.ensureSystemAdmin(user)
+      project <- knoraProjectService
+                   .findByShortcode(eraseReq.shortcode)
+                   .orDie
+                   .someOrFail(NotFoundException(s"Project with shortcode ${eraseReq.shortcode.value} not found."))
+      knoraResponse <- valuesService.eraseValue(eraseReq, user, project)
+      response      <- render(knoraResponse)
+    } yield response
+
+  def eraseValueHistory(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
+    for {
+      eraseReq <- requestParser.eraseValueHistoryV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
+      _        <- auth.ensureSystemAdmin(user)
+      project <- knoraProjectService
+                   .findByShortcode(eraseReq.shortcode)
+                   .orDie
+                   .someOrFail(NotFoundException(s"Project with shortcode ${eraseReq.shortcode.value} not found."))
+      knoraResponse <- valuesService.eraseValueHistory(eraseReq, user, project)
+      response      <- render(knoraResponse)
+    } yield response
 }
 
 object ValuesRestService {

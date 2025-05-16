@@ -17,6 +17,7 @@ import scala.concurrent.Future
 
 import dsp.errors.ApplicationLockException
 import org.knora.webapi.IRI
+import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 import org.knora.webapi.util.JavaUtil
 
 /**
@@ -86,6 +87,9 @@ object IriLocker {
         decrementOrReleaseLock(iri, apiRequestID)
       }
     }
+
+  def runWithIriLock[A](apiRequestID: UUID, iri: KnoraIri, task: Task[A]): Task[A] =
+    runWithIriLock(apiRequestID, iri.toInternalSchema.toString, task)
 
   /**
    * Acquires an update lock on an IRI, then runs a task that updates the IRI.

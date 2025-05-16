@@ -249,7 +249,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       version,
       "sipi"        -> Dependencies.sipiImage,
       "fuseki"      -> Dependencies.fusekiImage,
-      "pekkoHttp"   -> Dependencies.pekkoHttp,
       "buildCommit" -> buildCommit,
       "buildTime"   -> buildTime,
     ),

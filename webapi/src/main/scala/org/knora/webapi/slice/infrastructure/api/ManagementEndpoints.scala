@@ -32,7 +32,6 @@ final case class VersionResponse(
   buildCommit: String,
   buildTime: String,
   fuseki: String,
-  pekkoHttp: String,
   scala: String,
   sipi: String,
   name: String = "version",
@@ -44,7 +43,6 @@ object VersionResponse {
     BuildInfo.buildCommit,
     BuildInfo.buildTime,
     BuildInfo.fuseki.split(":").last,
-    BuildInfo.pekkoHttp.split(":").last,
     BuildInfo.scalaVersion.split(":").last,
     BuildInfo.sipi.split(":").last,
   )

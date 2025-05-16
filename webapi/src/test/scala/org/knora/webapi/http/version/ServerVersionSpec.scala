@@ -16,7 +16,6 @@ object ServerVersionSpec extends ZIOSpecDefault {
     test("The server version header") {
       val header: Server = ServerVersion.serverVersionHeader
       assertTrue(header.toString.contains("webapi/"))
-      assertTrue(header.toString.contains("pekko-http/"))
     },
   )
 }

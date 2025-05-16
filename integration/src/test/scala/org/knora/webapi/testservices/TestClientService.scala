@@ -7,8 +7,10 @@ package org.knora.webapi.testservices
 
 import org.apache.pekko
 import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.http.scaladsl.client.RequestBuilding
 import org.apache.pekko.http.scaladsl.model.HttpEntity
 import org.apache.pekko.http.scaladsl.model.headers.HttpCredentials
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import sttp.capabilities.zio.ZioStreams
 import sttp.client3
 import sttp.client3.*
@@ -30,9 +32,6 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.settings.KnoraDispatchers
-
-import pekko.http.scaladsl.client.RequestBuilding
-import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 final case class TestClientService(
   config: AppConfig,
