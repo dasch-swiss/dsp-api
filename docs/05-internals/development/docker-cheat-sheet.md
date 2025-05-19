@@ -1,7 +1,7 @@
 # Docker Cheat Sheet
 
 A complete cheat sheet can be found
-[here](https://github.com/wsargent/docker-cheat-sheet)
+[on GitHub](https://github.com/wsargent/docker-cheat-sheet).
 
 ## Lifecycle
 

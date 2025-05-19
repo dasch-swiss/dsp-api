@@ -24,6 +24,8 @@ import scala.util.Try
 import dsp.errors.FileWriteException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 
 /**
  * Functions for reading and writing files.
@@ -53,6 +55,9 @@ object FileUtil {
       source.close()
     }
   }
+
+  def readTextFileAsJsonLD(file: Path): JsonLDDocument =
+    JsonLDUtil.parseJsonLD(readTextFile(file))
 
   /**
    * Reads a file from the classpath into a string.

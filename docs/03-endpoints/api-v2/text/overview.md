@@ -49,14 +49,14 @@ This allows for the following markup:
 
 DSP-APP provides a text editor for conveniently editing text with standard standoff markup.
 
-More details can be found [here](standard-standoff.md).
+More details can be found [the standard standoff documentation](standard-standoff.md).
 
 
 ### Text with Custom Markup
 
 It is possible to create custom XML-to-Schema mappings,
 which allows for creating project specific custom markup for text values. 
-Details can be found [here](custom-standoff.md).
+Details can be found [in the custom standoff documentation](custom-standoff.md).
 
 !!! info
     Custom markup is not supported by DSP-TOOLS and is view-only in DSP-APP.  
@@ -67,7 +67,7 @@ Details can be found [here](custom-standoff.md).
 ## File Based
 
 Text files of various formats (Word, PDF, XML, etc.) can be uploaded to the media file server. 
-For more details, see [here](../../../01-introduction/file-formats.md)
+For more details, see [the file formats documentation](../../../01-introduction/file-formats.md)
 
 This allows for easy upload and retrieval of the file. 
 However, it does not allow for searching within the file content.
@@ -75,7 +75,7 @@ However, it does not allow for searching within the file content.
 
 ## TEI XML
 
-All text values in DSP-API using standoff markup can be converted to TEI XML as described [here](tei-xml.md).
+All text values in DSP-API using standoff markup can be converted to TEI XML as described [in the tei xml documentation](tei-xml.md).
 
 !!! info
     Improved support for TEI XML is in planning.
