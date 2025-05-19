@@ -9,11 +9,12 @@ import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
+import org.scalatest.wordspec.AnyWordSpec
 
 /**
  * This spec is used to test the [[User]] and [[UserIdentifierADM]] classes.
  */
-class UsersMessagesADMSpec extends CoreSpec {
+class UsersMessagesADMSpec extends AnyWordSpec {
 
   private val id          = SharedTestDataADM.rootUser.id
   private val username    = SharedTestDataADM.rootUser.username
