@@ -10,21 +10,21 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck; integration/Te
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate; integration/Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck; integration/Test/headerCheck")
 
-val flywayVersion               = "11.3.4"
+val flywayVersion               = "11.4.0"
 val hikariVersion               = "6.2.1"
 val knoraSipiVersion            = "v31.13.0"
 val quillVersion                = "4.8.6"
 val sqliteVersion               = "3.49.1.0"
-val tapirVersion                = "1.11.19"
+val tapirVersion                = "1.11.20"
 val testContainersVersion       = "1.20.4"
-val zioConfigVersion            = "4.0.3"
-val zioJsonVersion              = "0.7.36"
+val zioConfigVersion            = "4.0.4"
+val zioJsonVersion              = "0.7.39"
 val zioLoggingVersion           = "2.5.0"
 val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
-val zioPreludeVersion           = "1.0.0-RC39"
-val zioSchemaVersion            = "1.6.5"
+val zioSchemaVersion            = "1.6.6"
+val zioPreludeVersion           = "1.0.0-RC40"
 val zioVersion                  = "2.1.16"
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
@@ -70,7 +70,7 @@ val zio = Seq(
 
 val test = Seq(
   "dev.zio"      %% "zio-mock"               % zioMockVersion % Test,
-  "dev.zio"      %% "zio-http"               % "3.0.1"        % Test,
+  "dev.zio"      %% "zio-http"               % "3.1.0"        % Test,
   "dev.zio"      %% "zio-test"               % zioVersion     % Test,
   "dev.zio"      %% "zio-test-junit"         % zioVersion     % Test,
   "dev.zio"      %% "zio-test-magnolia"      % zioVersion     % Test,

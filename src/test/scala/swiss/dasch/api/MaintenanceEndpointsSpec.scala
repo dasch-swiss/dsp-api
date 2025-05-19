@@ -19,7 +19,6 @@ import zio.nio.file.Files
 import zio.test.*
 
 object MaintenanceEndpointsSpec extends ZIOSpecDefault {
-
   private def awaitTrue[R, E](awaitThis: ZIO[R, E, Boolean], timeout: Duration = 3.seconds): ZIO[R, E, Boolean] =
     awaitThis.repeatUntil(identity).timeout(timeout).map(_.getOrElse(false))
 
@@ -39,16 +38,18 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
   private val needsTopleftCorrectionSuite =
     suite("/maintenance/needs-top-left-correction should")(
       test("should return 204 and create a report") {
-        val request = Request
-          .get(URL(Path.root / "maintenance" / "needs-top-left-correction"))
-          .addHeader(Header.Authorization.name, "Bearer fakeToken")
-        for {
-          _        <- SipiClientMock.setOrientation(OrientationValue.Rotate270CW)
-          response <- executeRequest(request)
-          projects <- loadReport("needsTopLeftCorrection.json")
-          status    = response.status
-        } yield {
-          assertTrue(status == Status.Accepted, projects == Chunk("0001"))
+        ZIO.scoped {
+          val request = Request
+            .get(URL(Path.root / "maintenance" / "needs-top-left-correction"))
+            .addHeader(Header.Authorization.name, "Bearer fakeToken")
+          for {
+            _        <- SipiClientMock.setOrientation(OrientationValue.Rotate270CW)
+            response <- executeRequest(request)
+            projects <- loadReport("needsTopLeftCorrection.json")
+            status    = response.status
+          } yield {
+            assertTrue(status == Status.Accepted, projects == Chunk("0001"))
+          }
         }
       },
     ) @@ TestAspect.withLiveClock

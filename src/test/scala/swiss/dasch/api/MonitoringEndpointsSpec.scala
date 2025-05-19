@@ -12,10 +12,12 @@ import swiss.dasch.version.BuildInfo
 import zio.http.{Path, Request, Status, URL}
 import zio.json.ast.Json
 import zio.json.{DecoderOps, EncoderOps}
-import zio.test.{ZIOSpecDefault, assertTrue}
-import zio.{Ref, UIO, ULayer, ZIO, ZLayer}
+import zio.test.{Spec, TestResult, ZIOSpecDefault, assertTrue}
+import zio.{Ref, UIO, ULayer, Scope, ZIO, ZLayer}
 
 object MonitoringEndpointsSpec extends ZIOSpecDefault {
+  def testWithScope[E, Err](label: String)(assertion: => ZIO[E & Scope, Err, TestResult]): Spec[E, Err] =
+    zio.test.test(label)(ZIO.scoped(assertion))
 
   private def executeRequest(request: Request) =
     for {
@@ -26,7 +28,7 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
     } yield response
 
   private val healthEndpointsSuite = suite("get /health")(
-    test("when healthy should return status UP") {
+    testWithScope("when healthy should return status UP") {
       for {
         _        <- MockHealthCheckService.setHealthUp()
         response <- executeRequest(Request.get(URL(Path.root / "health")))
@@ -37,7 +39,7 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
         bodyJson.fromJson[Json] == "{\"status\":\"UP\"}".fromJson[Json],
       )
     },
-    test("when unhealthy should return status DOWN") {
+    testWithScope("when unhealthy should return status DOWN") {
       for {
         _        <- MockHealthCheckService.setHealthDown()
         response <- executeRequest(Request.get(URL(Path.root / "health")))
@@ -52,7 +54,7 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
     },
   )
   val infoEndpointSuite = suite("get /info")(
-    test("should return 200") {
+    testWithScope("should return 200") {
       for {
         response     <- executeRequest(Request.get(URL(Path.root / "info")))
         bodyAsString <- response.body.asString

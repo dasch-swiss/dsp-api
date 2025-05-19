@@ -45,6 +45,12 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     ZLayer.succeed(new FetchAssetPermissionsLive(stub, DspApiConfig("")))
   }
 
+  import zio.test.TestResult
+  import zio.Scope
+
+  def testWithScope[E, Err](label: String)(assertion: => ZIO[E & Scope, Err, TestResult]): Spec[E, Err] =
+    zio.test.test(label)(ZIO.scoped(assertion))
+
   private val projectExportSuite = {
     def postExport(shortcode: String | ProjectShortcode) = {
       val request = Request
@@ -53,7 +59,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
       executeRequest(request)
     }
     suite("POST /projects/{shortcode}/export should,")(
-      test("given the project does not exist, return 404") {
+      testWithScope("given the project does not exist, return 404") {
         for {
           response <- postExport(nonExistentProject)
           status    = response.status
@@ -61,7 +67,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           assertTrue(status == Status.NotFound)
         }
       },
-      test("given the project shortcode is invalid, return 400") {
+      testWithScope("given the project shortcode is invalid, return 400") {
         for {
           response <- postExport("invalid-short-code")
           status    = response.status
@@ -69,7 +75,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           assertTrue(status == Status.BadRequest)
         }
       },
-      test("given the project is valid, return 200 with correct headers") {
+      testWithScope("given the project is valid, return 200 with correct headers") {
         for {
           response <- postExport(existingProject)
           status    = response.status
@@ -112,14 +118,14 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     }
 
     suite("POST /projects/{shortcode}/import should")(
-      test("given the shortcode is invalid, return 400")(for {
+      testWithScope("given the shortcode is invalid, return 400")(for {
         body     <- bodyFromZipFile
         response <- postImport("invalid-shortcode", body, validContentTypeHeaders)
         status    = response.status
       } yield {
         assertTrue(status == Status.BadRequest)
       }),
-      test("given the Content-Type header is invalid, return correct error")(
+      testWithScope("given the Content-Type header is invalid, return correct error")(
         for {
           body                <- bodyFromZipFile
           responseWrongHeader <- postImport(emptyProject, body, Headers(Header.ContentType(MediaType.application.json)))
@@ -128,7 +134,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           assertTrue(status == Status.UnsupportedMediaType)
         },
       ),
-      test("given the Content-Type header is not-present, return correct error")(
+      testWithScope("given the Content-Type header is not-present, return correct error")(
         for {
           body             <- bodyFromZipFile
           responseNoHeader <- postImport(existingProject, body, Headers.empty)
@@ -137,13 +143,13 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           assertTrue(status == Status.BadRequest)
         },
       ),
-      test("given the Body is empty, return 400")(for {
+      testWithScope("given the Body is empty, return 400")(for {
         response <- postImport(emptyProject, Body.empty, validContentTypeHeaders)
         status    = response.status
       } yield {
         assertTrue(status == Status.BadRequest)
       }),
-      test("given the Body is a zip, return 200")(
+      testWithScope("given the Body is a zip, return 200")(
         for {
           storageConfig <- ZIO.service[StorageConfig]
           body          <- bodyFromZipFile
@@ -155,7 +161,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           assertTrue(status == Status.Ok, importExists)
         },
       ),
-      test("given the Body is not a zip, will return 400") {
+      testWithScope("given the Body is not a zip, will return 400") {
         for {
           storageConfig      <- ZIO.service[StorageConfig]
           body               <- nonEmptyChunkBody
@@ -171,13 +177,13 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
 
   private val assetOriginalSuite =
     suite("/projects/<shortcode>/asset/<assetId>/original")(
-      test("given the info file does not exist, it should return Not Found") {
+      testWithScope("given the info file does not exist, it should return Not Found") {
         val req = Request
           .get(URL(Path.root / "projects" / "0666" / "assets" / "7l5QJAtPnv5-lLmBPfO7U40" / "original"))
           .addHeader("Authorization", "Bearer fakeToken")
         executeRequest(req).map(response => assertTrue(response.status == Status.NotFound))
       },
-      test("return the original contents") {
+      testWithScope("return the original contents") {
         for {
           contents   <- ZIO.succeed("123".toList.map(_.toByte))
           contentType = Some(""""originalMimeType": "text/plain"""")
@@ -198,13 +204,15 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
 
   private val assetOriginalSuiteFakeSttp =
     suite("/projects/<shortcode>/asset/<assetId>/original")(
-      test("fail by no permissions") {
+      testWithScope("fail by no permissions") {
         for {
           contents   <- ZIO.succeed("123".toList.map(_.toByte))
           contentType = Some(""""originalMimeType": "text/plain"""")
           ref        <- AssetInfoFileTestHelper.createInfoFile("txt", "txt", contentType, Some(contents)).map(_.assetRef)
           req =
-            Request.get(URL(Path.root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value / "original"))
+            Request.get(
+              URL(Path.root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value / "original"),
+            )
           response <- executeRequest(req)
           body     <- response.body.asString
         } yield assertTrue(
@@ -216,13 +224,13 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
 
   private val assetInfoSuite =
     suite("/projects/<shortcode>/asset/<assetId>")(
-      test("given the project folder does not exist should return Not Found") {
+      testWithScope("given the project folder does not exist should return Not Found") {
         val req = Request
           .get(URL(Path.root / "projects" / "0666" / "assets" / "7l5QJAtPnv5-lLmBPfO7U40"))
           .addHeader("Authorization", "Bearer fakeToken")
         executeRequest(req).map(response => assertTrue(response.status == Status.NotFound))
       },
-      test("given the project folder exists but the asset info file does not exist should return Not Found") {
+      testWithScope("given the project folder exists but the asset info file does not exist should return Not Found") {
         val req = Request
           .get(URL(Path.root / "projects" / "0666" / "assets" / "7l5QJAtPnv5-lLmBPfO7U40"))
           .addHeader("Authorization", "Bearer fakeToken")
@@ -231,7 +239,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           .tap(StorageService.createDirectories(_)) *>
           executeRequest(req).map(response => assertTrue(response.status == Status.NotFound))
       },
-      test("given a basic asset info file exists it should return the info") {
+      testWithScope("given a basic asset info file exists it should return the info") {
         for {
           ref <- AssetInfoFileTestHelper.createInfoFile("txt", "txt").map(_.assetRef)
           req = Request
@@ -253,7 +261,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           ),
         )
       },
-      test("given a still image asset info file exists it should return the info") {
+      testWithScope("given a still image asset info file exists it should return the info") {
         for {
           ref <- AssetInfoFileTestHelper
                    .createInfoFile(
@@ -290,7 +298,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           ),
         )
       },
-      test("given a moving image asset info file exists it should return the info") {
+      testWithScope("given a moving image asset info file exists it should return the info") {
         for {
           ref <- AssetInfoFileTestHelper
                    .createInfoFile(
@@ -335,13 +343,13 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
 
   private val assetIngestSuite =
     suite("/projects/<shortcode>/asset/ingest/<filename>.mp3")(
-      test("should ingest successfully") {
+      testWithScope("should ingest successfully") {
         val req = Request
           .post(URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "sample.mp3"), Body.fromString("tegxd"))
           .addHeader("Authorization", "Bearer fakeToken")
         executeRequest(req).map(response => assertTrue(response.status == Status.Ok))
       },
-      test("should handle ingest denormalized filenames") {
+      testWithScope("should handle ingest denormalized filenames") {
         val encoded     = "a%CC%84.mp3"
         val decoded     = URLDecoder.decode(encoded, "UTF-8")
         val decodedNorm = Normalizer.normalize(decoded, Normalizer.Form.NFC)
@@ -355,13 +363,13 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           assertTrue(response.status == Status.Ok) && assertTrue(decodedNorm == "ā.mp3")
         }
       },
-      test("should refuse ingesting without content") {
+      testWithScope("should refuse ingesting without content") {
         val req = Request
           .post(URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "sample.mp3"), Body.empty)
           .addHeader("Authorization", "Bearer fakeToken")
         executeRequest(req).map(response => assertTrue(response.status.isClientError))
       },
-      test("should consult AuthService") {
+      testWithScope("should consult AuthService") {
         executeRequest(
           Request
             .post(URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "sample.mp3"), Body.empty)
@@ -373,7 +381,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     )
 
   private val projectsSuite = suite("/admin/projects/{shortcode}")(
-    test("DELETE ./erase should delete the project folder") {
+    testWithScope("DELETE ./erase should delete the project folder") {
       val shortcode = ProjectShortcode.unsafeFrom("1111")
       for {
         prjFolder <- StorageService.getProjectFolder(shortcode)
@@ -393,7 +401,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
   )
 
   val projectShouldListTest =
-    test("GET /projects should list non-empty project in test folders") {
+    testWithScope("GET /projects should list non-empty project in test folders") {
       val req = Request.get(URL(Path.root / "projects")).addHeader("Authorization", "Bearer fakeToken")
       for {
         response <- executeRequest(req)

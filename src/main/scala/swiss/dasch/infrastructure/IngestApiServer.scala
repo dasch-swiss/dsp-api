@@ -29,7 +29,7 @@ object IngestApiServer {
     _   <- ZIO.logInfo(s"Starting ${BuildInfo.name}")
     app <- ZIO.serviceWith[Endpoints](_.endpoints).map(ZioHttpInterpreter(serverOptions).toHttp(_))
     c   <- ZIO.service[ServiceConfig]
-    _   <- Server.install(app)
+    _   <- ZIO.serviceWithZIO[Server](_.install(app)): @annotation.nowarn
     _   <- ZIO.logInfo(s"Started ${BuildInfo.name}/${BuildInfo.version}, see http://${c.host}:${c.port}/docs")
   } yield ()
 
