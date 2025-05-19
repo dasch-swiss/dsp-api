@@ -93,7 +93,7 @@ abstract class ITKnoraLiveSpec
           for {
             _ <- AppServer.test
             _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-            _ <- DspApiServer.make
+            _ <- DspApiServer.make.fork
           } yield (),
         )
         .getOrThrow()

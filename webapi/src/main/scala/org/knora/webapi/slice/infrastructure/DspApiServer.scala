@@ -10,13 +10,13 @@ import zio.http.*
 
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.slice.common.api.DspApiServerEndpoints
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import org.knora.webapi.slice.common.api.TapirToZioHttpInterpreter
 
 object DspApiServer {
 
-  val make: ZIO[KnoraApi & TapirToPekkoInterpreter & DspApiServerEndpoints, Throwable, Unit] = for {
+  val make: ZIO[KnoraApi & TapirToZioHttpInterpreter & DspApiServerEndpoints, Throwable, Unit] = for {
     endpoints <- ZIO.service[DspApiServerEndpoints]
-    tapir     <- ZIO.service[TapirToPekkoInterpreter]
+    tapir     <- ZIO.service[TapirToZioHttpInterpreter]
     routes     = tapir.toHttp(endpoints.serverEndpoints)
     _         <- Server.serve(routes).provideSome[KnoraApi](ApiHttpServer.layer)
   } yield ()

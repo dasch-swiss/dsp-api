@@ -77,11 +77,7 @@ abstract class CoreSpec
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(AppServer.test *> prepareRepository(rdfDataObjects) *> DspApiServer.make)
-        .getOrThrow()
-    }
+    UnsafeZioRun.runOrThrow(AppServer.test *> prepareRepository(rdfDataObjects) *> DspApiServer.make.fork.unit)
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */

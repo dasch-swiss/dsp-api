@@ -34,7 +34,7 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
     appServer <- AppServer.init()
     _         <- appServer.start(requiresAdditionalRepositoryChecks = false).orDie
     _         <- prepareRepository(rdfDataObjects)
-    _         <- DspApiServer.make
+    _         <- DspApiServer.make.fork
   } yield appServer
 
   def withResettedTriplestore =

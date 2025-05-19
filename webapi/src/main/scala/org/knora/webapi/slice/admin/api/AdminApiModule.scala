@@ -66,7 +66,7 @@ object AdminApiModule
       ProjectExportService &
       ProjectImportService &
       ProjectService &
-      TapirToPekkoInterpreter &
+      TapirToZioHttpInterpreter &
       TriplestoreService &
       UserService
       ,

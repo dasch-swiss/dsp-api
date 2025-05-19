@@ -9,12 +9,12 @@ import zio.*
 
 import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import org.knora.webapi.slice.common.api.TapirToZioHttpInterpreter
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 
 object ShaclApiModule
     extends URModule[
-      BaseEndpoints & ShaclValidator & TapirToPekkoInterpreter,
+      BaseEndpoints & ShaclValidator & TapirToZioHttpInterpreter,
       ShaclEndpoints & ShaclServerEndpoints,
     ] {
   self =>

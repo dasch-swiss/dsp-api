@@ -87,7 +87,7 @@ abstract class E2ESpec
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
-    UnsafeZioRun.runOrThrow(AppServer.test *> prepareRepository(rdfDataObjects) *> DspApiServer.make)
+    UnsafeZioRun.runOrThrow(AppServer.test *> prepareRepository(rdfDataObjects) *> DspApiServer.make.fork.unit)
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */

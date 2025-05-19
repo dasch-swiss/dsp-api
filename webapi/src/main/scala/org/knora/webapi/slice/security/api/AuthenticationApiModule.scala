@@ -11,12 +11,12 @@ import zio.ZLayer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import org.knora.webapi.slice.common.api.TapirToZioHttpInterpreter
 import org.knora.webapi.slice.security.Authenticator
 
 object AuthenticationApiModule
     extends URModule[
-      AppConfig & Authenticator & BaseEndpoints & TapirToPekkoInterpreter,
+      AppConfig & Authenticator & BaseEndpoints & TapirToZioHttpInterpreter,
       AuthenticationEndpointsV2 & AuthenticationServerEndpointsV2,
     ] { self =>
   val layer: URLayer[self.Dependencies, self.Provided] =

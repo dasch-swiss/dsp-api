@@ -117,7 +117,7 @@ object LayersLive {
     StandoffResponderV2 &
     StandoffTagUtilV2 &
     State &
-    TapirToPekkoInterpreter &
+    TapirToZioHttpInterpreter &
     UserRestService &
     ValuesResponderV2
     // format: on
@@ -177,7 +177,7 @@ object LayersLive {
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
-      TapirToPekkoInterpreter.layer,
+      TapirToZioHttpInterpreter.layer,
       ValuesResponderV2.layer,
       // ZLayer.Debug.mermaid,
     )

@@ -25,7 +25,7 @@ import zio.http.Routes
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
-final case class TapirToPekkoInterpreter() {
+final case class TapirToZioHttpInterpreter() {
 
   private case class GenericErrorResponse(error: String)
   private object GenericErrorResponse {
@@ -59,6 +59,6 @@ final case class TapirToPekkoInterpreter() {
     ZioHttpInterpreter(serverOptions).toHttp(ses)
 }
 
-object TapirToPekkoInterpreter {
-  val layer = ZLayer.derive[TapirToPekkoInterpreter]
+object TapirToZioHttpInterpreter {
+  val layer = ZLayer.derive[TapirToZioHttpInterpreter]
 }

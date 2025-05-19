@@ -139,7 +139,7 @@ object LayersTestMock { self =>
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
-      TapirToPekkoInterpreter.layer,
+      TapirToZioHttpInterpreter.layer,
       TestClientService.layer,
       TestDspIngestClient.layer,
       ValuesResponderV2.layer,

@@ -59,7 +59,7 @@ final case class ListsServerEndpoints(
     listsEndpoints.getListsCanDeleteByIri
       .zServerLogic(listsResponder.canDeleteListRequestADM),
     listsEndpoints.deleteListsComment
-      .serverLogic(listsResponder.deleteListNodeCommentsADM),
+      .serverLogic(_ => iri => listsResponder.deleteListNodeCommentsADM(iri)),
   )
 }
 

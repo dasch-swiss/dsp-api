@@ -13,7 +13,7 @@ import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import org.knora.webapi.slice.common.api.TapirToZioHttpInterpreter
 import org.knora.webapi.slice.ontology.api.service.OntologiesRestService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -24,7 +24,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 object OntologyApiModule
     extends URModule[
       AuthorizationRestService & AppConfig & BaseEndpoints & CardinalityService & IriConverter & KnoraResponseRenderer &
-        OntologyCacheHelpers & OntologyRepo & OntologyResponderV2 & StringFormatter & TapirToPekkoInterpreter,
+        OntologyCacheHelpers & OntologyRepo & OntologyResponderV2 & StringFormatter & TapirToZioHttpInterpreter,
       OntologiesServerEndpoints & OntologiesEndpoints & OntologyV2RequestParser,
     ] { self =>
 

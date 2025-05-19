@@ -8,7 +8,7 @@ package org.knora.webapi.slice.resourceinfo
 import zio.*
 
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import org.knora.webapi.slice.common.api.TapirToZioHttpInterpreter
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoServerEndpoints
@@ -19,7 +19,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object ResourceInfoLayers {
 
   val live: URLayer[
-    TriplestoreService & IriConverter & BaseEndpoints & TapirToPekkoInterpreter,
+    TriplestoreService & IriConverter & BaseEndpoints & TapirToZioHttpInterpreter,
     RestResourceInfoService & ResourceInfoEndpoints & ResourceInfoServerEndpoints,
   ] =
     ResourceInfoRepoLive.layer >>> RestResourceInfoService.layer >+> ResourceInfoEndpoints.layer >+> ResourceInfoServerEndpoints.layer

@@ -10,12 +10,12 @@ import zio.ZLayer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import org.knora.webapi.slice.common.api.TapirToZioHttpInterpreter
 import org.knora.webapi.slice.lists.domain.ListsService
 
 object ListsApiModule
     extends URModule[
-      AppConfig & BaseEndpoints & ListsService & TapirToPekkoInterpreter,
+      AppConfig & BaseEndpoints & ListsService & TapirToZioHttpInterpreter,
       ListsServerEndpointsV2 & ListsEndpointsV2,
     ] {
   self =>
