@@ -68,14 +68,6 @@ object Dependencies {
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
 
-  // pekko
-  val pekkoActor         = "org.apache.pekko" %% "pekko-actor"           % PekkoActorVersion
-  val pekkoHttp          = "org.apache.pekko" %% "pekko-http"            % PekkoHttpVersion
-  val pekkoHttpCors      = "org.apache.pekko" %% "pekko-http-cors"       % PekkoHttpVersion
-  val pekkoHttpSprayJson = "org.apache.pekko" %% "pekko-http-spray-json" % PekkoHttpVersion
-  val pekkoSlf4j         = "org.apache.pekko" %% "pekko-slf4j"           % PekkoActorVersion
-  val pekkoStream        = "org.apache.pekko" %% "pekko-stream"          % PekkoActorVersion
-
   // rdf and graph libraries
   val jenaCore      = "org.apache.jena"   % "jena-core"           % JenaVersion
   val jenaText      = "org.apache.jena"   % "jena-text"           % JenaVersion
@@ -119,10 +111,7 @@ object Dependencies {
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.10.0"
 
   // test
-  val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion
-  val pekkoStreamTestkit = "org.apache.pekko" %% "pekko-stream-testkit" % PekkoActorVersion
-  val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
-  val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "1.21.0"
 
@@ -158,10 +147,20 @@ object Dependencies {
     "io.opentelemetry" % "opentelemetry-semconv"               % "0.14.1",
   )
 
-  val integrationTestDependencies = Seq(
-    pekkoHttpTestkit,
-    pekkoStreamTestkit,
-    pekkoTestkit,
+  // pekko is only used for testing
+  val pekko = Seq(
+    "org.apache.pekko" %% "pekko-actor"           % PekkoActorVersion,
+    "org.apache.pekko" %% "pekko-http"            % PekkoHttpVersion,
+    "org.apache.pekko" %% "pekko-http-cors"       % PekkoHttpVersion,
+    "org.apache.pekko" %% "pekko-http-spray-json" % PekkoHttpVersion,
+    "org.apache.pekko" %% "pekko-http-testkit"    % PekkoHttpVersion,
+    "org.apache.pekko" %% "pekko-slf4j"           % PekkoActorVersion,
+    "org.apache.pekko" %% "pekko-stream"          % PekkoActorVersion,
+    "org.apache.pekko" %% "pekko-stream-testkit"  % PekkoActorVersion,
+    "org.apache.pekko" %% "pekko-testkit"         % PekkoActorVersion,
+  ).map(_ % Test)
+
+  val integrationTestDependencies = pekko ++ Seq(
     rdf4jClient,
     scalaTest,
     testcontainers,
@@ -174,12 +173,6 @@ object Dependencies {
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
   val webapiDependencies = monocle ++ refined ++ Seq(
-    pekkoActor,
-    pekkoHttp,
-    pekkoHttpCors,
-    pekkoHttpSprayJson,
-    pekkoSlf4j,
-    pekkoStream,
     bouncyCastle,
     commonsLang3,
     commonsValidator,

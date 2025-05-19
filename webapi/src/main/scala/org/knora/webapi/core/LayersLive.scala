@@ -5,7 +5,6 @@
 
 package org.knora.webapi.core
 
-import org.apache.pekko.actor.ActorSystem
 import zio.*
 import zio.ULayer
 import zio.ZLayer
@@ -71,7 +70,6 @@ object LayersLive {
    */
   type DspEnvironmentLive =
     // format: off
-    ActorSystem &
     AdminApiEndpoints &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
@@ -157,7 +155,6 @@ object LayersLive {
       OntologyApiModule.layer,
       OntologyResponderV2.layer,
       OpenTelemetryTracerLive.layer,
-      PekkoActorSystem.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,

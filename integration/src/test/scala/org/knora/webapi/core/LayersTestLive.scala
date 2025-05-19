@@ -69,7 +69,7 @@ import org.knora.webapi.testservices.TestDspIngestClient
 object LayersTestLive { self =>
 
   type Environment =
-    LayersLive.DspEnvironmentLive & MessageRelayActorRef & FusekiTestContainer & TestClientService &
+    LayersLive.DspEnvironmentLive & ActorSystem & MessageRelayActorRef & FusekiTestContainer & TestClientService &
       TestDspIngestClient & SipiTestContainer & DspIngestTestContainer & SharedVolumes.Volumes
 
   /**
