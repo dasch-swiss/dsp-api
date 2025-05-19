@@ -48,7 +48,7 @@ and then sent to the DSP-API.
 The XML sent to the GUI by the DSP-API is unwrapped accordingly.
 Although the GUI supports HTML5, it is treated as if it was XHTML in strict XML notation.
 
-Text with standard standoff markup can be transformed to TEI XML as described [here](tei-xml.md).
+Text with standard standoff markup can be transformed to TEI XML as described [in the tei xml documentation](tei-xml.md).
 
 ## Footnotes
 

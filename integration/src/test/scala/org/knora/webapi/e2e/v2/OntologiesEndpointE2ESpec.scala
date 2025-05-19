@@ -41,7 +41,7 @@ import org.knora.webapi.util.*
 import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
-object OntologyV2R2RSpec {
+object OntologiesEndpointE2ESpec {
   private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
   private val anythingUsername    = anythingUserProfile.email
 
@@ -54,9 +54,9 @@ object OntologyV2R2RSpec {
 /**
  * End-to-end test specification for API v2 ontology routes.
  */
-class OntologyV2R2RSpec extends R2RSpec {
+class OntologiesEndpointE2ESpec extends E2ESpec {
 
-  import OntologyV2R2RSpec.*
+  import OntologiesEndpointE2ESpec.*
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -1288,7 +1288,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         ZIO.serviceWithZIO[TestClientService](
           _.getResponseJsonLD(
             Put(
-              s"$apiBaseUrl/v2/ontologies/properties",
+              s"$baseApiUrl/v2/ontologies/properties",
               HttpEntity(RdfMediaTypes.`application/ld+json`, params),
             ) ~> addCredentials(
               anythingUserCreds,
@@ -1378,7 +1378,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         ZIO.serviceWithZIO[TestClientService](
           _.getResponseJsonLD(
             Put(
-              s"$apiBaseUrl/v2/ontologies/properties",
+              s"$baseApiUrl/v2/ontologies/properties",
               HttpEntity(RdfMediaTypes.`application/ld+json`, params),
             ) ~> addCredentials(
               anythingUserCreds,
@@ -1442,7 +1442,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         ZIO.serviceWithZIO[TestClientService](
           _.getResponseJsonLD(
             Delete(
-              s"$apiBaseUrl/v2/ontologies/properties/comment/$propertyIriEncoded?lastModificationDate=$anythingLastModDate",
+              s"$baseApiUrl/v2/ontologies/properties/comment/$propertyIriEncoded?lastModificationDate=$anythingLastModDate",
             ) ~> addCredentials(anythingUserCreds),
           ),
         ),
@@ -2972,33 +2972,33 @@ class OntologyV2R2RSpec extends R2RSpec {
   }
 
   def getResponse(url: String): HttpResponse =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(Get(apiBaseUrl + url))))
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(Get(baseApiUrl + url))))
 
   def getJsonLd(url: String): JsonLDDocument =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getJsonLd(apiBaseUrl + url)))
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getJsonLd(baseApiUrl + url)))
 
   def getJsonLd(url: String, credentials: HttpCredentials): JsonLDDocument =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getJsonLd(apiBaseUrl + url, credentials)))
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getJsonLd(baseApiUrl + url, credentials)))
 
   def deleteJsonLd(url: String, credentials: HttpCredentials): JsonLDDocument =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.deleteJsonLd(apiBaseUrl + url, credentials)))
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.deleteJsonLd(baseApiUrl + url, credentials)))
 
   def patchJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): JsonLDDocument =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.patchJsonLd(apiBaseUrl + url, jsonLd, credentials)))
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.patchJsonLd(baseApiUrl + url, jsonLd, credentials)))
 
   def putJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): JsonLDDocument =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.putJsonLd(apiBaseUrl + url, jsonLd, credentials)))
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.putJsonLd(baseApiUrl + url, jsonLd, credentials)))
 
   def putJsonLdGetResponse(url: String, jsonLd: String, credentials: HttpCredentials): HttpResponse =
     val request =
-      Put(apiBaseUrl + url, HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLd)) ~> addCredentials(credentials)
+      Put(baseApiUrl + url, HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLd)) ~> addCredentials(credentials)
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request)))
 
   def postJsonLd(url: String, jsonLd: String, credentials: HttpCredentials): JsonLDDocument =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.postJsonLd(apiBaseUrl + url, jsonLd, credentials)))
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.postJsonLd(baseApiUrl + url, jsonLd, credentials)))
 
   def postJsonLdGetResponse(url: String, jsonLd: String, credentials: HttpCredentials): HttpResponse =
     val request =
-      Post(apiBaseUrl + url, HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLd)) ~> addCredentials(credentials)
+      Post(baseApiUrl + url, HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLd)) ~> addCredentials(credentials)
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request)))
 }

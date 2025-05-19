@@ -3,10 +3,10 @@
 ## Permissions
 
 
-The permissions API endpoint is described [here](../../../03-endpoints/api-admin/permissions.md).
+The permissions API endpoint is described [in the permission documentation](../../../03-endpoints/api-admin/permissions.md).
 
 The default permissions when a project is created are described
-[here](../../../03-endpoints/api-admin/projects.md#default-set-of-permissions-for-a-new-project).
+[admin api documenation](../../../03-endpoints/api-admin/projects.md#default-set-of-permissions-for-a-new-project).
 
 DSP's concept of access control is that permissions 
 can only be granted to groups and not to individual users.

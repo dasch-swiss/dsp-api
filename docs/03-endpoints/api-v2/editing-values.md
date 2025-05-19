@@ -171,7 +171,7 @@ Use the predicate `knora-api:valueAsString` of `knora-api:TextValue`:
 
 Currently, the only way to create a text value with standoff markup
 is to submit it in XML format using an XML-to-standoff mapping.
-See [here](text/overview.md) for more detials.
+See [the overview](text/overview.md) for more detials.
 
 #### Creating a Text Value with Standard Mapping
 
@@ -221,7 +221,7 @@ to a `kb:TextFileValue`
 which represents the XSLT file stored in SIPI. For more Details, see [Creating File Values](#creating-file-values).
 
 The `kb:XMLToStandoffMapping` resource requires the mapping XML as
-specified [here](text/custom-standoff.md#creating-a-custom-mapping).
+specified [in the custom standoff documentation](text/custom-standoff.md#creating-a-custom-mapping).
 If an XSL transformation has been defined, the IRI the transformation can be placed in the `<defaultXSLTransformation>`
 tag of the mapping XML.
 
