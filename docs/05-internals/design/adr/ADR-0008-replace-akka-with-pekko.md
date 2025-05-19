@@ -42,8 +42,8 @@ Scala 3.3.0 is the minimum Scala 3 version supported. Scala 2.12 and 2.13 are st
 Our current migration to another http server implementation is currently on hold, 
 but we might want to switch to Pekko so that we could receive security updates and bugfixes.
 
-The proof of concept implementation has been shared in the pull request 
-[here](https://github.com/dasch-swiss/dsp-api/pull/2848), 
+The proof of concept implementation has been shared in [the pull request 
+here](https://github.com/dasch-swiss/dsp-api/pull/2848), 
 allowing for further testing and validation of the proposed switch to Pekko.
 
 ## Decision

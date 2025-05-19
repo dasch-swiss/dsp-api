@@ -20,4 +20,4 @@ The following table shows the accepted file formats:
 
 *) If your XML files represent text with markup (e.g. [TEI/XML](http://www.tei-c.org/)),
 it is possible to store it as [Standoff/RDF](standoff-rdf.md),
-as described [here](../03-endpoints/api-v2/text/overview.md).
+as described [in the api overview](../03-endpoints/api-v2/text/overview.md).

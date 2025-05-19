@@ -50,7 +50,7 @@ If you are creating a new ontology,
 please do not use these properties anymore.
 Instead, use the newly introduced Segment type.
 
-More information on Segments can be found [here](../02-dsp-ontologies/knora-base.md#segment).
+More information on Segments can be found [in the knora-base ontology documentation](../02-dsp-ontologies/knora-base.md#segment).
 
 ### Updating DOAPs
 
@@ -58,14 +58,14 @@ For updating DOAPs, using the general-purpose route `/admin/permissions/{permiss
 is deprecated and will be removed in a future version.
 
 Insteads use `/admin/permissions/doap/{permissionIri}`
-as described [here](../03-endpoints/api-admin/permissions.md#updating-an-existing-default-object-access-permission).
+as described [in the permission documentation](../03-endpoints/api-admin/permissions.md#updating-an-existing-default-object-access-permission).
 
 ### Retrieving List Information
 
 For retrieving list infos, the routes `/admin/lists/infos/{listIri}` and `/admin/lists/nodes/{listIri}`
 are deprecated and will be removed in a future version.  
 Instead, use `/admin/lists/{listIri}/info` 
-as described [here](../03-endpoints/api-admin/lists.md#get-list-info). 
+as described [in the lists api documentation](../03-endpoints/api-admin/lists.md#get-list-info). 
 
 ### Authentication
 
@@ -80,7 +80,7 @@ The unparametrised check if it is possible to replace a cardinality of a propert
 Instead of `/v2/ontologies/canreplacecardinalities/{classIRI}`,
 use `/v2/ontologies/canreplacecardinalities/{classIRI}?propertyIri={propertyIRI}&newCardinality=[0-1|1|1-n|0-n]`.
 
-For more information, see [here](../03-endpoints/api-v2/ontology-information/#pre-update-checks).
+For more information, see [the api documentation](../03-endpoints/api-v2/ontology-information/#pre-update-checks).
 
 ### `fileValueHasExternalUrl`
 
@@ -89,5 +89,5 @@ Instead, use `knora-base:stillImageFileValueExternalFileValue`.
 Additionally, this property should no longer be typed as a string literal,
 but as a `xsd:anyURI` instead.
 
-For more information, see [here](../03-endpoints/api-v2/editing-values.md#images-stored-in-an-external-iiif-server).
+For more information, see [the api documentation](../03-endpoints/api-v2/editing-values.md#images-stored-in-an-external-iiif-server).
 
