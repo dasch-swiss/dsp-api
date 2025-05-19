@@ -19,6 +19,7 @@ import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.infrastructure.DspApiServer
 
 abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
@@ -29,10 +30,11 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
   type env = LayersTestMock.Environment with Client with Scope
 
-  private def prepare: ZIO[AppServer.AppServerEnvironment, Throwable, AppServer] = for {
+  private def prepare = for {
     appServer <- AppServer.init()
     _         <- appServer.start(requiresAdditionalRepositoryChecks = false).orDie
     _         <- prepareRepository(rdfDataObjects)
+    _         <- DspApiServer.make
   } yield appServer
 
   def withResettedTriplestore =

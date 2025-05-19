@@ -33,6 +33,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.infrastructure.DspApiServer
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
@@ -92,6 +93,7 @@ abstract class ITKnoraLiveSpec
           for {
             _ <- AppServer.test
             _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
+            _ <- DspApiServer.make
           } yield (),
         )
         .getOrThrow()

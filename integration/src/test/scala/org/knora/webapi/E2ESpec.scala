@@ -36,9 +36,9 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.infrastructure.DspApiServer
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.LogAspect
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack
@@ -87,7 +87,7 @@ abstract class E2ESpec
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
-    UnsafeZioRun.runOrThrow(AppServer.test *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")))
+    UnsafeZioRun.runOrThrow(AppServer.test *> prepareRepository(rdfDataObjects) *> DspApiServer.make)
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
