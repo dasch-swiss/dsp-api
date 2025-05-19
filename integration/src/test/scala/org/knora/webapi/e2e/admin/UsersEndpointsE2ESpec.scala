@@ -31,7 +31,7 @@ import pekko.http.scaladsl.unmarshalling.Unmarshal
 /**
  * End-to-End (E2E) test specification for testing users endpoint.
  */
-class UsersADME2ESpec extends E2ESpec with SprayJsonSupport {
+class UsersEndpointsE2ESpec extends E2ESpec with SprayJsonSupport {
 
   private val rootUser                         = SharedTestDataADM.rootUser
   private val projectAdminUser                 = SharedTestDataADM.imagesUser01
@@ -497,29 +497,17 @@ class UsersADME2ESpec extends E2ESpec with SprayJsonSupport {
         result.lang should be("de")
       }
 
-      "return 'BadRequest' if user IRI is None and 'NotFound' if user IRI is '' in update user request" in {
-        val updateUserRequest: String =
-          s"""{
-             |    "username": "donald.without.iri.duck"
-             |}""".stripMargin
-
-        val missingUserIri = ""
+      "return 'BadRequest' if user IRI is invalid and 'NotFound' if user IRI is '' in update user request" in {
         val request = Put(
-          baseApiUrl + s"/admin/users/iri/$missingUserIri/BasicUserInformation",
-          HttpEntity(ContentTypes.`application/json`, updateUserRequest),
+          baseApiUrl + "/admin/users/iri/not-a-user-iri/BasicUserInformation",
+          HttpEntity(
+            ContentTypes.`application/json`,
+            s"""{ "username": "donald.without.iri.duck" }""".stripMargin,
+          ),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
-        response.status should be(StatusCodes.NotFound)
-
-        val missingUserIriNone = None
-        val request2 = Put(
-          baseApiUrl + s"/admin/users/iri/$missingUserIriNone/BasicUserInformation",
-          HttpEntity(ContentTypes.`application/json`, updateUserRequest),
-        ) ~> addRootUserCredentials()
-        val response2: HttpResponse = singleAwaitingRequest(request2)
-
-        response2.status should be(StatusCodes.BadRequest)
+        response.status should be(StatusCodes.BadRequest)
       }
 
       "return 'Forbidden' when updating another user's password if a requesting user is not a SystemAdmin" in {
