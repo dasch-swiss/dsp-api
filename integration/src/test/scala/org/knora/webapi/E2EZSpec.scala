@@ -21,7 +21,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.infrastructure.DspApiServer
 
-abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
+abstract class E2EZSpec extends ZIOSpecDefault {
 
   private val testLayers =
     util.Logger.text() >>> LayersTestMock.layer()
@@ -32,13 +32,12 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
   private def prepare = for {
     appServer <- AppServer.init()
-    _         <- appServer.start(requiresAdditionalRepositoryChecks = false).orDie
-    _         <- prepareRepository(rdfDataObjects)
-    _         <- DspApiServer.make.fork
+    _         <- appServer.start(requiresAdditionalRepositoryChecks = false)
+    _         <- TestStartupUtils.prepareRepository(rdfDataObjects)
+    _         <- DspApiServer.make.forkDaemon.unit
   } yield appServer
 
-  def withResettedTriplestore =
-    TestAspect.before(prepareRepository(rdfDataObjects))
+  def withResettedTriplestore = TestAspect.before(TestStartupUtils.prepareRepository(rdfDataObjects))
 
   def e2eSpec: Spec[env, Any]
 

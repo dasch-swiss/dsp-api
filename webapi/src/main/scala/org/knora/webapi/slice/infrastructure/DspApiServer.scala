@@ -14,12 +14,12 @@ import org.knora.webapi.slice.common.api.TapirToZioHttpInterpreter
 
 object DspApiServer {
 
-  val make: ZIO[KnoraApi & TapirToZioHttpInterpreter & DspApiServerEndpoints, Throwable, Unit] = for {
+  val make: ZIO[KnoraApi & TapirToZioHttpInterpreter & DspApiServerEndpoints, Throwable, Nothing] = (for {
     endpoints <- ZIO.service[DspApiServerEndpoints]
     tapir     <- ZIO.service[TapirToZioHttpInterpreter]
     routes     = tapir.toHttp(endpoints.serverEndpoints)
-    _         <- Server.serve(routes).provideSome[KnoraApi](ApiHttpServer.layer)
-  } yield ()
+    nothing   <- Server.serve(routes).provideSome[KnoraApi](ApiHttpServer.layer)
+  } yield nothing).ensuring(ZIO.logInfo("Shutting down DSP API Server"))
 }
 
 object ApiHttpServer {
@@ -28,10 +28,12 @@ object ApiHttpServer {
   private def configLayer =
     ZLayer.fromZIO(
       ZIO
-        .serviceWith[KnoraApi](c =>
-          Server.Config.default
-            .binding(c.externalHost, c.externalPort)
-            .enableRequestStreaming,
+        .serviceWithZIO[KnoraApi](c =>
+          ZIO.logInfo(s"Starting DSP API Server with config: $c").as {
+            Server.Config.default
+              .binding(c.externalHost, c.externalPort)
+              .enableRequestStreaming
+          },
         ),
     )
 }

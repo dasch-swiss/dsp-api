@@ -25,7 +25,6 @@ import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTestLive
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -33,11 +32,9 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.slice.infrastructure.DspApiServer
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
-import org.knora.webapi.util.LogAspect
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack and
@@ -46,7 +43,6 @@ import org.knora.webapi.util.LogAspect
 abstract class ITKnoraLiveSpec
     extends AnyWordSpec
     with TestKitBase
-    with TestStartupUtils
     with Matchers
     with BeforeAndAfterAll
     with RequestBuilding
@@ -85,19 +81,7 @@ abstract class ITKnoraLiveSpec
   val baseApiUrl: String          = appConfig.knoraApi.internalKnoraApiBaseUrl
   val baseInternalSipiUrl: String = appConfig.sipi.internalBaseUrl
 
-  final override def beforeAll(): Unit =
-    /* Here we start our app and initialize the repository before each suit runs */
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            _ <- AppServer.test
-            _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-            _ <- DspApiServer.make.fork
-          } yield (),
-        )
-        .getOrThrow()
-    }
+  final override def beforeAll() = UnsafeZioRun.runOrThrow(TestStartupUtils.startDspApi(rdfDataObjects))
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */

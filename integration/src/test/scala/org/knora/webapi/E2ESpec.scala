@@ -30,13 +30,11 @@ import scala.concurrent.duration.FiniteDuration
 
 import dsp.errors.AssertionException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.slice.infrastructure.DspApiServer
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
 
@@ -47,7 +45,6 @@ import org.knora.webapi.util.FileUtil
 abstract class E2ESpec
     extends AnyWordSpec
     with TestKitBase
-    with TestStartupUtils
     with TriplestoreJsonProtocol
     with Matchers
     with ScalaFutures
@@ -85,9 +82,7 @@ abstract class E2ESpec
   // needed by some tests
   val baseApiUrl = appConfig.knoraApi.internalKnoraApiBaseUrl
 
-  final override def beforeAll(): Unit =
-    /* Here we start our app and initialize the repository before each suit runs */
-    UnsafeZioRun.runOrThrow(AppServer.test *> prepareRepository(rdfDataObjects) *> DspApiServer.make.fork.unit)
+  final override def beforeAll(): Unit = UnsafeZioRun.runOrThrow(TestStartupUtils.startDspApi(rdfDataObjects))
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
