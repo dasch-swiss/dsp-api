@@ -39,7 +39,7 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.*
 
-class ValuesRouteV2E2ESpec extends E2ESpec {
+class ValuesEndpointsE2ESpec extends E2ESpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
