@@ -81,7 +81,7 @@ abstract class ITKnoraLiveSpec
   val baseApiUrl: String          = appConfig.knoraApi.internalKnoraApiBaseUrl
   val baseInternalSipiUrl: String = appConfig.sipi.internalBaseUrl
 
-  final override def beforeAll() = UnsafeZioRun.runOrThrow(TestStartupUtils.startDspApi(rdfDataObjects))
+  final override def beforeAll(): Unit = UnsafeZioRun.runOrThrow(TestStartupUtils.startDspApi(rdfDataObjects))
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */

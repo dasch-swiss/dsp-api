@@ -55,7 +55,7 @@ object TriplestoreTimeoutException {
 }
 
 /**
- * Indicates that we tried using a feature which is unsuported by the selected triplestore.
+ * Indicates that we tried using a feature which is unsupported by the selected triplestore.
  *
  * @param message a description of the error.
  * @param cause   the original exception representing the cause of the error, if any.
@@ -66,20 +66,6 @@ final case class TriplestoreUnsupportedFeatureException(message: String, cause: 
 object TriplestoreUnsupportedFeatureException {
   def apply(message: String, e: Throwable, log: Logger): TriplestoreUnsupportedFeatureException =
     TriplestoreUnsupportedFeatureException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
-}
-
-/**
- * Indicates that something inside the Triplestore package went wrong. More details can be given in the message parameter.
- *
- * @param message a description of the error.
- * @param cause   the original exception representing the cause of the error, if any.
- */
-case class TriplestoreInternalException(message: String, cause: Option[Throwable] = None)
-    extends TriplestoreException(message, cause)
-
-object TriplestoreInternalException {
-  def apply(message: String, e: Throwable, log: Logger): TriplestoreInternalException =
-    TriplestoreInternalException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
 /**

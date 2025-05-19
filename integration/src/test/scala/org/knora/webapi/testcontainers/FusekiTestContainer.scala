@@ -6,6 +6,7 @@
 package org.knora.webapi.testcontainers
 
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.wait.strategy.Wait
 import zio.Task
 import zio.ULayer
 import zio.ZIO
@@ -64,10 +65,12 @@ object FusekiTestContainer {
   def initializeWithDataset(repositoryName: String): ZIO[FusekiTestContainer, Throwable, Unit] =
     ZIO.serviceWithZIO[FusekiTestContainer](_.initializeWithDataset(repositoryName))
 
-  def make: FusekiTestContainer = new FusekiTestContainer()
+  private val container: FusekiTestContainer = new FusekiTestContainer()
     .withExposedPorts(3030)
     .withEnv("ADMIN_PASSWORD", adminPassword)
     .withEnv("JVM_ARGS", "-Xmx3G")
+    .withLogConsumer(frame => print("FUSEKI:\t" + frame.getUtf8String))
+    .waitingFor(Wait.forHttp("/").forStatusCode(401))
 
-  val layer: ULayer[FusekiTestContainer] = make.toLayer
+  val layer: ULayer[FusekiTestContainer] = container.toLayer
 }

@@ -46,6 +46,12 @@ final case class BaseEndpoints(authenticator: Authenticator) {
       // plus security
       oneOfVariant[BadCredentialsException](statusCode(StatusCode.Unauthorized).and(jsonBody[BadCredentialsException])),
       oneOfVariant[ForbiddenException](statusCode(StatusCode.Forbidden).and(jsonBody[ForbiddenException])),
+      // catchall
+      oneOfDefaultVariant(
+        statusCode(StatusCode.InternalServerError).and(
+          stringBody.map(s => new InternalServerErrorException(s))(_.message),
+        ),
+      ),
     )
 
   val publicEndpoint: PublicEndpoint[Unit, Throwable, Unit, Any] = endpoint.errorOut(errorOutputs)

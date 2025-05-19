@@ -5,7 +5,6 @@
 
 package org.knora.webapi
 
-import com.typesafe.scalalogging.*
 import org.apache.pekko
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.client.RequestBuilding
@@ -58,16 +57,10 @@ abstract class E2ESpec
   type Environment = core.LayersTestLive.Environment
 
   /**
-   * The effect layers from which the App is built.
-   * Can be overriden in specs that need other implementations.
-   */
-  lazy val effectLayers = core.LayersTestLive.layer
-
-  /**
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
    * and cleaned up when the Runtime is shutdown.
    */
-  private val bootstrap = util.Logger.text() >>> effectLayers
+  private val bootstrap = util.Logger.text() >>> core.LayersTestLive.layer
 
   // create a configured runtime
   implicit val runtime: Runtime.Scoped[Environment] =
@@ -77,10 +70,9 @@ abstract class E2ESpec
   implicit lazy val system: ActorSystem                = UnsafeZioRun.service[ActorSystem]
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
-  val log: Logger                                      = Logger(this.getClass)
 
   // needed by some tests
-  val baseApiUrl = appConfig.knoraApi.internalKnoraApiBaseUrl
+  val baseApiUrl: String = appConfig.knoraApi.internalKnoraApiBaseUrl
 
   final override def beforeAll(): Unit = UnsafeZioRun.runOrThrow(TestStartupUtils.startDspApi(rdfDataObjects))
 
