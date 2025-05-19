@@ -1,5 +1,29 @@
 # Changelog
 
+## [31.15.0](https://github.com/dasch-swiss/dsp-api/compare/v31.14.0...v31.15.0) (2025-05-19)
+
+
+### Maintenances
+
+* Dependency updates ([#3600](https://github.com/dasch-swiss/dsp-api/issues/3600)) ([1d411c0](https://github.com/dasch-swiss/dsp-api/commit/1d411c06dc5ea1991578af93a724cffa461b93d6))
+* Remove pekko dependenices pt. 2 (DEV-4870) ([#3591](https://github.com/dasch-swiss/dsp-api/issues/3591)) ([5f20ffb](https://github.com/dasch-swiss/dsp-api/commit/5f20ffbe1a99298afe559da5e54412edb4be97b7))
+* Remove StringFormatter from TriplestoreServiceLive ([#3595](https://github.com/dasch-swiss/dsp-api/issues/3595)) ([fbf4c9a](https://github.com/dasch-swiss/dsp-api/commit/fbf4c9addbb8e238a426c7f577b63308c8bfe8ca))
+
+
+### Enhancements
+
+* Value Erasing, except standoff with links (DEV-4701) ([#3583](https://github.com/dasch-swiss/dsp-api/issues/3583)) ([92a0565](https://github.com/dasch-swiss/dsp-api/commit/92a0565fd21d481c9cd93e4443b796c9c786a963))
+
+
+### Bug Fixes
+
+* Allow empty strings as results from the database (DEV-4887) ([#3597](https://github.com/dasch-swiss/dsp-api/issues/3597)) ([8e0915f](https://github.com/dasch-swiss/dsp-api/commit/8e0915f57c7f671fa4bd24ba75778e9585ec4495))
+
+
+### Tests
+
+* Migrate Pekko R2R tests to E2E test and remove R2RSpec ([#3602](https://github.com/dasch-swiss/dsp-api/issues/3602)) ([341c2cb](https://github.com/dasch-swiss/dsp-api/commit/341c2cb6b9a45fd21a2391d0f2587b10c496c0df))
+
 ## [31.14.0](https://github.com/dasch-swiss/dsp-api/compare/v31.13.0...v31.14.0) (2025-05-13)
 
 
