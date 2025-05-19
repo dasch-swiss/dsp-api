@@ -6,8 +6,8 @@
 package org.knora.webapi.e2e.v2
 
 import org.apache.pekko
-import spray.json.JsValue
-import spray.json.JsonParser
+import org.apache.pekko.http.scaladsl.model.headers.Accept
+import org.apache.pekko.http.scaladsl.server.Directives.*
 
 import java.net.URLEncoder
 import java.nio.file.Paths
@@ -17,9 +17,6 @@ import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.util.FileUtil
-
-import pekko.http.scaladsl.model.headers.Accept
-import pekko.http.scaladsl.server.Directives.*
 
 /**
  * End-to-end test specification for the lists endpoint. This specification uses the Spray Testkit as documented
@@ -47,30 +44,29 @@ class ListsEndpointsE2ESpec extends E2ESpec {
   "The lists v2 endpoint" should {
 
     "perform a request for a list in JSON-LD" in {
-      val actual = getResponseAsJson(
+      val actual = getResponseAsJsonLD(
         Get(s"$baseApiUrl/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}"),
       )
       val expected =
-        JsonParser(FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/listsR2RV2/imagesList.jsonld")))
+        FileUtil.readTextFileAsJsonLD(Paths.get("..", "test_data/generated_test_data/listsR2RV2/imagesList.jsonld"))
       assert(actual == expected)
     }
 
     "perform a request for the anything treelist list in JSON-LD" in {
-      val actual = getResponseAsJson(
+      val actual = getResponseAsJsonLD(
         Get(s"$baseApiUrl/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "UTF-8")}"),
       )
-      val expected: JsValue =
-        JsonParser(FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/listsR2RV2/treelist.jsonld")))
+      val expected =
+        FileUtil.readTextFileAsJsonLD(Paths.get("..", "test_data/generated_test_data/listsR2RV2/treelist.jsonld"))
       assert(actual == expected)
     }
 
     "perform a request for the anything othertreelist list in JSON-LD" in {
-      val actual = getResponseAsJson(
+      val actual = getResponseAsJsonLD(
         Get(s"$baseApiUrl/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/0001/otherTreeList", "UTF-8")}"),
       )
-      val expected = JsonParser(
-        FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/listsR2RV2/othertreelist.jsonld")),
-      )
+      val expected =
+        FileUtil.readTextFileAsJsonLD(Paths.get("..", "test_data/generated_test_data/listsR2RV2/othertreelist.jsonld"))
       assert(actual == expected)
     }
 
@@ -97,30 +93,26 @@ class ListsEndpointsE2ESpec extends E2ESpec {
     }
 
     "perform a request for a node in JSON-LD" in {
-      val actual = getResponseAsJson(
-        Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}"),
+      val actual = getResponseAsJsonLD(
+        Get(s"$baseApiUrl/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}"),
       )
-      val expected: JsValue =
-        JsonParser(
-          FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/listsR2RV2/imagesListNode.jsonld")),
-        )
+      val expected =
+        FileUtil.readTextFileAsJsonLD(Paths.get("..", "test_data/generated_test_data/listsR2RV2/imagesListNode.jsonld"))
       assert(actual == expected)
     }
 
     "perform a request for a treelist node in JSON-LD" in {
-      val actual = getResponseAsJson(
-        Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/0001/treeList01", "UTF-8")}"),
+      val actual = getResponseAsJsonLD(
+        Get(s"$baseApiUrl/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/0001/treeList01", "UTF-8")}"),
       )
-      val expected: JsValue =
-        JsonParser(
-          FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/listsR2RV2/treelistnode.jsonld")),
-        )
+      val expected =
+        FileUtil.readTextFileAsJsonLD(Paths.get("..", "test_data/generated_test_data/listsR2RV2/treelistnode.jsonld"))
       assert(actual == expected)
     }
 
     "perform a request for a node in Turtle" in {
       val actual = getResponseAsString(
-        Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}")
+        Get(s"$baseApiUrl/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}")
           .addHeader(Accept(RdfMediaTypes.`text/turtle`)),
       )
       val expectedAnswerTurtle: RdfModel =
@@ -133,7 +125,7 @@ class ListsEndpointsE2ESpec extends E2ESpec {
 
     "perform a request for a node in RDF/XML" in {
       val actual = getResponseAsString(
-        Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}")
+        Get(s"$baseApiUrl/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}")
           .addHeader(Accept(RdfMediaTypes.`application/rdf+xml`)),
       )
       val expectedAnswerRdfXml: RdfModel =
