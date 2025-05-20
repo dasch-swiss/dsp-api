@@ -12,6 +12,7 @@ import zio.json.JsonCodec
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
+import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -28,6 +29,7 @@ object ProjectsEndpointsRequestsAndResponses {
     logo: Option[Logo] = None,
     status: Status = Status.Active,
     selfjoin: SelfJoin = SelfJoin.CannotJoin,
+    allowedCopyrightHolders: Option[Set[CopyrightHolder]] = None,
     enabledLicenses: Option[Set[LicenseIri]] = None,
   )
   object ProjectCreateRequest {

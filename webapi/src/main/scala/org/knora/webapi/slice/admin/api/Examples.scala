@@ -109,6 +109,7 @@ object Examples {
       status = Active,
       ontologies = Seq.empty,
       selfjoin = CannotJoin,
+      allowedCopyrightHolders = Set.empty,
       enabledLicenses = LicenseIri.BUILT_IN,
     )
 

@@ -37,8 +37,13 @@ final case class CopyrightHolder private (override val value: String) extends St
 object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
   given JsonCodec[CopyrightHolder] = ZioJsonCodec.stringCodec(CopyrightHolder.from)
   given Schema[CopyrightHolder]    = Schema.string
+  given Ordering[CopyrightHolder]  = Ordering.by(_.value)
 
-  given Ordering[CopyrightHolder] = Ordering.by(_.value)
+  val default: Set[CopyrightHolder] =
+    Set("AI-Generated Content - Not Protected by Copyright", "Public Domain - Not Protected by Copyright").map(
+      CopyrightHolder.unsafeFrom,
+    )
+
   def from(str: String): Either[String, CopyrightHolder] =
     fromValidations(
       "Copyright Holder",

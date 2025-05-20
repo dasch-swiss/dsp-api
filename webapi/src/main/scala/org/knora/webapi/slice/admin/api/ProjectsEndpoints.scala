@@ -193,7 +193,12 @@ final case class ProjectsEndpoints(
 
     val postAdminProjects = baseEndpoints.securedEndpoint.post
       .in(projectsBase)
-      .in(jsonBody[ProjectCreateRequest])
+      .in(
+        jsonBody[ProjectCreateRequest].description(
+          "The property `enabledLicenses` is optional and if not provided the DaSCH recommended licensed will be used. " +
+            "The property `allowedCopyrightHolders` is optional and copyright holder for AI generated values and unknown authorship will be added in any case.",
+        ),
+      )
       .out(jsonBody[ProjectOperationResponseADM])
       .description("Creates a new project.")
 

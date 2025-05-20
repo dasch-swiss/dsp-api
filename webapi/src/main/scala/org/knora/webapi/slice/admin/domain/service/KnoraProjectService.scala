@@ -67,6 +67,7 @@ final case class KnoraProjectService(
                     }
                   case None => licenseRepo.findRecommendedLicenses().map(_.map(_.id))
                 }
+    copyrightHolders = req.allowedCopyrightHolders.getOrElse(Set.empty) ++ CopyrightHolder.default
     project = KnoraProject(
                 req.id.getOrElse(ProjectIri.makeNew),
                 req.shortname,
@@ -78,7 +79,7 @@ final case class KnoraProjectService(
                 req.status,
                 req.selfjoin,
                 RestrictedView.default,
-                Set.empty,
+                copyrightHolders,
                 licenses.toSet,
               )
     project <- projectRepo.save(project)
