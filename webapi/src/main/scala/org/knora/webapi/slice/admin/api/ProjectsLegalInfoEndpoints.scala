@@ -74,7 +74,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
         "The user must be project member, project admin or system admin.",
     )
 
-  val getProjectLicenses = baseEndpoints.securedEndpoint.get
+  val getProjectLicenses = baseEndpoints.publicEndpoint.get
     .in(base / "licenses")
     .in(PageAndSize.queryParams())
     .in(FilterAndOrder.queryParams)
@@ -137,15 +137,15 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
         "The user must be a system admin.",
     )
 
-  val endpoints: Seq[AnyEndpoint] = Seq(
-    getProjectAuthorships,
-    getProjectLicenses,
-    putProjectLicensesEnable,
-    putProjectLicensesDisable,
-    getProjectCopyrightHolders,
-    postProjectCopyrightHolders,
-    putProjectCopyrightHolders,
-  ).map(_.endpoint).map(_.tag("Admin Projects (Legal Info)"))
+  val endpoints: Seq[AnyEndpoint] = (Seq(getProjectLicenses) ++
+    Seq(
+      getProjectAuthorships,
+      putProjectLicensesEnable,
+      putProjectLicensesDisable,
+      getProjectCopyrightHolders,
+      postProjectCopyrightHolders,
+      putProjectCopyrightHolders,
+    ).map(_.endpoint)).map(_.tag("Admin Projects (Legal Info)"))
 }
 
 object ProjectsLegalInfoEndpoints {
