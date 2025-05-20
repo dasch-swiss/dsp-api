@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.api
 import zio.ZLayer
+
 import org.knora.webapi.slice.admin.api.service.ProjectsLegalInfoRestService
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler

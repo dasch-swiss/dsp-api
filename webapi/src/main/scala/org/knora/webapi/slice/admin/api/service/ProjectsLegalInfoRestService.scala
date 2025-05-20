@@ -6,12 +6,12 @@
 package org.knora.webapi.slice.admin.api.service
 
 import cats.syntax.traverse.*
-import dsp.errors.ForbiddenException
 import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.json.JsonCodec
+
 import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.api.CopyrightHolderAddRequest
 import org.knora.webapi.slice.admin.api.CopyrightHolderReplaceRequest
