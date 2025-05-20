@@ -7,6 +7,8 @@ package org.knora.webapi.slice.common
 
 import eu.timepit.refined.types.string.NonEmptyString
 
+import java.net.URI
+
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -120,6 +122,7 @@ object KnoraIris {
       extends KnoraIri {
     override def equals(other: Any): Boolean = super.equals(other)
     override def hashCode(): Int             = super.hashCode()
+    val latestArkUrl: URI                    = URI.create(smartIri.fromResourceIriToArkUrl(None))
   }
   object ResourceIri {
 
