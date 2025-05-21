@@ -93,6 +93,5 @@ markdownlint:
 
 
 # Check that there are no dead links in the docs
-[no-exit-message]
 check-links:
     markdown-link-validator ./docs
