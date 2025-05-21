@@ -195,8 +195,8 @@ final case class ProjectsEndpoints(
       .in(projectsBase)
       .in(
         jsonBody[ProjectCreateRequest].description(
-          "The property `enabledLicenses` is optional and if not provided the DaSCH recommended licenses will be used. " +
-            "The property `allowedCopyrightHolders` is optional and copyright holder for AI generated values and unknown authorship will be added in any case.",
+          "The property `enabledLicenses` is optional. If not provided, the DaSCH recommended licenses will be used. " +
+            "The property `allowedCopyrightHolders` is optional. The copyright holder for AI generated values and unknown authorship will be added in any case.",
         ),
       )
       .out(jsonBody[ProjectOperationResponseADM])
