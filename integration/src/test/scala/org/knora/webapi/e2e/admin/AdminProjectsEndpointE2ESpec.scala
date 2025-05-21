@@ -34,11 +34,9 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.slice.admin.domain.model.LicenseIri
 
-/**
- * End-to-End (E2E) test specification for testing groups endpoint.
- */
-class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
+class AdminProjectsEndpointE2ESpec extends E2ESpec with SprayJsonSupport {
 
   private val rootEmail        = SharedTestDataADM.rootUser.email
   private val testPass         = SharedTestDataADM.testPass
@@ -156,7 +154,10 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
              |    "keywords": ["projectIRI"],
              |    "logo": "/fu/bar/baz.jpg",
              |    "status": true,
-             |    "selfjoin": false
+             |    "selfjoin": false,
+             |    "enabledLicenses": [
+             |        "http://rdfh.ch/licenses/cc-by-4.0"
+             |      ]
              |}""".stripMargin
 
         val request = Post(
@@ -177,6 +178,7 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         result.longname.map(_.value) should be(Some("new project with a custom IRI"))
         result.keywords should be(Seq("projectIRI"))
         result.description should be(Seq(StringLiteralV2.from("a project created with a custom IRI", Some("en"))))
+        result.enabledLicenses should be(Set(LicenseIri.unsafeFrom("http://rdfh.ch/licenses/cc-by-4.0")))
         result.allowedCopyrightHolders.map(_.value) should be(
           Set("AI-Generated Content - Not Protected by Copyright", "Public Domain - Not Protected by Copyright"),
         )
