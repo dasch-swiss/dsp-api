@@ -32,9 +32,9 @@ import org.knora.webapi.slice.admin.api.model.ProjectMembersGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
+import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.slice.admin.domain.model.LicenseIri
 
 class AdminProjectsEndpointE2ESpec extends E2ESpec with SprayJsonSupport {
 
