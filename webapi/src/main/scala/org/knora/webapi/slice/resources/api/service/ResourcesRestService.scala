@@ -8,26 +8,37 @@ import sttp.model.MediaType
 import zio.*
 
 import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.resources.api.ResourceMetadataDto
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.IriDto
 import org.knora.webapi.slice.resources.api.model.VersionDate
 
 final case class ResourcesRestService(
+  private val auth: AuthorizationRestService,
   private val resourcesService: ResourcesResponderV2,
   private val searchService: SearchResponderV2,
   private val iriConverter: IriConverter,
   private val requestParser: ApiComplexV2JsonLdRequestParser,
   private val renderer: KnoraResponseRenderer,
 ) {
+
+  def getResourcesMetadata(user: User)(shortcode: Shortcode): IO[ForbiddenException, List[ResourceMetadataDto]] =
+    for {
+      prj    <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
+      result <- resourcesService.getResourcesMetadata(prj).orDie
+    } yield result
 
   def getResourcesIiifManifest(user: User)(
     resourceIri: IriDto,
