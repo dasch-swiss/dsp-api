@@ -14,19 +14,14 @@ import org.knora.webapi.slice.URModule
 
 object InfrastructureModule
     extends URModule[
-      // format: off
-      DspIngestConfig &
-      JwtConfig
-      ,
-      CacheManager &
-      InvalidTokenCache &
-      JwtService
-      // format: on
+      DspIngestConfig & JwtConfig,
+      CacheManager & CsvService & InvalidTokenCache & JwtService,
     ] { self =>
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       CacheManager.layer,
       InvalidTokenCache.layer,
       JwtServiceLive.layer,
+      CsvService.layer,
     )
 }
