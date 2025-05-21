@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.it.v2
+package org.knora.webapi.e2e
 
 import org.apache.pekko
 import org.apache.pekko.http.javadsl.model.StatusCodes
@@ -13,6 +13,7 @@ import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json.*
+import zio.ZIO
 
 import java.net.URLEncoder
 import java.nio.file.Paths
@@ -28,15 +29,20 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
+import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
 /**
  * Integration test specification for the standoff endpoint.
  */
-class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonProtocol {
+class StandoffEndpointsE2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
+
+  def uploadToIngest(fileToUpload: java.nio.file.Path): TestDspIngestClient.UploadedFile =
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(fileToUpload)))
 
   val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
@@ -129,7 +135,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
     val request = Get(
       s"$baseApiUrl/v2/resources/$iri",
     ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-    getResponseJsonLD(request)
+    getResponseAsJsonLD(request)
   }
 
   "The Standoff v2 Endpoint" should {
