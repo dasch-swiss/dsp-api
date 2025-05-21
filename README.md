@@ -40,6 +40,8 @@ Each developer machine should have the following prerequisites installed:
 * JDK [Temurin 21](https://adoptium.net/en-GB/temurin/)
 * [sbt](https://www.scala-sbt.org/)
 * [just](https://just.systems/man/en/)
+* [markdown-link-validator](https://github.com/webhintio/markdown-link-validator)
+  (`npm install -g markdown-link-validator`)
 
 #### JDK Temurin 21
 
