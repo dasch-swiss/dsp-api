@@ -12,7 +12,6 @@ import zio.ZIO
 import zio.ZLayer
 import zio.json.JsonCodec
 
-import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.api.CopyrightHolderAddRequest
 import org.knora.webapi.slice.admin.api.CopyrightHolderReplaceRequest
@@ -43,18 +42,17 @@ final case class ProjectsLegalInfoRestService(
   ): Task[PagedResponse[Authorship]] =
     auth.ensureProjectMember(user, shortcode).flatMap(legalInfos.findAuthorships(_, pageAndSize, filterAndOrder))
 
-  def findLicenses(user: User)(
+  def findLicenses(
     shortcode: Shortcode,
     pageAndSize: PageAndSize,
     filterAndOrder: FilterAndOrder,
     showEnabledOnly: Boolean,
-  ): IO[ForbiddenException, PagedResponse[ProjectLicenseDto]] =
-    for {
-      prj <- auth.ensureProjectMember(user, shortcode)
-      licenses <- if (showEnabledOnly) { legalInfos.findEnabledLicenses(shortcode) }
-                  else { legalInfos.findAvailableLicenses(shortcode) }
-      licenseDtos = licenses.map(l => ProjectLicenseDto.from(l, prj.enabledLicenses.contains(l.id))).toSeq
-    } yield slice(licenseDtos, pageAndSize, filterAndOrder)
+  ): IO[NotFoundException, PagedResponse[ProjectLicenseDto]] = for {
+    prj <- projects.findByShortcode(shortcode).orDie.someOrFail(NotFoundException(s"Project $shortcode not found"))
+    licenses <- if (showEnabledOnly) { legalInfos.findEnabledLicenses(shortcode) }
+                else { legalInfos.findAvailableLicenses(shortcode) }
+    licenseDtos = licenses.map(l => ProjectLicenseDto.from(l, prj.enabledLicenses.contains(l.id))).toSeq
+  } yield slice(licenseDtos, pageAndSize, filterAndOrder)
 
   private def slice[A: JsonCodec](
     all: Seq[A],

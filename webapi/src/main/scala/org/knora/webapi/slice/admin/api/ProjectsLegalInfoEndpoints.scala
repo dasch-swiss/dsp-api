@@ -74,7 +74,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
         "The user must be project member, project admin or system admin.",
     )
 
-  val getProjectLicenses = baseEndpoints.securedEndpoint.get
+  val getProjectLicenses = baseEndpoints.publicEndpoint.get
     .in(base / "licenses")
     .in(PageAndSize.queryParams())
     .in(FilterAndOrder.queryParams)
@@ -83,10 +83,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
       jsonBody[PagedResponse[ProjectLicenseDto]]
         .example(Examples.PagedResponse.fromTotal(License.BUILT_IN.map(l => ProjectLicenseDto.from(l, true)))),
     )
-    .description(
-      "Get the available licenses for use within this project. " +
-        "The user must be project member, project admin or system admin.",
-    )
+    .description("Get the available licenses for use within this project.")
 
   val putProjectLicensesEnable = baseEndpoints.securedEndpoint.put
     .in(base / "licenses" / licenseIriPath / "enable")
@@ -137,15 +134,15 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
         "The user must be a system admin.",
     )
 
-  val endpoints: Seq[AnyEndpoint] = Seq(
-    getProjectAuthorships,
-    getProjectLicenses,
-    putProjectLicensesEnable,
-    putProjectLicensesDisable,
-    getProjectCopyrightHolders,
-    postProjectCopyrightHolders,
-    putProjectCopyrightHolders,
-  ).map(_.endpoint).map(_.tag("Admin Projects (Legal Info)"))
+  val endpoints: Seq[AnyEndpoint] = (Seq(getProjectLicenses) ++
+    Seq(
+      getProjectAuthorships,
+      putProjectLicensesEnable,
+      putProjectLicensesDisable,
+      getProjectCopyrightHolders,
+      postProjectCopyrightHolders,
+      putProjectCopyrightHolders,
+    ).map(_.endpoint)).map(_.tag("Admin Projects (Legal Info)"))
 }
 
 object ProjectsLegalInfoEndpoints {
