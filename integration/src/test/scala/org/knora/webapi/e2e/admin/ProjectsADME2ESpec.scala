@@ -177,6 +177,9 @@ class ProjectsADME2ESpec extends E2ESpec with SprayJsonSupport {
         result.longname.map(_.value) should be(Some("new project with a custom IRI"))
         result.keywords should be(Seq("projectIRI"))
         result.description should be(Seq(StringLiteralV2.from("a project created with a custom IRI", Some("en"))))
+        result.allowedCopyrightHolders.map(_.value) should be(
+          Set("AI-Generated Content - Not Protected by Copyright", "Public Domain - Not Protected by Copyright"),
+        )
       }
 
       "return 'BadRequest' if the supplied project IRI is not unique" in {

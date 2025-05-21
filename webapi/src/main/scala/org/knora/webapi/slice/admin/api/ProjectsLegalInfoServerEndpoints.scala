@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.admin.api
 import sttp.capabilities.zio.ZioStreams
-import sttp.tapir.ztapir.ZServerEndpoint
+import sttp.tapir.ztapir.*
 import zio.ZLayer
 
 import org.knora.webapi.slice.admin.api.service.ProjectsLegalInfoRestService
@@ -15,8 +15,8 @@ final class ProjectsLegalInfoServerEndpoints(
   restService: ProjectsLegalInfoRestService,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] = List(
+    endpoints.getProjectLicenses.zServerLogic(restService.findLicenses),
     endpoints.getProjectAuthorships.serverLogic(restService.findAuthorships),
-    endpoints.getProjectLicenses.serverLogic(restService.findLicenses),
     endpoints.putProjectLicensesEnable.serverLogic(restService.enableLicense),
     endpoints.putProjectLicensesDisable.serverLogic(restService.disableLicense),
     endpoints.getProjectCopyrightHolders.serverLogic(restService.findCopyrightHolders),
@@ -24,7 +24,6 @@ final class ProjectsLegalInfoServerEndpoints(
     endpoints.putProjectCopyrightHolders.serverLogic(restService.replaceCopyrightHolder),
   )
 }
-
 object ProjectsLegalInfoServerEndpoints {
   val layer = ZLayer.derive[ProjectsLegalInfoServerEndpoints]
 }
