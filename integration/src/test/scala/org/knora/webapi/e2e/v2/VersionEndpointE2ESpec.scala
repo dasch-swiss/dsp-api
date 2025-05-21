@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.it
+package org.knora.webapi.e2e.v2
 
 import org.apache.pekko
 import spray.json.*
@@ -11,14 +11,14 @@ import spray.json.*
 import scala.concurrent.Await
 import scala.concurrent.duration.*
 
-import org.knora.webapi.ITKnoraLiveSpec
+import org.knora.webapi.E2ESpec
 
 import pekko.http.scaladsl.model.*
 
 /**
  * End-to-End (E2E) test specification for testing route rejections.
  */
-class VersionRouteITSpec extends ITKnoraLiveSpec {
+class VersionEndpointE2ESpec extends E2ESpec {
 
   private def getJsonResponse: JsObject = {
     val request                = Get(baseApiUrl + s"/version")

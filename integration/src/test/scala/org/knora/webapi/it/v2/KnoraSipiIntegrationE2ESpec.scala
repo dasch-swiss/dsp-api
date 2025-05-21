@@ -25,10 +25,7 @@ import org.knora.webapi.slice.security.Authenticator
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
  */
-class KnoraSipiAuthenticationITSpec
-    extends ITKnoraLiveSpec
-    with AuthenticationV2JsonProtocol
-    with TriplestoreJsonProtocol {
+class KnoraSipiIntegrationE2ESpec extends E2ESpec with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
   private val anythingUserEmail = SharedTestDataADM.anythingAdminUser.email
   private val password          = SharedTestDataADM.testPass
@@ -67,7 +64,7 @@ class KnoraSipiAuthenticationITSpec
 
       // Request the permanently stored image from Sipi.
       val sipiGetImageRequest =
-        Get(s"$baseInternalSipiUrl/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/max/0/default.jpg") ~> addHeader(cookieHeader)
+        Get(s"$baseSipiUrl/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/max/0/default.jpg") ~> addHeader(cookieHeader)
       val response = singleAwaitingRequest(sipiGetImageRequest)
       assert(response.status === StatusCodes.OK)
     }
@@ -78,7 +75,7 @@ class KnoraSipiAuthenticationITSpec
       val password = "clean_tmp_dir_pw"
 
       val request =
-        Get(s"$baseInternalSipiUrl/clean_temp_dir") ~> addCredentials(BasicHttpCredentials(username, password))
+        Get(s"$baseSipiUrl/clean_temp_dir") ~> addCredentials(BasicHttpCredentials(username, password))
 
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
@@ -89,7 +86,7 @@ class KnoraSipiAuthenticationITSpec
       val password = "password"
 
       val request =
-        Get(s"$baseInternalSipiUrl/clean_temp_dir") ~> addCredentials(BasicHttpCredentials(username, password))
+        Get(s"$baseSipiUrl/clean_temp_dir") ~> addCredentials(BasicHttpCredentials(username, password))
 
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.Unauthorized)

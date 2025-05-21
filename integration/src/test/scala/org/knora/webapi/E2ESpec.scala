@@ -72,7 +72,8 @@ abstract class E2ESpec
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
 
   // needed by some tests
-  val baseApiUrl: String = appConfig.knoraApi.internalKnoraApiBaseUrl
+  val baseApiUrl: String  = appConfig.knoraApi.internalKnoraApiBaseUrl
+  val baseSipiUrl: String = appConfig.sipi.internalBaseUrl
 
   final override def beforeAll(): Unit = UnsafeZioRun.runOrThrow(TestStartupUtils.startDspApi(rdfDataObjects))
 

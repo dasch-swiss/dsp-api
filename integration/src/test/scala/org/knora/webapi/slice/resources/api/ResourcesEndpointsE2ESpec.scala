@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.e2e.v2
+package org.knora.webapi.slice.resources.api
 
 import org.apache.pekko.http.scaladsl.model.HttpEntity
 import org.apache.pekko.http.scaladsl.model.HttpResponse
@@ -33,6 +33,7 @@ import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.e2e.InstanceChecker
+import org.knora.webapi.e2e.v2.*
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -50,7 +51,7 @@ import org.knora.webapi.util.*
 /**
  * Tests the API v2 resources route.
  */
-class ResourcesRouteV2E2ESpec extends E2ESpec {
+class ResourcesEndpointsE2ESpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val anythingUserEmail             = SharedTestDataADM.anythingUser1.email

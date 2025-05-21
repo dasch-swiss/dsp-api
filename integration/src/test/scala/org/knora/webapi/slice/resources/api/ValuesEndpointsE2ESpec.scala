@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.e2e.v2
+package org.knora.webapi.slice.resources.api
 
 import org.apache.pekko.http.scaladsl.model.HttpEntity
 import org.apache.pekko.http.scaladsl.model.HttpResponse
@@ -28,7 +28,7 @@ import org.knora.webapi.util.MutableTestIri
 /**
  * Tests creating a still image file value using a mock Sipi.
  */
-class ValuesV2R2RSpec extends ITKnoraLiveSpec {
+class ValuesEndpointsE2ESpec extends E2ESpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -43,7 +43,7 @@ class ValuesV2R2RSpec extends ITKnoraLiveSpec {
 
   private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
-  override lazy val rdfDataObjects = List(
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
       name = "http://www.knora.org/data/0001/anything",
