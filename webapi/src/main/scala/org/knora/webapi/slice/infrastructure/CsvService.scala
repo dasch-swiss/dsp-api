@@ -1,26 +1,30 @@
 package org.knora.webapi.slice.infrastructure
 
 import com.github.tototoshi.csv.CSVWriter
+import zio.Scope
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.nio.file.Path
 
-case class CsvService() {
-  private def createWriter(path: Path) = {
-    val acquire = ZIO.succeed(CSVWriter.open(path.toFile))
-    val release = (w: CSVWriter) => ZIO.succeed(w.close())
-    ZIO.acquireRelease(acquire)(release)
-  }
+import java.io.OutputStream
 
-  def writeReportToCsv[A](report: Seq[A], path: Path)(using rowBuilder: CsvRowBuilder[A]): Task[Path] =
-    ZIO.scoped {
-      for {
-        w <- createWriter(path)
-        _ <- ZIO.succeed(w.writeRow(rowBuilder.headerRow))
-        _ <- ZIO.foreachDiscard(report)(rep => ZIO.succeed(w.writeRow(rowBuilder.valueRow(rep))))
-      } yield path
-    }
+case class CsvService() {
+
+  def writeToPath[A](items: Seq[A], path: Path)(using
+    rowBuilder: CsvRowBuilder[A],
+  ): ZIO[Scope, Throwable, Path] =
+    ZIO.fromAutoCloseable(ZIO.succeed(CSVWriter.open(path.toFile))).flatMap(write(_, items)).as(path)
+
+  def writeToStream[A](items: Seq[A], os: OutputStream)(using
+    rowBuilder: CsvRowBuilder[A],
+  ): ZIO[Scope, Throwable, OutputStream] =
+    ZIO.fromAutoCloseable(ZIO.succeed(CSVWriter.open(os))).flatMap(write(_, items).as(os))
+
+  private def write[A](w: CSVWriter, items: Seq[A])(using
+    rowBuilder: CsvRowBuilder[A],
+  ): Task[Unit] = ZIO.attempt(w.writeRow(rowBuilder.headerRow)) *>
+    ZIO.foreachDiscard(items)(item => ZIO.attempt(w.writeRow(rowBuilder.valueRow(item))))
 }
 object CsvService {
   val layer = ZLayer.derive[CsvService]

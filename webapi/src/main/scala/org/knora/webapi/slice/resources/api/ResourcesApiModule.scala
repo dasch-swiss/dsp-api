@@ -22,15 +22,17 @@ import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 import org.knora.webapi.slice.resources.api.service.StandoffRestService
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
+import org.knora.webapi.slice.resources.service.ResourcesMetadataService
 
 object ResourcesApiModule
     extends URModule[
       AuthorizationRestService & ApiComplexV2JsonLdRequestParser & BaseEndpoints & GraphRoute & HandlerMapper &
-        IriConverter & KnoraProjectService & KnoraResponseRenderer & ResourcesResponderV2 & SearchResponderV2 &
-        StandoffResponderV2 & TapirToPekkoInterpreter & ValuesResponderV2,
+        IriConverter & KnoraProjectService & KnoraResponseRenderer & ResourcesModule.Provided & ResourcesResponderV2 &
+        SearchResponderV2 & StandoffResponderV2 & TapirToPekkoInterpreter & ValuesResponderV2,
       ResourcesApiRoutes & ResourcesEndpoints & StandoffEndpoints & ValuesEndpoints,
     ] { self =>
 

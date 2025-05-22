@@ -24,10 +24,12 @@ import org.knora.webapi.slice.resources.api.ResourceMetadataDto
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.IriDto
 import org.knora.webapi.slice.resources.api.model.VersionDate
+import org.knora.webapi.slice.resources.service.ResourcesMetadataService
 
 final case class ResourcesRestService(
   private val auth: AuthorizationRestService,
   private val resourcesService: ResourcesResponderV2,
+  private val resourcesMetadataService: ResourcesMetadataService,
   private val searchService: SearchResponderV2,
   private val iriConverter: IriConverter,
   private val requestParser: ApiComplexV2JsonLdRequestParser,
@@ -37,7 +39,7 @@ final case class ResourcesRestService(
   def getResourcesMetadata(user: User)(shortcode: Shortcode): IO[ForbiddenException, List[ResourceMetadataDto]] =
     for {
       prj    <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-      result <- resourcesService.getResourcesMetadata(prj).orDie
+      result <- resourcesMetadataService.getResourcesMetadata(prj).orDie
     } yield result
 
   def getResourcesIiifManifest(user: User)(
