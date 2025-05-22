@@ -154,7 +154,7 @@ final case class ResourcesEndpoints(
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
 
-  val endpoints: Seq[AnyEndpoint] = (Seq(
+  val endpoints: Seq[AnyEndpoint] = Seq(
     getResourcesIiifManifest,
     getResourcesPreview,
     getResourcesProjectHistoryEvents,
@@ -168,7 +168,7 @@ final case class ResourcesEndpoints(
     postResourcesDelete,
     postResources,
     putResources,
-  ).map(_.endpoint)).map(_.tag("V2 Resources"))
+  ).map(_.endpoint).map(_.tag("V2 Resources"))
 }
 
 object ResourcesEndpoints {
