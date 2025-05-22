@@ -110,16 +110,16 @@ final case class MetadataService(
   }
   private val csv = new DefaultCSVFormat {}
 
-  def getResourcesMetadataAsCsv(project: KnoraProject): ZIO[Scope, Throwable, String] =
+  def getResourcesMetadataAsCsv(project: KnoraProject): Task[String] =
     getResourcesMetadata(project).flatMap(data =>
       given CSVFormat = csv
-      csvService.writeToString(data),
+      ZIO.scoped(csvService.writeToString(data)),
     )
 
-  def getResourcesMetadataAsTsv(project: KnoraProject): ZIO[Scope, Throwable, String] =
+  def getResourcesMetadataAsTsv(project: KnoraProject): Task[String] =
     getResourcesMetadata(project).flatMap(data =>
       given CSVFormat = tsv
-      csvService.writeToString(data),
+      ZIO.scoped(csvService.writeToString(data)),
     )
 }
 

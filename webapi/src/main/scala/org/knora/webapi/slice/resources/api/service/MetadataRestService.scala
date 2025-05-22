@@ -34,25 +34,22 @@ final case class MetadataRestService(
 
   def getResourcesMetadata(
     user: User,
-  )(shortcode: Shortcode, format: ExportFormat): IO[ForbiddenException, (MediaType, String, String)] =
-    ZIO.scoped {
-      for {
-        prj <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-        result <- format match {
-                    case ExportFormat.CSV =>
-                      metadataService.getResourcesMetadataAsCsv(prj).orDie
-                    case ExportFormat.TSV =>
-                      metadataService.getResourcesMetadataAsTsv(prj).orDie
-                    case JSON =>
-                      metadataService.getResourcesMetadata(prj).map(_.toJson).orDie
-                  }
-        now <- Clock.instant.map(formatForFilename)
-      } yield (
-        format.mediaType,
-        s"attachment; filename=project_${shortcode.value}_metadata_resources_${now}.${format.ext}",
-        result,
-      )
-    }
+  )(shortcode: Shortcode, format: ExportFormat): IO[ForbiddenException, (MediaType, String, String)] = for {
+    prj <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
+    result <- format match {
+                case ExportFormat.CSV =>
+                  metadataService.getResourcesMetadataAsCsv(prj).orDie
+                case ExportFormat.TSV =>
+                  metadataService.getResourcesMetadataAsTsv(prj).orDie
+                case JSON =>
+                  metadataService.getResourcesMetadata(prj).map(_.toJson).orDie
+              }
+    now <- Clock.instant.map(formatForFilename)
+  } yield (
+    format.mediaType,
+    s"attachment; filename=project_${shortcode.value}_metadata_resources_${now}.${format.ext}",
+    result,
+  )
 }
 
 object MetadataRestService {
