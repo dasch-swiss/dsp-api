@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.resources.api.model
 
+import zio.json.JsonCodec
+
 import java.time.Instant
 import java.util.UUID
 import scala.util.Try
@@ -13,7 +15,9 @@ import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.slice.admin.api.Codecs.*
+import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
+import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.WithFrom
 
 final case class ValueUuid private (value: UUID) extends Value[UUID]
@@ -38,10 +42,11 @@ object VersionDate extends WithFrom[String, VersionDate] {
       .toRight(s"Invalid value for instant: $str")
 }
 
-final case class IriDto(value: String)
-object IriDto {
+final case class IriDto(value: String) extends StringValue
+object IriDto extends StringValueCompanion[IriDto] {
 
-  given TapirCodec.StringCodec[IriDto] = TapirCodec.stringCodec(IriDto.from, _.value)
+  given JsonCodec[IriDto]              = ZioJsonCodec.stringCodec(IriDto.from)
+  given TapirCodec.StringCodec[IriDto] = TapirCodec.stringCodec(IriDto.from)
 
   def from(str: String): Either[String, IriDto] =
     if Iri.isIri(str) then Right(IriDto(str)) else Left(s"Invalid IRI: $str")

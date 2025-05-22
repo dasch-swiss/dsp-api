@@ -8,6 +8,7 @@ import zio.ZLayer
 
 import org.knora.webapi.slice.admin.api.service.ProjectsLegalInfoRestService
 import org.knora.webapi.slice.common.api.HandlerMapper
+import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 final class ProjectsLegalInfoEndpointsHandler(
@@ -15,15 +16,17 @@ final class ProjectsLegalInfoEndpointsHandler(
   restService: ProjectsLegalInfoRestService,
   mapper: HandlerMapper,
 ) {
-  val allHandlers = List(
-    SecuredEndpointHandler(endpoints.getProjectAuthorships, restService.findAuthorships),
-    SecuredEndpointHandler(endpoints.getProjectLicenses, restService.findLicenses),
-    SecuredEndpointHandler(endpoints.putProjectLicensesEnable, restService.enableLicense),
-    SecuredEndpointHandler(endpoints.putProjectLicensesDisable, restService.disableLicense),
-    SecuredEndpointHandler(endpoints.getProjectCopyrightHolders, restService.findCopyrightHolders),
-    SecuredEndpointHandler(endpoints.postProjectCopyrightHolders, restService.addCopyrightHolders),
-    SecuredEndpointHandler(endpoints.putProjectCopyrightHolders, restService.replaceCopyrightHolder),
-  ).map(mapper.mapSecuredEndpointHandler)
+  val allHandlers =
+    List(PublicEndpointHandler(endpoints.getProjectLicenses, restService.findLicenses))
+      .map(mapper.mapPublicEndpointHandler) ++
+      List(
+        SecuredEndpointHandler(endpoints.getProjectAuthorships, restService.findAuthorships),
+        SecuredEndpointHandler(endpoints.putProjectLicensesEnable, restService.enableLicense),
+        SecuredEndpointHandler(endpoints.putProjectLicensesDisable, restService.disableLicense),
+        SecuredEndpointHandler(endpoints.getProjectCopyrightHolders, restService.findCopyrightHolders),
+        SecuredEndpointHandler(endpoints.postProjectCopyrightHolders, restService.addCopyrightHolders),
+        SecuredEndpointHandler(endpoints.putProjectCopyrightHolders, restService.replaceCopyrightHolder),
+      ).map(mapper.mapSecuredEndpointHandler)
 }
 
 object ProjectsLegalInfoEndpointsHandler {

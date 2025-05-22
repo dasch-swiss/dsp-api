@@ -12,6 +12,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
+import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -42,6 +43,7 @@ case class Project(
   ontologies: Seq[IRI],
   status: Status,
   selfjoin: SelfJoin,
+  allowedCopyrightHolders: Set[CopyrightHolder],
   enabledLicenses: Set[LicenseIri],
 ) extends Ordered[Project] {
 

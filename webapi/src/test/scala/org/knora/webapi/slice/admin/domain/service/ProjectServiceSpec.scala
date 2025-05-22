@@ -35,6 +35,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           ontologies = List.empty,
           status = Status.Active,
           selfjoin = SelfJoin.CanJoin,
+          allowedCopyrightHolders = Set.empty,
           enabledLicenses = Set.empty,
         )
         assertTrue(

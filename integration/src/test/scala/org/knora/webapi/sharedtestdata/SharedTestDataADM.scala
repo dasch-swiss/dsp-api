@@ -176,6 +176,7 @@ object SharedTestDataADM {
     ),
     status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
+    allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
   )
 
@@ -191,6 +192,7 @@ object SharedTestDataADM {
     ontologies = Seq.empty[IRI],
     status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
+    allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
   )
 
@@ -304,6 +306,7 @@ object SharedTestDataADM {
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
     status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
+    allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
   )
 
@@ -319,6 +322,7 @@ object SharedTestDataADM {
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI_LocalHost),
     status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
+    allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
   )
 
@@ -483,6 +487,7 @@ object SharedTestDataADM {
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
     status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
+    allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
   )
 
@@ -519,6 +524,7 @@ object SharedTestDataADM {
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI_LocalHost),
     status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
+    allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
   )
 
@@ -632,6 +638,7 @@ object SharedTestDataADM {
     ontologies = Seq(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI, SharedOntologyTestDataADM.SomethingOntologyIri),
     status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
+    allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
   )
 
@@ -649,6 +656,7 @@ object SharedTestDataADM {
     ),
     status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
+    allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
   )
 
@@ -687,6 +695,7 @@ object SharedTestDataADM {
     ),
     status = Status.Active,
     selfjoin = SelfJoin.CannotJoin,
+    allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
   )
 
@@ -737,6 +746,7 @@ object SharedTestDataADM {
     ontologies = Seq("http://www.knora.org/ontology/0804/dokubib"),
     status = Status.Inactive,
     selfjoin = SelfJoin.CannotJoin,
+    allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
   )
 }
