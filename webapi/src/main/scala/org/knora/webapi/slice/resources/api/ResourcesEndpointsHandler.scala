@@ -8,20 +8,16 @@ import zio.*
 
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
-import org.knora.webapi.slice.resources.api.service.MetadataRestService
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 
 final class ResourcesEndpointsHandler(
   private val resourcesEndpoints: ResourcesEndpoints,
   private val resourcesRestService: ResourcesRestService,
-  private val metadataEndpoints: MetadataEndpoints,
-  private val metadataRestService: MetadataRestService,
   private val mapper: HandlerMapper,
 ) {
 
   val allHandlers =
     Seq(
-      SecuredEndpointHandler(metadataEndpoints.getResourcesMetadata, metadataRestService.getResourcesMetadata),
       SecuredEndpointHandler(resourcesEndpoints.getResourcesGraph, resourcesRestService.getResourcesGraph),
       SecuredEndpointHandler(
         resourcesEndpoints.getResourcesIiifManifest,
