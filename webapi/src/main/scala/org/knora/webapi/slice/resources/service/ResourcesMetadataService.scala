@@ -97,6 +97,9 @@ final case class ResourcesMetadataService(
                 )
     } yield meta
   }
+
+  def getResourcesMetadataAsCsv(project: KnoraProject): ZIO[Scope, Throwable, String] =
+    getResourcesMetadata(project).flatMap(csvService.writeToString)
 }
 
 object ResourcesMetadataService {
