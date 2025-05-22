@@ -21,19 +21,19 @@ case class CsvService() {
 
   def writeToPath[A](items: Seq[A], path: Path)(using
     rowBuilder: CsvRowBuilder[A],
-    CSVFormat: CSVFormat,
+    csvFormat: CSVFormat,
   ): ZIO[Scope, Throwable, Path] =
     ZIO.fromAutoCloseable(ZIO.succeed(CSVWriter.open(path.toFile))).flatMap(write(_, items)).as(path)
 
   def writeToWriter[A](items: Seq[A], w: Writer)(using
     rowBuilder: CsvRowBuilder[A],
-    CSVFormat: CSVFormat,
+    csvFormat: CSVFormat,
   ): ZIO[Scope, Throwable, Writer] =
     ZIO.fromAutoCloseable(ZIO.succeed(CSVWriter.open(w))).flatMap(write(_, items).as(w))
 
   def writeToStream[A](items: Seq[A], os: OutputStream)(using
     rowBuilder: CsvRowBuilder[A],
-    CSVFormat: CSVFormat,
+    csvFormat: CSVFormat,
   ): ZIO[Scope, Throwable, OutputStream] =
     ZIO.fromAutoCloseable(ZIO.succeed(CSVWriter.open(os))).flatMap(write(_, items).as(os))
 
