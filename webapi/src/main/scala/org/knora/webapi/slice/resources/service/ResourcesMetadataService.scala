@@ -1,5 +1,7 @@
 package org.knora.webapi.slice.resources.service
 
+import com.github.tototoshi.csv.CSVFormat
+import com.github.tototoshi.csv.DefaultCSVFormat
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
@@ -98,8 +100,22 @@ final case class ResourcesMetadataService(
     } yield meta
   }
 
+  private val tsv: CSVFormat = new DefaultCSVFormat {
+    override val delimiter: Char = '\t'
+  }
+  private val csv = new DefaultCSVFormat {}
+
   def getResourcesMetadataAsCsv(project: KnoraProject): ZIO[Scope, Throwable, String] =
-    getResourcesMetadata(project).flatMap(csvService.writeToString)
+    getResourcesMetadata(project).flatMap(data =>
+      given CSVFormat = csv
+      csvService.writeToString(data),
+    )
+
+  def getResourcesMetadataAsTsv(project: KnoraProject): ZIO[Scope, Throwable, String] =
+    getResourcesMetadata(project).flatMap(data =>
+      given CSVFormat = tsv
+      csvService.writeToString(data),
+    )
 }
 
 object ResourcesMetadataService {

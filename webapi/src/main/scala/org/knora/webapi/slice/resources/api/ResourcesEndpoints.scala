@@ -8,6 +8,7 @@ package org.knora.webapi.slice.resources.api
 import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
+import sttp.tapir.Codec.PlainCodec
 import sttp.tapir.server.PartialServerEndpoint
 import zio.ZLayer
 import zio.json.DeriveJsonCodec
@@ -25,6 +26,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.infrastructure.ColumnDef
 import org.knora.webapi.slice.infrastructure.CsvRowBuilder
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.IriDto
@@ -44,23 +46,25 @@ object ResourceMetadataDto {
   given JsonCodec[ResourceMetadataDto] = DeriveJsonCodec.gen[ResourceMetadataDto]
   given Schema[ResourceMetadataDto]    = Schema.derived[ResourceMetadataDto]
 
-  given CsvRowBuilder[ResourceMetadataDto] = new CsvRowBuilder[ResourceMetadataDto] {
-    override def headerRow: Seq[String] = Seq(
-      "Resource Class IRI",
-      "Resource IRI",
-      "ARK URL (latest version)",
-      "Label",
-      "Creator IRI",
-      "Creation Date Time",
-      "Last Modification Date Time",
-      "Deletion Date Time",
-    )
+  given CsvRowBuilder[ResourceMetadataDto] = CsvRowBuilder.fromColumnDefs[ResourceMetadataDto](
+    ColumnDef("Resource IRI", _.resourceIri),
+    ColumnDef("ARK URL (Permalink)", _.arkUrl),
+    ColumnDef("Resource Class", _.resourceClassIri),
+    ColumnDef("Label", _.label),
+    ColumnDef("Created by", _.resourceCreatorIri),
+    ColumnDef("Creation Date", _.resourceCreationDate),
+    ColumnDef("Last Modification Date (if available)", _.resourceLastModificationDate.getOrElse("")),
+    ColumnDef("Deletion Date (if available)", _.resourceDeletionDate.getOrElse("")),
+  )
+}
 
-    override def valueRow(rowItem: ResourceMetadataDto): List[Any] = rowItem.productIterator.toList.map {
-      case opt: Option[_] => opt.getOrElse("")
-      case other          => other
-    }
-  }
+enum ExportFormat {
+  case CSV  extends ExportFormat
+  case TSV  extends ExportFormat
+  case JSON extends ExportFormat
+}
+object ExportFormat {
+  given PlainCodec[ExportFormat] = Codec.derivedEnumeration[String, ExportFormat].defaultStringBased
 }
 
 final case class ResourcesEndpoints(
@@ -97,6 +101,7 @@ final case class ResourcesEndpoints(
   val getResourcesMetadata = baseEndpoints.securedEndpoint.get
     .in(base / "projects" / projectShortcode / "metadata" / "resources")
     .out(stringBody)
+    .in(query[ExportFormat]("format").default(ExportFormat.CSV))
     .description(
       "<b>This endpoint is currently not stable and may change in the future.</b> " +
         "Get metadata of all resources in a project. " +

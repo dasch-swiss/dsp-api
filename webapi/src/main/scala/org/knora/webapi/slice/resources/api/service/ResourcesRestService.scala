@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.resources.api.service
 import sttp.model.MediaType
 import zio.*
+import zio.json.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
@@ -20,6 +21,9 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.resources.api.ExportFormat
+import org.knora.webapi.slice.resources.api.ExportFormat.JSON
+import org.knora.webapi.slice.resources.api.ResourceMetadataDto
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.IriDto
 import org.knora.webapi.slice.resources.api.model.VersionDate
@@ -35,12 +39,19 @@ final case class ResourcesRestService(
   private val renderer: KnoraResponseRenderer,
 ) {
 
-  def getResourcesMetadata(user: User)(shortcode: Shortcode): IO[ForbiddenException, String] =
+  def getResourcesMetadata(user: User)(shortcode: Shortcode, format: ExportFormat): IO[ForbiddenException, String] =
     ZIO.scoped {
       for {
         prj <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-        is  <- resourcesMetadataService.getResourcesMetadataAsCsv(prj).orDie
-      } yield is
+        result <- format match {
+                    case ExportFormat.CSV =>
+                      resourcesMetadataService.getResourcesMetadataAsCsv(prj).orDie
+                    case ExportFormat.TSV =>
+                      resourcesMetadataService.getResourcesMetadataAsTsv(prj).orDie
+                    case JSON =>
+                      resourcesMetadataService.getResourcesMetadata(prj).map(_.toJson).orDie
+                  }
+      } yield result
     }
 
   def getResourcesIiifManifest(user: User)(
