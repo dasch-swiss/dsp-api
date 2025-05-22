@@ -8,64 +8,20 @@ package org.knora.webapi.slice.resources.api
 import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
-import sttp.tapir.Codec.PlainCodec
 import sttp.tapir.server.PartialServerEndpoint
 import zio.ZLayer
-import zio.json.DeriveJsonCodec
-import zio.json.JsonCodec
 
-import java.time.Instant
 import scala.concurrent.Future
 
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.config.GraphRoute
-import org.knora.webapi.slice.admin.api.AdminPathVariables
-import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.infrastructure.ColumnDef
-import org.knora.webapi.slice.infrastructure.CsvRowBuilder
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.IriDto
 import org.knora.webapi.slice.resources.api.model.VersionDate
-
-final case class ResourceMetadataDto(
-  resourceClassIri: String,
-  resourceIri: String,
-  arkUrl: String,
-  label: String,
-  resourceCreatorIri: String,
-  resourceCreationDate: Instant,
-  resourceLastModificationDate: Option[Instant],
-  resourceDeletionDate: Option[Instant],
-)
-object ResourceMetadataDto {
-  given JsonCodec[ResourceMetadataDto] = DeriveJsonCodec.gen[ResourceMetadataDto]
-  given Schema[ResourceMetadataDto]    = Schema.derived[ResourceMetadataDto]
-
-  given CsvRowBuilder[ResourceMetadataDto] = CsvRowBuilder.fromColumnDefs[ResourceMetadataDto](
-    ColumnDef("Resource IRI", _.resourceIri),
-    ColumnDef("ARK URL (Permalink)", _.arkUrl),
-    ColumnDef("Resource Class", _.resourceClassIri),
-    ColumnDef("Label", _.label),
-    ColumnDef("Created by", _.resourceCreatorIri),
-    ColumnDef("Creation Date", _.resourceCreationDate),
-    ColumnDef("Last Modification Date (if available)", _.resourceLastModificationDate.getOrElse("")),
-    ColumnDef("Deletion Date (if available)", _.resourceDeletionDate.getOrElse("")),
-  )
-}
-
-enum ExportFormat {
-  case CSV  extends ExportFormat
-  case TSV  extends ExportFormat
-  case JSON extends ExportFormat
-}
-object ExportFormat {
-  given PlainCodec[ExportFormat] = Codec.derivedEnumeration[String, ExportFormat].defaultStringBased
-}
 
 final case class ResourcesEndpoints(
   private val baseEndpoints: BaseEndpoints,
@@ -97,16 +53,6 @@ final case class ResourcesEndpoints(
       case (_, Some(v)) => Some(v)
       case _            => None
     }(d => (d, d))
-
-  val getResourcesMetadata = baseEndpoints.securedEndpoint.get
-    .in(base / "projects" / projectShortcode / "metadata" / "resources")
-    .out(stringBody)
-    .in(query[ExportFormat]("format").default(ExportFormat.CSV))
-    .description(
-      "<b>This endpoint is currently not stable and may change in the future.</b> " +
-        "Get metadata of all resources in a project. " +
-        "This endpoint is only available for system and project admins.",
-    )
 
   val getResourcesPreview = baseEndpoints.withUserEndpoint.get
     .in("v2" / "resourcespreview" / paths)
@@ -209,7 +155,6 @@ final case class ResourcesEndpoints(
     .out(header[MediaType](HeaderNames.ContentType))
 
   val endpoints: Seq[AnyEndpoint] = (Seq(
-    getResourcesMetadata,
     getResourcesIiifManifest,
     getResourcesPreview,
     getResourcesProjectHistoryEvents,

@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2025 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.resources.service
 
 import com.github.tototoshi.csv.CSVFormat
@@ -23,7 +28,7 @@ import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.resources.api.ResourceMetadataDto
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-final case class ResourcesMetadataService(
+final case class MetadataService(
   private val csvService: CsvService,
   private val projectService: KnoraProjectService,
   private val triplestore: TriplestoreService,
@@ -118,6 +123,6 @@ final case class ResourcesMetadataService(
     )
 }
 
-object ResourcesMetadataService {
-  val layer = ZLayer.derive[ResourcesMetadataService]
+object MetadataService {
+  val layer = ZLayer.derive[MetadataService]
 }
