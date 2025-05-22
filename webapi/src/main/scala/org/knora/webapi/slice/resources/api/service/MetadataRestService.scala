@@ -21,7 +21,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.resources.api.ExportFormat
-import org.knora.webapi.slice.resources.api.ExportFormat.JSON
+import org.knora.webapi.slice.resources.api.ExportFormat.*
 import org.knora.webapi.slice.resources.service.MetadataService
 
 final case class MetadataRestService(
@@ -37,12 +37,9 @@ final case class MetadataRestService(
   )(shortcode: Shortcode, format: ExportFormat): IO[ForbiddenException, (MediaType, String, String)] = for {
     prj <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
     result <- format match {
-                case ExportFormat.CSV =>
-                  metadataService.getResourcesMetadataAsCsv(prj).orDie
-                case ExportFormat.TSV =>
-                  metadataService.getResourcesMetadataAsTsv(prj).orDie
-                case JSON =>
-                  metadataService.getResourcesMetadata(prj).map(_.toJson).orDie
+                case CSV  => metadataService.getResourcesMetadataAsCsv(prj).orDie
+                case TSV  => metadataService.getResourcesMetadataAsTsv(prj).orDie
+                case JSON => metadataService.getResourcesMetadata(prj).map(_.toJson).orDie
               }
     now <- Clock.instant.map(formatForFilename)
   } yield (
