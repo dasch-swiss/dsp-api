@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.slice.resources.api.service
+import sttp.model.MediaType
 import zio.Clock
 import zio.IO
 import zio.ZIO
@@ -29,11 +30,11 @@ final case class MetadataRestService(
 ) {
 
   private val formatForFilename: Instant => String =
-    _.atZone(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMMdd_HHmmss"))
+    _.atZone(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmssX"))
 
   def getResourcesMetadata(
     user: User,
-  )(shortcode: Shortcode, format: ExportFormat): IO[ForbiddenException, (String, String, String)] =
+  )(shortcode: Shortcode, format: ExportFormat): IO[ForbiddenException, (MediaType, String, String)] =
     ZIO.scoped {
       for {
         prj <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
@@ -45,18 +46,12 @@ final case class MetadataRestService(
                     case JSON =>
                       metadataService.getResourcesMetadata(prj).map(_.toJson).orDie
                   }
-        contentType = format match {
-                        case ExportFormat.CSV  => "text/csv"
-                        case ExportFormat.TSV  => "text/tab-separated-values"
-                        case ExportFormat.JSON => "application/json"
-                      }
         now <- Clock.instant.map(formatForFilename)
-        ext = format match {
-                case ExportFormat.CSV  => "csv"
-                case ExportFormat.TSV  => "tsv"
-                case ExportFormat.JSON => "json"
-              }
-      } yield (contentType, s"attachment; filename=project_${shortcode.value}_metadata_resources_${now}.$ext", result)
+      } yield (
+        format.mediaType,
+        s"attachment; filename=project_${shortcode.value}_metadata_resources_${now}.${format.ext}",
+        result,
+      )
     }
 }
 

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.api
 
+import sttp.model.MediaType
 import sttp.tapir.*
 import sttp.tapir.Codec.PlainCodec
 import sttp.tapir.server.PartialServerEndpoint
@@ -50,10 +51,10 @@ object ResourceMetadataDto {
   )
 }
 
-enum ExportFormat {
-  case CSV  extends ExportFormat
-  case TSV  extends ExportFormat
-  case JSON extends ExportFormat
+enum ExportFormat(val mediaType: MediaType, val ext: String) {
+  case CSV  extends ExportFormat(MediaType.TextCsv, "csv")
+  case TSV  extends ExportFormat(MediaType("text", "tab-separated-values"), "tsv")
+  case JSON extends ExportFormat(MediaType.ApplicationJson, "json")
 }
 object ExportFormat {
   given PlainCodec[ExportFormat] = Codec.derivedEnumeration[String, ExportFormat].defaultStringBased
@@ -65,7 +66,7 @@ final case class MetadataEndpoints(private val baseEndpoints: BaseEndpoints) {
   val getResourcesMetadata = baseEndpoints.securedEndpoint.get
     .in(base / "projects" / projectShortcode / "resources")
     .in(query[ExportFormat]("format").default(ExportFormat.CSV))
-    .out(header[String]("Content-Type"))
+    .out(header[MediaType]("Content-Type"))
     .out(header[String]("Content-Disposition"))
     .out(stringBody)
     .description(
