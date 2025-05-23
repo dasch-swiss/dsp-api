@@ -52,13 +52,11 @@ final case class MetadataRestService(
     classIri <- ZIO.foreach(classIri.map(_.value))(iriConverter.asResourceClassIri).mapError(BadRequestException.apply)
     data     <- metadataService.getResourcesMetadata(prj, classIri).orDie
     result <- format match {
-                case CSV =>
+                case JSON => ZIO.succeed(data.toJson)
+                case CSV  => ZIO.scoped(csvService.writeToString(data).orDie)
+                case TSV =>
                   given CSVFormat = new TSVFormat {}
                   ZIO.scoped(csvService.writeToString(data).orDie)
-                case TSV =>
-                  given CSVFormat = new DefaultCSVFormat {}
-                  ZIO.scoped(csvService.writeToString(data).orDie)
-                case JSON => ZIO.succeed(data.toJson)
               }
     now <- Clock.instant.map(formatForFilename)
   } yield (
