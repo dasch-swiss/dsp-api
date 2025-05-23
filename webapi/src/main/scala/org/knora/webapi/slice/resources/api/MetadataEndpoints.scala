@@ -8,15 +8,12 @@ package org.knora.webapi.slice.resources.api
 import sttp.model.MediaType
 import sttp.tapir.*
 import sttp.tapir.Codec.PlainCodec
-import sttp.tapir.server.PartialServerEndpoint
 import zio.ZLayer
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import java.time.Instant
-import scala.concurrent.Future
 
-import dsp.errors.RequestRejectedException
 import org.knora.webapi.slice.admin.api.AdminPathVariables
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
