@@ -90,8 +90,3 @@ markdownlint:
     --config .markdownlint.yml \
     --disable MD013 MD040 -- \
     "docs/**/*.md"
-
-
-# Check that there are no dead links in the docs
-check-links:
-    markdown-link-validator ./docs

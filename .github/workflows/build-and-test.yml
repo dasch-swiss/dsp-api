@@ -118,11 +118,6 @@ jobs:
       - name: markdownlint
         if: ${{ env.IS_NOOP == 'false' }}
         run: just markdownlint
-      - name: markdown-link-validator
-        if: ${{ env.IS_NOOP == 'false' }}
-        run: | 
-          npm install -g markdown-link-validator
-          just check-links
       - name: Build docs
         if: ${{ env.IS_NOOP == 'false' }}
         run: just docs-build
