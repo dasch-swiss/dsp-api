@@ -40,7 +40,7 @@ final case class MetadataService(
   def getResourcesMetadata(
     project: KnoraProject,
     classIris: List[ResourceClassIri],
-  ): Task[List[ResourceMetadataDto]] = {
+  ): Task[Seq[ResourceMetadataDto]] = {
     val (
       classIriVar,
       creationDateVar,
@@ -91,30 +91,28 @@ final case class MetadataService(
       s"Resource metadata query for project ${project.shortcode} returned inconsistent data for $field",
     )
     for {
-      _ <- ZIO.logInfo(s"QUERY: \n ${query.getQueryString}")
-      rows <- triplestore
-                .select(query)
-                .map(_.results.bindings)
-                .timed
-                .flatMap((d, s) => ZIO.logInfo(s"Query took ${d.toMillis} ms and returned ${s.size} rows").ignore.as(s))
+      rows <-
+        triplestore
+          .select(query)
+          .map(_.results.bindings)
+          .timed
+          .flatMap((d, s) =>
+            ZIO.logInfo(s"Query took ${d.toMillis} ms and returned ${s.size} rows:\n${query.getQueryString}").as(s),
+          )
       meta <- ZIO
                 .attempt(rows.map { row =>
-                  val resourceIri = row.rowMap.getOrElse(resourceIriVar, throwEx(resourceIriVar))
                   val classIri =
                     row.rowMap.getOrElse(classIriVar, throwEx(classIriVar)).toSmartIri.toComplexSchema.toIri
+                  val resourceIri = row.rowMap.getOrElse(resourceIriVar, throwEx(resourceIriVar))
+                  val arkUrl      = resourceIri.toSmartIri.fromResourceIriToArkUrl()
+                  val label       = row.rowMap.getOrElse(labelVar, throwEx(labelVar))
                   val creatorIri =
                     row.rowMap.getOrElse(creatorIriVar, throwEx(creatorIriVar)).toSmartIri.toComplexSchema.toIri
-                  val label     = row.rowMap.getOrElse(labelVar, throwEx(labelVar))
                   val createdAt = row.rowMap.get(creationDateVar).map(Instant.parse).getOrElse(throwEx(creationDateVar))
                   val deletedAt = row.rowMap.get(deleteDateVar).map(Instant.parse)
                   val lastModAt = row.rowMap.get(lastModificationDateVar).map(Instant.parse)
-                  val arkUrl    = resourceIri.toSmartIri.fromResourceIriToArkUrl()
                   ResourceMetadataDto(classIri, resourceIri, arkUrl, label, creatorIri, createdAt, lastModAt, deletedAt)
                 })
-                .timed
-                .flatMap((d, m) =>
-                  ZIO.logInfo(s"Mapping took ${d.toMillis} ms and returned ${m.size} rows").ignore.as(m.toList),
-                )
     } yield meta
   }
 

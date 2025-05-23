@@ -44,7 +44,6 @@ final case class MetadataRestService(
     classIri: List[IriDto],
   ): IO[RequestRejectedException, (MediaType, String, String)] = for {
     prj      <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-    _        <- ZIO.logInfo(s"Filtering metadata by class IRIs ${classIri}")
     classIri <- ZIO.foreach(classIri.map(_.value))(iriConverter.asResourceClassIri).mapError(BadRequestException.apply)
     result <- format match {
                 case CSV  => metadataService.getResourcesMetadataAsCsv(prj, classIri).orDie
