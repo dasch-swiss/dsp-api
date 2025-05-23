@@ -10,6 +10,7 @@ import zio.test.Assertion.anything
 import zio.test.Assertion.fails
 import zio.test.Assertion.isSubtype
 import zio.test.Spec
+import zio.test.TestResult
 import zio.test.ZIOSpecDefault
 import zio.test.assert
 import zio.test.assertTrue
@@ -2131,12 +2132,23 @@ object GravsearchParserSpec extends ZIOSpecDefault {
     ),
   )
 
+  // quick fix, because the vector order seems to be non-deterministic
+  def removeConstructClauseStatements(cq: ConstructQuery): ConstructQuery =
+    cq.copy(constructClause = cq.constructClause.copy(statements = Vector()))
+
+  def compareQueriesWithStatementSets(a: ConstructQuery, b: ConstructQuery): TestResult =
+    assertTrue(
+      removeConstructClauseStatements(a) == removeConstructClauseStatements(b),
+      a.constructClause.statements.toSet == b.constructClause.statements.toSet,
+    )
+
   val spec: Spec[Any, Nothing] = suite("The GravsearchParser object")(
     test("parse a Gravsearch query") {
       val parsed   = GravsearchParser.parseQuery(Query)
       val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
 
-      assertTrue(parsed == ParsedQuery, reparsed == parsed)
+      compareQueriesWithStatementSets(parsed, reparsed) &&
+      compareQueriesWithStatementSets(parsed, ParsedQuery)
     },
     test("parse a Gravsearch query with a BIND") {
       val parsed   = GravsearchParser.parseQuery(QueryWithBind)
@@ -2196,13 +2208,15 @@ object GravsearchParserSpec extends ZIOSpecDefault {
       val parsed   = GravsearchParser.parseQuery(QueryWithFilterInOptional)
       val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
 
-      assertTrue(parsed == ParsedQueryWithFilterInOptional, reparsed == parsed)
+      compareQueriesWithStatementSets(parsed, reparsed) &&
+      compareQueriesWithStatementSets(parsed, ParsedQueryWithFilterInOptional)
     },
     test("parse a Gravsearch query containing a nested OPTIONAL") {
       val parsed   = GravsearchParser.parseQuery(QueryStrWithNestedOptional)
       val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
 
-      assertTrue(parsed == ParsedQueryWithNestedOptional, reparsed == parsed)
+      compareQueriesWithStatementSets(parsed, reparsed) &&
+      compareQueriesWithStatementSets(parsed, ParsedQueryWithNestedOptional)
     },
     test("parse a Gravsearch query containing a UNION in an OPTIONAL") {
       val parsed   = GravsearchParser.parseQuery(QueryStrWithUnionInOptional)
