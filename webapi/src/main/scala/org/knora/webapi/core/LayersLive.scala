@@ -46,6 +46,7 @@ import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
+import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
 import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
@@ -165,6 +166,7 @@ object LayersLive {
       ResourceInfoLayers.live,
       ResourceUtilV2Live.layer,
       ResourcesApiModule.layer,
+      ResourcesModule.layer,
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
       SearchEndpoints.layer,

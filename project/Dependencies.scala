@@ -21,7 +21,7 @@ object Dependencies {
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion         = "5.1.2"
+  val Rdf4jVersion         = "5.1.3"
   val TopbraidShaclVersion = "1.4.4"
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
@@ -91,7 +91,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.4"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.4.4" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.4.5" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -101,14 +101,15 @@ object Dependencies {
   val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
 
   // other
-  val diff           = "com.sksamuel.diff" % "diff"             % "1.1.11"
-  val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"       % "icu4j"            % "77.1"
-  val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
-  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.6"
-  val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "2.0.2"
-  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.6.0"
-  val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.10.0"
+  val diff           = "com.sksamuel.diff"     % "diff"             % "1.1.11"
+  val gwtServlet     = "com.google.gwt"        % "gwt-servlet"      % "2.10.0"
+  val icu4j          = "com.ibm.icu"           % "icu4j"            % "77.1"
+  val jakartaJSON    = "org.glassfish"         % "jakarta.json"     % "2.0.1"
+  val saxonHE        = "net.sf.saxon"          % "Saxon-HE"         % "12.6"
+  val scalaGraph     = "org.scala-graph"      %% "graph-core"       % "2.0.2"
+  val titaniumJSONLD = "com.apicatalog"        % "titanium-json-ld" % "1.6.0"
+  val xmlunitCore    = "org.xmlunit"           % "xmlunit-core"     % "2.10.0"
+  val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
 
   // test
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
@@ -136,7 +137,7 @@ object Dependencies {
   )
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"         %% "zio-opentelemetry"                   % "3.1.3",
+    "dev.zio"         %% "zio-opentelemetry"                   % "3.1.4",
     "io.sentry"        % "sentry"                              % "8.11.1",
     "io.sentry"        % "sentry-opentelemetry-core"           % "8.11.1",
     "io.sentry"        % "sentry-opentelemetry-agentless"      % "8.11.1",
@@ -186,6 +187,7 @@ object Dependencies {
     rdf4jShacl,
     rdf4jSparql,
     saxonHE,
+    scalaCsv,
     scalaGraph,
     scalaLogging,
     slf4jApi,

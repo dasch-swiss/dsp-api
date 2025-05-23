@@ -11,6 +11,7 @@ import zio.ZLayer
 import org.knora.webapi.slice.lists.api.ListsEndpointsV2
 import org.knora.webapi.slice.ontology.api.OntologiesEndpoints
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
+import org.knora.webapi.slice.resources.api.MetadataEndpoints
 import org.knora.webapi.slice.resources.api.ResourcesEndpoints
 import org.knora.webapi.slice.resources.api.StandoffEndpoints
 import org.knora.webapi.slice.resources.api.ValuesEndpoints
@@ -21,6 +22,7 @@ final case class ApiV2Endpoints(
   private val authenticationEndpoints: AuthenticationEndpointsV2,
   private val listsEndpointsV2: ListsEndpointsV2,
   private val ontologiesEndpoints: OntologiesEndpoints,
+  private val metadataEndpoints: MetadataEndpoints,
   private val resourceInfoEndpoints: ResourceInfoEndpoints,
   private val resourcesEndpoints: ResourcesEndpoints,
   private val searchEndpoints: SearchEndpoints,
@@ -30,6 +32,7 @@ final case class ApiV2Endpoints(
 
   val endpoints: Seq[AnyEndpoint] =
     authenticationEndpoints.endpoints ++
+      metadataEndpoints.endpoints ++
       listsEndpointsV2.endpoints ++
       ontologiesEndpoints.endpoints ++
       resourceInfoEndpoints.endpoints ++

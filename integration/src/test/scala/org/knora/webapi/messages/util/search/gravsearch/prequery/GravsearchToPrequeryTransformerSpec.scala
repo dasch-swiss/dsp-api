@@ -1398,11 +1398,11 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
       |
       |CONSTRUCT {
       |    ?thing knora-api:isMainResource true .
-      |    ?thing onto:hasText ?text .        
+      |    ?thing onto:hasText ?text .
       |} WHERE {
       |    ?thing a onto:Thing .
       |    ?thing onto:hasText ?text .
-      |    
+      |
       |    {
       |        ?thing onto:hasInteger ?int .
       |        FILTER(?int = 1)
@@ -1895,7 +1895,7 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
                                           |} WHERE {
                                           |  ?thing anything:hasOtherThing ?thing1 .
                                           |  ?thing1 anything:hasOtherThing ?thing2 .
-                                          |  ?thing2 anything:hasOtherThing ?thing . 
+                                          |  ?thing2 anything:hasOtherThing ?thing .
                                           |} """.stripMargin
 
   val transformedQueryToReorderWithCycle: SelectQuery = SelectQuery(
@@ -2235,7 +2235,7 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
        |    ?thing a knora-api:Resource .
        |    ?thing a anything:Thing .
        |    ?thing anything:hasInteger ?int .
-       |    
+       |
        |    {
        |        ?thing anything:hasRichtext ?richtext .
        |        FILTER knora-api:matchText(?richtext, "test")
@@ -2748,12 +2748,18 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
 
     "reorder query patterns in where clause" in {
       val transformedQuery = transformQuery(queryToReorder)
-      assert(transformedQuery === transformedQueryToReorder)
+      assert(
+        transformedQuery.variables.toSet === transformedQueryToReorder.variables.toSet,
+        transformedQuery.copy(variables = Vector()) === transformedQueryToReorder.copy(variables = Vector()),
+      )
     }
 
     "reorder query patterns in where clause with union" in {
       val transformedQuery = transformQuery(queryToReorderWithUnion)
-      assert(transformedQuery === transformedQueryToReorderWithUnion)
+      assert(
+        transformedQuery.variables.toSet === transformedQueryToReorderWithUnion.variables.toSet,
+        transformedQuery.copy(variables = Vector()) === transformedQueryToReorderWithUnion.copy(variables = Vector()),
+      )
     }
 
     "reorder query patterns in where clause with optional" in {

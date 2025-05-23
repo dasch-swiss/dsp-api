@@ -19,22 +19,27 @@ import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
-import org.knora.webapi.slice.common.api.TapirToZioHttpInterpreter
+import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.resources.ResourcesModule
+import org.knora.webapi.slice.resources.api.service.MetadataRestService
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 import org.knora.webapi.slice.resources.api.service.StandoffRestService
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
 
 object ResourcesApiModule
     extends URModule[
-      ApiComplexV2JsonLdRequestParser & AuthorizationRestService & BaseEndpoints & GraphRoute & IriConverter &
-        KnoraProjectService & KnoraResponseRenderer & ResourcesResponderV2 & SearchResponderV2 & StandoffResponderV2 &
-        TapirToZioHttpInterpreter & ValuesResponderV2,
-      ResourcesApiServerEndpoints & ResourcesEndpoints & StandoffEndpoints & ValuesEndpoints,
+      ApiComplexV2JsonLdRequestParser & AuthorizationRestService & BaseEndpoints & GraphRoute &
+        InfrastructureModule.Provided & IriConverter & KnoraProjectService & KnoraResponseRenderer &
+        ResourcesModule.Provided & ResourcesResponderV2 & SearchResponderV2 & StandoffResponderV2 & ValuesResponderV2,
+      MetadataEndpoints & ResourcesApiServerEndpoints & ResourcesEndpoints & StandoffEndpoints & ValuesEndpoints,
     ] { self =>
 
   override def layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
+      MetadataEndpoints.layer,
+      MetadataRestService.layer,
+      MetadataServerEndpoints.layer,
       ResourcesApiServerEndpoints.layer,
       ResourcesEndpoints.layer,
       ResourcesRestService.layer,

@@ -44,6 +44,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
+import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
@@ -128,6 +129,7 @@ object LayersTestMock { self =>
       ResourceInfoLayers.live,
       ResourceUtilV2Live.layer,
       ResourcesApiModule.layer,
+      ResourcesModule.layer,
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
       SearchEndpoints.layer,

@@ -15,7 +15,6 @@ final class ResourcesServerEndpoints(
   private val resourcesRestService: ResourcesRestService,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] = List(
-    resourcesEndpoints.getResourcesMetadata.serverLogic(resourcesRestService.getResourcesMetadata),
     resourcesEndpoints.getResourcesGraph
       .serverLogic(resourcesRestService.getResourcesGraph),
     resourcesEndpoints.getResourcesIiifManifest

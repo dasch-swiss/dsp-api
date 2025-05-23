@@ -8,39 +8,16 @@ package org.knora.webapi.slice.resources.api
 import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
-import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
-import zio.json.DeriveJsonCodec
-import zio.json.JsonCodec
-
-import java.time.Instant
 
 import org.knora.webapi.config.GraphRoute
-import org.knora.webapi.slice.admin.api.AdminPathVariables
-import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.IriDto
 import org.knora.webapi.slice.resources.api.model.VersionDate
-
-final case class ResourceMetadataDto(
-  resourceClassIri: String,
-  resourceIri: String,
-  arkUrl: String,
-  label: String,
-  resourceCreatorIri: String,
-  resourceCreationDate: Instant,
-  resourceLastModificationDate: Option[Instant],
-  resourceDeletionDate: Option[Instant],
-)
-object ResourceMetadataDto {
-  given JsonCodec[ResourceMetadataDto] = DeriveJsonCodec.gen[ResourceMetadataDto]
-  given Schema[ResourceMetadataDto]    = Schema.derived[ResourceMetadataDto]
-}
 
 final case class ResourcesEndpoints(
   private val baseEndpoints: BaseEndpoints,
@@ -72,15 +49,6 @@ final case class ResourcesEndpoints(
       case (_, Some(v)) => Some(v)
       case _            => None
     }(d => (d, d))
-
-  val getResourcesMetadata = baseEndpoints.securedEndpoint.get
-    .in(base / "projects" / projectShortcode / "metadata" / "resources")
-    .out(jsonBody[List[ResourceMetadataDto]])
-    .description(
-      "<b>This endpoint is currently not stable and may change in the future.</b> " +
-        "Get metadata of all resources in a project. " +
-        "This endpoint is only available for system and project admins.",
-    )
 
   val getResourcesPreview = baseEndpoints.withUserEndpoint.get
     .in("v2" / "resourcespreview" / paths)
@@ -182,8 +150,7 @@ final case class ResourcesEndpoints(
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
 
-  val endpoints: Seq[AnyEndpoint] = (Seq(
-    getResourcesMetadata,
+  val endpoints: Seq[AnyEndpoint] = Seq(
     getResourcesIiifManifest,
     getResourcesPreview,
     getResourcesProjectHistoryEvents,
@@ -197,7 +164,7 @@ final case class ResourcesEndpoints(
     postResourcesDelete,
     postResources,
     putResources,
-  ).map(_.endpoint)).map(_.tag("V2 Resources"))
+  ).map(_.endpoint).map(_.tag("V2 Resources"))
 }
 
 object ResourcesEndpoints {

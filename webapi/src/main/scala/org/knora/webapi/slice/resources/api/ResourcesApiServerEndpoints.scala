@@ -13,9 +13,11 @@ final case class ResourcesApiServerEndpoints(
   private val valuesEndpoints: ValuesServerEndpoints,
   private val resourcesEndpoints: ResourcesServerEndpoints,
   private val standoffEndpoints: StandoffServerEndpoints,
+  private val metadataEndpoints: MetadataServerEndpoints,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =
-    valuesEndpoints.serverEndpoints ++
+    metadataEndpoints.serverEndpoints ++
+      valuesEndpoints.serverEndpoints ++
       resourcesEndpoints.serverEndpoints ++
       standoffEndpoints.serverEndpoints
 }
