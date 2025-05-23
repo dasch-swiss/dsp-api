@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.resources.api.service
 import com.github.tototoshi.csv.CSVFormat
-import com.github.tototoshi.csv.DefaultCSVFormat
 import com.github.tototoshi.csv.TSVFormat
 import sttp.model.MediaType
 import zio.Clock
