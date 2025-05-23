@@ -4,6 +4,9 @@
  */
 
 package org.knora.webapi.slice.resources.api.service
+import com.github.tototoshi.csv.CSVFormat
+import com.github.tototoshi.csv.DefaultCSVFormat
+import com.github.tototoshi.csv.TSVFormat
 import sttp.model.MediaType
 import zio.Clock
 import zio.IO
@@ -21,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resources.api.ExportFormat
 import org.knora.webapi.slice.resources.api.ExportFormat.*
@@ -31,6 +35,7 @@ final case class MetadataRestService(
   private val auth: AuthorizationRestService,
   private val iriConverter: IriConverter,
   private val metadataService: MetadataService,
+  private val csvService: CsvService,
 ) {
 
   private val formatForFilename: Instant => String =
@@ -45,10 +50,15 @@ final case class MetadataRestService(
   ): IO[RequestRejectedException, (MediaType, String, String)] = for {
     prj      <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
     classIri <- ZIO.foreach(classIri.map(_.value))(iriConverter.asResourceClassIri).mapError(BadRequestException.apply)
+    data     <- metadataService.getResourcesMetadata(prj, classIri).orDie
     result <- format match {
-                case CSV  => metadataService.getResourcesMetadataAsCsv(prj, classIri).orDie
-                case TSV  => metadataService.getResourcesMetadataAsTsv(prj, classIri).orDie
-                case JSON => metadataService.getResourcesMetadata(prj, classIri).map(_.toJson).orDie
+                case CSV =>
+                  given CSVFormat = new TSVFormat {}
+                  ZIO.scoped(csvService.writeToString(data).orDie)
+                case TSV =>
+                  given CSVFormat = new DefaultCSVFormat {}
+                  ZIO.scoped(csvService.writeToString(data).orDie)
+                case JSON => ZIO.succeed(data.toJson)
               }
     now <- Clock.instant.map(formatForFilename)
   } yield (

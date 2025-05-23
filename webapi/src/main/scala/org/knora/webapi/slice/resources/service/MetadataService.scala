@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.resources.service
 
-import com.github.tototoshi.csv.CSVFormat
-import com.github.tototoshi.csv.DefaultCSVFormat
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
@@ -27,16 +25,13 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
-import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.resources.api.ResourceMetadataDto
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class MetadataService(
-  private val csvService: CsvService,
   private val projectService: KnoraProjectService,
   private val triplestore: TriplestoreService,
 )(implicit val sf: StringFormatter) {
-
   def getResourcesMetadata(
     project: KnoraProject,
     classIris: List[ResourceClassIri],
@@ -115,23 +110,6 @@ final case class MetadataService(
                 })
     } yield meta
   }
-
-  private val tsv: CSVFormat = new DefaultCSVFormat {
-    override val delimiter: Char = '\t'
-  }
-  private val csv = new DefaultCSVFormat {}
-
-  def getResourcesMetadataAsCsv(project: KnoraProject, classIri: List[ResourceClassIri]): Task[String] =
-    getResourcesMetadata(project, classIri).flatMap(data =>
-      given CSVFormat = csv
-      ZIO.scoped(csvService.writeToString(data)),
-    )
-
-  def getResourcesMetadataAsTsv(project: KnoraProject, classIri: List[ResourceClassIri]): Task[String] =
-    getResourcesMetadata(project, classIri).flatMap(data =>
-      given CSVFormat = tsv
-      ZIO.scoped(csvService.writeToString(data)),
-    )
 }
 
 object MetadataService {
