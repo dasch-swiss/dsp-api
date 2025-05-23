@@ -16,14 +16,12 @@ import zio.test.*
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTestMock
 import org.knora.webapi.core.TestStartupUtils
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.infrastructure.DspApiServer
 
-abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
-
-  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+abstract class E2EZSpec extends ZIOSpecDefault {
 
   private val testLayers =
     util.Logger.text() >>> LayersTestMock.layer()
@@ -32,14 +30,14 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
   type env = LayersTestMock.Environment with Client with Scope
 
-  private def prepare: ZIO[AppServer.AppServerEnvironment, Throwable, AppServer] = for {
+  private def prepare = for {
     appServer <- AppServer.init()
-    _         <- appServer.start(requiresAdditionalRepositoryChecks = false).orDie
-    _         <- prepareRepository(rdfDataObjects)
+    _         <- appServer.start(requiresAdditionalRepositoryChecks = false)
+    _         <- TestStartupUtils.prepareRepository(rdfDataObjects)
+    _         <- DspApiServer.make.forkDaemon.unit
   } yield appServer
 
-  def withResettedTriplestore =
-    TestAspect.before(prepareRepository(rdfDataObjects))
+  def withResettedTriplestore = TestAspect.before(TestStartupUtils.prepareRepository(rdfDataObjects))
 
   def e2eSpec: Spec[env, Any]
 

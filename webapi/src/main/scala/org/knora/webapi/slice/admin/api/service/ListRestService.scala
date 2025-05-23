@@ -28,7 +28,7 @@ final case class ListRestService(
   listsResponder: ListsResponder,
   knoraProjectService: KnoraProjectService,
 ) {
-  def listChange(iri: ListIri, request: ListChangeRequest, user: User): Task[NodeInfoGetResponseADM] = for {
+  def listChange(user: User)(iri: ListIri, request: ListChangeRequest): Task[NodeInfoGetResponseADM] = for {
     _ <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)
     project <- knoraProjectService
                  .findById(request.projectIri)
@@ -38,42 +38,41 @@ final case class ListRestService(
     response <- listsResponder.nodeInfoChangeRequest(request, uuid)
   } yield response
 
-  def listChangeName(iri: ListIri, request: ListChangeNameRequest, user: User): Task[NodeInfoGetResponseADM] = for {
+  def listChangeName(user: User)(iri: ListIri, request: ListChangeNameRequest): Task[NodeInfoGetResponseADM] = for {
     // authorization is currently done in the responder
     uuid     <- Random.nextUUID
     response <- listsResponder.nodeNameChangeRequest(iri, request, user, uuid)
   } yield response
 
-  def listChangeLabels(iri: ListIri, request: ListChangeLabelsRequest, user: User): Task[NodeInfoGetResponseADM] = for {
+  def listChangeLabels(user: User)(iri: ListIri, request: ListChangeLabelsRequest): Task[NodeInfoGetResponseADM] = for {
     // authorization is currently done in the responder
     uuid     <- Random.nextUUID
     response <- listsResponder.nodeLabelsChangeRequest(iri, request, user, uuid)
   } yield response
 
-  def listChangeComments(iri: ListIri, request: ListChangeCommentsRequest, user: User): Task[NodeInfoGetResponseADM] =
+  def listChangeComments(user: User)(iri: ListIri, request: ListChangeCommentsRequest): Task[NodeInfoGetResponseADM] =
     for {
       // authorization is currently done in the responder
       uuid     <- Random.nextUUID
       response <- listsResponder.nodeCommentsChangeRequest(iri, request, user, uuid)
     } yield response
 
-  def nodePositionChangeRequest(
+  def nodePositionChangeRequest(user: User)(
     iri: ListIri,
     request: ListChangePositionRequest,
-    user: User,
   ): Task[NodePositionChangeResponseADM] = for {
     // authorization is currently done in the responder
     uuid     <- Random.nextUUID
     response <- listsResponder.nodePositionChangeRequest(iri, request, user, uuid)
   } yield response
 
-  def deleteListItemRequestADM(iri: ListIri, user: User): Task[ListItemDeleteResponseADM] = for {
+  def deleteListItemRequestADM(user: User)(iri: ListIri): Task[ListItemDeleteResponseADM] = for {
     // authorization is currently done in the responder
     uuid     <- Random.nextUUID
     response <- listsResponder.deleteListItemRequestADM(iri, user, uuid)
   } yield response
 
-  def listCreateRootNode(req: ListCreateRootNodeRequest, user: User): Task[ListGetResponseADM] = for {
+  def listCreateRootNode(user: User)(req: ListCreateRootNodeRequest): Task[ListGetResponseADM] = for {
     project <- knoraProjectService
                  .findById(req.projectIri)
                  .someOrFail(BadRequestException("Project not found"))
@@ -82,7 +81,7 @@ final case class ListRestService(
     response <- listsResponder.listCreateRootNode(req, uuid)
   } yield response
 
-  def listCreateChildNode(req: ListCreateChildNodeRequest, user: User): Task[ChildNodeInfoGetResponseADM] = for {
+  def listCreateChildNode(user: User)(req: ListCreateChildNodeRequest): Task[ChildNodeInfoGetResponseADM] = for {
     project <- knoraProjectService
                  .findById(req.projectIri)
                  .someOrFail(BadRequestException("Project not found"))

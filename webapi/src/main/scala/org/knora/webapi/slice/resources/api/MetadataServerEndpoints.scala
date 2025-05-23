@@ -4,21 +4,19 @@
  */
 
 package org.knora.webapi.slice.resources.api
+import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.ztapir.ZServerEndpoint
 import zio.ZLayer
 
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 import org.knora.webapi.slice.resources.api.service.MetadataRestService
 
 final case class MetadataServerEndpoints(
   private val endpoints: MetadataEndpoints,
   private val resourcesRestService: MetadataRestService,
-  private val mapper: HandlerMapper,
 ) {
-  val allHandlers =
-    Seq(
-      SecuredEndpointHandler(endpoints.getResourcesMetadata, resourcesRestService.getResourcesMetadata),
-    ).map(mapper.mapSecuredEndpointHandler)
+  val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] = List(
+    endpoints.getResourcesMetadata.serverLogic(resourcesRestService.getResourcesMetadata),
+  )
 }
 
 object MetadataServerEndpoints {

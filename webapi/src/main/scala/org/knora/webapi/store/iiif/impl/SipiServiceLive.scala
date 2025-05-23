@@ -72,8 +72,7 @@ final case class SipiServiceLive(
       .apply(quickRequest.get(uri"${textFileRequest.fileUrl}"))
       .map(SipiGetTextFileResponse.apply)
       .catchAll { ex =>
-        val msg =
-          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${ex.getMessage}"
+        val msg = s"Unable to get file ${textFileRequest.fileUrl} from Sipi: ${ex.getMessage}"
         (ex match {
           case (_: NotFoundException | _: BadRequestException | _: SipiException) => ZIO.die(SipiException(msg))
           case other                                                              => ZIO.logError(msg) *> ZIO.die(SipiException(msg))

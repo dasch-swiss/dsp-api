@@ -5,7 +5,6 @@
 
 package org.knora.webapi.core
 
-import org.apache.pekko.actor.ActorSystem
 import zio.*
 import zio.ULayer
 import zio.ZLayer
@@ -23,7 +22,6 @@ import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.api.AdminApiModule
@@ -39,7 +37,7 @@ import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OpenTelemetryTracerLive
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
-import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
+import org.knora.webapi.slice.infrastructure.api.ManagementServerEndpoints
 import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.lists.domain.ListsService
 import org.knora.webapi.slice.ontology.CoreModule
@@ -50,16 +48,16 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
-import org.knora.webapi.slice.resources.api.ResourcesApiRoutes
+import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
-import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
+import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.security.api.AuthenticationApiModule
 import org.knora.webapi.slice.shacl.ShaclModule
 import org.knora.webapi.slice.shacl.api.ShaclApiModule
-import org.knora.webapi.slice.shacl.api.ShaclApiRoutes
+import org.knora.webapi.slice.shacl.api.ShaclServerEndpoints
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -73,11 +71,9 @@ object LayersLive {
    */
   type DspEnvironmentLive =
     // format: off
-    ActorSystem &
     AdminApiEndpoints &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
-    ApiRoutes &
     ApiV2Endpoints &
     AppConfig.AppConfigurations &
     AssetPermissionsResponder &
@@ -87,9 +83,9 @@ object LayersLive {
     CardinalityHandler &
     ConstructResponseUtilV2 &
     CoreModule.Provided &
+    DspApiServerEndpoints &
     DefaultObjectAccessPermissionService &
     GroupRestService &
-    HttpServer &
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
     InstrumentationServerConfig &
@@ -109,12 +105,12 @@ object LayersLive {
     ProjectRestService &
     RepositoryUpdater &
     ResourceUtilV2 &
-    ResourcesApiRoutes &
+    ResourcesApiServerEndpoints&
     ResourcesResponderV2 &
     ResourcesRepo &
     SecurityModule.Provided &
-    SearchApiRoutes &
     SearchResponderV2Module.Provided &
+    SearchServerEndpoints &
     SecurityModule.Provided &
     ShaclApiModule.Provided &
     ShaclModule.Provided &
@@ -122,6 +118,7 @@ object LayersLive {
     StandoffResponderV2 &
     StandoffTagUtilV2 &
     State &
+    TapirToZioHttpInterpreter &
     UserRestService &
     ValuesResponderV2
     // format: on
@@ -134,7 +131,6 @@ object LayersLive {
       AdminApiModule.layer,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
-      ApiRoutes.layer,
       ApiV2Endpoints.layer,
       AppConfig.layer,
       AssetPermissionsResponder.layer,
@@ -145,9 +141,8 @@ object LayersLive {
       CardinalityHandler.layer,
       ConstructResponseUtilV2.layer,
       CoreModule.layer,
+      DspApiServerEndpoints.layer,
       DspIngestClientLive.layer,
-      HandlerMapper.layer,
-      HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
       IriService.layer,
@@ -156,12 +151,11 @@ object LayersLive {
       ListsResponder.layer,
       ListsService.layer,
       ManagementEndpoints.layer,
-      ManagementRoutes.layer,
+      ManagementServerEndpoints.layer,
       MessageRelayLive.layer,
       OntologyApiModule.layer,
       OntologyResponderV2.layer,
       OpenTelemetryTracerLive.layer,
-      PekkoActorSystem.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,
@@ -175,9 +169,9 @@ object LayersLive {
       ResourcesModule.layer,
       ResourcesRepoLive.layer,
       ResourcesResponderV2.layer,
-      SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Module.layer,
+      SearchServerEndpoints.layer,
       SecurityModule.layer,
       ShaclApiModule.layer,
       ShaclModule.layer,
@@ -185,7 +179,7 @@ object LayersLive {
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
-      TapirToPekkoInterpreter.layer,
+      TapirToZioHttpInterpreter.layer,
       ValuesResponderV2.layer,
       // ZLayer.Debug.mermaid,
     )

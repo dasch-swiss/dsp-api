@@ -5,7 +5,6 @@
 
 package org.knora.webapi
 
-import com.typesafe.scalalogging.*
 import org.apache.pekko
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.client.RequestBuilding
@@ -30,7 +29,6 @@ import scala.concurrent.duration.FiniteDuration
 
 import dsp.errors.AssertionException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
@@ -38,7 +36,6 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.LogAspect
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack
@@ -47,7 +44,6 @@ import org.knora.webapi.util.LogAspect
 abstract class E2ESpec
     extends AnyWordSpec
     with TestKitBase
-    with TestStartupUtils
     with TriplestoreJsonProtocol
     with Matchers
     with ScalaFutures
@@ -61,16 +57,10 @@ abstract class E2ESpec
   type Environment = core.LayersTestLive.Environment
 
   /**
-   * The effect layers from which the App is built.
-   * Can be overriden in specs that need other implementations.
-   */
-  lazy val effectLayers = core.LayersTestLive.layer
-
-  /**
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
    * and cleaned up when the Runtime is shutdown.
    */
-  private val bootstrap = util.Logger.text() >>> effectLayers
+  private val bootstrap = util.Logger.text() >>> core.LayersTestLive.layer
 
   // create a configured runtime
   implicit val runtime: Runtime.Scoped[Environment] =
@@ -80,14 +70,12 @@ abstract class E2ESpec
   implicit lazy val system: ActorSystem                = UnsafeZioRun.service[ActorSystem]
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
-  val log: Logger                                      = Logger(this.getClass)
 
   // needed by some tests
-  val baseApiUrl = appConfig.knoraApi.internalKnoraApiBaseUrl
+  val baseApiUrl: String  = appConfig.knoraApi.internalKnoraApiBaseUrl
+  val baseSipiUrl: String = appConfig.sipi.internalBaseUrl
 
-  final override def beforeAll(): Unit =
-    /* Here we start our app and initialize the repository before each suit runs */
-    UnsafeZioRun.runOrThrow(AppServer.test *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")))
+  final override def beforeAll(): Unit = UnsafeZioRun.runOrThrow(TestStartupUtils.startDspApi(rdfDataObjects))
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */

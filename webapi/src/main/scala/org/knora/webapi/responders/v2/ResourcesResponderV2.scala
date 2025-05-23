@@ -796,11 +796,7 @@ final case class ResourcesResponderV2(
       gravsearchTemplateUrl <- recoveredGravsearchUrlTask
       response <- messageRelay
                     .ask[SipiGetTextFileResponse](
-                      SipiGetTextFileRequest(
-                        fileUrl = gravsearchTemplateUrl,
-                        requestingUser = KnoraSystemInstances.Users.SystemUser,
-                        senderName = this.getClass.getName,
-                      ),
+                      SipiGetTextFileRequest(gravsearchTemplateUrl, KnoraSystemInstances.Users.SystemUser),
                     )
       gravsearchTemplate: String = response.content
 

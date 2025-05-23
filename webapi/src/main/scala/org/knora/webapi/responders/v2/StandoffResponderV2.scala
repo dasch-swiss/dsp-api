@@ -173,14 +173,7 @@ final case class StandoffResponderV2(
         } else {
           for {
             response <-
-              sipiService
-                .getTextFileRequest(
-                  SipiGetTextFileRequest(
-                    fileUrl = xsltFileUrl,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    senderName = this.getClass.getName,
-                  ),
-                )
+              sipiService.getTextFileRequest(SipiGetTextFileRequest(xsltFileUrl, KnoraSystemInstances.Users.SystemUser))
             _ = xsltCache.put(xsltFileUrl, response.content)
           } yield response.content
         }
