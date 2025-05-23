@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.infrastructure.ColumnDef
 import org.knora.webapi.slice.infrastructure.CsvRowBuilder
+import org.knora.webapi.slice.resources.api.model.IriDto
 
 final case class ResourceMetadataDto(
   resourceClassIri: String,
@@ -65,12 +66,41 @@ final case class MetadataEndpoints(private val baseEndpoints: BaseEndpoints) {
 
   val getResourcesMetadata = baseEndpoints.securedEndpoint.get
     .in(base / "projects" / projectShortcode / "resources")
-    .in(query[ExportFormat]("format").default(ExportFormat.CSV))
-    .out(header[MediaType]("Content-Type"))
-    .out(header[String]("Content-Disposition"))
-    .out(stringBody)
+    .in(query[ExportFormat]("format").default(ExportFormat.CSV).description("The format of the response."))
+    .in(
+      query[List[IriDto]]("classIris")
+        .default(List.empty)
+        .description(
+          "List of resource class IRIs to filter the resources. " +
+            "If not present, all resources of the project will be returned.",
+        ),
+    )
+    .out(
+      header[MediaType]("Content-Type").description(
+        s"The content type of the response, depends on the format: ${ExportFormat.values.map(f => s"$f => ${f.mediaType}").mkString(", ")}",
+      ),
+    )
+    .out(
+      header[String]("Content-Disposition").description(
+        "Will be set to attachment. " +
+          "The filename contains project shortcode, export timestamp and the format.",
+      ),
+    )
+    .out(
+      stringBody
+        .description(
+          s"Depending on the format the response will be rendered as ${ExportFormat.values.mkString(",")}. The example is CSV.",
+        )
+        .example(
+          """
+            |Resource IRI,ARK URL (Permalink),Resource Class,Label,Created by,Creation Date,Last Modification Date (if available),Deletion Date (if available)
+            |http://rdfh.ch/0803/00014b43f902,http://0.0.0.0:3336/ark:/72163/1/0803/00014b43f902l,http://0.0.0.0:3333/ontology/0803/incunabula/v2#page,t8r,http://rdfh.ch/users/91e19f1e01,2016-03-02T15:05:37Z,,
+            |http://rdfh.ch/0803/0015627fe303,http://0.0.0.0:3336/ark:/72163/1/0803/0015627fe303e,http://0.0.0.0:3333/ontology/0803/incunabula/v2#page,m8v,http://rdfh.ch/users/91e19f1e01,2016-03-02T15:05:49Z,,""".stripMargin,
+        ),
+    )
     .description(
       "Get metadata of all resources in a project. " +
+        "The metadata is returned with complex schema IRIs in the payload. " +
         "This endpoint is only available for system and project admins.",
     )
 

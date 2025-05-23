@@ -13,6 +13,8 @@ import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.*
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 
@@ -23,6 +25,7 @@ import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.resources.api.ResourceMetadataDto
@@ -34,7 +37,10 @@ final case class MetadataService(
   private val triplestore: TriplestoreService,
 )(implicit val sf: StringFormatter) {
 
-  def getResourcesMetadata(project: KnoraProject): Task[List[ResourceMetadataDto]] = {
+  def getResourcesMetadata(
+    project: KnoraProject,
+    classIri: List[ResourceClassIri],
+  ): Task[List[ResourceMetadataDto]] = {
     val (
       classIriVar,
       creationDateVar,
@@ -68,12 +74,17 @@ final case class MetadataService(
         .and(variable(resourceIriVar).has(KB.deleteDate, variable(deleteDateVar)).optional())
         .from(Rdf.iri(projectGraph.value))
 
-    val classConstraintPattern =
-      variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), KB.Resource)
+    val classConstraintPattern = classIri.map(_.toInternalSchema.toIri).map(Rdf.iri) match {
+      case Nil         => variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), KB.Resource)
+      case head :: Nil => variable(resourceIriVar).isA(head)
+      case head :: tail =>
+        val pat = variable(resourceIriVar).isA(head)
+        pat.union(tail.map(c => variable(resourceIriVar).isA(c)): _*)
+    }
 
     val query = Queries
       .SELECT(selectPattern)
-      .where(wherePattern, classConstraintPattern)
+      .where(classConstraintPattern, wherePattern)
       .prefix(prefix(KB.NS), prefix(RDFS.NS))
 
     def throwEx(field: String): Nothing = throw new InconsistentRepositoryDataException(
@@ -89,13 +100,15 @@ final case class MetadataService(
       meta <- ZIO
                 .attempt(rows.map { row =>
                   val resourceIri = row.rowMap.getOrElse(resourceIriVar, throwEx(resourceIriVar))
-                  val classIri    = row.rowMap.getOrElse(classIriVar, throwEx(classIriVar))
-                  val creatorIri  = row.rowMap.getOrElse(creatorIriVar, throwEx(creatorIriVar))
-                  val label       = row.rowMap.getOrElse(labelVar, throwEx(labelVar))
-                  val createdAt   = row.rowMap.get(creationDateVar).map(Instant.parse).getOrElse(throwEx(creationDateVar))
-                  val deletedAt   = row.rowMap.get(deleteDateVar).map(Instant.parse)
-                  val lastModAt   = row.rowMap.get(lastModificationDateVar).map(Instant.parse)
-                  val arkUrl      = resourceIri.toSmartIri.fromResourceIriToArkUrl()
+                  val classIri =
+                    row.rowMap.getOrElse(classIriVar, throwEx(classIriVar)).toSmartIri.toComplexSchema.toIri
+                  val creatorIri =
+                    row.rowMap.getOrElse(creatorIriVar, throwEx(creatorIriVar)).toSmartIri.toComplexSchema.toIri
+                  val label     = row.rowMap.getOrElse(labelVar, throwEx(labelVar))
+                  val createdAt = row.rowMap.get(creationDateVar).map(Instant.parse).getOrElse(throwEx(creationDateVar))
+                  val deletedAt = row.rowMap.get(deleteDateVar).map(Instant.parse)
+                  val lastModAt = row.rowMap.get(lastModificationDateVar).map(Instant.parse)
+                  val arkUrl    = resourceIri.toSmartIri.fromResourceIriToArkUrl()
                   ResourceMetadataDto(classIri, resourceIri, arkUrl, label, creatorIri, createdAt, lastModAt, deletedAt)
                 })
                 .timed
@@ -110,14 +123,14 @@ final case class MetadataService(
   }
   private val csv = new DefaultCSVFormat {}
 
-  def getResourcesMetadataAsCsv(project: KnoraProject): Task[String] =
-    getResourcesMetadata(project).flatMap(data =>
+  def getResourcesMetadataAsCsv(project: KnoraProject, classIri: List[ResourceClassIri]): Task[String] =
+    getResourcesMetadata(project, classIri).flatMap(data =>
       given CSVFormat = csv
       ZIO.scoped(csvService.writeToString(data)),
     )
 
-  def getResourcesMetadataAsTsv(project: KnoraProject): Task[String] =
-    getResourcesMetadata(project).flatMap(data =>
+  def getResourcesMetadataAsTsv(project: KnoraProject, classIri: List[ResourceClassIri]): Task[String] =
+    getResourcesMetadata(project, classIri).flatMap(data =>
       given CSVFormat = tsv
       ZIO.scoped(csvService.writeToString(data)),
     )

@@ -15,17 +15,21 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-import dsp.errors.ForbiddenException
+import dsp.errors.BadRequestException
+import dsp.errors.RequestRejectedException
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resources.api.ExportFormat
 import org.knora.webapi.slice.resources.api.ExportFormat.*
+import org.knora.webapi.slice.resources.api.model.IriDto
 import org.knora.webapi.slice.resources.service.MetadataService
 
 final case class MetadataRestService(
   private val auth: AuthorizationRestService,
+  private val iriConverter: IriConverter,
   private val metadataService: MetadataService,
 ) {
 
@@ -34,12 +38,18 @@ final case class MetadataRestService(
 
   def getResourcesMetadata(
     user: User,
-  )(shortcode: Shortcode, format: ExportFormat): IO[ForbiddenException, (MediaType, String, String)] = for {
-    prj <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
+  )(
+    shortcode: Shortcode,
+    format: ExportFormat,
+    classIri: List[IriDto],
+  ): IO[RequestRejectedException, (MediaType, String, String)] = for {
+    prj      <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
+    _        <- ZIO.logInfo(s"Filtering metadata by class IRIs ${classIri}")
+    classIri <- ZIO.foreach(classIri.map(_.value))(iriConverter.asResourceClassIri).mapError(BadRequestException.apply)
     result <- format match {
-                case CSV  => metadataService.getResourcesMetadataAsCsv(prj).orDie
-                case TSV  => metadataService.getResourcesMetadataAsTsv(prj).orDie
-                case JSON => metadataService.getResourcesMetadata(prj).map(_.toJson).orDie
+                case CSV  => metadataService.getResourcesMetadataAsCsv(prj, classIri).orDie
+                case TSV  => metadataService.getResourcesMetadataAsTsv(prj, classIri).orDie
+                case JSON => metadataService.getResourcesMetadata(prj, classIri).map(_.toJson).orDie
               }
     now <- Clock.instant.map(formatForFilename)
   } yield (
