@@ -1,7 +1,7 @@
 # Gravsearch Design
 
 For a detailed overview of Gravsearch, see
-[Gravsearch: Transforming SPARQL to query humanities data](https://doi.org/10.3233/SW-200386).
+[Gravsearch: Transforming SPARQL to query humanities data](https://journals.sagepub.com/doi/full/10.3233/SW-200386).
 
 ## Type Inspection
 

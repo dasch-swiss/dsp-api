@@ -11,7 +11,7 @@ response format). The various HTTP methods are applied according to the
 widespread practice of RESTful APIs: GET for reading, POST for adding,
 PUT for changing resources and values, and DELETE to delete resources or
 values (see
-[Using HTTP Methods for RESTful Services](http://www.restapitutorial.com/lessons/httpmethods.html)).
+[Using HTTP Methods for RESTful Services](http://www.restapitutorial.com/introduction/httpmethods)).
 
 ## Knora IRIs in the Admin API
 

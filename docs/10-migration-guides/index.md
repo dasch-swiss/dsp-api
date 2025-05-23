@@ -80,7 +80,7 @@ The unparametrised check if it is possible to replace a cardinality of a propert
 Instead of `/v2/ontologies/canreplacecardinalities/{classIRI}`,
 use `/v2/ontologies/canreplacecardinalities/{classIRI}?propertyIri={propertyIRI}&newCardinality=[0-1|1|1-n|0-n]`.
 
-For more information, see [the api documentation](../03-endpoints/api-v2/ontology-information/#pre-update-checks).
+For more information, see [the api documentation](../03-endpoints/api-v2/ontology-information.md#pre-update-checks).
 
 ### `fileValueHasExternalUrl`
 
