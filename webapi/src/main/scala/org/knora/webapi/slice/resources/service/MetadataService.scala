@@ -39,7 +39,7 @@ final case class MetadataService(
 
   def getResourcesMetadata(
     project: KnoraProject,
-    classIri: List[ResourceClassIri],
+    classIris: List[ResourceClassIri],
   ): Task[List[ResourceMetadataDto]] = {
     val (
       classIriVar,
@@ -74,7 +74,7 @@ final case class MetadataService(
         .and(variable(resourceIriVar).has(KB.deleteDate, variable(deleteDateVar)).optional())
         .from(Rdf.iri(projectGraph.value))
 
-    val classConstraintPattern = classIri.map(_.toInternalSchema.toIri).map(Rdf.iri) match {
+    val classConstraintPattern = classIris.map(_.toInternalSchema.toIri).map(Rdf.iri) match {
       case Nil         => variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), KB.Resource)
       case head :: Nil => variable(resourceIriVar).isA(head)
       case head :: tail =>
