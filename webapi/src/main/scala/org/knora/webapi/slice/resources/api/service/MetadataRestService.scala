@@ -45,11 +45,11 @@ final case class MetadataRestService(
   )(
     shortcode: Shortcode,
     format: ExportFormat,
-    classIri: List[IriDto],
+    classIris: List[IriDto],
   ): IO[RequestRejectedException, (MediaType, String, String)] = for {
     prj      <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-    classIri <- ZIO.foreach(classIri.map(_.value))(iriConverter.asResourceClassIri).mapError(BadRequestException.apply)
-    data     <- metadataService.getResourcesMetadata(prj, classIri).orDie
+    classIri <- ZIO.foreach(classIris.map(_.value))(iriConverter.asResourceClassIri).mapError(BadRequestException.apply)
+    data     <- metadataService.getResourcesMetadata(prj, classIris).orDie
     result <- format match {
                 case JSON => ZIO.succeed(data.toJson)
                 case CSV  => ZIO.scoped(csvService.writeToString(data).orDie)
