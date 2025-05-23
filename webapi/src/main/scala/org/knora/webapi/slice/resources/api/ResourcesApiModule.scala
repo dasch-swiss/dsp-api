@@ -21,17 +21,23 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import org.knora.webapi.slice.infrastructure.CsvService
+import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.resources.ResourcesModule
+import org.knora.webapi.slice.resources.api.service.MetadataRestService
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
 import org.knora.webapi.slice.resources.api.service.StandoffRestService
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
+import org.knora.webapi.slice.resources.service.MetadataService
 
 object ResourcesApiModule
     extends URModule[
-      AuthorizationRestService & ApiComplexV2JsonLdRequestParser & BaseEndpoints & GraphRoute & HandlerMapper &
-        IriConverter & KnoraProjectService & KnoraResponseRenderer & ResourcesResponderV2 & SearchResponderV2 &
-        StandoffResponderV2 & TapirToPekkoInterpreter & ValuesResponderV2,
-      ResourcesApiRoutes & ResourcesEndpoints & StandoffEndpoints & ValuesEndpoints,
+      ApiComplexV2JsonLdRequestParser & AuthorizationRestService & BaseEndpoints & GraphRoute & HandlerMapper &
+        InfrastructureModule.Provided & IriConverter & KnoraProjectService & KnoraResponseRenderer &
+        ResourcesModule.Provided & ResourcesResponderV2 & SearchResponderV2 & StandoffResponderV2 &
+        TapirToPekkoInterpreter & ValuesResponderV2,
+      MetadataEndpoints & ResourcesApiRoutes & ResourcesEndpoints & StandoffEndpoints & ValuesEndpoints,
     ] { self =>
 
   override def layer: URLayer[self.Dependencies, self.Provided] =
@@ -43,6 +49,9 @@ object ResourcesApiModule
       ResourcesEndpointsHandler.layer,
       ResourcesRestService.layer,
       ResourcesApiRoutes.layer,
+      MetadataEndpoints.layer,
+      MetadataServerEndpoints.layer,
+      MetadataRestService.layer,
       StandoffEndpoints.layer,
       StandoffEndpointsHandler.layer,
       StandoffRestService.layer,
