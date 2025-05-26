@@ -30,6 +30,7 @@ final case class ResourceMetadataDto(
   resourceClassIri: String,
   resourceIri: String,
   arkUrl: String,
+  arkUrlWithTimestamp: String,
   label: String,
   resourceCreatorIri: String,
   resourceCreationDate: Instant,
@@ -41,10 +42,11 @@ object ResourceMetadataDto {
   given Schema[ResourceMetadataDto]    = Schema.derived[ResourceMetadataDto]
 
   given CsvRowBuilder[ResourceMetadataDto] = CsvRowBuilder.fromColumnDefs[ResourceMetadataDto](
-    ColumnDef("Resource IRI", _.resourceIri),
-    ColumnDef("ARK URL (Permalink)", _.arkUrl),
-    ColumnDef("Resource Class", _.resourceClassIri),
     ColumnDef("Label", _.label),
+    ColumnDef("Resource Class", _.resourceClassIri),
+    ColumnDef("ARK URL (Permalink)", _.arkUrl),
+    ColumnDef("ARK with timestamp", _.arkUrlWithTimestamp),
+    ColumnDef("Resource IRI", _.resourceIri),
     ColumnDef("Created by", _.resourceCreatorIri),
     ColumnDef("Creation Date", _.resourceCreationDate),
     ColumnDef("Last Modification Date (if available)", _.resourceLastModificationDate.getOrElse("")),
