@@ -27,6 +27,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.api.ResourceMetadataDto
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
 final case class MetadataService(
   private val projectService: KnoraProjectService,
@@ -88,7 +89,7 @@ final case class MetadataService(
     for {
       rows <-
         triplestore
-          .select(query)
+          .selectWithTimeout(query, SparqlTimeout.Gravsearch)
           .map(_.results.bindings)
           .timed
           .flatMap((d, s) =>

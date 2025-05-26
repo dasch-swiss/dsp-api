@@ -22,6 +22,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout.Standard
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
@@ -59,6 +60,8 @@ trait TriplestoreService {
    */
   def query(sparql: Select): Task[SparqlSelectResult]
   final def select(sparql: SelectQuery): Task[SparqlSelectResult] = query(Select(sparql))
+  final def selectWithTimeout(sparql: SelectQuery, timeout: SparqlTimeout): Task[SparqlSelectResult] =
+    query(Select(sparql, timeout))
 
   /**
    * Performs a SPARQL update operation, i.e. an INSERT or DELETE query.
@@ -172,8 +175,9 @@ object TriplestoreService {
 
     case class Select(sparql: String, override val timeout: SparqlTimeout = SparqlTimeout.Standard) extends SparqlQuery
     object Select {
-      def apply(sparql: SelectQuery): Select          = Select(sparql.getQueryString)
-      def apply(sparql: TxtFormat.Appendable): Select = Select(sparql.toString)
+      def apply(sparql: SelectQuery): Select                         = Select(sparql.getQueryString)
+      def apply(sparql: SelectQuery, timeout: SparqlTimeout): Select = Select(sparql.getQueryString, timeout)
+      def apply(sparql: TxtFormat.Appendable): Select                = Select(sparql.toString)
 
       def gravsearch(sparql: TxtFormat.Appendable): Select = Select.gravsearch(sparql.toString)
       def gravsearch(sparql: String): Select               = Select(sparql, SparqlTimeout.Gravsearch)
