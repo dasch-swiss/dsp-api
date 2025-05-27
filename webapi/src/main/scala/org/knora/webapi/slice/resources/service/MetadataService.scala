@@ -27,6 +27,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.api.ResourceMetadataDto
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
 final case class MetadataService(
   private val projectService: KnoraProjectService,
@@ -88,25 +89,37 @@ final case class MetadataService(
     for {
       rows <-
         triplestore
-          .select(query)
+          .selectWithTimeout(query, SparqlTimeout.Gravsearch)
           .map(_.results.bindings)
           .timed
           .flatMap((d, s) =>
             ZIO.logInfo(s"Query took ${d.toMillis} ms and returned ${s.size} rows:\n${query.getQueryString}").as(s),
           )
+      now <- Clock.instant
       meta <- ZIO
                 .attempt(rows.map { row =>
                   val classIri =
                     row.rowMap.getOrElse(classIriVar, throwEx(classIriVar)).toSmartIri.toComplexSchema.toIri
-                  val resourceIri = row.rowMap.getOrElse(resourceIriVar, throwEx(resourceIriVar))
-                  val arkUrl      = resourceIri.toSmartIri.fromResourceIriToArkUrl()
-                  val label       = row.rowMap.getOrElse(labelVar, throwEx(labelVar))
+                  val resourceIri         = row.rowMap.getOrElse(resourceIriVar, throwEx(resourceIriVar))
+                  val arkUrl              = resourceIri.toSmartIri.fromResourceIriToArkUrl(None)
+                  val arkUrlWithTimestamp = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(now))
+                  val label               = row.rowMap.getOrElse(labelVar, throwEx(labelVar))
                   val creatorIri =
                     row.rowMap.getOrElse(creatorIriVar, throwEx(creatorIriVar)).toSmartIri.toComplexSchema.toIri
                   val createdAt = row.rowMap.get(creationDateVar).map(Instant.parse).getOrElse(throwEx(creationDateVar))
                   val deletedAt = row.rowMap.get(deleteDateVar).map(Instant.parse)
                   val lastModAt = row.rowMap.get(lastModificationDateVar).map(Instant.parse)
-                  ResourceMetadataDto(classIri, resourceIri, arkUrl, label, creatorIri, createdAt, lastModAt, deletedAt)
+                  ResourceMetadataDto(
+                    classIri,
+                    resourceIri,
+                    arkUrl,
+                    arkUrlWithTimestamp,
+                    label,
+                    creatorIri,
+                    createdAt,
+                    lastModAt,
+                    deletedAt,
+                  )
                 })
     } yield meta
   }
