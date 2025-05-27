@@ -26,19 +26,7 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
        reported to the client.
 
     2. Exceptions extending InternalServerException mean that the problem is not the client's fault. They are
-       reported to the client and are also logged (e.g. to the console). When thrown in an actor, they are also
-       escalated to the actor's supervisor.
-
-    Error-handling tools
-    --------------------
-
-    In an actor, have the receive method handle each different incoming message type by calling some private method that
-    returns a Future. The receive method can then pass this object to ActorUtil.future2Message, which takes care of
-    reporting exceptions as described above.
-
-    If you extract data from a Map, and there's any chance some required data might be missing, wrap your Map in
-    an ErrorHandlingMap, which takes some of the work out of checking for missing values and throwing helpful
-    exceptions.
+       reported to the client and are also logged (e.g. to the console).
 
     Adding new exception classes
     ----------------------------
@@ -55,8 +43,7 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
     Your exception's constructor can also take a nested exception argument representing the original cause of the
     error, which should also be passed up the class hierarchy to the constructor of Exception. Then you'll get nice
     chained stack traces in your logs. However, you need to ensure that the nested exception is serializable, otherwise
-    your Actor won't be able to report it. Use ExceptionUtil.logAndWrapIfNotSerializable for this. See
-    TriplestoreConnectionException for an example.
+    your Actor won't be able to report it.
 
  */
 
@@ -75,11 +62,6 @@ trait KnoraException extends Serializable
 abstract class RequestRejectedException(msg: String, cause: Throwable = null)
     extends Exception(msg, cause)
     with KnoraException
-
-object RequestRejectedException {
-  // So we can match instances of RequestRejectedException, even though it's an abstract class
-  def unapply(e: RequestRejectedException): Option[RequestRejectedException] = Option(e)
-}
 
 /**
  * An exception indicating that the request parameters did not make sense.
@@ -224,13 +206,19 @@ object ValidationException {
  * @param message a description of the error.
  * @param cause   the original exception representing the cause of the error, if any.
  */
-abstract class InternalServerException(message: String, cause: Option[Throwable] = None)
+class InternalServerException(message: String, cause: Option[Throwable] = None)
     extends Exception(message, cause.orNull)
     with KnoraException
 
 object InternalServerException {
   // So we can match instances of InternalServerException, even though it's an abstract class
   def unapply(e: InternalServerException): Option[InternalServerException] = Option(e)
+}
+
+case class InternalServerErrorException(message: String) extends InternalServerException(message)
+
+object InternalServerErrorException {
+  given JsonCodec[InternalServerErrorException] = DeriveJsonCodec.gen[InternalServerErrorException]
 }
 
 /**
@@ -258,14 +246,6 @@ object AuthenticationException {
 case class DataConversionException(message: String) extends InternalServerException(message)
 
 /**
- * An exception indicating that during file upload there was an error.
- *
- * @param message a description of the error.
- */
-case class FileUploadException(message: String = "Error during file upload. Please report this as a possible bug.")
-    extends InternalServerException(message)
-
-/**
  * An exception indicating that a requested update was not performed, although it was expected to succeed.
  * This probably indicates a bug.
  *
@@ -273,16 +253,6 @@ case class FileUploadException(message: String = "Error during file upload. Plea
  */
 case class UpdateNotPerformedException(
   message: String = "A requested update was not performed. Please report this as a possible bug.",
-) extends InternalServerException(message)
-
-/**
- * An exception indicating that an unsupported value was passed.
- * This probably indicates a bug.
- *
- * @param message a description of the error.
- */
-case class UnsupportedValueException(
-  message: String = "An unsupported value was given. Please report this as a possible bug.",
 ) extends InternalServerException(message)
 
 /**
@@ -344,23 +314,11 @@ object InvalidApiJsonException {
 }
 
 /**
- * Indicates that during caching with [[org.knora.webapi.store.cache.api.CacheService]] something went wrong.
- *
- * @param message a description of the error.
- */
-abstract class CacheServiceException(message: String) extends InternalServerException(message)
-
-/**
  * Indicates that an application lock could not be acquired.
  *
  * @param message a description of the error.
  */
 case class ApplicationLockException(message: String) extends InternalServerException(message)
-
-/**
- * Indicates that an error occurred in transaction management.
- */
-case class TransactionManagementException(message: String) extends InternalServerException(message)
 
 /**
  * Indicates that an Akka actor received an unexpected message.
@@ -370,25 +328,11 @@ case class TransactionManagementException(message: String) extends InternalServe
 case class UnexpectedMessageException(message: String) extends InternalServerException(message)
 
 /**
- * Indicates that an error occurred in the application's cache.
- *
- * @param message a description of the error.
- */
-case class ApplicationCacheException(message: String) extends InternalServerException(message)
-
-/**
  * Indicates that an error occurred during the generation of SPARQL query code.
  *
  * @param message a description of the error.
  */
 case class SparqlGenerationException(message: String) extends InternalServerException(message)
-
-/**
- * Indicates that an error occurred during the generation of client API code.
- *
- * @param message a description of the error.
- */
-case class ClientApiGenerationException(message: String) extends InternalServerException(message)
 
 /**
  * A generic [[InternalServerException]] for wrapping any non-serializable exception in a serializable form.
@@ -408,41 +352,6 @@ case class FileWriteException(message: String) extends InternalServerException(m
  * @param message a description of the error.
  */
 case class NotImplementedException(message: String) extends InternalServerException(message)
-
-/**
- * An abstract base class for exceptions indicating that something about a configuration made it impossible to start.
- *
- * @param message a description of the error.
- */
-abstract class ApplicationConfigurationException(message: String, cause: Option[Throwable] = None)
-    extends Exception(message, cause.orNull)
-    with KnoraException
-
-object ApplicationConfigurationException {
-  // So we can match instances of ApplicationConfigurationException, even though it's an abstract class
-  def unapply(e: ApplicationConfigurationException): Option[ApplicationConfigurationException] = Option(e)
-}
-
-/**
- * Indicates that an unsupported triplestore was selected in the configuration.
- *
- * @param message a description of the error.
- */
-case class UnsupportedTriplestoreException(message: String) extends ApplicationConfigurationException(message)
-
-/**
- * Indicates that the HTTP configuration is incorrect.
- *
- * @param message a description of the error.
- */
-case class HttpConfigurationException(message: String) extends ApplicationConfigurationException(message)
-
-/**
- * Indicates that a test configuration is incorrect.
- *
- * @param message a description of the error.
- */
-case class TestConfigurationException(message: String) extends ApplicationConfigurationException(message)
 
 /**
  * Indicates that RDF processing failed.
@@ -471,7 +380,7 @@ object ExceptionUtil {
    * @param e the exception to be checked.
    * @return `true` if the exception is serializable, otherwise `false`.
    */
-  def isSerializable(e: Throwable): Boolean =
+  private def isSerializable(e: Throwable): Boolean =
     try {
       SerializationUtils.serialize(e)
       true

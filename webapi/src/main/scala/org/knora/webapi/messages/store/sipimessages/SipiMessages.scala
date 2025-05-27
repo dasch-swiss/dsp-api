@@ -7,7 +7,6 @@ package org.knora.webapi.messages.store.sipimessages
 
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.store.StoreRequest
-import org.knora.webapi.messages.traits.RequestWithSender
 import org.knora.webapi.slice.admin.domain.model.User
 
 /**
@@ -24,9 +23,7 @@ sealed trait SipiRequest extends IIIFRequest
  * @param fileUrl        the URL pointing to the file.
  * @param requestingUser the user making the request.
  */
-case class SipiGetTextFileRequest(fileUrl: String, requestingUser: User, senderName: String)
-    extends SipiRequest
-    with RequestWithSender
+case class SipiGetTextFileRequest(fileUrl: String, requestingUser: User) extends SipiRequest
 
 /**
  * Represents a response for [[SipiGetTextFileRequest]].

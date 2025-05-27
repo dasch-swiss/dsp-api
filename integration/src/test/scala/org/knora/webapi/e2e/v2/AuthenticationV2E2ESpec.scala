@@ -11,6 +11,8 @@ import org.apache.pekko.http.scaladsl.model.headers.*
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import spray.json.*
 import zio.ZIO
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 import zio.json.ast.Json
 
 import scala.concurrent.Await
@@ -323,6 +325,9 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
 }
 
 final case class LoginResponse(token: String)
+object LoginResponse {
+  given JsonCodec[LoginResponse] = DeriveJsonCodec.gen[LoginResponse]
+}
 
 trait AuthenticationV2JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
   implicit val SessionResponseFormat: RootJsonFormat[LoginResponse] =

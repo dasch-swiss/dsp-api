@@ -893,30 +893,15 @@ class StringFormatterSpec extends CoreSpec {
     "convert 100,000 IRIs" ignore {
       val totalIris = 100000
 
-      val parseStart = System.currentTimeMillis
-
       for (i <- 1 to totalIris) {
         val iriStr = s"http://0.0.0.0:3333/ontology/00FF/images/v2#class$i"
         iriStr.toSmartIri.toOntologySchema(InternalSchema)
       }
 
-      val parseEnd            = System.currentTimeMillis
-      val parseDuration       = (parseEnd - parseStart).toDouble
-      val parseDurationPerIri = parseDuration / totalIris.toDouble
-      logger.info(f"Parse and store $totalIris IRIs, $parseDuration ms, time per IRI $parseDurationPerIri%1.5f ms")
-
-      val retrieveStart = System.currentTimeMillis
-
       for (i <- 1 to totalIris) {
         val iriStr = s"http://0.0.0.0:3333/ontology/00FF/images/v2#class$i"
         iriStr.toSmartIri.toOntologySchema(InternalSchema)
       }
-
-      val retrieveEnd            = System.currentTimeMillis
-      val retrieveDuration       = (retrieveEnd - retrieveStart).toDouble
-      val retrieveDurationPerIri = retrieveDuration / totalIris.toDouble
-
-      logger.info(f"Retrieve time $retrieveDuration ms, time per IRI $retrieveDurationPerIri%1.5f ms")
     }
 
     "should convert link value prop to link prop" in {
