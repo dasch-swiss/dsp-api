@@ -417,8 +417,10 @@ final case class SearchRestService(
     (for {
       searchResult <-
         searchResponderV2.searchIncomingLinksV2(resourceIri, offset.value, opts.schemaRendering, user, limitToProject)
+          @@ tracing.aspects.span("query")
       response <- renderer.render(searchResult, opts)
-      _        <- ZIO.succeed(Sentry.captureMessage("searchIncomingLinks", SentryLevel.INFO))
+                    @@ tracing.aspects.span("render")
+      _ <- ZIO.succeed(Sentry.captureMessage("searchIncomingLinks", SentryLevel.INFO))
     } yield response) @@ tracing.aspects.root(
       spanName = "searchIncomingLinks",
       attributes = Attributes
