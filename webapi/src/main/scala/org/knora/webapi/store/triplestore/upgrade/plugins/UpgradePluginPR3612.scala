@@ -11,6 +11,7 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.*
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.*
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.IsDaschRecommended.Yes
