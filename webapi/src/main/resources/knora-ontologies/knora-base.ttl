@@ -21,7 +21,6 @@
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
     :ontologyVersion   "knora-base v50" .
-#    :ontologyVersion   "knora-base v49" .
 
 
 #################################################################

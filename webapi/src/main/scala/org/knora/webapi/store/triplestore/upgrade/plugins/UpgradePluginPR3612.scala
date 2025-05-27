@@ -23,7 +23,7 @@ import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
 /**
  * Add default values for the `hasAllowedCopyrightHolder` and `hasEnabledLicense` properties to every existing project.
  */
-class UpgradePluginPRXXXX extends AbstractSparqlUpdatePlugin {
+class UpgradePluginPR3612 extends AbstractSparqlUpdatePlugin {
   override def graphsForMigration: GraphsForMigration =
     MigrateSpecificGraphs.from(AdminConstants.adminDataNamedGraph)
 
