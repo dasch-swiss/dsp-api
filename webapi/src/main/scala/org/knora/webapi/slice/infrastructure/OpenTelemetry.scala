@@ -22,6 +22,10 @@ import org.knora.webapi.config.OpenTelemetryConfig
 import org.knora.webapi.http.version.BuildInfo
 
 object OpenTelemetry {
+  // Sentry is used for distributed tracing.
+  // The sentry-opentelemetry-agentless dependency adds opentelemetry-sdk-extension-autoconfigure which takes care of
+  // configuring OpenTelemetry to work with Sentry.
+  // This is triggered by creating a `AutoConfiguredOpenTelemetrySdk`.
   // https://docs.sentry.io/platforms/java/opentelemetry/setup/agentless/#usage
   private val builder: AutoConfiguredOpenTelemetrySdkBuilder = AutoConfiguredOpenTelemetrySdk
     .builder()
