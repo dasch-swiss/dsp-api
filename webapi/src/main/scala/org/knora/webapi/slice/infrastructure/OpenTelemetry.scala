@@ -25,7 +25,7 @@ object OpenTelemetry {
   // Sentry is used for distributed tracing.
   // The sentry-opentelemetry-agentless dependency adds opentelemetry-sdk-extension-autoconfigure which takes care of
   // configuring OpenTelemetry to work with Sentry.
-  // This is triggered by creating a `AutoConfiguredOpenTelemetrySdk`.
+  // This is triggered by creating a `AutoConfiguredOpenTelemetrySdk` and must happen before `Sentry.init`.
   // https://docs.sentry.io/platforms/java/opentelemetry/setup/agentless/#usage
   private val builder: AutoConfiguredOpenTelemetrySdkBuilder = AutoConfiguredOpenTelemetrySdk
     .builder()
@@ -55,6 +55,7 @@ object OpenTelemetry {
             }
           }
     } yield otel)
+    // Integrate the OpenTelemetry SDK into ZIO and expose as `Tracing`: https://zio.dev/zio-telemetry/opentelemetry/
       >+> ZOpenTelemetry.contextZIO >>> ZOpenTelemetry.tracing("global")
 
   val live: URLayer[OpenTelemetryConfig & KnoraApi, Tracing] = make(_.setResultAsGlobal().build())
