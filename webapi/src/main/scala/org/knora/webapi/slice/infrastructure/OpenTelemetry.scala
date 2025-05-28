@@ -39,7 +39,7 @@ object OpenTelemetry {
 
   private def make(
     build: AutoConfiguredOpenTelemetrySdkBuilder => AutoConfiguredOpenTelemetrySdk,
-  ): ZLayer[OpenTelemetryConfig & KnoraApi, Nothing, Tracing] =
+  ): URLayer[OpenTelemetryConfig & KnoraApi, Tracing] =
     ZLayer.scoped(for {
       config    <- ZIO.service[OpenTelemetryConfig]
       apiConfig <- ZIO.service[KnoraApi]
