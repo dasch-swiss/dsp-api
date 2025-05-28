@@ -34,7 +34,7 @@ import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
-import org.knora.webapi.slice.infrastructure.OpenTelemetryTracerLive
+import org.knora.webapi.slice.infrastructure.OpenTelemetry
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiModule
@@ -114,7 +114,7 @@ object LayersTestLive { self =>
       MessageRelayLive.layer,
       OntologyApiModule.layer,
       OntologyResponderV2.layer,
-      OpenTelemetryTracerLive.layer,
+      OpenTelemetry.test,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,
