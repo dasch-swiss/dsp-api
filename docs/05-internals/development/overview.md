@@ -19,7 +19,7 @@ git clone https://github.com/dasch-swiss/dsp-api
 ## Triplestore
 
 A number of triplestore implementations are available, including [free
-software](http://www.gnu.org/philosophy/free-sw.en.html) as well as
+software](https://www.gnu.org/philosophy/free-sw.en.html) as well as
 proprietary options. DSP-API is designed to work with any
 standards-compliant triplestore. It is primarily tested with [Apache Jena Fuseki](https://jena.apache.org/).
 
