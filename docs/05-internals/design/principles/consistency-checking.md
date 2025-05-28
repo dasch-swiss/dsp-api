@@ -85,7 +85,7 @@ property `isDeleted`. This must be taken into account as follows:
 
 ## Design
 
-[Ontotext GraphDB](https://ontotext.com/products/graphdb/) provides a
+[Ontotext GraphDB](https://www.ontotext.com/products/graphdb/) provides a
 mechanism for checking the consistency of data in a repository each time
 an update transaction is committed. Knora provides GraphDB-specific
 consistency rules that take advantage of this feature to provide an
@@ -96,7 +96,7 @@ When a repository is created in GraphDB, a set of consistency rules can
 be provided, and GraphDB's consistency checker can be turned on to
 ensure that each update transaction respects these rules, as described
 in the section
-[Reasoning](http://graphdb.ontotext.com/documentation/standard/reasoning.html)
+[Reasoning](https://graphdb.ontotext.com/documentation/11.0/reasoning.html)
 of the GraphDB documentation. Like custom inference rules, consistency
 rules are defined in files with the `.pie` filename extension, in a
 GraphDB-specific syntax.
@@ -117,7 +117,7 @@ automatically.
 
 Consistency checking in GraphDB relies on reasoning. GraphDB's reasoning
 is
-[Forward-chaining](http://graphdb.ontotext.com/documentation/standard/introduction-to-semantic-web.html#reasoning-strategies),
+[Forward-chaining](https://graphdb.ontotext.com/documentation/11.0/introduction-to-semantic-web.html#reasoning-strategies),
 which means that reasoning is applied to the contents of each update,
 before the update transaction is committed, and the inferred statements
 are added to the repository.
@@ -235,7 +235,7 @@ two optimisations suggested by Ontotext:
    subjects, and use those tables to simplify the consistency rules.
 2. Use the `[Cut]` constraint to avoid generating certain redundant
    compiled rules (see [Entailment
-   rules](http://graphdb.ontotext.com/documentation/standard/reasoning.html#entailment-rules)).
+   rules](https://graphdb.ontotext.com/documentation/11.0/reasoning.html#entailment-rules)).
 
 For example, to construct a table of subjects belonging to classes that
 have `owl:maxCardinality 1` on some property `p`, we use the following
@@ -255,7 +255,7 @@ inferred triples are added to the context (i.e. the named graph)
 `http://www.ontotext.com/_maxCardinality_1_table`. (Note that we have
 defined the prefix `onto` as `http://www.ontotext.com/` in the
 `Prefices` section of the rules file.) As the GraphDB documentation on
-[Rules](http://graphdb.ontotext.com/documentation/standard/reasoning.html#rules)
+[Rules](https://graphdb.ontotext.com/documentation/11.0/reasoning.html#rules)
 explains:
 
 > If the context is provided, the statements produced as rule
