@@ -9,14 +9,16 @@ import zio.ZLayer
 
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 
-class ResourcesApiRoutes(
-  valuesEndpoints: ValuesEndpointsHandler,
-  resourcesEndpoints: ResourcesEndpointsHandler,
-  standoffEndpoints: StandoffEndpointsHandler,
-  tapirToPekko: TapirToPekkoInterpreter,
+final case class ResourcesApiRoutes(
+  private val metadataEndpoints: MetadataServerEndpoints,
+  private val resourcesEndpoints: ResourcesEndpointsHandler,
+  private val standoffEndpoints: StandoffEndpointsHandler,
+  private val valuesEndpoints: ValuesEndpointsHandler,
+  private val tapirToPekko: TapirToPekkoInterpreter,
 ) {
 
-  private val handlers = valuesEndpoints.allHandlers ++ resourcesEndpoints.allHandlers ++ standoffEndpoints.allHandlers
+  private val handlers =
+    valuesEndpoints.allHandlers ++ resourcesEndpoints.allHandlers ++ standoffEndpoints.allHandlers ++ metadataEndpoints.allHandlers
 
   val routes: Seq[Route] = handlers.map(tapirToPekko.toRoute(_))
 }
