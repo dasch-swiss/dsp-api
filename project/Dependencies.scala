@@ -153,7 +153,7 @@ object Dependencies {
     "io.sentry"        % "sentry"                              % "8.11.1",
     "io.sentry"        % "sentry-opentelemetry-core"           % "8.11.1",
     "io.sentry"        % "sentry-opentelemetry-agentless"      % "8.11.1",
-    "io.opentelemetry" % "opentelemetry-sdk"                   % "1.49.0",
+    "io.opentelemetry" % "opentelemetry-sdk"                   % "1.50.0",
     "io.opentelemetry" % "opentelemetry-exporter-otlp"         % "1.50.0",
     "io.opentelemetry" % "opentelemetry-exporter-logging"      % "1.50.0",
     "io.opentelemetry" % "opentelemetry-exporter-logging-otlp" % "1.50.0",
