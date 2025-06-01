@@ -14,7 +14,7 @@ object Dependencies {
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.16.0"
 
-  val ScalaVersion = "3.3.5"
+  val ScalaVersion = "3.3.6"
 
   val PekkoActorVersion = "1.1.3"
   val PekkoHttpVersion  = "1.1.0"
