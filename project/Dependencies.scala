@@ -116,7 +116,7 @@ object Dependencies {
   val saxonHE        = "net.sf.saxon"          % "Saxon-HE"         % "12.6"
   val scalaGraph     = "org.scala-graph"      %% "graph-core"       % "2.0.2"
   val titaniumJSONLD = "com.apicatalog"        % "titanium-json-ld" % "1.6.0"
-  val xmlunitCore    = "org.xmlunit"           % "xmlunit-core"     % "2.10.0"
+  val xmlunitCore    = "org.xmlunit"           % "xmlunit-core"     % "2.10.2"
   val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
 
   // test
