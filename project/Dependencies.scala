@@ -42,7 +42,7 @@ object Dependencies {
   // jwt-scala 10.0.1 depends on zio-json 0.7.42
   // though newer version compatible with a newer zio-json version is available
   // it is not yet published: https://github.com/jwt-scala/jwt-scala/issues/642
-  val ZioJsonVersion        = "0.7.42"
+  val ZioJsonVersion        = "0.7.43"
   val zioJson               = "dev.zio"                       %% "zio-json"                  % ZioJsonVersion
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
