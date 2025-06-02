@@ -1,5 +1,41 @@
 # Changelog
 
+## [31.16.0](https://github.com/dasch-swiss/dsp-api/compare/v31.15.0...v31.16.0) (2025-06-02)
+
+
+### Maintenances
+
+* Dependency updates ([#3618](https://github.com/dasch-swiss/dsp-api/issues/3618)) ([edba976](https://github.com/dasch-swiss/dsp-api/commit/edba976c336ac9930a431c486a31186b5be58e3c))
+* Patch dependency updates ([#3579](https://github.com/dasch-swiss/dsp-api/issues/3579)) ([72d99b1](https://github.com/dasch-swiss/dsp-api/commit/72d99b1d819b1ecb363c746d55dca4e556ae58ee))
+* Remove unused application.conf entries ([#3614](https://github.com/dasch-swiss/dsp-api/issues/3614)) ([f05806c](https://github.com/dasch-swiss/dsp-api/commit/f05806c3ebbd921c5c6b7aaced9ed5fdd235bc09))
+
+
+### Documentation
+
+* Add missing route for adding list child nodes to OpenAPI documentation (DEV-4975) ([#3616](https://github.com/dasch-swiss/dsp-api/issues/3616)) ([eb3a76c](https://github.com/dasch-swiss/dsp-api/commit/eb3a76c5c6396e923c260ee52cbaa83ec4a33904))
+* Fix some dead links in documentation ([#3608](https://github.com/dasch-swiss/dsp-api/issues/3608)) ([af8015d](https://github.com/dasch-swiss/dsp-api/commit/af8015df8ba274e54eda1c2176d38a51a72b6043))
+
+
+### Enhancements
+
+* Add ark url with timestamp to resource metadata export (DEV-4950) ([#3611](https://github.com/dasch-swiss/dsp-api/issues/3611)) ([8811856](https://github.com/dasch-swiss/dsp-api/commit/881185624dbfc3743e70f956334379ef50bcccb3))
+* Add default CopyrightHolder and Licenses to projects without (DEV-4957) ([#3612](https://github.com/dasch-swiss/dsp-api/issues/3612)) ([ac0faff](https://github.com/dasch-swiss/dsp-api/commit/ac0faff4a3056fad322332b260191898171f634d))
+* Add default CopyrightHolders when creating a new project (DEV-4929) ([#3604](https://github.com/dasch-swiss/dsp-api/issues/3604)) ([4b880d9](https://github.com/dasch-swiss/dsp-api/commit/4b880d9921fe49cea3126b32286bbbf8bc1d202e))
+* Add experimental resource metadata endpoint ([#3605](https://github.com/dasch-swiss/dsp-api/issues/3605)) ([44e0c17](https://github.com/dasch-swiss/dsp-api/commit/44e0c17d6708497cfd4ee50c458de3fa627a5c7f))
+* Allow public read access to project licenses (DEV-4913) ([#3603](https://github.com/dasch-swiss/dsp-api/issues/3603)) ([5783409](https://github.com/dasch-swiss/dsp-api/commit/578340980ccbbe68b8905ee0e50ad75e69da1cce))
+* Raise timeout for resource metadata query (DEV-4946) ([#3610](https://github.com/dasch-swiss/dsp-api/issues/3610)) ([582c574](https://github.com/dasch-swiss/dsp-api/commit/582c5740d337b353e8b37265531c9edea4145a1e))
+* Support CSV, TSV and JSON and class filtering for metadata resources (DEV-4946) ([#3609](https://github.com/dasch-swiss/dsp-api/issues/3609)) ([ba02a1c](https://github.com/dasch-swiss/dsp-api/commit/ba02a1c677cfcc06a10e3214007517b930f5828a))
+
+
+### Performance Improvements
+
+* Add attributes to searchIncomingLinks span ([#3613](https://github.com/dasch-swiss/dsp-api/issues/3613)) ([60d608d](https://github.com/dasch-swiss/dsp-api/commit/60d608d04e8156ebabdeae763bc8e79e62f5008c))
+
+
+### Tests
+
+* Add e2e assertion for providing custom enabled licenses during project creation ([#3607](https://github.com/dasch-swiss/dsp-api/issues/3607)) ([7b2477b](https://github.com/dasch-swiss/dsp-api/commit/7b2477b474c43efed6127fe9cde66c2b5f236a3e))
+
 ## [31.15.0](https://github.com/dasch-swiss/dsp-api/compare/v31.14.0...v31.15.0) (2025-05-19)
 
 
