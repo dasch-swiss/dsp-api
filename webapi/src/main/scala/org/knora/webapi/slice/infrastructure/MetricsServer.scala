@@ -32,7 +32,7 @@ object MetricsServer {
     for {
       docs       <- DocsServer.docsEndpoints.map(endpoints => ZioHttpInterpreter().toHttp(endpoints))
       prometheus <- ZIO.service[PrometheusRoutes]
-      _          <- Server.install(prometheus.routes ++ docs)
+      _          <- Server.install(prometheus.routes ++ docs): @annotation.nowarn
       _          <- ZIO.never.as(())
     } yield ()
 
@@ -65,7 +65,7 @@ object MetricsServer {
                ZLayer.succeed(metricsConfig) >>> prometheus.prometheusLayer,
                Runtime.enableRuntimeMetrics,
                Runtime.enableFiberRoots,
-               DefaultJvmMetrics.live.unit,
+               DefaultJvmMetrics.liveV2.unit,
                PrometheusRoutes.layer,
              )
     } yield ()
