@@ -160,7 +160,7 @@ object LayersLive {
       MessageRelayLive.layer,
       OntologyApiModule.layer,
       OntologyResponderV2.layer,
-      OpenTelemetry.live,
+      OpenTelemetry.layer,
       PekkoActorSystem.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,

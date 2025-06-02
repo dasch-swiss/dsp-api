@@ -122,7 +122,7 @@ object LayersTestMock { self =>
       MessageRelayLive.layer,
       OntologyApiModule.layer,
       OntologyResponderV2.layer,
-      OpenTelemetry.test,
+      OpenTelemetry.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,

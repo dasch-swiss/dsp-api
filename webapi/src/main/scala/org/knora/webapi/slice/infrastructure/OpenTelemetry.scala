@@ -7,7 +7,6 @@ package org.knora.webapi.slice.infrastructure
 
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk
-import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder
 import io.sentry.Sentry
 import io.sentry.SentryOptions
 import zio.*
@@ -27,23 +26,26 @@ object OpenTelemetry {
   // configuring OpenTelemetry to work with Sentry.
   // This is triggered by creating a `AutoConfiguredOpenTelemetrySdk` and must happen before `Sentry.init`.
   // https://docs.sentry.io/platforms/java/opentelemetry/setup/agentless/#usage
-  private val builder: AutoConfiguredOpenTelemetrySdkBuilder = AutoConfiguredOpenTelemetrySdk
-    .builder()
-    .addPropertiesSupplier(() =>
-      Map(
-        "otel.logs.exporter"    -> "none",
-        "otel.metrics.exporter" -> "none",
-        "otel.traces.exporter"  -> "none",
-      ).asJava,
-    )
-
-  private def make(
-    build: AutoConfiguredOpenTelemetrySdkBuilder => AutoConfiguredOpenTelemetrySdk,
-  ): URLayer[OpenTelemetryConfig & KnoraApi, Tracing] =
-    ZLayer.scoped(for {
+  private val otelSdkSentry = ZLayer.scoped {
+    for {
+      _ <- ZIO.logInfo("Initializing OpenTelemetry.")
+      otel <- ZIO.fromAutoCloseable(
+                ZIO.succeed(
+                  AutoConfiguredOpenTelemetrySdk
+                    .builder()
+                    .addPropertiesSupplier(() =>
+                      Map(
+                        "otel.logs.exporter"    -> "none",
+                        "otel.metrics.exporter" -> "none",
+                        "otel.traces.exporter"  -> "none",
+                      ).asJava,
+                    )
+                    .build()
+                    .getOpenTelemetrySdk,
+                ),
+              )
       config    <- ZIO.service[OpenTelemetryConfig]
       apiConfig <- ZIO.service[KnoraApi]
-      otel      <- ZIO.fromAutoCloseable(ZIO.succeed(build(builder).getOpenTelemetrySdk))
       _ = config.dsn.map { dsn =>
             Sentry.init { (options: SentryOptions) =>
               options.setDsn(dsn)
@@ -54,10 +56,10 @@ object OpenTelemetry {
               options.setRelease(version)
             }
           }
-    } yield otel)
-    // Integrate the OpenTelemetry SDK into ZIO and expose as `Tracing`: https://zio.dev/zio-telemetry/opentelemetry/
-      >+> ZOpenTelemetry.contextZIO >>> ZOpenTelemetry.tracing("global")
+    } yield otel
+  }
 
-  val live: URLayer[OpenTelemetryConfig & KnoraApi, Tracing] = make(_.setResultAsGlobal().build())
-  val test: URLayer[OpenTelemetryConfig & KnoraApi, Tracing] = make(_.build())
+  val layer: URLayer[OpenTelemetryConfig & KnoraApi, Tracing] =
+    // Integrate the OpenTelemetry SDK into ZIO and expose as `Tracing`: https://zio.dev/zio-telemetry/opentelemetry/
+    otelSdkSentry >+> ZOpenTelemetry.contextZIO >>> ZOpenTelemetry.tracing("global")
 }
