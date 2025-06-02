@@ -46,16 +46,20 @@ object OpenTelemetry {
               )
       config    <- ZIO.service[OpenTelemetryConfig]
       apiConfig <- ZIO.service[KnoraApi]
-      _ = config.dsn.map { dsn =>
-            Sentry.init { (options: SentryOptions) =>
-              options.setDsn(dsn)
-              options.setTracesSampleRate(1.0)
-              options.setEnvironment(apiConfig.externalHost)
-              // For each of our pre-release, we use a common snapshot version.
-              val version = BuildInfo.version.replaceFirst("-.*", "-SNAPSHOT")
-              options.setRelease(version)
-            }
-          }
+      _ <- ZIO
+             .fromOption(config.dsn)
+             .zipLeft(ZIO.logInfo("Sentry DSN is set, initializing Sentry."))
+             .map { dsn =>
+               Sentry.init { (options: SentryOptions) =>
+                 options.setDsn(dsn)
+                 options.setTracesSampleRate(1.0)
+                 options.setEnvironment(apiConfig.externalHost)
+                 // For each of our pre-release, we use a common snapshot version.
+                 val version = BuildInfo.version.replaceFirst("-.*", "-SNAPSHOT")
+                 options.setRelease(version)
+               }
+             }
+             .orElse(ZIO.unit)
     } yield otel
   }
 
