@@ -27,7 +27,7 @@ object LoginPayloadSpec extends ZIOSpecDefault {
       test("decode iri password") {
         assertTrue(iriPasswordJson.fromJson[LoginPayload] == Right(iriPasswordPayload))
       }
-    }
+    }: @annotation.nowarn
 
     suiteAll("email password payload") {
       val emailPasswordJson    = "{\"email\":\"email@example.com\",\"password\":\"secret\"}"
@@ -38,7 +38,7 @@ object LoginPayloadSpec extends ZIOSpecDefault {
       test("decode email password") {
         assertTrue(emailPasswordJson.fromJson[LoginPayload] == Right(emailPasswordPayload))
       }
-    }
+    }: @annotation.nowarn
 
     suiteAll("username password payload") {
       val usernamePasswordJson    = "{\"username\":\"some.user\",\"password\":\"secret\"}"
@@ -49,6 +49,6 @@ object LoginPayloadSpec extends ZIOSpecDefault {
       test("decode username password") {
         assertTrue(usernamePasswordJson.fromJson[LoginPayload] == Right(usernamePasswordPayload))
       }
-    }
+    }: @annotation.nowarn
   }
 }
