@@ -17,7 +17,7 @@ object Dependencies {
   val ScalaVersion = "3.3.5"
 
   val PekkoActorVersion = "1.1.3"
-  val PekkoHttpVersion  = "1.1.0"
+  val PekkoHttpVersion  = "1.2.0"
 
   val MonocleVersion = "3.3.0"
 
@@ -39,10 +39,7 @@ object Dependencies {
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
 
-  // jwt-scala 10.0.1 depends on zio-json 0.7.42
-  // though newer version compatible with a newer zio-json version is available
-  // it is not yet published: https://github.com/jwt-scala/jwt-scala/issues/642
-  val ZioJsonVersion        = "0.7.42"
+  val ZioJsonVersion        = "0.7.43"
   val zioJson               = "dev.zio"                       %% "zio-json"                  % ZioJsonVersion
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
@@ -149,15 +146,8 @@ object Dependencies {
   )
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"         %% "zio-opentelemetry"                   % "3.1.4",
-    "io.sentry"        % "sentry"                              % "8.11.1",
-    "io.sentry"        % "sentry-opentelemetry-core"           % "8.11.1",
-    "io.sentry"        % "sentry-opentelemetry-agentless"      % "8.11.1",
-    "io.opentelemetry" % "opentelemetry-sdk"                   % "1.49.0",
-    "io.opentelemetry" % "opentelemetry-exporter-otlp"         % "1.49.0",
-    "io.opentelemetry" % "opentelemetry-exporter-logging"      % "1.49.0",
-    "io.opentelemetry" % "opentelemetry-exporter-logging-otlp" % "1.49.0",
-    "io.opentelemetry" % "opentelemetry-semconv"               % "0.14.1",
+    "dev.zio"  %% "zio-opentelemetry"              % "3.1.4",
+    "io.sentry" % "sentry-opentelemetry-agentless" % "8.13.2",
   )
 
   val integrationTestDependencies = Seq(
