@@ -10,13 +10,10 @@ import zio.ZLayer
 
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
-import org.knora.webapi.slice.URModule
 
-object InfrastructureModule
-    extends URModule[
-      DspIngestConfig & JwtConfig,
-      CacheManager & CsvService & InvalidTokenCache & JwtService,
-    ] { self =>
+object InfrastructureModule { self =>
+  type Dependencies = DspIngestConfig & JwtConfig
+  type Provided     = CacheManager & CsvService & InvalidTokenCache & JwtService
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       CacheManager.layer,

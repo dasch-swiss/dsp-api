@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.repo
 
+import zio.URLayer
 import zio.ZLayer
 
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
@@ -20,18 +21,13 @@ import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-object AdminRepoModule {
+object AdminRepoModule { self =>
 
-  type Dependencies =
-    // format: off
-    TriplestoreService &
-    CacheManager
-    // format: on
+  type Dependencies = CacheManager & TriplestoreService
 
   type Provided =
     // format: off
     AdministrativePermissionRepo &
-    CacheManager &
     DefaultObjectAccessPermissionRepo &
     LicenseRepo &
     KnoraGroupRepo &
@@ -39,7 +35,7 @@ object AdminRepoModule {
     KnoraUserRepo
     // format: on
 
-  val layer = ZLayer.makeSome[Dependencies, Provided](
+  val layer: URLayer[self.Dependencies, self.Provided] = ZLayer.makeSome[self.Dependencies, self.Provided](
     KnoraGroupRepoLive.layer,
     KnoraProjectRepoLive.layer,
     KnoraUserRepoLive.layer,

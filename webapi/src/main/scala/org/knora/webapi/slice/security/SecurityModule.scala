@@ -9,15 +9,14 @@ import zio.URLayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.infrastructure.InvalidTokenCache
 import org.knora.webapi.slice.infrastructure.JwtService
 
-object SecurityModule
-    extends URModule[
+object SecurityModule { self =>
+  type Dependencies =
       // format: off
       AppConfig &
       InvalidTokenCache &
@@ -25,14 +24,10 @@ object SecurityModule
       KnoraProjectService &
       PasswordService &
       UserService
-      ,
-      ScopeResolver &
-      Authenticator
       // format: on
-    ] { self =>
+
+  type Provided = ScopeResolver & Authenticator
+
   val layer: URLayer[self.Dependencies, self.Provided] =
-    ZLayer.makeSome[self.Dependencies, self.Provided](
-      ScopeResolver.layer,
-      AuthenticatorLive.layer,
-    )
+    ZLayer.makeSome[self.Dependencies, self.Provided](ScopeResolver.layer, AuthenticatorLive.layer)
 }
