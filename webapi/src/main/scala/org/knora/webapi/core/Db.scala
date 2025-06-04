@@ -48,15 +48,15 @@ object Db { self =>
     .orDie
     .unit
 
-  private def resetTripleStoreContent(data: List[RdfDataObject]) =
-    ZIO.logInfo(s"Loading test data: ${data.map(_.name).mkString}") *>
-      triplestore(_.resetTripleStoreContent(data).timeout(480.seconds)) *>
-      ZIO.logInfo("... loading test data done.")
-
   private val checkTriplestore =
     state(_.set(AppState.WaitingForTriplestore)) *>
       triplestore(_.checkTriplestore().filterOrDieWith(_ == Available)(s => new Exception(s.msg))) *>
       state(_.set(AppState.TriplestoreReady))
+
+  private def resetTripleStoreContent(data: List[RdfDataObject]) =
+    ZIO.logInfo(s"Loading test data: ${data.map(_.name).mkString}") *>
+      triplestore(_.resetTripleStoreContent(data).timeout(480.seconds)) *>
+      ZIO.logInfo("... loading test data done.")
 
   private def upgradeRepository =
     state(_.set(AppState.UpdatingRepository)) *>
