@@ -45,7 +45,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 object ValuesEraseSpec extends E2EZSpec {
   import TestHelper.DiffLib._
 
-  override val e2eSpec = suite("ValuesEraseSpec")(
+  override val e2eSpec: Spec[env, Any] = suite("ValuesEraseSpec")(
     test("erase an IntValue") {
       for {
         res1               <- TestHelper.createResource
