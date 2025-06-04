@@ -21,7 +21,6 @@ import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.infrastructure.CsvService
-import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.api.service.MetadataRestService
@@ -38,7 +37,7 @@ object ResourcesApiModule { self =>
     BaseEndpoints &
     GraphRoute &
     HandlerMapper &
-    InfrastructureModule.Provided &
+    CsvService &
     IriConverter &
     KnoraProjectService &
     KnoraResponseRenderer &
