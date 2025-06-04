@@ -25,7 +25,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppServer
+import org.knora.webapi.core.Db
 import org.knora.webapi.core.LayersTestLive
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -36,7 +36,6 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
-import org.knora.webapi.util.LogAspect
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack and
@@ -85,17 +84,7 @@ abstract class ITKnoraLiveSpec
   val baseInternalSipiUrl: String = appConfig.sipi.internalBaseUrl
 
   final override def beforeAll(): Unit =
-    /* Here we start our app and initialize the repository before each suit runs */
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            _ <- AppServer.test
-            _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-          } yield (),
-        )
-        .getOrThrow()
-    }
+    Unsafe.unsafe(implicit u => runtime.unsafe.run(Db.initWithTestData(rdfDataObjects)).getOrThrow())
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */

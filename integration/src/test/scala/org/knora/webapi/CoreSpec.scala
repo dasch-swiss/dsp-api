@@ -22,7 +22,7 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppServer
+import org.knora.webapi.core.Db
 import org.knora.webapi.core.LayersTestLive
 import org.knora.webapi.core.LayersTestMock
 import org.knora.webapi.core.MessageRelayActorRef
@@ -32,7 +32,6 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.security.ScopeResolver
-import org.knora.webapi.util.LogAspect
 
 abstract class CoreSpec
     extends AnyWordSpec
@@ -76,12 +75,7 @@ abstract class CoreSpec
   implicit val timeout: FiniteDuration = FiniteDuration(10, SECONDS)
 
   final override def beforeAll(): Unit =
-    /* Here we start our app and initialize the repository before each suit runs */
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(AppServer.test *> prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo"))
-        .getOrThrow()
-    }
+    Unsafe.unsafe(implicit u => runtime.unsafe.run(Db.initWithTestData(rdfDataObjects)).getOrThrow())
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */

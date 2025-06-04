@@ -31,5 +31,5 @@ object Main extends ZIOApp {
    *  Entrypoint of our Application
    */
   override def run: ZIO[Environment & ZIOAppArgs & Scope, Any, Any] =
-    AppServer.make *> MetricsServer.make
+    Db.init *> MetricsServer.make
 }
