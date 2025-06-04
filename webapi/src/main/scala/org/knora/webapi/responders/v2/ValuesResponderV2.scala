@@ -28,7 +28,6 @@ import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.*
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
@@ -75,6 +74,7 @@ final case class ValuesResponderV2(
   valueRepo: ValueRepo,
   ontologyRepo: OntologyRepo,
   auth: AuthorizationRestService,
+  resourcesResponder: ResourcesResponderV2,
 )(implicit val stringFormatter: StringFormatter) {
 
   /**
@@ -1596,18 +1596,13 @@ final case class ValuesResponderV2(
         (Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri)
           .map(_.toOntologySchema(ApiV2Complex))
 
-      // Make a Gravsearch query from a template.
-      gravsearchQuery: String =
-        org.knora.webapi.messages.twirl.queries.gravsearch.txt
-          .getResourceWithSpecifiedProperties(
-            resourceIri = resourceIri,
-            propertyIris = propertyIrisForGravsearchQuery,
-          )
-          .toString()
-
-      // Run the query.
-      query          <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
-      searchResponse <- searchResponderV2.gravsearchV2(query, SchemaRendering.default, requestingUser)
+      searchResponse <- resourcesResponder.getResourcesV2(
+                          resourceIris = Seq(resourceIri),
+                          targetSchema = ApiV2Complex,
+                          schemaOptions = Set.empty,
+                          requestingUser = requestingUser,
+                          showDeletedValues = true,
+                        )
     } yield searchResponse.toResource(resourceIri)
 
   /**
