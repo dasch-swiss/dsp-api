@@ -11,7 +11,6 @@ import zio.ZLayer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Features
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
@@ -26,8 +25,8 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-object AdminDomainModule
-    extends URModule[
+object AdminDomainModule { self =>
+  type Dependencies =
       // format: off
       AdminRepoModule.Provided &
       AppConfig &
@@ -39,7 +38,10 @@ object AdminDomainModule
       OntologyCache &
       OntologyRepo &
       TriplestoreService
-      ,
+      // format: on
+
+  type Provided =
+      // format: off
       AdministrativePermissionService &
       DefaultObjectAccessPermissionService &
       GroupService &
@@ -54,7 +56,6 @@ object AdminDomainModule
       ProjectService &
       UserService
       // format: on
-    ] { self =>
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       AdministrativePermissionService.layer,

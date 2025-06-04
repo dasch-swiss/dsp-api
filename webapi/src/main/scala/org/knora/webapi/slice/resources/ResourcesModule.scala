@@ -7,16 +7,13 @@ package org.knora.webapi.slice.resources
 
 import zio.URLayer
 
-import org.knora.webapi.slice.URModule
-import org.knora.webapi.slice.admin.AdminModule
-import org.knora.webapi.slice.common.BaseModule
-import org.knora.webapi.slice.ontology.CoreModule
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.resources.service.MetadataService
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-object ResourcesModule
-    extends URModule[
-      AdminModule.Provided & BaseModule.Provided & CoreModule.Provided,
-      MetadataService,
-    ] {
-  override val layer: URLayer[Dependencies, Provided] = MetadataService.layer
+object ResourcesModule { self =>
+  type Dependencies = KnoraProjectService & TriplestoreService & StringFormatter
+  type Provided     = MetadataService
+  val layer: URLayer[Dependencies, Provided] = MetadataService.layer
 }
