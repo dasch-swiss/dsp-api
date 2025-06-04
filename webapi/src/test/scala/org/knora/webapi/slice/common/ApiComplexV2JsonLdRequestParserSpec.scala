@@ -799,7 +799,7 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       }
     },
     standOffSuite,
-  ).provideSome[Scope](
+  ).provide(
     AdministrativePermissionRepoInMemory.layer,
     AdministrativePermissionService.layer,
     ApiComplexV2JsonLdRequestParser.layer,
