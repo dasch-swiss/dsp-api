@@ -54,20 +54,19 @@ object MetricsServer {
              s"Starting api on ${knoraApiConfig.externalKnoraApiBaseUrl}, " +
                s"find docs on ${knoraApiConfig.externalProtocol}://${knoraApiConfig.externalHost}:$port/docs",
            )
-      _ <- metricsServer
-             .provideSome(
-               ZLayer.succeed(knoraApiConfig),
-               ZLayer.succeed(adminApiEndpoints),
-               ZLayer.succeed(apiV2Endpoints),
-               ZLayer.succeed(shaclApiEndpoints),
-               Server.defaultWithPort(port),
-               prometheus.publisherLayer,
-               ZLayer.succeed(metricsConfig) >>> prometheus.prometheusLayer,
-               Runtime.enableRuntimeMetrics,
-               Runtime.enableFiberRoots,
-               DefaultJvmMetrics.liveV2.unit,
-               PrometheusRoutes.layer,
-             )
+      _ <- metricsServer.provide(
+             ZLayer.succeed(knoraApiConfig),
+             ZLayer.succeed(adminApiEndpoints),
+             ZLayer.succeed(apiV2Endpoints),
+             ZLayer.succeed(shaclApiEndpoints),
+             Server.defaultWithPort(port),
+             prometheus.publisherLayer,
+             ZLayer.succeed(metricsConfig) >>> prometheus.prometheusLayer,
+             Runtime.enableRuntimeMetrics,
+             Runtime.enableFiberRoots,
+             DefaultJvmMetrics.liveV2.unit,
+             PrometheusRoutes.layer,
+           )
     } yield ()
 }
 
