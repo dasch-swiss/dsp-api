@@ -9,7 +9,6 @@ import zio.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.OntologyResponderV2
-import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
@@ -21,12 +20,24 @@ import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
-object OntologyApiModule
-    extends URModule[
-      AuthorizationRestService & AppConfig & BaseEndpoints & CardinalityService & IriConverter & KnoraResponseRenderer &
-        OntologyCacheHelpers & OntologyRepo & OntologyResponderV2 & StringFormatter & TapirToZioHttpInterpreter,
-      OntologiesServerEndpoints & OntologiesEndpoints & OntologyV2RequestParser,
-    ] { self =>
+object OntologyApiModule { self =>
+
+  type Dependencies =
+  // format: off
+  AuthorizationRestService &
+  AppConfig &
+  BaseEndpoints &
+  CardinalityService &
+  IriConverter &
+  KnoraResponseRenderer &
+  OntologyCacheHelpers &
+  OntologyRepo &
+  OntologyResponderV2 &
+  StringFormatter &
+  TapirToZioHttpInterpreter
+  // format: on
+
+  type Provided = OntologiesServerEndpoints & OntologiesEndpoints & OntologyV2RequestParser
 
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](

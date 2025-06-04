@@ -18,7 +18,7 @@ object DspApiServer {
     endpoints <- ZIO.service[DspApiServerEndpoints]
     tapir     <- ZIO.service[TapirToZioHttpInterpreter]
     routes     = tapir.toHttp(endpoints.serverEndpoints)
-    nothing   <- Server.serve(routes).provideSome[KnoraApi](ApiHttpServer.layer)
+    nothing   <- Server.serve(routes).provideSome[KnoraApi](ApiHttpServer.layer): @annotation.nowarn
   } yield nothing).ensuring(ZIO.logInfo("Shutting down DSP API Server"))
 }
 

@@ -7,17 +7,13 @@ package org.knora.webapi.slice.shacl.api
 
 import zio.*
 
-import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.TapirToZioHttpInterpreter
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 
-object ShaclApiModule
-    extends URModule[
-      BaseEndpoints & ShaclValidator & TapirToZioHttpInterpreter,
-      ShaclEndpoints & ShaclServerEndpoints,
-    ] {
-  self =>
+object ShaclApiModule { self =>
+  type Dependencies = BaseEndpoints & ShaclValidator & TapirToZioHttpInterpreter
+  type Provided     = ShaclEndpoints & ShaclServerEndpoints
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       ShaclEndpoints.layer,

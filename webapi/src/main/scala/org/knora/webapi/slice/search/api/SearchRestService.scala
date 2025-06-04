@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.slice.search.api
+import io.opentelemetry.api.common.Attributes
 import io.sentry.Sentry
 import io.sentry.SentryLevel
 import sttp.model.MediaType
@@ -80,25 +81,21 @@ final case class SearchRestService(
     user: User,
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
-    for {
-      response <-
-        tracing.root("searchIncomingLinks") {
-          for {
-            searchResult <-
-              searchResponderV2
-                .searchIncomingLinksV2(
-                  resourceIri,
-                  offset.value,
-                  opts.schemaRendering,
-                  user,
-                  limitToProject,
-                )
-            response <- renderer.render(searchResult, opts)
-            _        <- ZIO.succeed(Sentry.captureMessage("searchIncomingLinks", SentryLevel.INFO))
-          } yield response
-        }
-
-    } yield response
+    (for {
+      searchResult <-
+        searchResponderV2.searchIncomingLinksV2(resourceIri, offset.value, opts.schemaRendering, user, limitToProject)
+          @@ tracing.aspects.span("query")
+      response <- renderer.render(searchResult, opts) @@ tracing.aspects.span("render")
+      _        <- ZIO.succeed(Sentry.captureMessage("searchIncomingLinks", SentryLevel.INFO))
+    } yield response) @@ tracing.aspects.root(
+      spanName = "searchIncomingLinks",
+      attributes = Attributes
+        .builder()
+        .put("resourceIri", resourceIri)
+        .put("offset", offset.value)
+        .put("limitToProject", limitToProject.map(_.value).getOrElse("None"))
+        .build(),
+    )
 
   def getSearchStillImageRepresentations(
     resourceIri: String,

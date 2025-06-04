@@ -10,11 +10,8 @@ import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Greater
 import sttp.model.HeaderNames
 import sttp.model.MediaType
-import sttp.tapir.Codec
-import sttp.tapir.CodecFormat
-import sttp.tapir.EndpointInput
+import sttp.tapir.*
 import sttp.tapir.codec.refined.*
-import sttp.tapir.ztapir.*
 import zio.*
 
 import dsp.valueobjects.Iri
@@ -189,7 +186,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(header[MediaType](HeaderNames.ContentType))
     .description("Search for resources by label.")
 
-  val endpoints =
+  val endpoints: Seq[AnyEndpoint] =
     Seq(
       postGravsearch,
       getGravsearch,
@@ -205,6 +202,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
       getFullTextSearchCount,
     ).map(_.endpoint.tag("V2 Search"))
 }
+
 object SearchEndpoints {
   val layer = ZLayer.derive[SearchEndpoints]
 }

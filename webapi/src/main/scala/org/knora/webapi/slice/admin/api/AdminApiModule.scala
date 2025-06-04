@@ -13,7 +13,6 @@ import org.knora.webapi.config.Features
 import org.knora.webapi.responders.admin.AssetPermissionsResponder
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.admin.PermissionsResponder
-import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionRestService
@@ -40,8 +39,9 @@ import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-object AdminApiModule
-    extends URModule[
+object AdminApiModule { self =>
+
+  type Dependencies =
       // format: off
       AdministrativePermissionService &
       AppConfig &
@@ -69,7 +69,10 @@ object AdminApiModule
       TapirToZioHttpInterpreter &
       TriplestoreService &
       UserService
-      ,
+      // format: on
+
+  type Provided =
+      // format: off
       AdminApiEndpoints &
       AdminApiServerEndpoints &
       // the `*RestService`s are only exposed for the integration tests
@@ -78,7 +81,7 @@ object AdminApiModule
       ProjectRestService &
       UserRestService
       // format: on
-    ] { self =>
+
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       AdminApiEndpoints.layer,

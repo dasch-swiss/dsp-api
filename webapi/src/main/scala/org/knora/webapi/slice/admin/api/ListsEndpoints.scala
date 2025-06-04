@@ -70,11 +70,13 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base)
     .in(jsonBody[ListCreateRootNodeRequest])
     .out(jsonBody[ListGetResponseADM])
+    .description("Creates a new list by creating the root node of the list.")
 
   val postListsChild = baseEndpoints.securedEndpoint.post
     .in(base / listIriPathVar)
     .in(jsonBody[ListCreateChildNodeRequest])
     .out(jsonBody[ChildNodeInfoGetResponseADM])
+    .description("Creates a new list node as a child of the specified list node.")
 
   // Updates
   val putListsByIriName = baseEndpoints.securedEndpoint.put
@@ -119,6 +121,7 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) {
   private val secured =
     List(
       postLists,
+      postListsChild,
       putListsByIriName,
       putListsByIriLabels,
       putListsByIriComments,

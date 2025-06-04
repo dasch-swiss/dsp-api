@@ -10,7 +10,6 @@ import zio.URLayer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Features
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.slice.URModule
 import org.knora.webapi.slice.admin.domain.AdminDomainModule
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.admin.repo.AdminRepoModule
@@ -21,8 +20,8 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-object AdminModule
-    extends URModule[
+object AdminModule { self =>
+  type Dependencies =
       // format: off
       AppConfig &
       CacheManager &
@@ -34,10 +33,10 @@ object AdminModule
       OntologyRepo &
       PredicateObjectMapper &
       TriplestoreService
-      ,
-      AdminDomainModule.Provided
       // format: on
-    ] { self =>
+
+  type Provided = AdminDomainModule.Provided
+
   val layer: URLayer[self.Dependencies, self.Provided] =
     AdminRepoModule.layer >>> AdminDomainModule.layer
 }
