@@ -11,6 +11,8 @@ import zio.ZLayer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Features
 import org.knora.webapi.responders.IriService
+import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
+import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
@@ -18,23 +20,25 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
-import org.knora.webapi.slice.admin.repo.AdminRepoModule
-import org.knora.webapi.slice.infrastructure.CacheManager
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object AdminDomainModule { self =>
+
   type Dependencies =
       // format: off
-      AdminRepoModule.Provided &
+      AdministrativePermissionRepo &
       AppConfig &
-      CacheManager &
+      DefaultObjectAccessPermissionRepo &
       DspIngestClient &
       Features &
-      IriConverter &
       IriService &
+      KnoraGroupRepo &
+      KnoraProjectRepo &
+      KnoraUserRepo &
+      LicenseRepo &
       OntologyCache &
       OntologyRepo &
       TriplestoreService
@@ -56,6 +60,7 @@ object AdminDomainModule { self =>
       ProjectService &
       UserService
       // format: on
+
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
       AdministrativePermissionService.layer,
