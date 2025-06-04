@@ -21,10 +21,8 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
  */
 object Db { self =>
 
-  private val state         = ZIO.serviceWithZIO[State]
-  private val triplestore   = ZIO.serviceWithZIO[TriplestoreService]
-  private val updater       = ZIO.serviceWithZIO[RepositoryUpdater]
-  private val ontologyCache = ZIO.serviceWithZIO[OntologyCache]
+  private def setState(s: AppState) = ZIO.serviceWithZIO[State](_.set(s))
+  private val triplestore           = ZIO.serviceWithZIO[TriplestoreService]
 
   type DbInitEnv = AppConfig & OntologyCache & RepositoryUpdater & State & TriplestoreService
 
@@ -43,15 +41,15 @@ object Db { self =>
         refreshCache *>
         ZIO.logInfo("=> Startup checks finished") *>
         ZIO.logWarning("Resetting DB over HTTP is turned ON").when(appConfig.allowReloadOverHttp) *>
-        state(_.set(AppState.Running))
+        setState(AppState.Running)
     }
     .orDie
     .unit
 
   private val checkTriplestore =
-    state(_.set(AppState.WaitingForTriplestore)) *>
+    setState(AppState.WaitingForTriplestore) *>
       triplestore(_.checkTriplestore().filterOrDieWith(_ == Available)(s => new Exception(s.msg))) *>
-      state(_.set(AppState.TriplestoreReady))
+      setState(AppState.TriplestoreReady)
 
   private def resetTripleStoreContent(data: List[RdfDataObject]) =
     ZIO.logInfo(s"Loading test data: ${data.map(_.name).mkString}") *>
@@ -59,14 +57,14 @@ object Db { self =>
       ZIO.logInfo("... loading test data done.")
 
   private def upgradeRepository =
-    state(_.set(AppState.UpdatingRepository)) *>
-      updater(_.maybeUpgradeRepository.flatMap(response => ZIO.logInfo(response.message))) *>
-      state(_.set(AppState.RepositoryUpToDate))
+    setState(AppState.UpdatingRepository) *>
+      ZIO.serviceWithZIO[RepositoryUpdater](_.maybeUpgradeRepository).tap(r => ZIO.logInfo(r.message)) *>
+      setState(AppState.RepositoryUpToDate)
 
   private def refreshCache =
-    state(_.set(AppState.LoadingOntologies)) *>
-      ontologyCache(_.refreshCache()).tap(cd =>
-        ZIO.logInfo(s"Ontology cache loaded: ${cd.ontologies.size} ontologies"),
-      ) *>
-      state(_.set(AppState.OntologiesReady))
+    setState(AppState.LoadingOntologies) *>
+      ZIO
+        .serviceWithZIO[OntologyCache](_.refreshCache())
+        .tap(cd => ZIO.logInfo(s"Ontology cache loaded: ${cd.ontologies.size} ontologies")) *>
+      setState(AppState.OntologiesReady)
 }
