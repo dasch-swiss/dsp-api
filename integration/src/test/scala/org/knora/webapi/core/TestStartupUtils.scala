@@ -9,7 +9,7 @@ import zio.*
 import zio.http.*
 
 import org.knora.webapi.config.KnoraApi
-import org.knora.webapi.core.AppServer.AppServerEnvironment
+import org.knora.webapi.core.Db.DbInitEnv
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.common.api.DspApiServerEndpoints
 import org.knora.webapi.slice.common.api.TapirToZioHttpInterpreter
@@ -23,18 +23,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
  */
 object TestStartupUtils {
 
-  def startDspApi(rdfDataObjects: List[RdfDataObject]): ZIO[
-    KnoraApi & TapirToZioHttpInterpreter & DspApiServerEndpoints & TriplestoreService & OntologyCache &
-      AppServerEnvironment,
-    Throwable,
-    Unit,
-  ] =
-    for {
-      _ <- AppServer.test
-      _ <- prepareRepository(rdfDataObjects)
-      _ <- (DspApiServer.make *> ZIO.never).forkDaemon
-      _ <- waitForDspApiServer
-    } yield ()
+  def startDspApi(
+    rdfDataObjects: List[RdfDataObject],
+  ): ZIO[KnoraApi & TapirToZioHttpInterpreter & DspApiServerEndpoints & DbInitEnv, Throwable, Unit] =
+    Db.initWithTestData(rdfDataObjects) *>
+      (DspApiServer.make *> ZIO.never).forkDaemon *>
+      waitForDspApiServer
 
   private val waitForDspApiServer =
     ZIO.serviceWithZIO[KnoraApi] { knoraApi =>

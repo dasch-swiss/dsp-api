@@ -50,7 +50,7 @@ object MetricsServer {
       interval           = config.interval
       metricsConfig      = MetricsConfig(interval)
       _ <- metricsServer
-             .provideSome(
+             .provide(
                ZLayer.succeed(knoraApiConfig),
                ZLayer.succeed(adminApiEndpoints),
                ZLayer.succeed(apiV2Endpoints),

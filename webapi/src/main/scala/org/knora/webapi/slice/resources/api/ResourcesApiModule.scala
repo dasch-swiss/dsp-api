@@ -19,7 +19,6 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.infrastructure.CsvService
-import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.api.service.MetadataRestService
@@ -29,13 +28,14 @@ import org.knora.webapi.slice.resources.api.service.ValuesRestService
 import org.knora.webapi.slice.resources.service.MetadataService
 
 object ResourcesApiModule { self =>
+
   type Dependencies =
     //format: off
     ApiComplexV2JsonLdRequestParser &
     AuthorizationRestService &
     BaseEndpoints &
+    CsvService &
     GraphRoute &
-    InfrastructureModule.Provided &
     IriConverter &
     KnoraProjectService &
     KnoraResponseRenderer &
@@ -46,8 +46,14 @@ object ResourcesApiModule { self =>
     ValuesResponderV2
     //format: on
 
-  type Provided = MetadataEndpoints & ResourcesApiServerEndpoints & ResourcesEndpoints & StandoffEndpoints &
+  type Provided =
+    // format: off
+    MetadataEndpoints &
+    ResourcesApiServerEndpoints &
+    ResourcesEndpoints &
+    StandoffEndpoints &
     ValuesEndpoints
+    // format: on
 
   def layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
