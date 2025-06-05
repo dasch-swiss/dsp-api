@@ -69,7 +69,7 @@ object FusekiTestContainer {
     .withExposedPorts(3030)
     .withEnv("ADMIN_PASSWORD", adminPassword)
     .withEnv("JVM_ARGS", "-Xmx3G")
-    .withLogConsumer(frame => print("FUSEKI:\t" + frame.getUtf8String))
+//    .withLogConsumer(frame => print("FUSEKI:\t" + frame.getUtf8String))
     .waitingFor(Wait.forHttp("/").forStatusCode(401))
 
   val layer: ULayer[FusekiTestContainer] = container.toLayer

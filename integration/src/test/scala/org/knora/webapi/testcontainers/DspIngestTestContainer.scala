@@ -37,7 +37,7 @@ object DspIngestTestContainer {
       .withEnv("DB_JDBC_URL", "jdbc:sqlite:/tmp/ingest.sqlite")
       .withFileSystemBind(imagesVolume.hostPath, assetDir, BindMode.READ_WRITE)
       .withFileSystemBind(tempVolume.hostPath, tempDir, BindMode.READ_WRITE)
-      .withLogConsumer(frame => print("DSP-INGEST:\t" + frame.getUtf8String))
+//      .withLogConsumer(frame => print("DSP-INGEST:\t" + frame.getUtf8String))
       .waitingFor(Wait.forListeningPorts(port))
   }
 
