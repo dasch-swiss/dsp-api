@@ -9,7 +9,7 @@ import zio.ZIO
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.*
@@ -23,7 +23,7 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 /**
  * This spec is used to test subclasses of the [[PermissionsResponderRequestADM]] class.
  */
-class PermissionsMessagesADMSpec extends CoreSpec {
+class PermissionsMessagesADMSpec extends E2ESpec {
 
   "Administrative Permission Create Requests" should {
     "return 'BadRequest' if the supplied project IRI for AdministrativePermissionCreateRequestADM is not valid" in {

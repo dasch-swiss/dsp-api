@@ -5,11 +5,9 @@
 
 package org.knora.webapi.slice.lists
 
-import org.apache.pekko
-import org.apache.pekko.testkit.ImplicitSender
 import zio.*
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.admin.responder.listsmessages
 import org.knora.webapi.messages.admin.responder.listsmessages.ListADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -23,7 +21,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.lists.domain.ListsService
 
-class ListsServiceSpec extends CoreSpec with ImplicitSender {
+class ListsServiceSpec extends E2ESpec {
 
   private val listsService = ZIO.serviceWithZIO[ListsService]
 

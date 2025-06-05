@@ -8,13 +8,13 @@ package org.knora.webapi.util
 import org.scalatest.compatible.Assertion
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.util.*
 
 /**
  * Tests [[CalendarDateUtilV2]].
  */
-class CalendarDateUtilV2Spec extends CoreSpec {
+class CalendarDateUtilV2Spec extends E2ESpec {
   private def checkSingleDate(
     calendarDate: CalendarDateV2,
     expectedStartJDN: Int,

@@ -20,6 +20,7 @@ import java.nio.file.Paths
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.e2e.v2.AuthenticationV2JsonProtocol
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants
@@ -36,7 +37,7 @@ import org.knora.webapi.util.MutableTestIri
 /**
  * Integration test specification for the standoff endpoint.
  */
-class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonProtocol {
+class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
 
   val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
@@ -129,7 +130,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
     val request = Get(
       s"$baseApiUrl/v2/resources/$iri",
     ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-    getResponseJsonLD(request)
+    getResponseAsJsonLD(request)
   }
 
   "The Standoff v2 Endpoint" should {

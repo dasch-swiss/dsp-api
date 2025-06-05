@@ -10,7 +10,7 @@ import zio.ZIO
 import scala.collection.mutable.ArrayBuffer
 
 import dsp.errors.AssertionException
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -23,7 +23,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
 
-class GravsearchToPrequeryTransformerSpec extends CoreSpec {
+class GravsearchToPrequeryTransformerSpec extends E2ESpec {
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

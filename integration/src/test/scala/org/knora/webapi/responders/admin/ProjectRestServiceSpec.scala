@@ -33,7 +33,7 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
  */
-class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
+class ProjectRestServiceSpec extends E2ESpec with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getInitializedTestInstance
 

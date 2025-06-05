@@ -398,7 +398,7 @@ class GraphTestData {
   )
 }
 
-class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender { self =>
+class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
   import ResourcesResponderV2Spec.*
 

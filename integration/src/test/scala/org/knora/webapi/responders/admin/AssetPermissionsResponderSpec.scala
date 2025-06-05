@@ -20,7 +20,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 /**
  * Tests [[AssetPermissionsResponder]].
  */
-class AssetPermissionsResponderSpec extends CoreSpec with ImplicitSender {
+class AssetPermissionsResponderSpec extends E2ESpec with ImplicitSender {
 
   private def getFileInfoForSipiADM(shortcode: Shortcode, filename: String, user: User) =
     ZIO.serviceWithZIO[AssetPermissionsResponder](

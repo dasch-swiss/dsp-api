@@ -7,14 +7,14 @@ package org.knora.webapi.slice.ontology.repo.service
 
 import zio.ZIO
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.UnsafeZioRun
 
 /**
  * This spec is used to test [[org.knora.webapi.slice.ontology.repo.service.OntologyCache]].
  */
-class OntologyCacheSpec extends CoreSpec {
+class OntologyCacheSpec extends E2ESpec {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
