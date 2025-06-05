@@ -1591,11 +1591,6 @@ final case class ValuesResponderV2(
           None
         }
 
-      // Convert the property IRIs to be queried to the API v2 complex schema for Gravsearch.
-      propertyIrisForGravsearchQuery =
-        (Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri)
-          .map(_.toOntologySchema(ApiV2Complex))
-
       searchResponse <- resourcesResponder.getResourcesV2(
                           resourceIris = Seq(resourceIri),
                           targetSchema = ApiV2Complex,
@@ -1764,7 +1759,8 @@ final case class ValuesResponderV2(
 
     sourceResourceInfo.values.get(linkValueProperty).flatMap { (linkValueInfos: Seq[ReadValueV2]) =>
       linkValueInfos.collectFirst {
-        case linkValueInfo: ReadLinkValueV2 if linkValueInfo.valueContent.referredResourceIri == targetResourceIri =>
+        case linkValueInfo: ReadLinkValueV2
+            if linkValueInfo.valueContent.referredResourceIri == targetResourceIri && linkValueInfo.deletionInfo.isEmpty =>
           linkValueInfo
       }
     }
