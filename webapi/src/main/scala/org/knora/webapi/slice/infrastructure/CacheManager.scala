@@ -52,10 +52,8 @@ object CacheManager {
   private def getClassOf[A: ClassTag]: Class[A] = implicitly[ClassTag[A]].runtimeClass.asInstanceOf[Class[A]]
 
   val layer: ULayer[CacheManager] = ZLayer.scoped {
-    val acquire = ZIO.succeed(CacheManagerBuilder.newCacheManagerBuilder().build(true))
-    val release = (cm: org.ehcache.CacheManager) => ZIO.succeed(cm.close())
     ZIO
-      .acquireRelease(acquire)(release)
+      .fromAutoCloseable(ZIO.succeed(CacheManagerBuilder.newCacheManagerBuilder().build(true)))
       .flatMap(mgr => Ref.make(Set.empty[EhCache[_, _]]).map(CacheManager(mgr, _)))
   }
 }
