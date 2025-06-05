@@ -36,7 +36,7 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 /**
  * Tests [[ListsResponder]].
  */
-class ListsResponderSpec extends CoreSpec with ImplicitSender {
+class ListsResponderSpec extends E2ESpec with ImplicitSender {
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(

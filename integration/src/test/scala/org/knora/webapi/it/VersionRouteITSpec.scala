@@ -6,19 +6,19 @@
 package org.knora.webapi.it
 
 import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model.HttpResponse
+import org.apache.pekko.http.scaladsl.model.StatusCodes
 import spray.json.*
 
 import scala.concurrent.Await
 import scala.concurrent.duration.*
 
-import org.knora.webapi.ITKnoraLiveSpec
-
-import pekko.http.scaladsl.model.*
+import org.knora.webapi.E2ESpec
 
 /**
  * End-to-End (E2E) test specification for testing route rejections.
  */
-class VersionRouteITSpec extends ITKnoraLiveSpec {
+class VersionRouteITSpec extends E2ESpec {
 
   private def getJsonResponse: JsObject = {
     val request                = Get(baseApiUrl + s"/version")

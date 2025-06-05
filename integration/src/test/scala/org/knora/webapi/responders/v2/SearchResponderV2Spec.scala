@@ -29,7 +29,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-class SearchResponderV2Spec extends CoreSpec {
+class SearchResponderV2Spec extends E2ESpec {
 
   private val iriConverter                              = ZIO.serviceWithZIO[IriConverter]
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

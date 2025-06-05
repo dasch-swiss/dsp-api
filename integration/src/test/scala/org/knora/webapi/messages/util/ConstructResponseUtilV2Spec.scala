@@ -30,7 +30,7 @@ import pekko.testkit.ImplicitSender
 /**
  * Tests [[ConstructResponseUtilV2]].
  */
-class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
+class ConstructResponseUtilV2Spec extends E2ESpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val incunabulaUser                            = SharedTestDataADM.incunabulaProjectAdminUser
   private val anythingAdminUser                         = SharedTestDataADM.anythingAdminUser

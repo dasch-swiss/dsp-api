@@ -8,7 +8,7 @@ package org.knora.webapi.responders.v2
 import org.apache.pekko
 import zio.ZIO
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.UnsafeZioRun
@@ -21,7 +21,7 @@ import pekko.testkit.ImplicitSender
 /**
  * Tests that the [[OntologyCache.refreshCache]] method does not load invalid data into the cache.
  */
-class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
+class LoadOntologiesSpec extends E2ESpec with ImplicitSender {
   private val INVALID_ONTO_NAME = "http://www.knora.org/ontology/invalid"
 
   /**

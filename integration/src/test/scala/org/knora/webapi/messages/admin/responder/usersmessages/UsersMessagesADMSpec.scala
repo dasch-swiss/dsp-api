@@ -13,7 +13,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 /**
  * This spec is used to test the [[User]] and [[UserIdentifierADM]] classes.
  */
-class UsersMessagesADMSpec extends CoreSpec {
+class UsersMessagesADMSpec extends E2ESpec {
 
   private val id          = SharedTestDataADM.rootUser.id
   private val username    = SharedTestDataADM.rootUser.username
