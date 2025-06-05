@@ -52,10 +52,14 @@ object CacheManager {
   private def getClassOf[A: ClassTag]: Class[A] = implicitly[ClassTag[A]].runtimeClass.asInstanceOf[Class[A]]
 
   val layer: ULayer[CacheManager] = ZLayer.scoped {
-    ZIO.logInfo("Creating EhCache CacheManager") *>
+    ZIO.logInfo("CacheManager: Creating") *>
       ZIO
-        .fromAutoCloseable(ZIO.succeed(CacheManagerBuilder.newCacheManagerBuilder().build(true)))
+        .fromAutoCloseable(ZIO.succeed(CacheManagerBuilder.newCacheManagerBuilder().build()))
+        .tap(mgr =>
+          ZIO.logInfo(s"CacheManager: Initializing ${mgr}") *>
+            ZIO.attempt(mgr.init()).logError.orDie,
+        )
         .flatMap(mgr => Ref.make(Set.empty[EhCache[_, _]]).map(CacheManager(mgr, _)))
-        .ensuring(ZIO.logInfo("EhCache CacheManager created"))
+        .ensuring(ZIO.logInfo("CacheManager: Created"))
   }
 }
