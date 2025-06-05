@@ -28,6 +28,7 @@ import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.*
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
@@ -1218,11 +1219,15 @@ final case class ValuesResponderV2(
 
     // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
     // so we can see objects that the user doesn't have permission to see.
-    resourceInfo <- getResourceWithPropertyValues(
-                      deleteValue.resourceIri.toString,
-                      adjustedInternalPropertyInfo,
-                      KnoraSystemInstances.Users.SystemUser,
-                    )
+    resourceInfo <- resourcesResponder
+                      .getResourcesV2(
+                        resourceIris = Seq(deleteValue.resourceIri.toString),
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = Set.empty,
+                        requestingUser = KnoraSystemInstances.Users.SystemUser,
+                        showDeletedValues = true,
+                      )
+                      .map(_.toResource(deleteValue.resourceIri.toString))
 
     // Check that the resource belongs to the class that the client submitted.
     _ <- ZIO.when(resourceInfo.resourceClassIri != deleteValue.resourceClassIri.toInternalSchema) {
@@ -1591,13 +1596,23 @@ final case class ValuesResponderV2(
           None
         }
 
-      searchResponse <- resourcesResponder.getResourcesV2(
-                          resourceIris = Seq(resourceIri),
-                          targetSchema = ApiV2Complex,
-                          schemaOptions = Set.empty,
-                          requestingUser = requestingUser,
-                          showDeletedValues = true,
-                        )
+      // Convert the property IRIs to be queried to the API v2 complex schema for Gravsearch.
+      propertyIrisForGravsearchQuery =
+        (Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri)
+          .map(_.toOntologySchema(ApiV2Complex))
+
+      // Make a Gravsearch query from a template.
+      gravsearchQuery: String =
+        org.knora.webapi.messages.twirl.queries.gravsearch.txt
+          .getResourceWithSpecifiedProperties(
+            resourceIri = resourceIri,
+            propertyIris = propertyIrisForGravsearchQuery,
+          )
+          .toString()
+
+      // Run the query.
+      query          <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
+      searchResponse <- searchResponderV2.gravsearchV2(query, SchemaRendering.default, requestingUser)
     } yield searchResponse.toResource(resourceIri)
 
   /**
