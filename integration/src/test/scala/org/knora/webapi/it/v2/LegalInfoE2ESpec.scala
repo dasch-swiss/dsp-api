@@ -20,8 +20,10 @@ import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*
 
+import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.net.URLEncoder
+import javax.imageio.ImageIO
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
 
@@ -46,6 +48,8 @@ import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.testservices.TestDspIngestClient
+import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
 
 object LegalInfoE2ESpec extends E2EZSpec {
 
@@ -87,8 +91,9 @@ object LegalInfoE2ESpec extends E2EZSpec {
   private val createResourceSuite = suite("Creating Resources")(
     test("without legal info should succeed and the creation response should not contain legal info") {
       for {
-        createResourceResponseModel <- createStillImageResource()
-        info                        <- copyrightAndLicenseInfo(createResourceResponseModel)
+        created             <- createStillImageResource()
+        (resourceCreated, _) = created
+        info                <- copyrightAndLicenseInfo(resourceCreated)
       } yield assertTrue(
         info.copyrightHolder.isEmpty,
         info.authorship.isEmpty,
@@ -99,8 +104,9 @@ object LegalInfoE2ESpec extends E2EZSpec {
       suite("given the copyright holder is allowed on the project")(
         test("then creation response should contain it") {
           for {
-            createResourceResponseModel <- createStillImageResourceWithInfos()
-            info                        <- copyrightAndLicenseInfo(createResourceResponseModel)
+            created             <- createStillImageResourceWithInfos()
+            (resourceCreated, _) = created
+            info                <- copyrightAndLicenseInfo(resourceCreated)
           } yield assertTrue(
             info.copyrightHolder.contains(aCopyrightHolder),
             info.licenseIri.contains(enabledLicenseIri),
@@ -108,10 +114,11 @@ object LegalInfoE2ESpec extends E2EZSpec {
         },
         test("when getting the created resource the response should contain it") {
           for {
-            createResourceResponseModel <- createStillImageResourceWithInfos()
-            resourceId                  <- resourceId(createResourceResponseModel)
-            getResponseModel            <- getResourceFromApi(resourceId)
-            info                        <- copyrightAndLicenseInfo(getResponseModel)
+            created             <- createStillImageResourceWithInfos()
+            (resourceCreated, _) = created
+            resourceId          <- resourceId(resourceCreated)
+            getResponseModel    <- getResourceFromApi(resourceId)
+            info                <- copyrightAndLicenseInfo(getResponseModel)
           } yield assertTrue(
             info.copyrightHolder.contains(aCopyrightHolder),
             info.licenseIri.contains(enabledLicenseIri),
@@ -119,9 +126,10 @@ object LegalInfoE2ESpec extends E2EZSpec {
         },
         test("when getting the created value the response should contain it") {
           for {
-            createResourceResponseModel <- createStillImageResourceWithInfos()
-            valueResponseModel          <- getValueFromApi(createResourceResponseModel)
-            info                        <- copyrightAndLicenseInfo(valueResponseModel)
+            created             <- createStillImageResourceWithInfos()
+            (resourceCreated, _) = created
+            valueResponseModel  <- getValueFromApi(resourceCreated)
+            info                <- copyrightAndLicenseInfo(valueResponseModel)
           } yield assertTrue(
             info.copyrightHolder.contains(aCopyrightHolder),
             info.licenseIri.contains(enabledLicenseIri),
@@ -145,12 +153,14 @@ object LegalInfoE2ESpec extends E2EZSpec {
     suite("given the copyright holder is NOT allowed on the project")(
       test("creating with a copyright holder should fail") {
         for {
-          response <- postCreateResource(Some(aCopyrightHolder))
+          asset    <- createAsset
+          response <- postCreateResource(asset, copyrightHolder = Some(aCopyrightHolder))
         } yield assertTrue(response.status == Status.BadRequest)
       },
       test("creating with a not enabled LicenseIri should fail") {
         for {
-          response <- postCreateResource(licenseIri = Some(LicenseIri.AI_GENERATED))
+          asset    <- createAsset
+          response <- postCreateResource(asset, licenseIri = Some(LicenseIri.AI_GENERATED))
         } yield assertTrue(response.status == Status.BadRequest)
       },
     ) @@ TestAspect.before(disallowCopyrightHolder),
@@ -160,11 +170,12 @@ object LegalInfoE2ESpec extends E2EZSpec {
     suite("given the license is not enabled")(
       test("when creating a value with legal info the creation should fail") {
         for {
-          resourceCreated <- createStillImageResource()
-          resourceId      <- resourceId(resourceCreated)
-          valueIdOld      <- valueId(resourceCreated)
-          response        <- putUpdateValue(resourceId, valueIdOld, aCopyrightHolder, someAuthorship, enabledLicenseIri)
-          body            <- response.body.asString
+          created                 <- createStillImageResource()
+          (resourceCreated, asset) = created
+          resourceId              <- resourceId(resourceCreated)
+          valueIdOld              <- valueId(resourceCreated)
+          response                <- putUpdateValue(asset, resourceId, valueIdOld, aCopyrightHolder, someAuthorship, enabledLicenseIri)
+          body                    <- response.body.asString
         } yield assertTrue(
           response.status.isClientError,
           body.contains("License http://rdfh.ch/licenses/public-domain is not allowed in project 0001"),
@@ -176,10 +187,11 @@ object LegalInfoE2ESpec extends E2EZSpec {
         test("when updating a value with valid legal info the created value should contain the update") {
           val newLicenseIri = LicenseIri.CC_BY_4_0
           for {
-            resourceCreated <- createStillImageResource()
-            resourceId      <- resourceId(resourceCreated)
-            valueIdOld      <- valueId(resourceCreated)
-            _ <- putUpdateValue(resourceId, valueIdOld, aCopyrightHolder, someAuthorship, newLicenseIri)
+            created                 <- createStillImageResource()
+            (resourceCreated, asset) = created
+            resourceId              <- resourceId(resourceCreated)
+            valueIdOld              <- valueId(resourceCreated)
+            _ <- putUpdateValue(asset, resourceId, valueIdOld, aCopyrightHolder, someAuthorship, newLicenseIri)
                    .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create value"))
             createdResourceModel <- getResourceFromApi(resourceId)
             info                 <- copyrightAndLicenseInfo(createdResourceModel)
@@ -190,10 +202,12 @@ object LegalInfoE2ESpec extends E2EZSpec {
         test("when updating a value with invalid LicenseIri the update should fail") {
           val invalidLicenseIri = LicenseIri.makeNew
           for {
-            resourceCreated <- createStillImageResource()
-            resourceId      <- resourceId(resourceCreated)
-            valueIdOld      <- valueId(resourceCreated)
-            response        <- putUpdateValue(resourceId, valueIdOld, aCopyrightHolder, someAuthorship, invalidLicenseIri)
+            created                 <- createStillImageResource()
+            (resourceCreated, asset) = created
+            resourceId              <- resourceId(resourceCreated)
+            valueIdOld              <- valueId(resourceCreated)
+            response <-
+              putUpdateValue(asset, resourceId, valueIdOld, aCopyrightHolder, someAuthorship, invalidLicenseIri)
           } yield assertTrue(response.status.isClientError)
         },
       ) @@ TestAspect.before(allowCopyrightHolder),
@@ -201,11 +215,18 @@ object LegalInfoE2ESpec extends E2EZSpec {
         test("when updating a value with valid legal info the created value should contain the update") {
           val disallowedCopyrightHolder = CopyrightHolder.unsafeFrom("disallowed-copyright-holder")
           for {
-            resourceCreated <- createStillImageResource()
-            resourceId      <- resourceId(resourceCreated)
-            valueIdOld      <- valueId(resourceCreated)
-            response <-
-              putUpdateValue(resourceId, valueIdOld, disallowedCopyrightHolder, someAuthorship, enabledLicenseIri)
+            created                 <- createStillImageResource()
+            (resourceCreated, asset) = created
+            resourceId              <- resourceId(resourceCreated)
+            valueIdOld              <- valueId(resourceCreated)
+            response <- putUpdateValue(
+                          asset,
+                          resourceId,
+                          valueIdOld,
+                          disallowedCopyrightHolder,
+                          someAuthorship,
+                          enabledLicenseIri,
+                        )
           } yield assertTrue(response.status.isClientError)
         },
       ) @@ TestAspect.before(disallowCopyrightHolder),
@@ -219,6 +240,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
     copyrightHolder: CopyrightHolder,
     authorship: List[Authorship],
     licenseIri: LicenseIri,
+    filename: String,
   ) {
     def jsonLd: String =
       JsonLd.expand(JsonDocument.of(new ByteArrayInputStream(toJson.toString().getBytes))).get.toString
@@ -234,7 +256,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
           Json.Obj(
             ldId(valueId),
             ldType(KA.StillImageFileValue),
-            (KA.FileValueHasFilename, Json.Str("test.jpx")),
+            (KA.FileValueHasFilename, Json.Str(filename)),
             (KA.HasCopyrightHolder, Json.Str(copyrightHolder.value)),
             (KA.HasAuthorship, Json.Arr(authorship.map(_.value).map(Json.Str.apply): _*)),
             (KA.HasLicense, Json.Obj(ldId(licenseIri.value))),
@@ -262,15 +284,33 @@ object LegalInfoE2ESpec extends E2EZSpec {
     copyrightHolder: Option[CopyrightHolder] = None,
     authorship: Option[List[Authorship]] = None,
     licenseIri: Option[LicenseIri] = None,
-  ): ZIO[env, Throwable, Model] =
+  ) =
     for {
-      responseBody <- postCreateResource(copyrightHolder, authorship, licenseIri)
+      asset <- createAsset
+      responseBody <- postCreateResource(asset, copyrightHolder, authorship, licenseIri)
                         .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create resource"))
                         .flatMap(_.body.asString)
-      createResourceResponseModel <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
-    } yield createResourceResponseModel
+      responseModel <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
+    } yield (responseModel, asset)
+
+  private val createAsset = for {
+    i       <- zio.Random.nextInt
+    filename = s"test${i}.jpg"
+    path    <- createImg(filename)
+    upload  <- ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(path, shortcode))
+  } yield upload
+
+  private def createImg(filename: String) =
+    for {
+      dir  <- zio.nio.file.Files.createTempDirectory(None, Seq.empty)
+      path  = dir / filename
+      file <- zio.nio.file.Files.createFile(path)
+      img   = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
+      _    <- ZIO.attemptBlocking(ImageIO.write(img, "jpeg", path.toFile))
+    } yield path
 
   private def postCreateResource(
+    img: UploadedFile,
     copyrightHolder: Option[CopyrightHolder] = None,
     authorship: Option[List[Authorship]] = None,
     licenseIri: Option[LicenseIri] = None,
@@ -278,7 +318,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
     val jsonLd = UploadFileRequest
       .make(
         FileType.StillImageFile(),
-        "internalFilename.jpg",
+        img.internalFilename,
         copyrightHolder = copyrightHolder,
         authorship = authorship,
         licenseIri = licenseIri,
@@ -288,6 +328,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
   }
 
   private def putUpdateValue(
+    uploadedFile: UploadedFile,
     resourceIri: ResourceIri,
     valueIdOld: ValueIri,
     copyrightHolder: CopyrightHolder = aCopyrightHolder,
@@ -297,12 +338,11 @@ object LegalInfoE2ESpec extends E2EZSpec {
     val request = UpdateStillImageFileValueRequest(
       resourceIri,
       valueIdOld,
-      ResourceClassIri.unsafeFrom(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-      ),
+      ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"),
       copyrightHolder,
       authorship,
       licenseIri,
+      uploadedFile.internalFilename,
     )
     sendPutRequestAsRoot(s"/v2/values", request.jsonLd)
   }

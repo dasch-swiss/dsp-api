@@ -84,6 +84,9 @@ final case class DspIngestClientLive(
     for {
       request  <- authenticatedRequest.map(_.get(uri"${projectsPath(shortcode)}/assets/$assetId"))
       response <- ZIO.blocking(request.send(backend = sttpBackend)).logError
+      _        <- ZIO.logWarning(s"asset info for $shortcode/$assetId")
+      _        <- ZIO.logWarning(s"Response from ingest: ${response.code}")
+      _        <- ZIO.logWarning(s"Response from ingest body: ${response.body.fold(identity, identity)}")
       result <- ZIO
                   .fromEither(response.body.flatMap(str => str.fromJson[AssetInfoResponse]))
                   .mapError(err => new IOException(s"Error parsing response: $err"))

@@ -84,6 +84,8 @@ object LayersTestLive { self =>
       PekkoActorSystem.layer,
       SipiServiceLive.layer,
       TestContainerLayers.all,
+      TestDspIngestClient.layer,
+      TestClientService.layer,
       /// common
       AdminApiModule.layer,
       AdminModule.layer,
@@ -138,8 +140,6 @@ object LayersTestLive { self =>
       StandoffTagUtilV2Live.layer,
       State.layer,
       TapirToPekkoInterpreter.layer,
-      TestClientService.layer,
-      TestDspIngestClient.layer,
       ValuesResponderV2.layer,
     )
 }
