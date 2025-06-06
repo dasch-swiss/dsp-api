@@ -10,7 +10,7 @@ import zio.ZLayer
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService

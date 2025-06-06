@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.ontology.domain.service
+package org.knora.webapi.slice.common.service
 
 import zio.IO
 import zio.Task

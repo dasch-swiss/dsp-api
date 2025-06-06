@@ -61,7 +61,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.VersionDate

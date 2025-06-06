@@ -54,7 +54,7 @@ import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ResourceOps
 import org.knora.webapi.slice.common.jena.ResourceOps.*
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse

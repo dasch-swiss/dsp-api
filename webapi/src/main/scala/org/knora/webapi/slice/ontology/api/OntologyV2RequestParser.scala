@@ -55,8 +55,8 @@ import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
 
 /**
  * Requests a change in the metadata of an ontology.

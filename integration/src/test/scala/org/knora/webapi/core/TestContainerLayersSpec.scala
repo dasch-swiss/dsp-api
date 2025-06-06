@@ -10,7 +10,6 @@ import zio.test.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.testcontainers.DspIngestTestContainer
-import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 
 object TestContainerLayersSpec extends ZIOSpecDefault {

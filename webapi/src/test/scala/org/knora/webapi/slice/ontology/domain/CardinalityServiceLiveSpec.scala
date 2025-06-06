@@ -15,12 +15,12 @@ import zio.test.ZIOSpecDefault
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.domain.model.CardinalitySpec.Generator.cardinalitiesGen
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.*
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive

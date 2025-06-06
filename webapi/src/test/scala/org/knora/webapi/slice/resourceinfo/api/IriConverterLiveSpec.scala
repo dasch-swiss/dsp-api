@@ -9,7 +9,7 @@ import zio.ZIO
 import zio.test.*
 
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 object IriConverterLiveSpec extends ZIOSpecDefault {
 

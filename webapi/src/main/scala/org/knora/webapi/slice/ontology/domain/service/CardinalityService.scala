@@ -12,6 +12,7 @@ import zio.ZLayer
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.Unbounded
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult

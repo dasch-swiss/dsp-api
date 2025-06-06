@@ -16,7 +16,7 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.common.service.IriConverter
 object JsonLDObjectSpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment & Scope, Any] =

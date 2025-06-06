@@ -91,7 +91,8 @@ object KnoraIris {
   }
 
   object ResourceClassIri {
-    def unsafeFrom(iri: SmartIri): ResourceClassIri = from(iri).fold(e => throw IllegalArgumentException(e), identity)
+    def unsafeFrom(iri: String)(using sf: StringFormatter): ResourceClassIri = unsafeFrom(sf.toSmartIri(iri))
+    def unsafeFrom(iri: SmartIri): ResourceClassIri                          = from(iri).fold(e => throw IllegalArgumentException(e), identity)
 
     def fromApiV2Complex(iri: SmartIri): Either[String, ResourceClassIri] =
       if iri.isApiV2ComplexSchema then from(iri)

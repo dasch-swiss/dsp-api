@@ -10,12 +10,16 @@ import zio.ZLayer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 
-object BaseModule { self =>
-  type Provided     = StringFormatter & TriplestoreService
+object CommonModule { self =>
+
   type Dependencies = AppConfig & Triplestore
+
+  type Provided = IriConverter & StringFormatter & TriplestoreService
+
   val layer: URLayer[self.Dependencies, self.Provided] =
-    StringFormatter.live >+> TriplestoreServiceLive.layer
+    StringFormatter.live >+> IriConverter.layer >+> TriplestoreServiceLive.layer
 }

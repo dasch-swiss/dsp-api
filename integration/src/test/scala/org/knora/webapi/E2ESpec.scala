@@ -63,8 +63,8 @@ abstract class E2ESpec
     with RequestBuilding
     with ImplicitSender {
 
-  implicit val runtime: Runtime.Scoped[core.LayersTestLive.Environment] =
-    Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(util.Logger.text() >>> core.LayersTestLive.layer))
+  implicit val runtime: Runtime.Scoped[core.LayersTest.Environment] =
+    Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(util.Logger.text() >>> core.LayersTest.layer))
 
   lazy val appConfig: AppConfig                        = UnsafeZioRun.service[AppConfig]
   implicit lazy val system: ActorSystem                = UnsafeZioRun.service[ActorSystem]

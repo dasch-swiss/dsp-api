@@ -19,7 +19,7 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInf
 import org.knora.webapi.messages.util.search.gravsearch.types.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService

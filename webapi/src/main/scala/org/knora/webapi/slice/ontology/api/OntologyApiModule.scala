@@ -14,10 +14,10 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.api.service.OntologiesRestService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 

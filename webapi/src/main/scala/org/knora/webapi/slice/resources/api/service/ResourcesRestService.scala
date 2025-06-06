@@ -16,7 +16,7 @@ import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.api.model.GraphDirection
 import org.knora.webapi.slice.resources.api.model.IriDto
 import org.knora.webapi.slice.resources.api.model.VersionDate
