@@ -17,11 +17,6 @@ import org.knora.webapi.responders.admin.*
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.routing.*
-import org.knora.webapi.slice.admin.api.*
-import org.knora.webapi.slice.admin.api.service.GroupRestService
-import org.knora.webapi.slice.admin.api.service.PermissionRestService
-import org.knora.webapi.slice.admin.api.service.ProjectRestService
-import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
