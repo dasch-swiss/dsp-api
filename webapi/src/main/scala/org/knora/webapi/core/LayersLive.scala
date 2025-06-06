@@ -11,7 +11,6 @@ import zio.ULayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.InstrumentationServerConfig
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
@@ -66,12 +65,12 @@ import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 
-object LayersLive {
+object LayersLive { self =>
 
   /**
    * The `Environment` that we require to exist at startup.
    */
-  type DspEnvironmentLive =
+  type Environment =
     // format: off
     ActorSystem &
     AdminApiEndpoints &
@@ -79,7 +78,6 @@ object LayersLive {
     ApiComplexV2JsonLdRequestParser &
     ApiRoutes &
     ApiV2Endpoints &
-    AppConfig.AppConfigurations &
     AssetPermissionsResponder &
     AuthenticationApiModule.Provided &
     AuthorizationRestService &
@@ -92,7 +90,6 @@ object LayersLive {
     HttpServer &
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
-    InstrumentationServerConfig &
     ListsApiModule.Provided &
     ListsResponder &
     ListsService &
@@ -126,17 +123,13 @@ object LayersLive {
     ValuesResponderV2
     // format: on
 
-  /**
-   * All effect layers needed to provide the `Environment`
-   */
-  val dspLayersLive: ULayer[DspEnvironmentLive] =
-    ZLayer.make[DspEnvironmentLive](
+  val layer: URLayer[AppConfig.AppConfigurations, self.Environment] =
+    ZLayer.makeSome[AppConfig.AppConfigurations, self.Environment](
       AdminApiModule.layer,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
       ApiRoutes.layer,
       ApiV2Endpoints.layer,
-      AppConfig.layer,
       AssetPermissionsResponder.layer,
       AuthenticationApiModule.layer,
       AuthorizationRestService.layer,
