@@ -16,12 +16,12 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 
-object TestContainerLayers { self =>
+object TestContainerLayers {
 
-  type Environment = SharedVolumes.Images & SharedVolumes.Temp & DspIngestTestContainer & FusekiTestContainer &
-    SipiTestContainer & AppConfigurations
-
-  val all: ULayer[self.Environment] =
+  val all: ULayer[
+    SharedVolumes.Images & SharedVolumes.Temp & DspIngestTestContainer & FusekiTestContainer & SipiTestContainer &
+      AppConfigurations,
+  ] =
     SharedVolumes.layer >+> DspIngestTestContainer.layer >+> FusekiTestContainer.layer >+> SipiTestContainer.layer >+>
       AppConfigForTestContainers.testcontainers
 

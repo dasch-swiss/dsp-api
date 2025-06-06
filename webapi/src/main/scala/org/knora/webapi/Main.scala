@@ -7,7 +7,6 @@ package org.knora.webapi
 
 import zio.*
 
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.*
 import org.knora.webapi.slice.infrastructure.MetricsServer
 import org.knora.webapi.util.Logger
@@ -19,14 +18,14 @@ object Main extends ZIOApp {
   /**
    * The `Environment` that we require to exist at startup.
    */
-  override type Environment = AppConfig.AppConfigurations & LayersLive.Environment
+  override type Environment = LayersLive.DspEnvironmentLive
 
   /**
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
    * and cleaned up when the Runtime is shutdown.
    */
   override def bootstrap: ZLayer[Any, Nothing, Environment] =
-    Logger.fromEnv() >>> AppConfig.layer >+> LayersLive.layer
+    Logger.fromEnv() >>> LayersLive.dspLayersLive
 
   /**
    *  Entrypoint of our Application
