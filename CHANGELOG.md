@@ -1,5 +1,26 @@
 # Changelog
 
+## [31.17.0](https://github.com/dasch-swiss/dsp-api/compare/v31.16.0...v31.17.0) (2025-06-06)
+
+
+### Maintenances
+
+* Merge all base spec into E2ESpec ([#3624](https://github.com/dasch-swiss/dsp-api/issues/3624)) ([bf402a7](https://github.com/dasch-swiss/dsp-api/commit/bf402a7894c22052423e9e91b2702cb4f3b7256f))
+* Minor dependency updates ([#3599](https://github.com/dasch-swiss/dsp-api/issues/3599)) ([443758f](https://github.com/dasch-swiss/dsp-api/commit/443758f574d2e9ad7d42cc201a34b12a71db4750))
+* Remove SliceModule trait ([#3621](https://github.com/dasch-swiss/dsp-api/issues/3621)) ([031b094](https://github.com/dasch-swiss/dsp-api/commit/031b0940145ca4859b317e08eb9d223fb334679d))
+* Replace AppServer with database init ZIO workflow ([#3623](https://github.com/dasch-swiss/dsp-api/issues/3623)) ([a7d7653](https://github.com/dasch-swiss/dsp-api/commit/a7d7653c5553f47a3890d15657cf9b82770fe8d2))
+
+
+### Enhancements
+
+* Add environment to OpenTelemetry and improve setup (DEV-4994) ([#3615](https://github.com/dasch-swiss/dsp-api/issues/3615)) ([a2d685f](https://github.com/dasch-swiss/dsp-api/commit/a2d685f56caec69c43b68d851101de7c2e3fa7de))
+* Allow hard-deleting soft-deleted values (DEV-4701) ([#3622](https://github.com/dasch-swiss/dsp-api/issues/3622)) ([97d4381](https://github.com/dasch-swiss/dsp-api/commit/97d43815cb574a5af7e5c3aa0b634c8ac5ec4bb5))
+
+
+### Bug Fixes
+
+* Remove deprecation warnings, add back -Xfatal-warnings ([#3619](https://github.com/dasch-swiss/dsp-api/issues/3619)) ([d40866f](https://github.com/dasch-swiss/dsp-api/commit/d40866f9142daf38ea102b1b23f27a6e7329e1a5))
+
 ## [31.16.0](https://github.com/dasch-swiss/dsp-api/compare/v31.15.0...v31.16.0) (2025-06-02)
 
 
