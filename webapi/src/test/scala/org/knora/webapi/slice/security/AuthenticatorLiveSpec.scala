@@ -42,12 +42,12 @@ import org.knora.webapi.slice.admin.repo.service.AdministrativePermissionRepoLiv
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.InvalidTokenCache
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.JwtServiceLive
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory

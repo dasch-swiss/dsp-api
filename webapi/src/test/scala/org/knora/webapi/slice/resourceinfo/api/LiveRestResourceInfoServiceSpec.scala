@@ -17,7 +17,7 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Asc
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.CreationDate

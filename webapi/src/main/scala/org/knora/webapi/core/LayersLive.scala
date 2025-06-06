@@ -32,7 +32,7 @@ import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
-import org.knora.webapi.slice.common.BaseModule
+import org.knora.webapi.slice.common.CommonModule
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
@@ -41,7 +41,7 @@ import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.lists.domain.ListsService
-import org.knora.webapi.slice.ontology.CoreModule
+import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -81,10 +81,10 @@ object LayersLive { self =>
     AssetPermissionsResponder &
     AuthenticationApiModule.Provided &
     AuthorizationRestService &
-    BaseModule.Provided &
     CardinalityHandler &
+    CommonModule.Provided &
     ConstructResponseUtilV2 &
-    CoreModule.Provided &
+    OntologyModule.Provided &
     DefaultObjectAccessPermissionService &
     GroupRestService &
     HttpServer &
@@ -134,10 +134,10 @@ object LayersLive { self =>
       AuthenticationApiModule.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
-      BaseModule.layer,
       CardinalityHandler.layer,
+      CommonModule.layer,
       ConstructResponseUtilV2.layer,
-      CoreModule.layer,
+      OntologyModule.layer,
       DspIngestClientLive.layer,
       HandlerMapper.layer,
       HttpServer.layer,

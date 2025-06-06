@@ -10,7 +10,7 @@ import zio.test.*
 import zio.test.ZIOSpecDefault
 
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
