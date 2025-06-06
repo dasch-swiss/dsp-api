@@ -31,17 +31,17 @@ object TestContainerLayers {
     private val sipiPort: Lens[AppConfig, Int]            = GenLens[AppConfig](_.sipi.internalPort)
     private val dspIngestBaseUrl: Lens[AppConfig, String] = GenLens[AppConfig](_.dspIngest.baseUrl)
 
-    private def alterFusekiAndSipiPort(
+    private def updateConfig(
       oldConfig: AppConfig,
       fusekiContainer: FusekiTestContainer,
       sipiContainer: SipiTestContainer,
       dspIngestContainer: DspIngestTestContainer,
-    ): UIO[AppConfig] = {
+    ): AppConfig = {
       val update = fusekiPort
         .replace(fusekiContainer.getFirstMappedPort)
         .andThen(sipiPort.replace(sipiContainer.getFirstMappedPort))
         .andThen(dspIngestBaseUrl.replace(s"http://localhost:${dspIngestContainer.getFirstMappedPort}"))
-      ZIO.succeed(update(oldConfig))
+      update(oldConfig)
     }
 
     /**
@@ -55,8 +55,7 @@ object TestContainerLayers {
           fusekiContainer    <- ZIO.service[FusekiTestContainer]
           sipiContainer      <- ZIO.service[SipiTestContainer]
           dspIngestContainer <- ZIO.service[DspIngestTestContainer]
-          alteredConfig      <- alterFusekiAndSipiPort(appConfig, fusekiContainer, sipiContainer, dspIngestContainer)
-        } yield alteredConfig
+        } yield updateConfig(appConfig, fusekiContainer, sipiContainer, dspIngestContainer)
       }
       AppConfig
         .projectAppConfigurations(appConfigLayer)
