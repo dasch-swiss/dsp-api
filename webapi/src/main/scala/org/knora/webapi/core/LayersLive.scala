@@ -26,10 +26,6 @@ import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.api.AdminApiModule
-import org.knora.webapi.slice.admin.api.service.GroupRestService
-import org.knora.webapi.slice.admin.api.service.PermissionRestService
-import org.knora.webapi.slice.admin.api.service.ProjectRestService
-import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.CommonModule
@@ -73,7 +69,7 @@ object LayersLive { self =>
   type Environment =
     // format: off
     ActorSystem &
-    AdminApiEndpoints &
+    AdminApiModule.Provided &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
     ApiRoutes &
@@ -86,7 +82,6 @@ object LayersLive { self =>
     ConstructResponseUtilV2 &
     OntologyModule.Provided &
     DefaultObjectAccessPermissionService &
-    GroupRestService &
     HttpServer &
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
@@ -97,13 +92,11 @@ object LayersLive { self =>
     OntologyApiModule.Provided &
     OntologyInferencer &
     OntologyResponderV2 &
-    PermissionRestService &
     PermissionUtilADM &
     PermissionsResponder &
     ProjectExportService &
     ProjectExportStorageService &
     ProjectImportService &
-    ProjectRestService &
     RepositoryUpdater &
     ResourceUtilV2 &
     ResourcesApiRoutes &
@@ -119,7 +112,6 @@ object LayersLive { self =>
     StandoffResponderV2 &
     StandoffTagUtilV2 &
     State &
-    UserRestService &
     ValuesResponderV2
     // format: on
 
