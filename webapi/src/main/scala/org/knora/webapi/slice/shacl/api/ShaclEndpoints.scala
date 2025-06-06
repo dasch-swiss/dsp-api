@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.shacl.api
 
+import sttp.capabilities.zio.ZioStreams
+import sttp.model.MediaType
 import sttp.tapir.*
 import sttp.tapir.Schema.annotations.description
 import sttp.tapir.generic.auto.*
@@ -33,18 +35,20 @@ case class ShaclEndpoints(baseEndpoints: BaseEndpoints) {
     .in("shacl" / "validate")
     .description("An endpoint for validating data against SHACL shapes.")
     .in(multipartBody[ValidationFormData])
-    .out(stringBody.description("""
-                                  |The validation report in Turtle format.
-                                  |
-                                  |```turtle
-                                  |@prefix sh:      <http://www.w3.org/ns/shacl#> .
-                                  |@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-                                  |
-                                  |[ rdf:type     sh:ValidationReport;
-                                  |  sh:conforms  true
-                                  |] .
-                                  |```
-                                  |""".stripMargin))
+    .out(streamTextBody(ZioStreams)(new CodecFormat {
+      override val mediaType: MediaType = MediaType("text", "turtle")
+    }).description("""
+                     |The validation report in Turtle format.
+                     |
+                     |```turtle
+                     |@prefix sh:      <http://www.w3.org/ns/shacl#> .
+                     |@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                     |
+                     |[ rdf:type     sh:ValidationReport;
+                     |  sh:conforms  true
+                     |] .
+                     |```
+                     |""".stripMargin))
     .out(header("Content-Type", "text/turtle"))
 
   val endpoints: Seq[AnyEndpoint] =

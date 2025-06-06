@@ -21,7 +21,8 @@ object ShaclApiServiceSpec extends ZIOSpecDefault {
         data    <- Files.createTempFile("data.ttl", None, Seq.empty)
         shacl   <- Files.createTempFile("shacl.ttl", None, Seq.empty)
         formData = ValidationFormData(data.toFile, shacl.toFile, None, None, None)
-        result  <- shaclApiService(_.validate(formData))
+        result <- shaclApiService(_.validate(formData))
+                    .flatMap(_.runCollect.map(bytes => new String(bytes.toArray, "UTF-8")))
       } yield assertTrue(result.contains("sh:conforms  true"))
     },
   ).provide(ShaclApiService.layer, ShaclValidator.layer)

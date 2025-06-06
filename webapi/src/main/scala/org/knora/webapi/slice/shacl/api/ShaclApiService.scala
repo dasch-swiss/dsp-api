@@ -8,16 +8,16 @@ package org.knora.webapi.slice.shacl.api
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.riot.RDFFormat
 import zio.*
+import zio.stream.ZStream
 
 import java.io.FileInputStream
-import java.io.StringWriter
 
 import org.knora.webapi.slice.shacl.domain.ShaclValidator
 import org.knora.webapi.slice.shacl.domain.ValidationOptions
 
 final case class ShaclApiService(validator: ShaclValidator) {
 
-  def validate(formData: ValidationFormData): Task[String] = {
+  def validate(formData: ValidationFormData): Task[ZStream[Any, Throwable, Byte]] = {
     val options = ValidationOptions(
       formData.validateShapes.getOrElse(ValidationOptions.default.validateShapes),
       formData.reportDetails.getOrElse(ValidationOptions.default.reportDetails),
@@ -28,9 +28,7 @@ final case class ShaclApiService(validator: ShaclValidator) {
         dataStream  <- ZIO.fromAutoCloseable(ZIO.succeed(new FileInputStream(formData.`data.ttl`)))
         shaclStream <- ZIO.fromAutoCloseable(ZIO.succeed(new FileInputStream(formData.`shacl.ttl`)))
         report      <- validator.validate(dataStream, shaclStream, options)
-        stringWriter = new StringWriter()
-        _           <- ZIO.attemptBlockingIO(RDFDataMgr.write(stringWriter, report.getModel, RDFFormat.TURTLE))
-      } yield stringWriter.toString
+      } yield ZStream.fromOutputStreamWriter(out => RDFDataMgr.write(out, report.getModel, RDFFormat.TURTLE))
     }
   }
 }
