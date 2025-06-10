@@ -24,18 +24,19 @@ final case class TestDspApiClient(
 
   private val baseUri: Uri = uri"${config.externalKnoraApiHostPort}"
 
-  private def fullUri(wholePath: String): Uri                   = baseUri.withPath(wholePath)
-  private def getRequest(wholePath: String)                     = basicRequest.get(fullUri(wholePath))
-  private def getStringRequest(wholePath: String)               = basicRequest.get(fullUri(wholePath)).response(asString)
-  private def getJsonRequest[A: JsonDecoder](wholePath: String) = getRequest(wholePath).response(asJson[A])
+  private def fullUri(wholePath: String): Uri     = baseUri.withPath(wholePath)
+  private def getRequest(wholePath: String)       = basicRequest.get(fullUri(wholePath))
+  private def getStringRequest(wholePath: String) = basicRequest.get(fullUri(wholePath)).response(asString)
+  private def getJsonRequest[A: JsonDecoder](wholePath: String) =
+    getRequest(wholePath).response(asJson[A].mapLeft((e: ResponseException[_]) => e.getMessage))
 
   private def createJwt(user: User): UIO[String] =
     scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _).map(_.jwtString))
 
-  def get[A: JsonDecoder](wholePath: String, user: User): Task[Response[Either[ResponseException[String], A]]] =
+  def get[A: JsonDecoder](wholePath: String, user: User): Task[Response[Either[String, A]]] =
     createJwt(user).flatMap(getJsonRequest(wholePath).auth.bearer(_).send(backend))
 
-  def get[A: JsonDecoder](wholePath: String): Task[Response[Either[ResponseException[String], A]]] =
+  def get[A: JsonDecoder](wholePath: String): Task[Response[Either[String, A]]] =
     getJsonRequest(wholePath).send(backend)
 
   def getAsString(wholePath: String, user: User): Task[Response[Either[String, String]]] =
@@ -62,12 +63,12 @@ object TestDspApiClient {
   def get[A: JsonDecoder](
     wholePath: String,
     user: User,
-  ): ZIO[TestDspApiClient, Throwable, Response[Either[ResponseException[String], A]]] =
+  ): ZIO[TestDspApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestDspApiClient](_.get[A](wholePath, user))
 
   def get[A: JsonDecoder](
     wholePath: String,
-  ): ZIO[TestDspApiClient, Throwable, Response[Either[ResponseException[String], A]]] =
+  ): ZIO[TestDspApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestDspApiClient](_.get[A](wholePath))
 
   def getAsString(wholePath: String, user: User): ZIO[TestDspApiClient, Throwable, Response[Either[String, String]]] =
@@ -90,10 +91,13 @@ object TestDspApiClient {
 
 object ResponseOps {
   extension [A](response: Response[Either[String, A]]) {
-    def `200`: IO[AssertionException, A] =
-      (if response.code == StatusCode.Ok
+    def assert200: IO[AssertionException, A] = assert(StatusCode.Ok)
+    def assert404: IO[AssertionException, A] = assert(StatusCode.NotFound)
+
+    def assert(code: StatusCode): IO[AssertionException, A] =
+      (if response.code == code
        then ZIO.fromEither(response.body)
-       else ZIO.fail(s"Expected 200 OK, got ${response.code} with body: ${response.body}"))
+       else ZIO.fail(s"Expected status code $code, got ${response.code} with body: ${response.body}"))
         .mapError(AssertionException(_))
   }
 }

@@ -31,6 +31,7 @@ import org.knora.webapi.testcontainers.DspIngestTestContainer
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.testservices.TestDspApiClient
 import org.knora.webapi.testservices.TestDspIngestClient
 
 object LayersTest { self =>
@@ -41,6 +42,7 @@ object LayersTest { self =>
     TestContainerLayers.Environment &
     MessageRelayActorRef &
     TestClientService &
+    TestDspApiClient &
     TestDspIngestClient
     // format: on
 
@@ -54,6 +56,7 @@ object LayersTest { self =>
       MessageRelayActorRef.layer,
       TestClientService.layer,
       TestContainerLayers.all,
+      TestDspApiClient.layer,
       TestDspIngestClient.layer,
       /// common
       LayersLive.layer,
