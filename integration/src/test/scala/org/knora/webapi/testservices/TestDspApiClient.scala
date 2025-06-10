@@ -2,10 +2,13 @@ package org.knora.webapi.testservices
 
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
+import sttp.client4.ResponseException.DeserializationException
 import sttp.client4.ziojson.*
 import sttp.model.*
 import zio.*
 import zio.json.JsonDecoder
+
+import scala.util.Try
 
 import dsp.errors.AssertionException
 import org.knora.webapi.config.KnoraApi
@@ -28,7 +31,13 @@ final case class TestDspApiClient(
   private def getRequest(wholePath: String)       = basicRequest.get(fullUri(wholePath))
   private def getStringRequest(wholePath: String) = basicRequest.get(fullUri(wholePath)).response(asString)
   private def getJsonRequest[A: JsonDecoder](wholePath: String) =
-    getRequest(wholePath).response(asJson[A].mapLeft((e: ResponseException[_]) => e.getMessage))
+    getRequest(wholePath).response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.getMessage))
+  private def getJsonLdRequest(wholePath: String) = basicRequest.get(fullUri(wholePath)).response(asJsonLd)
+
+  private val asJsonLd: ResponseAs[Either[String, JsonLDDocument]] = asString.map {
+    case Right(jsonString) => Try(JsonLDUtil.parseJsonLD(jsonString)).toEither.left.map(_.getMessage)
+    case Left(err)         => Left(err)
+  }
 
   private def createJwt(user: User): UIO[String] =
     scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _).map(_.jwtString))
@@ -46,16 +55,10 @@ final case class TestDspApiClient(
     getStringRequest(wholePath).send(backend)
 
   def getAsJsonLd(wholePath: String, user: User): ZIO[Any, Throwable, Response[Either[String, JsonLDDocument]]] =
-    getAsString(wholePath, user).flatMap(parseJsonLd)
-
-  private def parseJsonLd(response: Response[Either[String, String]]) =
-    response.body match
-      case Left(error) => ZIO.succeed(response.copy(body = Left(error)))
-      case Right(jsonString) =>
-        ZIO.attempt(JsonLDUtil.parseJsonLD(jsonString)).map(jsonLd => response.copy(body = Right(jsonLd)))
+    createJwt(user).flatMap(getJsonLdRequest(wholePath).auth.bearer(_).send(backend))
 
   def getAsJsonLd(wholePath: String): ZIO[Any, Throwable, Response[Either[String, JsonLDDocument]]] =
-    getAsString(wholePath).flatMap(parseJsonLd)
+    getJsonLdRequest(wholePath).send(backend)
 }
 
 object TestDspApiClient {
