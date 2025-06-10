@@ -39,17 +39,6 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
   ).provideShared(testLayers, Client.default, Scope.default)
     @@ TestAspect.withLiveEnvironment
 
-  def sendGetRequestAsRoot(url: String): URIO[env, Response] =
-    getRootToken.mapError(Exception(_)).orDie.flatMap(token => sendGetRequest(url, Some(token)))
-
-  def sendGetRequestAsRootDecode[A: JsonDecoder](url: String): ZIO[env, String, A] =
-    sendGetRequestAsRoot(url)
-      .flatMap(response => response.body.asString.mapBoth(_.getMessage, (response.status, _)))
-      .filterOrElseWith { case (status, _) => status.isSuccess } { case (status, body) =>
-        ZIO.fail(s"Failed request: Status $status, $body")
-      }
-      .flatMap { case (_, body) => ZIO.fromEither(body.fromJson[A]) }
-
   def sendGetRequest(url: String, token: Option[String] = None): URIO[env, Response] =
     for {
       client   <- ZIO.service[Client]
