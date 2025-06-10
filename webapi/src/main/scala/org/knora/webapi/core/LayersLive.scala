@@ -11,6 +11,14 @@ import zio.ULayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.config.Features
+import org.knora.webapi.config.GraphRoute
+import org.knora.webapi.config.JwtConfig
+import org.knora.webapi.config.KnoraApi
+import org.knora.webapi.config.OpenTelemetryConfig
+import org.knora.webapi.config.Sipi
+import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
@@ -115,8 +123,11 @@ object LayersLive { self =>
     ValuesResponderV2
     // format: on
 
-  val layer: URLayer[AppConfig.AppConfigurations, self.Environment] =
-    ZLayer.makeSome[AppConfig.AppConfigurations, self.Environment](
+  type Config = AppConfig & DspIngestConfig & Features & GraphRoute & JwtConfig & KnoraApi & OpenTelemetryConfig &
+    Sipi & Triplestore
+
+  val layer: URLayer[Config, self.Environment] =
+    ZLayer.makeSome[Config, self.Environment](
       AdminApiModule.layer,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
