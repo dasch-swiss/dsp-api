@@ -9,9 +9,8 @@ import zio.ZLayer
 import org.knora.webapi.config.Features
 
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.common.BaseModule
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
@@ -23,14 +22,13 @@ import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-object CoreModule { self =>
+object OntologyModule { self =>
 
-  type Dependencies = BaseModule.Provided & Features
+  type Dependencies = Features & IriConverter & StringFormatter & TriplestoreService
 
   type Provided =
     // format: off
     CardinalityService &
-    IriConverter &
     OntologyCache &
     OntologyCacheHelpers &
     OntologyRepo &
@@ -40,7 +38,6 @@ object CoreModule { self =>
 
   val layer: URLayer[self.Dependencies, self.Provided] = ZLayer.makeSome[self.Dependencies, self.Provided](
     CardinalityService.layer,
-    IriConverter.layer,
     OntologyCacheHelpers.layer,
     OntologyCacheLive.layer,
     OntologyRepoLive.layer,
