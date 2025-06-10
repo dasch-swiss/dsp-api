@@ -1,12 +1,13 @@
 package org.knora.webapi.testservices
 
-import dsp.errors.AssertionException
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
 import sttp.client4.ziojson.*
 import sttp.model.*
 import zio.*
 import zio.json.JsonDecoder
+
+import dsp.errors.AssertionException
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil

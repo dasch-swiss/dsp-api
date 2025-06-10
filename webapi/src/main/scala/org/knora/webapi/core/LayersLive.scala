@@ -11,7 +11,14 @@ import zio.ULayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.InstrumentationServerConfig
+import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.config.Features
+import org.knora.webapi.config.GraphRoute
+import org.knora.webapi.config.JwtConfig
+import org.knora.webapi.config.KnoraApi
+import org.knora.webapi.config.OpenTelemetryConfig
+import org.knora.webapi.config.Sipi
+import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
@@ -27,13 +34,9 @@ import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.api.AdminApiModule
-import org.knora.webapi.slice.admin.api.service.GroupRestService
-import org.knora.webapi.slice.admin.api.service.PermissionRestService
-import org.knora.webapi.slice.admin.api.service.ProjectRestService
-import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
-import org.knora.webapi.slice.common.BaseModule
+import org.knora.webapi.slice.common.CommonModule
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
@@ -42,7 +45,7 @@ import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiModule
 import org.knora.webapi.slice.lists.domain.ListsService
-import org.knora.webapi.slice.ontology.CoreModule
+import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -66,33 +69,30 @@ import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 
-object LayersLive {
+object LayersLive { self =>
 
   /**
    * The `Environment` that we require to exist at startup.
    */
-  type DspEnvironmentLive =
+  type Environment =
     // format: off
     ActorSystem &
-    AdminApiEndpoints &
+    AdminApiModule.Provided &
     AdminModule.Provided &
     ApiComplexV2JsonLdRequestParser &
     ApiRoutes &
     ApiV2Endpoints &
-    AppConfig.AppConfigurations &
     AssetPermissionsResponder &
     AuthenticationApiModule.Provided &
     AuthorizationRestService &
-    BaseModule.Provided &
     CardinalityHandler &
+    CommonModule.Provided &
     ConstructResponseUtilV2 &
-    CoreModule.Provided &
+    OntologyModule.Provided &
     DefaultObjectAccessPermissionService &
-    GroupRestService &
     HttpServer &
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
-    InstrumentationServerConfig &
     ListsApiModule.Provided &
     ListsResponder &
     ListsService &
@@ -100,13 +100,11 @@ object LayersLive {
     OntologyApiModule.Provided &
     OntologyInferencer &
     OntologyResponderV2 &
-    PermissionRestService &
     PermissionUtilADM &
     PermissionsResponder &
     ProjectExportService &
     ProjectExportStorageService &
     ProjectImportService &
-    ProjectRestService &
     RepositoryUpdater &
     ResourceUtilV2 &
     ResourcesApiRoutes &
@@ -122,29 +120,27 @@ object LayersLive {
     StandoffResponderV2 &
     StandoffTagUtilV2 &
     State &
-    UserRestService &
     ValuesResponderV2
     // format: on
 
-  /**
-   * All effect layers needed to provide the `Environment`
-   */
-  val dspLayersLive: ULayer[DspEnvironmentLive] =
-    ZLayer.make[DspEnvironmentLive](
+  type Config = AppConfig & DspIngestConfig & Features & GraphRoute & JwtConfig & KnoraApi & OpenTelemetryConfig &
+    Sipi & Triplestore
+
+  val layer: URLayer[Config, self.Environment] =
+    ZLayer.makeSome[Config, self.Environment](
       AdminApiModule.layer,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
       ApiRoutes.layer,
       ApiV2Endpoints.layer,
-      AppConfig.layer,
       AssetPermissionsResponder.layer,
       AuthenticationApiModule.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
-      BaseModule.layer,
       CardinalityHandler.layer,
+      CommonModule.layer,
       ConstructResponseUtilV2.layer,
-      CoreModule.layer,
+      OntologyModule.layer,
       DspIngestClientLive.layer,
       HandlerMapper.layer,
       HttpServer.layer,
