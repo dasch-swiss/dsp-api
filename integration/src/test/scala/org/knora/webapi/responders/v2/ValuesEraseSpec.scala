@@ -159,7 +159,7 @@ object ValuesEraseSpec extends E2EZSpec {
         _    <- TestHelper.eraseIntegerValue(val1, res1)
       } yield assertCompletes
     },
-  ).provideSome[env](TestHelper.layer, ValueRepo.layer)
+  ).provideSomeAuto(TestHelper.layer, ValueRepo.layer)
 }
 
 final case class TestHelper(
