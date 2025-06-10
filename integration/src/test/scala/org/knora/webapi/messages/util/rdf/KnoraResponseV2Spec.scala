@@ -17,7 +17,7 @@ import org.knora.webapi.util.FileUtil
 /**
  * Tests the formatting of Knora API v2 responses.
  */
-class KnoraResponseV2Spec() extends CoreSpec {
+class KnoraResponseV2Spec() extends E2ESpec {
 
   private val turtle =
     """<http://rdfh.ch/foo1> a <http://example.org/foo#Foo>;

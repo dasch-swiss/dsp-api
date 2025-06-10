@@ -10,7 +10,7 @@ import zio.ZIO
 import java.util.UUID
 
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -21,7 +21,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 /**
  * Tests [[StandoffTagUtilV2]].
  */
-class StandoffTagUtilV2Spec extends CoreSpec {
+class StandoffTagUtilV2Spec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   val standoff1: Vector[StandoffTagV2] = Vector(

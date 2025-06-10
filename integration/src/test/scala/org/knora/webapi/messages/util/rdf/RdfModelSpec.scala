@@ -11,7 +11,7 @@ import java.io.BufferedInputStream
 import java.io.FileInputStream
 
 import dsp.errors.AssertionException
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.rdf.JenaRepository
@@ -19,7 +19,7 @@ import org.knora.webapi.messages.util.rdf.JenaRepository
 /**
  * Tests implementations of [[RdfModel]].
  */
-class RdfModelSpec() extends CoreSpec {
+class RdfModelSpec() extends E2ESpec {
 
   private val model: RdfModel = JenaModelFactory.makeEmptyModel
 

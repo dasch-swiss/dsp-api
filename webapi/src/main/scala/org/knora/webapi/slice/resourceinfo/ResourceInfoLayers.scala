@@ -9,7 +9,7 @@ import zio.*
 
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.TapirToZioHttpInterpreter
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoServerEndpoints
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService

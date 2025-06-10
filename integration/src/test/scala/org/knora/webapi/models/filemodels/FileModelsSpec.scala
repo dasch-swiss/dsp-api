@@ -13,7 +13,7 @@ import java.util.UUID
 
 import dsp.errors.AssertionException
 import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
@@ -22,7 +22,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
-class FileModelsSpec extends CoreSpec {
+class FileModelsSpec extends E2ESpec {
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val fileNamePDF                       = "document-file.pdf"
   private val fileNameImage                     = "image.jp2"

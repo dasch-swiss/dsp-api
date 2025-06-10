@@ -15,6 +15,7 @@ import scala.concurrent.ExecutionContextExecutor
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as OntConsts

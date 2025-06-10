@@ -28,11 +28,14 @@ final case class TestDspIngestClient(
   private val ingestUrl = uri"${config.baseUrl}"
 
   def uploadFile(file: java.nio.file.Path, shortcode: Shortcode = Shortcode.unsafeFrom("0001")): Task[UploadedFile] =
+    uploadFile(Path.fromJava(file), shortcode)
+
+  def uploadFile(path: zio.nio.file.Path, shortcode: Shortcode): Task[UploadedFile] =
     for {
-      contents   <- Files.readAllBytes(Path.fromJava(file))
-      filename    = file.getFileName.toString
+      contents   <- Files.readAllBytes(path)
+      filename    = path.filename.toString
       loginToken <- jwtService.createJwtForDspIngest().map(_.jwtString)
-      url         = ingestUrl.addPath("projects", shortcode.value, "assets", "ingest", file.getFileName.toString)
+      url         = ingestUrl.addPath("projects", shortcode.value, "assets", "ingest", filename)
       request     = quickRequest.post(url).header("Authorization", s"Bearer $loginToken").body(contents.toArray)
       responseBody <-
         sttp

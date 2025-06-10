@@ -7,7 +7,7 @@ package org.knora.webapi.responders.v2.ontology
 
 import zio.ZIO
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.SmartIri
@@ -22,7 +22,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.OntologyHelpers]].
  */
-class OntologyHelpersSpec extends CoreSpec {
+class OntologyHelpersSpec extends E2ESpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

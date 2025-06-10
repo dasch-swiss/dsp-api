@@ -40,7 +40,7 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 /**
  * This spec is used to test the [[PermissionsResponder]] actor.
  */
-class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
+class PermissionsResponderSpec extends E2ESpec with ImplicitSender {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(

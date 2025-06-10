@@ -15,7 +15,7 @@ import org.knora.webapi.messages.IriConversions.*
 /**
  * Tests [[StringFormatter]].
  */
-class StringFormatterSpec extends CoreSpec {
+class StringFormatterSpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   "The StringFormatter class" should {

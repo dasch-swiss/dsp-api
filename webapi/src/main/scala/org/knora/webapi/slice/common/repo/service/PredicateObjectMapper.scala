@@ -11,7 +11,7 @@ import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.common.service.IriConverter
 
 /**
  * The [[PredicateObjectMapper]] is a service which provides methods to extract values from a [[ConstructPredicateObjects]].

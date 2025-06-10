@@ -43,7 +43,7 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 /**
  * Tests [[ValuesResponderV2]].
  */
-class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
+class ValuesResponderV2Spec extends E2ESpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"

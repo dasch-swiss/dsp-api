@@ -9,11 +9,10 @@ import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.TapirToZioHttpInterpreter
 import org.knora.webapi.slice.lists.domain.ListsService
 
 object ListsApiModule { self =>
-  type Dependencies = AppConfig & BaseEndpoints & ListsService & TapirToZioHttpInterpreter
+  type Dependencies = AppConfig & BaseEndpoints & ListsService
   type Provided     = ListsServerEndpointsV2 & ListsEndpointsV2
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](

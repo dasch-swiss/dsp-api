@@ -21,7 +21,7 @@ import org.knora.webapi.slice.common.domain.SparqlEncodedString
 /**
  * Tests [[AssetPermissionsResponder]].
  */
-class AssetPermissionsResponderSpec extends CoreSpec with ImplicitSender {
+class AssetPermissionsResponderSpec extends E2ESpec with ImplicitSender {
 
   private def getFileInfoForSipiADM(shortcode: Shortcode, filename: SparqlEncodedString, user: User) =
     ZIO.serviceWithZIO[AssetPermissionsResponder](

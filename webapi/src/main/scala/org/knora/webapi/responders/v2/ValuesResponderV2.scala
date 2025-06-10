@@ -50,10 +50,10 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -75,6 +75,7 @@ final case class ValuesResponderV2(
   valueRepo: ValueRepo,
   ontologyRepo: OntologyRepo,
   auth: AuthorizationRestService,
+  resourcesResponder: ResourcesResponderV2,
 )(implicit val stringFormatter: StringFormatter) {
 
   /**
@@ -1218,11 +1219,15 @@ final case class ValuesResponderV2(
 
     // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
     // so we can see objects that the user doesn't have permission to see.
-    resourceInfo <- getResourceWithPropertyValues(
-                      deleteValue.resourceIri.toString,
-                      adjustedInternalPropertyInfo,
-                      KnoraSystemInstances.Users.SystemUser,
-                    )
+    resourceInfo <- resourcesResponder
+                      .getResourcesV2(
+                        resourceIris = Seq(deleteValue.resourceIri.toString),
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = Set.empty,
+                        requestingUser = KnoraSystemInstances.Users.SystemUser,
+                        showDeletedValues = true,
+                      )
+                      .map(_.toResource(deleteValue.resourceIri.toString))
 
     // Check that the resource belongs to the class that the client submitted.
     _ <- ZIO.when(resourceInfo.resourceClassIri != deleteValue.resourceClassIri.toInternalSchema) {
@@ -1769,7 +1774,8 @@ final case class ValuesResponderV2(
 
     sourceResourceInfo.values.get(linkValueProperty).flatMap { (linkValueInfos: Seq[ReadValueV2]) =>
       linkValueInfos.collectFirst {
-        case linkValueInfo: ReadLinkValueV2 if linkValueInfo.valueContent.referredResourceIri == targetResourceIri =>
+        case linkValueInfo: ReadLinkValueV2
+            if linkValueInfo.valueContent.referredResourceIri == targetResourceIri && linkValueInfo.deletionInfo.isEmpty =>
           linkValueInfo
       }
     }

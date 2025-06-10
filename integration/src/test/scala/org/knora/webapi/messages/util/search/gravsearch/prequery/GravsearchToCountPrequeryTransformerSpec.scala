@@ -8,7 +8,7 @@ package org.knora.webapi.messages.util.search.gravsearch.prequery
 import zio.*
 
 import dsp.errors.AssertionException
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
@@ -20,7 +20,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
 
-class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
+class GravsearchToCountPrequeryTransformerSpec extends E2ESpec {
 
   def transformQuery(query: String): SelectQuery = {
 

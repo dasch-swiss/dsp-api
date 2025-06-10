@@ -66,7 +66,6 @@ object AdminApiModule { self =>
       ProjectExportService &
       ProjectImportService &
       ProjectService &
-      TapirToZioHttpInterpreter &
       TriplestoreService &
       UserService
       // format: on

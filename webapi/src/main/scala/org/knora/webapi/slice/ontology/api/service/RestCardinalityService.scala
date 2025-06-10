@@ -20,6 +20,7 @@ import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.util.rdf.JsonLDValue
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.classIriKey
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.newCardinalityKey
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.propertyIriKey
@@ -28,7 +29,6 @@ import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.CanReplaceCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 

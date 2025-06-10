@@ -16,6 +16,8 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.e2e.v2.AuthenticationV2JsonProtocol
 import org.knora.webapi.e2e.v2.LoginResponse
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -28,13 +30,12 @@ import org.knora.webapi.models.filemodels.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.security.Authenticator
-import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.util.MutableTestIri
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
  */
-class KnoraSipiIntegrationE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
+class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val anythingUserEmail = SharedTestDataADM.anythingAdminUser.email
@@ -322,9 +323,6 @@ class KnoraSipiIntegrationE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
   protected def requestJsonLDWithAuth(request: HttpRequest): JsonLDDocument =
     getResponseAsJsonLD(request ~> addAuthorization)
-
-  def uploadToIngest(fileToUpload: java.nio.file.Path): TestDspIngestClient.UploadedFile =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(fileToUpload)))
 
   "The Knora/Sipi integration" should {
 

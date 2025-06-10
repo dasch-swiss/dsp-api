@@ -12,39 +12,37 @@ import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
-import org.knora.webapi.slice.common.api.TapirToZioHttpInterpreter
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.api.service.OntologiesRestService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
 object OntologyApiModule { self =>
 
   type Dependencies =
-  // format: off
-  AuthorizationRestService &
-  AppConfig &
-  BaseEndpoints &
-  CardinalityService &
-  IriConverter &
-  KnoraResponseRenderer &
-  OntologyCacheHelpers &
-  OntologyRepo &
-  OntologyResponderV2 &
-  StringFormatter &
-  TapirToZioHttpInterpreter
-  // format: on
+    // format: off
+    AppConfig &
+    AuthorizationRestService &
+    BaseEndpoints &
+    CardinalityService &
+    IriConverter &
+    KnoraResponseRenderer &
+    OntologyCacheHelpers &
+    OntologyRepo &
+    OntologyResponderV2 &
+    StringFormatter
+    // format: on
 
   type Provided = OntologiesServerEndpoints & OntologiesEndpoints & OntologyV2RequestParser
 
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
-      RestCardinalityService.layer,
+      OntologiesEndpoints.layer,
       OntologiesRestService.layer,
       OntologiesServerEndpoints.layer,
-      OntologiesEndpoints.layer,
       OntologyV2RequestParser.layer,
+      RestCardinalityService.layer,
     )
 }

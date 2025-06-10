@@ -10,7 +10,7 @@ import zio.ZIO
 import java.util.UUID
 
 import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -35,7 +35,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cardinalities]].
  */
-class AddCardinalitiesToClassSpec extends CoreSpec {
+class AddCardinalitiesToClassSpec extends E2ESpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val ontologyResponder                         = ZIO.serviceWithZIO[OntologyResponderV2]

@@ -9,13 +9,13 @@ import zio.ZIO
 
 import scala.concurrent.ExecutionContextExecutor
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.UnsafeZioRun
 
 object ResourceUtilV2Spec {}
 
-class ResourceUtilV2Spec extends CoreSpec {
+class ResourceUtilV2Spec extends E2ESpec {
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(

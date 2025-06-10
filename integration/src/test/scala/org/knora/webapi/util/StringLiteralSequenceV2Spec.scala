@@ -4,15 +4,14 @@
  */
 
 package org.knora.webapi.util
-
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 /**
  * Tests [[StringLiteralSequenceV2]].
  */
-class StringLiteralSequenceV2Spec extends CoreSpec {
+class StringLiteralSequenceV2Spec extends E2ESpec {
 
   private val literalSeq: StringLiteralSequenceV2 = StringLiteralSequenceV2(
     Vector(

@@ -13,7 +13,6 @@ import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json.*
-import zio.ZIO
 
 import java.net.URLEncoder
 import java.nio.file.Paths
@@ -21,6 +20,7 @@ import java.nio.file.Paths
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.e2e.v2.AuthenticationV2JsonProtocol
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants
@@ -29,10 +29,8 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
-import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
@@ -40,9 +38,6 @@ import org.knora.webapi.util.MutableTestIri
  * Integration test specification for the standoff endpoint.
  */
 class StandoffEndpointsE2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
-
-  def uploadToIngest(fileToUpload: java.nio.file.Path): TestDspIngestClient.UploadedFile =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(fileToUpload)))
 
   val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 

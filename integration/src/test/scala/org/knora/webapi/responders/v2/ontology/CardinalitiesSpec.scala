@@ -7,7 +7,7 @@ package org.knora.webapi.responders.v2.ontology
 
 import zio.ZIO
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -16,7 +16,7 @@ import org.knora.webapi.routing.UnsafeZioRun
 /**
  * This spec is used to test [[CardinalityHandler]].
  */
-class CardinalitiesSpec extends CoreSpec {
+class CardinalitiesSpec extends E2ESpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

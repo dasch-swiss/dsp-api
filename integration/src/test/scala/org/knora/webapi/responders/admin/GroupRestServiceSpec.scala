@@ -26,7 +26,7 @@ import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-class GroupRestServiceSpec extends CoreSpec {
+class GroupRestServiceSpec extends E2ESpec {
   private val groupRestService = ZIO.serviceWithZIO[GroupRestService]
   private val groupService     = ZIO.serviceWithZIO[GroupService]
 

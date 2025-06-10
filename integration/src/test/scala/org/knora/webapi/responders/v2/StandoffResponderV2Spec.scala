@@ -20,7 +20,7 @@ import org.knora.webapi.slice.common.CreateMappingRequestV2
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
-class StandoffResponderV2Spec extends CoreSpec {
+class StandoffResponderV2Spec extends E2ESpec {
 
   private def getMapping(iri: String): SparqlConstructResponse =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Construct(sparql.v2.txt.getMapping(iri)))))

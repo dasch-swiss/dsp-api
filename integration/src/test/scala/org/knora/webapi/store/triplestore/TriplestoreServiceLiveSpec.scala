@@ -15,14 +15,14 @@ import zio.ZIO
 
 import scala.concurrent.duration.*
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
+class TriplestoreServiceLiveSpec extends E2ESpec with ImplicitSender {
 
   private val triplestore = ZIO.serviceWithZIO[TriplestoreService]
 

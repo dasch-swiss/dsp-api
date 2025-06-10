@@ -9,7 +9,7 @@ import zio.*
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search.*
-import org.knora.webapi.slice.ontology.domain.service.IriConverter
+import org.knora.webapi.slice.common.service.IriConverter
 final case class ConstructTransformer(
   sparqlTransformerLive: OntologyInferencer,
   iriConverter: IriConverter,
