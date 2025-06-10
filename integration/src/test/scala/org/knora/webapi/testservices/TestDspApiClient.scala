@@ -6,29 +6,60 @@ import sttp.client4.ziojson.*
 import sttp.model.*
 import zio.*
 import zio.json.JsonDecoder
-
 import org.knora.webapi.config.KnoraApi
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.security.ScopeResolver
 
 final case class TestDspApiClient(
+  private val backend: StreamBackend[Task, ZioStreams],
   private val config: KnoraApi,
   private val jwtService: JwtService,
-  private val backend: StreamBackend[Task, ZioStreams],
+  private val scopeResolver: ScopeResolver,
 ) { self =>
 
-  private val dspApiUrl: Uri = uri"${config.externalKnoraApiHostPort}"
+  private val baseUri: Uri = uri"${config.externalKnoraApiHostPort}"
+
+  private def fullUri(wholePath: String): Uri                   = baseUri.withPath(wholePath)
+  private def getRequest(wholePath: String)                     = basicRequest.get(fullUri(wholePath))
+  private def getStringRequest(wholePath: String)               = basicRequest.get(fullUri(wholePath)).response(asString)
+  private def getJsonRequest[A: JsonDecoder](wholePath: String) = getRequest(wholePath).response(asJson[A])
+
+  private def createJwt(user: User): UIO[String] =
+    scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _).map(_.jwtString))
+
+  def get[A: JsonDecoder](wholePath: String, user: User): Task[Response[Either[ResponseException[String], A]]] =
+    createJwt(user).flatMap(getJsonRequest(wholePath).auth.bearer(_).send(backend))
 
   def get[A: JsonDecoder](wholePath: String): Task[Response[Either[ResponseException[String], A]]] =
-    jwtService.createJwtForDspIngest().flatMap { jwt =>
-      val url: Uri = dspApiUrl.withWholePath(wholePath)
-      basicRequest
-        .get(url)
-        .header("Authorization", s"Bearer ${jwt.jwtString}")
-        .response(asJson[A])
-        .send(backend)
-    }
+    getJsonRequest(wholePath).send(backend)
+
+  def getAsString(wholePath: String, user: User): Task[Response[Either[String, String]]] =
+    createJwt(user).flatMap(getStringRequest(wholePath).auth.bearer(_).send(backend))
+
+  def getAsString(wholePath: String): Task[Response[Either[String, String]]] =
+    getStringRequest(wholePath).send(backend)
+
 }
 
 object TestDspApiClient {
+
+  def get[A: JsonDecoder](
+    wholePath: String,
+    user: User,
+  ): ZIO[TestDspApiClient, Throwable, Response[Either[ResponseException[String], A]]] =
+    ZIO.serviceWithZIO[TestDspApiClient](_.get[A](wholePath, user))
+
+  def get[A: JsonDecoder](
+    wholePath: String,
+  ): ZIO[TestDspApiClient, Throwable, Response[Either[ResponseException[String], A]]] =
+    ZIO.serviceWithZIO[TestDspApiClient](_.get[A](wholePath))
+
+  def getAsString(wholePath: String, user: User): ZIO[TestDspApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestDspApiClient](_.getAsString(wholePath, user))
+
+  def getAsString(wholePath: String): ZIO[TestDspApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestDspApiClient](_.getAsString(wholePath))
+
   val layer = ZLayer.derive[TestDspApiClient]
 }
