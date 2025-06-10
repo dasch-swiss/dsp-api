@@ -39,7 +39,7 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
   ).provideShared(testLayers, Client.default, Scope.default)
     @@ TestAspect.withLiveEnvironment
 
-  def sendGetRequest(url: String, token: Option[String] = None): URIO[env, Response] =
+  private def sendGetRequest(url: String, token: Option[String] = None): URIO[env, Response] =
     for {
       client   <- ZIO.service[Client]
       urlStr    = s"http://localhost:3333$url"

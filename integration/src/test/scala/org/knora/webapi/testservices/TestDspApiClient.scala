@@ -92,7 +92,6 @@ object TestDspApiClient {
 object ResponseOps {
   extension [A](response: Response[Either[String, A]]) {
     def assert200: IO[AssertionException, A] = assert(StatusCode.Ok)
-    def assert404: IO[AssertionException, A] = assert(StatusCode.NotFound)
 
     def assert(code: StatusCode): IO[AssertionException, A] =
       (if response.code == code
