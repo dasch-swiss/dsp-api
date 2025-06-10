@@ -11,13 +11,13 @@ import org.xmlunit.diff.Diff
 
 import java.util.UUID
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.StringFormatter
 
 /**
  * Tests [[XMLToStandoffUtil]].
  */
-class XMLToStandoffUtilSpec extends CoreSpec {
+class XMLToStandoffUtilSpec extends E2ESpec {
 
   "The XML to standoff utility" should {
 

@@ -7,6 +7,7 @@ package org.knora.webapi.slice.ontology
 import zio.URLayer
 import zio.ZLayer
 import org.knora.webapi.config.Features
+
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.BaseModule
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService

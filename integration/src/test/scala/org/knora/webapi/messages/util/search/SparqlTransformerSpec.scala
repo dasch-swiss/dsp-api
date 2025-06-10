@@ -4,8 +4,7 @@
  */
 
 package org.knora.webapi.util.search
-
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -16,7 +15,7 @@ import org.knora.webapi.routing.UnsafeZioRun
 /**
  * Tests [[SparqlTransformer]].
  */
-class SparqlTransformerSpec extends CoreSpec {
+class SparqlTransformerSpec extends E2ESpec {
 
   protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

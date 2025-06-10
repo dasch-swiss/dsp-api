@@ -45,7 +45,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 object ValuesEraseSpec extends E2EZSpec {
   import TestHelper.DiffLib._
 
-  override val e2eSpec = suite("ValuesEraseSpec")(
+  override val e2eSpec: Spec[env, Any] = suite("ValuesEraseSpec")(
     test("erase an IntValue") {
       for {
         res1               <- TestHelper.createResource
@@ -150,6 +150,14 @@ object ValuesEraseSpec extends E2EZSpec {
       )
 
       testCase(lastVersionHasLink = false) && testCase(lastVersionHasLink = true)
+    },
+    test("erasing a soft-deleted value") {
+      for {
+        res1 <- TestHelper.createResource
+        val0 <- TestHelper.createIntegerValue(res1)
+        val1 <- TestHelper.deleteIntegerValue(val0, res1)
+        _    <- TestHelper.eraseIntegerValue(val1, res1)
+      } yield assertCompletes
     },
   ).provideSome[env](TestHelper.layer, ValueRepo.layer)
 }
@@ -317,7 +325,7 @@ final case class TestHelper(
       deleted <- valueRepo.findById(value.iri).someOrFail(IllegalStateException("Deleted value not found"))
     } yield deleted
 
-  def eraseIntegerValue(value: ActiveValue, resource: ActiveResource): ZIO[Any, Throwable, Unit] =
+  def eraseIntegerValue(value: ValueModel, resource: ActiveResource): ZIO[Any, Throwable, Unit] =
     val erase = EraseValueV2(
       resource.iri,
       resource.resourceClassIri,
@@ -536,7 +544,7 @@ object TestHelper {
   ): ZIO[TestHelper, Throwable, ActiveValue] =
     ZIO.serviceWithZIO[TestHelper](_.updateIntegerValue(value, resource, newValue))
 
-  def eraseIntegerValue(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
+  def eraseIntegerValue(value: ValueModel, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
     ZIO.serviceWithZIO[TestHelper](_.eraseIntegerValue(value, resource))
 
   def eraseIntegerValueHistory(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =

@@ -25,7 +25,7 @@ import pekko.testkit.ImplicitSender
 /**
  * Tests Gravsearch type inspection.
  */
-class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
+class GravsearchTypeInspectorSpec extends E2ESpec with ImplicitSender {
   private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

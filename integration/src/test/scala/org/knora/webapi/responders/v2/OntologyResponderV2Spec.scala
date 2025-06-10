@@ -8,7 +8,6 @@ package org.knora.webapi.responders.v2
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.pattern.ask
-import org.apache.pekko.testkit.ImplicitSender
 import zio.ZIO
 
 import java.time.Instant
@@ -19,6 +18,7 @@ import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
 import org.knora.webapi.*
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.Rdfs
@@ -52,7 +52,7 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 /**
  * Tests [[OntologyResponderV2]].
  */
-class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
+class OntologyResponderV2Spec extends E2ESpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

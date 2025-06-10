@@ -35,7 +35,7 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-class UserRestServiceSpec extends CoreSpec {
+class UserRestServiceSpec extends E2ESpec {
 
   private val rootUser   = SharedTestDataADM.rootUser
   private val normalUser = SharedTestDataADM.normalUser

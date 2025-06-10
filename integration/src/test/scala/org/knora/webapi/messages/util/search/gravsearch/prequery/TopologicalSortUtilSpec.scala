@@ -8,13 +8,13 @@ package org.knora.webapi.util.search.gravsearch.prequery
 import scalax.collection.hyperedges.DiHyperEdge
 import scalax.collection.immutable.Graph
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.util.search.gravsearch.prequery.TopologicalSortUtil
 
 /**
  * Tests [[TopologicalSortUtil]].
  */
-class TopologicalSortUtilSpec extends CoreSpec {
+class TopologicalSortUtilSpec extends E2ESpec {
   type GraphT = Graph[Int, DiHyperEdge[Int]]
   type NodeT  = GraphT#NodeT
 

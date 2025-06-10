@@ -7,9 +7,11 @@ package org.knora.webapi
 
 import com.typesafe.scalalogging.*
 import org.apache.pekko
+import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.client.RequestBuilding
 import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.testkit.ImplicitSender
 import org.apache.pekko.testkit.TestKitBase
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
@@ -27,18 +29,24 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.SECONDS
 
 import dsp.errors.AssertionException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppServer
+import org.knora.webapi.core.Db
+import org.knora.webapi.core.MessageRelayActorRef
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.testservices.TestDspIngestClient
+import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.LogAspect
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack
@@ -52,42 +60,27 @@ abstract class E2ESpec
     with Matchers
     with ScalaFutures
     with BeforeAndAfterAll
-    with RequestBuilding {
+    with RequestBuilding
+    with ImplicitSender {
 
-  /**
-   * The `Environment` that we require to exist at startup.
-   * Can be overriden in specs that need other implementations.
-   */
-  type Environment = core.LayersTestLive.Environment
-
-  /**
-   * The effect layers from which the App is built.
-   * Can be overriden in specs that need other implementations.
-   */
-  lazy val effectLayers = core.LayersTestLive.layer
-
-  /**
-   * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
-   * and cleaned up when the Runtime is shutdown.
-   */
-  private val bootstrap = util.Logger.text() >>> effectLayers
-
-  // create a configured runtime
-  implicit val runtime: Runtime.Scoped[Environment] =
-    Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
+  implicit val runtime: Runtime.Scoped[core.LayersTestLive.Environment] =
+    Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(util.Logger.text() >>> core.LayersTestLive.layer))
 
   lazy val appConfig: AppConfig                        = UnsafeZioRun.service[AppConfig]
   implicit lazy val system: ActorSystem                = UnsafeZioRun.service[ActorSystem]
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
+  lazy val appActor: ActorRef                          = UnsafeZioRun.service[MessageRelayActorRef].ref
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
   val log: Logger                                      = Logger(this.getClass)
 
   // needed by some tests
-  val baseApiUrl = appConfig.knoraApi.internalKnoraApiBaseUrl
+  val baseApiUrl: String          = appConfig.knoraApi.internalKnoraApiBaseUrl
+  val baseInternalSipiUrl: String = appConfig.sipi.internalBaseUrl
 
-  final override def beforeAll(): Unit =
-    /* Here we start our app and initialize the repository before each suit runs */
-    UnsafeZioRun.runOrThrow(AppServer.test *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")))
+  // the default timeout for all tests
+  implicit val timeout: FiniteDuration = FiniteDuration(10, SECONDS)
+
+  final override def beforeAll(): Unit = UnsafeZioRun.runOrThrow(Db.initWithTestData(rdfDataObjects))
 
   final override def afterAll(): Unit =
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
@@ -197,4 +190,12 @@ abstract class E2ESpec
     )
     responseAsString
   }
+
+  def createJwtTokenString(user: User): ZIO[ScopeResolver & JwtService, Nothing, String] = for {
+    scope <- ZIO.serviceWithZIO[ScopeResolver](_.resolve(user))
+    token <- ZIO.serviceWithZIO[JwtService](_.createJwt(user.userIri, scope))
+  } yield token.jwtString
+
+  def uploadToIngest(fileToUpload: java.nio.file.Path): UploadedFile =
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(fileToUpload)))
 }

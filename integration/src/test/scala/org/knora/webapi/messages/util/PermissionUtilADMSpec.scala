@@ -21,7 +21,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 
 import pekko.testkit.ImplicitSender
 
-class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
+class PermissionUtilADMSpec extends E2ESpec with ImplicitSender {
 
   val permissionLiteral =
     "RV knora-admin:UnknownUser|V knora-admin:KnownUser|M knora-admin:ProjectMember|CR knora-admin:Creator"
