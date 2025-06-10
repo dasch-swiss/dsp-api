@@ -6,13 +6,8 @@
 package org.knora.webapi.slice.admin.domain.service
 
 import sttp.capabilities.zio.ZioStreams
-import sttp.client3.Empty
-import sttp.client3.RequestT
-import sttp.client3.SttpBackend
-import sttp.client3.UriContext
-import sttp.client3.asStreamAlways
-import sttp.client3.basicRequest
-import sttp.client3.httpclient.zio.HttpClientZioBackend
+import sttp.client4.*
+import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.Scope
 import zio.Task
 import zio.ZIO
@@ -69,12 +64,12 @@ object AssetInfoResponse {
 final case class DspIngestClientLive(
   jwtService: JwtService,
   dspIngestConfig: DspIngestConfig,
-  sttpBackend: SttpBackend[Task, ZioStreams],
+  backend: StreamBackend[Task, ZioStreams],
 ) extends DspIngestClient {
 
   private def projectsPath(shortcode: Shortcode) = s"${dspIngestConfig.baseUrl}/projects/${shortcode.value}"
 
-  private val authenticatedRequest: ZIO[Any, Nothing, RequestT[Empty, Either[String, String], Any]] =
+  private val authenticatedRequest: ZIO[Any, Nothing, PartialRequest[Either[String, String]]] =
     jwtService
       .createJwtForDspIngest()
       .map(_.jwtString)
@@ -83,7 +78,7 @@ final case class DspIngestClientLive(
   override def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
     for {
       request  <- authenticatedRequest.map(_.get(uri"${projectsPath(shortcode)}/assets/$assetId"))
-      response <- ZIO.blocking(request.send(backend = sttpBackend)).logError
+      response <- request.send(backend)
       result <- ZIO
                   .fromEither(response.body.flatMap(str => str.fromJson[AssetInfoResponse]))
                   .mapError(err => new IOException(s"Error parsing response: $err"))
@@ -98,13 +93,13 @@ final case class DspIngestClientLive(
                      .readTimeout(30.minutes)
                      .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(exportFile.toFile))))
                  }
-      response <- ZIO.blocking(request.send(backend = sttpBackend))
+      response <- request.send(backend)
       _        <- ZIO.logInfo(s"Response from ingest :${response.code}")
     } yield exportFile
 
   override def eraseProject(shortcode: Shortcode): Task[Unit] = for {
     request  <- authenticatedRequest.map(_.delete(uri"${projectsPath(shortcode)}/erase"))
-    response <- ZIO.blocking(request.send(backend = sttpBackend))
+    response <- request.send(backend)
     _        <- ZIO.logInfo(s"Response from ingest :${response.body}")
   } yield ()
 

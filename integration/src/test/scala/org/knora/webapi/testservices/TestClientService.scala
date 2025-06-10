@@ -12,10 +12,7 @@ import org.apache.pekko.http.scaladsl.model.HttpEntity
 import org.apache.pekko.http.scaladsl.model.headers.HttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import sttp.capabilities.zio.ZioStreams
-import sttp.client3
-import sttp.client3.*
-import sttp.client3.SttpBackend
-import sttp.client3.httpclient.zio.HttpClientZioBackend
+import sttp.client4.*
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
@@ -35,7 +32,7 @@ import org.knora.webapi.settings.KnoraDispatchers
 
 final case class TestClientService(
   config: AppConfig,
-  sttp: SttpBackend[Task, ZioStreams],
+  backend: StreamBackend[Task, ZioStreams],
 )(implicit system: ActorSystem)
     extends TriplestoreJsonProtocol
     with RequestBuilding {
@@ -148,13 +145,5 @@ final case class TestClientService(
 }
 
 object TestClientService {
-  def layer: ZLayer[ActorSystem & AppConfig, Nothing, TestClientService] =
-    HttpClientZioBackend.layer().orDie >+>
-      ZLayer.scoped {
-        for {
-          sys    <- ZIO.service[ActorSystem]
-          config <- ZIO.service[AppConfig]
-          sttp   <- ZIO.service[SttpBackend[Task, ZioStreams]]
-        } yield TestClientService(config, sttp)(sys)
-      }
+  def layer = ZLayer.derive[TestClientService]
 }
