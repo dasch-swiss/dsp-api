@@ -5,9 +5,10 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json.*
 
-import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
@@ -15,7 +16,7 @@ import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 /**
  * This spec is used to test 'ListAdminMessages'.
  */
-class ListsMessagesADMSpec extends E2ESpec with IntegrationTestListADMJsonProtocol {
+class ListsMessagesADMSpec extends AnyWordSpecLike with Matchers with IntegrationTestListADMJsonProtocol {
   val exampleListIri = "http://rdfh.ch/lists/00FF/abcd"
 
   "Conversion from case class to JSON and back" should {
