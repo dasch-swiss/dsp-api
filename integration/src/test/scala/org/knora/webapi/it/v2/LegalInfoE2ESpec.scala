@@ -35,7 +35,6 @@ import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.api.model.PageAndSize
 import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.*
@@ -49,8 +48,6 @@ import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.testservices.ResponseOps.assert200
-import org.knora.webapi.testservices.TestDspApiClient
 import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
 
@@ -146,11 +143,9 @@ object LegalInfoE2ESpec extends E2EZSpec {
           for {
             _ <- createStillImageResourceWithInfos(authorship = Some(someAuthorship))
             _ <- createStillImageResourceWithInfos(authorship = Some(anotherAuthorship))
-            response <- TestDspApiClient.get[PagedResponse[Authorship]](
-                          s"/admin/projects/shortcode/$shortcode/legal-info/authorships",
-                          rootUser,
-                        )
-            authorships <- response.assert200
+            authorships <- sendGetRequestAsRootDecode[PagedResponse[Authorship]](
+                             s"/admin/projects/shortcode/$shortcode/legal-info/authorships",
+                           )
           } yield assertTrue(authorships == PagedResponse.from(expected, expected.size, PageAndSize.Default))
         },
       ),
@@ -352,11 +347,12 @@ object LegalInfoE2ESpec extends E2EZSpec {
     sendPutRequestAsRoot(s"/v2/values", request.jsonLd)
   }
 
-  private def getResourceFromApi(resourceId: ResourceIri) =
-    TestDspApiClient
-      .getAsString(s"/v2/resources/${URLEncoder.encode(resourceId.toString, "UTF-8")}")
-      .flatMap(_.assert200)
-      .flatMap(ModelOps.fromJsonLd(_).mapError(Exception(_)))
+  private def getResourceFromApi(resourceId: ResourceIri) = for {
+    responseBody <- sendGetRequest(s"/v2/resources/${URLEncoder.encode(resourceId.toString, "UTF-8")}")
+                      .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to get resource $resourceId."))
+                      .flatMap(_.body.asString)
+    model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
+  } yield model
 
   private def getValueFromApi(createResourceResponse: Model): ZIO[env, Throwable, Model] = for {
     valueId    <- valueId(createResourceResponse)
@@ -364,11 +360,12 @@ object LegalInfoE2ESpec extends E2EZSpec {
     model      <- getValueFromApi(valueId, resourceId)
   } yield model
 
-  private def getValueFromApi(valueId: ValueIri, resourceId: ResourceIri) =
-    TestDspApiClient
-      .getAsString(s"/v2/values/${URLEncoder.encode(resourceId.toString, "UTF-8")}/${valueId.valueId}")
-      .flatMap(_.assert200)
-      .flatMap(ModelOps.fromJsonLd(_).mapError(Exception(_)))
+  private def getValueFromApi(valueId: ValueIri, resourceId: ResourceIri): ZIO[env, Throwable, Model] = for {
+    responseBody <- sendGetRequest(s"/v2/values/${URLEncoder.encode(resourceId.toString, "UTF-8")}/${valueId.valueId}")
+                      .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to get value $resourceId."))
+                      .flatMap(_.body.asString)
+    model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
+  } yield model
 
   private def resourceId(model: Model): Task[ResourceIri] =
     ZIO
