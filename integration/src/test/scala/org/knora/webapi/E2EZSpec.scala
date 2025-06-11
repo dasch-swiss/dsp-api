@@ -12,9 +12,8 @@ import zio.json.DecoderOps
 import zio.json.ast.Json
 import zio.json.ast.JsonCursor
 import zio.test.*
-
-import org.knora.webapi.core.Db
 import org.knora.webapi.core.LayersTest
+import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -28,7 +27,7 @@ abstract class E2EZSpec extends ZIOSpecDefault {
 
   type env = LayersTest.Environment with Client with Scope
 
-  private def prepare = Db.initWithTestData(rdfDataObjects)
+  private def prepare = TestStartupUtils.startDspApi(rdfDataObjects)
 
   def e2eSpec: Spec[env, Any]
 

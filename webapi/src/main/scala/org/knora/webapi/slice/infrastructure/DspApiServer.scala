@@ -20,8 +20,7 @@ object DspApiServer {
   } >>> Server.live
 
   val make: ZIO[DspApiRoutes & KnoraApi, Throwable, Unit] = ZIO
-    .serviceWithZIO[DspApiRoutes] { r =>
-      Server.serve(r.routes).provideSomeAuto(dspApiHttpServer).fork: @annotation.nowarn
-    }
+    .serviceWith[DspApiRoutes](_.routes)
+    .flatMap(Server.serve(_).provideSomeAuto(dspApiHttpServer).fork: @annotation.nowarn)
     .unit
 }

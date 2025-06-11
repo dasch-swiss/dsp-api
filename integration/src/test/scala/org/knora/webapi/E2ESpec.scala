@@ -76,9 +76,8 @@ abstract class E2ESpec
   // the default timeout for all tests
   implicit val timeout: FiniteDuration = FiniteDuration(10, SECONDS)
 
-  final override def afterAll(): Unit =
-    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-    Unsafe.unsafe(implicit u => runtime.unsafe.shutdown())
+  final override def beforeAll(): Unit = UnsafeZioRun.runOrThrow(TestStartupUtils.startDspApi(rdfDataObjects))
+  final override def afterAll(): Unit  = Unsafe.unsafe(implicit u => runtime.unsafe.shutdown())
 
   protected def singleAwaitingRequest(
     request: HttpRequest,
