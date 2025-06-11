@@ -31,6 +31,11 @@ object UnsafeZioRun {
   def runOrThrow[R, E, A](effect: ZIO[R, E, A])(implicit r: Runtime[R]): A =
     Unsafe.unsafe(implicit u => r.unsafe.run(effect).getOrThrowFiberFailure())
 
+  def fork[R, E, A](effect: ZIO[R, E, A])(implicit r: Runtime[R]): Unit = {
+    val _ = Unsafe.unsafe(implicit u => r.unsafe.fork(effect))
+    ()
+  }
+
   /**
    * Executes the effect synchronously and returns its result as a
    * [[Future]].

@@ -70,14 +70,23 @@ abstract class E2ESpec
   lazy val appActor: ActorRef                          = UnsafeZioRun.service[MessageRelayActorRef].ref
 
   // needed by some tests
-  val baseApiUrl: String  = appConfig.knoraApi.internalKnoraApiBaseUrl
+  val baseApiUrl: String  = appConfig.knoraApi.externalKnoraApiBaseUrl
   val baseSipiUrl: String = appConfig.sipi.internalBaseUrl
 
   // the default timeout for all tests
   implicit val timeout: FiniteDuration = FiniteDuration(10, SECONDS)
 
-  final override def beforeAll(): Unit = UnsafeZioRun.runOrThrow(TestStartupUtils.startDspApi(rdfDataObjects))
-  final override def afterAll(): Unit  = Unsafe.unsafe(implicit u => runtime.unsafe.shutdown())
+  final override def beforeAll(): Unit = {
+    UnsafeZioRun.runOrThrow(ZIO.logWarning("beforeAll"))
+    UnsafeZioRun.fork(TestStartupUtils.startDspApi(rdfDataObjects) *> ZIO.never)
+    UnsafeZioRun.runOrThrow(TestStartupUtils.waitForDspApiServer)
+  }
+
+  final override def afterAll(): Unit = {
+    UnsafeZioRun.runOrThrow(ZIO.logWarning("<afterAll>"))
+    Unsafe.unsafe(implicit u => runtime.unsafe.shutdown())
+    UnsafeZioRun.runOrThrow(ZIO.logWarning("</afterAll>"))
+  }
 
   protected def singleAwaitingRequest(
     request: HttpRequest,
