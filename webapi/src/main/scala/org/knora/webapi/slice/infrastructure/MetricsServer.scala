@@ -32,7 +32,7 @@ object MetricsServer {
     for {
       docs       <- DocsServer.docsEndpoints.map(endpoints => ZioHttpInterpreter().toHttp(endpoints))
       prometheus <- ZIO.service[PrometheusRoutes]
-      _          <- Server.install(prometheus.routes ++ docs): @annotation.nowarn
+      _          <- Server.serve(prometheus.routes ++ docs): @annotation.nowarn
     } yield ()
 
   val make: ZIO[
@@ -46,9 +46,13 @@ object MetricsServer {
       adminApiEndpoints <- ZIO.service[AdminApiEndpoints]
       shaclApiEndpoints <- ZIO.service[ShaclEndpoints]
       config            <- ZIO.service[InstrumentationServerConfig]
-      port               = config.port
-      interval           = config.interval
-      metricsConfig      = MetricsConfig(interval)
+      _ <-
+        ZIO.logInfo(
+          s"Starting metrics server ${knoraApiConfig.externalProtocol}://${knoraApiConfig.externalHost}:${config.port}/docs",
+        )
+      port          = config.port
+      interval      = config.interval
+      metricsConfig = MetricsConfig(interval)
       _ <- metricsServer
              .provide(
                ZLayer.succeed(knoraApiConfig),
