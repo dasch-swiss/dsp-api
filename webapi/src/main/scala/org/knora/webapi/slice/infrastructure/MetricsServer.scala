@@ -46,13 +46,11 @@ object MetricsServer {
       adminApiEndpoints <- ZIO.service[AdminApiEndpoints]
       shaclApiEndpoints <- ZIO.service[ShaclEndpoints]
       config            <- ZIO.service[InstrumentationServerConfig]
-      _ <-
-        ZIO.logInfo(
-          s"Starting metrics server ${knoraApiConfig.externalProtocol}://${knoraApiConfig.externalHost}:${config.port}/docs",
-        )
-      port          = config.port
-      interval      = config.interval
-      metricsConfig = MetricsConfig(interval)
+      baseUrl            = s"${knoraApiConfig.externalProtocol}://${knoraApiConfig.externalHost}:${config.port}"
+      _                 <- ZIO.logInfo(s"Starting Metrics server ${baseUrl}/metrics find docs at $baseUrl/docs")
+      port               = config.port
+      interval           = config.interval
+      metricsConfig      = MetricsConfig(interval)
       _ <- metricsServer
              .provide(
                ZLayer.succeed(knoraApiConfig),
