@@ -8,8 +8,6 @@ package org.knora.webapi
 import zio.*
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.InstrumentationServerConfig
-import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.core.*
 import org.knora.webapi.slice.infrastructure.DspApiServer
 import org.knora.webapi.slice.infrastructure.MetricsServer
@@ -31,22 +29,10 @@ object Main extends ZIOApp {
   override def bootstrap: ZLayer[Any, Nothing, Environment] =
     Logger.fromEnv() >>> AppConfig.layer >+> LayersLive.layer
 
-  /**
-   *  Entrypoint of our Application
-   */
-  override def run: ZIO[Environment & ZIOAppArgs & Scope, Any, Any] =
-    Db.init *>
-      MetricsServer.make.fork *>
-      DspApiServer.make.fork *>
-      logStartUp *>
-      ZIO.never
-
-  val logStartUp = for {
-    apiConfig  <- ZIO.service[KnoraApi]
-    instConfig <- ZIO.service[InstrumentationServerConfig]
-    _ <- ZIO.logInfo(
-           s"Starting api on ${apiConfig.externalKnoraApiBaseUrl}, " +
-             s"find docs on ${apiConfig.externalProtocol}://${apiConfig.externalHost}:${instConfig.port}/docs",
-         )
+  override val run = for {
+    _ <- Db.init
+    _ <- DspApiServer.make
+    _ <- MetricsServer.make
+    _ <- ZIO.never
   } yield ()
 }

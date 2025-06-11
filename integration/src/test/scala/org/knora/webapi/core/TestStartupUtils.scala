@@ -27,8 +27,9 @@ object TestStartupUtils {
     rdfDataObjects: List[RdfDataObject],
   ): ZIO[KnoraApi & TapirToZioHttpInterpreter & DspApiServerEndpoints & DbInitEnv, Throwable, Unit] =
     Db.initWithTestData(rdfDataObjects) *>
-      (DspApiServer.make *> ZIO.never).forkDaemon *>
-      waitForDspApiServer
+      DspApiServer.make *>
+      waitForDspApiServer *>
+      ZIO.never
 
   private val waitForDspApiServer =
     ZIO.serviceWithZIO[KnoraApi] { knoraApi =>

@@ -86,7 +86,7 @@ object LayersLive { self =>
     CommonModule.Provided &
     ConstructResponseUtilV2 &
     DefaultObjectAccessPermissionService &
-    DspApiServerEndpoints &
+    DspApiRoutes &
     IIIFRequestMessageHandler &
     InfrastructureModule.Provided &
     ListsApiModule.Provided &
@@ -110,7 +110,6 @@ object LayersLive { self =>
     SearchResponderV2Module.Provided &
     SearchServerEndpoints &
     SecurityModule.Provided &
-    SecurityModule.Provided &
     ShaclApiModule.Provided &
     ShaclModule.Provided &
     SipiService &
@@ -126,7 +125,6 @@ object LayersLive { self =>
 
   val layer: URLayer[Config, self.Environment] =
     ZLayer.makeSome[Config, self.Environment](
-      // ZLayer.Debug.mermaid,
       AdminApiModule.layer,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
@@ -138,7 +136,7 @@ object LayersLive { self =>
       CardinalityHandler.layer,
       CommonModule.layer,
       ConstructResponseUtilV2.layer,
-      DspApiServerEndpoints.layer,
+      DspApiRoutes.layer,
       DspIngestClientLive.layer,
       IIIFRequestMessageHandlerLive.layer,
       InfrastructureModule.layer,
@@ -179,5 +177,6 @@ object LayersLive { self =>
       State.layer,
       TapirToZioHttpInterpreter.layer,
       ValuesResponderV2.layer,
+      // ZLayer.Debug.mermaid,
     )
 }

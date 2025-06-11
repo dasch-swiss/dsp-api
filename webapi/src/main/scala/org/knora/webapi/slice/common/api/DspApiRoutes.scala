@@ -8,7 +8,6 @@ package org.knora.webapi.slice.common.api
 import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.ztapir.*
 import zio.*
-
 import org.knora.webapi.slice.admin.api.AdminApiServerEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementServerEndpoints
 import org.knora.webapi.slice.lists.api.ListsServerEndpointsV2
@@ -18,8 +17,10 @@ import org.knora.webapi.slice.resources.api.ResourcesApiServerEndpoints
 import org.knora.webapi.slice.search.api.SearchServerEndpoints
 import org.knora.webapi.slice.security.api.AuthenticationServerEndpointsV2
 import org.knora.webapi.slice.shacl.api.ShaclServerEndpoints
+import zio.http.Response
+import zio.http.Routes
 
-final case class DspApiServerEndpoints(
+final case class DspApiRoutes(
   private val adminApi: AdminApiServerEndpoints,
   private val authentication: AuthenticationServerEndpointsV2,
   private val listsApiV2: ListsServerEndpointsV2,
@@ -29,9 +30,10 @@ final case class DspApiServerEndpoints(
   private val resourcesApi: ResourcesApiServerEndpoints,
   private val search: SearchServerEndpoints,
   private val shacl: ShaclServerEndpoints,
+  private val tapirToZioHttpInterpreter: TapirToZioHttpInterpreter,
 ) {
 
-  val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =
+  private val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =
     adminApi.serverEndpoints ++
       authentication.serverEndpoints ++
       listsApiV2.serverEndpoints ++
@@ -41,8 +43,10 @@ final case class DspApiServerEndpoints(
       resourcesApi.serverEndpoints ++
       search.serverEndpoints ++
       shacl.serverEndpoints
+
+  val routes: Routes[Any, Response] = tapirToZioHttpInterpreter.toHttp(serverEndpoints)
 }
 
-object DspApiServerEndpoints {
-  val layer = ZLayer.derive[DspApiServerEndpoints]
+object DspApiRoutes {
+  val layer = ZLayer.derive[DspApiRoutes]
 }
