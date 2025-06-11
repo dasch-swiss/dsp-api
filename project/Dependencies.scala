@@ -40,13 +40,18 @@ object Dependencies {
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
 
   val ZioJsonVersion        = "0.7.43"
-  val zioJson               = "dev.zio"                       %% "zio-json"                  % ZioJsonVersion
-  val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
-  val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
-  val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
-  val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
-  val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
-  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.11.0"
+  val zioJson               = "dev.zio" %% "zio-json"                  % ZioJsonVersion
+  val zioLogging            = "dev.zio" %% "zio-logging"               % ZioLoggingVersion
+  val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
+  val zioNio                = "dev.zio" %% "zio-nio"                   % ZioNioVersion
+  val zioMacros             = "dev.zio" %% "zio-macros"                % ZioVersion
+  val zioPrelude            = "dev.zio" %% "zio-prelude"               % ZioPreludeVersion
+
+  val SttpClientVersion = "4.0.8"
+  val zioSttpClient = Seq(
+    "com.softwaremill.sttp.client4" %% "zio"      % SttpClientVersion,
+    "com.softwaremill.sttp.client4" %% "zio-json" % SttpClientVersion,
+  )
 
   // refined
   val refined = Seq(
@@ -202,6 +207,5 @@ object Dependencies {
     zioMacros,
     zioNio,
     zioPrelude,
-    zioSttp,
-  ) ++ metrics ++ tapir ++ openTelemetryWithSentry
+  ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 }

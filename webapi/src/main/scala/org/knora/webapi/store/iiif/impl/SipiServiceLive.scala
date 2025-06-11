@@ -6,10 +6,8 @@
 package org.knora.webapi.store.iiif.impl
 
 import sttp.capabilities.zio.ZioStreams
-import sttp.client3
-import sttp.client3.*
-import sttp.client3.SttpBackend
-import sttp.client3.httpclient.zio.HttpClientZioBackend
+import sttp.client4.*
+import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.*
 import zio.nio.file.Path
 
@@ -36,7 +34,7 @@ final case class SipiServiceLive(
   private val sipiConfig: Sipi,
   private val jwtService: JwtService,
   private val scopeResolver: ScopeResolver,
-  private val sttp: SttpBackend[Task, ZioStreams],
+  private val backend: StreamBackend[Task, ZioStreams],
   private val dspIngestClient: DspIngestClient,
 ) extends SipiService {
 
@@ -80,9 +78,9 @@ final case class SipiServiceLive(
         })
       }
 
-  private def doSipiRequest(request: Request[String, Any]): Task[String] =
-    sttp
-      .send(request)
+  private def doSipiRequest(request: Request[String]): Task[String] =
+    request
+      .send(backend)
       .flatMap { response =>
         if (response.isSuccess) {
           ZIO.succeed(response.body)
@@ -117,8 +115,10 @@ final case class SipiServiceLive(
    */
   override def downloadAsset(asset: Asset, targetDir: Path, user: User): Task[Option[Path]] = {
     def executeDownloadRequest(uri: URI, jwt: Jwt, targetFilename: String): ZIO[Any, Throwable, Option[Path]] =
-      sttp
-        .send(quickRequest.get(uri"$uri").header("Authorization", s"Bearer ${jwt.jwtString}"))
+      quickRequest
+        .get(uri"$uri")
+        .header("Authorization", s"Bearer ${jwt.jwtString}")
+        .send(backend)
         .filterOrElseWith(_.code.isSuccess)(r => ZIO.fail(new Exception(s"${r.code.code} code from sipi")))
         .flatMap { response =>
           val path = targetDir / targetFilename

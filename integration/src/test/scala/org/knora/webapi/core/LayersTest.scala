@@ -6,7 +6,7 @@
 package org.knora.webapi.core
 
 import org.apache.pekko.actor.ActorSystem
-import sttp.client3.httpclient.zio.HttpClientZioBackend
+import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.*
 
 import org.knora.webapi.config.AppConfig

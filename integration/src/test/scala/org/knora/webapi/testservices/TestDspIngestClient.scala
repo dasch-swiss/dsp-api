@@ -6,9 +6,7 @@
 package org.knora.webapi.testservices
 
 import sttp.capabilities.zio.ZioStreams
-import sttp.client3
-import sttp.client3.*
-import sttp.client3.SttpBackend
+import sttp.client4.*
 import zio.*
 import zio.json.*
 import zio.nio.file.Files
@@ -21,8 +19,8 @@ import org.knora.webapi.testservices.TestDspIngestClient.*
 
 final case class TestDspIngestClient(
   config: DspIngestConfig,
-  sttp: SttpBackend[Task, ZioStreams],
   jwtService: JwtService,
+  backend: StreamBackend[Task, ZioStreams],
 ) {
 
   private val ingestUrl = uri"${config.baseUrl}"
@@ -38,8 +36,8 @@ final case class TestDspIngestClient(
       url         = ingestUrl.addPath("projects", shortcode.value, "assets", "ingest", filename)
       request     = quickRequest.post(url).header("Authorization", s"Bearer $loginToken").body(contents.toArray)
       responseBody <-
-        sttp
-          .send(request)
+        request
+          .send(backend)
           .filterOrElseWith(_.is200)(response =>
             ZIO.fail(Exception(s"Upload failed: $filename, ${response.code.code}: ${response.body}")),
           )

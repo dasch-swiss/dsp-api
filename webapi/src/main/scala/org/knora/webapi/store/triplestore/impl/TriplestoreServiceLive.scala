@@ -8,15 +8,8 @@ package org.knora.webapi.store.triplestore.impl
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.HttpHost
 import sttp.capabilities.zio.ZioStreams
-import sttp.client3.Empty
-import sttp.client3.Request
-import sttp.client3.RequestT
-import sttp.client3.Response
-import sttp.client3.SttpBackend
-import sttp.client3.SttpBackendOptions
-import sttp.client3.UriContext
-import sttp.client3.basicRequest
-import sttp.client3.httpclient.zio.HttpClientZioBackend
+import sttp.client4.*
+import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
@@ -55,7 +48,7 @@ import org.knora.webapi.util.FileUtil
 
 case class TriplestoreServiceLive(
   triplestoreConfig: Triplestore,
-  sttp: SttpBackend[Task, ZioStreams],
+  backend: StreamBackend[Task, ZioStreams],
 ) extends TriplestoreService
     with FusekiTriplestore {
 
@@ -66,7 +59,7 @@ case class TriplestoreServiceLive(
   }
 
   // NOTE: possibly quickRequest might be used instead of basicRequest (no Either)
-  private val authenticatedRequest: RequestT[Empty, Either[String, String], Any] =
+  private val authenticatedRequest: PartialRequest[Either[String, String]] =
     basicRequest.auth.basic(triplestoreConfig.fuseki.username, triplestoreConfig.fuseki.password)
 
   private val requestTimer =
@@ -232,7 +225,7 @@ case class TriplestoreServiceLive(
     for {
       _      <- ZIO.logDebug("==>> Loading Data Start")
       objects = DefaultRdfData.data.toList.filter(_ => prependDefaults) ++ rdfDataObjects
-      _      <- ZIO.foreach(objects)(insertObjectIntoTriplestore)
+      _      <- ZIO.foreachDiscard(objects)(insertObjectIntoTriplestore)
       _      <- ZIO.logDebug("==>> Loading Data End")
     } yield ()
 
@@ -295,7 +288,7 @@ case class TriplestoreServiceLive(
                       .header("Accept", mimeTypeApplicationJson),
                   )
       fusekiServer <- ZIO.fromEither(response.body.toOption.getOrElse("").fromJson[FusekiServer]).mapError(Throwable(_))
-    } yield fusekiServer.datasets.find(ds => ds.dsName == s"/${fusekiConfig.repositoryName}" && ds.dsState).nonEmpty
+    } yield fusekiServer.datasets.exists(ds => ds.dsName == s"/${fusekiConfig.repositoryName}" && ds.dsState)
 
   override def compact(): Task[Boolean] =
     ZIO
@@ -464,10 +457,10 @@ case class TriplestoreServiceLive(
       .unit
 
   private def doHttpRequest[T](
-    request: Request[Either[String, String], Any],
+    request: Request[Either[String, String]],
   ): Task[Response[Either[String, String]]] = {
-    def executeQuery(request: Request[Either[String, String], Any]): Task[Response[Either[String, String]]] = {
-      request.send(sttp).catchSome {
+    def executeQuery(request: Request[Either[String, String]]): Task[Response[Either[String, String]]] = {
+      request.send(backend).catchSome {
         case socketTimeoutException: java.net.SocketTimeoutException =>
           val message =
             "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
@@ -508,18 +501,10 @@ case class TriplestoreServiceLive(
 }
 
 object TriplestoreServiceLive {
-  import scala.concurrent.duration._
+  import scala.concurrent.duration.*
 
   val layer: URLayer[Triplestore, TriplestoreService] =
     HttpClientZioBackend
-      .layer(
-        SttpBackendOptions.connectionTimeout(2.hours),
-      )
-      .orDie >+>
-      ZLayer.scoped {
-        for {
-          config <- ZIO.service[Triplestore]
-          sttp   <- ZIO.service[SttpBackend[Task, ZioStreams]]
-        } yield TriplestoreServiceLive(config, sttp)
-      }
+      .layer(options = BackendOptions.Default.connectionTimeout(2.hours))
+      .orDie >+> ZLayer.derive[TriplestoreServiceLive]
 }
