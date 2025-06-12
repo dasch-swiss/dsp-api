@@ -9,18 +9,22 @@ import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import spray.json.*
-import zio.durationInt
+import org.knora.webapi.testservices.ResponseOps.*
 
 import java.net.URLEncoder
-
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.admin.responder.IntegrationTestAdminJsonProtocol.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.testservices.TestAdminApiClient
 import org.knora.webapi.util.AkkaHttpUtils
 
 /**
@@ -30,65 +34,44 @@ import org.knora.webapi.util.AkkaHttpUtils
  */
 class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
 
-  private val customDOAPIri = "http://rdfh.ch/permissions/00FF/zTOK3HlWTLGgTO8ZWVnotg"
+  private val imageProjectIri: ProjectIri = ProjectIri.unsafeFrom(SharedTestDataADM2.imagesProjectInfo.id)
+  private val projecMemberIri: GroupIri   = KnoraGroupRepo.builtIn.ProjectMember.id
+  private val customDOAPIri: String       = "http://rdfh.ch/permissions/00FF/zTOK3HlWTLGgTO8ZWVnotg"
+
   "The Permissions Route ('admin/permissions')" when {
     "getting permissions" should {
       "return a group's administrative permission" in {
-        val projectIri =
-          URLEncoder.encode(ProjectIri.unsafeFrom(SharedTestDataADM2.imagesProjectInfo.id).value, "utf-8")
-        val groupIri = URLEncoder.encode(KnoraGroupRepo.builtIn.ProjectMember.id.value, "utf-8")
-        val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri/$groupIri") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass),
+        val response: AdministrativePermissionGetResponseADM = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient
+            .getAdministrativePermissions(imageProjectIri, projecMemberIri, rootUser)
+            .flatMap(_.assert200),
         )
-
-        val response = singleAwaitingRequest(request, 1.seconds)
-        assert(response.status === StatusCodes.OK, responseToString(response))
-        val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
-
-        val iri = result
-          .getOrElse("iri", throw DeserializationException("The expected field 'iri' is missing."))
-          .convertTo[String]
-
-        assert(iri == "http://rdfh.ch/permissions/00FF/QYdrY7O6QD2VR30oaAt3Yg")
+        assert(response.administrativePermission.iri == "http://rdfh.ch/permissions/00FF/QYdrY7O6QD2VR30oaAt3Yg")
       }
 
       "return a project's administrative permissions" in {
-        val projectIri = URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
-
-        val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass),
+        val response: AdministrativePermissionsForProjectGetResponseADM = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient
+            .getAdministrativePermissions(imageProjectIri, rootUser)
+            .flatMap(_.assert200),
         )
-
-        val response = singleAwaitingRequest(request, 1.seconds)
-        assert(response.status === StatusCodes.OK, responseToString(response))
-        val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permissions")
-        result.asInstanceOf[JsArray].elements.size should be(3)
+        response.administrativePermissions.size should be(3)
       }
 
       "return a project's default object access permissions" in {
-        val projectIri = URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
-
-        val request = Get(baseApiUrl + s"/admin/permissions/doap/$projectIri") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass),
+        val response = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient
+            .getDefaultObjectAccessPermissions(imageProjectIri, rootUser)
+            .flatMap(_.assert200),
         )
-
-        val response = singleAwaitingRequest(request, 1.seconds)
-        assert(response.status === StatusCodes.OK, responseToString(response))
-        val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permissions")
-        result.asInstanceOf[JsArray].elements.size should be(3)
+        response.defaultObjectAccessPermissions.size should be(3)
       }
 
       "return a project's all permissions" in {
-        val projectIri = URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
-
-        val request = Get(baseApiUrl + s"/admin/permissions/$projectIri") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass),
+        val response = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient.getAdminPermissions(imageProjectIri, rootUser).flatMap(_.assert200),
         )
-
-        val response = singleAwaitingRequest(request, 1.seconds)
-        assert(response.status === StatusCodes.OK, responseToString(response))
-        val result = AkkaHttpUtils.httpResponseToJson(response).fields("permissions")
-        result.asInstanceOf[JsArray].elements.size should be(6)
+        response.permissions.size should be(6)
       }
     }
 
