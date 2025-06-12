@@ -5,13 +5,14 @@
 
 package org.knora.webapi.testservices
 import org.apache.pekko.actor.ActorSystem
+import sttp.client4.httpclient.zio.HttpClientZioBackend
+import zio.URLayer
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.security.ScopeResolver
-import sttp.client4.httpclient.zio.HttpClientZioBackend
-import zio.URLayer
 
 object TestClientsModule { self =>
 
