@@ -8,7 +8,6 @@ package org.knora.webapi.e2e.admin
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import spray.json.*
 
 import java.net.URLEncoder
 
@@ -242,50 +241,39 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
       }
 
       "change the resource class of a default object access permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
-        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
-        val resourceClassIri     = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
-        val updateResourceClass =
-          s"""{
-             |   "forResourceClass":"$resourceClassIri"
-             |}""".stripMargin
-        val request = Put(
-          baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/resourceClass",
-          HttpEntity(ContentTypes.`application/json`, updateResourceClass),
-        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-        val response: HttpResponse = singleAwaitingRequest(request)
-        assert(response.status === StatusCodes.OK)
-        val result =
-          AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
-        val forResourceClassIRI = result
-          .getOrElse(
-            "forResourceClass",
-            throw DeserializationException("The expected field 'forResourceClass' is missing."),
-          )
-          .convertTo[String]
-        assert(forResourceClassIRI == resourceClassIri)
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ")
+        val response = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient
+            .updateDefaultObjectAccessPermissionsResourceClass(
+              permissionIri,
+              SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
+              rootUser,
+            )
+            .flatMap(_.assert200),
+        )
+        assert(
+          response.defaultObjectAccessPermission.forResourceClass.contains(
+            SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
+          ),
+        )
       }
 
       "change the property of a default object access permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA"
-        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
-        val propertyClassIri     = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
-        val updateResourceClass =
-          s"""{
-             |   "forProperty":"$propertyClassIri"
-             |}""".stripMargin
-        val request = Put(
-          baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/property",
-          HttpEntity(ContentTypes.`application/json`, updateResourceClass),
-        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-        val response: HttpResponse = singleAwaitingRequest(request)
-        assert(response.status === StatusCodes.OK)
-        val result =
-          AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
-        val forProperty = result
-          .getOrElse("forProperty", throw DeserializationException("The expected field 'forProperty' is missing."))
-          .convertTo[String]
-        assert(forProperty == propertyClassIri)
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA")
+        val response = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient
+            .updateDefaultObjectAccessPermissionsProperty(
+              permissionIri,
+              SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
+              rootUser,
+            )
+            .flatMap(_.assert200),
+        )
+        assert(
+          response.defaultObjectAccessPermission.forProperty.contains(
+            SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
+          ),
+        )
       }
     }
 
