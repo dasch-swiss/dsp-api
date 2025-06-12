@@ -12,7 +12,7 @@ import zio.json.ast.*
 
 import ResponseOps.assert200
 
-case class TestOntologyApiClient(apiClient: TestApiClient) {
+case class TestOntologyApiClient(private val apiClient: TestApiClient) {
   def getLastModificationDate(ontologyIri: String): Task[String] = for {
     json  <- apiClient.getJson[Json](uri"/v2/ontologies/allentities/$ontologyIri").flatMap(_.assert200)
     cursor = JsonCursor.field("knora-api:lastModificationDate").isObject.field("@value").isString
