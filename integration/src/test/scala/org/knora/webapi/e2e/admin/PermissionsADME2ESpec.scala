@@ -11,6 +11,7 @@ import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import spray.json.*
 
 import java.net.URLEncoder
+
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.admin.responder.IntegrationTestAdminJsonProtocol.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
