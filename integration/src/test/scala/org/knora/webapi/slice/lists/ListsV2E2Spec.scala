@@ -5,11 +5,14 @@
 
 package org.knora.webapi.slice.lists
 import zio.test.*
-
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
+import org.knora.webapi.testservices.TestApiClient
+import sttp.client4.UriContext
+import sttp.model.StatusCode
+import zio.json.ast.Json
 
 object ListsV2E2Spec extends E2EZSpec {
 
@@ -30,9 +33,10 @@ object ListsV2E2Spec extends E2EZSpec {
   override def e2eSpec: Spec[env, Any] = suite("the lists API v2 for")(
     suite("/v2/lists/:listIri should")(
       test("return 404 for an unknown list") {
+        val unkownListIri = "http://rdfh.ch/lists/0001/unknown"
         for {
-          response <- sendGetRequest(v2listsListIri(ListIri.unsafeFrom("http://rdfh.ch/lists/0001/unknown")))
-        } yield assertTrue(response.status.code == 404)
+          response <- TestApiClient.getJson[Json](uri"/v2/lists/$unkownListIri")
+        } yield assertTrue(response.code == StatusCode.NotFound)
       },
       test("return 404 for an existing sub node") {
         for {
