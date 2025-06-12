@@ -16,12 +16,16 @@ import org.knora.webapi.slice.security.ScopeResolver
 
 object TestClientsModule { self =>
 
-  type Provided = TestAdminApiClient & TestApiClient & TestClientService & TestDspIngestClient
+  type Provided = TestAdminApiClient & TestApiClient & TestClientService & TestDspIngestClient & TestOntologyApiClient
 
   type Dependencies = ActorSystem & AppConfig & DspIngestConfig & JwtService & KnoraApi & ScopeResolver
 
   val layer: URLayer[self.Dependencies, self.Provided] =
     HttpClientZioBackend.layer().orDie >>> (
-      TestApiClient.layer >+> TestAdminApiClient.layer ++ TestDspIngestClient.layer ++ TestClientService.layer
+      TestApiClient.layer >+>
+        TestAdminApiClient.layer ++
+        TestDspIngestClient.layer ++
+        TestClientService.layer ++
+        TestOntologyApiClient.layer
     )
 }

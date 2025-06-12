@@ -49,6 +49,9 @@ final case class TestApiClient(
     f(request).send(backend)
   }
 
+  def getJson[A: JsonDecoder](relativeUri: Uri): Task[Response[Either[String, A]]] =
+    getJson(relativeUri, (r: Request[Either[String, A]]) => r)
+
   def getJson[A: JsonDecoder](
     relativeUri: Uri,
     f: Request[Either[String, A]] => Request[Either[String, A]],

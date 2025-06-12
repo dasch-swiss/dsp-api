@@ -18,6 +18,7 @@ import org.knora.webapi.e2ez.KnoraBaseJsonModels.ResourceResponses.VideoSegmentR
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
+import org.knora.webapi.testservices.TestOntologyApiClient
 
 object SegmentE2EZSpec extends E2EZSpec {
 
@@ -142,7 +143,7 @@ object SegmentE2EZSpec extends E2EZSpec {
               |  }
               |}""".stripMargin
         for {
-          lmd <- getOntologyLastModificationDate("http://0.0.0.0:3333/ontology/0001/anything/v2")
+          lmd <- TestOntologyApiClient.getLastModificationDate("http://0.0.0.0:3333/ontology/0001/anything/v2")
           res <- TestApiClient
                    .postJsonLd(uri"/v2/ontologies/classes", createPayload(lmd), rootUser)
                    .flatMap(_.assert200)
@@ -332,7 +333,7 @@ object SegmentE2EZSpec extends E2EZSpec {
               |  }
               |}""".stripMargin
         for {
-          lmd <- getOntologyLastModificationDate("http://0.0.0.0:3333/ontology/0001/anything/v2")
+          lmd <- TestOntologyApiClient.getLastModificationDate("http://0.0.0.0:3333/ontology/0001/anything/v2")
           res <- TestApiClient
                    .postJsonLd(uri"/v2/ontologies/classes", createPayload(lmd), rootUser)
                    .flatMap(_.assert200)
