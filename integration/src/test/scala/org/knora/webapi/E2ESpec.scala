@@ -40,9 +40,6 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
