@@ -21,9 +21,9 @@ import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
-import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.ProjectMember
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestAdminApiClient
 import org.knora.webapi.util.AkkaHttpUtils
@@ -36,7 +36,6 @@ import org.knora.webapi.util.AkkaHttpUtils
 class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
 
   private val imageProjectIri: ProjectIri = ProjectIri.unsafeFrom(SharedTestDataADM2.imagesProjectInfo.id)
-  private val projecMemberIri: GroupIri   = KnoraGroupRepo.builtIn.ProjectMember.id
   private val customDOAPIri: String       = "http://rdfh.ch/permissions/00FF/zTOK3HlWTLGgTO8ZWVnotg"
 
   "The Permissions Route ('admin/permissions')" when {
@@ -44,7 +43,7 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
       "return a group's administrative permission" in {
         val response: AdministrativePermissionGetResponseADM = UnsafeZioRun.runOrThrow(
           TestAdminApiClient
-            .getAdministrativePermissions(imageProjectIri, projecMemberIri, rootUser)
+            .getAdministrativePermissions(imageProjectIri, ProjectMember.id, rootUser)
             .flatMap(_.assert200),
         )
         assert(response.administrativePermission.iri == "http://rdfh.ch/permissions/00FF/QYdrY7O6QD2VR30oaAt3Yg")
