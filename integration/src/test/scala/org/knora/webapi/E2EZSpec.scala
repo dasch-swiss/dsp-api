@@ -5,10 +5,10 @@
 
 package org.knora.webapi
 
+import sttp.client4.*
 import zio.*
 import zio.http.*
 import zio.json.*
-import zio.json.DecoderOps
 import zio.json.ast.Json
 import zio.json.ast.JsonCursor
 import zio.test.*
@@ -18,6 +18,8 @@ import org.knora.webapi.core.LayersTest
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.testservices.ResponseError
+import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 
 abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
@@ -42,52 +44,12 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
   ).provideShared(testLayers, Client.default, Scope.default)
     @@ TestAspect.withLiveEnvironment
 
-  def sendGetRequest(url: String, token: Option[String] = None): URIO[env, Response] =
-    for {
-      client   <- ZIO.service[Client]
-      urlStr    = s"http://localhost:3333$url"
-      urlFull  <- ZIO.fromEither(URL.decode(urlStr)).orDie
-      _        <- ZIO.logDebug(s"GET   ${urlFull.encode}")
-      bearer    = token.map(Header.Authorization.Bearer(_)).toList
-      response <- client.url(urlFull).addHeaders(Headers(bearer)).get("").orDie
-    } yield response
-
-  def sendGetRequestStringOrFail(url: String, token: Option[String] = None): ZIO[env, String, String] =
-    for {
-      response <- sendGetRequest(url, token)
-      data     <- response.body.asString.orDie
-      _        <- ZIO.fail(s"Failed request: Status ${response.status} - $data").when(response.status != Status.Ok)
-    } yield data
-
-  def sendPostRequest(url: String, data: String, token: Option[String] = None): ZIO[env, String, Response] =
-    for {
-      client   <- ZIO.service[Client]
-      urlStr    = s"http://localhost:3333$url"
-      urlFull  <- ZIO.fromEither(URL.decode(urlStr)).mapError(_.getMessage)
-      _        <- ZIO.logDebug(s"POST  ${urlFull.encode}")
-      body      = Body.fromString(data)
-      bearer    = token.map(Header.Authorization.Bearer(_))
-      headers   = Headers(List(Header.ContentType(MediaType.application.json)) ++ bearer.toList)
-      response <- client.url(urlFull).addHeaders(headers).post("")(body).mapError(_.getMessage)
-    } yield response
-
-  def sendPostRequestStringOrFail(url: String, data: String, token: Option[String] = None): ZIO[env, String, String] =
-    for {
-      response <- sendPostRequest(url, data, token)
-      data     <- response.body.asString.mapError(_.getMessage)
-      _        <- ZIO.fail(s"Failed request: Status ${response.status} - $data").when(response.status != Status.Ok)
-    } yield data
-
-  def getRootToken: ZIO[TestApiClient, String, IRI] = TestApiClient.getRootToken.mapError(_.getMessage)
-
-  def urlEncode(s: String): String = java.net.URLEncoder.encode(s, "UTF-8")
-
-  def getOntologyLastModificationDate(ontlogyIri: String): ZIO[env, String, String] = {
+  def getOntologyLastModificationDate(ontologyIri: String): ZIO[TestApiClient, Throwable, String] =
     val cursor = JsonCursor.field("knora-api:lastModificationDate").isObject.field("@value").isString
     for {
-      responseStr <- sendGetRequestStringOrFail(s"/v2/ontologies/allentities/${urlEncode(ontlogyIri)}")
-      responseAst <- ZIO.fromEither(responseStr.fromJson[Json])
-      lmd         <- ZIO.fromEither(responseAst.get(cursor))
+      responseAst <- TestApiClient
+                       .getJson[Json](uri"/v2/ontologies/allentities/$ontologyIri")
+                       .flatMap(_.assert200)
+      lmd <- ZIO.fromEither(responseAst.get(cursor)).mapError(ResponseError.apply)
     } yield lmd.value
-  }
 }

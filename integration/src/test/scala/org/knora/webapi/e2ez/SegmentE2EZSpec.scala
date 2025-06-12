@@ -5,12 +5,19 @@
 
 package org.knora.webapi.e2ez
 
+import sttp.client4.*
 import zio.*
 import zio.json.*
+import zio.json.ast.Json
 import zio.test.*
 
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.e2ez.KnoraBaseJsonModels.ResourceResponses.AudioSegmentResourceResponse
+import org.knora.webapi.e2ez.KnoraBaseJsonModels.ResourceResponses.ResourcePreviewResponse
+import org.knora.webapi.e2ez.KnoraBaseJsonModels.ResourceResponses.VideoSegmentResourceResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.testservices.ResponseOps.*
+import org.knora.webapi.testservices.TestApiClient
 
 object SegmentE2EZSpec extends E2EZSpec {
 
@@ -62,12 +69,11 @@ object SegmentE2EZSpec extends E2EZSpec {
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
              |}
-             |""".stripMargin
+             |""".stripMargin.fromJson[Json].fold(err => throw new RuntimeException(err), identity)
         for {
-          token       <- getRootToken
-          responseStr <- sendPostRequestStringOrFail("/v2/resources", createPayload, Some(token))
-          response <-
-            ZIO.fromEither(responseStr.fromJson[KnoraBaseJsonModels.ResourceResponses.ResourcePreviewResponse])
+          response <- TestApiClient
+                        .postJson[ResourcePreviewResponse, Json](uri"/v2/resources", createPayload, rootUser)
+                        .flatMap(_.assert200)
           _ = videoSegmentIri = response.`@id`
         } yield assertTrue(
           response.`@type` == "knora-api:VideoSegment",
@@ -79,10 +85,9 @@ object SegmentE2EZSpec extends E2EZSpec {
 
       test("Get the created instance of `knora-base:VideoSegment`") {
         for {
-          token       <- getRootToken
-          responseStr <- sendGetRequestStringOrFail(s"/v2/resources/${urlEncode(videoSegmentIri)}", Some(token))
-          response <-
-            ZIO.fromEither(responseStr.fromJson[KnoraBaseJsonModels.ResourceResponses.VideoSegmentResourceResponse])
+          response <- TestApiClient
+                        .getJson[VideoSegmentResourceResponse](uri"/v2/resources/$videoSegmentIri", rootUser)
+                        .flatMap(_.assert200)
         } yield assertTrue(
           response.`@type` == "knora-api:VideoSegment",
           response.`rdfs:label` == "Test Video Segment",
@@ -137,10 +142,10 @@ object SegmentE2EZSpec extends E2EZSpec {
               |  }
               |}""".stripMargin
         for {
-          lmd    <- getOntologyLastModificationDate("http://0.0.0.0:3333/ontology/0001/anything/v2")
-          token  <- getRootToken
-          payload = createPayload(lmd)
-          res    <- sendPostRequestStringOrFail("/v2/ontologies/classes", payload, Some(token))
+          lmd <- getOntologyLastModificationDate("http://0.0.0.0:3333/ontology/0001/anything/v2")
+          res <- TestApiClient
+                   .postJsonLd(uri"/v2/ontologies/classes", createPayload(lmd), rootUser)
+                   .flatMap(_.assert200)
         } yield assertTrue(res.contains("anything:VideoSegment"))
       }
 
@@ -180,12 +185,11 @@ object SegmentE2EZSpec extends E2EZSpec {
              |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
              |    "anything" :  "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
-             |}""".stripMargin
+             |}""".stripMargin.fromJson[Json].fold(err => throw new RuntimeException(err), identity)
         for {
-          token       <- getRootToken
-          responseStr <- sendPostRequestStringOrFail("/v2/resources", createPayload, Some(token))
-          response <-
-            ZIO.fromEither(responseStr.fromJson[KnoraBaseJsonModels.ResourceResponses.ResourcePreviewResponse])
+          response <- TestApiClient
+                        .postJson[ResourcePreviewResponse, Json](uri"/v2/resources", createPayload, rootUser)
+                        .flatMap(_.assert200)
           _ = videoSegmentIri = response.`@id`
         } yield assertTrue(
           response.`@type` == "anything:VideoSegment",
@@ -197,10 +201,9 @@ object SegmentE2EZSpec extends E2EZSpec {
 
       test("Get the created instance of `anything:VideoSegment`") {
         for {
-          token       <- getRootToken
-          responseStr <- sendGetRequestStringOrFail(s"/v2/resources/${urlEncode(videoSegmentIri)}", Some(token))
-          response <-
-            ZIO.fromEither(responseStr.fromJson[KnoraBaseJsonModels.ResourceResponses.VideoSegmentResourceResponse])
+          response <- TestApiClient
+                        .getJson[VideoSegmentResourceResponse](uri"/v2/resources/$videoSegmentIri", rootUser)
+                        .flatMap(_.assert200)
         } yield assertTrue(
           response.`@type` == "anything:VideoSegment",
           response.`rdfs:label` == "Test Video Segment Subclass",
@@ -256,12 +259,11 @@ object SegmentE2EZSpec extends E2EZSpec {
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
              |}
-             |""".stripMargin
+             |""".stripMargin.fromJson[Json].fold(err => throw new RuntimeException(err), identity)
         for {
-          token       <- getRootToken
-          responseStr <- sendPostRequestStringOrFail("/v2/resources", createPayload, Some(token))
-          response <-
-            ZIO.fromEither(responseStr.fromJson[KnoraBaseJsonModels.ResourceResponses.ResourcePreviewResponse])
+          response <- TestApiClient
+                        .postJson[ResourcePreviewResponse, Json](uri"/v2/resources", createPayload, rootUser)
+                        .flatMap(_.assert200)
           _ = audioSegmentIri = response.`@id`
         } yield assertTrue(
           response.`@type` == "knora-api:AudioSegment",
@@ -273,10 +275,9 @@ object SegmentE2EZSpec extends E2EZSpec {
 
       test("Get the created instance of `knora-base:AudioSegment`") {
         for {
-          token       <- getRootToken
-          responseStr <- sendGetRequestStringOrFail(s"/v2/resources/${urlEncode(audioSegmentIri)}", Some(token))
-          response <-
-            ZIO.fromEither(responseStr.fromJson[KnoraBaseJsonModels.ResourceResponses.AudioSegmentResourceResponse])
+          response <- TestApiClient
+                        .getJson[AudioSegmentResourceResponse](uri"/v2/resources/$audioSegmentIri", rootUser)
+                        .flatMap(_.assert200)
         } yield assertTrue(
           response.`@type` == "knora-api:AudioSegment",
           response.`rdfs:label` == "Test Audio Segment",
@@ -331,10 +332,10 @@ object SegmentE2EZSpec extends E2EZSpec {
               |  }
               |}""".stripMargin
         for {
-          lmd    <- getOntologyLastModificationDate("http://0.0.0.0:3333/ontology/0001/anything/v2")
-          token  <- getRootToken
-          payload = createPayload(lmd)
-          res    <- sendPostRequestStringOrFail("/v2/ontologies/classes", payload, Some(token))
+          lmd <- getOntologyLastModificationDate("http://0.0.0.0:3333/ontology/0001/anything/v2")
+          res <- TestApiClient
+                   .postJsonLd(uri"/v2/ontologies/classes", createPayload(lmd), rootUser)
+                   .flatMap(_.assert200)
         } yield assertTrue(res.contains("anything:AudioSegment"))
       }
 
@@ -374,12 +375,11 @@ object SegmentE2EZSpec extends E2EZSpec {
              |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
              |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
              |  }
-             |}""".stripMargin
+             |}""".stripMargin.fromJson[Json].fold(err => throw new RuntimeException(err), identity)
         for {
-          token       <- getRootToken
-          responseStr <- sendPostRequestStringOrFail("/v2/resources", createPayload, Some(token))
-          response <-
-            ZIO.fromEither(responseStr.fromJson[KnoraBaseJsonModels.ResourceResponses.ResourcePreviewResponse])
+          response <- TestApiClient
+                        .postJson[ResourcePreviewResponse, Json](uri"/v2/resources", createPayload, rootUser)
+                        .flatMap(_.assert200)
           _ = audioSegmentIri = response.`@id`
         } yield assertTrue(
           response.`@type` == "anything:AudioSegment",
@@ -391,10 +391,9 @@ object SegmentE2EZSpec extends E2EZSpec {
 
       test("Get the created instance of `knora-base:AudioSegment`") {
         for {
-          token       <- getRootToken
-          responseStr <- sendGetRequestStringOrFail(s"/v2/resources/${urlEncode(audioSegmentIri)}", Some(token))
-          response <-
-            ZIO.fromEither(responseStr.fromJson[KnoraBaseJsonModels.ResourceResponses.AudioSegmentResourceResponse])
+          response <- TestApiClient
+                        .getJson[AudioSegmentResourceResponse](uri"/v2/resources/$audioSegmentIri", rootUser)
+                        .flatMap(_.assert200)
         } yield assertTrue(
           response.`@type` == "anything:AudioSegment",
           response.`rdfs:label` == "Test Audio Segment Subclass",
