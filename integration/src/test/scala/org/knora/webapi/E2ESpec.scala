@@ -191,11 +191,6 @@ abstract class E2ESpec
     responseAsString
   }
 
-  def createJwtTokenString(user: User): ZIO[ScopeResolver & JwtService, Nothing, String] = for {
-    scope <- ZIO.serviceWithZIO[ScopeResolver](_.resolve(user))
-    token <- ZIO.serviceWithZIO[JwtService](_.createJwt(user.userIri, scope))
-  } yield token.jwtString
-
   def uploadToIngest(fileToUpload: java.nio.file.Path): UploadedFile =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(fileToUpload)))
 }
