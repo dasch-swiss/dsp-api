@@ -16,7 +16,6 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.e2e.v2.AuthenticationV2JsonProtocol
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
