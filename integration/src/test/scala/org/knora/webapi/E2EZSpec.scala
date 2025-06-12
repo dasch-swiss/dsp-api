@@ -18,7 +18,7 @@ import org.knora.webapi.core.LayersTest
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.KnoraIris.KnoraIri
+import org.knora.webapi.testservices.TestApiClient
 
 abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
@@ -90,22 +90,7 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       response <- client.request(request)
     } yield response).mapError(_.getMessage)
 
-  def getToken(email: String, password: String): ZIO[env, String, String] =
-    for {
-      response <-
-        sendPostRequestStringOrFail(
-          "/v2/authentication",
-          s"""|{
-              |  "email": "$email",
-              |  "password": "$password"
-              |}""".stripMargin,
-        )
-      result <- ZIO.fromEither(response.fromJson[Map[String, String]])
-      token  <- ZIO.fromOption(result.get("token")).orElseFail("No token in response")
-    } yield token
-
-  def getRootToken: ZIO[env, String, String] =
-    getToken("root@example.com", "test")
+  def getRootToken: ZIO[TestApiClient, String, IRI] = TestApiClient.getRootToken.mapError(_.getMessage)
 
   def urlEncode(s: String): String = java.net.URLEncoder.encode(s, "UTF-8")
 
