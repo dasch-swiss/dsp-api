@@ -107,8 +107,7 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
   def getRootToken: ZIO[env, String, String] =
     getToken("root@example.com", "test")
 
-  def urlEncode(iri: KnoraIri): String = urlEncode(iri.toComplexSchema.toIri)
-  def urlEncode(s: String): String     = java.net.URLEncoder.encode(s, "UTF-8")
+  def urlEncode(s: String): String = java.net.URLEncoder.encode(s, "UTF-8")
 
   def getOntologyLastModificationDate(ontlogyIri: String): ZIO[env, String, String] = {
     val cursor = JsonCursor.field("knora-api:lastModificationDate").isObject.field("@value").isString
