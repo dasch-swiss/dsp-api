@@ -11,17 +11,22 @@ import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import spray.json.*
 
 import java.net.URLEncoder
-
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.admin.responder.IntegrationTestAdminJsonProtocol.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.ProjectMember
 import org.knora.webapi.testservices.ResponseOps.*
@@ -76,206 +81,115 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
     }
 
     "creating permissions" should {
-      "create an administrative access permission" in {
-        val createAdministrativePermissionRequest: String =
-          s"""{
-             |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-             |    "forProject":"${SharedTestDataADM.anythingProjectIri}",
-             |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
-             |}""".stripMargin
-
-        val request = Post(
-          baseApiUrl + s"/admin/permissions/ap",
-          HttpEntity(ContentTypes.`application/json`, createAdministrativePermissionRequest),
-        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-
-        val response: HttpResponse = singleAwaitingRequest(request)
-        assert(response.status === StatusCodes.OK)
-
-        val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
-
-        val groupIri = result
-          .getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing."))
-          .convertTo[String]
-        assert(groupIri == "http://rdfh.ch/groups/0001/thing-searcher")
-        val projectIri = result
-          .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
-          .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/0001")
-        val permissions = result
-          .getOrElse(
-            "hasPermissions",
-            throw DeserializationException("The expected field 'hasPermissions' is missing."),
-          )
-          .compactPrint
-
-        assert(permissions.contains("ProjectAdminGroupAllPermission"))
-      }
-
-      "create a new administrative permission for a new project" in {
-        val projectIri = "http://rdfh.ch/projects/Fti-cwr3QICVH1DjE_cvCQ"
-        val projectPayload =
-          s"""
-             |{
-             |	  "id": "$projectIri",
-             |    "shortname": "newprojectWithIri",
-             |    "shortcode": "3333",
-             |    "longname": "new project with a custom IRI",
-             |    "description": [{"value": "a project created with a custom IRI", "language": "en"}],
-             |    "keywords": ["projectIRI"],
-             |    "logo": "/fu/bar/baz.jpg",
-             |    "status": true,
-             |    "selfjoin": false
-             |}
-             |""".stripMargin
-
-        val request = Post(
-          baseApiUrl + s"/admin/projects",
-          HttpEntity(ContentTypes.`application/json`, projectPayload),
-        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-        val response: HttpResponse = singleAwaitingRequest(request)
-        response.status should be(StatusCodes.OK)
-
-        val permissionPayload =
-          s"""{
-             |    "forGroup":"http://www.knora.org/ontology/knora-admin#KnownUser",
-             |    "forProject":"$projectIri",
-             |	   "hasPermissions":[{"additionalInformation":null,"name":"ProjectResourceCreateAllPermission","permissionCode":null}]
-             |}""".stripMargin
-
-        val permissionRequest = Post(
-          baseApiUrl + s"/admin/permissions/ap",
-          HttpEntity(ContentTypes.`application/json`, permissionPayload),
-        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-
-        val permissionResponse: HttpResponse = singleAwaitingRequest(permissionRequest)
-        assert(permissionResponse.status === StatusCodes.OK)
+      "create administrative permission" in {
+        val response = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient
+            .createAdministrativePermission(
+              CreateAdministrativePermissionAPIRequestADM(
+                forProject = SharedTestDataADM.anythingProjectIri.value,
+                forGroup = SharedTestDataADM.thingSearcherGroup.id,
+                hasPermissions = Set(PermissionADM(name = "ProjectAdminGroupAllPermission")),
+              ),
+              rootUser,
+            )
+            .flatMap(_.assert200),
+        )
+        val actual = response.administrativePermission
+        assert(actual.forGroup == "http://rdfh.ch/groups/0001/thing-searcher")
+        assert(actual.forProject == "http://rdfh.ch/projects/0001")
+        assert(actual.hasPermissions.map(_.name).contains("ProjectAdminGroupAllPermission"))
       }
 
       "create a default object access permission" in {
-        val createDefaultObjectAccessPermissionRequest: String =
-          s"""{
-             |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-             |    "forProject":"${SharedTestDataADM.anythingProjectIri}",
-             |    "forProperty":null,
-             |    "forResourceClass":null,
-             |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
-             |}""".stripMargin
+        val response = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient
+            .createDefaultObjectAccessPermission(
+              CreateDefaultObjectAccessPermissionAPIRequestADM(
+                forProject = anythingProjectIri.value,
+                forGroup = Some(thingSearcherGroup.id),
+                hasPermissions = Set(
+                  PermissionADM(
+                    name = "D",
+                    additionalInformation = Some("http://www.knora.org/ontology/knora-admin#ProjectMember"),
+                    permissionCode = Some(7),
+                  ),
+                ),
+              ),
+              rootUser,
+            )
+            .flatMap(_.assert200),
+        )
 
-        val request = Post(
-          baseApiUrl + s"/admin/permissions/doap",
-          HttpEntity(ContentTypes.`application/json`, createDefaultObjectAccessPermissionRequest),
-        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-        val response: HttpResponse = singleAwaitingRequest(request)
-        assert(response.status === StatusCodes.OK)
-
-        val result =
-          AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
-        val groupIri = result
-          .getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing."))
-          .convertTo[String]
-        assert(groupIri == "http://rdfh.ch/groups/0001/thing-searcher")
-        val projectIri = result
-          .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
-          .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/0001")
-        val permissions = result
-          .getOrElse(
-            "hasPermissions",
-            throw DeserializationException("The expected field 'hasPermissions' is missing."),
-          )
-          .compactPrint
-
-        assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
+        val actual = response.defaultObjectAccessPermission
+        assert(actual.forGroup.contains("http://rdfh.ch/groups/0001/thing-searcher"))
+        assert(actual.forProject == "http://rdfh.ch/projects/0001")
+        assert(
+          actual.hasPermissions
+            .flatMap(_.additionalInformation)
+            .contains("http://www.knora.org/ontology/knora-admin#ProjectMember"),
+        )
       }
 
       "create a default object access permission with a custom IRI" in {
-        val createDefaultObjectAccessPermissionWithCustomIriRequest: String =
-          s"""{
+        val response = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient
+            .createDefaultObjectAccessPermission(
+              CreateDefaultObjectAccessPermissionAPIRequestADM(
+                id = Some(customDOAPIri),
+                forProject = imagesProjectIri.value,
+                forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
+                hasPermissions = Set(
+                  PermissionADM(
+                    name = "D",
+                    additionalInformation = Some("http://www.knora.org/ontology/knora-admin#ProjectMember"),
+                    permissionCode = Some(7),
+                  ),
+                ),
+              ),
+              rootUser,
+            )
+            .flatMap(_.assert200),
+        )
 
-             |    "id": "$customDOAPIri",
-             |    "forGroup":null,
-             |    "forProject":"${SharedTestDataADM.imagesProjectIri}",
-             |    "forProperty":null,
-             |    "forResourceClass":"${SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS}",
-             |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
-             |}""".stripMargin
-
-        val request = Post(
-          baseApiUrl + s"/admin/permissions/doap",
-          HttpEntity(ContentTypes.`application/json`, createDefaultObjectAccessPermissionWithCustomIriRequest),
-        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-        val response: HttpResponse = singleAwaitingRequest(request)
-        assert(response.status === StatusCodes.OK)
-
-        val result =
-          AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
-        val permissionIri = result
-          .getOrElse("iri", throw DeserializationException("The expected field 'iri' is missing."))
-          .convertTo[String]
-        assert(permissionIri == customDOAPIri)
-        val forResourceClassIRI = result
-          .getOrElse(
-            "forResourceClass",
-            throw DeserializationException("The expected field 'forResourceClass' is missing."),
-          )
-          .convertTo[String]
-        assert(forResourceClassIRI == SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS)
-        val projectIri = result
-          .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
-          .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/00FF")
-        val permissions = result
-          .getOrElse(
-            "hasPermissions",
-            throw DeserializationException("The expected field 'hasPermissions' is missing."),
-          )
-          .compactPrint
-
-        assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
+        val actual = response.defaultObjectAccessPermission
+        assert(actual.iri == customDOAPIri)
+        assert(actual.forResourceClass.contains(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS))
+        assert(actual.forProject == "http://rdfh.ch/projects/00FF")
+        assert(
+          actual.hasPermissions
+            .flatMap(_.additionalInformation)
+            .contains("http://www.knora.org/ontology/knora-admin#ProjectMember"),
+        )
       }
     }
 
     "updating permissions" should {
       "change the group of an administrative permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
-        val newGroupIri          = "http://rdfh.ch/groups/00FF/images-reviewer"
-        val updatePermissionGroup =
-          s"""{
-             |    "forGroup": "$newGroupIri"
-             |}""".stripMargin
-        val request = Put(
-          baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group",
-          HttpEntity(ContentTypes.`application/json`, updatePermissionGroup),
-        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-        val response: HttpResponse = singleAwaitingRequest(request)
-        assert(response.status === StatusCodes.OK)
-        val result   = AkkaHttpUtils.httpResponseToJson(response).convertTo[AdministrativePermissionGetResponseADM]
-        val groupIri = result.administrativePermission.forGroup
-        assert(groupIri == newGroupIri)
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ")
+        val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
+        val response = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient
+            .updateAdministrativePermissionGroup(permissionIri, newGroupIri, rootUser)
+            .flatMap(_.assert200),
+        )
+        assert(
+          response
+            .asInstanceOf[AdministrativePermissionGetResponseADM]
+            .administrativePermission
+            .forGroup == newGroupIri.value,
+        )
       }
 
       "change the group of a default object access permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA"
-        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
-        val newGroupIri          = "http://rdfh.ch/groups/00FF/images-reviewer"
-        val updatePermissionGroup =
-          s"""{
-             |    "forGroup": "$newGroupIri"
-             |}""".stripMargin
-        val request = Put(
-          baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group",
-          HttpEntity(ContentTypes.`application/json`, updatePermissionGroup),
-        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-        val response: HttpResponse = singleAwaitingRequest(request)
-        assert(response.status === StatusCodes.OK)
-        val result =
-          AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
-        val groupIri = result
-          .getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing."))
-          .convertTo[String]
-        assert(groupIri == newGroupIri)
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA")
+        val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
+        val response = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient
+            .updateAdministrativePermissionGroup(permissionIri, newGroupIri, rootUser)
+            .flatMap(_.assert200),
+        )
+        val actual = response.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM]
+        assert(actual.defaultObjectAccessPermission.forGroup.contains(newGroupIri.value))
       }
 
       "change the set of hasPermissions of an administrative permission" in {

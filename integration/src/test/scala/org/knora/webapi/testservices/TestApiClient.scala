@@ -126,6 +126,22 @@ final case class TestApiClient(
         .send(backend)
     }
 
+  def putJson[A: JsonDecoder, B: JsonEncoder](
+    relativeUri: Uri,
+    body: B,
+    user: User,
+  ): Task[Response[Either[String, A]]] =
+    jwtFor(user).flatMap { jwt =>
+      basicRequest
+        .put(relativeUri)
+        .body(body.toJson)
+        .contentType(MediaType.ApplicationJson)
+        .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.getMessage))
+        .auth
+        .bearer(jwt)
+        .send(backend)
+    }
+
   def putJsonLd(
     relativeUri: Uri,
     jsonLdBody: String,

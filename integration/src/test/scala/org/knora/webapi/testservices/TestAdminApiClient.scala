@@ -5,12 +5,17 @@
 
 package org.knora.webapi.testservices
 
+import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionCreateResponseADM
 import sttp.client4.*
 import zio.*
-
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionGroupApiRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsForProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
 import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
@@ -18,6 +23,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsGetResponse
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.testservices.ResponseOps.*
 
@@ -63,6 +69,39 @@ case class TestAdminApiClient(private val apiClient: TestApiClient) {
     user: User,
   ): Task[Response[Either[String, PermissionsForProjectGetResponseADM]]] =
     apiClient.getJson[PermissionsForProjectGetResponseADM](uri"/admin/permissions/$projectIri", user)
+
+  def createAdministrativePermission(
+    createReq: CreateAdministrativePermissionAPIRequestADM,
+    user: User,
+  ): Task[Response[Either[String, AdministrativePermissionCreateResponseADM]]] =
+    apiClient.postJson[AdministrativePermissionCreateResponseADM, CreateAdministrativePermissionAPIRequestADM](
+      uri"/admin/permissions/ap",
+      createReq,
+      user,
+    )
+
+  def createDefaultObjectAccessPermission(
+    createReq: CreateDefaultObjectAccessPermissionAPIRequestADM,
+    user: User,
+  ): Task[Response[Either[String, DefaultObjectAccessPermissionCreateResponseADM]]] =
+    apiClient
+      .postJson[DefaultObjectAccessPermissionCreateResponseADM, CreateDefaultObjectAccessPermissionAPIRequestADM](
+        uri"/admin/permissions/doap",
+        createReq,
+        user,
+      )
+
+  def updateAdministrativePermissionGroup(
+    permissionIri: PermissionIri,
+    group: GroupIri,
+    user: User,
+  ): Task[Response[Either[String, PermissionGetResponseADM]]] =
+    val updateReq = ChangePermissionGroupApiRequestADM(group.value)
+    apiClient.putJson[PermissionGetResponseADM, ChangePermissionGroupApiRequestADM](
+      uri"/admin/permissions/$permissionIri/group",
+      updateReq,
+      user,
+    )
 }
 
 object TestAdminApiClient {
@@ -110,6 +149,25 @@ object TestAdminApiClient {
     user: User,
   ): ZIO[TestAdminApiClient, Throwable, Response[Either[String, PermissionsForProjectGetResponseADM]]] =
     ZIO.serviceWithZIO[TestAdminApiClient](_.getAdminPermissions(projectIri, user))
+
+  def createAdministrativePermission(
+    createReq: CreateAdministrativePermissionAPIRequestADM,
+    user: User,
+  ): ZIO[TestAdminApiClient, Throwable, Response[Either[String, AdministrativePermissionCreateResponseADM]]] =
+    ZIO.serviceWithZIO[TestAdminApiClient](_.createAdministrativePermission(createReq, user))
+
+  def createDefaultObjectAccessPermission(
+    createReq: CreateDefaultObjectAccessPermissionAPIRequestADM,
+    user: User,
+  ): ZIO[TestAdminApiClient, Throwable, Response[Either[String, DefaultObjectAccessPermissionCreateResponseADM]]] =
+    ZIO.serviceWithZIO[TestAdminApiClient](_.createDefaultObjectAccessPermission(createReq, user))
+
+  def updateAdministrativePermissionGroup(
+    permissionIri: PermissionIri,
+    group: GroupIri,
+    user: User,
+  ): ZIO[TestAdminApiClient, Throwable, Response[Either[String, PermissionGetResponseADM]]] =
+    ZIO.serviceWithZIO[TestAdminApiClient](_.updateAdministrativePermissionGroup(permissionIri, group, user))
 
   val layer = ZLayer.derive[TestAdminApiClient]
 }
