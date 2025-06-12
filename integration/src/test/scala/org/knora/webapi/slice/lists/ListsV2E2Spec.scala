@@ -4,20 +4,21 @@
  */
 
 package org.knora.webapi.slice.lists
+import sttp.client4.UriContext
+import sttp.model.StatusCode
 import zio.test.*
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
+import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
-import sttp.client4.UriContext
-import sttp.model.StatusCode
-import zio.json.ast.Json
 
 object ListsV2E2Spec extends E2EZSpec {
 
-  private def v2listsListIri(iri: ListIri) = s"/v2/lists/${urlEncode(iri.value)}"
-  private def v2nodeListIri(iri: ListIri)  = s"/v2/node/${urlEncode(iri.value)}"
+  private def v2listsListIri(iri: ListIri) = uri"/v2/lists/${iri.value}"
+  private def v2nodeListIri(iri: ListIri)  = uri"/v2/node/${iri.value}"
 
   private val knownRootNode = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
   private val knownSubNode  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
@@ -33,23 +34,20 @@ object ListsV2E2Spec extends E2EZSpec {
   override def e2eSpec: Spec[env, Any] = suite("the lists API v2 for")(
     suite("/v2/lists/:listIri should")(
       test("return 404 for an unknown list") {
-        val unkownListIri = "http://rdfh.ch/lists/0001/unknown"
         for {
-          response <- TestApiClient.getJson[Json](uri"/v2/lists/$unkownListIri")
+          response <- TestApiClient.getJsonLd(v2listsListIri(ListIri.unsafeFrom("http://rdfh.ch/lists/0001/unknown")))
         } yield assertTrue(response.code == StatusCode.NotFound)
       },
       test("return 404 for an existing sub node") {
         for {
-          response <- sendGetRequest(v2listsListIri(knownSubNode))
-        } yield assertTrue(response.status.code == 404)
+          response <- TestApiClient.getJsonLd(v2listsListIri(knownSubNode))
+        } yield assertTrue(response.code == StatusCode.NotFound)
       },
       test("return a known list") {
         for {
-          response <- sendGetRequest(v2listsListIri(knownRootNode))
-          bodyStr  <- response.body.asString
+          bodyStr <- TestApiClient.getJsonLd(v2listsListIri(knownRootNode)).flatMap(_.assert200)
         } yield {
           assertTrue(
-            response.status.code == 200,
             JsonLDUtil.parseJsonLD(bodyStr) == JsonLDUtil.parseJsonLD("""
                {
                  "rdfs:label": "a list that is not used",
@@ -180,20 +178,19 @@ object ListsV2E2Spec extends E2EZSpec {
     suite("/v2/lists/:listIri should")(
       test("return 404 for an unknown list") {
         for {
-          response <- sendGetRequest(v2nodeListIri(ListIri.unsafeFrom("http://rdfh.ch/lists/0001/unknown")))
-        } yield assertTrue(response.status.code == 404)
+          response <-
+            TestApiClient.getJsonLd(v2nodeListIri(ListIri.unsafeFrom("http://rdfh.ch/lists/0001/unknown")))
+        } yield assertTrue(response.code == StatusCode.NotFound)
       },
       test("return 404 for an existing root node") {
         for {
-          response <- sendGetRequest(v2nodeListIri(knownRootNode))
-        } yield assertTrue(response.status.code == 404)
+          response <- TestApiClient.getJsonLd(v2nodeListIri(knownRootNode))
+        } yield assertTrue(response.code == StatusCode.NotFound)
       },
       test("return 200 for an existing sub node") {
         for {
-          response <- sendGetRequest(v2nodeListIri(knownSubNode))
-          bodyStr  <- response.body.asString
+          bodyStr <- TestApiClient.getJsonLd(v2nodeListIri(knownSubNode)).flatMap(_.assert200)
         } yield assertTrue(
-          response.status.code == 200,
           JsonLDUtil.parseJsonLD(bodyStr) == JsonLDUtil.parseJsonLD("""
                {
                  "rdfs:label": "node 1",
