@@ -12,17 +12,15 @@ import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.vocabulary.RDF
+import sttp.client4.*
+import sttp.model.*
 import zio.*
-import zio.http.Body
-import zio.http.Response
-import zio.http.Status
 import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*
 
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
-import java.net.URLEncoder
 import javax.imageio.ImageIO
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
@@ -48,6 +46,9 @@ import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.ResponseOps.assert400
+import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
 
@@ -143,9 +144,12 @@ object LegalInfoE2ESpec extends E2EZSpec {
           for {
             _ <- createStillImageResourceWithInfos(authorship = Some(someAuthorship))
             _ <- createStillImageResourceWithInfos(authorship = Some(anotherAuthorship))
-            authorships <- sendGetRequestAsRootDecode[PagedResponse[Authorship]](
-                             s"/admin/projects/shortcode/$shortcode/legal-info/authorships",
-                           )
+            authorships <- TestApiClient
+                             .getJson[PagedResponse[Authorship]](
+                               uri"/admin/projects/shortcode/$shortcode/legal-info/authorships",
+                               rootUser,
+                             )
+                             .flatMap(_.assert200)
           } yield assertTrue(authorships == PagedResponse.from(expected, expected.size, PageAndSize.Default))
         },
       ),
@@ -155,13 +159,13 @@ object LegalInfoE2ESpec extends E2EZSpec {
         for {
           asset    <- createAsset
           response <- postCreateResource(asset, copyrightHolder = Some(aCopyrightHolder))
-        } yield assertTrue(response.status == Status.BadRequest)
+        } yield assertTrue(response.code == StatusCode.BadRequest)
       },
       test("creating with a not enabled LicenseIri should fail") {
         for {
           asset    <- createAsset
           response <- postCreateResource(asset, licenseIri = Some(LicenseIri.AI_GENERATED))
-        } yield assertTrue(response.status == Status.BadRequest)
+        } yield assertTrue(response.code == StatusCode.BadRequest)
       },
     ) @@ TestAspect.before(disallowCopyrightHolder),
   )
@@ -175,10 +179,9 @@ object LegalInfoE2ESpec extends E2EZSpec {
           resourceId              <- resourceId(resourceCreated)
           valueIdOld              <- valueId(resourceCreated)
           response                <- putUpdateValue(asset, resourceId, valueIdOld, aCopyrightHolder, someAuthorship, enabledLicenseIri)
-          body                    <- response.body.asString
+          errorBody               <- response.assert400
         } yield assertTrue(
-          response.status.isClientError,
-          body.contains("License http://rdfh.ch/licenses/public-domain is not allowed in project 0001"),
+          errorBody.contains("License http://rdfh.ch/licenses/public-domain is not allowed in project 0001"),
         )
       },
     ) @@ TestAspect.before(disableAllLicenses) @@ TestAspect.before(allowCopyrightHolder),
@@ -192,7 +195,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
             resourceId              <- resourceId(resourceCreated)
             valueIdOld              <- valueId(resourceCreated)
             _ <- putUpdateValue(asset, resourceId, valueIdOld, aCopyrightHolder, someAuthorship, newLicenseIri)
-                   .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create value"))
+                   .flatMap(_.assert200)
             createdResourceModel <- getResourceFromApi(resourceId)
             info                 <- copyrightAndLicenseInfo(createdResourceModel)
           } yield assertTrue(
@@ -208,7 +211,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
             valueIdOld              <- valueId(resourceCreated)
             response <-
               putUpdateValue(asset, resourceId, valueIdOld, aCopyrightHolder, someAuthorship, invalidLicenseIri)
-          } yield assertTrue(response.status.isClientError)
+          } yield assertTrue(response.code == StatusCode.BadRequest)
         },
       ) @@ TestAspect.before(allowCopyrightHolder),
       suite("given the copyright holder is NOT allowed")(
@@ -227,7 +230,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
                           someAuthorship,
                           enabledLicenseIri,
                         )
-          } yield assertTrue(response.status.isClientError)
+          } yield assertTrue(response.code == StatusCode.BadRequest)
         },
       ) @@ TestAspect.before(disallowCopyrightHolder),
     ) @@ TestAspect.before(enableLicenses),
@@ -271,9 +274,6 @@ object LegalInfoE2ESpec extends E2EZSpec {
       enableLicenses,
     )
 
-  private def failResponse(msg: String)(response: Response) =
-    response.body.asString.flatMap(bodyStr => ZIO.fail(Exception(s"$msg\nstatus: ${response.status}\nbody: $bodyStr")))
-
   private def createStillImageResourceWithInfos(
     copyrightHolder: Option[CopyrightHolder] = Some(aCopyrightHolder),
     authorship: Option[List[Authorship]] = Some(someAuthorship),
@@ -286,14 +286,12 @@ object LegalInfoE2ESpec extends E2EZSpec {
     licenseIri: Option[LicenseIri] = None,
   ) =
     for {
-      asset <- createAsset
-      responseBody <- postCreateResource(asset, copyrightHolder, authorship, licenseIri)
-                        .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to create resource"))
-                        .flatMap(_.body.asString)
+      asset         <- createAsset
+      responseBody  <- postCreateResource(asset, copyrightHolder, authorship, licenseIri).flatMap(_.assert200)
       responseModel <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
     } yield (responseModel, asset)
 
-  private val createAsset = for {
+  private def createAsset = for {
     i       <- zio.Random.nextInt
     filename = s"test${i}.jpg"
     path    <- createImg(filename)
@@ -314,7 +312,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
     copyrightHolder: Option[CopyrightHolder] = None,
     authorship: Option[List[Authorship]] = None,
     licenseIri: Option[LicenseIri] = None,
-  ): URIO[env, Response] = {
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] = {
     val jsonLd = UploadFileRequest
       .make(
         FileType.StillImageFile(),
@@ -324,7 +322,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
         licenseIri = licenseIri,
       )
       .toJsonLd(shortcode = shortcode, className = Some("ThingPicture"), ontologyName = "anything")
-    sendPostRequestAsRoot("/v2/resources", jsonLd).mapError(Exception(_)).orDie
+    TestApiClient.postJsonLd(uri"/v2/resources", jsonLd, rootUser)
   }
 
   private def putUpdateValue(
@@ -334,7 +332,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
     copyrightHolder: CopyrightHolder = aCopyrightHolder,
     authorship: List[Authorship] = someAuthorship,
     licenseIri: LicenseIri = enabledLicenseIri,
-  ): ZIO[env, String, Response] = {
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] = {
     val request = UpdateStillImageFileValueRequest(
       resourceIri,
       valueIdOld,
@@ -344,14 +342,12 @@ object LegalInfoE2ESpec extends E2EZSpec {
       licenseIri,
       uploadedFile.internalFilename,
     )
-    sendPutRequestAsRoot(s"/v2/values", request.jsonLd)
+    TestApiClient.putJsonLd(uri"/v2/values", request.jsonLd, rootUser)
   }
 
   private def getResourceFromApi(resourceId: ResourceIri) = for {
-    responseBody <- sendGetRequest(s"/v2/resources/${URLEncoder.encode(resourceId.toString, "UTF-8")}")
-                      .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to get resource $resourceId."))
-                      .flatMap(_.body.asString)
-    model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
+    responseBody <- TestApiClient.getJsonLd(uri"/v2/resources/${resourceId.toComplexSchema}").flatMap(_.assert200)
+    model        <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
 
   private def getValueFromApi(createResourceResponse: Model): ZIO[env, Throwable, Model] = for {
@@ -361,9 +357,8 @@ object LegalInfoE2ESpec extends E2EZSpec {
   } yield model
 
   private def getValueFromApi(valueId: ValueIri, resourceId: ResourceIri): ZIO[env, Throwable, Model] = for {
-    responseBody <- sendGetRequest(s"/v2/values/${URLEncoder.encode(resourceId.toString, "UTF-8")}/${valueId.valueId}")
-                      .filterOrElseWith(_.status.isSuccess)(failResponse(s"Failed to get value $resourceId."))
-                      .flatMap(_.body.asString)
+    responseBody <-
+      TestApiClient.getJsonLd(uri"/v2/values/${resourceId.toComplexSchema}/${valueId.valueId}").flatMap(_.assert200)
     model <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
   } yield model
 

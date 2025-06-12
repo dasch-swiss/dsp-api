@@ -7,8 +7,10 @@ package org.knora.webapi.testservices
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
 import sttp.client4.ResponseException.DeserializationException
+import sttp.client4.wrappers.ResolveRelativeUrisBackend
 import sttp.client4.ziojson.*
 import sttp.model.MediaType
+import sttp.model.Uri
 import zio.*
 import zio.json.*
 
@@ -23,111 +25,164 @@ import org.knora.webapi.testservices.ResponseOps.assert200
 
 final case class TestApiClient(
   private val apiConfig: KnoraApi,
-  private val backend: StreamBackend[Task, ZioStreams],
+  private val be: StreamBackend[Task, ZioStreams],
   private val jwtService: JwtService,
   private val scopeResolver: ScopeResolver,
 ) {
 
   private val baseUrl = uri"${apiConfig.externalKnoraApiBaseUrl}"
+  private val backend = ResolveRelativeUrisBackend(be, baseUrl)
 
   private def jwtFor(user: User): UIO[String] =
     scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _)).map(_.jwtString)
 
-  def deleteJson[A: JsonDecoder](wholePath: String, user: User): Task[Response[Either[String, A]]] =
-    jwtFor(user).flatMap(jwt => deleteJson(wholePath, _.auth.bearer(jwt)))
+  def deleteJson[A: JsonDecoder](relativeUri: Uri, user: User): Task[Response[Either[String, A]]] =
+    jwtFor(user).flatMap(jwt => deleteJson(relativeUri, _.auth.bearer(jwt)))
 
   def deleteJson[A: JsonDecoder](
-    wholePath: String,
+    relativeUri: Uri,
     f: Request[Either[String, A]] => Request[Either[String, A]],
   ): Task[Response[Either[String, A]]] = {
     val request: Request[Either[String, A]] = basicRequest
-      .delete(baseUrl.withWholePath(wholePath))
+      .delete(relativeUri)
       .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.getMessage))
     f(request).send(backend)
   }
 
   def getJson[A: JsonDecoder](
-    wholePath: String,
+    relativeUri: Uri,
     f: Request[Either[String, A]] => Request[Either[String, A]],
-    params: Map[String, String],
   ): Task[Response[Either[String, A]]] = {
     val request: Request[Either[String, A]] = basicRequest
-      .get(baseUrl.withWholePath(wholePath).withParams(params))
+      .get(relativeUri)
       .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.getMessage))
     f(request).send(backend)
   }
 
-  def getJson[A: JsonDecoder](
-    wholePath: String,
-    user: User,
-    params: Map[String, String] = Map.empty,
-  ): Task[Response[Either[String, A]]] =
-    jwtFor(user).flatMap(jwt => getJson(wholePath, _.auth.bearer(jwt), params))
+  def getJson[A: JsonDecoder](relativeUri: Uri, user: User): Task[Response[Either[String, A]]] =
+    jwtFor(user).flatMap(jwt => getJson(relativeUri, _.auth.bearer(jwt)))
 
-  def postJson[A: JsonDecoder, B: JsonEncoder](wholePath: String, body: B): Task[Response[Either[String, A]]] =
+  def getJsonLd(relativeUri: Uri): Task[Response[Either[String, String]]] =
     basicRequest
-      .post(baseUrl.withWholePath(wholePath))
+      .get(relativeUri)
+      .contentType(MediaType.unsafeApply("application", "ld+json"))
+      .response(asString)
+      .send(backend)
+
+  def getJsonLd(
+    relativeUri: Uri,
+    user: User,
+  ): Task[Response[Either[String, String]]] =
+    jwtFor(user).flatMap(jwt =>
+      basicRequest
+        .get(relativeUri)
+        .contentType(MediaType.unsafeApply("application", "ld+json"))
+        .auth
+        .bearer(jwt)
+        .response(asString)
+        .send(backend),
+    )
+
+  def postJson[A: JsonDecoder, B: JsonEncoder](relativeUri: Uri, body: B): Task[Response[Either[String, A]]] =
+    basicRequest
+      .post(relativeUri)
       .body(body.toJson)
       .contentType(MediaType.ApplicationJson)
       .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.getMessage))
       .send(backend)
 
+  def postJsonLd(
+    relativeUri: Uri,
+    jsonLdBody: String,
+    user: User,
+  ): ZIO[Any, Throwable, Response[Either[String, String]]] =
+    jwtFor(user).flatMap { jwt =>
+      basicRequest
+        .post(relativeUri)
+        .body(jsonLdBody)
+        .contentType(MediaType.unsafeApply("application", "ld+json"))
+        .auth
+        .bearer(jwt)
+        .response(asString)
+        .send(backend)
+    }
+
+  def putJsonLd(
+    relativeUri: Uri,
+    jsonLdBody: String,
+    user: User,
+  ): ZIO[Any, Throwable, Response[Either[String, String]]] =
+    jwtFor(user).flatMap { jwt =>
+      basicRequest
+        .put(relativeUri)
+        .body(jsonLdBody)
+        .contentType(MediaType.unsafeApply("application", "ld+json"))
+        .auth
+        .bearer(jwt)
+        .response(asString)
+        .send(backend)
+    }
 }
 
 object TestApiClient {
   val getRootToken: ZIO[TestApiClient, Throwable, String] =
     TestApiClient
       .postJson[TokenResponse, LoginPayload](
-        "/v2/authentication",
+        uri"/v2/authentication",
         LoginPayload.EmailPassword(SharedTestDataADM.rootUser.getEmail, "test"),
       )
       .flatMap(_.assert200)
       .map(_.token)
 
   def deleteJson[A: JsonDecoder](
-    wholePath: String,
+    relativeUri: Uri,
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
-    ZIO.serviceWithZIO[TestApiClient](_.deleteJson(wholePath, user))
+    ZIO.serviceWithZIO[TestApiClient](_.deleteJson(relativeUri, user))
 
   def deleteJson[A: JsonDecoder](
-    wholePath: String,
+    relativeUri: Uri,
     f: Request[Either[String, A]] => Request[Either[String, A]],
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
-    ZIO.serviceWithZIO[TestApiClient](_.deleteJson(wholePath, f))
+    ZIO.serviceWithZIO[TestApiClient](_.deleteJson(relativeUri, f))
 
   def getJson[A: JsonDecoder](
-    wholePath: String,
+    relativeUri: Uri,
     f: Request[Either[String, A]] => Request[Either[String, A]],
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
-    ZIO.serviceWithZIO[TestApiClient](_.getJson(wholePath, f, Map.empty))
+    ZIO.serviceWithZIO[TestApiClient](_.getJson(relativeUri, f))
 
-  def getJson[A: JsonDecoder](wholePath: String): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
-    getJson[A](wholePath, Map.empty[String, String])
-
-  def getJson[A: JsonDecoder](
-    wholePath: String,
-    params: Map[String, String],
-  ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
-    ZIO.serviceWithZIO[TestApiClient](_.getJson(wholePath, (r: Request[Either[String, A]]) => r, params))
+  def getJson[A: JsonDecoder](relativeUri: Uri): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
+    getJson[A](relativeUri, (r: Request[Either[String, A]]) => r)
 
   def getJson[A: JsonDecoder](
-    wholePath: String,
+    relativeUri: Uri,
     user: User,
-  ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] = getJson[A](wholePath, user, Map.empty)
-
-  def getJson[A: JsonDecoder](
-    wholePath: String,
-    user: User,
-    params: Map[String, String],
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
-    ZIO.serviceWithZIO[TestApiClient](_.getJson(wholePath, user, params))
+    ZIO.serviceWithZIO[TestApiClient](_.getJson[A](relativeUri, user))
+
+  def getJsonLd(relativeUri: Uri): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri))
 
   def postJson[A: JsonDecoder, B: JsonEncoder](
-    wholePath: String,
+    relativeUri: Uri,
     body: B,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
-    ZIO.serviceWithZIO[TestApiClient](_.postJson(wholePath, body))
+    ZIO.serviceWithZIO[TestApiClient](_.postJson(relativeUri, body))
+
+  def postJsonLd(
+    relativeUri: Uri,
+    jsonLdBody: String,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postJsonLd(relativeUri, jsonLdBody, user))
+
+  def putJsonLd(
+    relativeUri: Uri,
+    jsonLdBody: String,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.putJsonLd(relativeUri, jsonLdBody, user))
 
   val layer = ZLayer.derive[TestApiClient]
 }
