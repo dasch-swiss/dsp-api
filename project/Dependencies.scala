@@ -44,7 +44,6 @@ object Dependencies {
   val zioLogging            = "dev.zio" %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
   val zioNio                = "dev.zio" %% "zio-nio"                   % ZioNioVersion
-  val zioMacros             = "dev.zio" %% "zio-macros"                % ZioVersion
   val zioPrelude            = "dev.zio" %% "zio-prelude"               % ZioPreludeVersion
 
   val SttpClientVersion = "4.0.8"
@@ -204,7 +203,6 @@ object Dependencies {
     zioJson,
     zioLogging,
     zioLoggingSlf4jBridge,
-    zioMacros,
     zioNio,
     zioPrelude,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
