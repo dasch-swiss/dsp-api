@@ -8,6 +8,7 @@ package org.knora.webapi.testservices
 import sttp.client4.*
 import zio.*
 
+import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.admin.api.model.ProjectOperationResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectsGetResponse
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -22,6 +23,14 @@ case class TestAdminApiClient(private val apiClient: TestApiClient) {
   def eraseProject(shortcode: Shortcode, user: User): Task[Response[Either[String, ProjectOperationResponseADM]]] =
     val uri = uri"/admin/projects/shortcode/$shortcode/erase"
     apiClient.deleteJson[ProjectOperationResponseADM](uri, user)
+
+  def getAdminFilesPermissions(
+    shortcode: Shortcode,
+    filename: String,
+    user: User,
+  ): Task[Response[Either[String, PermissionCodeAndProjectRestrictedViewSettings]]] =
+    apiClient
+      .getJson[PermissionCodeAndProjectRestrictedViewSettings](uri"/admin/files/${shortcode.value}/$filename", user)
 }
 
 object TestAdminApiClient {
@@ -36,6 +45,13 @@ object TestAdminApiClient {
     user: User,
   ): ZIO[TestAdminApiClient, Throwable, Response[Either[String, ProjectOperationResponseADM]]] =
     ZIO.serviceWithZIO[TestAdminApiClient](_.eraseProject(shortcode, user))
+
+  def getAdminFilesPermissions(
+    shortcode: Shortcode,
+    filename: String,
+    user: User,
+  ): ZIO[TestAdminApiClient, Throwable, Response[Either[String, PermissionCodeAndProjectRestrictedViewSettings]]] =
+    ZIO.serviceWithZIO[TestAdminApiClient](_.getAdminFilesPermissions(shortcode, filename, user))
 
   val layer = ZLayer.derive[TestAdminApiClient]
 }

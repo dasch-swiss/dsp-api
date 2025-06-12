@@ -12,6 +12,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.api.model.Project
@@ -536,7 +537,12 @@ object SharedTestDataADM {
    * *********************************
    */
   val anythingProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+  val anythingShortcode: Shortcode   = Shortcode.unsafeFrom("0001")
 
+  val anythingRdfData: RdfDataObject = RdfDataObject(
+    path = "test_data/project_data/anything-data.ttl",
+    name = "http://www.knora.org/data/0001/anything",
+  )
   val customResourceIRI: IRI                    = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
   val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
   val customValueIRI_withResourceIriAndValueIRIAndValueUUID: IRI =

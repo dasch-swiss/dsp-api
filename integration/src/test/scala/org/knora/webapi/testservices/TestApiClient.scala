@@ -183,6 +183,9 @@ object TestApiClient {
   def getJsonLd(relativeUri: Uri): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri))
 
+  def getJsonLd(relativeUri: Uri, user: User): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri, user))
+
   def postJson[A: JsonDecoder, B: JsonEncoder](
     relativeUri: Uri,
     body: B,
