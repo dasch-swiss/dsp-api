@@ -12,10 +12,12 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Administrat
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionGroupApiRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionHasPermissionsApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsForProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
 import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
@@ -92,7 +94,7 @@ case class TestAdminApiClient(private val apiClient: TestApiClient) {
         user,
       )
 
-  def updateAdministrativePermissionGroup(
+  def updatePermissionGroup(
     permissionIri: PermissionIri,
     group: GroupIri,
     user: User,
@@ -100,6 +102,18 @@ case class TestAdminApiClient(private val apiClient: TestApiClient) {
     val updateReq = ChangePermissionGroupApiRequestADM(group.value)
     apiClient.putJson[PermissionGetResponseADM, ChangePermissionGroupApiRequestADM](
       uri"/admin/permissions/$permissionIri/group",
+      updateReq,
+      user,
+    )
+
+  def updatePermissionHasPermission(
+    permissionIri: PermissionIri,
+    hasPermissions: Set[PermissionADM],
+    user: User,
+  ): Task[Response[Either[String, PermissionGetResponseADM]]] =
+    val updateReq = ChangePermissionHasPermissionsApiRequestADM(hasPermissions)
+    apiClient.putJson[PermissionGetResponseADM, ChangePermissionHasPermissionsApiRequestADM](
+      uri"/admin/permissions/$permissionIri/hasPermissions",
       updateReq,
       user,
     )
@@ -163,12 +177,19 @@ object TestAdminApiClient {
   ): ZIO[TestAdminApiClient, Throwable, Response[Either[String, DefaultObjectAccessPermissionCreateResponseADM]]] =
     ZIO.serviceWithZIO[TestAdminApiClient](_.createDefaultObjectAccessPermission(createReq, user))
 
-  def updateAdministrativePermissionGroup(
+  def updatePermissionGroup(
     permissionIri: PermissionIri,
     group: GroupIri,
     user: User,
   ): ZIO[TestAdminApiClient, Throwable, Response[Either[String, PermissionGetResponseADM]]] =
-    ZIO.serviceWithZIO[TestAdminApiClient](_.updateAdministrativePermissionGroup(permissionIri, group, user))
+    ZIO.serviceWithZIO[TestAdminApiClient](_.updatePermissionGroup(permissionIri, group, user))
+
+  def updatePermissionHasPermission(
+    permissionIri: PermissionIri,
+    hasPermissions: Set[PermissionADM],
+    user: User,
+  ): ZIO[TestAdminApiClient, Throwable, Response[Either[String, PermissionGetResponseADM]]] =
+    ZIO.serviceWithZIO[TestAdminApiClient](_.updatePermissionHasPermission(permissionIri, hasPermissions, user))
 
   val layer = ZLayer.derive[TestAdminApiClient]
 }

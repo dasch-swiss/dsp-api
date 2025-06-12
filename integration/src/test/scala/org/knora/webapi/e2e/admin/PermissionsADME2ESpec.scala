@@ -170,7 +170,7 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
         val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
         val response = UnsafeZioRun.runOrThrow(
           TestAdminApiClient
-            .updateAdministrativePermissionGroup(permissionIri, newGroupIri, rootUser)
+            .updatePermissionGroup(permissionIri, newGroupIri, rootUser)
             .flatMap(_.assert200),
         )
         assert(
@@ -186,7 +186,7 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
         val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
         val response = UnsafeZioRun.runOrThrow(
           TestAdminApiClient
-            .updateAdministrativePermissionGroup(permissionIri, newGroupIri, rootUser)
+            .updatePermissionGroup(permissionIri, newGroupIri, rootUser)
             .flatMap(_.assert200),
         )
         val actual = response.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM]
@@ -194,58 +194,50 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
       }
 
       "change the set of hasPermissions of an administrative permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
-        val updateHasPermissions =
-          s"""{
-             |   "hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
-             |}""".stripMargin
-        val request = Put(
-          baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/hasPermissions",
-          HttpEntity(ContentTypes.`application/json`, updateHasPermissions),
-        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-        val response: HttpResponse = singleAwaitingRequest(request)
-        assert(response.status === StatusCodes.OK)
-        val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
-        val permissions = result
-          .getOrElse(
-            "hasPermissions",
-            throw DeserializationException("The expected field 'hasPermissions' is missing."),
-          )
-          .asInstanceOf[JsArray]
-          .elements
-        permissions.size should be(1)
-        assert(permissions.head.asJsObject.fields("name").toString.contains("ProjectAdminGroupAllPermission"))
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ")
+        val response = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient
+            .updatePermissionHasPermission(
+              permissionIri,
+              Set(PermissionADM(name = "ProjectAdminGroupAllPermission")),
+              rootUser,
+            )
+            .flatMap(_.assert200),
+        )
+        val actual =
+          response.asInstanceOf[AdministrativePermissionGetResponseADM].administrativePermission.hasPermissions
+        assert(actual == Set(PermissionADM(name = "ProjectAdminGroupAllPermission")))
       }
 
       "change the set of hasPermissions of a default object access permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
-        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
-        val updateHasPermissions =
-          s"""{
-             |   "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
-             |}""".stripMargin
-        val request = Put(
-          baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/hasPermissions",
-          HttpEntity(ContentTypes.`application/json`, updateHasPermissions),
-        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
-        val response: HttpResponse = singleAwaitingRequest(request)
-        assert(response.status === StatusCodes.OK)
-        val result =
-          AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
-        val permissions = result
-          .getOrElse(
-            "hasPermissions",
-            throw DeserializationException("The expected field 'hasPermissions' is missing."),
-          )
-          .asInstanceOf[JsArray]
-          .elements
-        permissions.size should be(1)
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ")
+        val response = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient
+            .updatePermissionHasPermission(
+              permissionIri,
+              Set(
+                PermissionADM(
+                  name = "D",
+                  permissionCode = Some(7),
+                  additionalInformation = Some("http://www.knora.org/ontology/knora-admin#ProjectMember"),
+                ),
+              ),
+              rootUser,
+            )
+            .flatMap(_.assert200),
+        )
+        val actual = response
+          .asInstanceOf[DefaultObjectAccessPermissionGetResponseADM]
+          .defaultObjectAccessPermission
+          .hasPermissions
         assert(
-          permissions.head.asJsObject
-            .fields("additionalInformation")
-            .toString
-            .contains("http://www.knora.org/ontology/knora-admin#ProjectMember"),
+          actual == Set(
+            PermissionADM(
+              name = "D",
+              permissionCode = Some(7),
+              additionalInformation = Some("http://www.knora.org/ontology/knora-admin#ProjectMember"),
+            ),
+          ),
         )
       }
 
