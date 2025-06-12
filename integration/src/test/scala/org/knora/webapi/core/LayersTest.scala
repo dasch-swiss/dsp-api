@@ -6,10 +6,8 @@
 package org.knora.webapi.core
 
 import org.apache.pekko.actor.ActorSystem
-import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.*
 
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -42,9 +40,7 @@ object LayersTest { self =>
     LayersLive.Environment&
     TestContainerLayers.Environment &
     MessageRelayActorRef &
-    TestClientService &
-    TestClientsModule.Provided &
-    TestDspIngestClient
+    TestClientsModule.Provided
     // format: on
 
   /**
@@ -53,12 +49,9 @@ object LayersTest { self =>
    */
   val layer: ULayer[self.Environment] =
     ZLayer.make[self.Environment](
-      HttpClientZioBackend.layer().orDie,
       MessageRelayActorRef.layer,
-      TestClientService.layer,
       TestContainerLayers.all,
       TestClientsModule.layer,
-      TestDspIngestClient.layer,
       /// common
       LayersLive.layer,
     )
