@@ -5,10 +5,10 @@
 
 package org.knora.webapi
 
+import sttp.model.StatusCode
 import zio.Chunk
 import zio.NonEmptyChunk
 import zio.ZIO
-import zio.http.Status
 import zio.test.Spec
 import zio.test.TestAspect
 import zio.test.assertTrue
@@ -53,11 +53,12 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.testservices.ResponseOps.*
+import org.knora.webapi.testservices.TestAdminApiClient
 
 object ProjectEraseIT extends E2EZSpec {
 
@@ -136,26 +137,26 @@ object ProjectEraseIT extends E2EZSpec {
   private def doesGraphExist(graphName: InternalIri) = db(_.query(Ask(s"ASK { GRAPH <${graphName.value}> {} }")))
 
   override def e2eSpec: Spec[ProjectEraseIT.env, Any] =
-    suiteAll(s"The erasing project endpoint ${AdminApiRestClient.projectsShortcodeErasePath}") {
+    suiteAll(s"The project erase endpoint /admin/projects/:shortcode/erase") {
 
       suite("given project to delete is not present")(
         test("when called as root then it responds with Not Found") {
           for {
-            resp <- AdminApiRestClient.eraseProjectAsRoot(shortcode)
-          } yield assertTrue(resp.status == Status.NotFound)
+            resp <- TestAdminApiClient.eraseProject(shortcode, rootUser)
+          } yield assertTrue(resp.code == StatusCode.NotFound)
         },
       )
 
       suite("given project to delete is present")(
         test("when called as root then it should delete the project and respond with Ok") {
           for {
-            before <- AdminApiRestClient.getProjectAsRoot(shortcode)
-            erased <- AdminApiRestClient.eraseProjectAsRoot(shortcode)
-            after  <- AdminApiRestClient.getProjectAsRoot(shortcode)
+            before <- TestAdminApiClient.getProject(shortcode, rootUser)
+            erased <- TestAdminApiClient.eraseProject(shortcode, rootUser)
+            after  <- TestAdminApiClient.getProject(shortcode, rootUser)
           } yield assertTrue(
-            before.status == Status.Ok,
-            erased.status == Status.Ok,
-            after.status == Status.NotFound,
+            before.code == StatusCode.Ok,
+            erased.code == StatusCode.Ok,
+            after.code == StatusCode.NotFound,
           )
         },
         test("when called as root then it should delete user memberships and groups and respond with Ok") {
@@ -166,13 +167,13 @@ object ProjectEraseIT extends E2EZSpec {
             project      <- getProject
 
             // when
-            erased <- AdminApiRestClient.eraseProjectAsRoot(shortcode)
+            erased <- TestAdminApiClient.eraseProject(shortcode, rootUser)
 
             // then
             user            <- getUser(user.id)
             groupWasDeleted <- groups(_.findById(group.id)).map(_.isEmpty)
           } yield assertTrue(
-            erased.status == Status.Ok,
+            erased.code == StatusCode.Ok,
             !user.isInProject.contains(project.id),
             !user.isInProjectAdminGroup.contains(project.id),
             !user.isInGroup.contains(group),
@@ -194,12 +195,12 @@ object ProjectEraseIT extends E2EZSpec {
             graphExisted <- doesGraphExist(graphName)
 
             // when
-            erased <- AdminApiRestClient.eraseProjectAsRoot(shortcode)
+            erased <- TestAdminApiClient.eraseProject(shortcode, rootUser)
 
             // then
             graphDeleted <- doesGraphExist(graphName).negate
           } yield assertTrue(
-            erased.status == Status.Ok,
+            erased.code == StatusCode.Ok,
             graphExisted,
             graphDeleted,
           )
@@ -221,7 +222,7 @@ object ProjectEraseIT extends E2EZSpec {
             ontologyGraphExists <- doesGraphExist(ontologyGraphName)
 
             // when
-            erased <- AdminApiRestClient.eraseProjectAsRoot(shortcode)
+            _ <- TestAdminApiClient.eraseProject(shortcode, rootUser).flatMap(_.assert200)
 
             // then
             graphDeleted <- doesGraphExist(ontologyGraphName).negate
@@ -240,7 +241,7 @@ object ProjectEraseIT extends E2EZSpec {
             wasPresent <- aps(_.findByGroupAndProject(group.id, project.id)).map(_.nonEmpty)
 
             // when
-            erased <- AdminApiRestClient.eraseProjectAsRoot(shortcode)
+            erased <- TestAdminApiClient.eraseProject(shortcode, rootUser)
 
             // then
             wasDeleted <- aps(_.findByGroupAndProject(group.id, project.id)).map(_.isEmpty)
@@ -258,7 +259,7 @@ object ProjectEraseIT extends E2EZSpec {
             wasPresent <- doaps(_.findByProject(project.id)).map(_.nonEmpty)
 
             // when
-            erased <- AdminApiRestClient.eraseProjectAsRoot(shortcode)
+            erased <- TestAdminApiClient.eraseProject(shortcode, rootUser)
 
             // then
             wasDeleted <- doaps(_.findByProject(project.id)).map(_.isEmpty)

@@ -17,9 +17,7 @@ import org.knora.webapi.core.Db
 import org.knora.webapi.core.LayersTest
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 
 abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
@@ -120,37 +118,4 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       lmd         <- ZIO.fromEither(responseAst.get(cursor))
     } yield lmd.value
   }
-
-  object AdminApiRestClient {
-    private val shortcodePlaceholder                       = ":shortcode"
-    private def replace(shortcode: Shortcode, url: String) = url.replace(shortcodePlaceholder, shortcode.value)
-
-    val projectsShortcodePath: String      = s"/admin/projects/shortcode/$shortcodePlaceholder"
-    val projectsShortcodeErasePath: String = s"$projectsShortcodePath/erase"
-
-    private val userIriPlaceholder                     = ":userIri"
-    private def replace(userIri: UserIri, url: String) = url.replace(userIriPlaceholder, userIri.value)
-
-    val usersPath                       = "/admin/users"
-    val usersIriPath                    = s"$usersPath/iri/$userIriPlaceholder"
-    val usersIriProjectMemberships      = s"$usersIriPath/project-memberships"
-    val usersIriProjectAdminMemberships = s"$usersIriPath/project-admin-memberships"
-    val usersIriGroupMemberships        = s"$usersIriPath/group-memberships"
-
-    def eraseProjectAsRoot(shortcode: Shortcode): ZIO[env, String, Response] = for {
-      jwt      <- getRootToken.map(Some.apply)
-      response <- sendDeleteRequest(replace(shortcode, projectsShortcodeErasePath), jwt)
-    } yield response
-
-    def getProjectAsRoot(shortcode: Shortcode): ZIO[env, String, Response] = for {
-      jwt      <- getRootToken.map(Some.apply)
-      response <- sendGetRequest(replace(shortcode, projectsShortcodePath))
-    } yield response
-
-    def getUserAsRoot(userIri: UserIri): ZIO[env, IRI, Response] = for {
-      jwt      <- getRootToken.map(Some.apply)
-      response <- sendGetRequest(replace(userIri, usersIriPath))
-    } yield response
-  }
-
 }
