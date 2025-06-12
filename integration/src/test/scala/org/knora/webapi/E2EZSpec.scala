@@ -78,18 +78,6 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       _        <- ZIO.fail(s"Failed request: Status ${response.status} - $data").when(response.status != Status.Ok)
     } yield data
 
-  def sendDeleteRequest(url: String, token: Option[String]): ZIO[env, String, Response] =
-    (for {
-      client   <- ZIO.service[Client]
-      urlStr    = s"http://localhost:3333$url"
-      urlFull  <- ZIO.fromEither(URL.decode(urlStr))
-      _        <- ZIO.logDebug(s"POST  ${urlFull.encode}")
-      bearer    = token.map(Header.Authorization.Bearer.apply)
-      headers   = Headers(List(Header.ContentType(MediaType.application.json)) ++ bearer.toList)
-      request   = Request.delete(urlFull).addHeaders(headers)
-      response <- client.request(request)
-    } yield response).mapError(_.getMessage)
-
   def getRootToken: ZIO[TestApiClient, String, IRI] = TestApiClient.getRootToken.mapError(_.getMessage)
 
   def urlEncode(s: String): String = java.net.URLEncoder.encode(s, "UTF-8")
