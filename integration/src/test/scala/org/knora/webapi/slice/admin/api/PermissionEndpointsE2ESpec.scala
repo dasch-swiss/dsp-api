@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.admin.api
 
+import zio.test.*
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
@@ -17,7 +19,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.ProjectMember
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestAdminApiClient
-import zio.test.*
 
 object PermissionEndpointsE2ESpec extends E2EZSpec {
 
