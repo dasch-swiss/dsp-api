@@ -5,14 +5,7 @@
 
 package org.knora.webapi.e2e.admin
 
-import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.apache.pekko.http.scaladsl.model.*
-import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
-
-import java.net.URLEncoder
-
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.admin.responder.IntegrationTestAdminJsonProtocol.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
@@ -31,17 +24,16 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.ProjectMember
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestAdminApiClient
-import org.knora.webapi.util.AkkaHttpUtils
 
 /**
  * End-to-End (E2E) test specification for testing the 'v1/permissions' route.
  *
  * This spec tests the 'v1/store' route.
  */
-class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
+class PermissionsADME2ESpec extends E2ESpec {
 
-  private val imageProjectIri: ProjectIri = ProjectIri.unsafeFrom(SharedTestDataADM2.imagesProjectInfo.id)
-  private val customDOAPIri: String       = "http://rdfh.ch/permissions/00FF/zTOK3HlWTLGgTO8ZWVnotg"
+  val imageProjectIri: ProjectIri  = ProjectIri.unsafeFrom(SharedTestDataADM2.imagesProjectInfo.id)
+  val customDOAPIri: PermissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/zTOK3HlWTLGgTO8ZWVnotg")
 
   "The Permissions Route ('admin/permissions')" when {
     "getting permissions" should {
@@ -135,7 +127,7 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
           TestAdminApiClient
             .createDefaultObjectAccessPermission(
               CreateDefaultObjectAccessPermissionAPIRequestADM(
-                id = Some(customDOAPIri),
+                id = Some(customDOAPIri.value),
                 forProject = imagesProjectIri.value,
                 forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
                 hasPermissions = Set(
@@ -152,7 +144,7 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
         )
 
         val actual = response.defaultObjectAccessPermission
-        assert(actual.iri == customDOAPIri)
+        assert(actual.iri == customDOAPIri.value)
         assert(actual.forResourceClass.contains(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS))
         assert(actual.forProject == "http://rdfh.ch/projects/00FF")
         assert(
@@ -279,26 +271,20 @@ class PermissionsADME2ESpec extends E2ESpec with SprayJsonSupport {
 
     "delete request" should {
       "erase a defaultObjectAccess permission" in {
-        val permissionIri        = customDOAPIri
-        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
-        val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass),
-        )
-        val response: HttpResponse = singleAwaitingRequest(request)
-        response.status should be(StatusCodes.OK)
-        val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
-        deletedStatus.convertTo[Boolean] should be(true)
+        val response =
+          UnsafeZioRun.runOrThrow(TestAdminApiClient.deletePermission(customDOAPIri, rootUser).flatMap(_.assert200))
+        response.deleted should be(true)
       }
       "erase an administrative permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
-        val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass),
+        val response = UnsafeZioRun.runOrThrow(
+          TestAdminApiClient
+            .deletePermission(
+              PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"),
+              rootUser,
+            )
+            .flatMap(_.assert200),
         )
-        val response: HttpResponse = singleAwaitingRequest(request)
-        response.status should be(StatusCodes.OK)
-        val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
-        deletedStatus.convertTo[Boolean] should be(true)
+        response.deleted should be(true)
       }
     }
   }

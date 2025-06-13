@@ -7,6 +7,7 @@ package org.knora.webapi.testservices
 
 import sttp.client4.*
 import zio.*
+
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
@@ -20,6 +21,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
 import org.knora.webapi.slice.admin.api.model.PermissionCodeAndProjectRestrictedViewSettings
@@ -143,6 +145,12 @@ case class TestAdminApiClient(private val apiClient: TestApiClient) {
       updateReq,
       user,
     )
+
+  def deletePermission(
+    permissionIri: PermissionIri,
+    user: User,
+  ): Task[Response[Either[String, PermissionDeleteResponseADM]]] =
+    apiClient.deleteJson(uri"/admin/permissions/$permissionIri", user)
 }
 
 object TestAdminApiClient {
@@ -234,6 +242,12 @@ object TestAdminApiClient {
     ZIO.serviceWithZIO[TestAdminApiClient](
       _.updateDefaultObjectAccessPermissionsProperty(permissionIri, property, user),
     )
+
+  def deletePermission(
+    permissionIri: PermissionIri,
+    user: User,
+  ): ZIO[TestAdminApiClient, Throwable, Response[Either[String, PermissionDeleteResponseADM]]] =
+    ZIO.serviceWithZIO[TestAdminApiClient](_.deletePermission(permissionIri, user))
 
   val layer = ZLayer.derive[TestAdminApiClient]
 }
