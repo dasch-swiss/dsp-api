@@ -6,10 +6,8 @@
 package org.knora.webapi.core
 
 import org.apache.pekko.actor.ActorSystem
-import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.*
 
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -32,6 +30,7 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.testservices.TestClientsModule
 import org.knora.webapi.testservices.TestDspIngestClient
 
 object LayersTest { self =>
@@ -41,9 +40,7 @@ object LayersTest { self =>
     LayersLive.Environment&
     TestContainerLayers.Environment &
     MessageRelayActorRef &
-    TestClientService &
-    TestApiClient &
-    TestDspIngestClient
+    TestClientsModule.Provided
     // format: on
 
   /**
@@ -52,12 +49,9 @@ object LayersTest { self =>
    */
   val layer: ULayer[self.Environment] =
     ZLayer.make[self.Environment](
-      HttpClientZioBackend.layer().orDie,
       MessageRelayActorRef.layer,
-      TestClientService.layer,
       TestContainerLayers.all,
-      TestApiClient.layer,
-      TestDspIngestClient.layer,
+      TestClientsModule.layer,
       /// common
       LayersLive.layer,
     )

@@ -11,8 +11,6 @@ import org.apache.pekko.http.scaladsl.client.RequestBuilding
 import org.apache.pekko.http.scaladsl.model.HttpEntity
 import org.apache.pekko.http.scaladsl.model.headers.HttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
-import sttp.capabilities.zio.ZioStreams
-import sttp.client4.*
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
@@ -24,16 +22,12 @@ import scala.concurrent.duration.FiniteDuration
 
 import dsp.errors.AssertionException
 import org.knora.webapi.RdfMediaTypes
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.settings.KnoraDispatchers
 
-final case class TestClientService(
-  config: AppConfig,
-  backend: StreamBackend[Task, ZioStreams],
-)(implicit system: ActorSystem)
+final case class TestClientService()(implicit system: ActorSystem)
     extends TriplestoreJsonProtocol
     with RequestBuilding {
 
