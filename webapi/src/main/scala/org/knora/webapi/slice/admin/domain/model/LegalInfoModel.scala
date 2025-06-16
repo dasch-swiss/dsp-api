@@ -33,6 +33,15 @@ import org.knora.webapi.slice.common.StringValueCompanion.*
 import org.knora.webapi.slice.common.StringValueCompanion.maxLength
 import org.knora.webapi.slice.common.Value.StringValue
 
+final case class LegalInfo(
+  copyrightHolder: Option[CopyrightHolder],
+  authorship: Option[List[Authorship]],
+  licenseIri: Option[LicenseIri],
+) {
+  def from(copyrightHolder: CopyrightHolder, authorship: List[Authorship], licenseIri: LicenseIri): LegalInfo =
+    LegalInfo(Some(copyrightHolder), Some(authorship).filter(_.nonEmpty), Some(licenseIri))
+}
+
 final case class CopyrightHolder private (override val value: String) extends StringValue
 object CopyrightHolder extends StringValueCompanion[CopyrightHolder] {
   given JsonCodec[CopyrightHolder] = ZioJsonCodec.stringCodec(CopyrightHolder.from)

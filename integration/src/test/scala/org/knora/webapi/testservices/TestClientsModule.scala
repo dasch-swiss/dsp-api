@@ -16,7 +16,15 @@ import org.knora.webapi.slice.security.ScopeResolver
 
 object TestClientsModule { self =>
 
-  type Provided = TestAdminApiClient & TestApiClient & TestClientService & TestDspIngestClient & TestOntologyApiClient
+  type Provided =
+    // format: off
+    TestAdminApiClient &
+    TestApiClient &
+    TestClientService &
+    TestDspIngestClient &
+    TestOntologyApiClient &
+    TestResourcesApiClient
+    // format: on
 
   type Dependencies = ActorSystem & AppConfig & DspIngestConfig & JwtService & KnoraApi & ScopeResolver
 
@@ -24,8 +32,9 @@ object TestClientsModule { self =>
     HttpClientZioBackend.layer().orDie >>> (
       TestApiClient.layer >+>
         TestAdminApiClient.layer ++
-        TestDspIngestClient.layer ++
         TestClientService.layer ++
-        TestOntologyApiClient.layer
+        TestDspIngestClient.layer ++
+        TestOntologyApiClient.layer ++
+        TestResourcesApiClient.layer
     )
 }

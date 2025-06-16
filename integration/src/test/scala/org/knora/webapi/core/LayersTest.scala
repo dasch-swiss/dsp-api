@@ -32,6 +32,7 @@ import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.testservices.TestClientsModule
 import org.knora.webapi.testservices.TestDspIngestClient
+import org.knora.webapi.testservices.TestResourcesApiClient
 
 object LayersTest { self =>
 

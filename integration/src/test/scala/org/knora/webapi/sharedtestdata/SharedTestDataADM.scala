@@ -9,7 +9,9 @@ import java.time.Instant
 
 import dsp.constants.SalsahGui
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -28,12 +30,15 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 
 /**
  * This object holds the same user which are loaded with 'test_data/project_data/admin-data.ttl'. Using this object
  * in tests, allows easier updating of details as they change over time.
  */
 object SharedTestDataADM {
+
+  implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   /**
    * **********************************
@@ -538,10 +543,12 @@ object SharedTestDataADM {
    */
   val anythingProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   val anythingShortcode: Shortcode   = Shortcode.unsafeFrom("0001")
+  val anythingOntologyIri: OntologyIri =
+    OntologyIri.unsafeFrom(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI.toSmartIri)
 
   val anythingRdfData: RdfDataObject = RdfDataObject(
     path = "test_data/project_data/anything-data.ttl",
-    name = "http://www.knora.org/data/0001/anything",
+    name = anythingOntologyIri.toInternalSchema.toIri,
   )
   val customResourceIRI: IRI                    = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
   val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"

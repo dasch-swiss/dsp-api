@@ -85,6 +85,7 @@ object KnoraIris {
 
   final case class ResourceClassIri private (smartIri: SmartIri) extends KnoraIri {
     def ontologyIri: OntologyIri = OntologyIri.unsafeFrom(smartIri.getOntologyFromEntity)
+    def name: String             = smartIri.getEntityName
 
     override def equals(other: Any): Boolean = super.equals(other)
     override def hashCode(): Int             = super.hashCode()
