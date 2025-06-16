@@ -18,7 +18,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 
 abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
-  // keep the root user as a constant in order to make the * import work for all tests extending this spec
+  // test data
   val rootUser: User = SharedTestDataADM.rootUser
 
   private val testLayers = util.Logger.text() >>> LayersTest.layer
