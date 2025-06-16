@@ -33,6 +33,7 @@ import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.resources.api.model.VersionDate
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -490,7 +491,7 @@ case class ReadResourceV2(
    *
    * @return
    */
-  def withDeletedValues(): ReadResourceV2 = {
+  def withDeletedValues(versionDate: Option[VersionDate] = None): ReadResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val delIri: SmartIri                          = KnoraBase.DeletedValue.toSmartIri
     val valuesWithDeletedValues: Map[SmartIri, Seq[ReadValueV2]] =
@@ -501,8 +502,10 @@ case class ReadResourceV2(
               val withDeletedSeq = valueSequence
                 .map(value =>
                   value.deletionInfo match {
-                    case Some(_) => (delIri, value.asDeletedValue())
-                    case None    => (iri, value)
+                    case Some(DeletionInfo(deletedDate, _))
+                        if deletedDate.isBefore(versionDate.map(_.value).getOrElse(Instant.now)) =>
+                      (delIri, value.asDeletedValue())
+                    case _ => (iri, value)
                   },
                 )
               aggregator ++ withDeletedSeq

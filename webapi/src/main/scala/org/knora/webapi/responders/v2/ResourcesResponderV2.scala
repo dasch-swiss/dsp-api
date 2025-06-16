@@ -78,7 +78,7 @@ trait GetResources {
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
-    versionDate: Option[Instant] = None,
+    versionDate: Option[VersionDate] = None,
     withDeleted: Boolean = true,
     showDeletedValues: Boolean = false,
     targetSchema: ApiV2Schema,
@@ -149,7 +149,7 @@ final case class ResourcesResponderV2(
         resIris,
         propertyIri,
         valueUuid,
-        versionDate,
+        versionDate.map(VersionDate.fromInstant),
         withDeleted,
         showDeletedValues = false,
         targetSchema,
@@ -581,7 +581,7 @@ final case class ResourcesResponderV2(
     resourceIris: Seq[IRI],
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
-    versionDate: Option[Instant] = None,
+    versionDate: Option[VersionDate] = None,
     withDeleted: Boolean = true,
     showDeletedValues: Boolean = false,
     targetSchema: ApiV2Schema,
@@ -605,7 +605,7 @@ final case class ResourcesResponderV2(
           withDeleted = withDeleted,
           propertyIri = propertyIri,
           valueUuid = valueUuid,
-          versionDate = versionDate,
+          versionDate = versionDate.map(_.value),
           queryStandoff = queryStandoff,
           requestingUser = requestingUser,
         )
@@ -626,7 +626,7 @@ final case class ResourcesResponderV2(
           pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
           mappings = mappingsAsMap,
           queryStandoff = queryStandoff,
-          versionDate = versionDate,
+          versionDate = versionDate.map(_.value),
           calculateMayHaveMoreResults = false,
           targetSchema = targetSchema,
           requestingUser = requestingUser,
@@ -657,7 +657,7 @@ final case class ResourcesResponderV2(
               // deleted values should be shown -> resource can be returned
               if (showDeletedValues) resource
               // deleted Values should not be shown -> replace them with generic DeletedValue
-              else resource.withDeletedValues()
+              else resource.withDeletedValues(versionDate)
           }
         }
       responseWithDeletedResourcesReplaced = apiResponse.copy(resources = deletedResourcesReplaced)
@@ -1684,7 +1684,7 @@ final case class ResourcesResponderV2(
     for {
       resourceFullRepAtCreationTime <- getResourcesV2(
                                          resourceIris = Seq(resourceIri),
-                                         versionDate = Some(versionHist.versionDate),
+                                         versionDate = Some(VersionDate.fromInstant(versionHist.versionDate)),
                                          showDeletedValues = true,
                                          targetSchema = ApiV2Complex,
                                          schemaOptions = Set.empty[Rendering],

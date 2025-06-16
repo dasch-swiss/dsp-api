@@ -90,7 +90,7 @@ final case class ResourcesRestService(
   def getResources(user: User)(
     resourceIris: List[String],
     formatOptions: FormatOptions,
-    version: Option[VersionDate],
+    versionDate: Option[VersionDate],
   ): Task[(RenderedResponse, MediaType)] =
     ensureIris(resourceIris) *>
       resourcesService
@@ -98,7 +98,7 @@ final case class ResourcesRestService(
           resourceIris,
           propertyIri = None,
           valueUuid = None,
-          version.map(_.value),
+          versionDate,
           withDeleted = true,
           showDeletedValues = false,
           formatOptions.schema,

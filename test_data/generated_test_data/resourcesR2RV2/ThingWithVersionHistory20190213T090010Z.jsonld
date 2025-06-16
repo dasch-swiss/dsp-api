@@ -70,7 +70,7 @@
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO.20190213T090010Z",
         "@type": "xsd:anyURI"
     },
-    "knora-api:DeletedValue": {
+    "anything:hasOtherThingValue": {
         "knora-api:arkUrl": {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO/IZGOjVqxTfSNO4ieKyp0SAZ",
             "@type": "xsd:anyURI"
@@ -94,8 +94,10 @@
         "knora-api:valueHasUUID": "IZGOjVqxTfSNO4ieKyp0SA",
         "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
         "knora-api:isDeleted": true,
-        "@type": "knora-api:DeletedValue",
-        "http://www.knora.org/ontology/knora-base#DeletedValue": "DeletedValue",
+        "knora-api:linkValueHasTargetIri": {
+          "@id": "http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ"
+        },
+        "@type": "knora-api:LinkValue",
         "@id": "http://rdfh.ch/0001/thing-with-history/values/3b"
     },
     "knora-api:userHasPermission": "V",

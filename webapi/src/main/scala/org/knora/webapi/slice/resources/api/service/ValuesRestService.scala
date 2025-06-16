@@ -44,7 +44,7 @@ final class ValuesRestService(
         Seq(resourceIri),
         None,
         Some(valueUuid.value),
-        versionDate.map(_.value),
+        versionDate,
         withDeleted = true,
         showDeletedValues = false,
         formatOptions.schema,
