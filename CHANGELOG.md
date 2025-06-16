@@ -1,5 +1,39 @@
 # Changelog
 
+## [31.17.0](https://github.com/dasch-swiss/dsp-api/compare/v31.16.0...v31.17.0) (2025-06-16)
+
+
+### Maintenances
+
+* Dependency updates ([#3636](https://github.com/dasch-swiss/dsp-api/issues/3636)) ([1f6607d](https://github.com/dasch-swiss/dsp-api/commit/1f6607dc26cc7a43f2b7c80bf6e1b75a001ab0e6))
+* Merge all base spec into E2ESpec ([#3624](https://github.com/dasch-swiss/dsp-api/issues/3624)) ([bf402a7](https://github.com/dasch-swiss/dsp-api/commit/bf402a7894c22052423e9e91b2702cb4f3b7256f))
+* Minor dependency updates ([#3599](https://github.com/dasch-swiss/dsp-api/issues/3599)) ([443758f](https://github.com/dasch-swiss/dsp-api/commit/443758f574d2e9ad7d42cc201a34b12a71db4750))
+* Minor dependency updates ([#3635](https://github.com/dasch-swiss/dsp-api/issues/3635)) ([6c2851c](https://github.com/dasch-swiss/dsp-api/commit/6c2851ce55b2cb90ad480a2d484a3b598d2158d6))
+* Patch dependency updates ([#3617](https://github.com/dasch-swiss/dsp-api/issues/3617)) ([7cd7bcd](https://github.com/dasch-swiss/dsp-api/commit/7cd7bcdcbd8cea2ce8ac46d3325df90077fa3ab1))
+* Remove SliceModule trait ([#3621](https://github.com/dasch-swiss/dsp-api/issues/3621)) ([031b094](https://github.com/dasch-swiss/dsp-api/commit/031b0940145ca4859b317e08eb9d223fb334679d))
+* Replace AppServer with database init ZIO workflow ([#3623](https://github.com/dasch-swiss/dsp-api/issues/3623)) ([a7d7653](https://github.com/dasch-swiss/dsp-api/commit/a7d7653c5553f47a3890d15657cf9b82770fe8d2))
+* Update sttp client to 4.0.8 ([#3630](https://github.com/dasch-swiss/dsp-api/issues/3630)) ([9801a60](https://github.com/dasch-swiss/dsp-api/commit/9801a60f224d8186f44a51d642150ef9161ae4f1))
+* Update zio from 2.1.17 to 2.1.19 ([#3629](https://github.com/dasch-swiss/dsp-api/issues/3629)) ([110524e](https://github.com/dasch-swiss/dsp-api/commit/110524ed1d5e8c64bb574d82790229ed7004e60e))
+
+
+### Enhancements
+
+* Add environment to OpenTelemetry and improve setup (DEV-4994) ([#3615](https://github.com/dasch-swiss/dsp-api/issues/3615)) ([a2d685f](https://github.com/dasch-swiss/dsp-api/commit/a2d685f56caec69c43b68d851101de7c2e3fa7de))
+* Allow hard-deleting soft-deleted values (DEV-4701) ([#3622](https://github.com/dasch-swiss/dsp-api/issues/3622)) ([97d4381](https://github.com/dasch-swiss/dsp-api/commit/97d43815cb574a5af7e5c3aa0b634c8ac5ec4bb5))
+
+
+### Bug Fixes
+
+* Remove deprecation warnings, add back -Xfatal-warnings ([#3619](https://github.com/dasch-swiss/dsp-api/issues/3619)) ([d40866f](https://github.com/dasch-swiss/dsp-api/commit/d40866f9142daf38ea102b1b23f27a6e7329e1a5))
+
+
+### Tests
+
+* Migrate AuthenticationEndpointsV2E2ESpec to zio test ([#3631](https://github.com/dasch-swiss/dsp-api/issues/3631)) ([65d180a](https://github.com/dasch-swiss/dsp-api/commit/65d180a537dce2b9f18b03ca597b1ec9b2cf1dab))
+* Remove LayersTestMock ([#3625](https://github.com/dasch-swiss/dsp-api/issues/3625)) ([1e2efab](https://github.com/dasch-swiss/dsp-api/commit/1e2efab70dd818ff2427ea254fd3389aafcfd95a))
+* Turn ListsMessagesADMSpec into simple scala test ([#3628](https://github.com/dasch-swiss/dsp-api/issues/3628)) ([9cce043](https://github.com/dasch-swiss/dsp-api/commit/9cce0437c84314bb7d3c81a9a29e12734c227bbd))
+* Use api client in tests ([#3633](https://github.com/dasch-swiss/dsp-api/issues/3633)) ([d5efa33](https://github.com/dasch-swiss/dsp-api/commit/d5efa33d4b0309c170d38d7edd06a2425544186c))
+
 ## [31.16.0](https://github.com/dasch-swiss/dsp-api/compare/v31.15.0...v31.16.0) (2025-06-02)
 
 
