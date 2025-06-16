@@ -22,6 +22,7 @@ object TestClientsModule { self =>
     TestApiClient &
     TestClientService &
     TestDspIngestClient &
+    TestMetadataApiClient &
     TestOntologyApiClient &
     TestResourcesApiClient
     // format: on
@@ -34,6 +35,7 @@ object TestClientsModule { self =>
         TestAdminApiClient.layer ++
         TestClientService.layer ++
         TestDspIngestClient.layer ++
+        TestMetadataApiClient.layer ++
         TestOntologyApiClient.layer ++
         TestResourcesApiClient.layer
     )

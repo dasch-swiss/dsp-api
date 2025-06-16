@@ -37,7 +37,11 @@ final case class LegalInfo(
   copyrightHolder: Option[CopyrightHolder],
   authorship: Option[List[Authorship]],
   licenseIri: Option[LicenseIri],
-) {
+) {}
+object LegalInfo {
+
+  val empty: LegalInfo = LegalInfo(None, None, None)
+
   def from(copyrightHolder: CopyrightHolder, authorship: List[Authorship], licenseIri: LicenseIri): LegalInfo =
     LegalInfo(Some(copyrightHolder), Some(authorship).filter(_.nonEmpty), Some(licenseIri))
 }
