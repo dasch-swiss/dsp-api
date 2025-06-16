@@ -22,6 +22,7 @@ import zio.test.Assertion.*
 import java.io.ByteArrayInputStream
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.it.v2.LegalInfoE2ESpec.suite
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
