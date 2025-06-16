@@ -12,6 +12,9 @@ import zio.json.*
 import zio.nio.file.Files
 import zio.nio.file.Path
 
+import java.awt.image.BufferedImage
+import javax.imageio.ImageIO
+
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.infrastructure.JwtService
@@ -44,6 +47,22 @@ final case class TestDspIngestClient(
           .map(_.body)
       json <- ZIO.fromEither(responseBody.fromJson[UploadedFile]).mapError(Throwable(_))
     } yield json
+
+  def createImageAsset(shortcode: Shortcode): Task[UploadedFile] = for {
+    i      <- zio.Random.nextInt
+    path   <- createImageFile(s"test$i.jpg")
+    upload <- uploadFile(path, shortcode)
+  } yield upload
+
+  private def createImageFile(filename: String) =
+    for {
+      dir  <- zio.nio.file.Files.createTempDirectory(None, Seq.empty)
+      path  = dir / filename
+      file <- zio.nio.file.Files.createFile(path)
+      img   = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
+      _    <- ZIO.attemptBlocking(ImageIO.write(img, "jpeg", path.toFile))
+    } yield path
+
 }
 
 object TestDspIngestClient {
@@ -51,5 +70,9 @@ object TestDspIngestClient {
   object UploadedFile {
     implicit val decoder: JsonDecoder[UploadedFile] = DeriveJsonDecoder.gen[UploadedFile]
   }
+
+  def createImageAsset(shortcode: Shortcode): ZIO[TestDspIngestClient, Throwable, UploadedFile] =
+    ZIO.serviceWithZIO[TestDspIngestClient](_.createImageAsset(shortcode))
+
   val layer = ZLayer.derive[TestDspIngestClient]
 }

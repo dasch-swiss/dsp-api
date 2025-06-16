@@ -19,9 +19,7 @@ import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*
 
-import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
-import javax.imageio.ImageIO
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
 
@@ -157,13 +155,13 @@ object LegalInfoE2ESpec extends E2EZSpec {
     suite("given the copyright holder is NOT allowed on the project")(
       test("creating with a copyright holder should fail") {
         for {
-          asset    <- createAsset
+          asset    <- TestDspIngestClient.createImageAsset(shortcode)
           response <- postCreateResource(asset, copyrightHolder = Some(aCopyrightHolder))
         } yield assertTrue(response.code == StatusCode.BadRequest)
       },
       test("creating with a not enabled LicenseIri should fail") {
         for {
-          asset    <- createAsset
+          asset    <- TestDspIngestClient.createImageAsset(shortcode)
           response <- postCreateResource(asset, licenseIri = Some(LicenseIri.AI_GENERATED))
         } yield assertTrue(response.code == StatusCode.BadRequest)
       },
@@ -286,26 +284,10 @@ object LegalInfoE2ESpec extends E2EZSpec {
     licenseIri: Option[LicenseIri] = None,
   ) =
     for {
-      asset         <- createAsset
+      asset         <- TestDspIngestClient.createImageAsset(shortcode)
       responseBody  <- postCreateResource(asset, copyrightHolder, authorship, licenseIri).flatMap(_.assert200)
       responseModel <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
     } yield (responseModel, asset)
-
-  private def createAsset = for {
-    i       <- zio.Random.nextInt
-    filename = s"test${i}.jpg"
-    path    <- createImg(filename)
-    upload  <- ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(path, shortcode))
-  } yield upload
-
-  private def createImg(filename: String) =
-    for {
-      dir  <- zio.nio.file.Files.createTempDirectory(None, Seq.empty)
-      path  = dir / filename
-      file <- zio.nio.file.Files.createFile(path)
-      img   = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
-      _    <- ZIO.attemptBlocking(ImageIO.write(img, "jpeg", path.toFile))
-    } yield path
 
   private def postCreateResource(
     img: UploadedFile,
