@@ -28,10 +28,7 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.DspIngestTestContainer
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
-import org.knora.webapi.testservices.TestApiClient
-import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.testservices.TestClientsModule
-import org.knora.webapi.testservices.TestDspIngestClient
 
 object LayersTest { self =>
 

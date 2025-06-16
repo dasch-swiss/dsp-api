@@ -19,9 +19,7 @@ import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*
 
-import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
-import javax.imageio.ImageIO
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
 
@@ -31,12 +29,11 @@ import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.models.filemodels.FileType
-import org.knora.webapi.models.filemodels.UploadFileRequest
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.api.model.PageAndSize
 import org.knora.webapi.slice.admin.api.model.PagedResponse
 import org.knora.webapi.slice.admin.domain.model.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
@@ -51,10 +48,13 @@ import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
+import org.knora.webapi.testservices.TestResourcesApiClient
 
 object LegalInfoE2ESpec extends E2EZSpec {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+
+  override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
 
   private val projectService = ZIO.serviceWithZIO[KnoraProjectService]
 
@@ -63,29 +63,28 @@ object LegalInfoE2ESpec extends E2EZSpec {
   private val anotherAuthorship        = List("Lotte Reiniger").map(Authorship.unsafeFrom)
   private val enabledLicenseIri        = LicenseIri.PUBLIC_DOMAIN
   private val anotherEnabledLicenseIri = LicenseIri.CC_BY_4_0
-  private val shortcode                = Shortcode.unsafeFrom("0001")
 
   private val allowCopyrightHolder = for {
-    prj     <- projectService(_.findByShortcode(shortcode)).someOrFail(Exception("Project not found"))
+    prj     <- projectService(_.findByShortcode(anythingShortcode)).someOrFail(Exception("Project not found"))
     updated <- projectService(_.addCopyrightHolders(prj.id, Set(aCopyrightHolder)))
   } yield updated
 
   private val disallowCopyrightHolder = for {
-    prj <- projectService(_.findByShortcode(shortcode)).someOrFail(Exception("Project not found"))
+    prj <- projectService(_.findByShortcode(anythingShortcode)).someOrFail(Exception("Project not found"))
     _   <- projectService(_.removeAllCopyrightHolder(prj.id))
   } yield ()
 
   private val enableLicenses = {
     val licensesToEnable = Set(enabledLicenseIri, anotherEnabledLicenseIri)
     for {
-      prj <- projectService(_.findByShortcode(shortcode)).someOrFail(Exception("Project not found"))
+      prj <- projectService(_.findByShortcode(anythingShortcode)).someOrFail(Exception("Project not found"))
       _   <- ZIO.foreachDiscard(licensesToEnable)(iri => projectService(_.enableLicense(iri, prj)))
     } yield ()
   }
 
   private val disableAllLicenses =
     for {
-      prj <- projectService(_.findByShortcode(shortcode)).someOrFail(Exception("Project not found"))
+      prj <- projectService(_.findByShortcode(anythingShortcode)).someOrFail(Exception("Project not found"))
       _   <- ZIO.foreachDiscard(prj.enabledLicenses)(iri => projectService(_.disableLicense(iri, prj)))
     } yield ()
 
@@ -146,7 +145,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
             _ <- createStillImageResourceWithInfos(authorship = Some(anotherAuthorship))
             authorships <- TestApiClient
                              .getJson[PagedResponse[Authorship]](
-                               uri"/admin/projects/shortcode/$shortcode/legal-info/authorships",
+                               uri"/admin/projects/shortcode/$anythingShortcode/legal-info/authorships",
                                rootUser,
                              )
                              .flatMap(_.assert200)
@@ -157,13 +156,13 @@ object LegalInfoE2ESpec extends E2EZSpec {
     suite("given the copyright holder is NOT allowed on the project")(
       test("creating with a copyright holder should fail") {
         for {
-          asset    <- createAsset
+          asset    <- TestDspIngestClient.createImageAsset(anythingShortcode)
           response <- postCreateResource(asset, copyrightHolder = Some(aCopyrightHolder))
         } yield assertTrue(response.code == StatusCode.BadRequest)
       },
       test("creating with a not enabled LicenseIri should fail") {
         for {
-          asset    <- createAsset
+          asset    <- TestDspIngestClient.createImageAsset(anythingShortcode)
           response <- postCreateResource(asset, licenseIri = Some(LicenseIri.AI_GENERATED))
         } yield assertTrue(response.code == StatusCode.BadRequest)
       },
@@ -269,10 +268,9 @@ object LegalInfoE2ESpec extends E2EZSpec {
     }
   }
 
-  val e2eSpec: Spec[Scope & env, Any] =
-    suite("Copyright Attribution and Licenses")(createResourceSuite, createValueSuite) @@ TestAspect.before(
-      enableLicenses,
-    )
+  val e2eSpec = suite("Copyright Attribution and Licenses")(createResourceSuite, createValueSuite) @@ TestAspect.before(
+    enableLicenses,
+  )
 
   private def createStillImageResourceWithInfos(
     copyrightHolder: Option[CopyrightHolder] = Some(aCopyrightHolder),
@@ -286,44 +284,24 @@ object LegalInfoE2ESpec extends E2EZSpec {
     licenseIri: Option[LicenseIri] = None,
   ) =
     for {
-      asset         <- createAsset
+      asset         <- TestDspIngestClient.createImageAsset(anythingShortcode)
       responseBody  <- postCreateResource(asset, copyrightHolder, authorship, licenseIri).flatMap(_.assert200)
       responseModel <- ModelOps.fromJsonLd(responseBody).mapError(Exception(_))
     } yield (responseModel, asset)
-
-  private def createAsset = for {
-    i       <- zio.Random.nextInt
-    filename = s"test${i}.jpg"
-    path    <- createImg(filename)
-    upload  <- ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(path, shortcode))
-  } yield upload
-
-  private def createImg(filename: String) =
-    for {
-      dir  <- zio.nio.file.Files.createTempDirectory(None, Seq.empty)
-      path  = dir / filename
-      file <- zio.nio.file.Files.createFile(path)
-      img   = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
-      _    <- ZIO.attemptBlocking(ImageIO.write(img, "jpeg", path.toFile))
-    } yield path
 
   private def postCreateResource(
     img: UploadedFile,
     copyrightHolder: Option[CopyrightHolder] = None,
     authorship: Option[List[Authorship]] = None,
     licenseIri: Option[LicenseIri] = None,
-  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] = {
-    val jsonLd = UploadFileRequest
-      .make(
-        FileType.StillImageFile(),
-        img.internalFilename,
-        copyrightHolder = copyrightHolder,
-        authorship = authorship,
-        licenseIri = licenseIri,
-      )
-      .toJsonLd(shortcode = shortcode, className = Some("ThingPicture"), ontologyName = "anything")
-    TestApiClient.postJsonLd(uri"/v2/resources", jsonLd, rootUser)
-  }
+  ) = TestResourcesApiClient.createStillImageRepresentation(
+    anythingShortcode,
+    anythingOntologyIri,
+    "ThingPicture",
+    img,
+    rootUser,
+    LegalInfo(copyrightHolder, authorship, licenseIri),
+  )
 
   private def putUpdateValue(
     uploadedFile: UploadedFile,
