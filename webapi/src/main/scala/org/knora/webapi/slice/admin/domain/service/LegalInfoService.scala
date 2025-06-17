@@ -49,6 +49,9 @@ case class LegalInfoService(
     result    = licenses.flatten
   } yield result
 
+  def findAvailableLicenseByIdAndShortcode(licenseIri: LicenseIri, shortcode: Shortcode): UIO[Option[License]] =
+    findAvailableLicenses(shortcode).map(_.find(_.id == licenseIri))
+
   def enableLicense(license: LicenseIri, project: KnoraProject): UIO[KnoraProject] =
     projects.enableLicense(license, project).orDie
 

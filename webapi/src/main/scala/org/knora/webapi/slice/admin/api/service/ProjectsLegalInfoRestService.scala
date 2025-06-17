@@ -51,8 +51,18 @@ final case class ProjectsLegalInfoRestService(
     prj <- projects.findByShortcode(shortcode).orDie.someOrFail(NotFoundException(s"Project $shortcode not found"))
     licenses <- if (showEnabledOnly) { legalInfos.findEnabledLicenses(shortcode) }
                 else { legalInfos.findAvailableLicenses(shortcode) }
-    licenseDtos = licenses.map(l => ProjectLicenseDto.from(l, prj.enabledLicenses.contains(l.id))).toSeq
+    licenseDtos = licenses.map(ProjectLicenseDto.from(_, prj)).toSeq
   } yield slice(licenseDtos, pageAndSize, filterAndOrder)
+
+  def findAvailableLicenseByIdAndShortcode(
+    shortcode: Shortcode,
+    licenseIri: LicenseIri,
+  ): IO[NotFoundException, ProjectLicenseDto] = for {
+    prj <- projects.findByShortcode(shortcode).orDie.someOrFail(NotFoundException(s"Project $shortcode not found"))
+    license <- legalInfos
+                 .findAvailableLicenseByIdAndShortcode(licenseIri, shortcode)
+                 .someOrFail(NotFoundException(s"License $licenseIri not found in project $shortcode"))
+  } yield ProjectLicenseDto.from(license, prj)
 
   private def slice[A: JsonCodec](
     all: Seq[A],
