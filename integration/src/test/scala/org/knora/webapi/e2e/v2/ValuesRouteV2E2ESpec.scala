@@ -71,9 +71,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
   )
 
-  // If true, writes some API responses to test data files. If false, compares the API responses to the existing test data files.
-  private val writeTestDataFiles = false
-
   private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
   object AThing {
@@ -677,9 +674,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     val response: HttpResponse = singleAwaitingRequest(request)
     val responseStr            = responseToString(response)
     assert(response.status == StatusCodes.OK, responseStr)
-    val expectedResponseStr =
-      if (writeTestDataFiles) writeTestData(responseStr, Paths.get(s"valuesE2EV2/$fileBasename.jsonld"))
-      else readTestData(Paths.get(s"valuesE2EV2/$fileBasename.jsonld"))
+    val expectedResponseStr = readTestData("valuesE2EV2", s"$fileBasename.jsonld")
     compareJSONLDForResourcesResponse(expectedJSONLD = expectedResponseStr, receivedJSONLD = responseStr)
   }
   private val customValueUUID     = "CpO1TIDf1IS55dQbyIuDsA"

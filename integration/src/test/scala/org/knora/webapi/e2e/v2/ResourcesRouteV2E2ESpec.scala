@@ -63,9 +63,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
   private val aThingWithHistoryIriEncoded   = URLEncoder.encode(aThingWithHistoryIri, "UTF-8")
   private val reiseInsHeiligeLandIriEncoded = URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")
 
-  // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
-  private val writeTestDataFiles = false
-
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_data/incunabula-data.ttl",
@@ -115,11 +112,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
        |    }
        |}""".stripMargin
 
-  private def testData(contents: String, fileName: String): String = {
-    val path = Paths.get("resourcesR2RV2", fileName)
-    if (writeTestDataFiles) writeTestData(contents, path)
-    else readTestData(path)
-  }
+  private def testData(fileName: String): String = readTestData("resourcesR2RV2", fileName)
 
   "The resources v2 endpoint" should {
     "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
@@ -128,7 +121,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
 
-      val expectedAnswerJSONLD = testData(responseAsString, "BookReiseInsHeiligeLand.jsonld")
+      val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLand.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -152,7 +145,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerTurtle = testData(responseAsString, "BookReiseInsHeiligeLand.ttl")
+      val expectedAnswerTurtle = testData("BookReiseInsHeiligeLand.ttl")
       assert(RdfModel.fromTurtle(responseAsString) == RdfModel.fromTurtle(expectedAnswerTurtle))
     }
 
@@ -162,7 +155,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerRdfXml = testData(responseAsString, "BookReiseInsHeiligeLand.rdf")
+      val expectedAnswerRdfXml = testData("BookReiseInsHeiligeLand.rdf")
       assert(RdfModel.fromRdfXml(responseAsString) == RdfModel.fromRdfXml(expectedAnswerRdfXml))
     }
 
@@ -171,7 +164,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "BookReiseInsHeiligeLandPreview.jsonld")
+      val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLandPreview.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
@@ -180,7 +173,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "AThing.jsonld")
+      val expectedAnswerJSONLD = testData("AThing.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
@@ -190,7 +183,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "BookReiseInsHeiligeLandSimple.jsonld")
+      val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLandSimple.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -208,7 +201,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerTurtle = testData(responseAsString, "BookReiseInsHeiligeLandSimple.ttl")
+      val expectedAnswerTurtle = testData("BookReiseInsHeiligeLandSimple.ttl")
       assert(RdfModel.fromTurtle(responseAsString) == RdfModel.fromTurtle(expectedAnswerTurtle))
     }
 
@@ -219,7 +212,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerRdfXml = testData(responseAsString, "BookReiseInsHeiligeLandSimple.rdf")
+      val expectedAnswerRdfXml = testData("BookReiseInsHeiligeLandSimple.rdf")
       assert(RdfModel.fromRdfXml(responseAsString) == RdfModel.fromRdfXml(expectedAnswerRdfXml))
     }
 
@@ -229,7 +222,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "BookReiseInsHeiligeLandSimplePreview.jsonld")
+      val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLandSimplePreview.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
@@ -240,7 +233,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "BookReiseInsHeiligeLandSimple.jsonld")
+      val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLandSimple.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
@@ -250,7 +243,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "NarrenschiffFirstPage.jsonld")
+      val expectedAnswerJSONLD = testData("NarrenschiffFirstPage.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
@@ -260,7 +253,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingWithBCEDate.jsonld")
+      val expectedAnswerJSONLD = testData("ThingWithBCEDate.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -277,7 +270,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingWithBCEDate2.jsonld")
+      val expectedAnswerJSONLD = testData("ThingWithBCEDate2.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -294,7 +287,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingWithListValue.jsonld")
+      val expectedAnswerJSONLD = testData("ThingWithListValue.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -312,7 +305,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingWithListValueSimple.jsonld")
+      val expectedAnswerJSONLD = testData("ThingWithListValueSimple.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -329,7 +322,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingWithLinkComplex.jsonld")
+      val expectedAnswerJSONLD = testData("ThingWithLinkComplex.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -347,7 +340,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingWithLinkSimple.jsonld")
+      val expectedAnswerJSONLD = testData("ThingWithLinkSimple.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -364,7 +357,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingWithTextLangComplex.jsonld")
+      val expectedAnswerJSONLD = testData("ThingWithTextLangComplex.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -382,7 +375,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingWithTextLangSimple.jsonld")
+      val expectedAnswerJSONLD = testData("ThingWithTextLangSimple.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -399,7 +392,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "Testding.jsonld")
+      val expectedAnswerJSONLD = testData("Testding.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -416,7 +409,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingWithPicture.jsonld")
+      val expectedAnswerJSONLD = testData("ThingWithPicture.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -433,7 +426,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingWithOneHiddenResource.jsonld")
+      val expectedAnswerJSONLD = testData("ThingWithOneHiddenResource.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -450,7 +443,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingWithOneDeletedResource.jsonld")
+      val expectedAnswerJSONLD = testData("ThingWithOneDeletedResource.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
@@ -467,7 +460,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingWithVersionHistory.jsonld")
+      val expectedAnswerJSONLD = testData("ThingWithVersionHistory.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
@@ -477,7 +470,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingWithVersionHistory.jsonld")
+      val expectedAnswerJSONLD = testData("ThingWithVersionHistory.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
@@ -486,7 +479,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "CompleteVersionHistory.jsonld")
+      val expectedAnswerJSONLD = testData("CompleteVersionHistory.jsonld")
       compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
@@ -498,7 +491,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "PartialVersionHistory.jsonld")
+      val expectedAnswerJSONLD = testData("PartialVersionHistory.jsonld")
       compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
@@ -526,7 +519,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             val versionResponse: HttpResponse = singleAwaitingRequest(versionRequest)
             val versionResponseAsString       = responseToString(versionResponse)
             assert(versionResponse.status == StatusCodes.OK, versionResponseAsString)
-            val expectedAnswerJSONLD = testData(versionResponseAsString, s"ThingWithVersionHistory$arkTimestamp.jsonld")
+            val expectedAnswerJSONLD = testData(s"ThingWithVersionHistory$arkTimestamp.jsonld")
             compareJSONLDForResourcesResponse(expectedAnswerJSONLD, versionResponseAsString)
 
           case other => throw AssertionException(s"Expected JsonLDObject, got $other")
@@ -559,7 +552,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
       val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingGraphBoth.jsonld")
+      val expectedAnswerJSONLD = testData("ThingGraphBoth.jsonld")
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
       assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
     }
@@ -571,7 +564,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
       val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingGraphOutbound.jsonld")
+      val expectedAnswerJSONLD = testData("ThingGraphOutbound.jsonld")
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
       assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
     }
@@ -583,7 +576,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
       val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingGraphInbound.jsonld")
+      val expectedAnswerJSONLD = testData("ThingGraphInbound.jsonld")
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
       assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
     }
@@ -597,7 +590,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
       val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingGraphBothWithExcludedProp.jsonld")
+      val expectedAnswerJSONLD = testData("ThingGraphBothWithExcludedProp.jsonld")
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
       assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
     }
@@ -609,7 +602,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
       val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "ThingGraphBothWithDepth.jsonld")
+      val expectedAnswerJSONLD = testData("ThingGraphBothWithDepth.jsonld")
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
       assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
     }
@@ -658,7 +651,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
-      val expectedAnswerJSONLD = testData(responseAsString, "BooksFromIncunabula.jsonld")
+      val expectedAnswerJSONLD = testData("BooksFromIncunabula.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
@@ -1921,7 +1914,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseStr: String    = responseToString(response)
       assert(response.status == StatusCodes.OK, responseStr)
       val responseJson: JsValue = JsonParser(responseStr)
-      val expectedJson: JsValue = JsonParser(testData(responseStr, "IIIFManifest.jsonld"))
+      val expectedJson: JsValue = JsonParser(testData("IIIFManifest.jsonld"))
       assert(responseJson == expectedJson)
     }
 

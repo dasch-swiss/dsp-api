@@ -19,7 +19,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio.*
 
-import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
@@ -123,18 +122,9 @@ abstract class E2ESpec
   private def adjustFilePath(file: Path): Path =
     Paths.get("..", "test_data", "generated_test_data").resolve(file).normalize()
 
-  protected def readTestData(file: Path): String =
-    FileUtil.readTextFile(adjustFilePath(file)).replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
-
-  protected def writeTestData(responseAsString: String, file: Path): String = {
-    val adjustedFile = adjustFilePath(file)
-    Files.createDirectories(adjustedFile.getParent)
-    FileUtil.writeTextFile(
-      adjustedFile,
-      responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL"),
-    )
-    responseAsString
-  }
+  protected def readTestData(folder: String, file: String): String = FileUtil
+    .readTextFile(adjustFilePath(Paths.get(folder, file)))
+    .replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
 
   def uploadToIngest(fileToUpload: java.nio.file.Path): UploadedFile =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(fileToUpload)))

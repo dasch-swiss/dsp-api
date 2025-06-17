@@ -82,7 +82,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
     ),
   )
 
-  private def testData(filename: String): String = readTestData(Paths.get("searchR2RV2", filename))
+  private def testData(filename: String): String = readTestData("searchR2RV2", filename)
 
   "The Search v2 Endpoint" should {
     "perform a fulltext search for 'Narr'" in {
