@@ -26,7 +26,6 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.Db
 import org.knora.webapi.core.MessageRelayActorRef
@@ -37,6 +36,8 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
+
+import java.nio.file.Path
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack
@@ -116,6 +117,12 @@ abstract class E2ESpec
     responseToString(response)
   }
 
-  protected def readTestData(folder: String, file: String): String =
-    FileUtil.readTextFile(Paths.get("..", "test_data", "generated_test_data", folder, file).normalize())
+  def readTestData(folder: String, filename: String): String =
+    readTestData(Paths.get(folder, filename))
+
+  private def readTestData(file: Path): String =
+    FileUtil.readTextFile(adjustFilePath(file)).replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
+
+  private def adjustFilePath(file: Path): Path =
+    Paths.get("..", "test_data", "generated_test_data").resolve(file).normalize()
 }
