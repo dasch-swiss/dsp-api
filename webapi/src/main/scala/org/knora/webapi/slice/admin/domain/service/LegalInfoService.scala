@@ -69,11 +69,10 @@ case class LegalInfoService(
     licenseIri match
       case None => ZIO.succeed(Validation.unit)
       case Some(iri) =>
-        for {
-          licenses <- findEnabledLicenses(shortcode)
-          result = if (licenses.map(_.id).contains(iri)) { Validation.unit }
-                   else { Validation.fail(s"License $iri is not allowed in project $shortcode") }
-        } yield result
+        findEnabledLicenses(shortcode).map { licenses =>
+          if (licenses.map(_.id).contains(iri)) { Validation.unit }
+          else { Validation.fail(s"License $iri is not allowed in project $shortcode") }
+        }
 
   private def copyrightHolderValidation(
     copyrightHolder: Option[CopyrightHolder],
