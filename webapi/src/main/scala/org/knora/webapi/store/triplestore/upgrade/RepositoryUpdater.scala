@@ -245,7 +245,7 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
    */
   private def readResourceIntoModel(filename: String, rdfFormat: NonJsonLD): RdfModel = {
     val fileContent: String = FileUtil.readTextResource(filename)
-    RdfFormatUtil.parseToRdfModel(fileContent, rdfFormat)
+    RdfModel.from(fileContent, rdfFormat)
   }
 }
 

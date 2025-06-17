@@ -153,7 +153,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerTurtle = testData(responseAsString, "BookReiseInsHeiligeLand.ttl")
-      assert(parseTurtle(responseAsString) == parseTurtle(expectedAnswerTurtle))
+      assert(RdfModel.fromTurtle(responseAsString) == RdfModel.fromTurtle(expectedAnswerTurtle))
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in RDF/XML" in {
@@ -163,7 +163,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerRdfXml = testData(responseAsString, "BookReiseInsHeiligeLand.rdf")
-      assert(parseRdfXml(responseAsString) == parseRdfXml(expectedAnswerRdfXml))
+      assert(RdfModel.fromRdfXml(responseAsString) == RdfModel.fromRdfXml(expectedAnswerRdfXml))
     }
 
     "perform a resource preview request for the book 'Reise ins Heilige Land' using the complex schema" in {
@@ -209,7 +209,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerTurtle = testData(responseAsString, "BookReiseInsHeiligeLandSimple.ttl")
-      assert(parseTurtle(responseAsString) == parseTurtle(expectedAnswerTurtle))
+      assert(RdfModel.fromTurtle(responseAsString) == RdfModel.fromTurtle(expectedAnswerTurtle))
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in RDF/XML" in {
@@ -220,7 +220,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerRdfXml = testData(responseAsString, "BookReiseInsHeiligeLandSimple.rdf")
-      assert(parseRdfXml(responseAsString) == parseRdfXml(expectedAnswerRdfXml))
+      assert(RdfModel.fromRdfXml(responseAsString) == RdfModel.fromRdfXml(expectedAnswerRdfXml))
     }
 
     "perform a resource preview request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header)" in {

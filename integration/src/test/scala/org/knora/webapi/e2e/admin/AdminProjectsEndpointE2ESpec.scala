@@ -581,7 +581,7 @@ class AdminProjectsEndpointE2ESpec extends E2ESpec with SprayJsonSupport {
         assert(response.status === StatusCodes.OK)
         val trigStrFuture: Future[String] = Unmarshal(response.entity).to[String]
         val trigStr: String               = Await.result(trigStrFuture, Timeout(5.seconds).duration)
-        val parsedTrig: RdfModel          = parseTrig(trigStr)
+        val parsedTrig: RdfModel          = RdfModel.fromTriG(trigStr)
         val contextIris: Set[IRI]         = parsedTrig.getContexts
 
         assert(

@@ -175,14 +175,14 @@ class KnoraResponseV2Spec() extends E2ESpec {
       )
 
       // Parse the Turtle to an RDF4J Model.
-      val parsedTurtle: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
+      val parsedTurtle: RdfModel = RdfModel.fromTurtle(turtle)
 
       // Read an isomorphic Turtle file and parse it to an RDF4J Model.
       val expectedTurtle: String =
         FileUtil.readTextFile(
           Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
         )
-      val parsedExpectedTurtle: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = expectedTurtle, rdfFormat = Turtle)
+      val parsedExpectedTurtle: RdfModel = RdfModel.fromTurtle(expectedTurtle)
 
       // Compare the two models.
       parsedTurtle should ===(parsedExpectedTurtle)

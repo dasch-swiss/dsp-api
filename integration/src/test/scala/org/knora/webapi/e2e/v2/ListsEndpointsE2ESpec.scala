@@ -75,10 +75,10 @@ class ListsEndpointsE2ESpec extends E2ESpec {
         Get(s"$baseApiUrl/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}")
           .addHeader(Accept(RdfMediaTypes.`text/turtle`)),
       )
-      val expected: RdfModel =
-        parseTurtle(FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/listsR2RV2/imagesList.ttl")))
-      val responseTurtle: RdfModel = parseTurtle(actualStr)
-      assert(responseTurtle == expected)
+      val expected: RdfModel = RdfModel.fromTurtle(
+        FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/listsR2RV2/imagesList.ttl")),
+      )
+      assert(RdfModel.fromTurtle(actualStr) == expected)
     }
 
     "perform a request for a list in RDF/XML" in {
@@ -87,8 +87,10 @@ class ListsEndpointsE2ESpec extends E2ESpec {
           .addHeader(Accept(RdfMediaTypes.`application/rdf+xml`)),
       )
       val expectedAnswerRdfXml: RdfModel =
-        parseRdfXml(FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/listsR2RV2/imagesList.rdf")))
-      val responseRdfXml: RdfModel = parseRdfXml(actualStr)
+        RdfModel.fromRdfXml(
+          FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/listsR2RV2/imagesList.rdf")),
+        )
+      val responseRdfXml: RdfModel = RdfModel.fromRdfXml(actualStr)
       assert(responseRdfXml == expectedAnswerRdfXml)
     }
 
@@ -116,11 +118,10 @@ class ListsEndpointsE2ESpec extends E2ESpec {
           .addHeader(Accept(RdfMediaTypes.`text/turtle`)),
       )
       val expectedAnswerTurtle: RdfModel =
-        parseTurtle(
+        RdfModel.fromTurtle(
           FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/listsR2RV2/imagesListNode.ttl")),
         )
-      val responseTurtle: RdfModel = parseTurtle(actual)
-      assert(responseTurtle == expectedAnswerTurtle)
+      assert(RdfModel.fromTurtle(actual) == expectedAnswerTurtle)
     }
 
     "perform a request for a node in RDF/XML" in {
@@ -129,10 +130,10 @@ class ListsEndpointsE2ESpec extends E2ESpec {
           .addHeader(Accept(RdfMediaTypes.`application/rdf+xml`)),
       )
       val expectedAnswerRdfXml: RdfModel =
-        parseRdfXml(
+        RdfModel.fromRdfXml(
           FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/listsR2RV2/imagesListNode.rdf")),
         )
-      val responseRdfXml: RdfModel = parseRdfXml(actual)
+      val responseRdfXml: RdfModel = RdfModel.fromRdfXml(actual)
       assert(responseRdfXml == expectedAnswerRdfXml)
     }
   }

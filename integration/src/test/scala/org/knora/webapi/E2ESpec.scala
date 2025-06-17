@@ -18,8 +18,6 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio.*
-import zio.json.*
-import zio.json.ast.Json
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -31,7 +29,6 @@ import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
 
-import dsp.errors.AssertionException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.Db
 import org.knora.webapi.core.MessageRelayActorRef
@@ -118,23 +115,10 @@ abstract class E2ESpec
   }
 
   protected def doGetRequest(urlPath: String): String = {
-
     val request                = Get(s"$baseApiUrl$urlPath")
     val response: HttpResponse = singleAwaitingRequest(request)
     responseToString(response)
   }
-
-  protected def parseTrig(trigStr: String): RdfModel =
-    RdfFormatUtil.parseToRdfModel(rdfStr = trigStr, rdfFormat = TriG)
-
-  protected def parseTurtle(turtleStr: String): RdfModel =
-    RdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
-
-  protected def parseRdfXml(rdfXmlStr: String): RdfModel =
-    RdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
-
-  protected def parseJsonLd(rdfXmlStr: String): RdfModel =
-    RdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = JsonLD)
 
   /**
    * Reads or writes a test data file.
