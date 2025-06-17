@@ -40,7 +40,7 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
     ),
   )
 
-  private val findLicenseByIri = suite("findByIdAndProject")(
+  private val findLicenseByIri = suite("findAvailableLicenseByIdAndShortcode")(
     test("should return the license for a project") {
       for {
         prj    <- setupProject
