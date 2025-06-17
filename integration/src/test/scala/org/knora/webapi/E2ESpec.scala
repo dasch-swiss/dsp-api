@@ -101,16 +101,6 @@ abstract class E2ESpec
   protected def checkResponseOK(request: HttpRequest): Unit =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.checkResponseOK(request)))
 
-  protected def getSuccessResponseAs[A](request: HttpRequest)(implicit decoder: JsonDecoder[A]): A = UnsafeZioRun
-    .runOrThrow(
-      for {
-        str <- ZIO.serviceWithZIO[TestClientService](_.getResponseString(request))
-        obj <- ZIO
-                 .fromEither(str.fromJson[A])
-                 .mapError(e => new AssertionException(s"Error: $e\nFailed to parse json:\n$str"))
-      } yield obj,
-    )
-
   protected def getResponseAsJson(request: HttpRequest): Json.Obj =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseJson(request)))
 
