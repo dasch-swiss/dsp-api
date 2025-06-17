@@ -26,6 +26,8 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.models.filemodels.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingShortcode
+import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.util.MutableTestIri
 
 /**
@@ -323,7 +325,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
   "The Knora/Sipi integration" should {
     "create a resource with a still image file" in {
       // Upload the image to Sipi.
-      val uploadedFile = uploadToIngest(pathToMarbles)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToMarbles, anythingShortcode))
       uploadedFile.originalFilename should ===(marblesOriginalFilename)
 
       // Create the resource in the API.
@@ -369,7 +371,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "change a still image file value" in {
       // Upload the image to Sipi.
-      val uploadedFile = uploadToIngest(pathToTrp88)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTrp88, anythingShortcode))
       uploadedFile.originalFilename should ===(trp88OriginalFilename)
 
       // JSON describing the new image to the API.
@@ -403,7 +405,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "create a resource with a PDF file" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToMinimalPdf)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToMinimalPdf, anythingShortcode))
       uploadedFile.originalFilename should ===(minimalPdfOriginalFilename)
 
       // Create the resource in the API.
@@ -437,7 +439,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "change a PDF file value" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToTestPdf)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTestPdf, anythingShortcode))
 
       uploadedFile.originalFilename should ===(testPdfOriginalFilename)
 
@@ -469,7 +471,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "not create a document resource if the file is actually a zip file" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToMinimalZip)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToMinimalZip, anythingShortcode))
       uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
 
       // Create the resource in the API.
@@ -484,7 +486,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "create a resource with a CSV file" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToCsv1)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToCsv1, anythingShortcode))
       uploadedFile.originalFilename should ===(csv1OriginalFilename)
 
       // Create the resource in the API.
@@ -513,7 +515,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "change a CSV file value" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToCsv2)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToCsv2, anythingShortcode))
       uploadedFile.originalFilename should ===(csv2OriginalFilename)
 
       // Update the value.
@@ -543,7 +545,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "not create a resource with a still image file that's actually a text file" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToCsv1)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToCsv1, anythingShortcode))
       uploadedFile.originalFilename should ===(csv1OriginalFilename)
 
       // Create the resource in the API.
@@ -559,7 +561,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "create a resource with an XML file" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToXml1)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToXml1, anythingShortcode))
       uploadedFile.originalFilename should ===(xml1OriginalFilename)
 
       // Create the resource in the API.
@@ -594,7 +596,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "change an XML file value" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToXml2)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToXml2, anythingShortcode))
       uploadedFile.originalFilename should ===(xml2OriginalFilename)
 
       // Update the value.
@@ -630,7 +632,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "not create a resource of type TextRepresentation with a Zip file" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToMinimalZip)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToMinimalZip, anythingShortcode))
       uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
 
       // Create the resource in the API.
@@ -646,7 +648,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "create a resource of type ArchiveRepresentation with a Zip file" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToMinimalZip)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToMinimalZip, anythingShortcode))
       uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
 
       // Create the resource in the API.
@@ -684,7 +686,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "change a Zip file value" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToTestZip)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTestZip, anythingShortcode))
       uploadedFile.originalFilename should ===(testZipOriginalFilename)
 
       // Update the value.
@@ -720,7 +722,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "create a resource of type ArchiveRepresentation with a 7z file" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToTest7z)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTest7z, anythingShortcode))
       uploadedFile.originalFilename should ===(test7zOriginalFilename)
 
       // Create the resource in the API.
@@ -758,7 +760,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "create a resource with a WAV file" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToMinimalWav)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToMinimalWav, anythingShortcode))
       uploadedFile.originalFilename should ===(minimalWavOriginalFilename)
 
       // Create the resource in the API.
@@ -796,7 +798,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "change a WAV file value" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToTestWav)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTestWav, anythingShortcode))
       uploadedFile.originalFilename should ===(testWavOriginalFilename)
 
       // Update the value.
@@ -832,7 +834,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "create a resource with a video file" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToTestVideo)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTestVideo, anythingShortcode))
       uploadedFile.originalFilename should ===(testVideoOriginalFilename)
 
       // Create the resource in the API.
@@ -870,7 +872,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
     "change a video file value" in {
       // Upload the file to Sipi.
-      val uploadedFile = uploadToIngest(pathToTestVideo2)
+      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTestVideo2, anythingShortcode))
       uploadedFile.originalFilename should ===(testVideo2OriginalFilename)
 
       // Update the value.

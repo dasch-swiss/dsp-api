@@ -19,7 +19,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio.*
 
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
@@ -37,8 +36,6 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.TestClientService
-import org.knora.webapi.testservices.TestDspIngestClient
-import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
 import org.knora.webapi.util.FileUtil
 
 /**
@@ -119,13 +116,6 @@ abstract class E2ESpec
     responseToString(response)
   }
 
-  private def adjustFilePath(file: Path): Path =
-    Paths.get("..", "test_data", "generated_test_data").resolve(file).normalize()
-
-  protected def readTestData(folder: String, file: String): String = FileUtil
-    .readTextFile(adjustFilePath(Paths.get(folder, file)))
-    .replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
-
-  def uploadToIngest(fileToUpload: java.nio.file.Path): UploadedFile =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(fileToUpload)))
+  protected def readTestData(folder: String, file: String): String =
+    FileUtil.readTextFile(Paths.get("..", "test_data", "generated_test_data", folder, file).normalize())
 }
