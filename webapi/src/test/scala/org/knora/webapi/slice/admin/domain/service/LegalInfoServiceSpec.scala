@@ -51,7 +51,7 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
       for {
         prj              <- setupProject
         unknownLicenseIri = LicenseIri.unsafeFrom("http://rdfh.ch/licenses/i6xBpZn4RVOdOIyTezEumw")
-        actual           <- service(_.findByIdAndProject(unknownLicenseIri, prj.shortcode))
+        actual           <- service(_.findAvailableLicenseByIdAndShortcode(unknownLicenseIri, prj.shortcode))
       } yield assertTrue(actual.isEmpty)
     },
   )
