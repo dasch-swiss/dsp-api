@@ -136,13 +136,5 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
     StringFormatter.test,
     TriplestoreServiceInMemory.emptyLayer,
     CacheManager.layer,
-    ZLayer.succeed(
-      org.knora.webapi.config.Features(
-        allowEraseProjects = false,
-        disableLastModificationDateCheck = false,
-        triggerCompactionAfterProjectErasure = false,
-        enableFullLicenseCheck = true,
-      ),
-    ),
   )
 }

@@ -9,7 +9,6 @@ import zio.URLayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.Features
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
@@ -33,7 +32,6 @@ object AdminDomainModule { self =>
       AppConfig &
       DefaultObjectAccessPermissionRepo &
       DspIngestClient &
-      Features &
       IriService &
       KnoraGroupRepo &
       KnoraProjectRepo &
