@@ -101,9 +101,6 @@ abstract class E2ESpec
   protected def checkResponseOK(request: HttpRequest): Unit =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.checkResponseOK(request)))
 
-  protected def getResponseAsJson(request: HttpRequest): Json.Obj =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseJson(request)))
-
   protected def getResponseAsJsonLD(request: HttpRequest): JsonLDDocument =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseJsonLD(request)))
 
