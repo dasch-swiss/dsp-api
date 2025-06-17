@@ -17,7 +17,10 @@ final class ProjectsLegalInfoEndpointsHandler(
   mapper: HandlerMapper,
 ) {
   val allHandlers =
-    List(PublicEndpointHandler(endpoints.getProjectLicenses, restService.findLicenses))
+    List(
+      PublicEndpointHandler(endpoints.getProjectLicenses, restService.findLicenses),
+      PublicEndpointHandler(endpoints.getProjectLicensesIri, restService.findAvailableLicenseByIdAndShortcode),
+    )
       .map(mapper.mapPublicEndpointHandler) ++
       List(
         SecuredEndpointHandler(endpoints.getProjectAuthorships, restService.findAuthorships),
