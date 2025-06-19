@@ -34,6 +34,8 @@ object VersionDate extends WithFrom[String, VersionDate] {
 
   given TapirCodec.StringCodec[VersionDate] = TapirCodec.stringCodec(from, _.value.toString)
 
+  def fromInstant(instant: Instant): VersionDate = VersionDate(instant)
+
   override def from(str: String): Either[String, VersionDate] =
     ValuesValidator
       .xsdDateTimeStampToInstant(str)
