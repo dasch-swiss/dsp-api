@@ -19,6 +19,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio.*
 
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
@@ -26,6 +27,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.Db
 import org.knora.webapi.core.MessageRelayActorRef
@@ -36,8 +38,6 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
-
-import java.nio.file.Path
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack
