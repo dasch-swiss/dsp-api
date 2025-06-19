@@ -571,6 +571,7 @@ final case class ResourcesResponderV2(
    * @param valueUuid            if defined, requests only the value with the specified UUID.
    * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
    * @param withDeleted          if defined, indicates if the deleted resource and values should be returned or not.
+   * @param showDeletedValues    if false, deleted values will be shown as DeletedValue
    * @param targetSchema         the target API schema.
    * @param schemaOptions        the schema options submitted with the request.
    *
@@ -648,10 +649,10 @@ final case class ResourcesResponderV2(
 
       // Check if resources are deleted, if so, replace them with DeletedResource
       deletedResourcesReplaced =
-        apiResponse.resources.map { case resource =>
+        apiResponse.resources.map { resource =>
           resource.deletionInfo match {
             // Resource deleted -> return DeletedResource instead
-            case Some(_) => resource.asDeletedResource()
+            case Some(_) => resource.asDeletedResource(versionDate)
             // Resource not deleted -> return resource
             case None =>
               // deleted values should be shown -> resource can be returned

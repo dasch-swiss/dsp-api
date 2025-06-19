@@ -467,23 +467,26 @@ case class ReadResourceV2(
    *
    * @return A generic DeletedResource
    */
-  def asDeletedResource(): ReadResourceV2 = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    ReadResourceV2(
-      resourceIri = this.resourceIri,
-      label = "Deleted Resource",
-      resourceClassIri = KnoraBase.DeletedResource.toSmartIri,
-      attachedToUser = this.attachedToUser,
-      projectADM = this.projectADM,
-      permissions = this.permissions,
-      userPermission = this.userPermission,
-      values = Map.empty,
-      creationDate = this.creationDate,
-      lastModificationDate = this.lastModificationDate,
-      versionDate = None,
-      deletionInfo = this.deletionInfo,
-    )
-  }
+  def asDeletedResource(versionDate: Option[VersionDate] = None)(implicit sf: StringFormatter): ReadResourceV2 =
+    this.deletionInfo match {
+      case Some(DeletionInfo(deletedDate, _))
+          if deletedDate.isBefore(versionDate.map(_.value).getOrElse(Instant.now)) =>
+        ReadResourceV2(
+          resourceIri = this.resourceIri,
+          label = "Deleted Resource",
+          resourceClassIri = KnoraBase.DeletedResource.toSmartIri,
+          attachedToUser = this.attachedToUser,
+          projectADM = this.projectADM,
+          permissions = this.permissions,
+          userPermission = this.userPermission,
+          values = Map.empty,
+          creationDate = this.creationDate,
+          lastModificationDate = this.lastModificationDate,
+          versionDate = None,
+          deletionInfo = this.deletionInfo,
+        )
+      case _ => this
+    }
 
   /**
    * Return a copy of the present resource, where all values that are marked as deleted,
