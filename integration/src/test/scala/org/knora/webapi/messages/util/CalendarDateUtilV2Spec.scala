@@ -3,18 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.util
+package org.knora.webapi.messages.util
 
 import org.scalatest.compatible.Assertion
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.util.*
 
 /**
  * Tests [[CalendarDateUtilV2]].
  */
-class CalendarDateUtilV2Spec extends E2ESpec {
+class CalendarDateUtilV2Spec extends AnyWordSpec with Matchers {
+
   private def checkSingleDate(
     calendarDate: CalendarDateV2,
     expectedStartJDN: Int,
@@ -90,7 +91,7 @@ class CalendarDateUtilV2Spec extends E2ESpec {
         ),
         expectedStartJDN = 2192808,
         expectedEndJDN = 2192808,
-        dateStr = "JULIAN:1291-08-01 CE",
+        dateStr = "JULIAN:129-08-01 CE",
       )
 
       // JULIAN:4713-01-01 BCE
