@@ -91,7 +91,7 @@ class CalendarDateUtilV2Spec extends AnyWordSpec with Matchers {
         ),
         expectedStartJDN = 2192808,
         expectedEndJDN = 2192808,
-        dateStr = "JULIAN:129-08-01 CE",
+        dateStr = "JULIAN:1291-08-01 CE",
       )
 
       // JULIAN:4713-01-01 BCE
