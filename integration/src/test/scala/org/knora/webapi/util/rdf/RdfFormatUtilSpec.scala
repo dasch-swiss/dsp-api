@@ -58,25 +58,25 @@ class RdfFormatUtilSpec() extends E2ESpec {
         FileUtil.readTextFile(
           Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
         )
-      val inputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = Turtle)
+      val inputModel = RdfModel.fromTurtle(inputTurtle)
       checkModelForRdfTypeBook(inputModel)
 
-      val outputTurtle: String  = RdfFormatUtil.format(rdfModel = inputModel, rdfFormat = Turtle)
-      val outputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = outputTurtle, rdfFormat = Turtle)
+      val outputTurtle: String = RdfFormatUtil.format(rdfModel = inputModel, rdfFormat = Turtle)
+      val outputModel          = RdfModel.fromTurtle(outputTurtle)
       checkModelForRdfTypeBook(outputModel)
       assert(outputModel == inputModel)
     }
 
     "parse RDF in JSON-LD format, producing an RdfModel, then format it as JSON-LD again" in {
-      val inputTurtle: String =
+      val input: String =
         FileUtil.readTextFile(
           Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
         )
-      val inputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = JsonLD)
+      val inputModel = RdfModel.fromJsonLD(input)
       checkModelForRdfTypeBook(inputModel)
 
-      val outputTurtle: String  = RdfFormatUtil.format(rdfModel = inputModel, rdfFormat = JsonLD)
-      val outputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = outputTurtle, rdfFormat = JsonLD)
+      val output: String = RdfFormatUtil.format(rdfModel = inputModel, rdfFormat = JsonLD)
+      val outputModel    = RdfModel.fromJsonLD(output)
       checkModelForRdfTypeBook(outputModel)
       assert(outputModel == inputModel)
     }
@@ -86,7 +86,7 @@ class RdfFormatUtilSpec() extends E2ESpec {
         FileUtil.readTextFile(
           Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
         )
-      val inputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = Turtle)
+      val inputModel = RdfModel.fromTurtle(inputTurtle)
       val inputJsonLDDocument: JsonLDDocument =
         RdfFormatUtilSpec.parseToJsonLDDocument(inputTurtle, Turtle)
       checkJsonLDDocumentForRdfTypeBook(inputJsonLDDocument)
@@ -95,8 +95,8 @@ class RdfFormatUtilSpec() extends E2ESpec {
       checkModelForRdfTypeBook(jsonLDOutputModel)
       assert(jsonLDOutputModel == inputModel)
 
-      val outputTurtle: String        = RdfFormatUtil.format(rdfModel = jsonLDOutputModel, rdfFormat = Turtle)
-      val turtleOutputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = outputTurtle, rdfFormat = Turtle)
+      val outputTurtle: String = RdfFormatUtil.format(rdfModel = jsonLDOutputModel, rdfFormat = Turtle)
+      val turtleOutputModel    = RdfModel.fromTurtle(outputTurtle)
       checkModelForRdfTypeBook(turtleOutputModel)
       assert(turtleOutputModel == inputModel)
     }
@@ -106,7 +106,7 @@ class RdfFormatUtilSpec() extends E2ESpec {
         FileUtil.readTextFile(
           Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.rdf"),
         )
-      val inputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = inputRdfXml, rdfFormat = RdfXml)
+      val inputModel = RdfModel.fromRdfXml(inputRdfXml)
       val inputJsonLDDocument: JsonLDDocument =
         RdfFormatUtilSpec.parseToJsonLDDocument(inputRdfXml, RdfXml)
       checkJsonLDDocumentForRdfTypeBook(inputJsonLDDocument)
@@ -115,8 +115,8 @@ class RdfFormatUtilSpec() extends E2ESpec {
       checkModelForRdfTypeBook(jsonLDOutputModel)
       assert(jsonLDOutputModel == inputModel)
 
-      val outputRdfXml: String        = RdfFormatUtil.format(rdfModel = jsonLDOutputModel, rdfFormat = RdfXml)
-      val rdfXmlOutputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = outputRdfXml, rdfFormat = RdfXml)
+      val outputRdfXml: String = RdfFormatUtil.format(rdfModel = jsonLDOutputModel, rdfFormat = RdfXml)
+      val rdfXmlOutputModel    = RdfModel.fromRdfXml(outputRdfXml)
       checkModelForRdfTypeBook(rdfXmlOutputModel)
       assert(rdfXmlOutputModel == inputModel)
     }
@@ -126,7 +126,7 @@ class RdfFormatUtilSpec() extends E2ESpec {
       val inputTrig = FileUtil.readTextFile(
         Paths.get("..", "test_data/generated_test_data/rdfFormatUtil/BookReiseInsHeiligeLand.trig"),
       )
-      val inputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = inputTrig, rdfFormat = TriG)
+      val inputModel = RdfModel.fromTriG(inputTrig)
       checkModelForRdfTypeBook(rdfModel = inputModel, context = Some(graphIri))
     }
 
@@ -134,7 +134,7 @@ class RdfFormatUtilSpec() extends E2ESpec {
       val graphIri = "http://example.org/data#"
       val inputTrig =
         FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/rdfFormatUtil/BookReiseInsHeiligeLand.nq"))
-      val inputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = inputTrig, rdfFormat = NQuads)
+      val inputModel = RdfModel.fromNQuads(inputTrig)
       checkModelForRdfTypeBook(rdfModel = inputModel, context = Some(graphIri))
     }
 

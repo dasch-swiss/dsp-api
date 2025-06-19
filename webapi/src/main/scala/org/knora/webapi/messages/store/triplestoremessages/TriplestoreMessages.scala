@@ -61,7 +61,7 @@ object SparqlExtendedConstructResponse {
   def make(turtle: String)(implicit
     stringFormatter: StringFormatter,
   ): IO[DataConversionException, SparqlExtendedConstructResponse] =
-    make(RdfFormatUtil.parseToRdfModel(turtle, Turtle))
+    make(RdfModel.fromTurtle(turtle))
 
   def make(
     rdfModel: RdfModel,

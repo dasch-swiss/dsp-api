@@ -28,8 +28,10 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
@@ -75,7 +77,7 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     val jsonPart =
       Map(
         "knora-api:mappingHasName"    -> mappingName.toJson,
-        "knora-api:attachedToProject" -> Map(JsonLDKeywords.ID -> anythingProjectIri).toJson,
+        "knora-api:attachedToProject" -> Map(JsonLDKeywords.ID -> anythingProjectIri.value).toJson,
         "rdfs:label"                  -> "custom mapping".toJson,
         JsonLDKeywords.CONTEXT -> Map(
           "rdfs"      -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
@@ -293,7 +295,8 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     }
 
     "create a custom mapping with an XSL transformation" in {
-      val uploadedFile = uploadToIngest(Paths.get(pathToFreetestXSLTFile))
+      val uploadedFile =
+        UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(Paths.get(pathToFreetestXSLTFile), anythingShortcode))
 
       // create FileRepresentation in API
       val uploadFileJson = UploadFileRequest

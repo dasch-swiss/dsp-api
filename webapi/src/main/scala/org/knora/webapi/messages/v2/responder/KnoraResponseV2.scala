@@ -123,7 +123,7 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
 
       case _ =>
         // Some other format. Parse the Turtle to an RdfModel.
-        val rdfModel: RdfModel = RdfFormatUtil.parseToRdfModel(turtle, Turtle)
+        val rdfModel: RdfModel = RdfModel.fromTurtle(turtle)
 
         // Return the model in the requested format.
         RdfFormatUtil.format(

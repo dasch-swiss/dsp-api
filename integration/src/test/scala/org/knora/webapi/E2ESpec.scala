@@ -18,12 +18,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio.*
-import zio.json.*
-import zio.json.ast.Json
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
@@ -31,7 +26,6 @@ import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
 
-import dsp.errors.AssertionException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.Db
 import org.knora.webapi.core.MessageRelayActorRef
@@ -41,9 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.TestClientService
-import org.knora.webapi.testservices.TestDspIngestClient
-import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
-import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.TestDataFileUtil
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack
@@ -101,19 +93,6 @@ abstract class E2ESpec
   protected def checkResponseOK(request: HttpRequest): Unit =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.checkResponseOK(request)))
 
-  protected def getSuccessResponseAs[A](request: HttpRequest)(implicit decoder: JsonDecoder[A]): A = UnsafeZioRun
-    .runOrThrow(
-      for {
-        str <- ZIO.serviceWithZIO[TestClientService](_.getResponseString(request))
-        obj <- ZIO
-                 .fromEither(str.fromJson[A])
-                 .mapError(e => new AssertionException(s"Error: $e\nFailed to parse json:\n$str"))
-      } yield obj,
-    )
-
-  protected def getResponseAsJson(request: HttpRequest): Json.Obj =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseJson(request)))
-
   protected def getResponseAsJsonLD(request: HttpRequest): JsonLDDocument =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseJsonLD(request)))
 
@@ -131,63 +110,11 @@ abstract class E2ESpec
   }
 
   protected def doGetRequest(urlPath: String): String = {
-
     val request                = Get(s"$baseApiUrl$urlPath")
     val response: HttpResponse = singleAwaitingRequest(request)
     responseToString(response)
   }
 
-  protected def parseTrig(trigStr: String): RdfModel =
-    RdfFormatUtil.parseToRdfModel(rdfStr = trigStr, rdfFormat = TriG)
-
-  protected def parseTurtle(turtleStr: String): RdfModel =
-    RdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
-
-  protected def parseRdfXml(rdfXmlStr: String): RdfModel =
-    RdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
-
-  protected def parseJsonLd(rdfXmlStr: String): RdfModel =
-    RdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = JsonLD)
-
-  /**
-   * Reads or writes a test data file.
-   *
-   * @param responseAsString the API response received from Knora.
-   * @param file             the file in which the expected API response is stored.
-   * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
-   * @return the expected response.
-   */
-  @deprecated("Use readTestData() and writeTestData() instead")
-  protected def readOrWriteTextFile(responseAsString: String, file: Path, writeFile: Boolean = false): String = {
-    val adjustedFile = adjustFilePath(file)
-    if (writeFile) {
-      Files.createDirectories(adjustedFile.getParent)
-      FileUtil.writeTextFile(
-        adjustedFile,
-        responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL"),
-      )
-      responseAsString
-    } else {
-      FileUtil.readTextFile(adjustedFile).replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
-    }
-  }
-
-  private def adjustFilePath(file: Path): Path =
-    Paths.get("..", "test_data", "generated_test_data").resolve(file).normalize()
-
-  protected def readTestData(file: Path): String =
-    FileUtil.readTextFile(adjustFilePath(file)).replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
-
-  protected def writeTestData(responseAsString: String, file: Path): String = {
-    val adjustedFile = adjustFilePath(file)
-    Files.createDirectories(adjustedFile.getParent)
-    FileUtil.writeTextFile(
-      adjustedFile,
-      responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL"),
-    )
-    responseAsString
-  }
-
-  def uploadToIngest(fileToUpload: java.nio.file.Path): UploadedFile =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(fileToUpload)))
+  def readTestData(folder: String, filename: String): String =
+    TestDataFileUtil.readTestData(folder, filename, appConfig.sipi)
 }

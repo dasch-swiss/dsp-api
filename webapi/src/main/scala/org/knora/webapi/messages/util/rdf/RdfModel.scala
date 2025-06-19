@@ -339,3 +339,11 @@ trait RdfModel extends Iterable[Statement] {
       case _                      => false
     }
 }
+object RdfModel {
+  def from(str: String, format: RdfFormat): RdfModel = RdfFormatUtil.parseToRdfModel(str, format)
+  def fromJsonLD(jsonLD: String): RdfModel           = from(jsonLD, JsonLD)
+  def fromRdfXml(rdfXml: String): RdfModel           = from(rdfXml, RdfXml)
+  def fromTurtle(turtle: String): RdfModel           = from(turtle, Turtle)
+  def fromTriG(trig: String): RdfModel               = from(trig, TriG)
+  def fromNQuads(nquads: String): RdfModel           = from(nquads, NQuads)
+}

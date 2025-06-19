@@ -104,7 +104,7 @@ case class TriplestoreServiceLive(
     for {
       turtleStr <- executeSparqlQuery(query, mimeTypeTextTurtle)
       rdfModel <- ZIO
-                    .attempt(RdfFormatUtil.parseToRdfModel(turtleStr, Turtle))
+                    .attempt(RdfModel.fromTurtle(turtleStr))
                     .orElse(processError(query.sparql, turtleStr))
     } yield SparqlConstructResponse.make(rdfModel)
 

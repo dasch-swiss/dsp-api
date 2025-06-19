@@ -20,6 +20,7 @@ import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfFormatUtil
+import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -46,7 +47,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
 
     private def storeAsTtl(): Unit = {
       val jsonStr = readFile()
-      val model   = parseJsonLd(jsonStr)
+      val model   = RdfModel.fromJsonLD(jsonStr)
       val ttlStr  = RdfFormatUtil.format(model, Turtle)
       val newFile = makeFile("ttl")
       Files.createDirectories(newFile.getParent)
@@ -110,8 +111,8 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       )
     }
 
-    assert(parseTurtle(responseTtl) == parseJsonLd(responseJsonLd))
-    assert(parseRdfXml(responseRdfXml) == parseJsonLd(responseJsonLd))
+    assert(RdfModel.fromTurtle(responseTtl) == RdfModel.fromJsonLD(responseJsonLd))
+    assert(RdfModel.fromRdfXml(responseRdfXml) == RdfModel.fromJsonLD(responseJsonLd))
   }
 
   private def getResponse(url: String, mediaType: MediaType.NonBinary) = {
@@ -267,14 +268,14 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         RdfMediaTypes.`text/turtle`,
       )
       val knoraApiResponseTurtle = getResponse(s"/ontology/knora-api/simple/v2", RdfMediaTypes.`text/turtle`)
-      assert(parseTurtle(ontologyAllEntitiesResponseTurtle) == parseTurtle(knoraApiResponseTurtle))
+      assert(RdfModel.fromTurtle(ontologyAllEntitiesResponseTurtle) == RdfModel.fromTurtle(knoraApiResponseTurtle))
 
       val ontologyAllEntitiesResponseRdfXml = getResponse(
         s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Simple.KnoraApiOntologyIri)}",
         RdfMediaTypes.`application/rdf+xml`,
       )
       val knoraApiResponseRdfXml = getResponse(s"/ontology/knora-api/simple/v2", RdfMediaTypes.`application/rdf+xml`)
-      assert(parseRdfXml(ontologyAllEntitiesResponseRdfXml) == parseRdfXml(knoraApiResponseRdfXml))
+      assert(RdfModel.fromRdfXml(ontologyAllEntitiesResponseRdfXml) == RdfModel.fromRdfXml(knoraApiResponseRdfXml))
     }
 
     "serve the knora-api in the complex schema on two separate endpoints" in {
@@ -290,14 +291,14 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         RdfMediaTypes.`text/turtle`,
       )
       val knoraApiResponseTurtle = getResponse(s"/ontology/knora-api/v2", RdfMediaTypes.`text/turtle`)
-      assert(parseTurtle(ontologyAllEntitiesResponseTurtle) == parseTurtle(knoraApiResponseTurtle))
+      assert(RdfModel.fromTurtle(ontologyAllEntitiesResponseTurtle) == RdfModel.fromTurtle(knoraApiResponseTurtle))
 
       val ontologyAllEntitiesResponseRdfXml = getResponse(
         s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Complex.KnoraApiOntologyIri)}",
         RdfMediaTypes.`application/rdf+xml`,
       )
       val knoraApiResponseRdfXml = getResponse(s"/ontology/knora-api/v2", RdfMediaTypes.`application/rdf+xml`)
-      assert(parseRdfXml(ontologyAllEntitiesResponseRdfXml) == parseRdfXml(knoraApiResponseRdfXml))
+      assert(RdfModel.fromRdfXml(ontologyAllEntitiesResponseRdfXml) == RdfModel.fromRdfXml(knoraApiResponseRdfXml))
     }
   }
 }

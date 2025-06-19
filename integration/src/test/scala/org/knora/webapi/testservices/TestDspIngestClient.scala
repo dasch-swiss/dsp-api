@@ -71,6 +71,9 @@ object TestDspIngestClient {
     implicit val decoder: JsonDecoder[UploadedFile] = DeriveJsonDecoder.gen[UploadedFile]
   }
 
+  def uploadFile(file: java.nio.file.Path, shortcode: Shortcode): ZIO[TestDspIngestClient, Throwable, UploadedFile] =
+    ZIO.serviceWithZIO[TestDspIngestClient](_.uploadFile(file, shortcode))
+
   def createImageAsset(shortcode: Shortcode): ZIO[TestDspIngestClient, Throwable, UploadedFile] =
     ZIO.serviceWithZIO[TestDspIngestClient](_.createImageAsset(shortcode))
 

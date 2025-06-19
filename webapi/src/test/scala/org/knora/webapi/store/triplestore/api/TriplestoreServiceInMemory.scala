@@ -135,7 +135,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
     for {
       turtle <- queryRdf(query)
       rdfModel <- ZIO
-                    .attempt(RdfFormatUtil.parseToRdfModel(turtle, Turtle))
+                    .attempt(RdfModel.fromTurtle(turtle))
                     .foldZIO(
                       _ =>
                         if (turtle.contains("##  Query cancelled due to timeout during execution")) {
