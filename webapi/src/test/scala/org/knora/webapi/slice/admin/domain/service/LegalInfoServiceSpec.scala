@@ -40,6 +40,22 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
     ),
   )
 
+  private val findLicenseByIri = suite("findAvailableLicenseByIdAndShortcode")(
+    test("should return the license for a project") {
+      for {
+        prj    <- setupProject
+        actual <- service(_.findAvailableLicenseByIdAndShortcode(enabledLicense, prj.shortcode))
+      } yield assertTrue(actual.map(_.id).contains(enabledLicense))
+    },
+    test("should return None if the license is not available in the project") {
+      for {
+        prj              <- setupProject
+        unknownLicenseIri = LicenseIri.unsafeFrom("http://rdfh.ch/licenses/i6xBpZn4RVOdOIyTezEumw")
+        actual           <- service(_.findAvailableLicenseByIdAndShortcode(unknownLicenseIri, prj.shortcode))
+      } yield assertTrue(actual.isEmpty)
+    },
+  )
+
   private val licenseEnablingSuite = suite("License enabling and disabling")(
     test("enabling should work") {
       for {
@@ -114,6 +130,7 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
   )
 
   def spec = suite("LegalInfoService")(
+    findLicenseByIri,
     licenseEnablingSuite,
     validateLegalInfoSuite,
     test("findAvailableLicenses should return all licenses for project") {
@@ -136,13 +153,5 @@ object LegalInfoServiceSpec extends ZIOSpecDefault {
     StringFormatter.test,
     TriplestoreServiceInMemory.emptyLayer,
     CacheManager.layer,
-    ZLayer.succeed(
-      org.knora.webapi.config.Features(
-        allowEraseProjects = false,
-        disableLastModificationDateCheck = false,
-        triggerCompactionAfterProjectErasure = false,
-        enableFullLicenseCheck = true,
-      ),
-    ),
   )
 }

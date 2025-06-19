@@ -25,6 +25,9 @@ object ProjectLicenseDto {
   given JsonCodec[ProjectLicenseDto] = DeriveJsonCodec.gen[ProjectLicenseDto]
   given Ordering[ProjectLicenseDto]  = Ordering.by(_.labelEn)
 
+  def from(license: License, project: KnoraProject): ProjectLicenseDto =
+    from(license, project.enabledLicenses.contains(license.id))
+
   def from(license: License, isEnabled: Boolean): ProjectLicenseDto =
     ProjectLicenseDto(
       license.id.value,
@@ -85,6 +88,11 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     )
     .description("Get the available licenses for use within this project.")
 
+  val getProjectLicensesIri = baseEndpoints.publicEndpoint.get
+    .in(base / "licenses" / licenseIriPath)
+    .out(jsonBody[ProjectLicenseDto])
+    .description("Get a specific license by its IRI for use within this project.")
+
   val putProjectLicensesEnable = baseEndpoints.securedEndpoint.put
     .in(base / "licenses" / licenseIriPath / "enable")
     .description("Enable a license for use within this project. The user must be project admin or system admin.")
@@ -134,7 +142,7 @@ final case class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
         "The user must be a system admin.",
     )
 
-  val endpoints: Seq[AnyEndpoint] = (Seq(getProjectLicenses) ++
+  val endpoints: Seq[AnyEndpoint] = (Seq(getProjectLicenses, getProjectLicensesIri) ++
     Seq(
       getProjectAuthorships,
       putProjectLicensesEnable,
