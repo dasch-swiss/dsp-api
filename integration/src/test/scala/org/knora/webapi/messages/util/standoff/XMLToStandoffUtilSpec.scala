@@ -5,14 +5,15 @@
 
 package org.knora.webapi.messages.util.standoff
 
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 
 import java.util.UUID
+
 import org.knora.webapi.messages.StringFormatter
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 
 /**
  * Tests [[XMLToStandoffUtil]].

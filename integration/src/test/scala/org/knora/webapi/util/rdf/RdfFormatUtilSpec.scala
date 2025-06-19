@@ -7,6 +7,8 @@ package org.knora.webapi.util.rdf
 
 import org.apache.jena
 import org.scalatest.compatible.Assertion
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
@@ -17,9 +19,9 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.E2ESpec
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.rdf.JenaModel
 import org.knora.webapi.messages.util.rdf.JenaModelFactory
@@ -29,7 +31,9 @@ import org.knora.webapi.util.FileUtil
 /**
  * Tests implementations of [[RdfFormatUtil]].
  */
-class RdfFormatUtilSpec() extends E2ESpec {
+class RdfFormatUtilSpec extends AnyWordSpec with Matchers {
+
+  implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private def checkModelForRdfTypeBook(rdfModel: RdfModel, context: Option[IRI] = None): Assertion = {
     val statements: Set[Statement] = rdfModel

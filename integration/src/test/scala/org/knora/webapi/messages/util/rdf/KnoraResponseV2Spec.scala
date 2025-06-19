@@ -3,21 +3,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.util.rdf
+package org.knora.webapi.messages.util.rdf
+
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import zio.Runtime
 
 import java.nio.file.Paths
 
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.KnoraTurtleResponseV2
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.FileUtil
 
 /**
  * Tests the formatting of Knora API v2 responses.
  */
-class KnoraResponseV2Spec() extends E2ESpec {
+class KnoraResponseV2Spec extends AnyWordSpec with Matchers {
+
+  private val appConfig          = UnsafeZioRun.runOrThrow(AppConfig.parseConfig)(Runtime.default)
+  private val _: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val turtle =
     """<http://rdfh.ch/foo1> a <http://example.org/foo#Foo>;

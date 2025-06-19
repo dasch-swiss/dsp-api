@@ -4,12 +4,15 @@
  */
 
 package org.knora.webapi.responders.v2
-import org.knora.webapi.E2ESpec
+
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 
-class ResourcesResponseCheckerV2Spec extends E2ESpec {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+class ResourcesResponseCheckerV2Spec extends AnyWordSpec with Matchers {
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val resourcesResponderV2SpecFullData        = new ResourcesResponderV2SpecFullData
   private val resourcesResponderCheckerV2SpecFullData = new ResourcesResponseCheckerV2SpecFullData
