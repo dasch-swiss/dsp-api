@@ -19,9 +19,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio.*
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
@@ -30,7 +27,6 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.Sipi
 import org.knora.webapi.core.Db
 import org.knora.webapi.core.MessageRelayActorRef
 import org.knora.webapi.core.TestStartupUtils
@@ -39,7 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.TestClientService
-import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.TestDataFileUtil
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack
@@ -121,25 +117,4 @@ abstract class E2ESpec
 
   def readTestData(folder: String, filename: String): String =
     TestDataFileUtil.readTestData(folder, filename, appConfig.sipi)
-}
-
-object TestDataFileUtil {
-
-  private val iiifBaseUrl: String = "IIIF_BASE_URL"
-
-  def readTestData(folder: String, filename: String, sipi: Sipi): String =
-    val path    = resolvePath(folder, filename)
-    val content = FileUtil.readTextFile(path)
-    content.replaceAll(iiifBaseUrl, sipi.externalBaseUrl)
-
-  private def resolvePath(folder: String, filename: String): Path =
-    val file = Paths.get(folder, filename)
-    Paths.get("..", "test_data", "generated_test_data").resolve(file).normalize()
-
-  def writeTestData(folder: String, filename: String, sipi: Sipi, content: String): Path = {
-    val path = resolvePath(folder, filename)
-    Files.createDirectories(path.getParent)
-    val contentWithSipiUrl = content.replaceAll(sipi.externalBaseUrl, iiifBaseUrl)
-    FileUtil.writeTextFile(path, contentWithSipiUrl)
-  }
 }
