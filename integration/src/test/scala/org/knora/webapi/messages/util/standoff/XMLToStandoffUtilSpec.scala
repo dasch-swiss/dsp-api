@@ -10,14 +10,14 @@ import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 
 import java.util.UUID
-
-import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.StringFormatter
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 /**
  * Tests [[XMLToStandoffUtil]].
  */
-class XMLToStandoffUtilSpec extends E2ESpec {
+class XMLToStandoffUtilSpec extends AnyWordSpec with Matchers {
 
   "The XML to standoff utility" should {
 

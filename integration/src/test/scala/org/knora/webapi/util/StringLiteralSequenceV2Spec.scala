@@ -4,14 +4,17 @@
  */
 
 package org.knora.webapi.util
-import org.knora.webapi.E2ESpec
+
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 /**
  * Tests [[StringLiteralSequenceV2]].
  */
-class StringLiteralSequenceV2Spec extends E2ESpec {
+class StringLiteralSequenceV2Spec extends AnyWordSpec with Matchers {
 
   private val literalSeq: StringLiteralSequenceV2 = StringLiteralSequenceV2(
     Vector(

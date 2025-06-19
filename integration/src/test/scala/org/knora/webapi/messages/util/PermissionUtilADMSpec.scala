@@ -3,25 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.util
-
-import org.apache.pekko
+package org.knora.webapi.messages.util
 
 import scala.collection.Map
-
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
-import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-import pekko.testkit.ImplicitSender
-
-class PermissionUtilADMSpec extends E2ESpec with ImplicitSender {
+class PermissionUtilADMSpec extends AnyWordSpec with Matchers {
 
   val permissionLiteral =
     "RV knora-admin:UnknownUser|V knora-admin:KnownUser|M knora-admin:ProjectMember|CR knora-admin:Creator"

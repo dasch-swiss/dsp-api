@@ -3,18 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.util.search.gravsearch.prequery
+package org.knora.webapi.messages.util.search.gravsearch.prequery
 
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import scalax.collection.hyperedges.DiHyperEdge
 import scalax.collection.immutable.Graph
-
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.util.search.gravsearch.prequery.TopologicalSortUtil
 
 /**
  * Tests [[TopologicalSortUtil]].
  */
-class TopologicalSortUtilSpec extends E2ESpec {
+class TopologicalSortUtilSpec extends AnyWordSpec with Matchers {
   type GraphT = Graph[Int, DiHyperEdge[Int]]
   type NodeT  = GraphT#NodeT
 
