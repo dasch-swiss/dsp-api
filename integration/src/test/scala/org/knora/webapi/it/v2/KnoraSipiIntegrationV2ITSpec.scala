@@ -5,8 +5,10 @@
 
 package org.knora.webapi.it.v2
 
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import spray.json.*
 
 import java.net.URLEncoder
 import java.nio.file.Paths
@@ -906,4 +908,11 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
       checkResponseOK(sipiGetFileRequest)
     }
   }
+}
+
+final case class LoginResponse(token: String)
+
+trait AuthenticationV2JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
+  implicit val SessionResponseFormat: RootJsonFormat[LoginResponse] =
+    jsonFormat1(LoginResponse.apply)
 }
