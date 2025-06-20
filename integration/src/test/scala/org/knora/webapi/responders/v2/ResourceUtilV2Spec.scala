@@ -5,54 +5,33 @@
 
 package org.knora.webapi.responders.v2
 
-import zio.ZIO
+import zio.*
+import zio.test.*
 
-import scala.concurrent.ExecutionContextExecutor
-
-import org.knora.webapi.E2ESpec
+import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
-object ResourceUtilV2Spec {}
+object ResourceUtilV2Spec extends E2EZSpec {
 
-class ResourceUtilV2Spec extends E2ESpec {
-  implicit val ec: ExecutionContextExecutor = system.dispatcher
+  private val resourceUtil = ZIO.serviceWithZIO[ResourceUtilV2]
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(
-      path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything",
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
+
+  override val e2eSpec = suite("ResourceUtil")(
+    suite("checkListNodeExistsAndIsRootNode should")(
+      test("return FALSE for list child node") {
+        resourceUtil(_.checkListNodeExistsAndIsRootNode("http://rdfh.ch/lists/0001/otherTreeList01"))
+          .map(actual => assertTrue(actual == Right(false)))
+      },
+      test("return TRUE for list root node") {
+        resourceUtil(_.checkListNodeExistsAndIsRootNode("http://rdfh.ch/lists/0001/otherTreeList"))
+          .map(actual => assertTrue(actual == Right(true)))
+      },
+      test("should return NONE for nonexistent list") {
+        resourceUtil(_.checkListNodeExistsAndIsRootNode("http://rdfh.ch/lists/0001/otherTreeList77"))
+          .map(actual => assertTrue(actual == Left(None)))
+      },
     ),
   )
-
-  "ResourceUtil" when {
-    "called `checkListNodeExistsAndIsRootNode` method" should {
-      "return FALSE for list child node" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/otherTreeList01"
-        val checkNode = UnsafeZioRun.runToFuture(
-          ZIO.serviceWithZIO[ResourceUtilV2](_.checkListNodeExistsAndIsRootNode(nodeIri)),
-        )
-
-        checkNode.onComplete(_.get should be(Right(false)))
-      }
-
-      "return TRUE for list root node" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/otherTreeList"
-        val checkNode = UnsafeZioRun.runToFuture(
-          ZIO.serviceWithZIO[ResourceUtilV2](_.checkListNodeExistsAndIsRootNode(nodeIri)),
-        )
-
-        checkNode.onComplete(_.get should be(Right(true)))
-      }
-
-      "should return NONE for nonexistent list" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/otherTreeList77"
-        val checkNode = UnsafeZioRun.runToFuture(
-          ZIO.serviceWithZIO[ResourceUtilV2](_.checkListNodeExistsAndIsRootNode(nodeIri)),
-        )
-
-        checkNode.onComplete(_.get should be(Left(None)))
-      }
-    }
-  }
 }

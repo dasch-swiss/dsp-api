@@ -3,23 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.util.rdf
+package org.knora.webapi.messages.util.rdf
 
 import org.scalatest.compatible.Assertion
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 import java.io.BufferedInputStream
 import java.io.FileInputStream
 
 import dsp.errors.AssertionException
-import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.messages.util.rdf.JenaRepository
 
 /**
  * Tests implementations of [[RdfModel]].
  */
-class RdfModelSpec() extends E2ESpec {
+class RdfModelSpec extends AnyWordSpec with Matchers {
 
   private val model: RdfModel = JenaModelFactory.makeEmptyModel
 

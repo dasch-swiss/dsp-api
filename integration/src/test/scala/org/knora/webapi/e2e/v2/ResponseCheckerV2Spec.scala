@@ -5,15 +5,17 @@
 
 package org.knora.webapi.e2e.v2
 
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+
 import java.nio.file.Paths
 
-import org.knora.webapi.E2ESpec
 import org.knora.webapi.util.FileUtil
 
 /**
  * Tests [[ResponseCheckerV2]].
  */
-class ResponseCheckerV2Spec extends E2ESpec {
+class ResponseCheckerV2Spec extends AnyWordSpec with Matchers {
 
   "ResponseCheckerV2" should {
     "not throw an exception if received and expected resource responses are the same" in {

@@ -16,12 +16,11 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 import pekko.actor.Status
-import pekko.testkit.ImplicitSender
 
 /**
  * Tests that the [[OntologyCache.refreshCache]] method does not load invalid data into the cache.
  */
-class LoadOntologiesSpec extends E2ESpec with ImplicitSender {
+class LoadOntologiesSpec extends E2ESpec {
   private val INVALID_ONTO_NAME = "http://www.knora.org/ontology/invalid"
 
   /**
@@ -486,6 +485,5 @@ class LoadOntologiesSpec extends E2ESpec with ImplicitSender {
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
     }
-
   }
 }

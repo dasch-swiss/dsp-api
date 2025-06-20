@@ -5,19 +5,20 @@
 
 package org.knora.webapi.messages.util.standoff
 
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 
 import java.util.UUID
 
-import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.StringFormatter
 
 /**
  * Tests [[XMLToStandoffUtil]].
  */
-class XMLToStandoffUtilSpec extends E2ESpec {
+class XMLToStandoffUtilSpec extends AnyWordSpec with Matchers {
 
   "The XML to standoff utility" should {
 

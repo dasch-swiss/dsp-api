@@ -5,6 +5,9 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -13,7 +16,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 /**
  * This spec is used to test the [[User]] and [[UserIdentifierADM]] classes.
  */
-class UsersMessagesADMSpec extends E2ESpec {
+class UsersMessagesADMSpec extends AnyWordSpec with Matchers {
 
   private val id          = SharedTestDataADM.rootUser.id
   private val username    = SharedTestDataADM.rootUser.username
