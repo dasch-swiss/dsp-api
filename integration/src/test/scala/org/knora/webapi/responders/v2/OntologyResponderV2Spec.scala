@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.v2
 
 import eu.timepit.refined.types.string.NonEmptyString
-import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.pattern.ask
 import zio.ZIO
 
@@ -26,7 +25,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
@@ -5744,10 +5742,10 @@ class OntologyResponderV2Spec extends E2ESpec {
         ),
       )
 
-      val newAnythingLastModDate2 = response.ontologyMetadata.lastModificationDate
+      val newAnythingLastModDate4 = response.ontologyMetadata.lastModificationDate
         .getOrElse(throw AssertionException(s"${response.ontologyMetadata.ontologyIri} has no last modification date"))
-      assert(newAnythingLastModDate2.isAfter(anythingLastModDate))
-      anythingLastModDate = newAnythingLastModDate2
+      assert(newAnythingLastModDate4.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate4
 
       // Check that the correct blank nodes were stored for the cardinalities.
       val actual = UnsafeZioRun.runOrThrow(
@@ -6075,12 +6073,12 @@ class OntologyResponderV2Spec extends E2ESpec {
         ),
       )
 
-      val newFreetestLastModDate2 = deleteResponse.ontologyMetadata.lastModificationDate
+      val newFreetestLastModDate3 = deleteResponse.ontologyMetadata.lastModificationDate
         .getOrElse(
           throw AssertionException(s"${deleteResponse.ontologyMetadata.ontologyIri} has no last modification date"),
         )
-      assert(newFreetestLastModDate2.isAfter(freetestLastModDate))
-      freetestLastModDate = newFreetestLastModDate2
+      assert(newFreetestLastModDate3.isAfter(freetestLastModDate))
+      freetestLastModDate = newFreetestLastModDate3
 
       // Check that the correct blank nodes were stored for the cardinalities.
       val actual = UnsafeZioRun.runOrThrow(
