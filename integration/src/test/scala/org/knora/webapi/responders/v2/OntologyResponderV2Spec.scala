@@ -3059,7 +3059,7 @@ class OntologyResponderV2Spec extends E2ESpec {
         StringLiteralV2.from("rien", Some("fr")),
       )
 
-      assertFailsWithA[ForbiddenException] {
+      val exit = UnsafeZioRun.run(
         ZIO.serviceWithZIO[OntologyResponderV2](_.changeClassLabelsOrComments(
           ChangeClassLabelsOrCommentsRequestV2(
             classIri = classIri,
@@ -3070,7 +3070,8 @@ class OntologyResponderV2Spec extends E2ESpec {
             requestingUser = anythingNonAdminUser,
           )
         ))
-      }
+      )
+      assertFailsWithA[ForbiddenException](exit)
 
     }
 
@@ -4516,7 +4517,7 @@ class OntologyResponderV2Spec extends E2ESpec {
         ontologySchema = ApiV2Complex,
       )
 
-      assertFailsWithA[ForbiddenException] {
+      val exit = UnsafeZioRun.run(
         ZIO.serviceWithZIO[OntologyResponderV2](_.replaceClassCardinalities(
           ReplaceClassCardinalitiesRequestV2(
             classInfoContent = classInfoContent,
@@ -4525,7 +4526,8 @@ class OntologyResponderV2Spec extends E2ESpec {
             requestingUser = anythingNonAdminUser,
           )
         ))
-      }
+      )
+      assertFailsWithA[ForbiddenException](exit)
 
     }
 
