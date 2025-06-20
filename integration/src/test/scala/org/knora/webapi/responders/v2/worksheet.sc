@@ -1,1 +1,0 @@
-/Users/christian/git/dasch/dsp-api/integration/src/test/scala/org/knora/webapi/responders/v2/OntologyResponderV2Spec.scala
