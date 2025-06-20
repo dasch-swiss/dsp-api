@@ -41,6 +41,7 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
+import org.knora.webapi.slice.ontology.api.ChangeGuiOrderRequestV2
 import org.knora.webapi.slice.ontology.api.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.slice.ontology.api.CreateClassRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
@@ -120,7 +121,6 @@ final case class OntologyResponderV2(
       canDeleteCardinalitiesFromClass(canDeleteCardinalitiesFromClassRequestV2)
     case deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2 =>
       deleteCardinalitiesFromClass(deleteCardinalitiesFromClassRequest)
-    case changeGuiOrderRequest: ChangeGuiOrderRequestV2 => changeGuiOrder(changeGuiOrderRequest)
     case deleteClassRequest: DeleteClassRequestV2       => deleteClass(deleteClassRequest)
     case createPropertyRequest: CreatePropertyRequestV2 => createProperty(createPropertyRequest)
     case req: ChangePropertyGuiElementRequest           => changePropertyGuiElement(req)

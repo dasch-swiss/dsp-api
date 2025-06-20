@@ -31,7 +31,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeGuiOrderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyGuiElementRequest
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
@@ -121,6 +120,13 @@ case class ChangePropertyLabelsOrCommentsRequestV2(
   propertyIri: PropertyIri,
   predicateToUpdate: LabelOrComment,
   newObjects: Seq[StringLiteralV2],
+  lastModificationDate: Instant,
+  apiRequestID: UUID,
+  requestingUser: User,
+)
+
+case class ChangeGuiOrderRequestV2(
+  classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: User,
@@ -249,12 +255,11 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
   private def asOntologyLiteralV2(stmt: Statement): ZIO[Scope, String, OntologyLiteralV2] =
     stmt.getObject match
       case res: Resource => iriConverter.asSmartIri(res.getURI).mapBoth(_.getMessage, SmartIriLiteralV2.apply)
-      case literal: Literal => {
+      case literal: Literal =>
         literal.getValue match
           case str: String          => ZIO.succeed(StringLiteralV2.from(str, Option(literal.getLanguage).filter(_.nonEmpty)))
           case b: java.lang.Boolean => ZIO.succeed(BooleanLiteralV2(b))
           case _                    => ZIO.fail(s"Unsupported literal type: ${literal.getValue.getClass}")
-      }
 
   private def extractSubClasses(r: Resource): ZIO[Scope, String, Set[ResourceClassIri]] = {
     val subclasses: Set[String] = r.listProperties(RDFS.subClassOf).asScala.flatMap(_.objectAsUri.toOption).toSet

@@ -38,6 +38,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
+import org.knora.webapi.slice.ontology.api.ChangeGuiOrderRequestV2
 import org.knora.webapi.slice.ontology.api.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.slice.ontology.api.CreateClassRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
@@ -4601,12 +4602,7 @@ class OntologyResponderV2Spec extends E2ESpec {
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[OntologyResponderV2](
           _.changeGuiOrder(
-            ChangeGuiOrderRequestV2(
-              classInfoContent = classInfoContent,
-              lastModificationDate = anythingLastModDate,
-              apiRequestID = UUID.randomUUID,
-              requestingUser = anythingAdminUser,
-            ),
+            ChangeGuiOrderRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
           ),
         ),
       )
@@ -6405,12 +6401,7 @@ class OntologyResponderV2Spec extends E2ESpec {
       val response = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[OntologyResponderV2](
           _.changeGuiOrder(
-            ChangeGuiOrderRequestV2(
-              classInfoContent = classInfoContent,
-              lastModificationDate = anythingLastModDate,
-              apiRequestID = UUID.randomUUID,
-              requestingUser = anythingAdminUser,
-            ),
+            ChangeGuiOrderRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
           ),
         ),
       )

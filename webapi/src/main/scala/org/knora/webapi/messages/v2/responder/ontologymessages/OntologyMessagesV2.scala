@@ -203,13 +203,6 @@ object LabelOrComment {
     LabelOrComment.values.find(_.toString == str)
 }
 
-case class ChangeGuiOrderRequestV2(
-  classInfoContent: ClassInfoContentV2,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
 /**
  * Requests all available information about a list of ontology entities (classes and/or properties). A successful response will be an
  * [[EntityInfoGetResponseV2]].
