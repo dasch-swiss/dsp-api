@@ -92,21 +92,6 @@ case class CreatePropertyRequestV2(
 ) extends OntologiesResponderRequestV2
 
 /**
- * Requests the replacement of a class's cardinalities with new ones. A successful response will be a [[ReadOntologyV2]].
- *
- * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class ReplaceClassCardinalitiesRequestV2(
-  classInfoContent: ClassInfoContentV2,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-) extends OntologiesResponderRequestV2
-
-/**
  * FIXME(DSP-1856): Can only remove one single cardinality at a time.
  * Requests a check if the user can remove class's cardinalities. A successful response will be a [[CanDoResponseV2]].
  *
