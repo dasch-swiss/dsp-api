@@ -13,7 +13,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resources.api.ExportFormat
 import org.knora.webapi.slice.resources.api.ResourceMetadataDto
 
-final case class TestMetadataApiClient(apiClient: TestApiClient) {
+final case class TestMetadataApiClient(private val apiClient: TestApiClient) {
 
   def getResourcesMetadata(shortcode: Shortcode, user: User): Task[Response[Either[String, Seq[ResourceMetadataDto]]]] =
     apiClient.getJson[Seq[ResourceMetadataDto]](

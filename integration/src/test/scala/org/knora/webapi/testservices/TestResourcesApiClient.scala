@@ -14,7 +14,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
 
-final case class TestResourcesApiClient(apiClient: TestApiClient) {
+final case class TestResourcesApiClient(private val apiClient: TestApiClient) {
 
   def createStillImageRepresentation(
     shortcode: Shortcode,
