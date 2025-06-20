@@ -17,6 +17,7 @@ import scala.concurrent.duration.*
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -236,15 +237,18 @@ class ValuesResponderV2Spec extends E2ESpec with ImplicitSender {
     requestingUser: User,
     isLinkValue: Boolean = false,
   ): Unit = {
-    appActor ! ResourcesGetRequestV2(
-      resourceIris = Seq(resourceIri.toString),
-      targetSchema = ApiV2Complex,
-      requestingUser = requestingUser,
+    val getResponse = UnsafeZioRun.runOrThrow(
+      ZIO.serviceWithZIO[ResourcesResponderV2](
+        _.getResourcesV2(
+          resourceIris = Seq(resourceIri.toString),
+          targetSchema = ApiV2Complex,
+          schemaOptions = Set.empty,
+          requestingUser = requestingUser,
+        ),
+      ),
     )
 
-    val resource = expectMsgPF(timeout) { case getResponse: ReadResourcesSequenceV2 =>
-      getResponse.toResource(resourceIri.toString)
-    }
+    val resource = getResponse.toResource(resourceIri.toString)
     //  ensure the resource was not deleted
     resource.deletionInfo should be(None)
 
@@ -341,16 +345,18 @@ class ValuesResponderV2Spec extends E2ESpec with ImplicitSender {
     getResourceLastModificationDate(resourceIri.toString, requestingUser)
 
   private def getResourceLastModificationDate(resourceIri: IRI, requestingUser: User): Option[Instant] = {
-    appActor ! ResourcesPreviewGetRequestV2(
-      resourceIris = Seq(resourceIri),
-      targetSchema = ApiV2Complex,
-      requestingUser = requestingUser,
+    val previewResponse = UnsafeZioRun.runOrThrow(
+      ZIO.serviceWithZIO[ResourcesResponderV2](
+        _.getResourcePreviewV2(
+          resourceIris = Seq(resourceIri),
+          targetSchema = ApiV2Complex,
+          requestingUser = requestingUser,
+        ),
+      ),
     )
 
-    expectMsgPF(timeout) { case previewResponse: ReadResourcesSequenceV2 =>
-      val resourcePreview: ReadResourceV2 = previewResponse.toResource(resourceIri)
-      resourcePreview.lastModificationDate
-    }
+    val resourcePreview: ReadResourceV2 = previewResponse.toResource(resourceIri)
+    resourcePreview.lastModificationDate
   }
 
   private def getValueUUID(valueIri: IRI): Option[UUID] = {
@@ -397,11 +403,15 @@ class ValuesResponderV2Spec extends E2ESpec with ImplicitSender {
   }
 
   "Load test data" in {
-    appActor ! GetMappingRequestV2("http://rdfh.ch/standoff/mappings/StandardMapping")
+    val mappingResponse = UnsafeZioRun.runOrThrow(
+      ZIO.serviceWithZIO[MessageRelay](
+        _.ask[GetMappingResponseV2](
+          GetMappingRequestV2("http://rdfh.ch/standoff/mappings/StandardMapping"),
+        ),
+      ),
+    )
 
-    expectMsgPF(timeout) { case mappingResponse: GetMappingResponseV2 =>
-      standardMapping = Some(mappingResponse.mapping)
-    }
+    standardMapping = Some(mappingResponse.mapping)
   }
 
   "The values responder" should {
