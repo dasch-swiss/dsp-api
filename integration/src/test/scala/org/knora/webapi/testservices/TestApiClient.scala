@@ -14,6 +14,7 @@ import zio.*
 import zio.json.*
 
 import org.knora.webapi.config.KnoraApi
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.infrastructure.JwtService
@@ -82,6 +83,12 @@ final case class TestApiClient(
         .response(asString)
         .send(backend),
     )
+  def getJsonLdDocument(relativeUri: Uri): Task[Response[Either[String, JsonLDDocument]]] =
+    basicRequest
+      .get(relativeUri)
+      .contentType(MediaType.unsafeApply("application", "ld+json"))
+      .response(asJsonLdDocument)
+      .send(backend)
 
   def postJson[A: JsonDecoder, B: JsonEncoder](
     relativeUri: Uri,

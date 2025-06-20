@@ -1,10 +1,16 @@
 package org.knora.webapi.testservices
 import sttp.capabilities.zio.ZioStreams
+import sttp.client4.ResponseAs
 import sttp.client4.StreamBackend
+import sttp.client4.asString
 import sttp.client4.wrappers.ResolveRelativeUrisBackend
 import sttp.model.Uri
 import zio.*
 
+import scala.util.Try
+
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.infrastructure.JwtService
@@ -19,8 +25,13 @@ abstract class BaseApiClient(
 ) {
   protected def baseUrl: Uri
 
-  protected val backend: StreamBackend[Task, ZioStreams] = ResolveRelativeUrisBackend(be, baseUrl)
-  protected val authCookieName: String                   = authenticator.calculateCookieName()
+  protected lazy val backend: StreamBackend[Task, ZioStreams] = ResolveRelativeUrisBackend(be, baseUrl)
+  protected lazy val authCookieName: String                   = authenticator.calculateCookieName()
+
+  protected lazy val asJsonLdDocument: ResponseAs[Either[String, JsonLDDocument]] = asString.map {
+    case Right(value) => Try(JsonLDUtil.parseJsonLD(value)).toEither.left.map(_.getMessage)
+    case Left(err)    => Left(err)
+  }
 
   def jwtFor(user: User): UIO[String] =
     scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _)).map(_.jwtString)

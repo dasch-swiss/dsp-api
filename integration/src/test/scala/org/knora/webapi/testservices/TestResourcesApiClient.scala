@@ -7,11 +7,14 @@ package org.knora.webapi.testservices
 import sttp.client4.*
 import zio.*
 
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
 
 final case class TestResourcesApiClient(private val apiClient: TestApiClient) {
@@ -40,6 +43,9 @@ final case class TestResourcesApiClient(private val apiClient: TestApiClient) {
       )
     apiClient.postJsonLd(uri"/v2/resources", jsonLd, user)
   }
+
+  def getResource(resourceIri: ResourceIri): Task[Response[Either[String, JsonLDDocument]]] =
+    apiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri")
 }
 
 object TestResourcesApiClient {
@@ -62,6 +68,16 @@ object TestResourcesApiClient {
         legalInfo,
       ),
     )
+
+  def getResource(resourceIri: String)(implicit
+    sf: StringFormatter,
+  ): ZIO[TestResourcesApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
+    ZIO.attempt(ResourceIri.unsafeFrom(sf.toSmartIri(resourceIri))).flatMap(getResource)
+
+  def getResource(
+    resourceIri: ResourceIri,
+  ): ZIO[TestResourcesApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
+    ZIO.serviceWithZIO[TestResourcesApiClient](_.getResource(resourceIri))
 
   val layer = ZLayer.derive[TestResourcesApiClient]
 }
