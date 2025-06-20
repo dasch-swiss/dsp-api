@@ -5,8 +5,10 @@
 
 package org.knora.webapi.it.v2
 
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import spray.json.*
 
 import java.net.URLEncoder
 import java.nio.file.Paths
@@ -26,8 +28,13 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.models.filemodels.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingOntologyIri
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingShortcode
+import org.knora.webapi.slice.admin.domain.model.LegalInfo
+import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestDspIngestClient
+import org.knora.webapi.testservices.TestResourcesApiClient
 import org.knora.webapi.util.MutableTestIri
 
 /**
@@ -329,15 +336,25 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
       uploadedFile.originalFilename should ===(marblesOriginalFilename)
 
       // Create the resource in the API.
+      val resource = UnsafeZioRun
+        .runOrThrow(
+          for {
+            response <- TestResourcesApiClient
+                          .createStillImageRepresentation(
+                            anythingShortcode,
+                            anythingOntologyIri,
+                            "ThingPicture",
+                            uploadedFile,
+                            anythingAdminUser,
+                            LegalInfo.empty,
+                          )
+            jsonLd      <- response.assert200.mapAttempt(JsonLDUtil.parseJsonLD)
+            resourceIri <- jsonLd.body.getRequiredIdValueAsKnoraDataIri.map(_.toIri)
+            _            = stillImageResourceIri.set(resourceIri)
+            r           <- TestResourcesApiClient.getResource(resourceIri).flatMap(_.assert200)
+          } yield r,
+        )
 
-      val jsonLdEntity = UploadFileRequest
-        .make(FileType.StillImageFile(), uploadedFile.internalFilename)
-        .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
-
-      val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
-      stillImageResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
-
-      val resource = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(stillImageResourceIri.get)}"))
       assert(
         UnsafeZioRun
           .runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri)
@@ -906,4 +923,11 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
       checkResponseOK(sipiGetFileRequest)
     }
   }
+}
+
+final case class LoginResponse(token: String)
+
+trait AuthenticationV2JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
+  implicit val SessionResponseFormat: RootJsonFormat[LoginResponse] =
+    jsonFormat1(LoginResponse.apply)
 }

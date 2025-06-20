@@ -7,7 +7,6 @@ package org.knora.webapi.testservices
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
 import sttp.client4.ResponseException.DeserializationException
-import sttp.client4.wrappers.ResolveRelativeUrisBackend
 import sttp.client4.ziojson.*
 import sttp.model.MediaType
 import sttp.model.Uri
@@ -15,9 +14,11 @@ import zio.*
 import zio.json.*
 
 import org.knora.webapi.config.KnoraApi
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
@@ -25,16 +26,13 @@ import org.knora.webapi.testservices.ResponseOps.assert200
 
 final case class TestApiClient(
   private val apiConfig: KnoraApi,
+  private val authenticator: Authenticator,
   private val be: StreamBackend[Task, ZioStreams],
   private val jwtService: JwtService,
   private val scopeResolver: ScopeResolver,
-) {
+) extends BaseApiClient(authenticator, be, jwtService, scopeResolver) {
 
-  private val baseUrl = uri"${apiConfig.externalKnoraApiBaseUrl}"
-  private val backend = ResolveRelativeUrisBackend(be, baseUrl)
-
-  private def jwtFor(user: User): UIO[String] =
-    scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _)).map(_.jwtString)
+  protected override val baseUrl = uri"${apiConfig.externalKnoraApiBaseUrl}"
 
   def deleteJson[A: JsonDecoder](relativeUri: Uri, user: User): Task[Response[Either[String, A]]] =
     jwtFor(user).flatMap(jwt => deleteJson(relativeUri, _.auth.bearer(jwt)))
@@ -85,6 +83,12 @@ final case class TestApiClient(
         .response(asString)
         .send(backend),
     )
+  def getJsonLdDocument(relativeUri: Uri): Task[Response[Either[String, JsonLDDocument]]] =
+    basicRequest
+      .get(relativeUri)
+      .contentType(MediaType.unsafeApply("application", "ld+json"))
+      .response(asJsonLdDocument)
+      .send(backend)
 
   def postJson[A: JsonDecoder, B: JsonEncoder](
     relativeUri: Uri,
