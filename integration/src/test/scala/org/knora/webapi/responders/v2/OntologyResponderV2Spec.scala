@@ -4671,18 +4671,17 @@ class OntologyResponderV2Spec extends E2ESpec {
     }
 
     "not delete the class anything:Nothing, because the property anything:hasEmptiness refers to it" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+      val classIri = AnythingOntologyIri.makeClass("Nothing")
 
-      appActor ! DeleteClassRequestV2(
-        classIri = classIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](_.deleteClass(
+          classIri = classIri,
+          lastModificationDate = anythingLastModDate,
+          apiRequestID = UUID.randomUUID,
+          requestingUser = anythingAdminUser,
+        ))
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "delete the property anything:hasNothingness" in {
@@ -4736,16 +4735,17 @@ class OntologyResponderV2Spec extends E2ESpec {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! ReplaceClassCardinalitiesRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](_.replaceClassCardinalities(
+          ReplaceClassCardinalitiesRequestV2(
+            classInfoContent = classInfoContent,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingNonAdminUser,
+          )
+        ))
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
+      assertFailsWithA[ForbiddenException](exit)
     }
 
     "remove all cardinalities from the class anything:Nothing" in {
@@ -4762,11 +4762,15 @@ class OntologyResponderV2Spec extends E2ESpec {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! ReplaceClassCardinalitiesRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](_.replaceClassCardinalities(
+          ReplaceClassCardinalitiesRequestV2(
+            classInfoContent = classInfoContent,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          )
+        ))
       )
 
       val expectedProperties = Set(
@@ -4774,20 +4778,18 @@ class OntologyResponderV2Spec extends E2ESpec {
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri)
-        readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
-        readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
+      val externalOntology = response.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo = externalOntology.classes(classIri)
+      readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
+      readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not delete the property anything:hasEmptiness with the wrong knora-api:lastModificationDate" in {
@@ -4864,24 +4866,24 @@ class OntologyResponderV2Spec extends E2ESpec {
     }
 
     "delete the class anything:Nothing" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+      val classIri = AnythingOntologyIri.makeClass("Nothing")
 
-      appActor ! DeleteClassRequestV2(
-        classIri = classIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](_.deleteClass(
+          classIri = classIri,
+          lastModificationDate = anythingLastModDate,
+          apiRequestID = UUID.randomUUID,
+          requestingUser = anythingAdminUser,
+        ))
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(response.ontologies.size == 1)
+      val metadata = response.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not create a class whose base class is in a non-shared ontology in another project" in {
@@ -5122,24 +5124,24 @@ class OntologyResponderV2Spec extends E2ESpec {
     }
 
     "delete the class anything:AnyBox1" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("AnyBox1")
+      val classIri = AnythingOntologyIri.makeClass("AnyBox1")
 
-      appActor ! DeleteClassRequestV2(
-        classIri = classIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](_.deleteClass(
+          classIri = classIri,
+          lastModificationDate = anythingLastModDate,
+          apiRequestID = UUID.randomUUID,
+          requestingUser = anythingAdminUser,
+        ))
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(response.ontologies.size == 1)
+      val metadata = response.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "create a class anything:AnyBox2 with a cardinality on example-box:hasName" in {
@@ -5189,24 +5191,24 @@ class OntologyResponderV2Spec extends E2ESpec {
     }
 
     "delete the class anything:AnyBox2" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("AnyBox2")
+      val classIri = AnythingOntologyIri.makeClass("AnyBox2")
 
-      appActor ! DeleteClassRequestV2(
-        classIri = classIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](_.deleteClass(
+          classIri = classIri,
+          lastModificationDate = anythingLastModDate,
+          apiRequestID = UUID.randomUUID,
+          requestingUser = anythingAdminUser,
+        ))
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(response.ontologies.size == 1)
+      val metadata = response.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "create a property anything:hasAnyName with base property example-box:hasName" in {
@@ -6358,18 +6360,20 @@ class OntologyResponderV2Spec extends E2ESpec {
         anythingLastModDate = newAnythingLastModDate
       }
 
-      appActor ! ClassesGetRequestV2(
-        classIris = Set(AnythingOntologyIri.makeEntityIri("ThingWithSeqnum")),
-        allLanguages = false,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](_.handle(
+          ClassesGetRequestV2(
+            classIris = Set(AnythingOntologyIri.makeEntityIri("ThingWithSeqnum")),
+            allLanguages = false,
+            requestingUser = anythingAdminUser,
+          )
+        ).asInstanceOf[Task[ReadOntologyV2]])
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(AnythingOntologyIri.makeEntityIri("ThingWithSeqnum"))
-        assert(readClassInfo.inheritedCardinalities(AnythingOntologyIri.makeEntityIri("hasText")) == newCardinality)
-      }
+      val externalOntology = response.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo = externalOntology.classes(AnythingOntologyIri.makeEntityIri("ThingWithSeqnum"))
+      assert(readClassInfo.inheritedCardinalities(AnythingOntologyIri.makeEntityIri("hasText")) == newCardinality)
     }
   }
 
