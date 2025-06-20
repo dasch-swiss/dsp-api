@@ -17,7 +17,6 @@ import scala.concurrent.duration.*
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -403,12 +402,8 @@ class ValuesResponderV2Spec extends E2ESpec with ImplicitSender {
   }
 
   "Load test data" in {
-    val mappingResponse = UnsafeZioRun.runOrThrow(
-      ZIO.serviceWithZIO[MessageRelay](
-        _.ask[GetMappingResponseV2](
-          GetMappingRequestV2("http://rdfh.ch/standoff/mappings/StandardMapping"),
-        ),
-      ),
+    val mappingResponse: GetMappingResponseV2 = UnsafeZioRun.runOrThrow(
+      ZIO.serviceWithZIO[StandoffResponderV2](_.getMappingV2("http://rdfh.ch/standoff/mappings/StandardMapping")),
     )
 
     standardMapping = Some(mappingResponse.mapping)

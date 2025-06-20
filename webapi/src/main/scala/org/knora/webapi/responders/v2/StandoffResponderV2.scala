@@ -614,7 +614,7 @@ final case class StandoffResponderV2(
    * @param mappingIri           the IRI of the mapping to retrieve.
    * @return a [[MappingXMLtoStandoff]].
    */
-  private def getMappingV2(mappingIri: IRI): Task[GetMappingResponseV2] = {
+  def getMappingV2(mappingIri: IRI): Task[GetMappingResponseV2] = {
 
     val mappingFuture: Task[GetMappingResponseV2] =
       mappingCache.get(mappingIri) match {
