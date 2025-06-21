@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.v2
 
 import eu.timepit.refined.types.string.NonEmptyString
-import org.apache.pekko.pattern.ask
 import zio.ZIO
 
 import java.time.Instant
