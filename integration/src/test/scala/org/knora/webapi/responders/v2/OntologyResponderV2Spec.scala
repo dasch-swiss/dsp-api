@@ -6002,13 +6002,17 @@ class OntologyResponderV2Spec extends E2ESpec {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor.ask(
-        CreateResourceRequestV2(
-          createResource = inputResource,
-          requestingUser = anythingAdminUser,
-          apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.createResource(
+            CreateResourceRequestV2(
+              createResource = inputResource,
+              requestingUser = anythingAdminUser,
+              apiRequestID = UUID.randomUUID(),
+            ),
+          ),
         ),
-      )(timeout)
+      )
 
       // Successfully check if the cardinality can be deleted
 

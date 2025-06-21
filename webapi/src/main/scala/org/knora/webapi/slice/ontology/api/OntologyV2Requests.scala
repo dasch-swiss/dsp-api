@@ -88,14 +88,6 @@ case class ChangePropertyLabelsOrCommentsRequestV2(
   requestingUser: User,
 )
 
-/** EndMarker */
-case class ChangeGuiOrderRequestV2(
-  classInfoContent: ClassInfoContentV2,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-)
-
 /**
  * Requests the replacement of a class's cardinalities with new ones.
  *
