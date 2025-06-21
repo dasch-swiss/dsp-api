@@ -1359,7 +1359,7 @@ final case class ResourcesResponderV2(
    * @param resourceHistoryRequest the version history request.
    * @return the resource's version history.
    */
-  private def getResourceHistoryV2(
+  def getResourceHistoryV2(
     resourceHistoryRequest: ResourceVersionHistoryGetRequestV2,
   ): Task[ResourceVersionHistoryResponseV2] =
     for {

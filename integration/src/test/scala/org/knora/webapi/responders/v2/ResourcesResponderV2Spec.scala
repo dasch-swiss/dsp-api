@@ -45,6 +45,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.resources.api.model.GraphDirection
+import org.knora.webapi.slice.resources.api.model.VersionDate
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -478,15 +479,18 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
   )
 
   private def getResource(resourceIri: IRI): ReadResourceV2 = {
-    appActor ! ResourcesGetRequestV2(
-      resourceIris = Seq(resourceIri),
-      targetSchema = ApiV2Complex,
-      requestingUser = anythingUserProfile,
+    val response = UnsafeZioRun.runOrThrow(
+      ZIO.serviceWithZIO[ResourcesResponderV2](
+        _.getResourcesV2(
+          resourceIris = Seq(resourceIri),
+          targetSchema = ApiV2Complex,
+          schemaOptions = Set.empty,
+          requestingUser = anythingUserProfile,
+        ),
+      ),
     )
 
-    expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-      response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
-    }
+    response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
   }
 
   private def checkCreateResource(
@@ -532,138 +536,156 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
   override implicit val timeout: FiniteDuration = 30.seconds
 
   "Load test data" in {
-    appActor ! GetMappingRequestV2("http://rdfh.ch/standoff/mappings/StandardMapping")
+    val mappingResponse: GetMappingResponseV2 = UnsafeZioRun.runOrThrow(
+      ZIO.serviceWithZIO[StandoffResponderV2](_.getMappingV2("http://rdfh.ch/standoff/mappings/StandardMapping")),
+    )
 
-    expectMsgPF(timeout) { case mappingResponse: GetMappingResponseV2 =>
-      standardMapping = Some(mappingResponse.mapping)
-    }
+    standardMapping = Some(mappingResponse.mapping)
   }
 
   "The resources responder v2" should {
     "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
-      appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourcesV2(
+            resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
+            versionDate = None,
+            targetSchema = ApiV2Complex,
+            schemaOptions = Set.empty,
+            requestingUser = incunabulaUserProfile,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
-          received = response,
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
+        received = response,
+      )
 
     }
 
     "return a preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
-      appActor ! ResourcesPreviewGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
-        targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourcePreviewV2(
+            resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
+            targetSchema = ApiV2Complex,
+            requestingUser = incunabulaUserProfile,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein,
-          received = response,
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein,
+        received = response,
+      )
 
     }
 
     "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-      appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/2a6221216701"),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourcesV2(
+            resourceIris = Seq("http://rdfh.ch/0803/2a6221216701"),
+            versionDate = None,
+            targetSchema = ApiV2Complex,
+            schemaOptions = Set.empty,
+            requestingUser = incunabulaUserProfile,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
-          received = response,
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
+        received = response,
+      )
 
     }
 
     "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-      appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourcesV2(
+            resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
+            versionDate = None,
+            targetSchema = ApiV2Complex,
+            schemaOptions = Set.empty,
+            requestingUser = incunabulaUserProfile,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
-          received = response,
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
+        received = response,
+      )
 
     }
 
     "return two preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-      appActor ! ResourcesPreviewGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
-        targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourcePreviewV2(
+            resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
+            targetSchema = ApiV2Complex,
+            requestingUser = incunabulaUserProfile,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloeckleinAndReise,
-          received = response,
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloeckleinAndReise,
+        received = response,
+      )
 
     }
 
     "return two full descriptions of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
 
-      appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourcesV2(
+            resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
+            versionDate = None,
+            targetSchema = ApiV2Complex,
+            schemaOptions = Set.empty,
+            requestingUser = incunabulaUserProfile,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected =
-            resourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseAndZeitgloeckleinInversedOrder,
-          received = response,
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseAndZeitgloeckleinInversedOrder,
+        received = response,
+      )
 
     }
 
     "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
 
-      appActor ! ResourcesGetRequestV2(
-        resourceIris =
-          Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourcesV2(
+            resourceIris =
+              Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
+            versionDate = None,
+            targetSchema = ApiV2Complex,
+            schemaOptions = Set.empty,
+            requestingUser = incunabulaUserProfile,
+          ),
+        ),
       )
 
       // the redundant Iri should be ignored (distinct)
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
-          received = response,
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
+        received = response,
+      )
 
     }
 
@@ -711,35 +733,42 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
       val versionDate = Instant.parse("2019-02-12T08:05:10Z")
 
-      appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq(resourceIri),
-        versionDate = Some(versionDate),
-        targetSchema = ApiV2Complex,
-        requestingUser = anythingUserProfile,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourcesV2(
+            resourceIris = Seq(resourceIri),
+            versionDate = Some(VersionDate.fromInstant(versionDate)),
+            targetSchema = ApiV2Complex,
+            schemaOptions = Set.empty,
+            requestingUser = anythingUserProfile,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForThingWithHistory,
-          received = response,
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForThingWithHistory,
+        received = response,
+      )
 
     }
 
     "return the complete version history of a resource" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
 
-      appActor ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        startDate = None,
-        endDate = None,
-        requestingUser = anythingUserProfile,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourceHistoryV2(
+            ResourceVersionHistoryGetRequestV2(
+              resourceIri = resourceIri,
+              startDate = None,
+              endDate = None,
+              requestingUser = anythingUserProfile,
+            ),
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case response: ResourceVersionHistoryResponseV2 =>
-        assert(response == resourcesResponderV2SpecFullData.expectedCompleteVersionHistoryResponse)
-      }
+      assert(response == resourcesResponderV2SpecFullData.expectedCompleteVersionHistoryResponse)
     }
 
     "return the version history of a resource within a date range" in {
@@ -747,49 +776,59 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       val startDate   = Instant.parse("2019-02-08T15:05:11Z")
       val endDate     = Instant.parse("2019-02-13T09:05:10Z")
 
-      appActor ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        startDate = Some(startDate),
-        endDate = Some(endDate),
-        requestingUser = anythingUserProfile,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourceHistoryV2(
+            ResourceVersionHistoryGetRequestV2(
+              resourceIri = resourceIri,
+              startDate = Some(startDate),
+              endDate = Some(endDate),
+              requestingUser = anythingUserProfile,
+            ),
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case response: ResourceVersionHistoryResponseV2 =>
-        assert(response == resourcesResponderV2SpecFullData.expectedPartialVersionHistoryResponse)
-      }
+      assert(response == resourcesResponderV2SpecFullData.expectedPartialVersionHistoryResponse)
     }
 
     "get the latest version of a value, given its UUID" in {
-      appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
-        valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
-        targetSchema = ApiV2Complex,
-        requestingUser = anythingUserProfile,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourcesV2(
+            resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
+            valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
+            targetSchema = ApiV2Complex,
+            schemaOptions = Set.empty,
+            requestingUser = anythingUserProfile,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuid,
-          received = response,
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuid,
+        received = response,
+      )
     }
 
     "get a past version of a value, given its UUID and a timestamp" in {
-      appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
-        valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
-        versionDate = Some(Instant.parse("2019-02-12T09:05:10Z")),
-        targetSchema = ApiV2Complex,
-        requestingUser = anythingUserProfile,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourcesV2(
+            resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
+            valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
+            versionDate = Some(VersionDate.fromInstant(Instant.parse("2019-02-12T09:05:10Z"))),
+            targetSchema = ApiV2Complex,
+            schemaOptions = Set.empty,
+            requestingUser = anythingUserProfile,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuidAndVersionDate,
-          received = response,
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuidAndVersionDate,
+        received = response,
+      )
     }
 
     "return a graph of resources reachable via links from/to a given resource" in {
@@ -1804,19 +1843,23 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       )
       val _ = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.markResourceAsDeletedV2(deleteRequest)))
 
-      appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq(createdResourceIri),
-        targetSchema = ApiV2Complex,
-        requestingUser = SharedTestDataADM.anythingUser1,
+      val getResponse = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourcesV2(
+            resourceIris = Seq(createdResourceIri),
+            targetSchema = ApiV2Complex,
+            schemaOptions = Set.empty,
+            requestingUser = SharedTestDataADM.anythingUser1,
+          ),
+        ),
       )
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        response.resources.size should equal(1)
-        val resource = response.resources.head
-        resource.resourceClassIri should equal(OntologyConstants.KnoraBase.DeletedResource.toSmartIri)
-        resource.deletionInfo should not be None
-        resource.lastModificationDate should not be None
-        resource.creationDate should equal(createdResourceCreationDate)
-      }
+
+      getResponse.resources.size should equal(1)
+      val resource = getResponse.resources.head
+      resource.resourceClassIri should equal(OntologyConstants.KnoraBase.DeletedResource.toSmartIri)
+      resource.deletionInfo should not be None
+      resource.lastModificationDate should not be None
+      resource.creationDate should equal(createdResourceCreationDate)
     }
 
     "mark a resource as deleted, supplying a custom delete date" in {
@@ -1835,19 +1878,23 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
 
       val _ = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.markResourceAsDeletedV2(deleteRequest)))
 
-      appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq(resourceIri),
-        targetSchema = ApiV2Complex,
-        requestingUser = SharedTestDataADM.anythingUser1,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourcesV2(
+            resourceIris = Seq(resourceIri),
+            targetSchema = ApiV2Complex,
+            schemaOptions = Set.empty,
+            requestingUser = SharedTestDataADM.anythingUser1,
+          ),
+        ),
       )
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        response.resources.size should equal(1)
-        val resource = response.resources.head
-        resource.resourceClassIri should equal(OntologyConstants.KnoraBase.DeletedResource.toSmartIri)
-        resource.deletionInfo match {
-          case Some(v) => v.deleteDate should equal(deleteDate)
-          case None    => throw AssertionException("Missing deletionInfo on DeletedResource")
-        }
+
+      response.resources.size should equal(1)
+      val resource = response.resources.head
+      resource.resourceClassIri should equal(OntologyConstants.KnoraBase.DeletedResource.toSmartIri)
+      resource.deletionInfo match {
+        case Some(v) => v.deleteDate should equal(deleteDate)
+        case None    => throw AssertionException("Missing deletionInfo on DeletedResource")
       }
     }
 

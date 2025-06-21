@@ -31,7 +31,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeClassLabelsOrCommentsRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ChangeGuiOrderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ChangePropertyGuiElementRequest
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.CreateOntologyRequestV2
@@ -41,7 +40,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris
@@ -57,74 +55,6 @@ import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.jena.StatementOps.*
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
-
-/**
- * Requests a change in the metadata of an ontology.
- *
- * @param ontologyIri          the external ontology IRI.
- * @param label                the ontology's new label.
- * @param comment              the ontology's new comment.
- * @param lastModificationDate the ontology's last modification date, returned in a previous operation.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class ChangeOntologyMetadataRequestV2(
-  ontologyIri: OntologyIri,
-  label: Option[String] = None,
-  comment: Option[NonEmptyString] = None,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-)
-
-/**
- * Requests the addition of a class to an ontology.
- *
- * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class CreateClassRequestV2(
-  classInfoContent: ClassInfoContentV2,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-)
-
-/**
- * Requests the addition of cardinalities to a class.
- *
- * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class AddCardinalitiesToClassRequestV2(
-  classInfoContent: ClassInfoContentV2,
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-)
-
-/**
- * Requests that a property's labels or comments are changed.
- *
- * @param propertyIri          the IRI of the property.
- * @param predicateToUpdate    `rdfs:label` or `rdfs:comment`.
- * @param newObjects           the property's new labels or comments.
- * @param lastModificationDate the ontology's last modification date.
- * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
- */
-case class ChangePropertyLabelsOrCommentsRequestV2(
-  propertyIri: PropertyIri,
-  predicateToUpdate: LabelOrComment,
-  newObjects: Seq[StringLiteralV2],
-  lastModificationDate: Instant,
-  apiRequestID: UUID,
-  requestingUser: User,
-)
 
 final case class OntologyV2RequestParser(iriConverter: IriConverter) {
 
@@ -249,12 +179,11 @@ final case class OntologyV2RequestParser(iriConverter: IriConverter) {
   private def asOntologyLiteralV2(stmt: Statement): ZIO[Scope, String, OntologyLiteralV2] =
     stmt.getObject match
       case res: Resource => iriConverter.asSmartIri(res.getURI).mapBoth(_.getMessage, SmartIriLiteralV2.apply)
-      case literal: Literal => {
+      case literal: Literal =>
         literal.getValue match
           case str: String          => ZIO.succeed(StringLiteralV2.from(str, Option(literal.getLanguage).filter(_.nonEmpty)))
           case b: java.lang.Boolean => ZIO.succeed(BooleanLiteralV2(b))
           case _                    => ZIO.fail(s"Unsupported literal type: ${literal.getValue.getClass}")
-      }
 
   private def extractSubClasses(r: Resource): ZIO[Scope, String, Set[ResourceClassIri]] = {
     val subclasses: Set[String] = r.listProperties(RDFS.subClassOf).asScala.flatMap(_.objectAsUri.toOption).toSet
