@@ -7,7 +7,6 @@ package org.knora.webapi
 
 import com.typesafe.scalalogging.*
 import org.apache.pekko
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.client.RequestBuilding
 import org.apache.pekko.http.scaladsl.model.*
@@ -28,7 +27,6 @@ import scala.concurrent.duration.SECONDS
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.Db
-import org.knora.webapi.core.MessageRelayActorRef
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
@@ -58,7 +56,6 @@ abstract class E2ESpec
   lazy val appConfig: AppConfig                        = UnsafeZioRun.service[AppConfig]
   implicit lazy val system: ActorSystem                = UnsafeZioRun.service[ActorSystem]
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
-  lazy val appActor: ActorRef                          = UnsafeZioRun.service[MessageRelayActorRef].ref
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
   val log: Logger                                      = Logger(this.getClass)
 

@@ -36,7 +36,6 @@ object LayersTest { self =>
     // format: off
     LayersLive.Environment&
     TestContainerLayers.Environment &
-    MessageRelayActorRef &
     TestClientsModule.Provided
     // format: on
 
@@ -46,7 +45,6 @@ object LayersTest { self =>
    */
   val layer: ULayer[self.Environment] =
     ZLayer.make[self.Environment](
-      MessageRelayActorRef.layer,
       TestContainerLayers.all,
       TestClientsModule.layer,
       /// common
