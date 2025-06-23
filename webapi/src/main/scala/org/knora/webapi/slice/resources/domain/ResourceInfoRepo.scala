@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resourceinfo.domain
+package org.knora.webapi.slice.resources.domain
 
 import zio.Task
 

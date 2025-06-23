@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resourceinfo.repo
+package org.knora.webapi.slice.resources.repo
 
 import zio.*
 
@@ -13,8 +13,8 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.domain.InternalIri
-import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
-import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
+import org.knora.webapi.slice.resources.domain.ResourceInfo
+import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
