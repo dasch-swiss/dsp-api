@@ -7,8 +7,10 @@ package org.knora.webapi.slice.common.domain
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.slice.common.KnoraIris.KnoraIri
 
 final case class InternalIri(value: IRI)
 object InternalIri {
+  def from(knoraIri: KnoraIri): InternalIri = from(knoraIri.smartIri)
   def from(smartIri: SmartIri): InternalIri = InternalIri(smartIri.toInternalSchema.toIri)
 }
