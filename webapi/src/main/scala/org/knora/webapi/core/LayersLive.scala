@@ -166,7 +166,7 @@ object LayersLive { self =>
       ProjectImportService.layer,
       RepositoryUpdater.layer,
       ResourceInfoLayers.live,
-      ResourceUtilV2Live.layer,
+      ResourceUtilV2.layer,
       ResourcesApiModule.layer,
       ResourcesModule.layer,
       ResourcesRepoLive.layer,

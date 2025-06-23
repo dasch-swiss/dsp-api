@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import com.typesafe.scalalogging.LazyLogging
 import zio.*
 import zio.Task
 
@@ -27,50 +26,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 /**
  * Utility functions for working with Knora resources and their values.
  */
-trait ResourceUtilV2 {
-
-  /**
-   * Checks that a user has the specified permission on a resource.
-   *
-   * @param resourceInfo             the resource to be updated.
-   * @param permissionNeeded         the necessary Permission.ObjectAccess,
-   * @param requestingUser           the requesting user.
-   * @return [[ForbiddenException]]  if user does not have permission needed on the resource.
-   */
-  def checkResourcePermission(
-    resourceInfo: ReadResourceV2,
-    permissionNeeded: Permission.ObjectAccess,
-    requestingUser: User,
-  ): IO[ForbiddenException, Unit]
-
-  /**
-   * Checks that a user has the specified permission on a value.
-   *
-   * @param resourceInfo              the resource containing the value.
-   * @param valueInfo                 the value to be updated.
-   * @param permissionNeeded          the necessary Permission.ObjectAccess,
-   * @param requestingUser            the requesting user.
-   * @return  [[ForbiddenException]]  if user does not have permissions on the value.
-   */
-  def checkValuePermission(
-    resourceInfo: ReadResourceV2,
-    valueInfo: ReadValueV2,
-    permissionNeeded: Permission.ObjectAccess,
-    requestingUser: User,
-  ): IO[ForbiddenException, Unit]
-
-  /**
-   * Checks whether a list node exists and if is a root node.
-   *
-   * @param nodeIri the IRI of the list node.
-   * @return Task of Either None for nonexistent, true for root and false for child node.
-   */
-  def checkListNodeExistsAndIsRootNode(nodeIri: IRI): Task[Either[Option[Nothing], Boolean]]
-}
-
-final case class ResourceUtilV2Live(triplestore: TriplestoreService, sipiService: SipiService)
-    extends ResourceUtilV2
-    with LazyLogging {
+final case class ResourceUtilV2(triplestore: TriplestoreService, sipiService: SipiService) {
 
   /**
    * Checks that a user has the specified permission on a resource.
@@ -79,7 +35,7 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, sipiService
    * @param permissionNeeded the necessary Permission.ObjectAccess,
    * @param requestingUser   the requesting user.
    */
-  override def checkResourcePermission(
+  def checkResourcePermission(
     resourceInfo: ReadResourceV2,
     permissionNeeded: Permission.ObjectAccess,
     requestingUser: User,
@@ -111,7 +67,7 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, sipiService
    * @param permissionNeeded the necessary Permission.ObjectAccess,
    * @param requestingUser   the requesting user.
    */
-  override def checkValuePermission(
+  def checkValuePermission(
     resourceInfo: ReadResourceV2,
     valueInfo: ReadValueV2,
     permissionNeeded: Permission.ObjectAccess,
@@ -142,7 +98,7 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, sipiService
    * @param nodeIri the IRI of the list node.
    * @return [[Task]] of Either None for nonexistent, true for root and false for child node.
    */
-  override def checkListNodeExistsAndIsRootNode(nodeIri: IRI): Task[Either[Option[Nothing], Boolean]] = {
+  def checkListNodeExistsAndIsRootNode(nodeIri: IRI): Task[Either[Option[Nothing], Boolean]] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     val query = Construct(sparql.admin.txt.getListNode(nodeIri))
@@ -161,6 +117,6 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, sipiService
   }
 }
 
-object ResourceUtilV2Live {
-  val layer = ZLayer.derive[ResourceUtilV2Live]
+object ResourceUtilV2 {
+  val layer = ZLayer.derive[ResourceUtilV2]
 }
