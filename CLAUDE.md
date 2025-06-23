@@ -17,7 +17,10 @@ The project uses ZIO for functional programming, Pekko HTTP (Apache Pekko) for t
 ### Essential Development Commands
 
 **Testing:**
+- Run a single test: `sbt "testOnly *TestClassName*"`
+- Run tests in a specific package: `sbt "testOnly org.knora.webapi.slice.admin.*"`
 - `sbt test` - Run unit tests
+-  When running any E2EZSpec from the integration tests, ensure that the Sipi image is built first `make docker-build-sipi-image`.
 - `make integration-test` - Run integration tests (requires Docker)
 - `make test-all` - Run all tests
 
@@ -36,11 +39,6 @@ The project uses ZIO for functional programming, Pekko HTTP (Apache Pekko) for t
 - `just stack-start-dev` - Start stack without API (for development)
 - `just stack-stop` - Stop the stack
 - `just stack-init-test` - Initialize with test data
-- `make stack-logs` - View logs from all services
-
-**Testing Specific Features:**
-- Run a single test: `sbt "testOnly *TestClassName*"`
-- Run tests in a specific package: `sbt "testOnly org.knora.webapi.slice.admin.*"`
 
 ## Architecture
 
@@ -58,7 +56,6 @@ The codebase is organized into several key modules:
 - `infrastructure/` - Cross-cutting concerns (metrics, caching, JWT)
 - `lists/` - List management functionality
 - `ontology/` - Ontology management
-- `resourceinfo/` - Resource information services
 - `resources/` - Resource and value management
 - `search/` - Search functionality
 - `security/` - Authentication and authorization
@@ -75,7 +72,7 @@ Each slice typically contains:
 - **HTTP**: Pekko HTTP (Apache Pekko) with Tapir for endpoint definition
 - **Database**: Apache Jena Fuseki (RDF triplestore)
 - **Media Server**: Sipi (C++ media server)
-- **Testing**: ZIO Test framework
+- **Testing**: ZIO Test framework, some ScalaTests exist but will be migrated to ZIO Test
 - **JSON**: ZIO JSON for serialization
 
 ### Key Design Patterns
@@ -94,7 +91,6 @@ Each slice typically contains:
 ### Test Execution
 - Unit tests run against in-memory implementations
 - Integration tests use Testcontainers for real database/service instances
-- Use `sbt testOnly *TestName*` to run specific tests
 
 ### Test Data
 - Test data located in `test_data/` directory
@@ -108,6 +104,7 @@ Each slice typically contains:
 - sbt
 - Docker Desktop
 - just (optional)
+- Scala 3.3.X
 
 ### Local Development
 1. Start the development stack: `just stack-start-dev`
@@ -145,10 +142,6 @@ Each slice typically contains:
 2. Implement handler in `*EndpointsHandler.scala`
 3. Add route in `*Routes.scala`
 4. Add to main router in `ApiRoutes.scala`
-
-### Running Tests
-- Before running integration tests: `make docker-build-sipi-image`
-- For specific slice tests: `sbt "testOnly org.knora.webapi.slice.admin.*"`
 
 ### Code Style
 - Use Scalafmt for formatting
