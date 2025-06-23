@@ -9,7 +9,6 @@ import zio.*
 
 import dsp.errors.GravsearchOptimizationException
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -59,8 +58,8 @@ case class TransformedOrderBy(
 /**
  * Assists in the transformation of CONSTRUCT queries by traversing the query, delegating work to a [[AbstractPrequeryGenerator]].
  */
-final case class QueryTraverser(private val messageRelay: MessageRelay, private val ontologyCache: OntologyCache)(
-  implicit private val stringFormatter: StringFormatter,
+final case class QueryTraverser(private val ontologyCache: OntologyCache)(implicit
+  private val stringFormatter: StringFormatter,
 ) {
 
   /**

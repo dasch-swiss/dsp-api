@@ -9,7 +9,6 @@ import zio.*
 
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.search.*
@@ -25,18 +24,28 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object SearchResponderV2Module {
-  type Dependencies = StandoffTagUtilV2 & AppConfig & TriplestoreService & ConstructResponseUtilV2 & OntologyCache &
-    OntologyRepo & IriConverter & MessageRelay & StringFormatter & ProjectService
+  type Dependencies =
+   // format: off
+   AppConfig &
+   ConstructResponseUtilV2 &
+   IriConverter &
+   OntologyCache &
+   OntologyRepo &
+   OntologyResponderV2 &
+   ProjectService &
+   StandoffTagUtilV2 &
+   StringFormatter &
+   TriplestoreService
+   // format: on
 
   type Provided = SearchResponderV2Live & OntologyInferencer & QueryTraverser & GravsearchTypeInspectionRunner
 
   val layer: URLayer[Dependencies, Provided] =
-    ZLayer.makeSome[Dependencies, Provided](
-      GravsearchTypeInspectionRunner.layer,
-      ZLayer.derive[SearchResponderV2Live],
-      InferenceOptimizationService.layer,
-      QueryTraverser.layer,
-      ConstructTransformer.layer,
-      OntologyInferencer.layer,
-    )
+    QueryTraverser.layer >+>
+      OntologyInferencer.layer >+>
+      GravsearchTypeInspectionRunner.layer >+>
+      InferenceOptimizationService.layer >+>
+      ConstructTransformer.layer >+>
+      OntologyInferencer.layer >+>
+      SearchResponderV2Live.layer
 }

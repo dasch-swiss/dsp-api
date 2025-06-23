@@ -10,28 +10,26 @@ import zio.Task
 import zio.ZIO
 
 import scala.annotation.tailrec
-
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
 import org.knora.webapi.*
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.v2.responder.KnoraReadV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * A Gravsearch type inspector that infers types, relying on information from the relevant ontologies.
  */
 final case class InferringGravsearchTypeInspector(
-  private val messageRelay: MessageRelay,
+  private val ontologyService: OntologyResponderV2,
   private val queryTraverser: QueryTraverser,
 ) extends LazyLogging {
 
@@ -898,15 +896,8 @@ final case class InferringGravsearchTypeInspector(
       // Make an index of entity usage in the query.
       usageIndex <- ZIO.attempt(makeUsageIndex(whereClause))
 
-      // Ask the ontology responder about all the Knora class and property IRIs mentioned in the query.
-
-      initialEntityInfoRequest = EntityInfoGetRequestV2(
-                                   classIris = usageIndex.knoraClassIris,
-                                   propertyIris = usageIndex.knoraPropertyIris,
-                                   requestingUser = requestingUser,
-                                 )
-
-      initialEntityInfo <- messageRelay.ask[EntityInfoGetResponseV2](initialEntityInfoRequest)
+      initialEntityInfo <-
+        ontologyService.getEntityInfoResponseV2(usageIndex.knoraClassIris, usageIndex.knoraPropertyIris, requestingUser)
 
       // The ontology responder may return the requested information in the internal schema. Convert each entity
       // definition back to the input schema.
@@ -952,12 +943,7 @@ final case class InferringGravsearchTypeInspector(
                                                acc ++ maybeSubjectType ++ maybeObjectType
                                              }
 
-      additionalEntityInfoRequest = EntityInfoGetRequestV2(
-                                      classIris = subjectAndObjectTypes,
-                                      requestingUser = requestingUser,
-                                    )
-
-      additionalEntityInfo <- messageRelay.ask[EntityInfoGetResponseV2](additionalEntityInfoRequest)
+      additionalEntityInfo <- ontologyService.getEntityInfoResponseV2(subjectAndObjectTypes, Set.empty, requestingUser)
 
       // Add the additional classes to the usage index.
       usageIndexWithAdditionalClasses = usageIndex.copy(

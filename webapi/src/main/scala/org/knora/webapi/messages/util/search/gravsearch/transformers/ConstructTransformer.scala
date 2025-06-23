@@ -74,6 +74,5 @@ final case class ConstructTransformer(
 }
 
 object ConstructTransformer {
-  val layer: URLayer[OntologyInferencer & IriConverter, ConstructTransformer] =
-    ZLayer.fromFunction(ConstructTransformer.apply _)
+  val layer = ZLayer.derive[ConstructTransformer]
 }

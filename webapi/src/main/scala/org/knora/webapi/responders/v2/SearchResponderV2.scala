@@ -15,7 +15,6 @@ import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -288,19 +287,19 @@ trait SearchResponderV2 {
 
 final case class SearchResponderV2Live(
   private val appConfig: AppConfig,
-  private val triplestore: TriplestoreService,
-  private val messageRelay: MessageRelay,
   private val constructResponseUtilV2: ConstructResponseUtilV2,
-  private val ontologyCache: OntologyCache,
-  private val standoffTagUtilV2: StandoffTagUtilV2,
-  private val queryTraverser: QueryTraverser,
-  private val sparqlTransformerLive: OntologyInferencer,
+  private val constructTransformer: ConstructTransformer,
   private val gravsearchTypeInspectionRunner: GravsearchTypeInspectionRunner,
   private val inferenceOptimizationService: InferenceOptimizationService,
-  private val stringFormatter: StringFormatter,
   private val iriConverter: IriConverter,
-  private val constructTransformer: ConstructTransformer,
+  private val ontologyCache: OntologyCache,
   private val ontologyRepo: OntologyRepo,
+  private val ontologyService: OntologyResponderV2,
+  private val queryTraverser: QueryTraverser,
+  private val sparqlTransformerLive: OntologyInferencer,
+  private val standoffTagUtilV2: StandoffTagUtilV2,
+  private val stringFormatter: StringFormatter,
+  private val triplestore: TriplestoreService,
 ) extends SearchResponderV2
     with LazyLogging {
 
@@ -967,12 +966,10 @@ final case class SearchResponderV2Live(
 
     for {
       // Get information about the resource class, and about the ORDER BY property if specified.
-      entityInfoResponse <- messageRelay.ask[EntityInfoGetResponseV2](
-                              EntityInfoGetRequestV2(
-                                classIris = Set(internalClassIri),
-                                propertyIris = maybeInternalOrderByPropertyIri.toSet,
-                                requestingUser = requestingUser,
-                              ),
+      entityInfoResponse <- ontologyService.getEntityInfoResponseV2(
+                              Set(internalClassIri),
+                              maybeInternalOrderByPropertyIri.toSet,
+                              requestingUser,
                             )
 
       classDef: ReadClassInfoV2 = entityInfoResponse.classInfoMap(internalClassIri)

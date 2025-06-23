@@ -135,7 +135,7 @@ final case class OntologyResponderV2(
    * @param requestingUser the user making the request.
    * @return an [[EntityInfoGetResponseV2]].
    */
-  private def getEntityInfoResponseV2(
+  def getEntityInfoResponseV2(
     classIris: Set[SmartIri] = Set.empty[SmartIri],
     propertyIris: Set[SmartIri],
     requestingUser: User,
