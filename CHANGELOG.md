@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.20.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.19.2...v0.20.0) (2025-06-23)
+
+
+### Enhancements
+
+* Add support for HTML and epub file types (DEV-5080) ([#364](https://github.com/dasch-swiss/dsp-ingest/issues/364)) ([aa20a02](https://github.com/dasch-swiss/dsp-ingest/commit/aa20a029c6bc72b6436b972066ccf82de4889614))
+
 ## [0.19.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.19.1...v0.19.2) (2025-05-19)
 
 
