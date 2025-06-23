@@ -9,11 +9,12 @@ import zio.URLayer
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.resources.repo.ResourceInfoRepoLive
 import org.knora.webapi.slice.resources.service.MetadataService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object ResourcesModule { self =>
   type Dependencies = KnoraProjectService & TriplestoreService & StringFormatter
-  type Provided     = MetadataService
-  val layer: URLayer[Dependencies, Provided] = MetadataService.layer
+  type Provided     = MetadataService & ResourceInfoRepoLive
+  val layer: URLayer[Dependencies, Provided] = MetadataService.layer >+> ResourceInfoRepoLive.layer
 }

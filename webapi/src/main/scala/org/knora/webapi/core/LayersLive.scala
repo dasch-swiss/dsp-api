@@ -50,7 +50,6 @@ import org.knora.webapi.slice.ontology.api.OntologyApiModule
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.api.ResourcesApiModule
 import org.knora.webapi.slice.resources.api.ResourcesApiRoutes
@@ -165,7 +164,6 @@ object LayersLive { self =>
       ProjectExportStorageServiceLive.layer,
       ProjectImportService.layer,
       RepositoryUpdater.layer,
-      ResourceInfoLayers.live,
       ResourceUtilV2.layer,
       ResourcesApiModule.layer,
       ResourcesModule.layer,
