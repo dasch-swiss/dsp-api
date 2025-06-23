@@ -33,7 +33,7 @@ import org.knora.webapi.slice.resources.repo.ResourceInfoRepoFake.knownProjectIR
 import org.knora.webapi.slice.resources.repo.ResourceInfoRepoFake.knownResourceClass
 import org.knora.webapi.slice.resources.repo.ResourceInfoRepoFake.unknownProjectIRI
 
-object LiveResourceInfoRestServiceSpec extends ZIOSpecDefault {
+object ResourceInfoRestServiceSpec extends ZIOSpecDefault {
 
   private def findByProjectAndResourceClass(
     projectIri: ProjectIri,
