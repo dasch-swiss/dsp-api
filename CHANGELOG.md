@@ -1,5 +1,33 @@
 # Changelog
 
+## [31.18.0](https://github.com/dasch-swiss/dsp-api/compare/v31.17.0...v31.18.0) (2025-06-23)
+
+
+### Maintenances
+
+* Remove feature switch ENABLE_FULL_LICENSE_CHECK ([#3640](https://github.com/dasch-swiss/dsp-api/issues/3640)) ([68fd883](https://github.com/dasch-swiss/dsp-api/commit/68fd883046447672d3106c00a3945d65b79bac1a))
+
+
+### Enhancements
+
+* Add get project license by iri endpoint ([#3641](https://github.com/dasch-swiss/dsp-api/issues/3641)) ([3ef2767](https://github.com/dasch-swiss/dsp-api/commit/3ef27672793f4ae2b968301beb4856dc4452ecc3))
+* Add HTML and epub to the documented list of supported file formats (DEV-5080) ([#3649](https://github.com/dasch-swiss/dsp-api/issues/3649)) ([27205ec](https://github.com/dasch-swiss/dsp-api/commit/27205ec5b7026186a58734887ee88dbcfc541235))
+* Enable full license check on creating a FileValue (DEV-4956) ([#3639](https://github.com/dasch-swiss/dsp-api/issues/3639)) ([c076819](https://github.com/dasch-swiss/dsp-api/commit/c07681983817d5112b61c64fe7882a0f5f95f030))
+
+
+### Bug Fixes
+
+* Correctly return deleted values and resources (DEV-4848) ([#3643](https://github.com/dasch-swiss/dsp-api/issues/3643)) ([f3b57e5](https://github.com/dasch-swiss/dsp-api/commit/f3b57e551e27d0e45d2d76182f11b2cd55c2e918))
+
+
+### Tests
+
+* Add simple e2e test for MetadataEndpoint ([#3637](https://github.com/dasch-swiss/dsp-api/issues/3637)) ([c65ee52](https://github.com/dasch-swiss/dsp-api/commit/c65ee52281214872c0e81c371e11c90a0413bc22))
+* Cleanup E2ESpec ([#3642](https://github.com/dasch-swiss/dsp-api/issues/3642)) ([b1647c0](https://github.com/dasch-swiss/dsp-api/commit/b1647c0520cde02c9f9ab8268f89c3ef89fa4272))
+* Replace appActor calls with direct service calls in test specs ([#3648](https://github.com/dasch-swiss/dsp-api/issues/3648)) ([19f2eaf](https://github.com/dasch-swiss/dsp-api/commit/19f2eafe4636f81c1de953f47cf0d91e83444884))
+* Replace appActor calls with direct service calls in ValuesResponderV2Spec ([#3647](https://github.com/dasch-swiss/dsp-api/issues/3647)) ([83bba69](https://github.com/dasch-swiss/dsp-api/commit/83bba69a8413bbd58f8410fafebe532c2456d73e))
+* Turn E2E specs into simple scala test ([#3644](https://github.com/dasch-swiss/dsp-api/issues/3644)) ([ba1ca99](https://github.com/dasch-swiss/dsp-api/commit/ba1ca995ec0a594b8052c965187386bd74474605))
+
 ## [31.17.0](https://github.com/dasch-swiss/dsp-api/compare/v31.16.0...v31.17.0) (2025-06-16)
 
 
