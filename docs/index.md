@@ -15,13 +15,15 @@ Assets are identified by a unique identifier, the `internal_filename`, eg. `100W
 
 ## Types of Assets
 
-The service supports different types of assets:
+The service supports several different types of assets:
 
 * Images
 * Videos
 * Audio files
 * Excel files
 * PDF files
+* Ebooks (`.epub`)
+* Html files (`.html`, `.htm`)
 * And others in binary format
 
 The supported file formats are explained in detail in the [DSP-API documentation](https://docs.dasch.swiss/2023.06.02/DSP-API/01-introduction/file-formats/).
