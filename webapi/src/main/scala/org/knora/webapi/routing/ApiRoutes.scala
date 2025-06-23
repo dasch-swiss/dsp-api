@@ -19,7 +19,7 @@ import org.knora.webapi.slice.admin.api.AdminApiRoutes
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.lists.api.ListsApiV2Routes
 import org.knora.webapi.slice.ontology.api.OntologiesApiRoutes
-import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
+import org.knora.webapi.slice.resources.api.ResourceInfoRoutes
 import org.knora.webapi.slice.resources.api.ResourcesApiRoutes
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.security.api.AuthenticationApiRoutes

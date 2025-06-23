@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resourceinfo.api.model
+package org.knora.webapi.slice.resources.api.model
 
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat.TextPlain
