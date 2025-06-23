@@ -21,7 +21,7 @@ import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIriK
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.TestSmartIriFromInternalIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.common.domain.InternalIri
 
 object SmartIriConversion {
 

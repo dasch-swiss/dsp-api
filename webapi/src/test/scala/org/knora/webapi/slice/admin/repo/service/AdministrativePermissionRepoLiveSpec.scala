@@ -24,7 +24,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.*
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 

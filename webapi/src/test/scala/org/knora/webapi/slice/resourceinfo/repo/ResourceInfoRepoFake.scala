@@ -15,7 +15,7 @@ import zio.ZLayer
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.resourceinfo.domain
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 
@@ -44,7 +44,7 @@ object ResourceInfoRepoFake {
 
   val knownProjectIRI    = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   val unknownProjectIRI  = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002")
-  val knownResourceClass = domain.InternalIri("http://some-resource-class")
+  val knownResourceClass = InternalIri("http://some-resource-class")
 
   def findByProjectAndResourceClass(
     projectIri: ProjectIri,

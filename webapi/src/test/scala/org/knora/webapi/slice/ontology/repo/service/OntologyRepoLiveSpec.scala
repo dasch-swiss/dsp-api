@@ -18,7 +18,7 @@ import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
 import org.knora.webapi.slice.ontology.domain.ReadClassInfoV2Builder
 import org.knora.webapi.slice.ontology.domain.ReadOntologyV2Builder
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Anything
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 

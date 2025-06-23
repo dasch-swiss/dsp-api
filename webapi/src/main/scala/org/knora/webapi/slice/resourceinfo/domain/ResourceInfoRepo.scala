@@ -8,6 +8,7 @@ package org.knora.webapi.slice.resourceinfo.domain
 import zio.Task
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.domain.InternalIri
 
 trait ResourceInfoRepo {
   def findByProjectAndResourceClass(projectIri: ProjectIri, resourceClass: InternalIri): Task[List[ResourceInfo]]

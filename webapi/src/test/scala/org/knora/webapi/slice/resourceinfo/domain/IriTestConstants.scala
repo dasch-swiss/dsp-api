@@ -4,7 +4,9 @@
  */
 
 package org.knora.webapi.slice.resourceinfo.domain
+
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.domain.InternalIri
 
 object IriTestConstants {
   object Project {

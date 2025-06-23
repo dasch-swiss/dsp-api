@@ -3,8 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resourceinfo.domain
+package org.knora.webapi.slice.common.domain
 
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.SmartIri
 
 final case class InternalIri(value: IRI)
+object InternalIri {
+  def from(smartIri: SmartIri): InternalIri = InternalIri(smartIri.toInternalSchema.toIri)
+}

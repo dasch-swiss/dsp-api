@@ -32,7 +32,7 @@ import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol.fusekiServerFormat
 import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.*
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData

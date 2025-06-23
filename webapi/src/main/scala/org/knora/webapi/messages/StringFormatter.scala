@@ -30,8 +30,8 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
 
@@ -310,7 +310,7 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
 
   def toIri: IRI = toString
 
-  def toInternalIri: InternalIri = InternalIri(toOntologySchema(InternalSchema).toIri)
+  def toInternalIri: InternalIri = InternalIri.from(this)
 
   /**
    * Returns `true` if this is a Knora data or definition IRI.

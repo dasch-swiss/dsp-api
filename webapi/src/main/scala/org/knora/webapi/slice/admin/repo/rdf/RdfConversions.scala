@@ -11,8 +11,8 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixEx
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.LangString
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 object RdfConversions {
 
