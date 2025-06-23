@@ -21,7 +21,7 @@ import scala.xml.XML
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.Sipi
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
@@ -45,6 +45,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.CreateMappingRequestV2
 import org.knora.webapi.slice.infrastructure.CacheManager
@@ -62,15 +63,15 @@ import org.knora.webapi.util.FileUtil
  * and attributes to standoff classes and properties.
  */
 final case class StandoffResponderV2(
-  appConfig: AppConfig,
-  messageRelay: MessageRelay,
-  triplestore: TriplestoreService,
-  constructResponseUtilV2: ConstructResponseUtilV2,
-  standoffTagUtilV2: StandoffTagUtilV2,
-  projectService: ProjectService,
-  xsltCache: EhCache[String, String],
-  mappingCache: EhCache[String, MappingXMLtoStandoff],
-  sipiService: SipiService,
+  private val messageRelay: MessageRelay,
+  private val triplestore: TriplestoreService,
+  private val constructResponseUtilV2: ConstructResponseUtilV2,
+  private val standoffTagUtilV2: StandoffTagUtilV2,
+  private val projectService: KnoraProjectService,
+  private val xsltCache: EhCache[String, String],
+  private val mappingCache: EhCache[String, MappingXMLtoStandoff],
+  private val sipiConfig: Sipi,
+  private val sipiService: SipiService,
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
     with LazyLogging {
@@ -151,7 +152,7 @@ final case class StandoffResponderV2(
           }
 
       xsltUrl: String =
-        s"${appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
+        s"${sipiConfig.internalBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
 
     } yield xsltUrl
 
@@ -916,17 +917,17 @@ object StandoffResponderV2 {
   val layer =
     ZLayer.fromZIO {
       for {
-        ac      <- ZIO.service[AppConfig]
         mr      <- ZIO.service[MessageRelay]
         ts      <- ZIO.service[TriplestoreService]
         cru     <- ZIO.service[ConstructResponseUtilV2]
         stu     <- ZIO.service[StandoffTagUtilV2]
-        ps      <- ZIO.service[ProjectService]
+        ps      <- ZIO.service[KnoraProjectService]
         xc      <- ZIO.serviceWithZIO[CacheManager](_.createCache[String, String]("xsltCache"))
         mc      <- ZIO.serviceWithZIO[CacheManager](_.createCache[String, MappingXMLtoStandoff]("mappingCache"))
         sf      <- ZIO.service[StringFormatter]
+        sc      <- ZIO.service[Sipi]
         ssl     <- ZIO.service[SipiService]
-        handler <- mr.subscribe(StandoffResponderV2(ac, mr, ts, cru, stu, ps, xc, mc, ssl)(sf))
+        handler <- mr.subscribe(StandoffResponderV2(mr, ts, cru, stu, ps, xc, mc, sc, ssl)(sf))
       } yield handler
     }
 }
