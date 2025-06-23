@@ -18,7 +18,7 @@ import org.knora.webapi.slice.resources.api.model.QueryParams.*
 import org.knora.webapi.slice.resources.api.model.ResourceInfoDto
 import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 
-final case class RestResourceInfoService(repo: ResourceInfoRepo, iriConverter: IriConverter) {
+final case class ResourceInfoRestService(repo: ResourceInfoRepo, iriConverter: IriConverter) {
 
   private def lastModificationDateSort(order: Order)(one: ResourceInfoDto, two: ResourceInfoDto) =
     instant(order)(one.lastModificationDate, two.lastModificationDate)
@@ -60,6 +60,6 @@ final case class RestResourceInfoService(repo: ResourceInfoRepo, iriConverter: I
     } yield ListResponseDto(sort(resources, order, orderBy))
 }
 
-object RestResourceInfoService {
-  val layer = ZLayer.derive[RestResourceInfoService]
+object ResourceInfoRestService {
+  val layer = ZLayer.derive[ResourceInfoRestService]
 }

@@ -17,11 +17,11 @@ import org.knora.webapi.slice.resources.api.model.QueryParams.Asc
 import org.knora.webapi.slice.resources.api.model.QueryParams.LastModificationDate
 import org.knora.webapi.slice.resources.api.model.QueryParams.Order
 import org.knora.webapi.slice.resources.api.model.QueryParams.OrderBy
-import org.knora.webapi.slice.resources.api.service.RestResourceInfoService
+import org.knora.webapi.slice.resources.api.service.ResourceInfoRestService
 
 final case class ResourceInfoRoutes(
   endpoints: ResourceInfoEndpoints,
-  resourceInfoService: RestResourceInfoService,
+  resourceInfoService: ResourceInfoRestService,
   mapper: HandlerMapper,
   interpreter: TapirToPekkoInterpreter,
 ) {

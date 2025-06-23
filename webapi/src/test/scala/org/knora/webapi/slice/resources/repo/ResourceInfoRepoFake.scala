@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.resources.repo
 
 import zio.Ref
-import zio.Task
 import zio.UIO
 import zio.ULayer
 import zio.URIO
@@ -32,9 +31,9 @@ final case class ResourceInfoRepoFake(entitiesRef: Ref[Map[(ProjectIri, Internal
     for {
       current <- entitiesRef.get
       updated = current.get(key) match {
-        case Some(existing) => current + (key -> (existing :+ entity))
-        case None           => current + (key -> List(entity))
-      }
+                  case Some(existing) => current + (key -> (existing :+ entity))
+                  case None           => current + (key -> List(entity))
+                }
       _ <- entitiesRef.set(updated)
     } yield ()
   }
