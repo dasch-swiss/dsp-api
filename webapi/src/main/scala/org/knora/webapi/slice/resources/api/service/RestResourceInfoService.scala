@@ -13,10 +13,10 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 import org.knora.webapi.slice.resources.api.model.ListResponseDto
 import org.knora.webapi.slice.resources.api.model.QueryParams.*
 import org.knora.webapi.slice.resources.api.model.ResourceInfoDto
+import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 
 final case class RestResourceInfoService(repo: ResourceInfoRepo, iriConverter: IriConverter) {
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resourceinfo.api
+package org.knora.webapi.slice.resources.api
 
 import zio.Exit
 import zio.ZIO
@@ -28,10 +28,10 @@ import org.knora.webapi.slice.resources.api.model.QueryParams.OrderBy
 import org.knora.webapi.slice.resources.api.model.ResourceInfoDto
 import org.knora.webapi.slice.resources.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resources.domain.ResourceInfo
-import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
-import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.knownProjectIRI
-import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.knownResourceClass
-import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.unknownProjectIRI
+import org.knora.webapi.slice.resources.repo.ResourceInfoRepoFake
+import org.knora.webapi.slice.resources.repo.ResourceInfoRepoFake.knownProjectIRI
+import org.knora.webapi.slice.resources.repo.ResourceInfoRepoFake.knownResourceClass
+import org.knora.webapi.slice.resources.repo.ResourceInfoRepoFake.unknownProjectIRI
 
 object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
 

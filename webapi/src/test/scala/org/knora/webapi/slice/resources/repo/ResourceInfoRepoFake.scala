@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resourceinfo.repo
+package org.knora.webapi.slice.resources.repo
 
 import zio.Ref
 import zio.Task
@@ -24,19 +24,23 @@ final case class ResourceInfoRepoFake(entitiesRef: Ref[Map[(ProjectIri, Internal
   override def findByProjectAndResourceClass(
     projectIri: ProjectIri,
     resourceClass: InternalIri,
-  ): Task[List[ResourceInfo]] =
+  ): UIO[List[ResourceInfo]] =
     entitiesRef.get.map(_.getOrElse((projectIri, resourceClass), List.empty))
 
   def add(entity: ResourceInfo, projectIRI: ProjectIri, resourceClass: InternalIri): UIO[Unit] = {
     val key = (projectIRI, resourceClass)
-    entitiesRef.getAndUpdate(entities => entities + (key -> (entity :: entities.getOrElse(key, Nil)))).unit
+    for {
+      current <- entitiesRef.get
+      updated = current.get(key) match {
+        case Some(existing) => current + (key -> (existing :+ entity))
+        case None           => current + (key -> List(entity))
+      }
+      _ <- entitiesRef.set(updated)
+    } yield ()
   }
 
-  def addAll(entities: List[ResourceInfo], projectIri: ProjectIri, resourceClass: InternalIri): UIO[Unit] =
-    entities.map(add(_, projectIri, resourceClass)).reduce(_ *> _)
-
-  def removeAll(): UIO[Unit] =
-    entitiesRef.set(Map.empty[(ProjectIri, InternalIri), List[ResourceInfo]])
+  def addAll(entities: List[ResourceInfo], projectIRI: ProjectIri, resourceClass: InternalIri): UIO[Unit] =
+    ZIO.foreachDiscard(entities)(add(_, projectIRI, resourceClass))
 }
 
 object ResourceInfoRepoFake {
@@ -48,26 +52,20 @@ object ResourceInfoRepoFake {
   def findByProjectAndResourceClass(
     projectIri: ProjectIri,
     resourceClass: InternalIri,
-  ): ZIO[ResourceInfoRepoFake, Throwable, List[ResourceInfo]] =
-    ZIO.service[ResourceInfoRepoFake].flatMap(_.findByProjectAndResourceClass(projectIri, resourceClass))
+  ): URIO[ResourceInfoRepoFake, List[ResourceInfo]] =
+    ZIO.serviceWithZIO[ResourceInfoRepoFake](_.findByProjectAndResourceClass(projectIri, resourceClass))
+
+  def add(entity: ResourceInfo, projectIri: ProjectIri, resourceClass: InternalIri): URIO[ResourceInfoRepoFake, Unit] =
+    ZIO.serviceWithZIO[ResourceInfoRepoFake](_.add(entity, projectIri, resourceClass))
 
   def addAll(
-    items: List[ResourceInfo],
+    entities: List[ResourceInfo],
     projectIri: ProjectIri,
     resourceClass: InternalIri,
   ): URIO[ResourceInfoRepoFake, Unit] =
-    ZIO.service[ResourceInfoRepoFake].flatMap(_.addAll(items, projectIri, resourceClass))
+    ZIO.serviceWithZIO[ResourceInfoRepoFake](_.addAll(entities, projectIri, resourceClass))
 
-  def add(
-    entity: ResourceInfo,
-    projectIri: ProjectIri,
-    resourceClass: InternalIri,
-  ): URIO[ResourceInfoRepoFake, Unit] =
-    ZIO.service[ResourceInfoRepoFake].flatMap(_.add(entity, projectIri, resourceClass))
-
-  def removeAll(): URIO[ResourceInfoRepoFake, Unit] =
-    ZIO.service[ResourceInfoRepoFake].flatMap(_.removeAll())
-
-  val layer: ULayer[ResourceInfoRepoFake] =
-    ZLayer.fromZIO(Ref.make(Map.empty[(ProjectIri, InternalIri), List[ResourceInfo]]).map(ResourceInfoRepoFake(_)))
+  val layer: ULayer[ResourceInfoRepoFake] = ZLayer.fromZIO(
+    Ref.make(Map.empty[(ProjectIri, InternalIri), List[ResourceInfo]]).map(ResourceInfoRepoFake(_)),
+  )
 }
