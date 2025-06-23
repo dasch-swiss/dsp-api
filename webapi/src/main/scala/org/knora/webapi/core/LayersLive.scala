@@ -164,7 +164,7 @@ object LayersLive { self =>
       ProjectExportStorageServiceLive.layer,
       ProjectImportService.layer,
       RepositoryUpdater.layer,
-      ResourceUtilV2Live.layer,
+      ResourceUtilV2.layer,
       ResourcesApiModule.layer,
       ResourcesModule.layer,
       ResourcesRepoLive.layer,
