@@ -14,6 +14,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceSpec.StubCardinalitiesService.replaceSuccess
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceSpec.StubCardinalitiesService.setSuccess
@@ -26,7 +27,6 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.IsInUseCheckFailure
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
-import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 import org.knora.webapi.util.JsonHelper.StringToJson
 import org.knora.webapi.util.JsonHelper.renderResponseJson

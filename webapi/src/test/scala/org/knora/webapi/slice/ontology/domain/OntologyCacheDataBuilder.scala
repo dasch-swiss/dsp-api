@@ -16,12 +16,12 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Kn
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIri
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.BetterSmartIriKeyMap
 import org.knora.webapi.slice.ontology.domain.SmartIriConversion.TestSmartIriFromInternalIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
-import org.knora.webapi.slice.common.domain.InternalIri
 
 object SmartIriConversion {
 

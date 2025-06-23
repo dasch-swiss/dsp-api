@@ -9,8 +9,8 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-import org.knora.webapi.slice.common.repo.rdf.Errors.*
 import org.knora.webapi.slice.common.domain.InternalIri
+import org.knora.webapi.slice.common.repo.rdf.Errors.*
 
 object RdfModelSpec extends ZIOSpecDefault {
 

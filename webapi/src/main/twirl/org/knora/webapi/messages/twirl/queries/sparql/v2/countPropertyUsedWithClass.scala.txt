@@ -12,8 +12,8 @@
  *@
 
 @(
-  propertyIri: org.knora.webapi.slice.resourceinfo.domain.InternalIri,
-  classIri: org.knora.webapi.slice.resourceinfo.domain.InternalIri
+  propertyIri: org.knora.webapi.slice.common.domain.InternalIri,
+  classIri: org.knora.webapi.slice.common.domain.InternalIri
 )
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

@@ -12,7 +12,7 @@
  * @param ignoreRdfSubjectAndObject if true, rdf:subject and rdf:object will be ignored. This is necessary when checking
  * for references to a resource that is to be erased.
  *@
-@(entityIri: org.knora.webapi.slice.resourceinfo.domain.InternalIri,
+@(entityIri: org.knora.webapi.slice.common.domain.InternalIri,
   ignoreKnoraConstraints: Boolean = false,
   ignoreRdfSubjectAndObject: Boolean = false)
 

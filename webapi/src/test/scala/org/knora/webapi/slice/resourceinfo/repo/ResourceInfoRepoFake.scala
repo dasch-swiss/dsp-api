@@ -14,8 +14,8 @@ import zio.ZIO
 import zio.ZLayer
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.resourceinfo.domain
 import org.knora.webapi.slice.common.domain.InternalIri
+import org.knora.webapi.slice.resourceinfo.domain
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 

@@ -285,7 +285,7 @@ object StringFormatter {
  * - "http://knora.example.org/ontology/0000/example#Something".toSmartIri
  * - "http://knora.example.org/ontology/0000/example#Something".toSmartIriWithErr(throw BadRequestException("Invalid IRI"))
  */
-sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
+sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] { self =>
 
   /*
 
@@ -310,7 +310,7 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
 
   def toIri: IRI = toString
 
-  def toInternalIri: InternalIri = InternalIri.from(this)
+  def toInternalIri: InternalIri = InternalIri.from(self)
 
   /**
    * Returns `true` if this is a Knora data or definition IRI.

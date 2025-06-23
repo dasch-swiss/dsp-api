@@ -25,7 +25,7 @@ object KnoraIris {
 
   trait KnoraIri { self =>
     def smartIri: SmartIri
-    final def toInternalIri: InternalIri                    = self.smartIri.toInternalIri
+    final def toInternalIri: InternalIri                    = InternalIri.from(self)
     final def toComplexSchema: SmartIri                     = self.smartIri.toComplexSchema
     final def toInternalSchema: SmartIri                    = self.smartIri.toInternalSchema
     final def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
