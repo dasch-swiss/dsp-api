@@ -14,10 +14,9 @@ import zio.ZIO
 import zio.ZLayer
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.resourceinfo.domain
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
-import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
+import org.knora.webapi.slice.resources.domain.ResourceInfo
+import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 
 final case class ResourceInfoRepoFake(entitiesRef: Ref[Map[(ProjectIri, InternalIri), List[ResourceInfo]]])
     extends ResourceInfoRepo {
@@ -44,7 +43,7 @@ object ResourceInfoRepoFake {
 
   val knownProjectIRI    = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   val unknownProjectIRI  = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002")
-  val knownResourceClass = domain.InternalIri("http://some-resource-class")
+  val knownResourceClass = InternalIri("http://some-resource-class")
 
   def findByProjectAndResourceClass(
     projectIri: ProjectIri,

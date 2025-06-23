@@ -18,16 +18,16 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Asc
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.CreationDate
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Desc
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.LastModificationDate
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Order
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.OrderBy
-import org.knora.webapi.slice.resourceinfo.api.model.ResourceInfoDto
-import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
-import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
+import org.knora.webapi.slice.resources.api.model.ListResponseDto
+import org.knora.webapi.slice.resources.api.model.QueryParams.Asc
+import org.knora.webapi.slice.resources.api.model.QueryParams.CreationDate
+import org.knora.webapi.slice.resources.api.model.QueryParams.Desc
+import org.knora.webapi.slice.resources.api.model.QueryParams.LastModificationDate
+import org.knora.webapi.slice.resources.api.model.QueryParams.Order
+import org.knora.webapi.slice.resources.api.model.QueryParams.OrderBy
+import org.knora.webapi.slice.resources.api.model.ResourceInfoDto
+import org.knora.webapi.slice.resources.api.service.RestResourceInfoService
+import org.knora.webapi.slice.resources.domain.ResourceInfo
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.knownProjectIRI
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.knownResourceClass
@@ -87,7 +87,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
           actual <- findByProjectAndResourceClass(knownProjectIRI, knownResourceClass.value, Asc, LastModificationDate)
         } yield {
           val items = List(given1, given2).map(ResourceInfoDto.from).sortBy(_.lastModificationDate)
-          assertTrue(actual == model.ListResponseDto(items))
+          assertTrue(actual == ListResponseDto(items))
         }
       },
       test(
@@ -104,7 +104,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
           actual <- findByProjectAndResourceClass(knownProjectIRI, knownResourceClass.value, Desc, CreationDate)
         } yield {
           val items = List(given1, given2).map(ResourceInfoDto.from).sortBy(_.creationDate).reverse
-          assertTrue(actual == model.ListResponseDto(items))
+          assertTrue(actual == ListResponseDto(items))
         }
       },
     ).provide(

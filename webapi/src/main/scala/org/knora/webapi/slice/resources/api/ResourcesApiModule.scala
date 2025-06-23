@@ -25,6 +25,7 @@ import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.api.service.MetadataRestService
 import org.knora.webapi.slice.resources.api.service.ResourcesRestService
+import org.knora.webapi.slice.resources.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resources.api.service.StandoffRestService
 import org.knora.webapi.slice.resources.api.service.ValuesRestService
 import org.knora.webapi.slice.resources.service.MetadataService
@@ -49,7 +50,8 @@ object ResourcesApiModule { self =>
     ValuesResponderV2
     //format: on
 
-  type Provided = MetadataEndpoints & ResourcesApiRoutes & ResourcesEndpoints & StandoffEndpoints & ValuesEndpoints
+  type Provided = MetadataEndpoints & ResourceInfoEndpoints & ResourceInfoRoutes & ResourcesApiRoutes &
+    ResourcesEndpoints & StandoffEndpoints & ValuesEndpoints
 
   def layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
@@ -66,5 +68,8 @@ object ResourcesApiModule { self =>
       StandoffEndpoints.layer,
       StandoffEndpointsHandler.layer,
       StandoffRestService.layer,
+      RestResourceInfoService.layer,
+      ResourceInfoEndpoints.layer,
+      ResourceInfoRoutes.layer,
     )
 }
