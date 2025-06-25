@@ -309,9 +309,10 @@ final case class ApiComplexV2JsonLdRequestParser(
   private def checkMimeTypesForFileValueContents(
     values: Iterable[CreateValueInNewResourceV2],
   ): IO[String, Unit] = {
-    def failBadRequest(fileValueContent: FileValueContentV2): IO[String, Unit] = {
+    def failBadRequest(fvc: FileValueContentV2): IO[String, Unit] = {
       val msg =
-        s"File ${fileValueContent.fileValue.internalFilename} has MIME type ${fileValueContent.fileValue.internalMimeType}, which is not supported for still image files"
+        s"File ${fvc.fileValue.internalFilename} has MIME type ${fvc.fileValue.internalMimeType}, " +
+          s"which is not supported for ${fvc.getClass.getSimpleName}."
       ZIO.fail(msg)
     }
     ZIO
