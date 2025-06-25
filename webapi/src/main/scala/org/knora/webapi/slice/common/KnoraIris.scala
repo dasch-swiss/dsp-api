@@ -14,8 +14,8 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 object KnoraIris {
 
@@ -25,7 +25,7 @@ object KnoraIris {
 
   trait KnoraIri { self =>
     def smartIri: SmartIri
-    final def toInternalIri: InternalIri                    = self.smartIri.toInternalIri
+    final def toInternalIri: InternalIri                    = InternalIri.from(self)
     final def toComplexSchema: SmartIri                     = self.smartIri.toComplexSchema
     final def toInternalSchema: SmartIri                    = self.smartIri.toInternalSchema
     final def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)

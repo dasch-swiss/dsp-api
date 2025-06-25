@@ -12,8 +12,8 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.KnoraBase
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle

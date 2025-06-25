@@ -10,8 +10,8 @@ import zio.URLayer
 import zio.ZLayer
 
 import org.knora.webapi.messages.twirl.queries.sparql.v2.txt.countPropertyUsedWithClass
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.service.PredicateRepository
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 

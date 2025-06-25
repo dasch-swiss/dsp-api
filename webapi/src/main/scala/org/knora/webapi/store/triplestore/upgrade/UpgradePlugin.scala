@@ -6,7 +6,7 @@
 package org.knora.webapi.store.triplestore.upgrade
 
 import org.knora.webapi.messages.util.rdf.RdfModel
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.common.domain.InternalIri
 
 /**
  * A trait for plugins that update a repository.

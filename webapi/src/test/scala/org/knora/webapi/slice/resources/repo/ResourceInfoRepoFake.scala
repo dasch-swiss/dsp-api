@@ -13,7 +13,7 @@ import zio.ZIO
 import zio.ZLayer
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.domain.ResourceInfo
 import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 
