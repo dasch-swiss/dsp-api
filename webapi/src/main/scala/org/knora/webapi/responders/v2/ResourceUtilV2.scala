@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.v2
 
 import zio.*
-import zio.Task
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.IRI

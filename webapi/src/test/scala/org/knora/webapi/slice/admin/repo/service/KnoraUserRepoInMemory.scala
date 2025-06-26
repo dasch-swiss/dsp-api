@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.admin.repo.service
 import zio.*
-import zio.Chunk
-import zio.Ref
 
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri

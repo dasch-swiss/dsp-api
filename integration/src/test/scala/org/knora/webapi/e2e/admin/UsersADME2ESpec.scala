@@ -13,7 +13,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration.*
 
 import org.knora.webapi.*
-import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.admin.responder.IntegrationTestAdminJsonProtocol.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.sharedtestdata.SharedTestDataADM

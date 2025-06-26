@@ -30,7 +30,6 @@ import org.knora.webapi.slice.admin.domain.model.LicenseIri.PUBLIC_DOMAIN
 import org.knora.webapi.slice.admin.domain.model.LicenseIri.UNKNOWN
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion.*
-import org.knora.webapi.slice.common.StringValueCompanion.maxLength
 import org.knora.webapi.slice.common.Value.StringValue
 
 final case class LegalInfo(

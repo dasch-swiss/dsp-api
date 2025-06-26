@@ -10,7 +10,6 @@ import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import zio.*
-import zio.ZLayer
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.json.JsonDecoder

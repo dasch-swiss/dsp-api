@@ -11,7 +11,6 @@ import org.apache.pekko.stream.scaladsl.Sink
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
 import zio.*
-import zio.Scope
 import zio.nio.file.Files
 import zio.test.*
 

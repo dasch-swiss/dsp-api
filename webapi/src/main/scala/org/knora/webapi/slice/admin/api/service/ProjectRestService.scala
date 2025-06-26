@@ -13,14 +13,10 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.config.Features
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.api.model.*
-import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
-import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
-import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsGetResponse
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
