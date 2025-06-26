@@ -7,7 +7,6 @@ package org.knora.webapi.slice.ontology.repo
 
 import zio.ZIO
 import zio.test.*
-import zio.test.ZIOSpecDefault
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.domain.InternalIri

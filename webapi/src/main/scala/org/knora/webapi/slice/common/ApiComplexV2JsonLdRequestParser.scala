@@ -9,8 +9,6 @@ import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.RDF
 import org.apache.jena.vocabulary.RDFS
 import zio.*
-import zio.ZIO
-import zio.ZLayer
 
 import java.time.Instant
 import java.util.UUID
@@ -39,8 +37,8 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
-import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri as KResourceIri
+import org.knora.webapi.slice.common.KnoraIris.*
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.common.jena.ModelOps.*

@@ -8,9 +8,6 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.Scope
 import zio.ZIO
 import zio.test.*
-import zio.test.Spec
-import zio.test.TestEnvironment
-import zio.test.ZIOSpecDefault
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
