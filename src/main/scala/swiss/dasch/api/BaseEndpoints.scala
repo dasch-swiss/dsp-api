@@ -10,7 +10,7 @@ import sttp.model.headers.WWWAuthenticateChallenge
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
-import sttp.tapir.{Codec, EndpointOutput, PublicEndpoint, oneOf, oneOfVariant, statusCode}
+import sttp.tapir.{Codec, EndpointOutput, PublicEndpoint}
 import swiss.dasch.api.ApiProblem.Unauthorized
 import swiss.dasch.api.BaseEndpoints.defaultErrorOutputs
 import zio.*

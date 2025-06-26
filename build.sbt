@@ -10,12 +10,12 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck; integration/Te
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate; integration/Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck; integration/Test/headerCheck")
 
-val flywayVersion               = "11.4.0"
+val flywayVersion               = "11.4.1"
 val hikariVersion               = "6.2.1"
 val knoraSipiVersion            = "v31.15.0"
 val quillVersion                = "4.8.6"
 val sqliteVersion               = "3.49.1.0"
-val tapirVersion                = "1.11.20"
+val tapirVersion                = "1.11.33"
 val testContainersVersion       = "1.20.4"
 val zioConfigVersion            = "4.0.4"
 val zioJsonVersion              = "0.7.39"
@@ -25,18 +25,19 @@ val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
 val zioSchemaVersion            = "1.6.6"
 val zioPreludeVersion           = "1.0.0-RC40"
-val zioVersion                  = "2.1.16"
+val zioVersion                  = "2.1.19"
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
 val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
 
 ThisBuild / organization      := "dasch.swiss"
 ThisBuild / version           := gitVersion
-ThisBuild / scalaVersion      := "3.3.5"
+ThisBuild / scalaVersion      := "3.3.6"
 ThisBuild / fork              := true
 ThisBuild / semanticdbEnabled := true
 
 scalacOptions ++= Seq("-old-syntax", "-rewrite")
+scalacOptions ++= Seq("-Xmax-inlines", "50")
 
 val tapir = Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
