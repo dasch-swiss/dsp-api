@@ -11,7 +11,9 @@ import zio.URLayer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.KnoraApi
+import org.knora.webapi.config.Sipi
 import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.ScopeResolver
 
 object TestClientsModule { self =>
@@ -24,10 +26,21 @@ object TestClientsModule { self =>
     TestDspIngestClient &
     TestMetadataApiClient &
     TestOntologyApiClient &
-    TestResourcesApiClient
+    TestResourcesApiClient &
+    TestSipiApiClient
     // format: on
 
-  type Dependencies = ActorSystem & AppConfig & DspIngestConfig & JwtService & KnoraApi & ScopeResolver
+  type Dependencies =
+    // format: off
+    ActorSystem &
+    AppConfig &
+    Authenticator &
+    DspIngestConfig &
+    JwtService &
+    KnoraApi &
+    Sipi &
+    ScopeResolver
+    // format: on
 
   val layer: URLayer[self.Dependencies, self.Provided] =
     HttpClientZioBackend.layer().orDie >>> (
@@ -37,6 +50,7 @@ object TestClientsModule { self =>
         TestDspIngestClient.layer ++
         TestMetadataApiClient.layer ++
         TestOntologyApiClient.layer ++
-        TestResourcesApiClient.layer
+        TestResourcesApiClient.layer ++
+        TestSipiApiClient.layer
     )
 }
