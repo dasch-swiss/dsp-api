@@ -8,7 +8,7 @@ package org.knora.webapi.slice.ontology.domain.service
 import zio.Task
 import zio.ZIO
 
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.common.domain.InternalIri
 
 trait PredicateRepository {
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resourceinfo.api.service
+package org.knora.webapi.slice.resources.api.service
 
 import zio.*
 
@@ -13,12 +13,12 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.*
-import org.knora.webapi.slice.resourceinfo.api.model.ResourceInfoDto
-import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
+import org.knora.webapi.slice.resources.api.model.ListResponseDto
+import org.knora.webapi.slice.resources.api.model.QueryParams.*
+import org.knora.webapi.slice.resources.api.model.ResourceInfoDto
+import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 
-final case class RestResourceInfoService(repo: ResourceInfoRepo, iriConverter: IriConverter) {
+final case class ResourceInfoRestService(repo: ResourceInfoRepo, iriConverter: IriConverter) {
 
   private def lastModificationDateSort(order: Order)(one: ResourceInfoDto, two: ResourceInfoDto) =
     instant(order)(one.lastModificationDate, two.lastModificationDate)
@@ -60,6 +60,6 @@ final case class RestResourceInfoService(repo: ResourceInfoRepo, iriConverter: I
     } yield ListResponseDto(sort(resources, order, orderBy))
 }
 
-object RestResourceInfoService {
-  val layer = ZLayer.derive[RestResourceInfoService]
+object ResourceInfoRestService {
+  val layer = ZLayer.derive[ResourceInfoRestService]
 }

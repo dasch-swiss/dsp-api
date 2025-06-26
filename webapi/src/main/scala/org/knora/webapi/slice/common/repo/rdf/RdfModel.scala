@@ -13,8 +13,8 @@ import zio.*
 import java.io.StringReader
 import scala.jdk.CollectionConverters.*
 
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Errors.*
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 object Errors {
   sealed trait RdfError

@@ -6,7 +6,7 @@
 package org.knora.webapi.slice.admin
 
 import org.knora.webapi.messages.OntologyConstants.NamedGraphs.DataNamedGraphStart
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.common.domain.InternalIri
 
 object AdminConstants {
   val adminDataNamedGraph: InternalIri       = InternalIri(s"$DataNamedGraphStart/admin")

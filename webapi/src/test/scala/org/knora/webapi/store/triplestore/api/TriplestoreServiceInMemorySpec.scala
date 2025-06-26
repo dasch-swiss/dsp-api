@@ -21,7 +21,7 @@ import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask

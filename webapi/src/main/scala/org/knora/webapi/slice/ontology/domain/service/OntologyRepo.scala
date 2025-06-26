@@ -17,8 +17,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.service.Repository
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 

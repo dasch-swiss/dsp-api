@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resourceinfo.domain
+package org.knora.webapi.slice.resources.domain
 
 import zio.Task
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.domain.InternalIri
 
 trait ResourceInfoRepo {
   def findByProjectAndResourceClass(projectIri: ProjectIri, resourceClass: InternalIri): Task[List[ResourceInfo]]

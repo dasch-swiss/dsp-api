@@ -15,7 +15,7 @@ import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.repo.service.AdministrativePermissionRepoLive
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TestTripleStore
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 

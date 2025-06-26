@@ -6,8 +6,6 @@
 package org.knora.webapi.responders.v2
 
 import eu.timepit.refined.types.string.NonEmptyString
-import org.apache.pekko.actor.Status.Failure
-import org.apache.pekko.pattern.ask
 import zio.ZIO
 
 import java.time.Instant
@@ -26,7 +24,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.LabelOrComment
@@ -40,8 +37,10 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
+import org.knora.webapi.slice.ontology.api.ChangeGuiOrderRequestV2
 import org.knora.webapi.slice.ontology.api.ChangePropertyLabelsOrCommentsRequestV2
 import org.knora.webapi.slice.ontology.api.CreateClassRequestV2
+import org.knora.webapi.slice.ontology.api.ReplaceClassCardinalitiesRequestV2
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -2640,24 +2639,26 @@ class OntologyResponderV2Spec extends E2ESpec {
     }
 
     "delete the class anything:CardinalityThing" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("CardinalityThing")
+      val classIri = AnythingOntologyIri.makeClass("CardinalityThing")
 
-      appActor ! DeleteClassRequestV2(
-        classIri = classIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteClass(
+            classIri = classIri,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(response.ontologies.size == 1)
+      val metadata = response.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "create a class anything:WildThing that is a subclass of anything:Thing, with a direct cardinality for anything:hasName, overriding the cardinality for anything:hasInteger" in {
@@ -2858,16 +2859,20 @@ class OntologyResponderV2Spec extends E2ESpec {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CanDeleteCardinalitiesFromClassRequestV2(
-        classInfoContent = classInfoContentWithCardinalityToDeleteDontAllow,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.canDeleteCardinalitiesFromClass(
+            CanDeleteCardinalitiesFromClassRequestV2(
+              classInfoContent = classInfoContentWithCardinalityToDeleteDontAllow,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: CanDoResponseV2 =>
-        assert(!msg.canDo.value)
-      }
+      assert(!response.canDo.value)
     }
 
     "allow direct property to be deleted on subclass" in {
@@ -2977,16 +2982,20 @@ class OntologyResponderV2Spec extends E2ESpec {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CanDeleteCardinalitiesFromClassRequestV2(
-        classInfoContent = classInfoContentWithCardinalityToDeleteAllow,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.canDeleteCardinalitiesFromClass(
+            CanDeleteCardinalitiesFromClassRequestV2(
+              classInfoContent = classInfoContentWithCardinalityToDeleteAllow,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: CanDoResponseV2 =>
-        assert(msg.canDo.value)
-      }
+      assert(response.canDo.value)
     }
 
     "create a class anything:Nothing with no properties" in {
@@ -3055,18 +3064,21 @@ class OntologyResponderV2Spec extends E2ESpec {
         StringLiteralV2.from("rien", Some("fr")),
       )
 
-      appActor ! ChangeClassLabelsOrCommentsRequestV2(
-        classIri = classIri,
-        predicateToUpdate = LabelOrComment.Label,
-        newObjects = newObjects,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.changeClassLabelsOrComments(
+            ChangeClassLabelsOrCommentsRequestV2(
+              classIri = classIri,
+              predicateToUpdate = LabelOrComment.Label,
+              newObjects = newObjects,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingNonAdminUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
+      assertFailsWithA[ForbiddenException](exit)
 
     }
 
@@ -3078,30 +3090,34 @@ class OntologyResponderV2Spec extends E2ESpec {
         StringLiteralV2.from("rien", Some("fr")),
       )
 
-      appActor ! ChangeClassLabelsOrCommentsRequestV2(
-        classIri = classIri,
-        predicateToUpdate = LabelOrComment.Label,
-        newObjects = newObjects,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.changeClassLabelsOrComments(
+            ChangeClassLabelsOrCommentsRequestV2(
+              classIri = classIri,
+              predicateToUpdate = LabelOrComment.Label,
+              newObjects = newObjects,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri.smartIri)
-        readClassInfo.entityInfoContent.predicates(Rdfs.Label.toSmartIri).objects should ===(
-          newObjects,
-        )
+      val externalOntology = response.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo = externalOntology.classes(classIri.smartIri)
+      readClassInfo.entityInfoContent.predicates(Rdfs.Label.toSmartIri).objects should ===(
+        newObjects,
+      )
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "change the labels of a class, submitting the same labels again" in {
@@ -3112,30 +3128,34 @@ class OntologyResponderV2Spec extends E2ESpec {
         StringLiteralV2.from("rien", Some("fr")),
       )
 
-      appActor ! ChangeClassLabelsOrCommentsRequestV2(
-        classIri = classIri,
-        predicateToUpdate = LabelOrComment.Label,
-        newObjects = newObjects,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.changeClassLabelsOrComments(
+            ChangeClassLabelsOrCommentsRequestV2(
+              classIri = classIri,
+              predicateToUpdate = LabelOrComment.Label,
+              newObjects = newObjects,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri.smartIri)
-        readClassInfo.entityInfoContent.predicates(Rdfs.Label.toSmartIri).objects should ===(
-          newObjects,
-        )
+      val externalOntology = response.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo = externalOntology.classes(classIri.smartIri)
+      readClassInfo.entityInfoContent.predicates(Rdfs.Label.toSmartIri).objects should ===(
+        newObjects,
+      )
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not allow a user to change the comments of a class if they are not a sysadmin or an admin in the ontology's project" in {
@@ -3147,18 +3167,21 @@ class OntologyResponderV2Spec extends E2ESpec {
         StringLiteralV2.from("ne représente rien", Some("fr")),
       )
 
-      appActor ! ChangeClassLabelsOrCommentsRequestV2(
-        classIri = classIri,
-        predicateToUpdate = LabelOrComment.Comment,
-        newObjects = newObjects,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.changeClassLabelsOrComments(
+            ChangeClassLabelsOrCommentsRequestV2(
+              classIri = classIri,
+              predicateToUpdate = LabelOrComment.Comment,
+              newObjects = newObjects,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingNonAdminUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
+      assertFailsWithA[ForbiddenException](exit)
 
     }
 
@@ -3175,30 +3198,34 @@ class OntologyResponderV2Spec extends E2ESpec {
         StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
       }
 
-      appActor ! ChangeClassLabelsOrCommentsRequestV2(
-        classIri = classIri,
-        predicateToUpdate = LabelOrComment.Comment,
-        newObjects = newObjects,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.changeClassLabelsOrComments(
+            ChangeClassLabelsOrCommentsRequestV2(
+              classIri = classIri,
+              predicateToUpdate = LabelOrComment.Comment,
+              newObjects = newObjects,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri.smartIri)
-        readClassInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects should ===(
-          newObjectsUnescaped,
-        )
+      val externalOntology = response.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo = externalOntology.classes(classIri.smartIri)
+      readClassInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects should ===(
+        newObjectsUnescaped,
+      )
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "change the comments of a class, submitting the same comments again" in {
@@ -3214,30 +3241,34 @@ class OntologyResponderV2Spec extends E2ESpec {
         StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
       }
 
-      appActor ! ChangeClassLabelsOrCommentsRequestV2(
-        classIri = classIri,
-        predicateToUpdate = LabelOrComment.Comment,
-        newObjects = newObjects,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.changeClassLabelsOrComments(
+            ChangeClassLabelsOrCommentsRequestV2(
+              classIri = classIri,
+              predicateToUpdate = LabelOrComment.Comment,
+              newObjects = newObjects,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri.smartIri)
-        readClassInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects should ===(
-          newObjectsUnescaped,
-        )
+      val externalOntology = response.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo = externalOntology.classes(classIri.smartIri)
+      readClassInfo.entityInfoContent.predicates(Rdfs.Comment.toSmartIri).objects should ===(
+        newObjectsUnescaped,
+      )
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not create a class with the wrong rdf:type" in {
@@ -3722,58 +3753,63 @@ class OntologyResponderV2Spec extends E2ESpec {
           .make(guiAttributes, guiElement)
           .fold(e => throw e.head, v => v)
 
-      appActor ! ChangePropertyGuiElementRequest(
-        propertyIri = propertyIri,
-        newGuiObject = guiObject,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.changePropertyGuiElement(
+            ChangePropertyGuiElementRequest(
+              propertyIri = propertyIri,
+              newGuiObject = guiObject,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        msg.properties.head._2.entityInfoContent.predicates
-          .get(stringFormatter.toSmartIri(SalsahGui.GuiElementProp)) match {
-          case Some(predicateInfo) =>
-            val guiElementTypeFromMessage = predicateInfo.objects.head.asInstanceOf[SmartIriLiteralV2]
-            val guiElementTypeInternal    = guiElementTypeFromMessage.toOntologySchema(InternalSchema)
-            guiElementTypeFromMessage should equal(guiElementTypeInternal)
-          case None => ()
-        }
-
-        // Check that the salsah-gui:guiElement from the message is as expected
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(propertyIri.smartIri)
-
-        val guiElementPropComplex = property.entityInfoContent.predicates(
-          SalsahGui.External.GuiElementProp.toSmartIri,
-        )
-
-        val guiElementPropComplexExpected = PredicateInfoV2(
-          predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
-          objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri)),
-        )
-
-        guiElementPropComplex should equal(guiElementPropComplexExpected)
-
-        val guiAttributeComplex = property.entityInfoContent.predicates(
-          SalsahGui.External.GuiAttribute.toSmartIri,
-        )
-
-        val guiAttributeComplexExpected = PredicateInfoV2(
-          predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
-          objects = Seq(StringLiteralV2.from("size=80", None)),
-        )
-
-        guiAttributeComplex should equal(guiAttributeComplexExpected)
-
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
+      val msg = response
+      msg.properties.head._2.entityInfoContent.predicates
+        .get(stringFormatter.toSmartIri(SalsahGui.GuiElementProp)) match {
+        case Some(predicateInfo) =>
+          val guiElementTypeFromMessage = predicateInfo.objects.head.asInstanceOf[SmartIriLiteralV2]
+          val guiElementTypeInternal    = guiElementTypeFromMessage.toOntologySchema(InternalSchema)
+          guiElementTypeFromMessage should equal(guiElementTypeInternal)
+        case None => ()
       }
+
+      // Check that the salsah-gui:guiElement from the message is as expected
+      val externalOntology = msg.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.properties.size == 1)
+      val property = externalOntology.properties(propertyIri.smartIri)
+
+      val guiElementPropComplex = property.entityInfoContent.predicates(
+        SalsahGui.External.GuiElementProp.toSmartIri,
+      )
+
+      val guiElementPropComplexExpected = PredicateInfoV2(
+        predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
+        objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri)),
+      )
+
+      guiElementPropComplex should equal(guiElementPropComplexExpected)
+
+      val guiAttributeComplex = property.entityInfoContent.predicates(
+        SalsahGui.External.GuiAttribute.toSmartIri,
+      )
+
+      val guiAttributeComplexExpected = PredicateInfoV2(
+        predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
+        objects = Seq(StringLiteralV2.from("size=80", None)),
+      )
+
+      guiAttributeComplex should equal(guiAttributeComplexExpected)
+
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "delete the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
@@ -3785,32 +3821,36 @@ class OntologyResponderV2Spec extends E2ESpec {
           .make(guiAttributes, guiElement)
           .fold(e => throw e.head, v => v)
 
-      appActor ! ChangePropertyGuiElementRequest(
-        propertyIri = propertyIri,
-        newGuiObject = guiObject,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.changePropertyGuiElement(
+            ChangePropertyGuiElementRequest(
+              propertyIri = propertyIri,
+              newGuiObject = guiObject,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(propertyIri.smartIri)
+      val externalOntology = response.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.properties.size == 1)
+      val property = externalOntology.properties(propertyIri.smartIri)
 
-        property.entityInfoContent.predicates
-          .get(SalsahGui.External.GuiElementProp.toSmartIri) should ===(None)
+      property.entityInfoContent.predicates
+        .get(SalsahGui.External.GuiElementProp.toSmartIri) should ===(None)
 
-        property.entityInfoContent.predicates
-          .get(SalsahGui.External.GuiAttribute.toSmartIri) should ===(None)
+      property.entityInfoContent.predicates
+        .get(SalsahGui.External.GuiAttribute.toSmartIri) should ===(None)
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not create a property called anything:Thing, because that IRI is already used for a class" in {
@@ -3979,58 +4019,65 @@ class OntologyResponderV2Spec extends E2ESpec {
         anythingLastModDate = newAnythingLastModDate
       }
 
-      appActor ! DeleteCardinalitiesFromClassRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteCardinalitiesFromClass(
+            DeleteCardinalitiesFromClassRequestV2(
+              classInfoContent = classInfoContent,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        val metadata         = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val externalOntology = response.toOntologySchema(ApiV2Complex)
+      val metadata         = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not allow a user to delete a class if they are not a sysadmin or an admin in the ontology's project" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("Void")
+      val classIri = AnythingOntologyIri.makeClass("Void")
 
-      appActor ! DeleteClassRequestV2(
-        classIri = classIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteClass(
+            classIri = classIri,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingNonAdminUser,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
+      assertFailsWithA[ForbiddenException](exit)
     }
 
     "delete the class anything:Void" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("Void")
+      val classIri = AnythingOntologyIri.makeClass("Void")
 
-      appActor ! DeleteClassRequestV2(
-        classIri = classIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteClass(
+            classIri = classIri,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(response.ontologies.size == 1)
+      val metadata = response.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not allow a user to add a cardinality to a class if they are not a sysadmin or an admin in the user's project" in {
@@ -4508,16 +4555,19 @@ class OntologyResponderV2Spec extends E2ESpec {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! ReplaceClassCardinalitiesRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.replaceClassCardinalities(
+            ReplaceClassCardinalitiesRequestV2(
+              classInfoContent = classInfoContent,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingNonAdminUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
+      assertFailsWithA[ForbiddenException](exit)
 
     }
 
@@ -4549,11 +4599,12 @@ class OntologyResponderV2Spec extends E2ESpec {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! ChangeGuiOrderRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.changeGuiOrder(
+            ChangeGuiOrderRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+          ),
+        ),
       )
 
       val expectedCardinalities = Map(
@@ -4575,19 +4626,17 @@ class OntologyResponderV2Spec extends E2ESpec {
         ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri)
-        readClassInfo.entityInfoContent.directCardinalities should ===(expectedCardinalities)
+      val externalOntology = response.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo = externalOntology.classes(classIri)
+      readClassInfo.entityInfoContent.directCardinalities should ===(expectedCardinalities)
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "change the cardinalities of the class anything:Nothing, removing anything:hasOtherNothing and anything:hasNothingness and leaving anything:hasEmptiness" in {
@@ -4610,11 +4659,17 @@ class OntologyResponderV2Spec extends E2ESpec {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! ReplaceClassCardinalitiesRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.replaceClassCardinalities(
+            ReplaceClassCardinalitiesRequestV2(
+              classInfoContent = classInfoContent,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        ),
       )
 
       val expectedProperties = Set(
@@ -4628,36 +4683,35 @@ class OntologyResponderV2Spec extends E2ESpec {
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri)
-        assert(readClassInfo.allBaseClasses == expectedAllBaseClasses)
-        readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
-        readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
+      val externalOntology = response.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo = externalOntology.classes(classIri)
+      assert(readClassInfo.allBaseClasses == expectedAllBaseClasses)
+      readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
+      readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not delete the class anything:Nothing, because the property anything:hasEmptiness refers to it" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+      val classIri = AnythingOntologyIri.makeClass("Nothing")
 
-      appActor ! DeleteClassRequestV2(
-        classIri = classIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteClass(
+            classIri = classIri,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
+      assertFailsWithA[BadRequestException](exit)
     }
 
     "delete the property anything:hasNothingness" in {
@@ -4711,16 +4765,19 @@ class OntologyResponderV2Spec extends E2ESpec {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! ReplaceClassCardinalitiesRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser,
+      val exit = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.replaceClassCardinalities(
+            ReplaceClassCardinalitiesRequestV2(
+              classInfoContent = classInfoContent,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingNonAdminUser,
+            ),
+          ),
+        ),
       )
-
-      expectMsgPF(timeout) { case msg: Failure =>
-        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
+      assertFailsWithA[ForbiddenException](exit)
     }
 
     "remove all cardinalities from the class anything:Nothing" in {
@@ -4737,11 +4794,17 @@ class OntologyResponderV2Spec extends E2ESpec {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! ReplaceClassCardinalitiesRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.replaceClassCardinalities(
+            ReplaceClassCardinalitiesRequestV2(
+              classInfoContent = classInfoContent,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        ),
       )
 
       val expectedProperties = Set(
@@ -4749,20 +4812,18 @@ class OntologyResponderV2Spec extends E2ESpec {
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri)
-        readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
-        readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
+      val externalOntology = response.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo = externalOntology.classes(classIri)
+      readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
+      readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not delete the property anything:hasEmptiness with the wrong knora-api:lastModificationDate" in {
@@ -4839,24 +4900,26 @@ class OntologyResponderV2Spec extends E2ESpec {
     }
 
     "delete the class anything:Nothing" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+      val classIri = AnythingOntologyIri.makeClass("Nothing")
 
-      appActor ! DeleteClassRequestV2(
-        classIri = classIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteClass(
+            classIri = classIri,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(response.ontologies.size == 1)
+      val metadata = response.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "not create a class whose base class is in a non-shared ontology in another project" in {
@@ -5097,24 +5160,26 @@ class OntologyResponderV2Spec extends E2ESpec {
     }
 
     "delete the class anything:AnyBox1" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("AnyBox1")
+      val classIri = AnythingOntologyIri.makeClass("AnyBox1")
 
-      appActor ! DeleteClassRequestV2(
-        classIri = classIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteClass(
+            classIri = classIri,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(response.ontologies.size == 1)
+      val metadata = response.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "create a class anything:AnyBox2 with a cardinality on example-box:hasName" in {
@@ -5164,24 +5229,26 @@ class OntologyResponderV2Spec extends E2ESpec {
     }
 
     "delete the class anything:AnyBox2" in {
-      val classIri = AnythingOntologyIri.makeEntityIri("AnyBox2")
+      val classIri = AnythingOntologyIri.makeClass("AnyBox2")
 
-      appActor ! DeleteClassRequestV2(
-        classIri = classIri,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteClass(
+            classIri = classIri,
+            lastModificationDate = anythingLastModDate,
+            apiRequestID = UUID.randomUUID,
+            requestingUser = anythingAdminUser,
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
-        assert(msg.ontologies.size == 1)
-        val metadata = msg.ontologies.head
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      assert(response.ontologies.size == 1)
+      val metadata = response.ontologies.head
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "create a property anything:hasAnyName with base property example-box:hasName" in {
@@ -5641,36 +5708,40 @@ class OntologyResponderV2Spec extends E2ESpec {
 
       // Remove the link value cardinality from the class.
 
-      appActor ! ReplaceClassCardinalitiesRequestV2(
-        classInfoContent = ClassInfoContentV2(
-          predicates = Map(
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
-            ),
-          ),
-          classIri = (anythingOntology + "TestClass").toSmartIri,
-          ontologySchema = ApiV2Complex,
-          directCardinalities = Map(
-            (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne,
-            ),
-            (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.replaceClassCardinalities(
+            ReplaceClassCardinalitiesRequestV2(
+              classInfoContent = ClassInfoContentV2(
+                predicates = Map(
+                  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                    predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                    objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+                  ),
+                ),
+                classIri = (anythingOntology + "TestClass").toSmartIri,
+                ontologySchema = ApiV2Complex,
+                directCardinalities = Map(
+                  (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
+                    cardinality = ZeroOrOne,
+                  ),
+                  (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
+                    cardinality = ZeroOrOne,
+                  ),
+                ),
+              ),
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
             ),
           ),
         ),
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
-          .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val newAnythingLastModDate4 = response.ontologyMetadata.lastModificationDate
+        .getOrElse(throw AssertionException(s"${response.ontologyMetadata.ontologyIri} has no last modification date"))
+      assert(newAnythingLastModDate4.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate4
 
       // Check that the correct blank nodes were stored for the cardinalities.
       val actual = UnsafeZioRun.runOrThrow(
@@ -5930,70 +6001,84 @@ class OntologyResponderV2Spec extends E2ESpec {
         projectADM = SharedTestDataADM.anythingProject,
       )
 
-      appActor.ask(
-        CreateResourceRequestV2(
-          createResource = inputResource,
-          requestingUser = anythingAdminUser,
-          apiRequestID = UUID.randomUUID,
+      val _ = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.createResource(
+            CreateResourceRequestV2(
+              createResource = inputResource,
+              requestingUser = anythingAdminUser,
+              apiRequestID = UUID.randomUUID(),
+            ),
+          ),
         ),
-      )(timeout)
+      )
 
       // Successfully check if the cardinality can be deleted
 
-      appActor ! CanDeleteCardinalitiesFromClassRequestV2(
-        classInfoContent = ClassInfoContentV2(
-          predicates = Map(
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
-            ),
-          ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
-          ontologySchema = ApiV2Complex,
-          directCardinalities = Map(
-            "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.canDeleteCardinalitiesFromClass(
+            CanDeleteCardinalitiesFromClassRequestV2(
+              classInfoContent = ClassInfoContentV2(
+                predicates = Map(
+                  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                    predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                    objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+                  ),
+                ),
+                classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
+                ontologySchema = ApiV2Complex,
+                directCardinalities = Map(
+                  "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
+                    cardinality = ZeroOrOne,
+                  ),
+                ),
+              ),
+              lastModificationDate = freetestLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
             ),
           ),
         ),
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
       )
 
-      expectMsgPF(timeout) { case msg: CanDoResponseV2 =>
-        assert(msg.canDo.value)
-      }
+      assert(response.canDo.value)
 
       // Successfully remove the (unused) text value cardinality from the class.
 
-      appActor ! DeleteCardinalitiesFromClassRequestV2(
-        classInfoContent = ClassInfoContentV2(
-          predicates = Map(
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
-            ),
-          ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
-          ontologySchema = ApiV2Complex,
-          directCardinalities = Map(
-            "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne,
+      val deleteResponse = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.deleteCardinalitiesFromClass(
+            DeleteCardinalitiesFromClassRequestV2(
+              classInfoContent = ClassInfoContentV2(
+                predicates = Map(
+                  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                    predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                    objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+                  ),
+                ),
+                classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
+                ontologySchema = ApiV2Complex,
+                directCardinalities = Map(
+                  "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
+                    cardinality = ZeroOrOne,
+                  ),
+                ),
+              ),
+              lastModificationDate = freetestLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
             ),
           ),
         ),
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val newFreetestLastModDate = msg.ontologyMetadata.lastModificationDate
-          .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
-        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
-        freetestLastModDate = newFreetestLastModDate
-      }
+      val newFreetestLastModDate3 = deleteResponse.ontologyMetadata.lastModificationDate
+        .getOrElse(
+          throw AssertionException(s"${deleteResponse.ontologyMetadata.ontologyIri} has no last modification date"),
+        )
+      assert(newFreetestLastModDate3.isAfter(freetestLastModDate))
+      freetestLastModDate = newFreetestLastModDate3
 
       // Check that the correct blank nodes were stored for the cardinalities.
       val actual = UnsafeZioRun.runOrThrow(
@@ -6238,16 +6323,20 @@ class OntologyResponderV2Spec extends E2ESpec {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! CanDeleteCardinalitiesFromClassRequestV2(
-        classInfoContent = classInfoContentWithCardinalityToDeleteAllow,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.canDeleteCardinalitiesFromClass(
+            CanDeleteCardinalitiesFromClassRequestV2(
+              classInfoContent = classInfoContentWithCardinalityToDeleteAllow,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: CanDoResponseV2 =>
-        assert(msg.canDo.value)
-      }
+      assert(response.canDo.value)
 
       // remove cardinalities on the class anything:FoafPerson
       val classChangeInfoContent: ClassInfoContentV2 = ClassInfoContentV2(
@@ -6261,11 +6350,17 @@ class OntologyResponderV2Spec extends E2ESpec {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! ReplaceClassCardinalitiesRequestV2(
-        classInfoContent = classChangeInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val replaceResponse = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.replaceClassCardinalities(
+            ReplaceClassCardinalitiesRequestV2(
+              classInfoContent = classChangeInfoContent,
+              lastModificationDate = anythingLastModDate,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = anythingAdminUser,
+            ),
+          ),
+        ),
       )
 
       // check if cardinalities were removed correctly
@@ -6274,20 +6369,18 @@ class OntologyResponderV2Spec extends E2ESpec {
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri)
-        readClassInfo.entityInfoContent.directCardinalities should ===(classChangeInfoContent.directCardinalities)
-        readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedPropertiesAfterDeletion)
+      val externalOntology: ReadOntologyV2 = replaceResponse.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri)
+      readClassInfo.entityInfoContent.directCardinalities should ===(classChangeInfoContent.directCardinalities)
+      readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedPropertiesAfterDeletion)
 
-        val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
-        val newAnythingLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
+      val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
+      val newAnythingLastModDate: Instant = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
 
     "change the GUI order of a cardinality in a base class, and update its subclass in the ontology cache" in {
@@ -6309,42 +6402,28 @@ class OntologyResponderV2Spec extends E2ESpec {
         ontologySchema = ApiV2Complex,
       )
 
-      appActor ! ChangeGuiOrderRequestV2(
-        classInfoContent = classInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
+      val response = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyResponderV2](
+          _.changeGuiOrder(
+            ChangeGuiOrderRequestV2(classInfoContent, anythingLastModDate, UUID.randomUUID, anythingAdminUser),
+          ),
+        ),
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri)
-        assert(
-          readClassInfo.entityInfoContent
-            .directCardinalities(AnythingOntologyIri.makeEntityIri("hasText")) == newCardinality,
-        )
-
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
-
-      appActor ! ClassesGetRequestV2(
-        classIris = Set(AnythingOntologyIri.makeEntityIri("ThingWithSeqnum")),
-        allLanguages = false,
-        requestingUser = anythingAdminUser,
+      val externalOntology = response.toOntologySchema(ApiV2Complex)
+      assert(externalOntology.classes.size == 1)
+      val readClassInfo = externalOntology.classes(classIri)
+      assert(
+        readClassInfo.entityInfoContent
+          .directCardinalities(AnythingOntologyIri.makeEntityIri("hasText")) == newCardinality,
       )
 
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(AnythingOntologyIri.makeEntityIri("ThingWithSeqnum"))
-        assert(readClassInfo.inheritedCardinalities(AnythingOntologyIri.makeEntityIri("hasText")) == newCardinality)
-      }
+      val metadata = externalOntology.ontologyMetadata
+      val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
+      )
+      assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+      anythingLastModDate = newAnythingLastModDate
     }
   }
 

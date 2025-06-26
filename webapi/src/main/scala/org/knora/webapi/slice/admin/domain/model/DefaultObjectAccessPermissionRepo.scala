@@ -16,8 +16,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.service.EntityWithId
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.service.CrudRepository
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 final case class DefaultObjectAccessPermission(
   id: PermissionIri,

@@ -17,7 +17,7 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.common.domain.InternalIri
 
 final case class IriConverter(sf: StringFormatter) {
   def asSmartIri(iri: String): Task[SmartIri]              = ZIO.attempt(sf.toSmartIri(iri, requireInternal = false))

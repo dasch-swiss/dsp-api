@@ -70,7 +70,6 @@ object Dependencies {
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
 
   // pekko
-  val pekkoActor         = "org.apache.pekko" %% "pekko-actor"           % PekkoActorVersion
   val pekkoHttp          = "org.apache.pekko" %% "pekko-http"            % PekkoHttpVersion
   val pekkoHttpCors      = "org.apache.pekko" %% "pekko-http-cors"       % PekkoHttpVersion
   val pekkoHttpSprayJson = "org.apache.pekko" %% "pekko-http-spray-json" % PekkoHttpVersion
@@ -170,7 +169,6 @@ object Dependencies {
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
   val webapiDependencies = monocle ++ refined ++ Seq(
-    pekkoActor,
     pekkoHttp,
     pekkoHttpCors,
     pekkoHttpSprayJson,
