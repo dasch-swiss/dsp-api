@@ -27,9 +27,6 @@ case class TestSipiApiClient(
 
   protected override def baseUrl: Uri = uri"${sipiConfig.internalBaseUrl}"
 
-  def cleanTempDir(user: String, password: String): Task[Response[Either[String, String]]] =
-    basicRequest.get(uri"/clean_temp_dir").auth.basic(user, password).send(backend)
-
   def getImage(shortcode: Shortcode, filename: String, user: User): Task[Response[Either[String, String]]] =
     jwtFor(user).flatMap { jwt =>
       basicRequest.get(uri"/$shortcode/$filename/full/max/0/default.jpg").cookie(authCookieName, jwt).send(backend)
@@ -37,11 +34,6 @@ case class TestSipiApiClient(
 }
 
 object TestSipiApiClient {
-  def cleanTempDir(
-    user: String,
-    password: String,
-  ): ZIO[TestSipiApiClient, Throwable, Response[Either[String, String]]] =
-    ZIO.serviceWithZIO[TestSipiApiClient](_.cleanTempDir(user, password))
 
   def getImage(
     shortcode: Shortcode,

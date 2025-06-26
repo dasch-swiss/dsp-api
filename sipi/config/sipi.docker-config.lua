@@ -185,10 +185,5 @@ routes = {
         method = 'DELETE',
         route = '/delete_temp_file',
         script = 'delete_temp_file.lua'
-    },
-    {
-        method = 'GET',
-        route = '/clean_temp_dir',
-        script = 'clean_temp_dir.lua'
     }
 }
