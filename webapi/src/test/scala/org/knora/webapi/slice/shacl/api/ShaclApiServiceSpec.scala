@@ -24,7 +24,7 @@ object ShaclApiServiceSpec extends ZIOSpecDefault {
 
   private val shaclApiService = ZIO.serviceWithZIO[ShaclApiService]
 
-  val spec: Spec[TestEnvironment & Scope, Any] = suite("ShaclApiService")(
+  val spec: Spec[TestEnvironment & zio.Scope, Any] = suite("ShaclApiService")(
     test("validate") {
       for {
         data    <- Files.createTempFile("data.ttl", None, Seq.empty)

@@ -93,7 +93,10 @@ final case class ApiComplexV2JsonLdRequestParser(
         resourceIriOption <-
           ZIO
             .foreach(resource.uri)(
-              converter.asSmartIri(_).mapError(_.getMessage).flatMap(iri => ZIO.fromEither(KResourceIri.from(iri))),
+              converter
+                .asSmartIri(_)
+                .mapError(_.getMessage)
+                .flatMap(iri => ZIO.fromEither(KnoraIris.ResourceIri.from(iri))),
             )
         resourceClassIri <- resourceClassIri(resource)
       } yield RootResource(resource, resourceIriOption, resourceClassIri)
