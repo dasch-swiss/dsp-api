@@ -16,7 +16,6 @@ URL parameter `token`. In all cases, the token must be signed by DSP-API,
 it must have an expiration date and not have expired, its issuer must equal
 the hostname and port of the API, and its audience must include `Sipi`.
 The other contents of the expected tokens are described below.
-The `clean_temp_dir` route requires basic authentication.
 
 ## SipiConnector
 

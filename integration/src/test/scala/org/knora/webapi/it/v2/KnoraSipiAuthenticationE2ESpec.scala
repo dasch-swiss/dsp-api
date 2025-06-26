@@ -29,15 +29,5 @@ object KnoraSipiAuthenticationE2ESpec extends E2EZSpec {
         .getImage(anythingShortcode, "B1D0OkEgfFp-Cew2Seur7Wi.jp2", anythingAdminUser)
         .map(response => assertTrue(response.code == StatusCode.Ok))
     },
-    test("accept a request with valid credentials to clean_temp_dir route which requires basic auth") {
-      TestSipiApiClient.cleanTempDir("clean_tmp_dir_user", "clean_tmp_dir_pw").map { response =>
-        assertTrue(response.code == StatusCode.Ok)
-      }
-    },
-    test("not accept a request with invalid credentials to clean_temp_dir route which requires basic auth") {
-      TestSipiApiClient.cleanTempDir("invalid-username", "invalid-password").map { response =>
-        assertTrue(response.code == StatusCode.Unauthorized)
-      }
-    },
   )
 }
