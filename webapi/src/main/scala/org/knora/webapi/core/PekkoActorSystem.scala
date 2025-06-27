@@ -14,7 +14,8 @@ import scala.concurrent.ExecutionContext
 object PekkoActorSystem {
 
   private def acquire(executionContext: ExecutionContext): UIO[ActorSystem] =
-    ZIO.attempt(ActorSystem("webapi", None, None, Some(executionContext)))
+    ZIO
+      .attempt(ActorSystem("webapi", None, None, Some(executionContext)))
       .retry(Schedule.exponential(1.second) && Schedule.recurs(3))
       .tapError(error => ZIO.logError(s"Failed to initialize Actor System: ${error.getMessage}"))
       .orDie <*
