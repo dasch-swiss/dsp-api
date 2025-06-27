@@ -18,6 +18,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
@@ -307,6 +309,18 @@ final case class CardinalityHandler(
    */
   def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean] =
     triplestoreService.query(Ask(sparql.v2.txt.isPropertyUsed(propertyIri, classIri)))
+
+  /**
+   * Check if a property entity is used in resource instances. Returns `true` if
+   * it is used, and `false` if it is not used.
+   *
+   * @param classIri the IRI of the class that is being checked for usage.
+   * @param propertyIri the IRI of the entity that is being checked for usage.
+   *
+   * @return a [[Boolean]] denoting if the property entity is used.
+   */
+  def isPropertyUsedInResources(classIri: ResourceClassIri, propertyIri: PropertyIri): Task[Boolean] =
+    isPropertyUsedInResources(classIri.toInternalIri, propertyIri.toInternalIri)
 
   /**
    * Checks if the class is defined inside the ontology found in the cache.

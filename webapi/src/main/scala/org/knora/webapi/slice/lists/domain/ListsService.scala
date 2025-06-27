@@ -28,15 +28,14 @@ final case class ListsService(private val appConfig: AppConfig, private val list
   def getList(listIri: ListIri, requestingUser: User): IO[Option[Throwable], ListGetResponseV2] =
     listsResponder
       .listGetRequestADM(listIri.value)
-      .mapError {
-        case e: NotFoundException => None
-        case e                    => Some(e)
-      }
-      .flatMap {
-        case ListGetResponseADM(list) => ZIO.succeed(list)
-        case _                        => ZIO.fail(None)
-      }
+      .mapError(notFoundExceptionToNone)
+      .flatMap(r => ZIO.fromOption(r.asOpt[ListGetResponseADM]).map(_.list))
       .map(ListGetResponseV2(_, requestingUser.lang, appConfig.fallbackLanguage))
+
+  private def notFoundExceptionToNone: Throwable => Option[Throwable] = {
+    case _: NotFoundException => None
+    case e                    => Some(e)
+  }
 
   /**
    * Gets a single list node from the triplestore.
@@ -49,14 +48,8 @@ final case class ListsService(private val appConfig: AppConfig, private val list
   def getNode(nodeIri: ListIri, requestingUser: User): IO[Option[Throwable], NodeGetResponseV2] =
     listsResponder
       .listNodeInfoGetRequestADM(nodeIri.value)
-      .mapError {
-        case e: NotFoundException => None
-        case e                    => Some(e)
-      }
-      .flatMap {
-        case ChildNodeInfoGetResponseADM(node) => ZIO.succeed(node)
-        case _                                 => ZIO.fail(None)
-      }
+      .mapError(notFoundExceptionToNone)
+      .flatMap(r => ZIO.fromOption(r.asOpt[ChildNodeInfoGetResponseADM]).map(_.nodeinfo))
       .map(NodeGetResponseV2(_, requestingUser.lang, appConfig.fallbackLanguage))
 }
 

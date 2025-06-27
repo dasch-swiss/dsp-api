@@ -15,6 +15,7 @@ import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
+import org.knora.webapi.util.WithAsIs
 
 /**
  * Responds to deletion of list node's comments by returning a success message.
@@ -50,7 +51,7 @@ object ListsGetResponseADM {
 }
 
 @jsonDiscriminator("type")
-sealed trait ListItemGetResponseADM extends AdminKnoraResponseADM
+sealed trait ListItemGetResponseADM extends AdminKnoraResponseADM with WithAsIs[ListItemGetResponseADM]
 object ListItemGetResponseADM {
   implicit lazy val codec: JsonCodec[ListItemGetResponseADM] = DeriveJsonCodec.gen[ListItemGetResponseADM]
   implicit def schema: Schema[ListItemGetResponseADM]        = Schema.derived[ListItemGetResponseADM]
@@ -82,7 +83,7 @@ object ListNodeGetResponseADM {
  * Provides basic information about any node (root or child) without it's children.
  */
 @jsonDiscriminator("type")
-sealed trait NodeInfoGetResponseADM extends AdminKnoraResponseADM
+sealed trait NodeInfoGetResponseADM extends AdminKnoraResponseADM with WithAsIs[NodeInfoGetResponseADM]
 object NodeInfoGetResponseADM {
   implicit lazy val codec: JsonCodec[NodeInfoGetResponseADM] = DeriveJsonCodec.gen[NodeInfoGetResponseADM]
   implicit def schema: Schema[NodeInfoGetResponseADM]        = Schema.derived[NodeInfoGetResponseADM]
