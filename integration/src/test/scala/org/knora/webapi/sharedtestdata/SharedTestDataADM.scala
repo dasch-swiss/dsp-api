@@ -551,10 +551,11 @@ object SharedTestDataADM {
     path = "test_data/project_data/anything-data.ttl",
     name = anythingOntologyIri.toInternalSchema.toIri,
   )
-  val anythingRdfOntologyData: RdfDataObject = RdfDataObject(
+  val anythingRdfOntology: RdfDataObject = RdfDataObject(
     path = "test_data/project_ontologies/anything-onto.ttl",
     name = "http://www.knora.org/ontology/0001/anything",
   )
+  val anythingRdfOntologyAndData: List[RdfDataObject] = List(anythingRdfData, anythingRdfOntology)
 
   val customResourceIRI: IRI                    = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
   val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
@@ -776,8 +777,13 @@ object SharedTestDataADM {
    */
   val freetestOntologyIri: OntologyIri = OntologyIri.unsafeFrom(FREETEST_ONTOLOGY_IRI.toSmartIri)
 
-  val freetestRdfOntologyData: RdfDataObject = RdfDataObject(
+  val freetestRdfData: RdfDataObject = RdfDataObject(
+    path = "test_data/project_data/freetest-data.ttl",
+    name = freetestOntologyIri.toInternalSchema.toIri,
+  )
+  val freetestRdfOntology: RdfDataObject = RdfDataObject(
     path = "test_data/project_ontologies/freetest-onto.ttl",
     name = "http://www.knora.org/ontology/0001/freetest",
   )
+  val freetestRdfOntologyAndData: List[RdfDataObject] = List(freetestRdfData, freetestRdfOntology)
 }
