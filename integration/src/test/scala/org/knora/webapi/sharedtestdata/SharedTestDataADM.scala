@@ -17,6 +17,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
@@ -766,5 +767,17 @@ object SharedTestDataADM {
     selfjoin = SelfJoin.CannotJoin,
     allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
+  )
+
+  /**
+   * ***********************************
+   * FREETEST
+   * **********************************
+   */
+  val freetestOntologyIri: OntologyIri = OntologyIri.unsafeFrom(FREETEST_ONTOLOGY_IRI.toSmartIri)
+
+  val freetestRdfOntologyData: RdfDataObject = RdfDataObject(
+    path = "test_data/project_ontologies/freetest-onto.ttl",
+    name = "http://www.knora.org/ontology/0001/freetest",
   )
 }

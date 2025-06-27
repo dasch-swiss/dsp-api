@@ -24,7 +24,6 @@ import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.KnoraIris
-import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.api.AddCardinalitiesToClassRequestV2
@@ -41,13 +40,7 @@ object AddCardinalitiesToClassSpec extends E2EZSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val ontologyResponder                         = ZIO.serviceWithZIO[OntologyResponderV2]
 
-  override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(
-      path = "test_data/project_ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest",
-    ),
-    anythingRdfOntologyData,
-  )
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(freetestRdfOntologyData)
 
   private def getCardinalityCountFromTriplestore(
     classIri: ResourceClassIri,
@@ -68,8 +61,6 @@ object AddCardinalitiesToClassSpec extends E2EZSpec {
       .serviceWithZIO[TriplestoreService](_.query(Select(sparqlCountQuery)))
       .map(_.results.bindings.head.rowMap.values.head)
   }
-
-  private val freetestOntologyIri = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri)
 
   val e2eSpec: Spec[env, Any] = suite("The ontology responder")(
     test("add a cardinality to a class without duplicating all existing cardinalities in the triplestore") {
