@@ -134,30 +134,28 @@ final case class PermissionsResponder(
     if (!builtIn.all.map(_.id.value).contains(req.forGroup) && GroupIri.from(req.forGroup).isLeft) {
       throw BadRequestException(s"Invalid group IRI ${req.forGroup}")
     }
-
-    verifyHasPermissionsAP(req.hasPermissions)
-
-  }.unit
+  } *> verifyHasPermissionsAP(req.hasPermissions).unit
 
   /**
    * For administrative permission we only need the name parameter of each PermissionADM given in hasPermissions collection.
    * This method validates the content of hasPermissions collection by only keeping the values of name params.
    * @param hasPermissions       Set of the permissions.
    */
-  private def verifyHasPermissionsAP(hasPermissions: Set[PermissionADM]): Set[PermissionADM] =
-    hasPermissions
-      .map(_.name)
-      .map { name =>
-        Permission.Administrative
-          .fromToken(name)
-          .getOrElse(
-            throw BadRequestException(
-              s"Invalid value for name parameter of hasPermissions: $name, it should be one of " + s"${Permission.Administrative.allTokens
-                  .mkString(", ")}",
+  private def verifyHasPermissionsAP(
+    hasPermissions: Set[PermissionADM],
+  ): IO[BadRequestException, Set[PermissionADM]] = ZIO
+    .foreach(hasPermissions.map(_.name)) { name =>
+      ZIO
+        .fromOption(Permission.Administrative.fromToken(name))
+        .mapBoth(
+          _ =>
+            BadRequestException(
+              s"Invalid value for name parameter of hasPermissions: $name, it should be one of " +
+                s"${Permission.Administrative.allTokens.mkString(", ")}",
             ),
-          )
-      }
-      .map(PermissionADM.from)
+          PermissionADM.from,
+        )
+    }
 
   def createAdministrativePermission(
     createRequest: CreateAdministrativePermissionAPIRequestADM,
@@ -863,9 +861,8 @@ final case class PermissionsResponder(
                       // Is permission an administrative permission?
                       case ap: AdministrativePermissionADM =>
                         // Yes.
-                        val verifiedPermissions =
-                          verifyHasPermissionsAP(newHasPermissions.toSet)
                         for {
+                          verifiedPermissions <- verifyHasPermissionsAP(newHasPermissions.toSet)
                           formattedPermissions <-
                             ZIO.attempt(
                               PermissionUtilADM.formatPermissionADMs(verifiedPermissions, PermissionType.AP),
@@ -946,34 +943,6 @@ final case class PermissionsResponder(
   }
 
   /**
-   * *************
-   */
-  /*Helper Methods*/
-  /**
-   * ************
-   */
-  /**
-   * Checks that requesting user has right for the permission operation
-   *
-   * @param requestingUser the [[User]] of the requesting user.
-   * @param projectIri      the IRI of the project the permission is attached to.
-   * @param permissionIri the IRI of the permission.
-   *
-   *                      throws ForbiddenException if the user is not a project or system admin
-   */
-  private def verifyUsersRightForOperation(requestingUser: User, projectIri: IRI, permissionIri: IRI): Unit =
-    if (
-      !requestingUser.isSystemUser && !requestingUser.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(
-        projectIri,
-      )
-    ) {
-
-      throw ForbiddenException(
-        s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.",
-      )
-    }
-
-  /**
    * Get a permission.
    *
    * @param permissionIri  the IRI of the permission.
@@ -992,22 +961,23 @@ final case class PermissionsResponder(
                                         }
 
       /* check if we have found something */
-      _ = if (groupedPermissionsQueryResponse.isEmpty)
-            throw NotFoundException(s"Permission with given IRI: $permissionIri not found.")
+      _ <- ZIO.when(groupedPermissionsQueryResponse.isEmpty)(
+             ZIO.fail(NotFoundException(s"Permission with given IRI: $permissionIri not found.")),
+           )
 
-      projectIri = groupedPermissionsQueryResponse
-                     .getOrElse(
-                       OntologyConstants.KnoraAdmin.ForProject,
-                       throw InconsistentRepositoryDataException(s"Permission $permissionIri has no project attached"),
-                     )
-                     .head
+      projectIri <- ZIO.attempt(
+                      groupedPermissionsQueryResponse
+                        .getOrElse(
+                          OntologyConstants.KnoraAdmin.ForProject,
+                          throw InconsistentRepositoryDataException(
+                            s"Permission $permissionIri has no project attached",
+                          ),
+                        )
+                        .head,
+                    )
 
       // Before returning the permission check that the requesting user has permission to see it
-      _ = verifyUsersRightForOperation(
-            requestingUser = requestingUser,
-            projectIri = projectIri,
-            permissionIri = permissionIri,
-          )
+      _ <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, ProjectIri.unsafeFrom(projectIri))
 
       permissionType = groupedPermissionsQueryResponse
                          .getOrElse(

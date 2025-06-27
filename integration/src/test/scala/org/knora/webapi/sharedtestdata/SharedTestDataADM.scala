@@ -380,7 +380,17 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val incunabulaProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0803")
+  val incunabulaProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0803")
+
+  val incunabulaRdfData: RdfDataObject = RdfDataObject(
+    path = "test_data/project_data/incunabula-data.ttl",
+    name = "http://www.knora.org/data/0803/incunabula",
+  )
+  val incunabulaRdfOntology: RdfDataObject = RdfDataObject(
+    path = "test_data/project_ontologies/incunabula-onto.ttl",
+    name = "http://www.knora.org/ontology/0803/incunabula",
+  )
+  val incunabulaRdfOntologyAndData: List[RdfDataObject] = List(incunabulaRdfData, incunabulaRdfOntology)
 
   /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
   def incunabulaProjectAdminUser: User =
