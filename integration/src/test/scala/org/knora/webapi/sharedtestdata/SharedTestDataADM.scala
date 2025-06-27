@@ -38,7 +38,7 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
  */
 object SharedTestDataADM {
 
-  implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   /**
    * **********************************
@@ -550,6 +550,11 @@ object SharedTestDataADM {
     path = "test_data/project_data/anything-data.ttl",
     name = anythingOntologyIri.toInternalSchema.toIri,
   )
+  val anythingRdfOntologyData: RdfDataObject = RdfDataObject(
+    path = "test_data/project_ontologies/anything-onto.ttl",
+    name = "http://www.knora.org/ontology/0001/anything",
+  )
+
   val customResourceIRI: IRI                    = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
   val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
   val customValueIRI_withResourceIriAndValueIRIAndValueUUID: IRI =
