@@ -10,6 +10,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 
 /**
@@ -29,12 +30,6 @@ class MutableTestIri { self =>
     )
 
   /**
-   * Removes any stored IRI.
-   */
-  def unset(): Unit =
-    maybeIri = None
-
-  /**
    * Gets the stored IRI, or throws an exception if the IRI is not set.
    *
    * @return the stored IRI.
@@ -44,6 +39,7 @@ class MutableTestIri { self =>
 
   def asOntologyIri(implicit sf: StringFormatter): OntologyIri = OntologyIri.unsafeFrom(self.get.toSmartIri)
   def asProjectIri: ProjectIri                                 = ProjectIri.unsafeFrom(self.get)
+  def asUserIri: UserIri                                       = UserIri.unsafeFrom(self.get)
 }
 
 /**
