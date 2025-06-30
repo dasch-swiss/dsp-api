@@ -41,7 +41,6 @@ import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.testservices.ResponseOps.*
 
 case class TestAdminApiClient(private val apiClient: TestApiClient) {
   def getProject(shortcode: Shortcode, user: User): Task[Response[Either[String, ProjectsGetResponse]]] =

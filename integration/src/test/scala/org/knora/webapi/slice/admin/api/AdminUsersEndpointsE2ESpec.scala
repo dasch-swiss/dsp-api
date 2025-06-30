@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.e2e.admin
+package org.knora.webapi.slice.admin.api
 
 import sttp.client4.UriContext
 import sttp.model.StatusCode
@@ -12,7 +12,6 @@ import zio.test.*
 
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
-import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -21,7 +20,6 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.*
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.api.service.UserRestService.UserResponse
 import org.knora.webapi.slice.admin.domain.model.*
-import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.LoginPayload
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.TokenResponse
 import org.knora.webapi.testservices.ResponseOps
