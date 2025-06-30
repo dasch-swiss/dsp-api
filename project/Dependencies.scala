@@ -14,9 +14,9 @@ object Dependencies {
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.16.0"
 
-  val ScalaVersion = "3.3.5"
+  val ScalaVersion = "3.3.6"
 
-  val PekkoActorVersion = "1.1.3"
+  val PekkoActorVersion = "1.1.4"
   val PekkoHttpVersion  = "1.2.0"
 
   val MonocleVersion = "3.3.0"
@@ -127,7 +127,7 @@ object Dependencies {
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "1.21.1"
 
-  val wiremock = "org.wiremock" % "wiremock" % "3.13.0"
+  val wiremock = "org.wiremock" % "wiremock" % "3.13.1"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
@@ -150,7 +150,7 @@ object Dependencies {
 
   val openTelemetryWithSentry = Seq(
     "dev.zio"  %% "zio-opentelemetry"              % "3.1.5",
-    "io.sentry" % "sentry-opentelemetry-agentless" % "8.13.2",
+    "io.sentry" % "sentry-opentelemetry-agentless" % "8.13.3",
   )
 
   val integrationTestDependencies = Seq(

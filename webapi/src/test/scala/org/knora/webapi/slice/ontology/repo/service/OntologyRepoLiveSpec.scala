@@ -9,7 +9,6 @@ import zio.Chunk
 import zio.Scope
 import zio.ZIO
 import zio.test.*
-import zio.test.ZIOSpecDefault
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter

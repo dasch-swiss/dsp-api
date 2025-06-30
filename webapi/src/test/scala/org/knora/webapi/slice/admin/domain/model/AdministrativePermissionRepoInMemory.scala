@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.admin.domain.model
 import zio.*
-import zio.Chunk
-import zio.Ref
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.repo.service.AbstractInMemoryCrudRepository

@@ -13,7 +13,6 @@ import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
-import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.e2e.v2.ontology.InputOntologyParsingModeV2.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -25,8 +24,6 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
-import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.OwlCardinalityInfo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri

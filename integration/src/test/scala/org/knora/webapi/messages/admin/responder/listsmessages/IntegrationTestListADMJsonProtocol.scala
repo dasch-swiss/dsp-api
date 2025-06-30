@@ -7,13 +7,6 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
-import spray.json.DefaultJsonProtocol
-import spray.json.DeserializationException
-import spray.json.JsArray
-import spray.json.JsObject
-import spray.json.JsValue
-import spray.json.JsonFormat
-import spray.json.RootJsonFormat
 
 import scala.util.Try
 

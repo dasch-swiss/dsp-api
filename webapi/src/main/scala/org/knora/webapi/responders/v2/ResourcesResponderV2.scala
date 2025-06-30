@@ -15,8 +15,6 @@ import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
-import zio.Task
-import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID

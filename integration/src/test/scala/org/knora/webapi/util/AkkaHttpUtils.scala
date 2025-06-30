@@ -9,7 +9,6 @@ import com.typesafe.scalalogging.LazyLogging
 import org.apache.pekko
 import spray.json.*
 import zio.json.*
-import zio.json.JsonDecoder
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
