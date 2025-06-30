@@ -100,7 +100,7 @@ final case class TestApiClient(
         .post(relativeUri)
         .body(body.toJson)
         .contentType(MediaType.ApplicationJson)
-        .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.getMessage))
+        .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
         .auth
         .bearer(jwt)
         .send(backend)
@@ -225,6 +225,13 @@ object TestApiClient {
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.postJsonLd(relativeUri, jsonLdBody, user))
+
+  def putJson[A: JsonDecoder, B: JsonEncoder](
+    relativeUri: Uri,
+    body: B,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.putJson(relativeUri, body, user))
 
   def putJsonLd(
     relativeUri: Uri,
