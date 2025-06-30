@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.e2e.admin
+package org.knora.webapi.slice.admin.api
 
 import org.apache.pekko
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -27,7 +27,7 @@ import pekko.http.scaladsl.unmarshalling.Unmarshal
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
  */
-class GroupsADME2ESpec extends E2ESpec with SprayJsonSupport {
+class AdminGroupsEndpointsSpec extends E2ESpec with SprayJsonSupport {
 
   implicit def default: RouteTestTimeout = RouteTestTimeout(30.seconds)
 
