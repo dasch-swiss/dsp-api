@@ -11,20 +11,20 @@ addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate; i
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck; integration/Test/headerCheck")
 
 val flywayVersion               = "11.4.1"
-val hikariVersion               = "6.2.1"
+val hikariVersion               = "6.3.0"
 val knoraSipiVersion            = "v31.15.0"
 val quillVersion                = "4.8.6"
-val sqliteVersion               = "3.49.1.0"
+val sqliteVersion               = "3.50.1.0"
 val tapirVersion                = "1.11.33"
 val testContainersVersion       = "1.20.4"
 val zioConfigVersion            = "4.0.4"
-val zioJsonVersion              = "0.7.39"
+val zioJsonVersion              = "0.7.44"
 val zioLoggingVersion           = "2.5.0"
 val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
-val zioSchemaVersion            = "1.6.6"
-val zioPreludeVersion           = "1.0.0-RC40"
+val zioSchemaVersion            = "1.7.3"
+val zioPreludeVersion           = "1.0.0-RC41"
 val zioVersion                  = "2.1.19"
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
@@ -71,7 +71,7 @@ val zio = Seq(
 
 val test = Seq(
   "dev.zio"      %% "zio-mock"               % zioMockVersion % Test,
-  "dev.zio"      %% "zio-http"               % "3.1.0"        % Test,
+  "dev.zio"      %% "zio-http"               % "3.3.3"        % Test,
   "dev.zio"      %% "zio-test"               % zioVersion     % Test,
   "dev.zio"      %% "zio-test-junit"         % zioVersion     % Test,
   "dev.zio"      %% "zio-test-magnolia"      % zioVersion     % Test,
@@ -112,7 +112,7 @@ lazy val root = (project in file("."))
     headerLicense := projectLicense,
     libraryDependencies ++= db ++ tapir ++ metrics ++ zio ++ Seq(
       "com.github.jwt-scala"          %% "jwt-zio-json"                      % "10.0.4",
-      "commons-io"                     % "commons-io"                        % "2.18.0",
+      "commons-io"                     % "commons-io"                        % "2.19.0",
       "dev.zio"                       %% "zio-config"                        % zioConfigVersion,
       "dev.zio"                       %% "zio-config-magnolia"               % zioConfigVersion,
       "dev.zio"                       %% "zio-config-typesafe"               % zioConfigVersion,
@@ -121,7 +121,7 @@ lazy val root = (project in file("."))
       "dev.zio"                       %% "zio-metrics-connectors"            % zioMetricsConnectorsVersion,
       "dev.zio"                       %% "zio-metrics-connectors-prometheus" % zioMetricsConnectorsVersion,
       "eu.timepit"                    %% "refined"                           % "0.11.3",
-      "com.softwaremill.sttp.client3" %% "zio"                               % "3.10.3",
+      "com.softwaremill.sttp.client3" %% "zio"                               % "3.11.0",
 
       // csv for reports
       "com.github.tototoshi" %% "scala-csv" % "2.0.0",
