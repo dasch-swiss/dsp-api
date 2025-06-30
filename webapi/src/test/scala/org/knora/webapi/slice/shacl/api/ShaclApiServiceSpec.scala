@@ -11,7 +11,6 @@ import org.apache.pekko.stream.scaladsl.Sink
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
 import zio.*
-import zio.Scope
 import zio.nio.file.Files
 import zio.test.*
 
@@ -25,7 +24,7 @@ object ShaclApiServiceSpec extends ZIOSpecDefault {
 
   private val shaclApiService = ZIO.serviceWithZIO[ShaclApiService]
 
-  val spec: Spec[TestEnvironment & Scope, Any] = suite("ShaclApiService")(
+  val spec: Spec[TestEnvironment & zio.Scope, Any] = suite("ShaclApiService")(
     test("validate") {
       for {
         data    <- Files.createTempFile("data.ttl", None, Seq.empty)

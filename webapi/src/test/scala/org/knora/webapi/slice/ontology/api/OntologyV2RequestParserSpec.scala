@@ -8,7 +8,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import zio.test.check
 
 import java.time.Instant
 
@@ -31,7 +30,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.JsonLdTestUtil.JsonLdTransformations
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.jena.DatasetOps.*
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 

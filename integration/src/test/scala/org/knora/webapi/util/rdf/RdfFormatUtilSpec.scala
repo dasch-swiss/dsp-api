@@ -23,9 +23,6 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.messages.util.rdf.JenaModel
-import org.knora.webapi.messages.util.rdf.JenaModelFactory
-import org.knora.webapi.messages.util.rdf.JenaNodeFactory
 import org.knora.webapi.util.FileUtil
 
 /**

@@ -9,7 +9,6 @@ import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
 import zio.*
-import zio.ZLayer
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.config.AppConfig

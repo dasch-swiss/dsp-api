@@ -11,7 +11,6 @@ import zio.Ref
 import zio.ZIO
 import zio.ZLayer
 import zio.test.*
-import zio.test.ZIOSpecDefault
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter

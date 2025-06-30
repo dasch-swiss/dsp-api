@@ -7,9 +7,6 @@ package org.knora.webapi.slice.admin.domain.service
 import cats.syntax.traverse.*
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
-import zio.IO
-import zio.ZIO
-import zio.ZLayer
 import zio.prelude.Validation
 
 import dsp.errors.InconsistentRepositoryDataException

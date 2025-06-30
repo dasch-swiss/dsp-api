@@ -7,9 +7,6 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio.*
 import zio.json.*
-import zio.json.DeriveJsonCodec
-import zio.json.DeriveJsonEncoder
-import zio.json.JsonEncoder
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException

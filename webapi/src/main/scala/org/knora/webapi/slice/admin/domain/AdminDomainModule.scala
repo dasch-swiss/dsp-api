@@ -13,11 +13,6 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
 import org.knora.webapi.slice.admin.domain.service.*
-import org.knora.webapi.slice.admin.domain.service.GroupService
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.admin.domain.service.PasswordService
-import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo

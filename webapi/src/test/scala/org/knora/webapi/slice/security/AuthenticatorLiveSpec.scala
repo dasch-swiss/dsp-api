@@ -6,9 +6,7 @@
 package org.knora.webapi.slice.security
 
 import zio.*
-import zio.Exit
 import zio.test.*
-import zio.test.ZIOSpecDefault
 
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.config.AppConfig

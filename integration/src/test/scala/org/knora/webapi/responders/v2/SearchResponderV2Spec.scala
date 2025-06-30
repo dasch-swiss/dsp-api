@@ -9,8 +9,6 @@ import zio.ZIO
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.*
-import org.knora.webapi.ApiV2Schema
-import org.knora.webapi.SchemaRendering
 import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.SmartIri
