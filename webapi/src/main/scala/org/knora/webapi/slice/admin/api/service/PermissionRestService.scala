@@ -204,17 +204,5 @@ final case class PermissionRestService(
 }
 
 object PermissionRestService {
-  def createAdministrativePermission(
-    request: CreateAdministrativePermissionAPIRequestADM,
-    user: User,
-  ): ZIO[PermissionRestService, Throwable, AdministrativePermissionCreateResponseADM] =
-    ZIO.serviceWithZIO(_.createAdministrativePermission(request, user))
-
-  def createDefaultObjectAccessPermission(
-    request: CreateDefaultObjectAccessPermissionAPIRequestADM,
-    user: User,
-  ): ZIO[PermissionRestService, Throwable, DefaultObjectAccessPermissionCreateResponseADM] =
-    ZIO.serviceWithZIO(_.createDefaultObjectAccessPermission(request, user))
-
   val layer = ZLayer.derive[PermissionRestService]
 }
