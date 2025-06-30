@@ -11,6 +11,7 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import scala.reflect.ClassTag
+
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import org.knora.webapi.E2EZSpec
