@@ -1,5 +1,35 @@
 # Changelog
 
+## [31.19.0](https://github.com/dasch-swiss/dsp-api/compare/v31.18.0...v31.19.0) (2025-06-30)
+
+
+### Maintenances
+
+* Inline ResourceUtilV2 trait ([#3650](https://github.com/dasch-swiss/dsp-api/issues/3650)) ([0e58f0e](https://github.com/dasch-swiss/dsp-api/commit/0e58f0ea7f6ddef94bc4e6ebcf6db22e467b02d5))
+* Merge resourceinfo package into resources package ([#3651](https://github.com/dasch-swiss/dsp-api/issues/3651)) ([b24d769](https://github.com/dasch-swiss/dsp-api/commit/b24d7698ab5b4d7c2e18f66254ac34986bcd4794))
+* Move InternalIri from resourceinfo.domain to common.domain ([#3653](https://github.com/dasch-swiss/dsp-api/issues/3653)) ([45dafd4](https://github.com/dasch-swiss/dsp-api/commit/45dafd4c61455acb58c8ec26c0296e8e8218b887))
+* Patch dependency updates ([#3634](https://github.com/dasch-swiss/dsp-api/issues/3634)) ([f1baa79](https://github.com/dasch-swiss/dsp-api/commit/f1baa79d603932e8a838fb54746f24c8e982d653))
+* Remove unused clean_temp_dir Sipi endpoint (DEV-5090) ([#3659](https://github.com/dasch-swiss/dsp-api/issues/3659)) ([5f557d2](https://github.com/dasch-swiss/dsp-api/commit/5f557d247c1d13fe7d581a83bfdc60f55f6e7fbf))
+* Update CLAUDE.md ([#3654](https://github.com/dasch-swiss/dsp-api/issues/3654)) ([0b421d8](https://github.com/dasch-swiss/dsp-api/commit/0b421d887d8dc7120b7278c971316c8598a8a475))
+
+
+### Enhancements
+
+* Add new mimetypes to configuration (DEV-5085) ([#3655](https://github.com/dasch-swiss/dsp-api/issues/3655)) ([d46d861](https://github.com/dasch-swiss/dsp-api/commit/d46d861f4c48314a247b54948b6d73801a111636))
+
+
+### Bug Fixes
+
+* Resolve intermittent logger initialization timeout on startup (DEV-5093) ([#3660](https://github.com/dasch-swiss/dsp-api/issues/3660)) ([ae807b1](https://github.com/dasch-swiss/dsp-api/commit/ae807b1daf6e058842fcb2cf6d7912e610e00d54))
+
+
+### Tests
+
+* Convert ScalaTest integration tests to ZIO Test ([#3645](https://github.com/dasch-swiss/dsp-api/issues/3645)) ([47ad3dd](https://github.com/dasch-swiss/dsp-api/commit/47ad3dd3c12673919b0b353b540ae8d0e6690815))
+* Migrate LoadOntologiesSpec from ScalaTest to ZIO Test ([#3657](https://github.com/dasch-swiss/dsp-api/issues/3657)) ([c82036f](https://github.com/dasch-swiss/dsp-api/commit/c82036f37b99dfc4a97ad21e166f0a7d2b97c814))
+* Migrate specs to zio-test ([#3661](https://github.com/dasch-swiss/dsp-api/issues/3661)) ([e1c1351](https://github.com/dasch-swiss/dsp-api/commit/e1c1351e98d6d51d8f0ea8fd359292ade79940fa))
+* Remove redundant ValuesV2R2RSpec test ([#3656](https://github.com/dasch-swiss/dsp-api/issues/3656)) ([f835bcf](https://github.com/dasch-swiss/dsp-api/commit/f835bcfce875664d42e800f5966a8acf70844bc3))
+
 ## [31.18.0](https://github.com/dasch-swiss/dsp-api/compare/v31.17.0...v31.18.0) (2025-06-23)
 
 
