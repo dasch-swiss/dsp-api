@@ -365,7 +365,6 @@ class ProjectRestServiceSpec extends E2ESpec with ImplicitSender {
             _.updateProject(
               iri,
               ProjectUpdateRequest(
-                shortname = None,
                 longname = Some(updatedLongname),
                 description = Some(updatedDescription),
                 keywords = Some(updatedKeywords),

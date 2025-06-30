@@ -210,7 +210,9 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val imagesProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/00FF")
+  val imagesProjectIri: ProjectIri      = ProjectIri.unsafeFrom("http://rdfh.ch/projects/00FF")
+  val imagesProjectShortcode: Shortcode = Shortcode.unsafeFrom("00FF")
+  val imagesProjectShortname: Shortname = Shortname.unsafeFrom("images")
 
   /* represents 'user01' as found in admin-data.ttl  */
   def imagesUser01: User =
@@ -304,7 +306,7 @@ object SharedTestDataADM {
   /* represents the full ProjectADM of the images project */
   def imagesProject: Project = Project(
     id = imagesProjectIri,
-    shortname = Shortname.unsafeFrom("images"),
+    shortname = imagesProjectShortname,
     shortcode = Shortcode.unsafeFrom("00FF"),
     longname = Some(Longname.unsafeFrom("Image Collection Demo")),
     description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
