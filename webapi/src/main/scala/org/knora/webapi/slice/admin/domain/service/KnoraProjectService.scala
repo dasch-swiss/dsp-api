@@ -122,10 +122,6 @@ final case class KnoraProjectService(
                   case Some(value) => toNonEmptyChunk(value).map(Some(_))
                   case None        => ZIO.none
                 }
-        _ <- updateReq.shortname match {
-               case Some(value) => ensureShortnameIsUnique(value)
-               case None        => ZIO.unit
-             }
         updated <- projectRepo.save(
                      project.copy(
                        longname = updateReq.longname.orElse(project.longname),

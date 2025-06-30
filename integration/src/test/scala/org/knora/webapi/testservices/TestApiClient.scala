@@ -100,7 +100,7 @@ final case class TestApiClient(
         .post(relativeUri)
         .body(body.toJson)
         .contentType(MediaType.ApplicationJson)
-        .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.getMessage))
+        .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
         .auth
         .bearer(jwt)
         .send(backend)

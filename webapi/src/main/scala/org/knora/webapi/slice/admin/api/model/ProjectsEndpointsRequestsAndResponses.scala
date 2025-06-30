@@ -37,7 +37,6 @@ object ProjectsEndpointsRequestsAndResponses {
   }
 
   final case class ProjectUpdateRequest(
-    shortname: Option[Shortname] = None,
     longname: Option[Longname] = None,
     description: Option[List[Description]] = None,
     keywords: Option[List[Keyword]] = None,
