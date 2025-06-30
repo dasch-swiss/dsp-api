@@ -17,6 +17,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI
 import org.knora.webapi.slice.admin.api.model.Project
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
@@ -38,7 +39,7 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
  */
 object SharedTestDataADM {
 
-  implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   /**
    * **********************************
@@ -379,7 +380,17 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val incunabulaProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0803")
+  val incunabulaProjectIri: ProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0803")
+
+  val incunabulaRdfData: RdfDataObject = RdfDataObject(
+    path = "test_data/project_data/incunabula-data.ttl",
+    name = "http://www.knora.org/data/0803/incunabula",
+  )
+  val incunabulaRdfOntology: RdfDataObject = RdfDataObject(
+    path = "test_data/project_ontologies/incunabula-onto.ttl",
+    name = "http://www.knora.org/ontology/0803/incunabula",
+  )
+  val incunabulaRdfOntologyAndData: List[RdfDataObject] = List(incunabulaRdfData, incunabulaRdfOntology)
 
   /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
   def incunabulaProjectAdminUser: User =
@@ -550,6 +561,12 @@ object SharedTestDataADM {
     path = "test_data/project_data/anything-data.ttl",
     name = anythingOntologyIri.toInternalSchema.toIri,
   )
+  val anythingRdfOntology: RdfDataObject = RdfDataObject(
+    path = "test_data/project_ontologies/anything-onto.ttl",
+    name = "http://www.knora.org/ontology/0001/anything",
+  )
+  val anythingRdfOntologyAndData: List[RdfDataObject] = List(anythingRdfData, anythingRdfOntology)
+
   val customResourceIRI: IRI                    = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
   val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
   val customValueIRI_withResourceIriAndValueIRIAndValueUUID: IRI =
@@ -762,4 +779,21 @@ object SharedTestDataADM {
     allowedCopyrightHolders = Set.empty,
     enabledLicenses = Set.empty,
   )
+
+  /**
+   * ***********************************
+   * FREETEST
+   * **********************************
+   */
+  val freetestOntologyIri: OntologyIri = OntologyIri.unsafeFrom(FREETEST_ONTOLOGY_IRI.toSmartIri)
+
+  val freetestRdfData: RdfDataObject = RdfDataObject(
+    path = "test_data/project_data/freetest-data.ttl",
+    name = freetestOntologyIri.toInternalSchema.toIri,
+  )
+  val freetestRdfOntology: RdfDataObject = RdfDataObject(
+    path = "test_data/project_ontologies/freetest-onto.ttl",
+    name = "http://www.knora.org/ontology/0001/freetest",
+  )
+  val freetestRdfOntologyAndData: List[RdfDataObject] = List(freetestRdfData, freetestRdfOntology)
 }

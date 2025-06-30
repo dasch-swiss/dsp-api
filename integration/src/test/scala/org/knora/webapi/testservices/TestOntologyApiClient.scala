@@ -10,6 +10,10 @@ import zio.*
 import zio.json.*
 import zio.json.ast.*
 
+import java.time.Instant
+
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+
 import ResponseOps.assert200
 
 case class TestOntologyApiClient(private val apiClient: TestApiClient) {
@@ -23,6 +27,10 @@ case class TestOntologyApiClient(private val apiClient: TestApiClient) {
 object TestOntologyApiClient {
   def getLastModificationDate(iri: String): ZIO[TestOntologyApiClient, Throwable, String] =
     ZIO.serviceWithZIO[TestOntologyApiClient](_.getLastModificationDate(iri))
+
+  def getLastModificationDate(iri: OntologyIri): ZIO[TestOntologyApiClient, Throwable, Instant] = ZIO
+    .serviceWithZIO[TestOntologyApiClient](_.getLastModificationDate(iri.toComplexSchema.toIri))
+    .mapAttempt(Instant.parse)
 
   val layer = zio.ZLayer.derive[TestOntologyApiClient]
 }
