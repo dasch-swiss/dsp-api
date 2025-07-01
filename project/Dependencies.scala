@@ -46,7 +46,7 @@ object Dependencies {
   val zioNio                = "dev.zio" %% "zio-nio"                   % ZioNioVersion
   val zioPrelude            = "dev.zio" %% "zio-prelude"               % ZioPreludeVersion
 
-  val SttpClientVersion = "4.0.8"
+  val SttpClientVersion = "4.0.9"
   val zioSttpClient = Seq(
     "com.softwaremill.sttp.client4" %% "zio"      % SttpClientVersion,
     "com.softwaremill.sttp.client4" %% "zio-json" % SttpClientVersion,
@@ -96,10 +96,10 @@ object Dependencies {
     "commons-validator" % "commons-validator" % "1.9.0" exclude ("commons-logging", "commons-logging")
 
   // authentication
-  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "10.0.4"
+  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.0"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.5.0" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.5.1" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -116,7 +116,7 @@ object Dependencies {
   val saxonHE        = "net.sf.saxon"          % "Saxon-HE"         % "12.7"
   val scalaGraph     = "org.scala-graph"      %% "graph-core"       % "2.0.2"
   val titaniumJSONLD = "com.apicatalog"        % "titanium-json-ld" % "1.6.0"
-  val xmlunitCore    = "org.xmlunit"           % "xmlunit-core"     % "2.10.2"
+  val xmlunitCore    = "org.xmlunit"           % "xmlunit-core"     % "2.10.3"
   val scalaCsv       = "com.github.tototoshi" %% "scala-csv"        % "2.0.0"
 
   // test
@@ -125,14 +125,14 @@ object Dependencies {
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion
   val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.19"
 
-  val testcontainers = "org.testcontainers" % "testcontainers" % "1.21.1"
+  val testcontainers = "org.testcontainers" % "testcontainers" % "1.21.3"
 
   val wiremock = "org.wiremock" % "wiremock" % "3.13.1"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.33"
+  val tapirVersion = "1.11.35"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
@@ -150,7 +150,7 @@ object Dependencies {
 
   val openTelemetryWithSentry = Seq(
     "dev.zio"  %% "zio-opentelemetry"              % "3.1.5",
-    "io.sentry" % "sentry-opentelemetry-agentless" % "8.16.0",
+    "io.sentry" % "sentry-opentelemetry-agentless" % "8.16.3",
   )
 
   val integrationTestDependencies = Seq(
