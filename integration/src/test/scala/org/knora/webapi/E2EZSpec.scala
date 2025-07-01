@@ -8,6 +8,9 @@ package org.knora.webapi
 import zio.*
 import zio.http.*
 import zio.test.*
+import zio.test.Assertion.*
+
+import scala.reflect.ClassTag
 
 import org.knora.webapi.core.Db
 import org.knora.webapi.core.LayersTest
@@ -37,4 +40,16 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       @@ TestAspect.sequential
   ).provideShared(testLayers, Client.default, Scope.default)
     @@ TestAspect.withLiveEnvironment
+}
+
+object E2EZSpec {
+  def failsWithMessageEqualTo[A <: Throwable](messsage: String)(implicit
+    tag: ClassTag[A],
+  ): Assertion[Exit[Any, Any]] =
+    fails(isSubtype[A](hasMessage(equalTo(messsage))))
+
+  def failsWithMessageContaining[A <: Throwable](messsage: String)(implicit
+    tag: ClassTag[A],
+  ): Assertion[Exit[Any, Any]] =
+    fails(isSubtype[A](hasMessage(containsString(messsage))))
 }
