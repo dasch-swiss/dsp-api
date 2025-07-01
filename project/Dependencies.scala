@@ -46,7 +46,7 @@ object Dependencies {
   val zioNio                = "dev.zio" %% "zio-nio"                   % ZioNioVersion
   val zioPrelude            = "dev.zio" %% "zio-prelude"               % ZioPreludeVersion
 
-  val SttpClientVersion = "4.0.8"
+  val SttpClientVersion = "4.0.9"
   val zioSttpClient = Seq(
     "com.softwaremill.sttp.client4" %% "zio"      % SttpClientVersion,
     "com.softwaremill.sttp.client4" %% "zio-json" % SttpClientVersion,
