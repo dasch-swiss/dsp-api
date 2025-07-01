@@ -111,7 +111,7 @@ lazy val root = (project in file("."))
     name          := "dsp-ingest",
     headerLicense := projectLicense,
     libraryDependencies ++= db ++ tapir ++ metrics ++ zio ++ Seq(
-      "com.github.jwt-scala"          %% "jwt-zio-json"                      % "10.0.4",
+      "com.github.jwt-scala"          %% "jwt-zio-json"                      % "11.0.0",
       "commons-io"                     % "commons-io"                        % "2.19.0",
       "dev.zio"                       %% "zio-config"                        % zioConfigVersion,
       "dev.zio"                       %% "zio-config-magnolia"               % zioConfigVersion,
