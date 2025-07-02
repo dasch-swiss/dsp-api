@@ -39,7 +39,7 @@ object Dependencies {
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
 
-  val ZioJsonVersion        = "0.7.43"
+  val ZioJsonVersion        = "0.7.44"
   val zioJson               = "dev.zio" %% "zio-json"                  % ZioJsonVersion
   val zioLogging            = "dev.zio" %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
@@ -150,7 +150,7 @@ object Dependencies {
 
   val openTelemetryWithSentry = Seq(
     "dev.zio"  %% "zio-opentelemetry"              % "3.1.6",
-    "io.sentry" % "sentry-opentelemetry-agentless" % "8.13.3",
+    "io.sentry" % "sentry-opentelemetry-agentless" % "8.16.0",
   )
 
   val integrationTestDependencies = Seq(
