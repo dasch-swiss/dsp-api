@@ -1431,12 +1431,10 @@ final case class ListsResponder(
   private def deleteNode(dataNamedGraph: IRI, nodeIri: IRI, isRootNode: Boolean): Task[Unit] =
     for {
       _ <- triplestore.query(Update(sparql.admin.txt.deleteNode(dataNamedGraph, nodeIri, isRootNode)))
-      // Verify that the node was deleted correctly.
-      nodeStillExists <- nodeByIriExists(nodeIri)
-
-      _ = if (nodeStillExists) {
-            throw UpdateNotPerformedException(s"Node <$nodeIri> was not erased. Please report this as a possible bug.")
-          }
+      _ <- // Verify that the node was deleted correctly.
+        ZIO
+          .fail(UpdateNotPerformedException(s"Node <$nodeIri> was not erased. Please report this as a possible bug."))
+          .whenZIO(nodeByIriExists(nodeIri))
     } yield ()
 
   /**

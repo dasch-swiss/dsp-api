@@ -43,7 +43,7 @@ final case class TestApiClient(
   ): Task[Response[Either[String, A]]] = {
     val request: Request[Either[String, A]] = basicRequest
       .delete(relativeUri)
-      .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.getMessage))
+      .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
     f(request).send(backend)
   }
 

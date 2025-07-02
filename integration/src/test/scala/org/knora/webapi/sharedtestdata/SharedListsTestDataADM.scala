@@ -12,7 +12,6 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequence
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 object SharedListsTestDataADM {
-
   val otherTreeListInfo: ListRootNodeInfoADM = ListRootNodeInfoADM(
     id = "http://rdfh.ch/lists/0001/otherTreeList",
     projectIri = "http://rdfh.ch/projects/0001",
