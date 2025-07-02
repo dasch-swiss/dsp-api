@@ -5,20 +5,21 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.testkit.ImplicitSender
-import zio.ZIO
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
+import org.knora.webapi.LanguageCode.EN
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.api.model.*
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
@@ -28,567 +29,447 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-/**
- * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
- */
-class ProjectRestServiceSpec extends E2ESpec with ImplicitSender {
+object ProjectRestServiceSpec extends E2EZSpec {
+
+  private val projectRestService = ZIO.serviceWithZIO[ProjectRestService]
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getInitializedTestInstance
 
+  private val newProjectIri         = new MutableTestIri
   private val notExistingProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/notexisting")
-
-  private val ProjectRestService = ZIO.serviceWithZIO[ProjectRestService]
 
   private def toExternal(project: Project) =
     project.copy(ontologies =
       project.ontologies.map((iri: String) => iri.toSmartIri.toOntologySchema(ApiV2Complex).toString),
     )
 
-  "The ProjectRestService" when {
-    "used to query for project information" should {
-      "return information for every project excluding system projects" in {
-        val received    = UnsafeZioRun.runOrThrow(ProjectRestService(_.listAllProjects()))
-        val projectIris = received.projects.map(_.id)
-        assert(projectIris.contains(SharedTestDataADM.imagesProject.id))
-        assert(projectIris.contains(SharedTestDataADM.incunabulaProject.id))
-        assert(!projectIris.contains(SharedTestDataADM.systemProjectIri))
-        assert(!projectIris.contains(SharedTestDataADM.defaultSharedOntologiesProject.id))
-      }
-
-      "return information about a project identified by IRI" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          ProjectRestService(_.findById(SharedTestDataADM.incunabulaProject.id)),
-        )
-        assert(actual == ProjectGetResponse(toExternal(SharedTestDataADM.incunabulaProject)))
-      }
-
-      "return information about a project identified by shortname" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          ProjectRestService(_.findByShortname(SharedTestDataADM.incunabulaProject.shortname)),
-        )
-        assert(actual == ProjectGetResponse(toExternal(SharedTestDataADM.incunabulaProject)))
-      }
-
-      "return 'NotFoundException' when the project IRI is unknown" in {
-        val exit = UnsafeZioRun.run(ProjectRestService(_.findById(notExistingProjectIri)))
-        assertFailsWithA[NotFoundException](exit, s"Project '${notExistingProjectIri.value}' not found.")
-      }
-
-      "return 'NotFoundException' when the project shortname is unknown" in {
-        val exit = UnsafeZioRun.run(
-          ProjectRestService(_.findByShortname(Shortname.unsafeFrom("wrongshortname"))),
-        )
-        assertFailsWithA[NotFoundException](exit, s"Project 'wrongshortname' not found.")
-      }
-
-      "return 'NotFoundException' when the project shortcode is unknown" in {
-        val exit = UnsafeZioRun.run(
-          ProjectRestService(_.findByShortcode(Shortcode.unsafeFrom("9999"))),
-        )
-        assertFailsWithA[NotFoundException](exit, s"Project '9999' not found.")
-      }
-    }
-
-    "used to query project's restricted view settings" should {
-      val expectedResult = ProjectRestrictedViewSettingsGetResponseADM.from(RestrictedView.Size.unsafeFrom("!512,512"))
-
-      "return restricted view settings using project IRI" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.getProjectRestrictedViewSettingsById(SharedTestDataADM.imagesProject.id),
-          ),
-        )
-        actual shouldEqual expectedResult
-      }
-
-      "return restricted view settings using project SHORTNAME" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.getProjectRestrictedViewSettingsByShortname(SharedTestDataADM.imagesProject.shortname),
-          ),
-        )
-        actual shouldEqual expectedResult
-      }
-
-      "return restricted view settings using project SHORTCODE" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.getProjectRestrictedViewSettingsByShortcode(SharedTestDataADM.imagesProject.shortcode),
-          ),
-        )
-        actual shouldEqual expectedResult
-      }
-
-      "return 'NotFoundException' when the project IRI is unknown" in {
-        val exit = UnsafeZioRun.run(ProjectRestService(_.getProjectRestrictedViewSettingsById(notExistingProjectIri)))
-        assertFailsWithA[NotFoundException](exit, s"Project with id ${notExistingProjectIri.value} not found.")
-      }
-
-      "return 'NotFoundException' when the project SHORTCODE is unknown" in {
-        val exit = UnsafeZioRun.run(
-          ProjectRestService(_.getProjectRestrictedViewSettingsByShortcode(Shortcode.unsafeFrom("9999"))),
-        )
-        assertFailsWithA[NotFoundException](exit, s"Project with shortcode 9999 not found.")
-      }
-
-      "return 'NotFoundException' when the project SHORTNAME is unknown" in {
-        val exit = UnsafeZioRun.run(
-          ProjectRestService(
-            _.getProjectRestrictedViewSettingsByShortname(Shortname.unsafeFrom("wrongshortname")),
-          ),
-        )
-        assertFailsWithA[NotFoundException](exit, s"Project with shortname wrongshortname not found.")
-      }
-    }
-
-    "used to modify project information" should {
-      val newProjectIri = new MutableTestIri
-
-      "CREATE a project and return the project info if the supplied shortname is unique" in {
-        val shortcode = "111c"
-        val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.createProject(SharedTestDataADM.rootUser)(
-              ProjectCreateRequest(
-                shortname = Shortname.unsafeFrom("newproject"),
-                shortcode = Shortcode.unsafeFrom(shortcode),
-                longname = Some(Longname.unsafeFrom("project longname")),
-                description = List(
-                  Description.unsafeFrom(StringLiteralV2.from(value = "project description", language = Some("en"))),
-                ),
-                keywords = List("keywords").map(Keyword.unsafeFrom),
-                logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-                status = Status.Active,
-                selfjoin = SelfJoin.CannotJoin,
-              ),
-            ),
-          ),
-        )
-
-        received.project.shortname.value should be("newproject")
-        received.project.shortcode.value should be(shortcode.toUpperCase) // upper case
-        received.project.longname.map(_.value) should contain("project longname")
-        received.project.description should be(
-          Seq(StringLiteralV2.from(value = "project description", language = Some("en"))),
-        )
-        newProjectIri.set(received.project.id.value)
-
-        // Check Administrative Permissions
-        val receivedApAdmin =
-          UnsafeZioRun.runOrThrow(
-            ZIO.serviceWithZIO[PermissionsResponder](_.getPermissionsApByProjectIri(received.project.id.value)),
+  override val e2eSpec = suite("The ProjectRestService")(
+    suite("used to query for project information")(
+      test("return information for every project excluding system projects") {
+        projectRestService(_.listAllProjects()).map { received =>
+          val projectIris = received.projects.map(_.id)
+          assertTrue(
+            projectIris.contains(imagesProject.id),
+            projectIris.contains(incunabulaProject.id),
+            !projectIris.contains(systemProjectIri),
+            !projectIris.contains(defaultSharedOntologiesProject.id),
           )
-
-        val hasAPForProjectAdmin = receivedApAdmin.administrativePermissions.filter {
-          (ap: AdministrativePermissionADM) =>
-            ap.forProject == received.project.id.value && ap.forGroup == KnoraGroupRepo.builtIn.ProjectAdmin.id.value &&
-            ap.hasPermissions.equals(
-              Set(
-                PermissionADM.from(Permission.Administrative.ProjectAdminAll),
-                PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
-              ),
-            )
         }
-
-        hasAPForProjectAdmin.size shouldBe 1
-
-        // Check Administrative Permission of ProjectMember
-        val hasAPForProjectMember = receivedApAdmin.administrativePermissions.filter {
-          (ap: AdministrativePermissionADM) =>
-            ap.forProject == received.project.id.value && ap.forGroup == KnoraGroupRepo.builtIn.ProjectMember.id.value &&
-            ap.hasPermissions.equals(Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)))
-        }
-        hasAPForProjectMember.size shouldBe 1
-
-        // Check Default Object Access permissions
-        val receivedDoaps = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[PermissionsResponder](
-            _.getPermissionsDaopByProjectIri(received.project.id),
+      },
+      test("return information about a project identified by IRI") {
+        projectRestService(_.findById(incunabulaProject.id)).map(actual =>
+          assertTrue(actual == ProjectGetResponse(toExternal(incunabulaProject))),
+        )
+      },
+      test("return information about a project identified by shortname") {
+        projectRestService(_.findByShortname(incunabulaProject.shortname)).map(actual =>
+          assertTrue(actual == ProjectGetResponse(toExternal(incunabulaProject))),
+        )
+      },
+      test("return 'NotFoundException' when the project IRI is unknown") {
+        projectRestService(_.findById(notExistingProjectIri)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[NotFoundException](s"Project '$notExistingProjectIri' not found."),
           ),
         )
-
-        // Check Default Object Access permission of ProjectAdmin
-        val hasDOAPForProjectAdmin = receivedDoaps.defaultObjectAccessPermissions.filter {
-          (doap: DefaultObjectAccessPermissionADM) =>
-            doap.forProject == received.project.id.value && doap.forGroup.contains(
-              KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
-            ) &&
-            doap.hasPermissions.equals(
-              Set(
-                PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
-                PermissionADM.from(Permission.ObjectAccess.Delete, KnoraGroupRepo.builtIn.ProjectMember.id.value),
-              ),
-            )
-        }
-        hasDOAPForProjectAdmin.size shouldBe 1
-
-        // Check Default Object Access permission of ProjectMember
-        val hasDOAPForProjectMember = receivedDoaps.defaultObjectAccessPermissions.filter {
-          (doap: DefaultObjectAccessPermissionADM) =>
-            doap.forProject == received.project.id.value && doap.forGroup.contains(
-              KnoraGroupRepo.builtIn.ProjectMember.id.value,
-            ) &&
-            doap.hasPermissions.equals(
-              Set(
-                PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
-                PermissionADM.from(Permission.ObjectAccess.Delete, KnoraGroupRepo.builtIn.ProjectMember.id.value),
-              ),
-            )
-        }
-        hasDOAPForProjectMember.size shouldBe 1
-      }
-
-      "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {
-        val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.createProject(SharedTestDataADM.rootUser)(
-              ProjectCreateRequest(
-                shortname = Shortname.unsafeFrom("newproject2"),
-                shortcode = Shortcode.unsafeFrom("1112"),
-                longname = Some(Longname.unsafeFrom("project longname")),
-                description = List(
-                  Description.unsafeFrom(StringLiteralV2.from(value = "project description", language = Some("en"))),
+      },
+      test("return 'NotFoundException' when the project shortname is unknown") {
+        projectRestService(_.findByShortname(Shortname.unsafeFrom("wrongshortname"))).exit.map(
+          assert(_)(E2EZSpec.failsWithMessageEqualTo[NotFoundException](s"Project 'wrongshortname' not found.")),
+        )
+      },
+      test("return 'NotFoundException' when the project shortcode is unknown") {
+        projectRestService(_.findByShortcode(Shortcode.unsafeFrom("9999"))).exit.map(
+          assert(_)(E2EZSpec.failsWithMessageEqualTo[NotFoundException](s"Project '9999' not found.")),
+        )
+      },
+    ),
+    suite("used to query project's restricted view settings")(
+      test("return restricted view settings using project IRI") {
+        projectRestService(_.getProjectRestrictedViewSettingsById(imagesProject.id)).map(actual =>
+          assertTrue(
+            actual == ProjectRestrictedViewSettingsGetResponseADM.from(RestrictedView.Size.unsafeFrom("!512,512")),
+          ),
+        )
+      },
+      test("return restricted view settings using project SHORTNAME") {
+        projectRestService(_.getProjectRestrictedViewSettingsByShortname(imagesProject.shortname)).map(actual =>
+          assertTrue(
+            actual == ProjectRestrictedViewSettingsGetResponseADM.from(RestrictedView.Size.unsafeFrom("!512,512")),
+          ),
+        )
+      },
+      test("return restricted view settings using project SHORTCODE") {
+        projectRestService(_.getProjectRestrictedViewSettingsByShortcode(imagesProject.shortcode)).map(actual =>
+          assertTrue(
+            actual == ProjectRestrictedViewSettingsGetResponseADM.from(RestrictedView.Size.unsafeFrom("!512,512")),
+          ),
+        )
+      },
+      test("return 'NotFoundException' when the project IRI is unknown") {
+        projectRestService(_.getProjectRestrictedViewSettingsById(notExistingProjectIri)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[NotFoundException](s"Project with id $notExistingProjectIri not found."),
+          ),
+        )
+      },
+      test("return 'NotFoundException' when the project SHORTCODE is unknown") {
+        projectRestService(_.getProjectRestrictedViewSettingsByShortcode(Shortcode.unsafeFrom("9999"))).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[NotFoundException](s"Project with shortcode 9999 not found."),
+          ),
+        )
+      },
+      test("return 'NotFoundException' when the project SHORTNAME is unknown") {
+        projectRestService(
+          _.getProjectRestrictedViewSettingsByShortname(Shortname.unsafeFrom("wrongshortname")),
+        ).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[NotFoundException](s"Project with shortname wrongshortname not found."),
+          ),
+        )
+      },
+    ),
+    suite("used to modify project information")(
+      test("CREATE a project and return the project info if the supplied shortname is unique") {
+        val shortcode = "111c"
+        val createReq = ProjectCreateRequest(
+          None,
+          Shortname.unsafeFrom("newproject"),
+          Shortcode.unsafeFrom(shortcode),
+          Some(Longname.unsafeFrom("project longname")),
+          List(Description.unsafeFrom(StringLiteralV2.from("project description", EN))),
+          List(Keyword.unsafeFrom("keywords")),
+          Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+          Status.Active,
+          SelfJoin.CannotJoin,
+        )
+        for {
+          project <- projectRestService(_.createProject(rootUser)(createReq)).map(_.project)
+          _        = newProjectIri.set(project.id.value)
+          // Check Administrative Permissions
+          receivedApAdmin <- ZIO.serviceWithZIO[PermissionsResponder](_.getPermissionsApByProjectIri(project.id.value))
+          // Check Default Object Access permissions
+          receivedDoaps <- ZIO.serviceWithZIO[PermissionsResponder](_.getPermissionsDaopByProjectIri(project.id))
+        } yield {
+          val hasAPForProjectAdmin =
+            receivedApAdmin.administrativePermissions.filter { (ap: AdministrativePermissionADM) =>
+              ap.forProject == project.id.value && ap.forGroup == KnoraGroupRepo.builtIn.ProjectAdmin.id.value &&
+              ap.hasPermissions.equals(
+                Set(
+                  PermissionADM.from(Permission.Administrative.ProjectAdminAll),
+                  PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
                 ),
-                keywords = List("keywords").map(Keyword.unsafeFrom),
-                logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-                status = Status.Active,
-                selfjoin = SelfJoin.CannotJoin,
-              ),
+              )
+            }
+          // Check Administrative Permission of ProjectMember
+          val hasAPForProjectMember =
+            receivedApAdmin.administrativePermissions.filter { (ap: AdministrativePermissionADM) =>
+              ap.forProject == project.id.value && ap.forGroup == KnoraGroupRepo.builtIn.ProjectMember.id.value &&
+              ap.hasPermissions.equals(Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)))
+            }
+
+          // Check Default Object Access permission of ProjectAdmin
+          val hasDOAPForProjectAdmin =
+            receivedDoaps.defaultObjectAccessPermissions.filter { (doap: DefaultObjectAccessPermissionADM) =>
+              doap.forProject == project.id.value && doap.forGroup.contains(
+                KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
+              ) &&
+              doap.hasPermissions.equals(
+                Set(
+                  PermissionADM
+                    .from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
+                  PermissionADM.from(Permission.ObjectAccess.Delete, KnoraGroupRepo.builtIn.ProjectMember.id.value),
+                ),
+              )
+            }
+
+          // Check Default Object Access permission of ProjectMember
+          val hasDOAPForProjectMember =
+            receivedDoaps.defaultObjectAccessPermissions.filter { (doap: DefaultObjectAccessPermissionADM) =>
+              doap.forProject == project.id.value && doap.forGroup.contains(
+                KnoraGroupRepo.builtIn.ProjectMember.id.value,
+              ) &&
+              doap.hasPermissions.equals(
+                Set(
+                  PermissionADM
+                    .from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
+                  PermissionADM.from(Permission.ObjectAccess.Delete, KnoraGroupRepo.builtIn.ProjectMember.id.value),
+                ),
+              )
+            }
+          assertTrue(
+            project.shortname.value == "newproject",
+            project.shortcode.value == shortcode.toUpperCase,
+            project.longname.map(_.value).contains("project longname"),
+            project.description == Seq(StringLiteralV2.from(value = "project description", language = Some("en"))),
+            hasAPForProjectAdmin.size == 1,
+            hasAPForProjectMember.size == 1,
+            hasDOAPForProjectAdmin.size == 1,
+            hasDOAPForProjectMember.size == 1,
+          )
+        }
+      },
+      test("CREATE a project and return the project info if the supplied shortname and shortcode is unique") {
+        val createRequest = ProjectCreateRequest(
+          None,
+          Shortname.unsafeFrom("newproject2"),
+          Shortcode.unsafeFrom("1112"),
+          Some(Longname.unsafeFrom("project longname")),
+          List(Description.unsafeFrom(StringLiteralV2.from("project description", EN))),
+          List(Keyword.unsafeFrom("keywords")),
+          Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+          Status.Active,
+          SelfJoin.CannotJoin,
+        )
+        projectRestService(_.createProject(rootUser)(createRequest))
+          .map(_.project)
+          .map(project =>
+            assertTrue(
+              project.shortname.value == "newproject2",
+              project.shortcode.value == "1112",
+              project.longname.map(_.value).contains("project longname"),
+              project.description == Seq(StringLiteralV2.from("project description", EN)),
             ),
-          ),
-        )
-
-        received.project.shortname.value should be("newproject2")
-        received.project.shortcode.value should be("1112")
-        received.project.longname.map(_.value) should contain("project longname")
-        received.project.description should be(
-          Seq(StringLiteralV2.from(value = "project description", language = Some("en"))),
-        )
-      }
-
-      "CREATE a project that its info has special characters" in {
+          )
+      },
+      test("CREATE a project that its info has special characters") {
         val longnameWithSpecialCharacter    = """New "Longname""""
         val descriptionWithSpecialCharacter = """project "description""""
         val keywordWithSpecialCharacter     = """new "keyword""""
-        val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.createProject(SharedTestDataADM.rootUser)(
-              ProjectCreateRequest(
-                shortname = Shortname.unsafeFrom("project_with_char"),
-                shortcode = Shortcode.unsafeFrom("1312"),
-                longname = Some(Longname.unsafeFrom(longnameWithSpecialCharacter)),
-                description = List(
-                  Description.unsafeFrom(
-                    StringLiteralV2.from(value = descriptionWithSpecialCharacter, language = Some("en")),
+        val createRequest = ProjectCreateRequest(
+          None,
+          Shortname.unsafeFrom("project_with_char"),
+          Shortcode.unsafeFrom("1312"),
+          Some(Longname.unsafeFrom(longnameWithSpecialCharacter)),
+          List(
+            Description.unsafeFrom(
+              StringLiteralV2.from(value = descriptionWithSpecialCharacter, language = Some("en")),
+            ),
+          ),
+          List(keywordWithSpecialCharacter).map(Keyword.unsafeFrom),
+          Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+          Status.Active,
+          SelfJoin.CannotJoin,
+        )
+        projectRestService(_.createProject(rootUser)(createRequest))
+          .map(received =>
+            assertTrue(
+              received.project.longname
+                .map(_.value)
+                .contains(Iri.fromSparqlEncodedString(longnameWithSpecialCharacter)),
+              received.project.description ==
+                Seq(
+                  StringLiteralV2.from(
+                    value = Iri.fromSparqlEncodedString(descriptionWithSpecialCharacter),
+                    language = Some("en"),
                   ),
                 ),
-                keywords = List(keywordWithSpecialCharacter).map(Keyword.unsafeFrom),
-                logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-                status = Status.Active,
-                selfjoin = SelfJoin.CannotJoin,
+              received.project.keywords.contains(Iri.fromSparqlEncodedString(keywordWithSpecialCharacter)),
+            ),
+          )
+      },
+      test("return a 'DuplicateValueException' during creation if the supplied project shortname is not unique") {
+        val createRequest = ProjectCreateRequest(
+          None,
+          Shortname.unsafeFrom("newproject"),
+          Shortcode.unsafeFrom("111D"),
+          Some(Longname.unsafeFrom("project longname")),
+          List(Description.unsafeFrom(StringLiteralV2.from(value = "description", language = Some("en")))),
+          List("keywords").map(Keyword.unsafeFrom),
+          Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+          Status.Active,
+          SelfJoin.CannotJoin,
+        )
+        projectRestService(_.createProject(rootUser)(createRequest)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageContaining[DuplicateValueException](
+              "Project with the shortname: 'newproject' already exists",
+            ),
+          ),
+        )
+      },
+      test(
+        "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not",
+      ) {
+        val createRequest = ProjectCreateRequest(
+          None,
+          Shortname.unsafeFrom("newproject3"),
+          Shortcode.unsafeFrom("111C"),
+          Some(Longname.unsafeFrom("project longname")),
+          List(Description.unsafeFrom(StringLiteralV2.from(value = "description", language = Some("en")))),
+          List("keywords").map(Keyword.unsafeFrom),
+          Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+          Status.Active,
+          SelfJoin.CannotJoin,
+        )
+        projectRestService(_.createProject(rootUser)(createRequest)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageContaining[DuplicateValueException](
+              "Project with the shortcode: '111C' already exists",
+            ),
+          ),
+        )
+      },
+      test("UPDATE a project") {
+        val updateRequest = ProjectUpdateRequest(
+          Some(Longname.unsafeFrom("updated project longname")),
+          Some(
+            List(
+              Description.unsafeFrom(
+                StringLiteralV2.from("""updated project description with "quotes" and <html tags>""", Some("en")),
               ),
             ),
           ),
+          Some(List("updated", "keywords").map(Keyword.unsafeFrom)),
+          Some(Logo.unsafeFrom("/fu/bar/baz-updated.jpg")),
+          Some(Status.Active),
+          Some(SelfJoin.CanJoin),
         )
-
-        received.project.longname.map(_.value) should contain(Iri.fromSparqlEncodedString(longnameWithSpecialCharacter))
-        received.project.description should be(
-          Seq(
-            StringLiteralV2.from(
-              value = Iri.fromSparqlEncodedString(descriptionWithSpecialCharacter),
-              language = Some("en"),
+        projectRestService(_.updateProject(newProjectIri.asProjectIri, updateRequest, rootUser)).map(received =>
+          assertTrue(
+            received.project.shortname.value == "newproject",
+            received.project.shortcode.value == "111C",
+            received.project.longname.map(_.value) == Some("updated project longname"),
+            received.project.description ==
+              Seq(
+                StringLiteralV2.from(
+                  value = """updated project description with "quotes" and <html tags>""",
+                  language = Some("en"),
+                ),
+              ),
+            received.project.keywords.sorted == Seq("updated", "keywords").sorted,
+            received.project.logo.map(_.value) == Some("/fu/bar/baz-updated.jpg"),
+            received.project.status == Status.Active,
+            received.project.selfjoin == SelfJoin.CanJoin,
+          ),
+        )
+      },
+      test("return 'NotFound' if a not existing project IRI is submitted during update") {
+        val updateRequest = ProjectUpdateRequest(longname = Some(Longname.unsafeFrom("longname")))
+        projectRestService(_.updateProject(notExistingProjectIri, updateRequest, rootUser)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[NotFoundException](s"Project '$notExistingProjectIri' not found."),
+          ),
+        )
+      },
+    ),
+    suite("used to query members")(
+      test("return all members of a project identified by IRI") {
+        projectRestService(_.getProjectMembersById(rootUser, imagesProject.id)).map { actual =>
+          assert(actual.members.map(_.id))(
+            hasSameElements(Seq(imagesUser01.id, imagesUser02.id, multiuserUser.id, imagesReviewerUser.id)),
+          )
+        }
+      },
+      test("return all members of a project identified by shortname") {
+        projectRestService(_.getProjectMembersByShortname(rootUser, imagesProject.shortname)).map { actual =>
+          assert(actual.members.map(_.id))(
+            hasSameElements(Seq(imagesUser01.id, imagesUser02.id, multiuserUser.id, imagesReviewerUser.id)),
+          )
+        }
+      },
+      test("return all members of a project identified by shortcode") {
+        projectRestService(_.getProjectMembersByShortcode(rootUser, imagesProject.shortcode)).map { actual =>
+          assert(actual.members.map(_.id))(
+            hasSameElements(Seq(imagesUser01.id, imagesUser02.id, multiuserUser.id, imagesReviewerUser.id)),
+          )
+        }
+      },
+      test("return 'Forbidden' when the project IRI is unknown (project membership)") {
+        projectRestService(_.getProjectMembersById(rootUser, notExistingProjectIri)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[ForbiddenException](
+              s"Project with id $notExistingProjectIri not found.",
             ),
           ),
         )
-        received.project.keywords should contain(Iri.fromSparqlEncodedString(keywordWithSpecialCharacter))
-      }
-
-      "return a 'DuplicateValueException' during creation if the supplied project shortname is not unique" in {
-        val exit = UnsafeZioRun.run(
-          ProjectRestService(
-            _.createProject(SharedTestDataADM.rootUser)(
-              ProjectCreateRequest(
-                shortname = Shortname.unsafeFrom("newproject"),
-                shortcode = Shortcode.unsafeFrom("111D"),
-                longname = Some(Longname.unsafeFrom("project longname")),
-                description =
-                  List(Description.unsafeFrom(StringLiteralV2.from(value = "description", language = Some("en")))),
-                keywords = List("keywords").map(Keyword.unsafeFrom),
-                logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-                status = Status.Active,
-                selfjoin = SelfJoin.CannotJoin,
+      },
+      test("return 'Forbidden' when the project shortname is unknown (project membership)") {
+        projectRestService(_.getProjectMembersByShortname(rootUser, Shortname.unsafeFrom("wrongshortname"))).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[ForbiddenException](
+              s"Project with shortname wrongshortname not found.",
+            ),
+          ),
+        )
+      },
+      test("return 'Forbidden' when the project shortcode is unknown (project membership)") {
+        projectRestService(_.getProjectMembersByShortcode(rootUser, Shortcode.unsafeFrom("9999"))).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[ForbiddenException](
+              s"Project with shortcode 9999 not found.",
+            ),
+          ),
+        )
+      },
+      test("return all project admin members of a project identified by IRI") {
+        projectRestService(_.getProjectAdminMembersById(rootUser, imagesProject.id)).map { actual =>
+          assert(actual.members.map(_.id))(hasSameElements(Seq(imagesUser01.id, multiuserUser.id)))
+        }
+      },
+      test("return all project admin members of a project identified by shortname") {
+        projectRestService(_.getProjectAdminMembersByShortname(rootUser, imagesProject.shortname)).map { actual =>
+          assert(actual.members.map(_.id))(hasSameElements(Seq(imagesUser01.id, multiuserUser.id)))
+        }
+      },
+      test("return all project admin members of a project identified by shortcode") {
+        projectRestService(_.getProjectAdminMembersByShortcode(rootUser, imagesProject.shortcode)).map { actual =>
+          assert(actual.members.map(_.id))(hasSameElements(Seq(imagesUser01.id, multiuserUser.id)))
+        }
+      },
+      test("return 'Forbidden' when the project IRI is unknown (project admin membership)") {
+        projectRestService(_.getProjectAdminMembersById(rootUser, notExistingProjectIri)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[ForbiddenException](
+              s"Project with id $notExistingProjectIri not found.",
+            ),
+          ),
+        )
+      },
+      test("return 'Forbidden' when the project shortname is unknown (project admin membership)") {
+        projectRestService(_.getProjectAdminMembersByShortname(rootUser, Shortname.unsafeFrom("wrongshortname"))).exit
+          .map(
+            assert(_)(
+              E2EZSpec.failsWithMessageEqualTo[ForbiddenException](
+                s"Project with shortname wrongshortname not found.",
               ),
             ),
-          ),
-        )
-        assertFailsWithA[DuplicateValueException](exit, s"Project with the shortname: 'newproject' already exists")
-      }
-
-      "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not" in {
-        val exit = UnsafeZioRun.run(
-          ProjectRestService(
-            _.createProject(SharedTestDataADM.rootUser)(
-              ProjectCreateRequest(
-                shortname = Shortname.unsafeFrom("newproject3"),
-                shortcode = Shortcode.unsafeFrom("111C"),
-                longname = Some(Longname.unsafeFrom("project longname")),
-                description =
-                  List(Description.unsafeFrom(StringLiteralV2.from(value = "description", language = Some("en")))),
-                keywords = List("keywords").map(Keyword.unsafeFrom),
-                logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-                status = Status.Active,
-                selfjoin = SelfJoin.CannotJoin,
-              ),
+          )
+      },
+      test("return 'Forbidden' when the project shortcode is unknown (project admin membership)") {
+        projectRestService(_.getProjectMembersByShortcode(rootUser, Shortcode.unsafeFrom("9999"))).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[ForbiddenException](
+              s"Project with shortcode 9999 not found.",
             ),
           ),
         )
-        assertFailsWithA[DuplicateValueException](exit, s"Project with the shortcode: '111C' already exists")
-      }
-
-      "UPDATE a project" in {
-        val iri             = ProjectIri.unsafeFrom(newProjectIri.get)
-        val updatedLongname = Longname.unsafeFrom("updated project longname")
-        val updatedDescription = List(
-          Description.unsafeFrom(
-            StringLiteralV2.from("""updated project description with "quotes" and <html tags>""", Some("en")),
-          ),
-        )
-        val updatedKeywords = List("updated", "keywords").map(Keyword.unsafeFrom)
-        val updatedLogo     = Logo.unsafeFrom("/fu/bar/baz-updated.jpg")
-        val projectStatus   = Status.Active
-        val selfJoin        = SelfJoin.CanJoin
-
-        val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.updateProject(
-              iri,
-              ProjectUpdateRequest(
-                longname = Some(updatedLongname),
-                description = Some(updatedDescription),
-                keywords = Some(updatedKeywords),
-                logo = Some(updatedLogo),
-                status = Some(projectStatus),
-                selfjoin = Some(selfJoin),
-              ),
-              SharedTestDataADM.rootUser,
+      },
+    ),
+    suite("used to query keywords")(
+      test("return all unique keywords for all projects") {
+        projectRestService(_.listAllKeywords())
+          .map(received => assertTrue(received.keywords.size == 21))
+      },
+      test("return all keywords for a single project") {
+        projectRestService(_.getKeywordsByProjectIri(incunabulaProject.id))
+          .map(received => assertTrue(received.keywords == incunabulaProject.keywords))
+      },
+      test("return empty list for a project without keywords") {
+        projectRestService(_.getKeywordsByProjectIri(dokubibProject.id))
+          .map(received => assertTrue(received.keywords == Seq.empty[String]))
+      },
+      test("return 'NotFound' when the project IRI is unknown") {
+        projectRestService(_.getKeywordsByProjectIri(notExistingProjectIri)).exit.map(exit =>
+          assert(exit)(
+            E2EZSpec.failsWithMessageEqualTo[NotFoundException](
+              s"Project '$notExistingProjectIri' not found.",
             ),
           ),
         )
-        received.project.shortname.value should be("newproject")
-        received.project.shortcode.value should be("111C")
-        received.project.longname.map(_.value) should be(Some("updated project longname"))
-        received.project.description should be(
-          Seq(
-            StringLiteralV2.from(
-              value = """updated project description with "quotes" and <html tags>""",
-              language = Some("en"),
-            ),
-          ),
-        )
-        received.project.keywords.sorted should be(Seq("updated", "keywords").sorted)
-        received.project.logo.map(_.value) should be(Some("/fu/bar/baz-updated.jpg"))
-        received.project.status should be(Status.Active)
-        received.project.selfjoin should be(SelfJoin.CanJoin)
-      }
-
-      "return 'NotFound' if a not existing project IRI is submitted during update" in {
-        val longname = Longname.unsafeFrom("longname")
-        val exit = UnsafeZioRun.run(
-          ProjectRestService(
-            _.updateProject(
-              notExistingProjectIri,
-              ProjectUpdateRequest(longname = Some(longname)),
-              SharedTestDataADM.rootUser,
-            ),
-          ),
-        )
-
-        assertFailsWithA[NotFoundException](exit, s"Project '${notExistingProjectIri.value}' not found.")
-      }
-    }
-
-    "used to query members" should {
-      "return all members of a project identified by IRI" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.getProjectMembersById(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.id),
-          ),
-        )
-
-        val members = actual.members
-        members.size should be(4)
-        members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.id,
-          SharedTestDataADM.imagesUser02.id,
-          SharedTestDataADM.multiuserUser.id,
-          SharedTestDataADM.imagesReviewerUser.id,
-        )
-      }
-
-      "return all members of a project identified by shortname" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.getProjectMembersByShortname(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.shortname),
-          ),
-        )
-
-        val members = actual.members
-        members.size should be(4)
-        members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.id,
-          SharedTestDataADM.imagesUser02.id,
-          SharedTestDataADM.multiuserUser.id,
-          SharedTestDataADM.imagesReviewerUser.id,
-        )
-      }
-
-      "return all members of a project identified by shortcode" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.getProjectMembersByShortcode(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.shortcode),
-          ),
-        )
-
-        val members = actual.members
-        members.size should be(4)
-        members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.id,
-          SharedTestDataADM.imagesUser02.id,
-          SharedTestDataADM.multiuserUser.id,
-          SharedTestDataADM.imagesReviewerUser.id,
-        )
-      }
-
-      "return 'Forbidden' when the project IRI is unknown (project membership)" in {
-        val exit = UnsafeZioRun.run(
-          ProjectRestService(_.getProjectMembersById(SharedTestDataADM.rootUser, notExistingProjectIri)),
-        )
-        assertFailsWithA[ForbiddenException](exit, s"Project with id ${notExistingProjectIri.value} not found.")
-      }
-
-      "return 'Forbidden' when the project shortname is unknown (project membership)" in {
-        val exit = UnsafeZioRun.run(
-          ProjectRestService(
-            _.getProjectMembersByShortname(SharedTestDataADM.rootUser, Shortname.unsafeFrom("wrongshortname")),
-          ),
-        )
-        assertFailsWithA[ForbiddenException](exit, s"Project with shortname wrongshortname not found.")
-      }
-
-      "return 'Forbidden' when the project shortcode is unknown (project membership)" in {
-        val exit = UnsafeZioRun.run(
-          ProjectRestService(
-            _.getProjectMembersByShortcode(SharedTestDataADM.rootUser, Shortcode.unsafeFrom("9999")),
-          ),
-        )
-        assertFailsWithA[ForbiddenException](exit, s"Project with shortcode 9999 not found.")
-      }
-
-      "return all project admin members of a project identified by IRI" in {
-        val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.getProjectAdminMembersById(SharedTestDataADM.rootUser, SharedTestDataADM.imagesProject.id),
-          ),
-        )
-
-        val members = received.members
-        members.size should be(2)
-        members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.id,
-          SharedTestDataADM.multiuserUser.id,
-        )
-      }
-
-      "return all project admin members of a project identified by shortname" in {
-        val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.getProjectAdminMembersByShortname(
-              SharedTestDataADM.rootUser,
-              SharedTestDataADM.imagesProject.shortname,
-            ),
-          ),
-        )
-
-        val members = received.members
-        members.size should be(2)
-        members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.id,
-          SharedTestDataADM.multiuserUser.id,
-        )
-      }
-
-      "return all project admin members of a project identified by shortcode" in {
-        val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.getProjectAdminMembersByShortcode(
-              SharedTestDataADM.rootUser,
-              SharedTestDataADM.imagesProject.shortcode,
-            ),
-          ),
-        )
-
-        val members = received.members
-        members.size should be(2)
-        members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.id,
-          SharedTestDataADM.multiuserUser.id,
-        )
-      }
-
-      "return 'Forbidden' when the project IRI is unknown (project admin membership)" in {
-        val exit = UnsafeZioRun.run(
-          ProjectRestService(_.getProjectAdminMembersById(SharedTestDataADM.rootUser, notExistingProjectIri)),
-        )
-        assertFailsWithA[ForbiddenException](exit, s"Project with id ${notExistingProjectIri.value} not found.")
-      }
-
-      "return 'Forbidden' when the project shortname is unknown (project admin membership)" in {
-        val exit = UnsafeZioRun.run(
-          ProjectRestService(
-            _.getProjectAdminMembersByShortname(SharedTestDataADM.rootUser, Shortname.unsafeFrom("wrongshortname")),
-          ),
-        )
-        assertFailsWithA[ForbiddenException](exit, s"Project with shortname wrongshortname not found.")
-      }
-
-      "return 'Forbidden' when the project shortcode is unknown (project admin membership)" in {
-        val exit = UnsafeZioRun.run(
-          ProjectRestService(
-            _.getProjectMembersByShortcode(SharedTestDataADM.rootUser, Shortcode.unsafeFrom("9999")),
-          ),
-        )
-        assertFailsWithA[ForbiddenException](exit, s"Project with shortcode 9999 not found.")
-      }
-    }
-
-    "used to query keywords" should {
-      "return all unique keywords for all projects" in {
-        val received = UnsafeZioRun.runOrThrow(ProjectRestService(_.listAllKeywords()))
-        received.keywords.size should be(21)
-      }
-
-      "return all keywords for a single project" in {
-        val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(
-            _.getKeywordsByProjectIri(SharedTestDataADM.incunabulaProject.id),
-          ),
-        )
-        received.keywords should be(SharedTestDataADM.incunabulaProject.keywords)
-      }
-
-      "return empty list for a project without keywords" in {
-        val received = UnsafeZioRun.runOrThrow(
-          ProjectRestService(_.getKeywordsByProjectIri(SharedTestDataADM.dokubibProject.id)),
-        )
-        received.keywords should be(Seq.empty[String])
-      }
-
-      "return 'NotFound' when the project IRI is unknown" in {
-        val exit = UnsafeZioRun.run(ProjectRestService(_.getKeywordsByProjectIri(notExistingProjectIri)))
-        assertFailsWithA[NotFoundException](exit, s"Project '${notExistingProjectIri.value}' not found.")
-      }
-    }
-  }
+      },
+    ),
+  )
 }
