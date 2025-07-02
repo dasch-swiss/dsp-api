@@ -47,6 +47,13 @@ final case class TestApiClient(
     f(request).send(backend)
   }
 
+  def getAsString(
+    relativeUri: Uri,
+    f: Request[Either[String, String]] => Request[Either[String, String]],
+  ): Task[Response[Either[String, String]]] =
+    val request: Request[Either[String, String]] = basicRequest.get(relativeUri).response(asString)
+    f(request).send(backend)
+
   def getJson[A: JsonDecoder](relativeUri: Uri): Task[Response[Either[String, A]]] =
     getJson(relativeUri, (r: Request[Either[String, A]]) => r)
 
@@ -173,6 +180,12 @@ object TestApiClient {
       .flatMap(_.assert200)
       .map(_.token)
 
+  def getAsString(
+    relativeUri: Uri,
+    f: Request[Either[String, String]] => Request[Either[String, String]],
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.getAsString(relativeUri, f))
+
   def deleteJson[A: JsonDecoder](
     relativeUri: Uri,
     user: User,
@@ -202,6 +215,9 @@ object TestApiClient {
 
   def getJsonLd(relativeUri: Uri): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri))
+
+  def getJsonLdDocument(relativeUri: Uri): ZIO[TestApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.getJsonLdDocument(relativeUri))
 
   def getJsonLd(relativeUri: Uri, user: User): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri, user))

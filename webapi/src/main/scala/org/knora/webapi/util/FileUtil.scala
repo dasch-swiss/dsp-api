@@ -26,6 +26,7 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.messages.util.rdf.RdfModel
 
 /**
  * Functions for reading and writing files.
@@ -56,8 +57,9 @@ object FileUtil {
     }
   }
 
-  def readTextFileAsJsonLD(file: Path): JsonLDDocument =
-    JsonLDUtil.parseJsonLD(readTextFile(file))
+  def readAsJsonLd(file: Path): JsonLDDocument = JsonLDUtil.parseJsonLD(readTextFile(file))
+  def readAsRdfXml(file: Path): RdfModel       = RdfModel.fromRdfXml(readTextFile(file))
+  def readAsTurtle(file: Path): RdfModel       = RdfModel.fromTurtle(readTextFile(file))
 
   /**
    * Reads a file from the classpath into a string.

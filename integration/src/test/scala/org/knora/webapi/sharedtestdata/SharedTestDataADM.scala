@@ -214,6 +214,11 @@ object SharedTestDataADM {
   val imagesProjectShortcode: Shortcode = Shortcode.unsafeFrom("00FF")
   val imagesProjectShortname: Shortname = Shortname.unsafeFrom("images")
 
+  val imagesRdfData: RdfDataObject = RdfDataObject(
+    path = "test_data/project_data/images-demo-data.ttl",
+    name = "http://www.knora.org/data/00FF/images",
+  )
+
   /* represents 'user01' as found in admin-data.ttl  */
   def imagesUser01: User =
     User(
