@@ -104,7 +104,7 @@ final case class ListsEndpointsHandlers(
 
   private val putListsByIriPositionHandler =
     SecuredEndpointHandler[(ListIri, ListChangePositionRequest), NodePositionChangeResponseADM](
-      listsEndpoints.putListsByIriPosistion,
+      listsEndpoints.putListsByIriPosition,
       (user: User) => { case (iri: ListIri, request: ListChangePositionRequest) =>
         listRestService.nodePositionChangeRequest(iri, request, user)
       },
