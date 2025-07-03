@@ -94,7 +94,7 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) {
     .in(jsonBody[ListChangeCommentsRequest])
     .out(jsonBody[NodeInfoGetResponseADM])
 
-  val putListsByIriPosistion = baseEndpoints.securedEndpoint.put
+  val putListsByIriPosition = baseEndpoints.securedEndpoint.put
     .in(base / listIriPathVar / "position")
     .in(jsonBody[ListChangePositionRequest])
     .out(jsonBody[NodePositionChangeResponseADM])
@@ -125,7 +125,7 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) {
       putListsByIriName,
       putListsByIriLabels,
       putListsByIriComments,
-      putListsByIriPosistion,
+      putListsByIriPosition,
       putListsByIri,
       deleteListsByIri,
       deleteListsComment,
