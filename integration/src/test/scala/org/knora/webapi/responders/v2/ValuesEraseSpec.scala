@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
+import spray.json.*
 import zio.*
 import zio.test.*
 
@@ -342,7 +343,7 @@ final case class TestHelper(
 
   def createTextValueWithStandoff(resource: ActiveResource, textValueAsXml: String): Task[ActiveValue] =
     for {
-      textValueAsXmlEncoded <- ZIO.succeed(sf.toJsonEncodedString(textValueAsXml))
+      textValueAsXmlEncoded <- ZIO.succeed(JsString(textValueAsXml).compactPrint)
       jsonLd = s"""{
                   |  "@id" : "${resource.iri.toString}",
                   |  "@type" : "${ontologyIri.makeClass("Thing").toComplexSchema.toIri}",
@@ -374,7 +375,7 @@ final case class TestHelper(
     textValueAsXml: String,
   ): Task[ActiveValue] =
     for {
-      textValueAsXmlEncoded <- ZIO.succeed(sf.toJsonEncodedString(textValueAsXml))
+      textValueAsXmlEncoded <- ZIO.succeed(JsString(textValueAsXml).compactPrint)
       jsonLd = s"""{
                   |  "@id" : "${resource.iri.toString}",
                   |  "@type" : "${ontologyIri.makeClass("Thing").toComplexSchema.toIri}",
