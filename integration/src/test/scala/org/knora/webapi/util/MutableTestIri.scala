@@ -11,6 +11,7 @@ import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 
 /**
@@ -37,6 +38,7 @@ class MutableTestIri { self =>
   def get: IRI =
     maybeIri.getOrElse(throw TestIriException("This test could not be run because a previous test failed"))
 
+  def asListIri: ListIri                                       = ListIri.unsafeFrom(self.get)
   def asOntologyIri(implicit sf: StringFormatter): OntologyIri = OntologyIri.unsafeFrom(self.get.toSmartIri)
   def asProjectIri: ProjectIri                                 = ProjectIri.unsafeFrom(self.get)
   def asUserIri: UserIri                                       = UserIri.unsafeFrom(self.get)
