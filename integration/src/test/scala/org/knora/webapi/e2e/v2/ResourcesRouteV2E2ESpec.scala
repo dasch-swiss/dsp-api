@@ -15,6 +15,7 @@ import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
+import spray.json.JsString
 import spray.json.JsValue
 import spray.json.JsonParser
 import zio.durationInt
@@ -1630,7 +1631,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |  "@type" : "anything:Thing",
            |  "anything:hasRichtext" : {
            |    "@type" : "knora-api:TextValue",
-           |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(hamletXml)},
+           |    "knora-api:textValueAsXml" : ${JsString(hamletXml).compactPrint},
            |    "knora-api:textValueHasMapping" : {
            |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
            |    }
