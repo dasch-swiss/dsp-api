@@ -5,13 +5,14 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import zio.ZIO
+import zio.*
+import zio.test.*
 
 import scala.collection.mutable.ArrayBuffer
 
 import dsp.errors.AssertionException
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.E2EZSpec
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -20,44 +21,36 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
-class GravsearchToPrequeryTransformerSpec extends E2ESpec {
+object GravsearchToPrequeryTransformerSpec extends E2EZSpec {
 
-  implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-  private def transformQuery(query: String): SelectQuery = {
-    val inspectionRunner = for {
-      qt <- ZIO.service[QueryTraverser]
-      mr <- ZIO.service[MessageRelay]
-      sf <- ZIO.service[StringFormatter]
-    } yield GravsearchTypeInspectionRunner(qt, mr)(sf)
+  private val inspectionRunner = ZIO.serviceWithZIO[GravsearchTypeInspectionRunner]
+  private val queryTraverser   = ZIO.serviceWithZIO[QueryTraverser]
 
-    val preQueryZio = for {
-      constructQuery       <- ZIO.attempt(GravsearchParser.parseQuery(query))
-      constructClause       = constructQuery.constructClause
-      whereClause           = constructQuery.whereClause
-      querySchemaMaybe      = constructQuery.querySchema
-      sanitizedWhereClause <- GravsearchTypeInspectionUtil.removeTypeAnnotations(whereClause)
-      typeInspectionResult <- inspectionRunner.flatMap(_.inspectTypes(whereClause, anythingAdminUser))
-      _                    <- GravsearchQueryChecker.checkConstructClause(constructClause, typeInspectionResult)
-      querySchema          <- ZIO.fromOption(querySchemaMaybe).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-      transformer <- ZIO.attempt(
-                       new GravsearchToPrequeryTransformer(
-                         constructClause = constructClause,
-                         typeInspectionResult = typeInspectionResult,
-                         querySchema = querySchema,
-                         appConfig = appConfig,
-                       ),
-                     )
-      preQuery <-
-        ZIO.serviceWithZIO[QueryTraverser](
-          _.transformConstructToSelect(constructQuery.copy(whereClause = sanitizedWhereClause), transformer),
-        )
-    } yield preQuery
-    UnsafeZioRun.runOrThrow(preQueryZio)
-  }
+  private def transformQuery(
+    query: String,
+  ): ZIO[AppConfig & QueryTraverser & GravsearchTypeInspectionRunner, Throwable, SelectQuery] = for {
+    query                <- ZIO.attempt(GravsearchParser.parseQuery(query))
+    sanitizedWhereClause <- GravsearchTypeInspectionUtil.removeTypeAnnotations(query.whereClause)
+    typeInspectionResult <- inspectionRunner(_.inspectTypes(query.whereClause, anythingAdminUser))
+    _                    <- GravsearchQueryChecker.checkConstructClause(query.constructClause, typeInspectionResult)
+    querySchema          <- ZIO.fromOption(query.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
+    appConfig            <- ZIO.service[AppConfig]
+    transformer <- ZIO.attempt(
+                     new GravsearchToPrequeryTransformer(
+                       constructClause = query.constructClause,
+                       typeInspectionResult = typeInspectionResult,
+                       querySchema = querySchema,
+                       appConfig = appConfig,
+                     ),
+                   )
+    preQuery <- queryTraverser(
+                  _.transformConstructToSelect(query.copy(whereClause = sanitizedWhereClause), transformer),
+                )
+  } yield preQuery
 
   val inputQueryWithDateNonOptionalSortCriterion: String =
     """
@@ -2639,162 +2632,146 @@ class GravsearchToPrequeryTransformerSpec extends E2ESpec {
       |    FILTER knora-api:matchText(?text, "der")
       |}""".stripMargin
 
-  "The NonTriplestoreSpecificGravsearchToPrequeryGenerator object" should {
-
-    "transform an input query with an optional property criterion without removing the rdf:type statement" in {
-      val transformedQuery = transformQuery(queryWithOptional)
-      assert(transformedQuery === TransformedQueryWithOptional)
-    }
-
-    "transform an input query with a date as a non optional sort criterion" in {
-      val transformedQuery = transformQuery(inputQueryWithDateNonOptionalSortCriterion)
-      assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
-    }
-
-    "transform an input query with a date as a non optional sort criterion (submitted in complex schema)" in {
-      val transformedQuery = transformQuery(inputQueryWithDateNonOptionalSortCriterionComplex)
-      assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
-    }
-
-    "transform an input query with a date as non optional sort criterion and a filter" in {
-      val transformedQuery = transformQuery(inputQueryWithDateNonOptionalSortCriterionAndFilter)
-      assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
-    }
-
-    "transform an input query with a date as non optional sort criterion and a filter (submitted in complex schema)" in {
-      val transformedQuery = transformQuery(inputQueryWithDateNonOptionalSortCriterionAndFilterComplex)
-      assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
-    }
-
-    "transform an input query with a date as an optional sort criterion" in {
-      val transformedQuery = transformQuery(inputQueryWithDateOptionalSortCriterion)
-      assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
-    }
-
-    "transform an input query with a date as an optional sort criterion (submitted in complex schema)" in {
-      val transformedQuery = transformQuery(inputQueryWithDateOptionalSortCriterionComplex)
-      assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
-    }
-
-    "transform an input query with a date as an optional sort criterion and a filter" in {
-      val transformedQuery = transformQuery(inputQueryWithDateOptionalSortCriterionAndFilter)
-      assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
-    }
-
-    "transform an input query with a date as an optional sort criterion and a filter (submitted in complex schema)" in {
-      val transformedQuery = transformQuery(inputQueryWithDateOptionalSortCriterionAndFilterComplex)
-      assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
-    }
-
-    "transform an input query with a decimal as an optional sort criterion" in {
-      val transformedQuery = transformQuery(inputQueryWithDecimalOptionalSortCriterion)
-      assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
-    }
-
-    "transform an input query with a decimal as an optional sort criterion (submitted in complex schema)" in {
-      val transformedQuery = transformQuery(inputQueryWithDecimalOptionalSortCriterionComplex)
-      assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
-    }
-
-    "transform an input query with a decimal as an optional sort criterion and a filter" in {
-      val transformedQuery = transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilter)
-      assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
-    }
-
-    "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)" in {
-      val transformedQuery = transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex)
-      assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)
-    }
-
-    "transform an input query using rdfs:label and a literal in the simple schema" in {
-      val transformedQuery = transformQuery(InputQueryWithRdfsLabelAndLiteralInSimpleSchema)
-      assert(transformedQuery == TransformedQueryWithRdfsLabelAndLiteral)
-    }
-
-    "transform an input query using rdfs:label and a literal in the complex schema" in {
-      val transformedQuery = transformQuery(InputQueryWithRdfsLabelAndLiteralInComplexSchema)
-      assert(transformedQuery === TransformedQueryWithRdfsLabelAndLiteral)
-    }
-
-    "transform an input query using rdfs:label and a variable in the simple schema" in {
-      val transformedQuery = transformQuery(InputQueryWithRdfsLabelAndVariableInSimpleSchema)
-      assert(transformedQuery === TransformedQueryWithRdfsLabelAndVariable)
-    }
-
-    "transform an input query using rdfs:label and a variable in the complex schema" in {
-      val transformedQuery = transformQuery(InputQueryWithRdfsLabelAndVariableInComplexSchema)
-      assert(transformedQuery === TransformedQueryWithRdfsLabelAndVariable)
-    }
-
-    "transform an input query using rdfs:label and a regex in the simple schema" in {
-      val transformedQuery = transformQuery(InputQueryWithRdfsLabelAndRegexInSimpleSchema)
-      assert(transformedQuery === TransformedQueryWithRdfsLabelAndRegex)
-    }
-
-    "transform an input query using rdfs:label and a regex in the complex schema" in {
-      val transformedQuery = transformQuery(InputQueryWithRdfsLabelAndRegexInComplexSchema)
-      assert(transformedQuery === TransformedQueryWithRdfsLabelAndRegex)
-    }
-
-    "transform an input query with UNION scopes in the simple schema" in {
-      val transformedQuery = transformQuery(InputQueryWithUnionScopes)
-      assert(transformedQuery === TransformedQueryWithUnionScopes)
-    }
-
-    "transform an input query with knora-api:standoffTagHasStartAncestor" in {
-      val transformedQuery = transformQuery(queryWithStandoffTagHasStartAncestor)
-      assert(transformedQuery === transformedQueryWithStandoffTagHasStartAncestor)
-    }
-
-    "reorder query patterns in where clause" in {
-      val transformedQuery = transformQuery(queryToReorder)
-      assert(
-        transformedQuery.variables.toSet === transformedQueryToReorder.variables.toSet,
-        transformedQuery.copy(variables = Vector()) === transformedQueryToReorder.copy(variables = Vector()),
-      )
-    }
-
-    "reorder query patterns in where clause with union" in {
-      val transformedQuery = transformQuery(queryToReorderWithUnion)
-      assert(
-        transformedQuery.variables.toSet === transformedQueryToReorderWithUnion.variables.toSet,
-        transformedQuery.copy(variables = Vector()) === transformedQueryToReorderWithUnion.copy(variables = Vector()),
-      )
-    }
-
-    "reorder query patterns in where clause with optional" in {
-      val transformedQuery = transformQuery(queryWithOptional)
-      assert(transformedQuery === TransformedQueryWithOptional)
-    }
-
-    "reorder query patterns with minus scope" in {
-      val transformedQuery = transformQuery(queryToReorderWithMinus)
-      assert(transformedQuery == transformedQueryToReorderWithMinus)
-    }
-
-    "reorder a query with a cycle" in {
-      val transformedQuery = transformQuery(queryToReorderWithCycle)
-      assert(transformedQuery == transformedQueryToReorderWithCycle)
-    }
-
-    "not remove rdf:type knora-api:Resource if it's needed" in {
-      val transformedQuery = transformQuery(queryWithKnoraApiResource)
-
-      assert(
-        transformedQuery.whereClause.patterns.contains(
-          StatementPattern(
-            subj = QueryVariable(variableName = "resource"),
-            pred = IriRef(
-              iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              propertyPathOperator = None,
-            ),
-            obj = IriRef(
-              iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
-              propertyPathOperator = None,
+  override val e2eSpec = suite("The NonTriplestoreSpecificGravsearchToPrequeryGenerator object")(
+    test("transform an input query with an optional property criterion without removing the rdf:type statement") {
+      transformQuery(queryWithOptional)
+        .map(actual => assertTrue(actual == TransformedQueryWithOptional))
+    },
+    test("transform an input query with a date as a non optional sort criterion") {
+      transformQuery(inputQueryWithDateNonOptionalSortCriterion)
+        .map(actual => assertTrue(actual == transformedQueryWithDateNonOptionalSortCriterion))
+    },
+    test("transform an input query with a date as a non optional sort criterion (submitted in complex schema)") {
+      transformQuery(inputQueryWithDateNonOptionalSortCriterionComplex)
+        .map(actual => assertTrue(actual == transformedQueryWithDateNonOptionalSortCriterion))
+    },
+    test("transform an input query with a date as non optional sort criterion and a filter") {
+      transformQuery(inputQueryWithDateNonOptionalSortCriterionAndFilter)
+        .map(actual => assertTrue(actual == transformedQueryWithDateNonOptionalSortCriterionAndFilter))
+    },
+    test(
+      "transform an input query with a date as non optional sort criterion and a filter (submitted in complex schema)",
+    ) {
+      transformQuery(inputQueryWithDateNonOptionalSortCriterionAndFilterComplex)
+        .map(actual => assertTrue(actual == transformedQueryWithDateNonOptionalSortCriterionAndFilter))
+    },
+    test("transform an input query with a date as an optional sort criterion") {
+      transformQuery(inputQueryWithDateOptionalSortCriterion)
+        .map(actual => assertTrue(actual == transformedQueryWithDateOptionalSortCriterion))
+    },
+    test("transform an input query with a date as an optional sort criterion (submitted in complex schema)") {
+      transformQuery(inputQueryWithDateOptionalSortCriterionComplex)
+        .map(actual => assertTrue(actual == transformedQueryWithDateOptionalSortCriterion))
+    },
+    test("transform an input query with a date as an optional sort criterion and a filter") {
+      transformQuery(inputQueryWithDateOptionalSortCriterionAndFilter)
+        .map(actual => assertTrue(actual == transformedQueryWithDateOptionalSortCriterionAndFilter))
+    },
+    test(
+      "transform an input query with a date as an optional sort criterion and a filter (submitted in complex schema)",
+    ) {
+      transformQuery(inputQueryWithDateOptionalSortCriterionAndFilterComplex)
+        .map(actual => assertTrue(actual == transformedQueryWithDateOptionalSortCriterionAndFilter))
+    },
+    test("transform an input query with a decimal as an optional sort criterion") {
+      transformQuery(inputQueryWithDecimalOptionalSortCriterion)
+        .map(actual => assertTrue(actual == transformedQueryWithDecimalOptionalSortCriterion))
+    },
+    test("transform an input query with a decimal as an optional sort criterion (submitted in complex schema)") {
+      transformQuery(inputQueryWithDecimalOptionalSortCriterionComplex)
+        .map(actual => assertTrue(actual == transformedQueryWithDecimalOptionalSortCriterion))
+    },
+    test("transform an input query with a decimal as an optional sort criterion and a filter") {
+      transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilter)
+        .map(actual => assertTrue(actual == transformedQueryWithDecimalOptionalSortCriterionAndFilter))
+    },
+    test(
+      "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)",
+    ) {
+      transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex)
+        .map(actual => assertTrue(actual == transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex))
+    },
+    test("transform an input query using rdfs:label and a literal in the simple schema") {
+      transformQuery(InputQueryWithRdfsLabelAndLiteralInSimpleSchema)
+        .map(actual => assertTrue(actual == TransformedQueryWithRdfsLabelAndLiteral))
+    },
+    test("transform an input query using rdfs:label and a literal in the complex schema") {
+      transformQuery(InputQueryWithRdfsLabelAndLiteralInComplexSchema)
+        .map(actual => assertTrue(actual == TransformedQueryWithRdfsLabelAndLiteral))
+    },
+    test("transform an input query using rdfs:label and a variable in the simple schema") {
+      transformQuery(InputQueryWithRdfsLabelAndVariableInSimpleSchema)
+        .map(actual => assertTrue(actual == TransformedQueryWithRdfsLabelAndVariable))
+    },
+    test("transform an input query using rdfs:label and a variable in the complex schema") {
+      transformQuery(InputQueryWithRdfsLabelAndVariableInComplexSchema)
+        .map(actual => assertTrue(actual == TransformedQueryWithRdfsLabelAndVariable))
+    },
+    test("transform an input query using rdfs:label and a regex in the simple schema") {
+      transformQuery(InputQueryWithRdfsLabelAndRegexInSimpleSchema)
+        .map(actual => assertTrue(actual == TransformedQueryWithRdfsLabelAndRegex))
+    },
+    test("transform an input query using rdfs:label and a regex in the complex schema") {
+      transformQuery(InputQueryWithRdfsLabelAndRegexInComplexSchema)
+        .map(actual => assertTrue(actual == TransformedQueryWithRdfsLabelAndRegex))
+    },
+    test("transform an input query with UNION scopes in the simple schema") {
+      transformQuery(InputQueryWithUnionScopes)
+        .map(actual => assertTrue(actual == TransformedQueryWithUnionScopes))
+    },
+    test("transform an input query with knora-api:standoffTagHasStartAncestor") {
+      transformQuery(queryWithStandoffTagHasStartAncestor)
+        .map(actual => assertTrue(actual == transformedQueryWithStandoffTagHasStartAncestor))
+    },
+    test("reorder query patterns in where clause") {
+      transformQuery(queryToReorder)
+        .map(actual =>
+          assertTrue(
+            actual.variables.toSet == transformedQueryToReorder.variables.toSet,
+            actual.copy(variables = Vector()) == transformedQueryToReorder.copy(variables = Vector()),
+          ),
+        )
+    },
+    test("reorder query patterns in where clause with union") {
+      transformQuery(queryToReorderWithUnion)
+        .map(actual =>
+          assertTrue(
+            actual.variables.toSet == transformedQueryToReorderWithUnion.variables.toSet,
+            actual.copy(variables = Vector()) == transformedQueryToReorderWithUnion.copy(variables = Vector()),
+          ),
+        )
+    },
+    test("reorder query patterns in where clause with optional") {
+      transformQuery(queryWithOptional)
+        .map(actual => assertTrue(actual == TransformedQueryWithOptional))
+    },
+    test("reorder query patterns with minus scope") {
+      transformQuery(queryToReorderWithMinus)
+        .map(actual => assertTrue(actual == transformedQueryToReorderWithMinus))
+    },
+    test("reorder a query with a cycle") {
+      transformQuery(queryToReorderWithCycle)
+        .map(actual => assertTrue(actual == transformedQueryToReorderWithCycle))
+    },
+    test("not remove rdf:type knora-api:Resource if it's needed") {
+      transformQuery(queryWithKnoraApiResource)
+        .map(actual =>
+          assertTrue(
+            actual.whereClause.patterns.contains(
+              StatementPattern(
+                subj = QueryVariable(variableName = "resource"),
+                pred = IriRef(
+                  iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                  propertyPathOperator = None,
+                ),
+                obj = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
+                  propertyPathOperator = None,
+                ),
+              ),
             ),
           ),
-        ),
-      )
-    }
-  }
+        )
+    },
+  )
 }
