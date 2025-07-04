@@ -9,6 +9,7 @@ import org.apache.pekko
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
+import spray.json.*
 import zio.ZIO
 
 import java.net.URLEncoder
@@ -6725,9 +6726,9 @@ class SearchEndpointsE2ESpec extends E2ESpec {
       )
 
       // Next, create a resource with a text value containing a standoff date tag.
-      val xmlForJson = stringFormatter.toJsonEncodedString(
+      val xmlForJson = JsString(
         FileUtil.readTextFile(Paths.get("..", "test_data/test_route/texts/HTML.xml")),
-      )
+      ).compactPrint
       val requestBody =
         s"""{
            |  "@id" : "http://rdfh.ch/0001/a-thing",
@@ -6846,7 +6847,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
            |  "@type" : "anything:Thing",
            |  "anything:hasRichtext" : {
            |    "@type" : "knora-api:TextValue",
-           |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(hamletXml)},
+           |    "knora-api:textValueAsXml" : ${JsString(hamletXml).compactPrint},
            |    "knora-api:textValueHasMapping" : {
            |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
            |    }
@@ -7223,7 +7224,7 @@ class SearchEndpointsE2ESpec extends E2ESpec {
            |  "@type" : "anything:Thing",
            |  "anything:hasText" : {
            |    "@type" : "knora-api:TextValue",
-           |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(xmlStr)},
+           |    "knora-api:textValueAsXml" : ${JsString(xmlStr).compactPrint},
            |    "knora-api:textValueHasMapping" : {
            |      "@id" : "$anythingProjectIri/mappings/HTMLMapping"
            |    }

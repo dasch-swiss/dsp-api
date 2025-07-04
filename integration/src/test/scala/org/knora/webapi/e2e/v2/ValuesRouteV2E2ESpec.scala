@@ -12,6 +12,7 @@ import org.scalatest.compatible.Assertion
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
+import spray.json.JsString
 
 import java.net.URLEncoder
 import java.nio.file.Paths
@@ -277,15 +278,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private val geometryValue1 =
     """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
 
-  private def createTextValueWithStandoffRequest(resourceIri: IRI, textValueAsXml: String, mappingIri: String)(implicit
-    stringFormatter: StringFormatter,
-  ): String =
+  private def createTextValueWithStandoffRequest(resourceIri: IRI, textValueAsXml: String, mappingIri: String): String =
     s"""{
        |  "@id" : "$resourceIri",
        |  "@type" : "anything:Thing",
        |  "anything:hasText" : {
        |    "@type" : "knora-api:TextValue",
-       |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(textValueAsXml)},
+       |    "knora-api:textValueAsXml" : ${JsString(textValueAsXml).compactPrint},
        |    "knora-api:textValueHasMapping" : {
        |      "@id": "$mappingIri"
        |    }
@@ -2424,7 +2423,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  "@type" : "anything:Thing",
            |  "anything:hasGeometry" : {
            |    "@type" : "knora-api:GeomValue",
-           |    "knora-api:geometryValueAsGeometry" : ${stringFormatter.toJsonEncodedString(geometryValue1)}
+           |    "knora-api:geometryValueAsGeometry" : ${JsString(geometryValue1).compactPrint}
            |  },
            |  "@context" : {
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -3359,9 +3358,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  "anything:hasText" : {
            |    "@id" : "${textValueWithStandoffIri.get}",
            |    "@type" : "knora-api:TextValue",
-           |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(
-            textValue2AsXmlWithStandardMapping,
-          )},
+           |    "knora-api:textValueAsXml" : ${JsString(textValue2AsXmlWithStandardMapping).compactPrint},
            |    "knora-api:textValueHasMapping" : {
            |      "@id": "$standardMappingIri"
            |    }
@@ -4046,7 +4043,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  "anything:hasGeometry" : {
            |    "@id" : "${geometryValueIri.get}",
            |    "@type" : "knora-api:GeomValue",
-           |    "knora-api:geometryValueAsGeometry" : ${stringFormatter.toJsonEncodedString(geometryValue2)}
+           |    "knora-api:geometryValueAsGeometry" : ${JsString(geometryValue2).compactPrint}
            |  },
            |  "@context" : {
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
