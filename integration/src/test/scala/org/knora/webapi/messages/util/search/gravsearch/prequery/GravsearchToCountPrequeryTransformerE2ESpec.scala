@@ -6,10 +6,10 @@
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
 import zio.*
+import zio.test.*
 
 import dsp.errors.AssertionException
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
@@ -17,50 +17,30 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
-class GravsearchToCountPrequeryTransformerSpec extends E2ESpec {
+object GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec {
 
-  def transformQuery(query: String): SelectQuery = {
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-    val inspectionRunner = for {
-      qt <- ZIO.service[QueryTraverser]
-      mr <- ZIO.service[MessageRelay]
-      sf <- ZIO.service[StringFormatter]
-    } yield GravsearchTypeInspectionRunner(qt, mr)(sf)
+  private val queryTraverser   = ZIO.serviceWithZIO[QueryTraverser]
+  private val inspectionRunner = ZIO.serviceWithZIO[GravsearchTypeInspectionRunner]
 
-    val countQueryZio = for {
-      constructQuery       <- ZIO.attempt(GravsearchParser.parseQuery(query))
-      whereClause           = constructQuery.whereClause
-      constructClause       = constructQuery.constructClause
-      querySchemaMaybe      = constructQuery.querySchema
-      inspectionResult     <- inspectionRunner.flatMap(_.inspectTypes(whereClause, anythingAdminUser))
-      _                    <- GravsearchQueryChecker.checkConstructClause(constructClause, inspectionResult)
-      sanitizedWhereClause <- GravsearchTypeInspectionUtil.removeTypeAnnotations(whereClause)
-      querySchema <-
-        ZIO.fromOption(querySchemaMaybe).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-      transformer =
-        new GravsearchToCountPrequeryTransformer(
-          constructClause = constructClause,
-          typeInspectionResult = inspectionResult,
-          querySchema = querySchema,
-        )
-      prequery <- ZIO.serviceWithZIO[QueryTraverser](
-                    _.transformConstructToSelect(
-                      inputQuery = constructQuery.copy(
-                        whereClause = sanitizedWhereClause,
-                        orderBy = Seq.empty[OrderCriterion], // count queries do not need any sorting criteria
-                      ),
-                      transformer,
-                    ),
-                  )
-
-    } yield prequery
-    UnsafeZioRun.runOrThrow(countQueryZio)
-  }
-
-  implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private def transformQuery(
+    query: String,
+  ): ZIO[QueryTraverser & GravsearchTypeInspectionRunner, Throwable, SelectQuery] = for {
+    query                <- ZIO.attempt(GravsearchParser.parseQuery(query))
+    inspectionResult     <- inspectionRunner(_.inspectTypes(query.whereClause, anythingAdminUser))
+    _                    <- GravsearchQueryChecker.checkConstructClause(query.constructClause, inspectionResult)
+    sanitizedWhereClause <- GravsearchTypeInspectionUtil.removeTypeAnnotations(query.whereClause)
+    querySchema          <- ZIO.fromOption(query.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
+    prequery <- queryTraverser(
+                  _.transformConstructToSelect(
+                    query.copy(whereClause = sanitizedWhereClause, orderBy = Seq.empty),
+                    new GravsearchToCountPrequeryTransformer(query.constructClause, inspectionResult, querySchema),
+                  ),
+                )
+  } yield prequery
 
   val inputQueryWithDecimalOptionalSortCriterionAndFilter: String =
     """
@@ -196,7 +176,7 @@ class GravsearchToCountPrequeryTransformerSpec extends E2ESpec {
       |} ORDER BY ASC(?decimal)
         """.stripMargin
 
-  val transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex: SelectQuery =
+  val expectedQueryWithDecimalOptionalSortCriterionAndFilterComplex: SelectQuery =
     SelectQuery(
       fromClause = None,
       variables = List(
@@ -282,16 +262,16 @@ class GravsearchToCountPrequeryTransformerSpec extends E2ESpec {
       useDistinct = true,
     )
 
-  "The NonTriplestoreSpecificGravsearchToCountPrequeryGenerator object" should {
-
-    "transform an input query with a decimal as an optional sort criterion and a filter" in {
-      val transformedQuery = transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilter)
-      assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
-    }
-
-    "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)" in {
-      val transformedQuery = transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex)
-      assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)
-    }
-  }
+  override val e2eSpec = suite("The NonTriplestoreSpecificGravsearchToCountPrequeryGenerator object")(
+    test("transform an input query with a decimal as an optional sort criterion and a filter") {
+      transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilter)
+        .map(actual => assertTrue(actual == transformedQueryWithDecimalOptionalSortCriterionAndFilter))
+    },
+    test(
+      "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)",
+    ) {
+      transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex)
+        .map(actual => assertTrue(actual == expectedQueryWithDecimalOptionalSortCriterionAndFilterComplex))
+    },
+  )
 }
