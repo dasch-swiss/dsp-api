@@ -5,10 +5,12 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.testkit.*
-import zio.ZIO
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.util.UUID
+import scala.reflect.ClassTag
 
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
@@ -16,29 +18,21 @@ import dsp.errors.NotFoundException
 import dsp.errors.UpdateNotPerformedException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
+import org.knora.webapi.LanguageCode.*
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
-import org.knora.webapi.slice.admin.api.Requests.ListChangePositionRequest
-import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
-import org.knora.webapi.slice.admin.api.Requests.ListCreateChildNodeRequest
-import org.knora.webapi.slice.admin.api.Requests.ListCreateRootNodeRequest
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.api.Requests.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-/**
- * Tests [[ListsResponder]].
- */
-class ListsResponderSpec extends E2ESpec with ImplicitSender {
+object ListsResponderSpec extends E2EZSpec {
 
-  override lazy val rdfDataObjects = List(
+  override val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_data/images-demo-data.ttl",
       name = "http://www.knora.org/data/00FF/images",
@@ -48,957 +42,717 @@ class ListsResponderSpec extends E2ESpec with ImplicitSender {
       name = "http://www.knora.org/data/0001/anything",
     ),
   )
-
-  private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
-
-  private val summerNodeInfo: ListNodeInfoADM = SharedListsTestDataADM.summerNodeInfo
-
-  private val otherTreeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.otherTreeListInfo
-
-  private val treeListChildNodes: Seq[ListNodeADM] = SharedListsTestDataADM.treeListChildNodes
-
   private val listsResponder = ZIO.serviceWithZIO[ListsResponder]
 
-  "The Lists Responder" when {
-    "used to query information about lists" should {
-      "return all lists" in {
-        val actual = UnsafeZioRun.runOrThrow(listsResponder(_.getLists(None)))
-        actual.lists.size should be(9)
-      }
+  private val treeListInfo: ListRootNodeInfoADM      = SharedListsTestDataADM.treeListInfo
+  private val summerNodeInfo: ListNodeInfoADM        = SharedListsTestDataADM.summerNodeInfo
+  private val otherTreeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.otherTreeListInfo
+  private val treeListChildNodes: Seq[ListNodeADM]   = SharedListsTestDataADM.treeListChildNodes
 
-      "return all lists belonging to the images project by iri" in {
-        val actual =
-          UnsafeZioRun.runOrThrow(listsResponder(_.getLists(Some(Left(ProjectIri.unsafeFrom(imagesProjectIri))))))
-        actual.lists.size should be(4)
-      }
+  private val newListIri     = new MutableTestIri
+  private val firstChildIri  = new MutableTestIri
+  private val secondChildIri = new MutableTestIri
+  private val thirdChildIri  = new MutableTestIri
 
-      "return all lists belonging to the images project by shortcode" in {
-        val actual =
-          UnsafeZioRun.runOrThrow(listsResponder(_.getLists(Some(Right(imagesProjectShortcode)))))
-        actual.lists.size should be(4)
-      }
+  private def expectType[A](implicit ct: ClassTag[A]): Any => Task[A] = {
+    case a: A  => ZIO.succeed(a)
+    case other => ZIO.fail(new Exception(s"Unexpected Type ${other.getClass}"))
+  }
 
-      "getLists should fail if project by iri was not found" in {
-        val exit =
-          UnsafeZioRun.run(
-            listsResponder(_.getLists(Some(Left(ProjectIri.unsafeFrom("http://rdfh.ch/projects/unknown"))))),
-          )
-        assertFailsWithA[NotFoundException](exit)
-      }
-
-      "getLists should fail if project by shortcode was not found" in {
-        val exit =
-          UnsafeZioRun.run(
-            listsResponder(_.getLists(Some(Right(Shortcode.unsafeFrom("9999"))))),
-          )
-        assertFailsWithA[NotFoundException](exit)
-      }
-
-      "return all lists belonging to the anything project" in {
-        val actual =
-          UnsafeZioRun.runOrThrow(listsResponder(_.getLists(Some(Left(ProjectIri.unsafeFrom(anythingProjectIri))))))
-        actual.lists.size should be(4)
-      }
-
-      "return basic list information (anything list)" in {
-        val actual =
-          UnsafeZioRun.runOrThrow(ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/treeList"))
-        actual match {
-          case RootNodeInfoGetResponseADM(listInfo) => listInfo.sorted should be(treeListInfo.sorted)
-          case _                                    => fail(s"Expecting RootNodeInfoGetResponseADM.")
-        }
-      }
-
-      "return basic list information (anything other list)" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/otherTreeList"),
-        )
-        actual match {
-          case RootNodeInfoGetResponseADM(listInfo) => listInfo.sorted should be(otherTreeListInfo.sorted)
-          case _                                    => fail(s"Expecting RootNodeInfoGetResponseADM.")
-        }
-      }
-
-      "return basic node information (images list - sommer)" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/00FF/526f26ed04"),
-        )
-        actual match {
-          case ChildNodeInfoGetResponseADM(childInfo) => childInfo.sorted should be(summerNodeInfo.sorted)
-          case _                                      => fail(s"Expecting ChildNodeInfoGetResponseADM.")
-        }
-      }
-
-      "return a full list response" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          ListsResponder.listGetRequestADM("http://rdfh.ch/lists/0001/treeList"),
-        )
-        actual match {
-          case ListGetResponseADM(list) =>
-            list.listinfo.sorted should be(treeListInfo.sorted)
-            list.children.map(_.sorted) should be(treeListChildNodes.map(_.sorted))
-          case _ => fail(s"Expecting ListGetResponseADM.")
-        }
-      }
-    }
-
-    val newListIri     = new MutableTestIri
-    val firstChildIri  = new MutableTestIri
-    val secondChildIri = new MutableTestIri
-    val thirdChildIri  = new MutableTestIri
-
-    "used to modify lists" should {
-      "create a list" in {
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.listCreateRootNode(
-            ListCreateRootNodeRequest(
-              id = None,
-              Comments.unsafeFrom(Seq(StringLiteralV2.from(value = "Neuer Kommentar", language = Some("de")))),
-              Labels.unsafeFrom(Seq(StringLiteralV2.from(value = "Neue Liste", language = Some("de")))),
-              Some(ListName.unsafeFrom("neuelistename")),
-              ProjectIri.unsafeFrom(imagesProjectIri),
+  override val e2eSpec = suite("The Lists Responder")(
+    suite("used to query information about lists")(
+      test("return all lists") {
+        listsResponder(_.getLists(None)).map(actual => assertTrue(actual.lists.size == 9))
+      },
+      test("return all lists belonging to the images project by iri") {
+        listsResponder(_.getLists(Some(Left(imagesProjectIri))))
+          .map(actual => assertTrue(actual.lists.size == 4))
+      },
+      test("return all lists belonging to the images project by shortcode") {
+        listsResponder(_.getLists(Some(Right(imagesProjectShortcode))))
+          .map(actual => assertTrue(actual.lists.size == 4))
+      },
+      test("getLists should fail if project by iri was not found") {
+        listsResponder(_.getLists(Some(Left(ProjectIri.unsafeFrom("http://rdfh.ch/projects/unknown"))))).exit
+          .map(assert(_)(failsWithA[NotFoundException]))
+      },
+      test("getLists should fail if project by shortcode was not found") {
+        listsResponder(_.getLists(Some(Right(Shortcode.unsafeFrom("9999"))))).exit
+          .map(assert(_)(failsWithA[NotFoundException]))
+      },
+      test("return all lists belonging to the anything project") {
+        listsResponder(_.getLists(Some(Left(anythingProjectIri))))
+          .map(actual => assertTrue(actual.lists.size == 4))
+      },
+      test("return basic list information (anything list)") {
+        listsResponder(_.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/treeList"))
+          .flatMap(expectType[RootNodeInfoGetResponseADM])
+          .map(actual => assertTrue(actual.listinfo.sorted == treeListInfo.sorted))
+      },
+      test("return basic list information (anything other list)") {
+        listsResponder(_.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/otherTreeList"))
+          .flatMap(expectType[RootNodeInfoGetResponseADM])
+          .map(actual => assertTrue(actual.listinfo.sorted == otherTreeListInfo.sorted))
+      },
+      test("return basic node information (images list - sommer)") {
+        listsResponder(_.listNodeInfoGetRequestADM("http://rdfh.ch/lists/00FF/526f26ed04"))
+          .flatMap(expectType[ChildNodeInfoGetResponseADM])
+          .map(actual => assertTrue(actual.nodeinfo.sorted == summerNodeInfo.sorted))
+      },
+      test("return a full list response") {
+        listsResponder(_.listGetRequestADM("http://rdfh.ch/lists/0001/treeList"))
+          .flatMap(expectType[ListGetResponseADM])
+          .map(actual =>
+            assertTrue(
+              actual.list.listinfo.sorted == treeListInfo.sorted,
+              actual.list.children.map(_.sorted) == treeListChildNodes.map(_.sorted),
             ),
-            apiRequestID = UUID.randomUUID,
-          ),
+          )
+      },
+    ),
+    suite("used to modify lists")(
+      test("create a list") {
+        val createRequest = ListCreateRootNodeRequest(
+          id = None,
+          Comments.unsafeFrom(Seq(StringLiteralV2.from("Neuer Kommentar", language = Some("de")))),
+          Labels.unsafeFrom(Seq(StringLiteralV2.from("Neue Liste", language = Some("de")))),
+          Some(ListName.unsafeFrom("neuelistename")),
+          imagesProjectIri,
         )
 
-        val listInfo = received.list.listinfo
-        listInfo.projectIri should be(imagesProjectIri)
-
-        listInfo.name should be(Some("neuelistename"))
-
-        val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
-        labels.size should be(1)
-        labels.head should be(StringLiteralV2.from(value = "Neue Liste", language = Some("de")))
-
-        val comments: Seq[StringLiteralV2] = listInfo.comments.stringLiterals
-        comments.isEmpty should be(false)
-
-        val children = received.list.children
-        children.size should be(0)
-
-        // store list IRI for next test
-        newListIri.set(listInfo.id)
-      }
-
-      "create a list with special characters in its labels" in {
+        listsResponder(_.listCreateRootNode(createRequest, UUID.randomUUID))
+          .tap(received => ZIO.succeed(received.list.listinfo.id))
+          .map(_.list)
+          .tap(list => ZIO.succeed(newListIri.set(list.listinfo.id)))
+          .map { list =>
+            assertTrue(
+              list.children.isEmpty,
+              list.listinfo.id == newListIri.get,
+              list.listinfo.name == Some("neuelistename"),
+              list.listinfo.projectIri == imagesProjectIri.value,
+              list.listinfo.name == Some("neuelistename"),
+              list.listinfo.labels.stringLiterals.size == 1,
+              list.listinfo.labels.stringLiterals.head == StringLiteralV2
+                .from(value = "Neue Liste", language = Some("de")),
+              !list.listinfo.comments.stringLiterals.isEmpty,
+            )
+          }
+      },
+      test("create a list with special characters in its labels") {
         val labelWithSpecialCharacter   = "Neue \\\"Liste\\\""
         val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
         val nameWithSpecialCharacter    = "a new \\\"name\\\""
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.listCreateRootNode(
-            ListCreateRootNodeRequest(
-              id = None,
-              Comments.unsafeFrom(Seq(StringLiteralV2.from(commentWithSpecialCharacter, language = Some("de")))),
-              Labels.unsafeFrom(Seq(StringLiteralV2.from(labelWithSpecialCharacter, language = Some("de")))),
-              Some(ListName.unsafeFrom(nameWithSpecialCharacter)),
-              ProjectIri.unsafeFrom(imagesProjectIri),
-            ),
-            apiRequestID = UUID.randomUUID,
-          ),
+        val createReq = ListCreateRootNodeRequest(
+          None,
+          Comments.unsafeFrom(Seq(StringLiteralV2.from(commentWithSpecialCharacter, language = Some("de")))),
+          Labels.unsafeFrom(Seq(StringLiteralV2.from(labelWithSpecialCharacter, language = Some("de")))),
+          Some(ListName.unsafeFrom(nameWithSpecialCharacter)),
+          imagesProjectIri,
         )
-
-        val listInfo = received.list.listinfo
-        listInfo.projectIri should be(imagesProjectIri)
-
-        listInfo.name should be(Some(Iri.fromSparqlEncodedString(nameWithSpecialCharacter)))
-
-        val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
-        labels.size should be(1)
-        val givenLabel = labels.head
-        givenLabel.value shouldEqual Iri.fromSparqlEncodedString(labelWithSpecialCharacter)
-        givenLabel.language shouldEqual Some("de")
-
-        val comments     = received.list.listinfo.comments.stringLiterals
-        val givenComment = comments.head
-        givenComment.language shouldEqual Some("de")
-        givenComment.value shouldEqual Iri.fromSparqlEncodedString(commentWithSpecialCharacter)
-
-        val children = received.list.children
-        children.size should be(0)
-      }
-
-      "update basic list information" in {
-        val theChange: ListChangeRequest = ListChangeRequest(
-          listIri = ListIri.unsafeFrom(newListIri.get),
-          projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-          name = Some(ListName.unsafeFrom("updated name")),
-          labels = Some(
-            Labels.unsafeFrom(
-              Seq(
-                StringLiteralV2.from(value = "Neue geänderte Liste", language = Some("de")),
-                StringLiteralV2.from(value = "Changed List", language = Some("en")),
-              ),
-            ),
-          ),
-          comments = Some(
-            Comments
-              .unsafeFrom(
-                Seq(
-                  StringLiteralV2.from(value = "Neuer Kommentar", language = Some("de")),
-                  StringLiteralV2.from(value = "New Comment", language = Some("en")),
-                ),
-              ),
-          ),
-        )
-
-        val received = UnsafeZioRun.runOrThrow(ListsResponder.nodeInfoChangeRequest(theChange, UUID.randomUUID()))
-        val listInfo = received match {
-          case RootNodeInfoGetResponseADM(info) => info
-          case _                                => fail("RootNodeInfoGetResponseADM expected")
+        listsResponder(_.listCreateRootNode(createReq, UUID.randomUUID)).map { actual =>
+          assertTrue(
+            actual.list.listinfo.projectIri == imagesProjectIri.value,
+            actual.list.listinfo.name == Some(Iri.fromSparqlEncodedString(nameWithSpecialCharacter)),
+            actual.list.listinfo.labels.stringLiterals.size == 1,
+            actual.list.listinfo.labels.stringLiterals.head.value ==
+              Iri.fromSparqlEncodedString(labelWithSpecialCharacter),
+            actual.list.listinfo.labels.stringLiterals.head.language == Some("de"),
+            actual.list.listinfo.comments.stringLiterals.head.language == Some("de"),
+            actual.list.listinfo.comments.stringLiterals.head.value ==
+              Iri.fromSparqlEncodedString(commentWithSpecialCharacter),
+            actual.list.children.size == 0,
+          )
         }
-
-        listInfo.projectIri should be(imagesProjectIri)
-        listInfo.name should be(Some("updated name"))
-        val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
-        labels.size should be(2)
-        labels.sorted should be(
-          Seq(
-            StringLiteralV2.from(value = "Neue geänderte Liste", language = Some("de")),
-            StringLiteralV2.from(value = "Changed List", language = Some("en")),
-          ).sorted,
+      },
+      test("update basic list information") {
+        val newLabelValues = Seq(
+          StringLiteralV2.from("Neue geänderte Liste", language = Some("de")),
+          StringLiteralV2.from("Changed List", EN),
         )
-
-        val comments = listInfo.comments.stringLiterals
-        comments.size should be(2)
-        comments.sorted should be(
-          Seq(
-            StringLiteralV2.from(value = "Neuer Kommentar", language = Some("de")),
-            StringLiteralV2.from(value = "New Comment", language = Some("en")),
-          ).sorted,
+        val newCommentValues = Seq(
+          StringLiteralV2.from("Neuer Kommentar", language = Some("de")),
+          StringLiteralV2.from("New Comment", EN),
         )
-      }
-
-      "not update basic list information if name is duplicate" in {
-        val name       = Some(ListName.unsafeFrom("sommer"))
-        val projectIRI = ProjectIri.unsafeFrom(imagesProjectIri)
-        val theChange = ListChangeRequest(
-          listIri = ListIri.unsafeFrom(newListIri.get),
-          projectIri = projectIRI,
-          name = name,
+        val changeReq = ListChangeRequest(
+          newListIri.asListIri,
+          imagesProjectIri,
+          name = Some(ListName.unsafeFrom("updated name")),
+          labels = Some(Labels.unsafeFrom(newLabelValues)),
+          comments = Some(Comments.unsafeFrom(newCommentValues)),
         )
-        val exit = UnsafeZioRun.run(ListsResponder.nodeInfoChangeRequest(theChange, UUID.randomUUID()))
-        assertFailsWithA[DuplicateValueException](
-          exit,
-          s"The name ${name.value} is already used by a list inside the project ${projectIRI.value}.",
-        )
-      }
-
-      "add child to list - to the root node" in {
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.listCreateChildNode(
-            ListCreateChildNodeRequest(
-              id = None,
-              Some(
-                Comments.unsafeFrom(
-                  Seq(StringLiteralV2.from(value = "New First Child List Node Comment", language = Some("en"))),
-                ),
-              ),
-              Labels.unsafeFrom(
-                Seq(StringLiteralV2.from(value = "New First Child List Node Value", language = Some("en"))),
-              ),
-              Some(ListName.unsafeFrom("first")),
-              ListIri.unsafeFrom(newListIri.get),
-              None,
-              ProjectIri.unsafeFrom(imagesProjectIri),
+        listsResponder(_.nodeInfoChangeRequest(changeReq, UUID.randomUUID()))
+          .flatMap(expectType[RootNodeInfoGetResponseADM])
+          .map(_.listinfo)
+          .map(listInfo =>
+            assertTrue(
+              listInfo.projectIri == imagesProjectIri.value,
+              listInfo.name == Some("updated name"),
+              listInfo.labels.stringLiterals.sorted == newLabelValues.sorted,
+              listInfo.comments.stringLiterals.sorted == newCommentValues.sorted,
             ),
-            UUID.randomUUID,
+          )
+      },
+      test("not update basic list information if name is duplicate") {
+        val changeReq = ListChangeRequest(
+          newListIri.asListIri,
+          imagesProjectIri,
+          name = Some(ListName.unsafeFrom("sommer")),
+        )
+        listsResponder(_.nodeInfoChangeRequest(changeReq, UUID.randomUUID())).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[DuplicateValueException](
+              s"The name ${Some(ListName.unsafeFrom("sommer")).value} is already used by a list inside the project ${imagesProjectIri}.",
+            ),
           ),
         )
-
-        val childNodeInfo: ListChildNodeInfoADM = received.nodeinfo
-
-        // check labels
-        val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
-        labels.size should be(1)
-        labels.sorted should be(
-          Seq(StringLiteralV2.from(value = "New First Child List Node Value", language = Some("en"))),
+      },
+      test("add child to list - to the root node") {
+        val createReq = ListCreateChildNodeRequest(
+          None,
+          Some(Comments.unsafeFrom(Seq(StringLiteralV2.from("New First Child List Node Comment", EN)))),
+          Labels.unsafeFrom(Seq(StringLiteralV2.from("New First Child List Node Value", EN))),
+          Some(ListName.unsafeFrom("first")),
+          newListIri.asListIri,
+          None,
+          imagesProjectIri,
         )
-
-        // check comments
-        val comments = childNodeInfo.comments.stringLiterals
-        comments.size should be(1)
-        comments.sorted should be(
-          Seq(StringLiteralV2.from(value = "New First Child List Node Comment", language = Some("en"))),
-        )
-
-        // check position
-        val position = childNodeInfo.position
-        position should be(0)
-
-        // check has root node
-        val rootNode = childNodeInfo.hasRootNode
-        rootNode should be(newListIri.get)
-
-        firstChildIri.set(childNodeInfo.id)
-      }
-
-      "add second child to list in first position - to the root node" in {
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.listCreateChildNode(
-            ListCreateChildNodeRequest(
-              id = None,
-              Some(
-                Comments.unsafeFrom(
-                  Seq(StringLiteralV2.from(value = "New Second Child List Node Comment", language = Some("en"))),
-                ),
-              ),
-              Labels.unsafeFrom(
-                Seq(StringLiteralV2.from(value = "New Second Child List Node Value", language = Some("en"))),
-              ),
-              Some(ListName.unsafeFrom("second")),
-              ListIri.unsafeFrom(newListIri.get),
-              Some(Position.unsafeFrom(0)),
-              ProjectIri.unsafeFrom(imagesProjectIri),
+        listsResponder(_.listCreateChildNode(createReq, UUID.randomUUID))
+          .map(_.nodeinfo)
+          .tap(nodeInfo => ZIO.succeed(firstChildIri.set(nodeInfo.id)))
+          .map(nodeInfo =>
+            assertTrue(
+              nodeInfo.labels.stringLiterals.sorted ==
+                Seq(StringLiteralV2.from("New First Child List Node Value", EN)),
+              nodeInfo.comments.stringLiterals.sorted ==
+                Seq(StringLiteralV2.from("New First Child List Node Comment", EN)),
+              nodeInfo.position == 0,
+              nodeInfo.hasRootNode == newListIri.get,
             ),
-            UUID.randomUUID,
-          ),
+          )
+      },
+      test("add second child to list in first position - to the root node") {
+        val commentValues = Seq(StringLiteralV2.from("New Second Child List Node Comment", EN))
+        val labelValues   = Seq(StringLiteralV2.from("New Second Child List Node Value", EN))
+        val createReq = ListCreateChildNodeRequest(
+          None,
+          Some(Comments.unsafeFrom(commentValues)),
+          Labels.unsafeFrom(labelValues),
+          Some(ListName.unsafeFrom("second")),
+          newListIri.asListIri,
+          Some(Position.unsafeFrom(0)),
+          imagesProjectIri,
         )
-
-        val childNodeInfo: ListChildNodeInfoADM = received.nodeinfo
-
-        // check labels
-        val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
-        labels.size should be(1)
-        labels.sorted should be(
-          Seq(StringLiteralV2.from(value = "New Second Child List Node Value", language = Some("en"))),
-        )
-
-        // check comments
-        val comments = childNodeInfo.comments.stringLiterals
-        comments.size should be(1)
-        comments.sorted should be(
-          Seq(StringLiteralV2.from(value = "New Second Child List Node Comment", language = Some("en"))),
-        )
-
-        // check position
-        val position = childNodeInfo.position
-        position should be(0)
-
-        // check has root node
-        val rootNode = childNodeInfo.hasRootNode
-        rootNode should be(newListIri.get)
-
-        secondChildIri.set(childNodeInfo.id)
-      }
-
-      "add child to second child node" in {
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.listCreateChildNode(
-            ListCreateChildNodeRequest(
-              id = None,
-              Some(
-                Comments.unsafeFrom(
-                  Seq(StringLiteralV2.from(value = "New Third Child List Node Comment", language = Some("en"))),
-                ),
-              ),
-              Labels.unsafeFrom(
-                Seq(StringLiteralV2.from(value = "New Third Child List Node Value", language = Some("en"))),
-              ),
-              Some(ListName.unsafeFrom("third")),
-              ListIri.unsafeFrom(secondChildIri.get),
-              Some(Position.unsafeFrom(0)),
-              ProjectIri.unsafeFrom(imagesProjectIri),
+        listsResponder(_.listCreateChildNode(createReq, UUID.randomUUID))
+          .map(_.nodeinfo)
+          .tap(nodeInfo => ZIO.succeed(secondChildIri.set(nodeInfo.id)))
+          .map(nodeInfo =>
+            assertTrue(
+              nodeInfo.labels.stringLiterals == labelValues,
+              nodeInfo.comments.stringLiterals == commentValues,
+              nodeInfo.position == 0,
+              nodeInfo.hasRootNode == newListIri.get,
             ),
-            UUID.randomUUID,
-          ),
+          )
+      },
+      test("add child to second child node") {
+        val commentValues = Seq(StringLiteralV2.from("New Third Child List Node Comment", EN))
+        val labelValues   = Seq(StringLiteralV2.from("New Third Child List Node Value", EN))
+        val createReq = ListCreateChildNodeRequest(
+          None,
+          Some(Comments.unsafeFrom(commentValues)),
+          Labels.unsafeFrom(labelValues),
+          Some(ListName.unsafeFrom("third")),
+          ListIri.unsafeFrom(secondChildIri.get),
+          Some(Position.unsafeFrom(0)),
+          imagesProjectIri,
         )
-
-        val childNodeInfo = received.nodeinfo
-
-        // check labels
-        val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
-        labels.size should be(1)
-        labels.sorted should be(
-          Seq(StringLiteralV2.from(value = "New Third Child List Node Value", language = Some("en"))),
-        )
-
-        // check comments
-        val comments = childNodeInfo.comments.stringLiterals
-        comments.size should be(1)
-        comments.sorted should be(
-          Seq(StringLiteralV2.from(value = "New Third Child List Node Comment", language = Some("en"))),
-        )
-
-        // check position
-        val position = childNodeInfo.position
-        position should be(0)
-
-        // check has root node
-        val rootNode = childNodeInfo.hasRootNode
-        rootNode should be(newListIri.get)
-
-        thirdChildIri.set(childNodeInfo.id)
-      }
-
-      "not create a node if given new position is out of range" in {
+        listsResponder(_.listCreateChildNode(createReq, UUID.randomUUID))
+          .map(_.nodeinfo)
+          .tap(nodeInfo => ZIO.succeed(thirdChildIri.set(nodeInfo.id)))
+          .map(nodeInfo =>
+            assertTrue(
+              nodeInfo.labels.stringLiterals.sorted == labelValues,
+              nodeInfo.comments.stringLiterals == commentValues,
+              nodeInfo.position == 0,
+              nodeInfo.hasRootNode == newListIri.get,
+            ),
+          )
+      },
+      test("not create a node if given new position is out of range") {
         val givenPosition = Position.unsafeFrom(20)
 
-        val exit = UnsafeZioRun.run(
-          ListsResponder.listCreateChildNode(
-            ListCreateChildNodeRequest(
-              id = None,
-              Some(
-                Comments.unsafeFrom(
-                  Seq(StringLiteralV2.from(value = "New Fourth Child List Node Comment", language = Some("en"))),
-                ),
-              ),
-              Labels.unsafeFrom(
-                Seq(StringLiteralV2.from(value = "New Fourth Child List Node Value", language = Some("en"))),
-              ),
-              Some(ListName.unsafeFrom("fourth")),
-              ListIri.unsafeFrom(newListIri.get),
-              Some(givenPosition),
-              ProjectIri.unsafeFrom(imagesProjectIri),
+        val createReq = ListCreateChildNodeRequest(
+          None,
+          None,
+          Labels.unsafeFrom(Seq(StringLiteralV2.from("New Fourth Child List Node Value", EN))),
+          None,
+          ListIri.unsafeFrom(newListIri.get),
+          Some(givenPosition),
+          imagesProjectIri,
+        )
+        listsResponder(_.listCreateChildNode(createReq, UUID.randomUUID)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+              s"Invalid position given ${givenPosition.value}, maximum allowed position is = 2.",
             ),
-            UUID.randomUUID,
           ),
         )
-
-        assertFailsWithA[BadRequestException](
-          exit,
-          s"Invalid position given ${givenPosition.value}, maximum allowed position is = 2.",
-        )
-      }
-    }
-
-    "used to reposition nodes" should {
-      "not reposition a node if new position is the same as old one" in {
+      },
+    ),
+    suite("used to reposition nodes")(
+      test("not reposition a node if new position is the same as old one") {
         val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
         val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition = Position.unsafeFrom(3)
-        val exit = UnsafeZioRun.run(
-          ListsResponder.nodePositionChangeRequestADM(
+        listsResponder(
+          _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
             UUID.randomUUID,
           ),
+        ).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[UpdateNotPerformedException](
+              s"The given position is the same as node's current position.",
+            ),
+          ),
         )
-        assertFailsWithA[UpdateNotPerformedException](
-          exit,
-          s"The given position is the same as node's current position.",
-        )
-      }
-
-      "not reposition a node if new position is out of range" in {
+      },
+      test("not reposition a node if new position is out of range") {
         val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
         val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition = Position.unsafeFrom(30)
-
-        val exit = UnsafeZioRun.run(
-          ListsResponder.nodePositionChangeRequestADM(
+        listsResponder(
+          _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
             UUID.randomUUID,
           ),
+        ).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+              s"Invalid position given, maximum allowed position is = 4.",
+            ),
+          ),
         )
-        assertFailsWithA[BadRequestException](
-          exit,
-          s"Invalid position given, maximum allowed position is = 4.",
-        )
-      }
-
-      "not reposition a node to another parent node if new position is out of range" in {
+      },
+      test("not reposition a node to another parent node if new position is out of range") {
         val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
         val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
         val newPosition = Position.unsafeFrom(30)
-
-        val exit = UnsafeZioRun.run(
-          ListsResponder.nodePositionChangeRequestADM(
+        listsResponder(
+          _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
             UUID.randomUUID,
           ),
+        ).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+              s"Invalid position given, maximum allowed position is = 3.",
+            ),
+          ),
         )
-        assertFailsWithA[BadRequestException](
-          exit,
-          s"Invalid position given, maximum allowed position is = 3.",
-        )
-      }
-
-      "reposition node List014 from position 3 to 1 (shift to right)" in {
+      },
+      test("reposition node List014 from position 3 to 1 (shift to right)") {
         val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
         val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition = Position.unsafeFrom(1)
-
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.nodePositionChangeRequestADM(
+        listsResponder(
+          _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
             UUID.randomUUID,
           ),
-        )
-
-        val parentNode = received.node
-        parentNode.id should be(parentIri.value)
-
-        val children      = parentNode.children
-        val isNodeUpdated = children.exists(child => child.id == nodeIri.value && child.position == 1)
-        isNodeUpdated should be(true)
-
-        // node in position 4 must not have changed
-        val staticNode = children.last
-        staticNode.id should be("http://rdfh.ch/lists/0001/notUsedList015")
-        staticNode.position should be(4)
-
-        // node in position 1 must have been shifted to position 2
-        val isShifted =
-          children.exists(child => child.id == "http://rdfh.ch/lists/0001/notUsedList012" && child.position == 2)
-        isShifted should be(true)
-      }
-
-      "reposition node List011 from position 0 to end (shift to left)" in {
+        ).map(_.node).map { parentNode =>
+          val children      = parentNode.children
+          val isNodeUpdated = children.exists(child => child.id == nodeIri.value && child.position == 1)
+          // node in position 1 must have been shifted to position 2
+          val isShifted =
+            children.exists(child => child.id == "http://rdfh.ch/lists/0001/notUsedList012" && child.position == 2)
+          assertTrue(
+            parentNode.id == parentIri.value,
+            isNodeUpdated,
+            // last node must not have changed
+            children.last.position == 4,
+            children.last.id == "http://rdfh.ch/lists/0001/notUsedList015",
+            isShifted,
+          )
+        }
+      },
+      test("reposition node List011 from position 0 to end (shift to left)") {
         val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList011")
         val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition = Position.unsafeFrom(-1)
-
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.nodePositionChangeRequestADM(
+        listsResponder(
+          _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
             UUID.randomUUID,
           ),
-        )
-
-        val parentNode = received.node
-
-        /* check parent node */
-        parentNode.id should be(parentIri.value)
-        val children      = parentNode.children
-        val isNodeUpdated = children.exists(child => child.id == nodeIri.value && child.position == 4)
-        isNodeUpdated should be(true)
-
-        // node that was in position 1 must be in 0 now
-        val firstNode = children.head
-        firstNode.id should be("http://rdfh.ch/lists/0001/notUsedList014")
-        firstNode.position should be(0)
-
-        // last node must be one before last now
-        val isShifted =
-          children.exists(child => child.id == "http://rdfh.ch/lists/0001/notUsedList015" && child.position == 3)
-        isShifted should be(true)
-      }
-
-      "reposition node List013 in position 2 of another parent" in {
+        ).map(_.node).map { parentNode =>
+          val children      = parentNode.children
+          val firstNode     = children.head
+          val isNodeUpdated = children.exists(child => child.id == nodeIri.value && child.position == 4)
+          assertTrue(
+            parentNode.id == parentIri.value,
+            isNodeUpdated,
+            // node that was in position 1 must be in 0 now
+            firstNode.id == "http://rdfh.ch/lists/0001/notUsedList014",
+            firstNode.position == 0,
+            // last node must be one before last now
+            children.exists(child => child.id == "http://rdfh.ch/lists/0001/notUsedList015" && child.position == 3),
+          )
+        }
+      },
+      test("reposition node List013 in position 2 of another parent") {
         val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList013")
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
         val newPosition  = Position.unsafeFrom(2)
-
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.nodePositionChangeRequestADM(
+        val oldParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
+        val parentNode = listsResponder(
+          _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
             UUID.randomUUID,
           ),
-        )
+        ).map(_.node)
+        val actual = listsResponder(_.listGetRequestADM(oldParentIri.value)).flatMap(expectType[ListNodeGetResponseADM])
 
-        val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        val parentNode   = received.node
-        parentNode.id should be(newParentIri.value)
+        (parentNode <*> actual).map { (parentNode: ListNodeADM, actual: ListNodeGetResponseADM) =>
 
-        /* check children of new parent node */
-        val childrenOfNewParent = parentNode.children
+          /* check children of new parent node */
+          // node must be in children of new parent
+          val isNodeAdd = parentNode.children.exists(child => child.id == nodeIri.value && child.position == 2)
 
-        // node must be in children of new parent
-        childrenOfNewParent.size should be(4)
-        val isNodeAdd = childrenOfNewParent.exists(child => child.id == nodeIri.value && child.position == 2)
-        isNodeAdd should be(true)
+          // last node of new parent must be shifted one place to right
+          val isShifted = parentNode.children.exists(child =>
+            child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3,
+          )
 
-        // last node of new parent must be shifted one place to right
-        val isShifted = childrenOfNewParent.exists(child =>
-          child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3,
-        )
-        isShifted should be(true)
+          /* check old parent node */
+          // node must not be in children of old parent
+          val oldParentChildren = actual.node.children
+          val isNodeUpdated     = oldParentChildren.exists(child => child.id == nodeIri.value)
 
-        /* check old parent node */
-        val actual = UnsafeZioRun.runOrThrow(ListsResponder.listGetRequestADM(oldParentIri))
-        val receivedNode: ListNodeGetResponseADM = actual match {
-          case it: ListNodeGetResponseADM => it
-          case _                          => fail(s"Expecting ListNodeGetResponseADM.")
+          // nodes of old siblings must be shifted to the left.
+          val lastNode = oldParentChildren.last
+
+          assertTrue(
+            parentNode.id == newParentIri.value,
+            parentNode.children.size == 4,
+            isNodeAdd,
+            isShifted,
+            oldParentChildren.size == 4,
+            !isNodeUpdated,
+            lastNode.id == "http://rdfh.ch/lists/0001/notUsedList011",
+            lastNode.position == 3,
+          )
         }
-
-        // node must not be in children of old parent
-        val oldParentChildren = receivedNode.node.children
-        oldParentChildren.size should be(4)
-        val isNodeUpdated = oldParentChildren.exists(child => child.id == nodeIri.value)
-        isNodeUpdated should be(false)
-
-        // nodes of old siblings must be shifted to the left.
-        val lastNode = oldParentChildren.last
-        lastNode.id should be("http://rdfh.ch/lists/0001/notUsedList011")
-        lastNode.position should be(3)
-      }
-
-      "reposition node List015 to the end of another parent's children" in {
+      },
+      test("reposition node List015 to the end of another parent's children") {
         val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList015")
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
+        val oldParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition  = Position.unsafeFrom(-1)
 
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.nodePositionChangeRequestADM(
+        val parentNode = listsResponder(
+          _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
             UUID.randomUUID,
           ),
-        )
+        ).map(_.node)
 
-        val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        val parentNode   = received.node
-        parentNode.id should be(newParentIri.value)
+        val actual = listsResponder(_.listGetRequestADM(oldParentIri.value))
+          .flatMap(expectType[ListNodeGetResponseADM])
 
-        /* check children of new parent node */
-        val childrenOfNewParent = parentNode.children
-
-        // node must be in children of new parent
-        childrenOfNewParent.size should be(5)
-        val isNodeAdd = childrenOfNewParent.exists(child => child.id == nodeIri.value && child.position == 4)
-        isNodeAdd should be(true)
-
-        // last node of new parent must have remained in its current position
-        val isShifted = childrenOfNewParent.exists(child =>
-          child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3,
-        )
-        isShifted should be(true)
-
-        /* check old parent node */
-        val actual = UnsafeZioRun.runOrThrow(ListsResponder.listGetRequestADM(oldParentIri))
-        val receivedNode: ListNodeGetResponseADM = actual match {
-          case node: ListNodeGetResponseADM => node
-          case _                            => fail(s"Expecting ListNodeGetResponseADM.")
+        (parentNode <*> actual).map { (parentNode: ListNodeADM, actual: ListNodeGetResponseADM) =>
+          /* check children of new parent node */
+          val childrenOfNewParent = parentNode.children
+          // node must be in children of new parent
+          val isNodeAdd = childrenOfNewParent.exists(child => child.id == nodeIri.value && child.position == 4)
+          // last node of new parent must have remained in its current position
+          val isShifted = childrenOfNewParent
+            .exists(child => child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3)
+          // node must not be in children of old parent
+          val oldParentChildren = actual.node.children
+          val isNodeUpdated     = oldParentChildren.exists(child => child.id == nodeIri.value)
+          assertTrue(
+            parentNode.id == newParentIri.value,
+            childrenOfNewParent.size == 5,
+            isNodeAdd,
+            isShifted,
+            oldParentChildren.size == 3,
+            !isNodeUpdated,
+          )
         }
-
-        // node must not be in children of old parent
-        val oldParentChildren = receivedNode.node.children
-        oldParentChildren.size should be(3)
-        val isNodeUpdated = oldParentChildren.exists(child => child.id == nodeIri.value)
-        isNodeUpdated should be(false)
-      }
-
-      "put List015 back in end of its original parent node" in {
+      },
+      test("put List015 back in end of its original parent node") {
         val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList015")
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition  = Position.unsafeFrom(-1)
 
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.nodePositionChangeRequestADM(
+        listsResponder(
+          _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
             UUID.randomUUID,
           ),
-        )
-
-        val parentNode = received.node
-        parentNode.id should be(newParentIri.value)
-
-        /* check children of new parent node */
-        val childrenOfNewParent = parentNode.children
-        childrenOfNewParent.size should be(4)
-        val isNodeUpdated = childrenOfNewParent.exists(child => child.id == nodeIri.value && child.position == 3)
-        isNodeUpdated should be(true)
-      }
-
-      "put List013 back in position 2 of its original parent node" in {
+        ).map(_.node).map { parentNode =>
+          assertTrue(
+            parentNode.id == newParentIri.value,
+            parentNode.children.size == 4,
+            parentNode.children.exists(child => child.id == nodeIri.value && child.position == 3),
+          )
+        }
+      },
+      test("put List013 back in position 2 of its original parent node") {
         val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList013")
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition  = Position.unsafeFrom(2)
-
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.nodePositionChangeRequestADM(
+        listsResponder(
+          _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
             UUID.randomUUID,
           ),
-        )
-
-        val parentNode = received.node
-        parentNode.id should be(newParentIri.value)
-
-        /* check children of new parent node */
-        val childrenOfNewParent = parentNode.children
-        childrenOfNewParent.size should be(5)
-        val isNodeUpdated = childrenOfNewParent.exists(child => child.id == nodeIri.value && child.position == 2)
-        isNodeUpdated should be(true)
-      }
-
-      "put List011 back in its original place" in {
+        ).map(_.node).map { parentNode =>
+          assertTrue(
+            parentNode.id == newParentIri.value,
+            parentNode.children.size == 5,
+            parentNode.children.exists(child => child.id == nodeIri.value && child.position == 2),
+          )
+        }
+      },
+      test("put List011 back in its original place") {
         val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList011")
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition  = Position.unsafeFrom(0)
 
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.nodePositionChangeRequestADM(
+        listsResponder(
+          _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
             UUID.randomUUID,
           ),
-        )
-
-        val parentNode = received.node
-        parentNode.id should be(newParentIri.value)
-        val isNodeUpdated = parentNode.children.exists(child => child.id == nodeIri.value && child.position == 0)
-        isNodeUpdated should be(true)
-      }
-
-      "put List014 back in its original position" in {
+        ).map(_.node)
+          .map(parentNode =>
+            assertTrue(
+              parentNode.id == newParentIri.value,
+              parentNode.children.exists(child => child.id == nodeIri.value && child.position == 0),
+            ),
+          )
+      },
+      test("put List014 back in its original position") {
         val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition  = Position.unsafeFrom(3)
 
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.nodePositionChangeRequestADM(
+        listsResponder(
+          _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
             UUID.randomUUID,
           ),
-        )
-
-        val parentNode = received.node
-        parentNode.id should be(newParentIri.value)
-        val isNodeUpdated = parentNode.children.exists(child => child.id == nodeIri.value && child.position == 3)
-        isNodeUpdated should be(true)
-      }
-
-      "reposition node in a position equal to length of new parents children" in {
+        ).map(_.node)
+          .map(parentNode =>
+            assertTrue(
+              parentNode.id == newParentIri.value,
+              parentNode.children.exists(child => child.id == nodeIri.value && child.position == 3),
+            ),
+          )
+      },
+      test("reposition node in a position equal to length of new parents children") {
         val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList03")
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition  = Position.unsafeFrom(5)
-
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.nodePositionChangeRequestADM(
+        listsResponder(
+          _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
             UUID.randomUUID,
           ),
-        )
-
-        val parentNode = received.node
-        parentNode.id should be(newParentIri.value)
-        val isNodeUpdated = parentNode.children.exists(child => child.id == nodeIri.value && child.position == 5)
-        isNodeUpdated should be(true)
-      }
-
-      "reposition List014 in position 0 of its sibling which does not have a child" in {
+        ).map(_.node)
+          .map(received =>
+            assertTrue(
+              received.id == newParentIri.value,
+              received.children.exists(child => child.id == nodeIri.value && child.position == 5),
+            ),
+          )
+      },
+      test("reposition List014 in position 0 of its sibling which does not have a child") {
         val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList015")
         val newPosition  = Position.unsafeFrom(0)
-
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.nodePositionChangeRequestADM(
+        listsResponder(
+          _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            SharedTestDataADM.anythingAdminUser,
+            anythingAdminUser,
             UUID.randomUUID,
           ),
-        )
-
-        val parentNode = received.node
-        parentNode.id should be(newParentIri.value)
-        val isNodeUpdated = parentNode.children.exists(child => child.id == nodeIri.value && child.position == 0)
-        isNodeUpdated should be(true)
-      }
-    }
-
-    "used to delete list items" should {
-      "not delete a node that is in use" in {
+        ).map(_.node).map { received =>
+          assertTrue(
+            received.id == newParentIri.value,
+            received.children.exists(child => child.id == nodeIri.value && child.position == 0),
+          )
+        }
+      },
+    ),
+    suite("used to delete list items")(
+      test("not delete a node that is in use") {
         val nodeInUseIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
-        val exit = UnsafeZioRun.run(
-          ListsResponder.deleteListItemRequestADM(
-            nodeInUseIri,
-            SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID,
+        listsResponder(_.deleteListItemRequestADM(nodeInUseIri, anythingAdminUser, UUID.randomUUID)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+              s"Node $nodeInUseIri cannot be deleted, because it is in use.",
+            ),
           ),
         )
-        assertFailsWithA[BadRequestException](
-          exit,
-          s"Node ${nodeInUseIri.value} cannot be deleted, because it is in use.",
-        )
-      }
-
-      "not delete a node that has a child which is used (node itself not in use, but its child is)" in {
-        val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
-        val exit = UnsafeZioRun.run(
-          ListsResponder.deleteListItemRequestADM(
-            nodeIri,
-            SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID,
-          ),
-        )
+      },
+      test("not delete a node that has a child which is used (node itself not in use, but its child is)") {
+        val nodeIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
         val usedChild = "http://rdfh.ch/lists/0001/treeList10"
-        assertFailsWithA[BadRequestException](
-          exit,
-          s"Node ${nodeIri.value} cannot be deleted, because its child $usedChild is in use.",
+        listsResponder(_.deleteListItemRequestADM(nodeIri, anythingAdminUser, UUID.randomUUID)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+              s"Node ${nodeIri.value} cannot be deleted, because its child $usedChild is in use.",
+            ),
+          ),
         )
-      }
-
-      "not delete a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode" in {
+      },
+      test(
+        "not delete a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode",
+      ) {
         val nodeInUseInOntologyIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList")
-        val exit = UnsafeZioRun.run(
-          ListsResponder.deleteListItemRequestADM(
-            nodeInUseInOntologyIri,
-            SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID,
+        listsResponder(_.deleteListItemRequestADM(nodeInUseInOntologyIri, anythingAdminUser, UUID.randomUUID)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+              s"Node ${nodeInUseInOntologyIri.value} cannot be deleted, because it is in use.",
+            ),
           ),
         )
-        assertFailsWithA[BadRequestException](
-          exit,
-          s"Node ${nodeInUseInOntologyIri.value} cannot be deleted, because it is in use.",
-        )
-      }
-
-      "delete a middle child node that is not in use" in {
+      },
+      test("delete a middle child node that is not in use") {
         val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList012")
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.deleteListItemRequestADM(
-            nodeIri,
-            SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID,
-          ),
-        )
-
-        val parentNode = received match {
-          case ChildNodeDeleteResponseADM(node) => node
-          case _                                => fail("expecting ChildNodeDeleteResponseADM")
-        }
-
-        val remainingChildren = parentNode.children
-        remainingChildren.size should be(4)
-        // Tailing children should be shifted to left
-        remainingChildren.last.position should be(3)
-
-        // node List015 should still have its child
-        val list015 = remainingChildren.filter(node => node.id == "http://rdfh.ch/lists/0001/notUsedList015").head
-        list015.position should be(2)
-        list015.children.size should be(1)
-      }
-
-      "delete a child node that is not in use" in {
+        listsResponder(_.deleteListItemRequestADM(nodeIri, anythingAdminUser, UUID.randomUUID))
+          .flatMap(expectType[ChildNodeDeleteResponseADM])
+          .map(_.node.children)
+          .map { remainingChildren =>
+            // node List015 should still have its child
+            val list015 = remainingChildren.filter(node => node.id == "http://rdfh.ch/lists/0001/notUsedList015").head
+            assertTrue(
+              remainingChildren.size == 4,
+              // Tailing children  ==  shifted to left
+              remainingChildren.last.position == 3,
+              list015.position == 2,
+              list015.children.size == 1,
+            )
+          }
+      },
+      test("delete a child node that is not in use") {
         val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList02")
-        val received = UnsafeZioRun.runOrThrow(
-          ListsResponder.deleteListItemRequestADM(
-            nodeIri,
-            SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID,
-          ),
-        )
-        val parentNode = received match {
-          case ChildNodeDeleteResponseADM(node) => node
-          case _                                => fail("expecting ChildNodeDeleteResponseADM")
-        }
-
-        val remainingChildren = parentNode.children
-        remainingChildren.size should be(1)
-        val firstChild = remainingChildren.head
-        firstChild.id should be("http://rdfh.ch/lists/0001/notUsedList01")
-        firstChild.position should be(0)
-      }
-
-      "delete a list (i.e. root node) that is not in use in ontology" in {
+        listsResponder(_.deleteListItemRequestADM(nodeIri, anythingAdminUser, UUID.randomUUID))
+          .flatMap(expectType[ChildNodeDeleteResponseADM])
+          .map(_.node.children)
+          .map { remainingChildren =>
+            val firstChild = remainingChildren.head
+            assertTrue(
+              remainingChildren.size == 1,
+              firstChild.id == "http://rdfh.ch/lists/0001/notUsedList01",
+              firstChild.position == 0,
+            )
+          }
+      },
+      test("delete a list (i.e. root node) that is not in use in ontology") {
         val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
-        val actual = UnsafeZioRun.runOrThrow(
-          ListsResponder.deleteListItemRequestADM(
-            listIri,
-            SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID,
+        listsResponder(_.deleteListItemRequestADM(listIri, anythingAdminUser, UUID.randomUUID))
+          .flatMap(expectType[ListDeleteResponseADM])
+          .map(actual => assertTrue(actual.iri == listIri.value, actual.deleted))
+      },
+    ),
+    suite("used to query if list can be deleted")(
+      test("return FALSE for a node that is in use") {
+        val nodeInUseIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
+        listsResponder(_.canDeleteListRequestADM(nodeInUseIri))
+          .map(response => assertTrue(response.listIri == nodeInUseIri.value, !response.canDeleteList))
+      },
+      test("return FALSE for a node that is unused but has a child which is used") {
+        val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
+        listsResponder(_.canDeleteListRequestADM(nodeIri))
+          .map(response => assertTrue(response.listIri == nodeIri.value, !response.canDeleteList))
+      },
+      test(
+        "return FALSE for a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode",
+      ) {
+        val nodeInUseInOntologyIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
+        listsResponder(_.canDeleteListRequestADM(nodeInUseInOntologyIri))
+          .map(response => assertTrue(response.listIri == nodeInUseInOntologyIri.value, !response.canDeleteList))
+      },
+      test("return TRUE for a middle child node that is not in use") {
+        val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList012")
+        listsResponder(_.canDeleteListRequestADM(nodeIri))
+          .map(response => assertTrue(response.listIri == nodeIri.value, response.canDeleteList))
+      },
+      test("return TRUE for a child node that is not in use") {
+        val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList02")
+        listsResponder(_.canDeleteListRequestADM(nodeIri))
+          .map(response => assertTrue(response.listIri == nodeIri.value, response.canDeleteList))
+      },
+      test("delete a list (i.e. root node) that is not in use in ontology") {
+        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
+        listsResponder(_.canDeleteListRequestADM(listIri))
+          .map(response => assertTrue(response.canDeleteList, response.listIri == listIri.value))
+      },
+    ),
+    suite("used to delete list node comments")(
+      test("do not delete a comment of root list node") {
+        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList")
+        listsResponder(_.deleteListNodeCommentsADM(listIri)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+              s"Root node comments cannot be deleted.",
+            ),
           ),
         )
-
-        val received = actual match {
-          case resp: ListDeleteResponseADM => resp
-          case _                           => fail("expecting ListDeleteResponseADM")
-        }
-        received.iri should be(listIri.value)
-        received.deleted should be(true)
-      }
-    }
-
-    "used to query if list can be deleted" should {
-      "return FALSE for a node that is in use" in {
-        val nodeInUseIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
-        val response     = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeInUseIri))
-        response.listIri should be(nodeInUseIri.value)
-        response.canDeleteList should be(false)
-      }
-
-      "return FALSE for a node that is unused but has a child which is used" in {
-        val nodeIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
-        val response = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeIri))
-        response.listIri should be(nodeIri.value)
-        response.canDeleteList should be(false)
-      }
-
-      "return FALSE for a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode" in {
-        val nodeInUseInOntologyIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
-        val response               = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeInUseInOntologyIri))
-        response.listIri should be(nodeInUseInOntologyIri.value)
-        response.canDeleteList should be(false)
-      }
-
-      "return TRUE for a middle child node that is not in use" in {
-        val nodeIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList012")
-        val response = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeIri))
-        response.listIri should be(nodeIri.value)
-        response.canDeleteList should be(true)
-      }
-
-      "return TRUE for a child node that is not in use" in {
-        val nodeIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList02")
-        val response = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeIri))
-        response.listIri should be(nodeIri.value)
-        response.canDeleteList should be(true)
-      }
-
-      "delete a list (i.e. root node) that is not in use in ontology" in {
-        val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
-        val response = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(listIri))
-        response.listIri should be(listIri.value)
-        response.canDeleteList should be(true)
-      }
-    }
-
-    "used to delete list node comments" should {
-      "do not delete a comment of root list node" in {
-        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList")
-        val exit    = UnsafeZioRun.run(ListsResponder.deleteListNodeCommentsADM(listIri))
-        assertFailsWithA[BadRequestException](
-          exit,
-          s"Root node comments cannot be deleted.",
+      },
+      test("delete all comments of child node that contains just one comment") {
+        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList01")
+        listsResponder(_.deleteListNodeCommentsADM(listIri)).map(response =>
+          assertTrue(
+            response.nodeIri == listIri.value,
+            response.commentsDeleted,
+          ),
         )
-      }
-
-      "delete all comments of child node that contains just one comment" in {
-        val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList01")
-        val response = UnsafeZioRun.runOrThrow(ListsResponder.deleteListNodeCommentsADM(listIri))
-        response.nodeIri should be(listIri.value)
-        response.commentsDeleted should be(true)
-      }
-
-      "delete all comments of child node that contains more than one comment" in {
-        val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList02")
-        val response = UnsafeZioRun.runOrThrow(ListsResponder.deleteListNodeCommentsADM(listIri))
-        response.nodeIri should be(listIri.value)
-        response.commentsDeleted should be(true)
-      }
-
-      "if requested list does not have comments, inform there is no comments to delete" in {
+      },
+      test("delete all comments of child node that contains more than one comment") {
+        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList02")
+        listsResponder(_.deleteListNodeCommentsADM(listIri))
+          .map(response => assertTrue(response.nodeIri == listIri.value, response.commentsDeleted))
+      },
+      test("if requested list does not have comments, inform there is no comments to delete") {
         val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList03")
-        val exit    = UnsafeZioRun.run(ListsResponder.deleteListNodeCommentsADM(listIri))
-        assertFailsWithA[BadRequestException](
-          exit,
-          s"Nothing to delete. Node ${listIri.value} does not have comments.",
+        listsResponder(_.deleteListNodeCommentsADM(listIri)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+              s"Nothing to delete. Node ${listIri.value} does not have comments.",
+            ),
+          ),
         )
-      }
-    }
-  }
+      },
+    ),
+  )
 }
