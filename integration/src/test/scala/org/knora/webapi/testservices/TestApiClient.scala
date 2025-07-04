@@ -97,6 +97,17 @@ final case class TestApiClient(
       .response(asJsonLdDocument)
       .send(backend)
 
+  def getJsonLdDocument(relativeUri: Uri, user: User): Task[Response[Either[String, JsonLDDocument]]] =
+    jwtFor(user).flatMap { jwt =>
+      basicRequest
+        .get(relativeUri)
+        .contentType(MediaType.unsafeApply("application", "ld+json"))
+        .auth
+        .bearer(jwt)
+        .response(asJsonLdDocument)
+        .send(backend)
+    }
+
   def postJson[A: JsonDecoder, B: JsonEncoder](
     relativeUri: Uri,
     body: B,
@@ -218,6 +229,12 @@ object TestApiClient {
 
   def getJsonLdDocument(relativeUri: Uri): ZIO[TestApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getJsonLdDocument(relativeUri))
+
+  def getJsonLdDocument(
+    relativeUri: Uri,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.getJsonLdDocument(relativeUri, user))
 
   def getJsonLd(relativeUri: Uri, user: User): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri, user))
