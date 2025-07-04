@@ -5,11 +5,22 @@
 
 package org.knora.webapi.responders.v2
 
+import zio.*
+import zio.test.TestResult
+import zio.test.assertCompletes
+
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 
 object ResourcesResponseCheckerV2 {
+
+  def compareReadResourcesSequenceV2ResponseZIO(
+    expected: ReadResourcesSequenceV2,
+    received: ReadResourcesSequenceV2,
+  ): Task[TestResult] = ZIO
+    .attempt(compareReadResourcesSequenceV2Response(expected, received))
+    .as(assertCompletes)
 
   /**
    * Compares the response to a full resource request with the expected response.
@@ -57,10 +68,7 @@ object ResourcesResponseCheckerV2 {
               case (expectedVal: ReadValueV2, receivedVal: ReadValueV2) =>
                 assert(expectedVal == receivedVal, s"value objects does not match: $expectedVal != $receivedVal")
             }
-
         }
-
     }
   }
-
 }
