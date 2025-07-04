@@ -5,7 +5,6 @@
 
 package org.knora.webapi.messages
 
-import spray.json.*
 import zio.ZLayer
 
 import java.time.*
@@ -1374,15 +1373,6 @@ class StringFormatter private (
       // No. Convert it to a SmartIri without caching it.
       new SmartIriImpl(iri, None, errorFun)
     }
-
-  /**
-   * Encodes a string for use in JSON, and encloses it in quotation marks.
-   *
-   * @param s the string to be encoded.
-   * @return the encoded string.
-   */
-  def toJsonEncodedString(s: String): String =
-    JsString(s).compactPrint
 
   /**
    * Formats a Knora ARK timestamp.

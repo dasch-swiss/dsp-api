@@ -706,17 +706,21 @@ final case class ListsResponder(
         newListNodeIri <- createNode(createChildNodeRequest)
         // Verify that the list node was created.
         maybeNewListNode <- listNodeInfoGetADM(nodeIri = newListNodeIri)
-        newListNode = maybeNewListNode match {
-                        case Some(childNode: ListChildNodeInfoADM) => childNode
-                        case Some(_: ListRootNodeInfoADM) =>
-                          throw UpdateNotPerformedException(
-                            s"Child node ${createChildNodeRequest.name} could not be created. Probably parent node Iri is missing in payload.",
-                          )
-                        case _ =>
-                          throw UpdateNotPerformedException(
-                            s"List node $newListNodeIri was not created. Please report this as a possible bug.",
-                          )
-                      }
+        newListNode <- maybeNewListNode match {
+                         case Some(childNode: ListChildNodeInfoADM) => ZIO.succeed(childNode)
+                         case Some(_: ListRootNodeInfoADM) =>
+                           ZIO.fail(
+                             UpdateNotPerformedException(
+                               s"Child node ${createChildNodeRequest.name} could not be created. Probably parent node Iri is missing in payload.",
+                             ),
+                           )
+                         case _ =>
+                           ZIO.fail(
+                             UpdateNotPerformedException(
+                               s"List node $newListNodeIri was not created. Please report this as a possible bug.",
+                             ),
+                           )
+                       }
 
       } yield ChildNodeInfoGetResponseADM(nodeinfo = newListNode)
 
@@ -922,24 +926,30 @@ final case class ListsResponder(
 
         // verify that node is among children of specified parent in correct position
         updatedNode = rest.head
-        _ = if (updatedNode.id != nodeIri.value || updatedNode.position != newPosition) {
-              throw UpdateNotPerformedException(
-                s"Node is not repositioned correctly in specified parent node. Please report this as a bug.",
-              )
-            }
+        _ <- ZIO.when(updatedNode.id != nodeIri.value || updatedNode.position != newPosition) {
+               ZIO.fail(
+                 UpdateNotPerformedException(
+                   s"Node is not repositioned correctly in specified parent node. Please report this as a bug.",
+                 ),
+               )
+             }
         leftPositions = siblingsPositionedBefore.map(child => child.position)
-        _ = if (leftPositions != leftPositions.sorted) {
-              throw UpdateNotPerformedException(
-                s"Something has gone wrong with shifting nodes. Please report this as a bug.",
-              )
-            }
+        _ <- ZIO.when(leftPositions != leftPositions.sorted) {
+               ZIO.fail(
+                 UpdateNotPerformedException(
+                   s"Something has gone wrong with shifting nodes. Please report this as a bug.",
+                 ),
+               )
+             }
         siblingsPositionedAfter = rest.slice(1, rest.length)
         rightSiblings           = siblingsPositionedAfter.map(child => child.position)
-        _ = if (rightSiblings != rightSiblings.sorted) {
-              throw UpdateNotPerformedException(
-                s"Something has gone wrong with shifting nodes. Please report this as a bug.",
-              )
-            }
+        _ <- ZIO.when(rightSiblings != rightSiblings.sorted) {
+               ZIO.fail(
+                 UpdateNotPerformedException(
+                   s"Something has gone wrong with shifting nodes. Please report this as a bug.",
+                 ),
+               )
+             }
 
       } yield updatedParent
 
@@ -981,14 +991,13 @@ final case class ListsResponder(
                dataNamedGraph = dataNamedGraph,
              )
 
-        // update position of siblings
-        _ <-
+        _ <- // update position of siblings
           if (currPosition < newPosition) {
             shiftNodes(currPosition + 1, newPosition, parentChildren, dataNamedGraph, ShiftLeft)
           } else if (currPosition > newPosition) {
             shiftNodes(newPosition, currPosition - 1, parentChildren, dataNamedGraph, ShiftRight)
           } else {
-            throw UpdateNotPerformedException(s"The given position is the same as node's current position.")
+            ZIO.fail(UpdateNotPerformedException(s"The given position is the same as node's current position."))
           }
       } yield newPosition
 
@@ -1204,9 +1213,13 @@ final case class ListsResponder(
 
         remainingChildren = parentNode.children
 
-        _ = if (remainingChildren.exists(child => child.id == deletedNodeIri)) {
-              throw UpdateNotPerformedException(s"Node $deletedNodeIri is not deleted properly, report this as a bug.")
-            }
+        _ <- ZIO.when(remainingChildren.exists(child => child.id == deletedNodeIri)) {
+               ZIO.fail(
+                 UpdateNotPerformedException(
+                   s"Node $deletedNodeIri is not deleted properly, report this as a bug.",
+                 ),
+               )
+             }
 
         // shift the siblings that were positioned after the deleted node, one place to left.
         updatedChildren <-
@@ -1509,17 +1522,19 @@ final case class ListsResponder(
     // get old parent node with its immediate children
     maybeOldParent     <- listNodeGetADM(nodeIri = oldParentIri, shallow = true)
     childrenOfOldParent = maybeOldParent.get.children
-    _ = if (childrenOfOldParent.exists(node => node.id == nodeIri)) {
-          throw UpdateNotPerformedException(
-            s"Node $nodeIri is still a child of $oldParentIri. Report this as a bug.",
-          )
-        }
+    _ <- ZIO.when(childrenOfOldParent.exists(node => node.id == nodeIri)) {
+           ZIO.fail(
+             UpdateNotPerformedException(
+               s"Node $nodeIri is still a child of $oldParentIri. Report this as a bug.",
+             ),
+           )
+         }
     // get new parent node with its immediate children
     maybeNewParentNode <- listNodeGetADM(nodeIri = newParentIri, shallow = true)
     childrenOfNewParent = maybeNewParentNode.get.children
-    _ = if (!childrenOfNewParent.exists(node => node.id == nodeIri)) {
-          throw UpdateNotPerformedException(s"Node $nodeIri is not added to parent node $newParentIri. ")
-        }
+    _ <- ZIO.when(!childrenOfNewParent.exists(node => node.id == nodeIri)) {
+           ZIO.fail(UpdateNotPerformedException(s"Node $nodeIri is not added to parent node $newParentIri. "))
+         }
 
   } yield ()
 }
@@ -1542,53 +1557,6 @@ object ListsResponder {
          |    ?s ?p ?o .
          |}""".stripMargin
   }
-
-  def listGetRequestADM(nodeIri: IRI): ZIO[ListsResponder, Throwable, ListItemGetResponseADM] =
-    ZIO.serviceWithZIO[ListsResponder](_.listGetRequestADM(nodeIri))
-
-  def listNodeInfoGetRequestADM(nodeIri: String): ZIO[ListsResponder, Throwable, NodeInfoGetResponseADM] =
-    ZIO.serviceWithZIO[ListsResponder](_.listNodeInfoGetRequestADM(nodeIri))
-
-  def listCreateRootNode(
-    req: ListCreateRootNodeRequest,
-    apiRequestID: UUID,
-  ): ZIO[ListsResponder, Throwable, ListGetResponseADM] =
-    ZIO.serviceWithZIO[ListsResponder](_.listCreateRootNode(req, apiRequestID))
-
-  def listCreateChildNode(
-    req: ListCreateChildNodeRequest,
-    apiRequestID: UUID,
-  ): ZIO[ListsResponder, Throwable, ChildNodeInfoGetResponseADM] =
-    ZIO.serviceWithZIO[ListsResponder](_.listCreateChildNode(req, apiRequestID))
-
-  def nodePositionChangeRequestADM(
-    nodeIri: ListIri,
-    changeNodePositionRequest: ListChangePositionRequest,
-    requestingUser: User,
-    apiRequestID: UUID,
-  ): ZIO[ListsResponder, Throwable, NodePositionChangeResponseADM] =
-    ZIO.serviceWithZIO[ListsResponder](
-      _.nodePositionChangeRequest(nodeIri, changeNodePositionRequest, requestingUser, apiRequestID),
-    )
-
-  def nodeInfoChangeRequest(
-    req: ListChangeRequest,
-    apiRequestId: UUID,
-  ): ZIO[ListsResponder, Throwable, NodeInfoGetResponseADM] =
-    ZIO.serviceWithZIO[ListsResponder](_.nodeInfoChangeRequest(req, apiRequestId))
-
-  def deleteListItemRequestADM(
-    iri: ListIri,
-    user: User,
-    uuid: UUID,
-  ): ZIO[ListsResponder, Throwable, ListItemDeleteResponseADM] =
-    ZIO.serviceWithZIO[ListsResponder](_.deleteListItemRequestADM(iri, user, uuid))
-
-  def deleteListNodeCommentsADM(iri: ListIri): ZIO[ListsResponder, Throwable, ListNodeCommentsDeleteResponseADM] =
-    ZIO.serviceWithZIO[ListsResponder](_.deleteListNodeCommentsADM(iri))
-
-  def canDeleteListRequestADM(iri: ListIri): ZIO[ListsResponder, Throwable, CanDeleteListResponseADM] =
-    ZIO.serviceWithZIO[ListsResponder](_.canDeleteListRequestADM(iri))
 
   val layer = ZLayer.derive[ListsResponder]
 }
