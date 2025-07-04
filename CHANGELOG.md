@@ -1,5 +1,38 @@
 # Changelog
 
+## [31.19.1](https://github.com/dasch-swiss/dsp-api/compare/v31.19.0...v31.19.1) (2025-07-04)
+
+
+### Maintenances
+
+* Major dependency updates ([#3670](https://github.com/dasch-swiss/dsp-api/issues/3670)) ([3b5ca22](https://github.com/dasch-swiss/dsp-api/commit/3b5ca22fedbf372b4285a3008b2f19a10a44d59b))
+* Minor dependency updates ([#3669](https://github.com/dasch-swiss/dsp-api/issues/3669)) ([4a33a35](https://github.com/dasch-swiss/dsp-api/commit/4a33a35950dfed89920015bd42f99be1a3004ef7))
+* Patch dependency updates ([#3668](https://github.com/dasch-swiss/dsp-api/issues/3668)) ([131ff19](https://github.com/dasch-swiss/dsp-api/commit/131ff197ca2c0e8ab36adfccca6dd8e1e8e6c929))
+
+
+### Tests
+
+* Migrate AdminGroupsEndpointsE2ESpec from pekko/scalatest to TestApiClient/zio-test ([#3665](https://github.com/dasch-swiss/dsp-api/issues/3665)) ([02b1ac9](https://github.com/dasch-swiss/dsp-api/commit/02b1ac9779b5223c827b89c49739350c5d65bc95))
+* Migrate AdminProjectsEndpointsE2ESpec from pekko/scalatest to TestApiClient/zio-test ([#3663](https://github.com/dasch-swiss/dsp-api/issues/3663)) ([7ca2ef7](https://github.com/dasch-swiss/dsp-api/commit/7ca2ef71908a66784731cfd8b9810c5f68aceb94))
+* Migrate AdminUsersEndpointsE2ESpec to zio ([#3662](https://github.com/dasch-swiss/dsp-api/issues/3662)) ([9bc4287](https://github.com/dasch-swiss/dsp-api/commit/9bc42877d62a5e7dd97afeea25e5b91f2d2a2538))
+* Migrate AssetPermissionsResponderSpec from scalaTest to zio-test ([#3666](https://github.com/dasch-swiss/dsp-api/issues/3666)) ([fba3245](https://github.com/dasch-swiss/dsp-api/commit/fba32450559160ee2165a19af00647c0c1b6a53f))
+* Migrate ConstructResponseUtilV2Spec to zio-test ([#3685](https://github.com/dasch-swiss/dsp-api/issues/3685)) ([9f903dd](https://github.com/dasch-swiss/dsp-api/commit/9f903dd1166536d43fd340f819bed6efeb526f5c))
+* Migrate CreateListsEndpointsE2ESpec to zio-test/TestApiClient ([#3676](https://github.com/dasch-swiss/dsp-api/issues/3676)) ([215445f](https://github.com/dasch-swiss/dsp-api/commit/215445fc5e85d3e10809a6baf321b91d8b720a14))
+* Migrate DeleteListsEndpointsE2ESpec to zio-test/TestApiClient ([#3675](https://github.com/dasch-swiss/dsp-api/issues/3675)) ([f31e16d](https://github.com/dasch-swiss/dsp-api/commit/f31e16d7a0a7cd2476c39912f46217cdc70f8af4))
+* Migrate Gravsearch*TransformerSpecs to zio-test ([#3684](https://github.com/dasch-swiss/dsp-api/issues/3684)) ([91537d4](https://github.com/dasch-swiss/dsp-api/commit/91537d461d2fe27892353c247fe5f4c0b1f8a449))
+* Migrate GroupRestServiceSpec from scalaTest to zio-test ([#3671](https://github.com/dasch-swiss/dsp-api/issues/3671)) ([d772197](https://github.com/dasch-swiss/dsp-api/commit/d7721974845ef4a7350d350f1deb3b724ecb7249))
+* Migrate ListResponderE2ESpec to zio-test ([#3678](https://github.com/dasch-swiss/dsp-api/issues/3678)) ([eeaede7](https://github.com/dasch-swiss/dsp-api/commit/eeaede76be560f8b88763df272fa613daa2415b1))
+* Migrate ListsEndpointsE2ESpec to zio-test/TestApiClient ([#3674](https://github.com/dasch-swiss/dsp-api/issues/3674)) ([6b24aff](https://github.com/dasch-swiss/dsp-api/commit/6b24aff127155f0b2c42a96b7ae22c3b6d6060e5))
+* Migrate OntologyHelpersSpec to zio-test ([#3680](https://github.com/dasch-swiss/dsp-api/issues/3680)) ([9ebcc95](https://github.com/dasch-swiss/dsp-api/commit/9ebcc958b9d60dee35acfd246b5dfd03487bc49f))
+* Migrate PermissionRestServiceE2ESpec to zio-test ([#3667](https://github.com/dasch-swiss/dsp-api/issues/3667)) ([6f4e6b2](https://github.com/dasch-swiss/dsp-api/commit/6f4e6b224c9ecd4c48ca7582b7bf0961e8dbbcba))
+* Migrate ProjectRestServiceSpec to zio test ([#3672](https://github.com/dasch-swiss/dsp-api/issues/3672)) ([2168d21](https://github.com/dasch-swiss/dsp-api/commit/2168d218162c50f7a88f7568afe00a8a2b1ba219))
+* Migrate SparqlTransformerSpec to zio-test ([#3683](https://github.com/dasch-swiss/dsp-api/issues/3683)) ([bf9a9bf](https://github.com/dasch-swiss/dsp-api/commit/bf9a9bfa714c097d6c714ef4220545850c38eebd))
+* Migrate StandoffTagUtilV2Spec to zio-test ([#3682](https://github.com/dasch-swiss/dsp-api/issues/3682)) ([04dc987](https://github.com/dasch-swiss/dsp-api/commit/04dc987bd9fda070b5b53e80cfed8f5df153f6f6))
+* Migrate TriplestoreServiceLiveSpec to zio-test ([#3681](https://github.com/dasch-swiss/dsp-api/issues/3681)) ([7b3fa8a](https://github.com/dasch-swiss/dsp-api/commit/7b3fa8ae7cd8d06feb6739b04c8c3e4a6d608989))
+* Migrate UpdateListEndpointsE2ESpec to zio-test/TestApiClient ([#3677](https://github.com/dasch-swiss/dsp-api/issues/3677)) ([114ea75](https://github.com/dasch-swiss/dsp-api/commit/114ea751fe6ffad521d4c05100813d2bc041b794))
+* Migrate UserRestServiceSpec to zio-test ([#3673](https://github.com/dasch-swiss/dsp-api/issues/3673)) ([91cc8e6](https://github.com/dasch-swiss/dsp-api/commit/91cc8e64393e12d181d10bf030b6061f95a6e56c))
+* Replace spray json with zio json and start using TestApiClient ([#3686](https://github.com/dasch-swiss/dsp-api/issues/3686)) ([2b3868f](https://github.com/dasch-swiss/dsp-api/commit/2b3868fad42848e8392f6cf8a81382fa7946420f))
+
 ## [31.19.0](https://github.com/dasch-swiss/dsp-api/compare/v31.18.0...v31.19.0) (2025-06-30)
 
 
