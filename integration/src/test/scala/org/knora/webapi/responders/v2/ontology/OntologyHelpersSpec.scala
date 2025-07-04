@@ -5,83 +5,76 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import zio.ZIO
+import zio.*
+import zio.test.*
 
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.InternalSchema
+import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
-import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
-/**
- * This spec is used to test [[org.knora.webapi.responders.v2.ontology.OntologyHelpers]].
- */
-class OntologyHelpersSpec extends E2ESpec {
+object OntologyHelpersSpec extends E2EZSpec {
 
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest",
     ),
-    RdfDataObject(
-      path = "test_data/project_ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything",
-    ),
   )
 
-  val freetestOntologyIri: SmartIri =
-    "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri.toOntologySchema(InternalSchema)
+  private val getStrictestCardinalitiesFromClassesSuite = {
+    val freetestOntologyIri = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri)
+    // define the classes
+    val unbounded  = freetestOntologyIri.makeClass("PubMayHaveMany")  // 0-n
+    val atLeastOne = freetestOntologyIri.makeClass("PubMustHaveSome") // 1-n
+    val zeroOrOne  = freetestOntologyIri.makeClass("PubMayHaveOne")   // 0-1
+    val exactlyOne = freetestOntologyIri.makeClass("PubMustHaveOne")  // 1
 
-  "The ontology helper" should {
+    // define all test cases and the expected results
+    val testCases: List[(Set[ResourceClassIri], Cardinality)] = List(
+      (Set(unbounded), Unbounded),
+      (Set(atLeastOne), AtLeastOne),
+      (Set(zeroOrOne), ZeroOrOne),
+      (Set(exactlyOne), ExactlyOne),
+      (Set(unbounded, atLeastOne), AtLeastOne),
+      (Set(unbounded, zeroOrOne), ZeroOrOne),
+      (Set(unbounded, exactlyOne), ExactlyOne),
+      (Set(atLeastOne, zeroOrOne), ExactlyOne),
+      (Set(atLeastOne, exactlyOne), ExactlyOne),
+      (Set(zeroOrOne, exactlyOne), ExactlyOne),
+      (Set(unbounded, atLeastOne, zeroOrOne), ExactlyOne),
+      (Set(unbounded, atLeastOne, exactlyOne), ExactlyOne),
+      (Set(unbounded, zeroOrOne, exactlyOne), ExactlyOne),
+      (Set(atLeastOne, zeroOrOne, exactlyOne), ExactlyOne),
+      (Set(unbounded, atLeastOne, zeroOrOne, exactlyOne), ExactlyOne),
+    )
+    // define the property we are interested in
+    val hasPublicationDate = freetestOntologyIri.makeProperty("hasPublicationDate")
 
-    "determine the least strict cardinality allowed for a (inherited) property from a list of classes" in {
-
-      val cacheData: OntologyCacheData = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[OntologyCache](_.getCacheData))
-
-      // define the classes
-      val unbounded  = freetestOntologyIri.makeEntityIri("PubMayHaveMany").toOntologySchema(InternalSchema)  // 0-n
-      val atLeastOne = freetestOntologyIri.makeEntityIri("PubMustHaveSome").toOntologySchema(InternalSchema) // 1-n
-      val zeroOrOne  = freetestOntologyIri.makeEntityIri("PubMayHaveOne").toOntologySchema(InternalSchema)   // 0-1
-      val exactlyOne = freetestOntologyIri.makeEntityIri("PubMustHaveOne").toOntologySchema(InternalSchema)  // 1
-
-      val hasPublicationDateProperty = freetestOntologyIri.makeEntityIri("hasPublicationDate")
-
-      // define all test cases and the expected results
-      val testCases: List[(Set[SmartIri], Option[Cardinality])] = List(
-        (Set(unbounded), Some(Unbounded)),
-        (Set(atLeastOne), Some(AtLeastOne)),
-        (Set(zeroOrOne), Some(ZeroOrOne)),
-        (Set(exactlyOne), Some(ExactlyOne)),
-        (Set(unbounded, atLeastOne), Some(AtLeastOne)),
-        (Set(unbounded, zeroOrOne), Some(ZeroOrOne)),
-        (Set(unbounded, exactlyOne), Some(ExactlyOne)),
-        (Set(atLeastOne, zeroOrOne), Some(ExactlyOne)),
-        (Set(atLeastOne, exactlyOne), Some(ExactlyOne)),
-        (Set(zeroOrOne, exactlyOne), Some(ExactlyOne)),
-        (Set(unbounded, atLeastOne, zeroOrOne), Some(ExactlyOne)),
-        (Set(unbounded, atLeastOne, exactlyOne), Some(ExactlyOne)),
-        (Set(unbounded, zeroOrOne, exactlyOne), Some(ExactlyOne)),
-        (Set(atLeastOne, zeroOrOne, exactlyOne), Some(ExactlyOne)),
-        (Set(unbounded, atLeastOne, zeroOrOne, exactlyOne), Some(ExactlyOne)),
-      )
-
-      def getStrictest(classes: Set[SmartIri]): Option[Cardinality] =
+    def getStrictestCardinalitiesFromClasses(classes: Set[ResourceClassIri]): RIO[OntologyCache, Option[Cardinality]] =
+      ZIO.serviceWithZIO[OntologyCache](_.getCacheData).map { cacheData =>
+        val internalClasses = classes.map(_.toInternalSchema)
         OntologyHelpers
-          .getStrictestCardinalitiesFromClasses(classes, cacheData)
-          .get(hasPublicationDateProperty)
-          .map(card => card.cardinality)
-
-      testCases.map { case (testCase: Set[SmartIri], expectedResult: Option[Cardinality]) =>
-        assert(getStrictest(testCase) == expectedResult)
+          .getStrictestCardinalitiesFromClasses(internalClasses, cacheData)
+          .get(hasPublicationDate.toInternalSchema)
+          .map(_.cardinality)
       }
-    }
+
+    suite("getStrictestCardinalitiesFromClasses")(testCases.map {
+      case (classes: Set[ResourceClassIri], expected: Cardinality) =>
+        test(
+          s"given property '${hasPublicationDate.toShortString}' and classes" +
+            s"classes '${classes.map(_.toShortString).mkString(", ")}' expect cardinality $expected",
+        )(getStrictestCardinalitiesFromClasses(classes).map(actual => assertTrue(actual.contains(expected))))
+    })
   }
+
+  override val e2eSpec = suite("OntologyHelpers")(getStrictestCardinalitiesFromClassesSuite)
 }
