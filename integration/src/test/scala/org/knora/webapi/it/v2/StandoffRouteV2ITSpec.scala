@@ -12,16 +12,19 @@ import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
-import spray.json.*
+import sttp.client4.*
+import zio.json.*
+import zio.json.ast.*
 
-import java.net.URLEncoder
 import java.nio.file.Paths
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
-import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
+import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
+import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
@@ -30,6 +33,8 @@ import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
@@ -73,21 +78,24 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
   )
 
   def createMapping(mappingPath: String, mappingName: String): HttpResponse = {
-    val jsonPart =
-      Map(
-        "knora-api:mappingHasName"    -> mappingName.toJson,
-        "knora-api:attachedToProject" -> Map(JsonLDKeywords.ID -> anythingProjectIri.value).toJson,
-        "rdfs:label"                  -> "custom mapping".toJson,
-        JsonLDKeywords.CONTEXT -> Map(
-          "rdfs"      -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
-          "knora-api" -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
-        ).toJson,
-      ).toJson.prettyPrint
+    val jsonPart = Json
+      .Obj(
+        ("knora-api:mappingHasName", Json.Str(mappingName)),
+        ("knora-api:attachedToProject", Json.Obj("@id", Json.Str(anythingProjectIri.value))),
+        ("rdfs:label", Json.Str("custom mapping")),
+        (
+          "@context",
+          Json.Obj(
+            ("rdfs", Json.Str(Rdfs.RdfsPrefixExpansion)),
+            ("knora-api", Json.Str(KA.KnoraApiV2PrefixExpansion)),
+          ),
+        ),
+      )
 
     val xmlPart = Paths.get(mappingPath)
 
     val formData = Multipart.FormData(
-      Multipart.FormData.BodyPart("json", HttpEntity(ContentTypes.`application/json`, jsonPart)),
+      Multipart.FormData.BodyPart("json", HttpEntity(ContentTypes.`application/json`, jsonPart.toString())),
       Multipart.FormData.BodyPart("xml", HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, xmlPart)),
     )
     singleAwaitingRequest(
@@ -97,48 +105,48 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
   }
 
   def createResourceWithTextValue(xmlContent: String, mappingIRI: String): HttpResponse = {
-    val jsonLDEntity = Map(
-      "@type" -> "freetest:FreeTest".toJson,
-      "knora-api:attachedToProject" -> Map(
-        "@id" -> "http://rdfh.ch/projects/0001".toJson,
-      ).toJson,
-      "rdfs:label" -> "obj_inst1".toJson,
-      "freetest:hasText" -> Map(
-        "@type"                    -> "knora-api:TextValue".toJson,
-        "knora-api:textValueAsXml" -> xmlContent.toJson,
-        "knora-api:textValueHasMapping" -> Map(
-          "@id" -> mappingIRI.toJson,
-        ).toJson,
-      ).toJson,
-      "@context" -> Map(
-        "anything"  -> "http://0.0.0.0:3333/ontology/0001/anything/v2#".toJson,
-        "freetest"  -> freetestOntologyIRI.toJson,
-        "rdf"       -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#".toJson,
-        "rdfs"      -> "http://www.w3.org/2000/01/rdf-schema#".toJson,
-        "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#".toJson,
-      ).toJson,
-    ).toJson.prettyPrint
+    val jsonLDEntity = Json
+      .Obj(
+        ("@type", Json.Str("freetest:FreeTest")),
+        ("knora-api:attachedToProject", Json.Obj("@id", Json.Str("http://rdfh.ch/projects/0001"))),
+        ("rdfs:label", Json.Str("obj_inst1")),
+        (
+          "freetest:hasText",
+          Json.Obj(
+            ("@type", Json.Str("knora-api:TextValue")),
+            ("knora-api:textValueAsXml", Json.Str(xmlContent)),
+            ("knora-api:textValueHasMapping", Json.Obj("@id", Json.Str(mappingIRI))),
+          ),
+        ),
+        (
+          "@context",
+          Json.Obj(
+            ("anything", Json.Str("http://0.0.0.0:3333/ontology/0001/anything/v2#")),
+            ("freetest", Json.Str(freetestOntologyIRI)),
+            ("rdf", Json.Str("http://www.w3.org/1999/02/22-rdf-syntax-ns#")),
+            ("rdfs", Json.Str("http://www.w3.org/2000/01/rdf-schema#")),
+            ("knora-api", Json.Str("http://api.knora.org/ontology/knora-api/v2#")),
+          ),
+        ),
+      )
 
     val resourceRequest = Post(
       s"$baseApiUrl/v2/resources",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
+      HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity.toString()),
     ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
     singleAwaitingRequest(resourceRequest)
   }
 
-  def getTextValueAsDocument(iri: String): JsonLDDocument = {
-    val request = Get(
-      s"$baseApiUrl/v2/resources/$iri",
-    ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-    getResponseAsJsonLD(request)
-  }
+  def getTextValueAsDocument(iri: String): JsonLDDocument = UnsafeZioRun.runOrThrow(
+    TestApiClient.getJsonLdDocument(uri"/v2/resources/$iri", anythingUser1).flatMap(_.assert200),
+  )
 
   "The Standoff v2 Endpoint" should {
     "create a text value with standard mapping" in {
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping))
       val response = createResourceWithTextValue(
         xmlContent = xmlContent,
-        mappingIRI = OntologyConstants.KnoraBase.StandardMapping,
+        mappingIRI = KB.StandardMapping,
       )
       assert(response.status == StatusCodes.OK, responseToString(response))
       val resourceResponseDocument: JsonLDDocument = responseToJsonLDDocument(response)
@@ -151,24 +159,22 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     }
 
     "return XML but no HTML for a resource with standard mapping" in {
-      val valueIRI   = URLEncoder.encode(freetestTextValueIRI.get, "UTF-8")
-      val xmlContent = FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping))
-
-      val responseDocument = getTextValueAsDocument(valueIRI)
+      val xmlContent       = FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping))
+      val responseDocument = getTextValueAsDocument(freetestTextValueIRI.get)
       val textValueObject = responseDocument.body
         .getRequiredObject(s"${freetestOntologyIRI}hasText")
         .fold(e => throw BadRequestException(e), identity)
       textValueObject
         .getRequiredString(JsonLDKeywords.TYPE)
         .fold(msg => throw BadRequestException(msg), identity) should equal(
-        OntologyConstants.KnoraApiV2Complex.TextValue,
+        KA.TextValue,
       )
       textValueObject
-        .getRequiredObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
+        .getRequiredObject(KA.TextValueHasMapping)
         .flatMap(_.getRequiredString(JsonLDKeywords.ID))
-        .fold(e => throw BadRequestException(e), identity) should equal(OntologyConstants.KnoraBase.StandardMapping)
+        .fold(e => throw BadRequestException(e), identity) should equal(KB.StandardMapping)
       val retrievedXML = textValueObject
-        .getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+        .getRequiredString(KA.TextValueAsXml)
         .fold(msg => throw BadRequestException(msg), identity)
       val xmlDiff: Diff = DiffBuilder
         .compare(Input.fromString(xmlContent))
@@ -176,10 +182,10 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
         .build()
       xmlDiff.hasDifferences should be(false)
       textValueObject
-        .getString(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml)
+        .getString(KA.TextValueAsHtml)
         .fold(msg => throw BadRequestException(msg), identity) should equal(None)
       textValueObject
-        .getString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+        .getString(KA.ValueAsString)
         .fold(msg => throw BadRequestException(msg), identity) should equal(None)
     }
 
@@ -195,8 +201,8 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
            |    },
            |    "rdfs:label": "letter mapping",
            |    "@context": {
-           |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-           |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
+           |        "rdfs": "${Rdfs.RdfsPrefixExpansion}",
+           |        "knora-api": "${KA.KnoraApiV2PrefixExpansion}"
            |    }
            |}
                 """.stripMargin
@@ -266,30 +272,29 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     }
 
     "return XML but no HTML, as there is no transformation provided" in {
-      val valueIRI   = URLEncoder.encode(freetestTextValueIRI.get, "UTF-8")
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
 
-      val responseDocument = getTextValueAsDocument(valueIRI)
+      val responseDocument = getTextValueAsDocument(freetestTextValueIRI.get)
       val textValueObject = responseDocument.body
         .getRequiredObject(s"${freetestOntologyIRI}hasText")
         .fold(e => throw BadRequestException(e), identity)
       textValueObject
         .getRequiredString(JsonLDKeywords.TYPE)
         .fold(msg => throw BadRequestException(msg), identity) should equal(
-        OntologyConstants.KnoraApiV2Complex.TextValue,
+        KA.TextValue,
       )
       textValueObject
-        .getRequiredObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
+        .getRequiredObject(KA.TextValueHasMapping)
         .flatMap(_.getRequiredString(JsonLDKeywords.ID))
         .fold(msg => throw BadRequestException(msg), identity) should equal(freetestCustomMappingIRI)
       textValueObject
-        .getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+        .getRequiredString(KA.TextValueAsXml)
         .fold(msg => throw BadRequestException(msg), identity) should equal(xmlContent)
       textValueObject
-        .getString(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml)
+        .getString(KA.TextValueAsHtml)
         .fold(msg => throw BadRequestException(msg), identity) should equal(None)
       textValueObject
-        .getString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+        .getString(KA.ValueAsString)
         .fold(msg => throw BadRequestException(msg), identity) should equal(None)
     }
 
@@ -344,31 +349,30 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     }
 
     "return XML and HTML rendering of the standoff" in {
-      val valueIRI     = URLEncoder.encode(freetestTextValueIRI.get, "UTF-8")
       val xmlContent   = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
       val expectedHTML = Some("<div>\n    <p> This is a <i>sample</i> of standoff text. </p>\n</div>")
 
-      val responseDocument = getTextValueAsDocument(valueIRI)
+      val responseDocument = getTextValueAsDocument(freetestTextValueIRI.get)
       val textValueObject = responseDocument.body
         .getRequiredObject(s"${freetestOntologyIRI}hasText")
         .fold(e => throw BadRequestException(e), identity)
       textValueObject
         .getRequiredString(JsonLDKeywords.TYPE)
         .fold(msg => throw BadRequestException(msg), identity) should equal(
-        OntologyConstants.KnoraApiV2Complex.TextValue,
+        KA.TextValue,
       )
       textValueObject
-        .getRequiredObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
+        .getRequiredObject(KA.TextValueHasMapping)
         .flatMap(_.getRequiredString(JsonLDKeywords.ID))
         .fold(e => throw BadRequestException(e), identity) should equal(freetestCustomMappingWithTranformationIRI)
       textValueObject
-        .getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+        .getRequiredString(KA.TextValueAsXml)
         .fold(msg => throw BadRequestException(msg), identity) should equal(xmlContent)
       textValueObject
-        .getString(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml)
+        .getString(KA.TextValueAsHtml)
         .fold(msg => throw BadRequestException(msg), identity) should equal(expectedHTML)
       textValueObject
-        .getString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+        .getString(KA.ValueAsString)
         .fold(msg => throw BadRequestException(msg), identity) should equal(None)
     }
   }
