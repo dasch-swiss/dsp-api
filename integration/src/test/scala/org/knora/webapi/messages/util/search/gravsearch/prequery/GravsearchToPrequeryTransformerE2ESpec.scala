@@ -23,7 +23,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
-object GravsearchToPrequeryTransformerSpec extends E2EZSpec {
+object GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
