@@ -31,6 +31,7 @@ object KnoraIris {
     final def toOntologySchema(s: OntologySchema): SmartIri = self.smartIri.toOntologySchema(s)
 
     override def toString: String = self.smartIri.toString
+    def toShortString             = s"${self.smartIri.getOntologyName}:${self.smartIri.getEntityName}"
 
     override def equals(other: Any): Boolean =
       other match {

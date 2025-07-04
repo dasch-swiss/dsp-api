@@ -3,26 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.util.standoff
+package org.knora.webapi.messages.util.standoff
 
-import zio.ZIO
+import zio.*
+import zio.test.*
 
 import java.util.UUID
 
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.E2ESpec
+import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
-/**
- * Tests [[StandoffTagUtilV2]].
- */
-class StandoffTagUtilV2Spec extends E2ESpec {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+object StandoffTagUtilV2Spec extends E2EZSpec {
+  private implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   val standoff1: Vector[StandoffTagV2] = Vector(
     StandoffTagV2(
@@ -308,34 +304,19 @@ class StandoffTagUtilV2Spec extends E2ESpec {
       standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag".toSmartIri,
     ),
   )
+  private val standoffTagUtilV2 = ZIO.serviceWithZIO[StandoffTagUtilV2]
 
-  "StandoffTagUtilV2" should {
-
-    "compare standoff when the order of attributes is different" in {
+  override val e2eSpec = suite("StandoffTagUtilV2")(
+    test("compare standoff when the order of attributes is different") {
       val comparableStandoff1 = StandoffTagUtilV2.makeComparableStandoffCollection(standoff1)
       val comparableStandoff2 = StandoffTagUtilV2.makeComparableStandoffCollection(standoff2)
-      assert(comparableStandoff1 == comparableStandoff2)
-    }
-
-    "should create the correct StandoffTagV2 from SPARQL query results" in {
-
-      val anythingUserProfile = SharedTestDataADM.anythingUser2
-
-      val standoffTagsV1: Vector[StandoffTagV2] = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[StandoffTagUtilV2](
-          _.createStandoffTagsV2FromSelectResults(sparqlResultsV1, anythingUserProfile),
-        ),
-      )
-
-      val standoffTagsV2: Vector[StandoffTagV2] = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[StandoffTagUtilV2](
-          _.createStandoffTagsV2FromSelectResults(sparqlResultsV2, anythingUserProfile),
-        ),
-      )
-
-      assert(standoffTagsV1 == expectedStandoffTagsV1)
-      assert(standoffTagsV2 == expectedStandoffTagsV2)
-
-    }
-  }
+      assertTrue(comparableStandoff1 == comparableStandoff2)
+    },
+    test("should create the correct StandoffTagV2 from SPARQL query results") {
+      for {
+        standoffTagsV1 <- standoffTagUtilV2(_.createStandoffTagsV2FromSelectResults(sparqlResultsV1, anythingUser1))
+        standoffTagsV2 <- standoffTagUtilV2(_.createStandoffTagsV2FromSelectResults(sparqlResultsV2, anythingUser1))
+      } yield assertTrue(standoffTagsV1 == expectedStandoffTagsV1, standoffTagsV2 == expectedStandoffTagsV2)
+    },
+  )
 }
