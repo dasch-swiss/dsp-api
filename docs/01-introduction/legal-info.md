@@ -3,6 +3,12 @@
 Each file representation in the project data may have legal metadata associated with it.
 This metadata is stored in the [FileValue](../02-dsp-ontologies/knora-base.md#filevalue) that represents the file.
 
+For each file value, the legal information consists of:
+
+- **Exactly one copyright holder** (mandatory when legal information is required)
+- **Exactly one license** (mandatory when legal information is required)  
+- **One or more authorship attributions** (mandatory when legal information is required)
+
 !!! warning "Legal Information Will Become Mandatory"
 
     Currently, the legal information on the FileValue is optional. This will change in the future when License, Authorship, and Copyright Holder will become mandatory.
@@ -11,6 +17,7 @@ This metadata is stored in the [FileValue](../02-dsp-ontologies/knora-base.md#fi
 
 The copyright holder of the file.
 A copyright holder is a person or organization that holds the copyright to a file.
+Each file value has exactly one copyright holder (currently zero or one).
 
 Each project [references an allowed list of copyright holders](../03-endpoints/api-admin/index.md#get-adminprojectsshortcodeprojectshortcodelegal-infocopyright-holders) that can be used.  
 System project administrators can [add new copyright holders](../03-endpoints/api-admin/index.md#post-adminprojectsshortcodeprojectshortcodelegal-infocopyright-holders) to the list.
@@ -19,10 +26,12 @@ System project administrators can [add new copyright holders](../03-endpoints/ap
 
 The authorship of the file.
 This can be a person or an organization who was involved in creating the asset, also known as moral rights to the asset.
+Each file value can have one or more authorship attributions (currently zero or more).
 
 ## License
 
 The license under which the file is published.
+Each file value has exactly one license (currently zero or one).
 A license has the following properties:
 
 - `uri` - this is a URI that identifies the license.
