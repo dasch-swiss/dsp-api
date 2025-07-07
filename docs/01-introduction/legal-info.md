@@ -4,6 +4,7 @@ Each file representation in the project data may have legal metadata associated 
 This metadata is stored in the [FileValue](../02-dsp-ontologies/knora-base.md#filevalue) that represents the file.
 
 For each file value, the legal information consists of:
+
 - **Exactly one copyright holder** (mandatory when legal information is required)
 - **Exactly one license** (mandatory when legal information is required)  
 - **One or more authorship attributions** (mandatory when legal information is required)
