@@ -1,5 +1,17 @@
 # Changelog
 
+## [31.19.2](https://github.com/dasch-swiss/dsp-api/compare/v31.19.1...v31.19.2) (2025-07-11)
+
+
+### Documentation
+
+* Clarify legal information cardinalities per file value ([#3687](https://github.com/dasch-swiss/dsp-api/issues/3687)) ([d9faac9](https://github.com/dasch-swiss/dsp-api/commit/d9faac931d9856f01de4b83a61823952cc53b744))
+
+
+### Bug Fixes
+
+* Value creation fails if a link tag in standoff does not have a protocol (DEV-5142) ([#3689](https://github.com/dasch-swiss/dsp-api/issues/3689)) ([7ba1ea9](https://github.com/dasch-swiss/dsp-api/commit/7ba1ea97b8a78ff3b17c018f8c1d9ddd83246570))
+
 ## [31.19.1](https://github.com/dasch-swiss/dsp-api/compare/v31.19.0...v31.19.1) (2025-07-04)
 
 
