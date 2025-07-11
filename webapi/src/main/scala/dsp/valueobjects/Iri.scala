@@ -90,7 +90,7 @@ object Iri {
   def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
     Validation
       .fromTry(Try(encodeAllowEscapes(s)).filter(urlValidator.isValid))
-      .mapError(_ => ValidationException(s"Invalid IRI: $s"))
+      .asError(ValidationException(s"Invalid IRI: $s"))
 
   /**
    * Base64Uuid value object.

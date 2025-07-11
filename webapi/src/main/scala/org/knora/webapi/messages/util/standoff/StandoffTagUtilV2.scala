@@ -833,6 +833,13 @@ object StandoffTagUtilV2 {
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri.toSmartIri,
             value = Iri
               .validateAndEscapeIri(uriString)
+              .orElse(
+                if (uriString.startsWith("www.")) {
+                  Iri.validateAndEscapeIri(s"https://$uriString")
+                } else {
+                  throw BadRequestException(s"URI invalid: $uriString")
+                },
+              )
               .getOrElse(throw BadRequestException(s"URI invalid: $uriString")),
           )
 
