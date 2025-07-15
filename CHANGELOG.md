@@ -1,5 +1,14 @@
 # Changelog
 
+## [31.19.3](https://github.com/dasch-swiss/dsp-api/compare/v31.19.2...v31.19.3) (2025-07-15)
+
+
+### Maintenances
+
+* Dependency updates ([#3692](https://github.com/dasch-swiss/dsp-api/issues/3692)) ([5ce86b1](https://github.com/dasch-swiss/dsp-api/commit/5ce86b164c4af91cf68b381b1b39790adff988d8))
+* Minor dependency updates ([#3691](https://github.com/dasch-swiss/dsp-api/issues/3691)) ([a8e23d3](https://github.com/dasch-swiss/dsp-api/commit/a8e23d3e369202f033ad64d4e16fd3bdd70bc7fe))
+* Patch dependency updates ([#3690](https://github.com/dasch-swiss/dsp-api/issues/3690)) ([a71ed63](https://github.com/dasch-swiss/dsp-api/commit/a71ed6307ca7cb976f2f9e38a7f5151b8647803d))
+
 ## [31.19.2](https://github.com/dasch-swiss/dsp-api/compare/v31.19.1...v31.19.2) (2025-07-11)
 
 
