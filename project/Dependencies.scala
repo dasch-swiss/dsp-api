@@ -28,7 +28,7 @@ object Dependencies {
   val ZioConfigVersion            = "4.0.4"
   val ZioLoggingVersion           = "2.5.1"
   val ZioNioVersion               = "2.0.2"
-  val ZioMetricsConnectorsVersion = "2.3.1"
+  val ZioMetricsConnectorsVersion = "2.4.0"
   val ZioPreludeVersion           = "1.0.0-RC41"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.1.19"
@@ -93,7 +93,7 @@ object Dependencies {
 
   // input validation
   val commonsValidator =
-    "commons-validator" % "commons-validator" % "1.9.0" exclude ("commons-logging", "commons-logging")
+    "commons-validator" % "commons-validator" % "1.10.0" exclude ("commons-logging", "commons-logging")
 
   // authentication
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.2"
@@ -130,7 +130,7 @@ object Dependencies {
   val wiremock = "org.wiremock" % "wiremock" % "3.13.1"
 
   // found/added by the plugin but deleted anyway
-  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.18.0"
 
   val tapirVersion = "1.11.36"
 
@@ -149,7 +149,7 @@ object Dependencies {
 
   val openTelemetryWithSentry = Seq(
     "dev.zio"  %% "zio-opentelemetry"              % "3.1.6",
-    "io.sentry" % "sentry-opentelemetry-agentless" % "8.16.0",
+    "io.sentry" % "sentry-opentelemetry-agentless" % "8.17.0",
   )
 
   val integrationTestDependencies = Seq(
