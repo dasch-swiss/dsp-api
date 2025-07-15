@@ -26,7 +26,7 @@ object Dependencies {
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
   val ZioConfigVersion            = "4.0.4"
-  val ZioLoggingVersion           = "2.5.0"
+  val ZioLoggingVersion           = "2.5.1"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC41"
