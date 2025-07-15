@@ -26,7 +26,7 @@ object Dependencies {
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
   val ZioConfigVersion            = "4.0.4"
-  val ZioLoggingVersion           = "2.5.0"
+  val ZioLoggingVersion           = "2.5.1"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC41"
@@ -96,7 +96,7 @@ object Dependencies {
     "commons-validator" % "commons-validator" % "1.9.0" exclude ("commons-logging", "commons-logging")
 
   // authentication
-  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.0"
+  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "6.5.1" exclude (
@@ -132,7 +132,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.17.0"
 
-  val tapirVersion = "1.11.35"
+  val tapirVersion = "1.11.36"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
