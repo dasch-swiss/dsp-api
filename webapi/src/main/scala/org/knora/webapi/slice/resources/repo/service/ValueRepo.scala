@@ -7,6 +7,7 @@ package org.knora.webapi.slice.resources.repo.service
 
 import org.apache.jena.rdf.model.Resource
 import org.eclipse.rdf4j.model.vocabulary.RDFS
+import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
@@ -33,7 +34,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.eclipse.rdf4j.model.vocabulary.XSD
 
 sealed trait ValueModel {
   def iri: ValueIri
