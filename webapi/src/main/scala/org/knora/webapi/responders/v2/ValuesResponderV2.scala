@@ -48,6 +48,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
@@ -613,30 +614,13 @@ final case class ValuesResponderV2(
              requestingUser = requestingUser,
            )
 
-      // Do the update.
-      dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
-      currentTime         = updateValue.valueCreationDate.getOrElse(Instant.now)
-      sparqlUpdate =
-        s"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-            |DELETE {
-            |    GRAPH ?graph {
-            |        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
-            |        ?value knora-base:hasPermissions ?currentValuePermissions .
-            |    }
-            |} INSERT {
-            |    GRAPH ?graph {
-            |        ?resource knora-base:lastModificationDate "$currentTime"^^xsd:dateTime .
-            |        ?value knora-base:hasPermissions "$newValuePermissionLiteral" .
-            |    }
-            |} WHERE {
-            |    BIND(IRI("$dataNamedGraph") AS ?graph)
-            |    BIND(IRI("${resourceInfo.resourceIri}") AS ?resource)
-            |    BIND(IRI("${currentValue.valueIri}") AS ?value)
-            |    ?value knora-base:hasPermissions ?currentValuePermissions .
-            |    OPTIONAL { ?resource knora-base:lastModificationDate ?resourceLastModificationDate . }
-            |}""".stripMargin
-      _ <- triplestoreService.query(Update(sparqlUpdate))
+      _ <- valueRepo.updateValuePermissions(
+             projectDataGraph = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM),
+             resourceIri = InternalIri(resourceInfo.resourceIri),
+             valueIri = ValueIri.unsafeFrom(currentValue.valueIri.toSmartIri),
+             newPermissions = newValuePermissionLiteral,
+             currentTime = Instant.now,
+           )
     } yield UpdateValueResponseV2(
       currentValue.valueIri,
       currentValue.valueContent.valueType,

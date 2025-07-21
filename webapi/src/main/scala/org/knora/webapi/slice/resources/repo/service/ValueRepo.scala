@@ -33,6 +33,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.eclipse.rdf4j.model.vocabulary.XSD
 
 sealed trait ValueModel {
   def iri: ValueIri
@@ -162,6 +163,39 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
         value.has(iri(OntologyConstants.Rdf.Predicate), p),
         value.has(iri(OntologyConstants.Rdf.Object), o),
       )
+    triplestore.query(Update(query))
+  }
+
+  def updateValuePermissions(
+    projectDataGraph: InternalIri,
+    resourceIri: InternalIri,
+    valueIri: ValueIri,
+    newPermissions: String,
+    currentTime: Instant,
+  ): Task[Unit] = {
+    val resource = iri(resourceIri.value)
+    val value    = iri(valueIri.toString)
+
+    val (resourceLastModDate, currentValuePerms) =
+      (variable("resourceLastModificationDate"), variable("currentValuePermissions"))
+
+    val query = Queries
+      .MODIFY()
+      .`with`(Rdf.iri(projectDataGraph.value))
+      .delete(
+        resource.has(KB.lastModificationDate, resourceLastModDate),
+        value.has(KB.hasPermissions, currentValuePerms),
+      )
+      .insert(
+        resource.has(KB.lastModificationDate, Rdf.literalOfType(currentTime.toString, XSD.DATETIME)),
+        value.has(KB.hasPermissions, Rdf.literalOf(newPermissions)),
+      )
+      .where(
+        value
+          .has(KB.hasPermissions, currentValuePerms)
+          .and(resource.has(KB.lastModificationDate, resourceLastModDate).optional()),
+      )
+
     triplestore.query(Update(query))
   }
 }
