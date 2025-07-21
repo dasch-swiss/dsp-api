@@ -607,21 +607,6 @@ final case class ValuesResponderV2(
       // Validate and reformat the submitted permissions.
       newValuePermissionLiteral <- permissionUtilADM.validatePermissions(updateValue.permissions)
 
-      // Check that the user has Permission.ObjectAccess.ChangeRights on the value, and that the new permissions are
-      // different from the current ones.
-      currentPermissionsParsed <- ZIO.attempt(PermissionUtilADM.parsePermissions(currentValue.permissions))
-      newPermissionsParsed <-
-        ZIO.attempt(
-          PermissionUtilADM.parsePermissions(
-            updateValue.permissions,
-            (permissionLiteral: String) => throw AssertionException(s"Invalid permission literal: $permissionLiteral"),
-          ),
-        )
-
-      _ <- ZIO.when(newPermissionsParsed == currentPermissionsParsed)(
-             ZIO.fail(BadRequestException(s"The submitted permissions are the same as the current ones")),
-           )
-
       _ <- resourceUtilV2.checkValuePermission(
              resourceInfo = resourceInfo,
              valueInfo = currentValue,
