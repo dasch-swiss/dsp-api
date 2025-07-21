@@ -606,7 +606,6 @@ final case class ValuesResponderV2(
 
       // Validate and reformat the submitted permissions.
       newValuePermissionLiteral <- permissionUtilADM.validatePermissions(updateValue.permissions)
-
       _ <- resourceUtilV2.checkValuePermission(
              resourceInfo = resourceInfo,
              valueInfo = currentValue,
@@ -616,63 +615,30 @@ final case class ValuesResponderV2(
 
       // Do the update.
       dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
-      newValueIri <-
-        iriService.checkOrCreateEntityIri(
-          updateValue.newValueVersionIri,
-          stringFormatter.makeRandomValueIri(resourceInfo.resourceIri),
-        )
-
-      currentTime = updateValue.valueCreationDate.getOrElse(Instant.now)
-
+      currentTime         = updateValue.valueCreationDate.getOrElse(Instant.now)
       sparqlUpdate =
-        s"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        s"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-            |
             |DELETE {
-            |    GRAPH ?dataNamedGraph {
-            |        ?resource ?property ?currentValue .
+            |    GRAPH ?graph {
             |        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
-            |        ?currentValue knora-base:valueHasUUID ?currentValueUUID .
-            |        ?currentValue knora-base:hasPermissions ?currentValuePermissions .
+            |        ?value knora-base:hasPermissions ?currentValuePermissions .
             |    }
             |} INSERT {
-            |    GRAPH ?dataNamedGraph {
-            |        ?newValue ?valuePred ?valueObj ;
-            |            knora-base:previousValue ?currentValue ;
-            |            knora-base:valueCreationDate "$currentTime"^^xsd:dateTime ;
-            |            knora-base:hasPermissions "$newValuePermissionLiteral" .
-            |        ?resource ?property ?newValue .
+            |    GRAPH ?graph {
             |        ?resource knora-base:lastModificationDate "$currentTime"^^xsd:dateTime .
+            |        ?value knora-base:hasPermissions "$newValuePermissionLiteral" .
             |    }
-            |}
-            |
-            |WHERE {
-            |    BIND(IRI("$dataNamedGraph") AS ?dataNamedGraph)
+            |} WHERE {
+            |    BIND(IRI("$dataNamedGraph") AS ?graph)
             |    BIND(IRI("${resourceInfo.resourceIri}") AS ?resource)
-            |    BIND(IRI("${updateValue.propertyIri.toInternalSchema}") AS ?property)
-            |    BIND(IRI("${currentValue.valueIri}") AS ?currentValue)
-            |    BIND(IRI("$newValueIri") AS ?newValue)
-            |
-            |    ?resource rdf:type ?resourceClass ;
-            |        knora-base:isDeleted false .
-            |    ?resourceClass rdfs:subClassOf* knora-base:Resource .
-            |    ?resource ?property ?currentValue .
-            |    ?currentValue ?valuePred ?valueObj ;
-            |        knora-base:isDeleted false ;
-            |        knora-base:valueHasUUID ?currentValueUUID ;
-            |        knora-base:hasPermissions ?currentValuePermissions .
-            |
-            |    FILTER(!(?valuePred = knora-base:previousValue || ?valuePred = knora-base:valueCreationDate || ?valuePred = knora-base:hasPermissions))
-            |
-            |    OPTIONAL {
-            |        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
-            |    }
+            |    BIND(IRI("${currentValue.valueIri}") AS ?value)
+            |    ?value knora-base:hasPermissions ?currentValuePermissions .
+            |    OPTIONAL { ?resource knora-base:lastModificationDate ?resourceLastModificationDate . }
             |}""".stripMargin
       _ <- triplestoreService.query(Update(sparqlUpdate))
     } yield UpdateValueResponseV2(
-      newValueIri,
+      currentValue.valueIri,
       currentValue.valueContent.valueType,
       currentValue.valueHasUUID,
       resourceInfo.projectADM,
