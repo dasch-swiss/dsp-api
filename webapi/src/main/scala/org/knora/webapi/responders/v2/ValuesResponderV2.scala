@@ -624,16 +624,52 @@ final case class ValuesResponderV2(
 
       currentTime = updateValue.valueCreationDate.getOrElse(Instant.now)
 
-      sparqlUpdate = sparql.v2.txt.changeValuePermissions(
-                       dataNamedGraph = dataNamedGraph,
-                       resourceIri = resourceInfo.resourceIri,
-                       propertyIri = updateValue.propertyIri.toInternalSchema,
-                       currentValueIri = currentValue.valueIri,
-                       valueTypeIri = currentValue.valueContent.valueType,
-                       newValueIri = newValueIri,
-                       newPermissions = newValuePermissionLiteral,
-                       currentTime = currentTime,
-                     )
+      sparqlUpdate =
+        s"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |DELETE {
+            |    GRAPH ?dataNamedGraph {
+            |        ?resource ?property ?currentValue .
+            |        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+            |        ?currentValue knora-base:valueHasUUID ?currentValueUUID .
+            |        ?currentValue knora-base:hasPermissions ?currentValuePermissions .
+            |    }
+            |} INSERT {
+            |    GRAPH ?dataNamedGraph {
+            |        ?newValue ?valuePred ?valueObj ;
+            |            knora-base:previousValue ?currentValue ;
+            |            knora-base:valueCreationDate "$currentTime"^^xsd:dateTime ;
+            |            knora-base:hasPermissions "$newValuePermissionLiteral" .
+            |        ?resource ?property ?newValue .
+            |        ?resource knora-base:lastModificationDate "$currentTime"^^xsd:dateTime .
+            |    }
+            |}
+            |
+            |WHERE {
+            |    BIND(IRI("$dataNamedGraph") AS ?dataNamedGraph)
+            |    BIND(IRI("${resourceInfo.resourceIri}") AS ?resource)
+            |    BIND(IRI("${updateValue.propertyIri.toInternalSchema}") AS ?property)
+            |    BIND(IRI("${currentValue.valueIri}") AS ?currentValue)
+            |    BIND(IRI("$newValueIri") AS ?newValue)
+            |
+            |    ?resource rdf:type ?resourceClass ;
+            |        knora-base:isDeleted false .
+            |    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+            |    ?resource ?property ?currentValue .
+            |    ?currentValue ?valuePred ?valueObj ;
+            |        knora-base:isDeleted false ;
+            |        knora-base:valueHasUUID ?currentValueUUID ;
+            |        knora-base:hasPermissions ?currentValuePermissions .
+            |
+            |    FILTER(!(?valuePred = knora-base:previousValue || ?valuePred = knora-base:valueCreationDate || ?valuePred = knora-base:hasPermissions))
+            |
+            |    OPTIONAL {
+            |        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+            |    }
+            |}""".stripMargin
       _ <- triplestoreService.query(Update(sparqlUpdate))
     } yield UpdateValueResponseV2(
       newValueIri,
