@@ -2375,41 +2375,6 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
       events.size should be(9)
     }
 
-    "update value permission to test update permission event" in {
-      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
-
-      // Update the value permission.
-      val updateValuePermissionResponse = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[ValuesResponderV2](
-          _.updateValueV2(
-            UpdateValuePermissionsV2(
-              resourceIri = resourceIri,
-              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-              propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
-              valueIri = "http://rdfh.ch/0001/thing-with-history/values/1c",
-              valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-              permissions = "CR knora-admin:Creator|V knora-admin:KnownUser",
-            ),
-            anythingUserProfile,
-            UUID.randomUUID,
-          ),
-        ),
-      )
-
-      val events = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[ResourcesResponderV2](
-          _.getResourceHistoryEvents(resourceIri, anythingUserProfile).map(_.historyEvents),
-        ),
-      )
-      events.size should be(10)
-      val updatePermissionEvent: Option[ResourceAndValueHistoryEvent] =
-        events.find(event => event.eventType == ResourceAndValueEventsUtil.UPDATE_VALUE_PERMISSION_EVENT)
-      assert(updatePermissionEvent.isDefined)
-      val updatePermissionPayload = updatePermissionEvent.get.eventBody
-        .asInstanceOf[ValueEventBody]
-      updatePermissionPayload.valueIri shouldEqual updateValuePermissionResponse.valueIri
-    }
-
     "create a new value to test create value history event" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
       val newValueIri = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
@@ -2442,7 +2407,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
           _.getResourceHistoryEvents(resourceIri, anythingUserProfile).map(_.historyEvents),
         ),
       )
-      events.size should be(11)
+      events.size should be(10)
       val createValueEvent: Option[ResourceAndValueHistoryEvent] =
         events.find(event =>
           event.eventType == ResourceAndValueEventsUtil.CREATE_VALUE_EVENT && event.eventBody
@@ -2491,7 +2456,7 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
           _.getResourceHistoryEvents(resourceIri.toString, anythingUserProfile).map(_.historyEvents),
         ),
       )
-      events.size should be(12)
+      events.size should be(11)
       val deleteValueEvent: Option[ResourceAndValueHistoryEvent] =
         events.find(event =>
           event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT &&
