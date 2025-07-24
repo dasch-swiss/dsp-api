@@ -4,6 +4,8 @@
  */
 
 package org.knora.webapi.messages.admin.responder.groupsmessages
+import sttp.tapir.Schema
+import sttp.tapir.generic.auto.*
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
@@ -18,6 +20,14 @@ import org.knora.webapi.slice.admin.domain.model.Group
 final case class GroupsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponseADM
 object GroupsGetResponseADM {
   implicit val codec: JsonCodec[GroupsGetResponseADM] = DeriveJsonCodec.gen[GroupsGetResponseADM]
+  
+  // Custom schema to ensure 'groups' field is not marked as optional in OpenAPI
+  // This addresses the Tapir library issue: https://github.com/softwaremill/tapir/issues/993
+  implicit val schema: Schema[GroupsGetResponseADM] = {
+    // Create a custom schema for Seq[Group] that is not optional
+    implicit val seqGroupSchema: Schema[Seq[Group]] = Schema.schemaForIterable[Group, Seq].copy(isOptional = false)
+    Schema.derived[GroupsGetResponseADM]
+  }
 }
 
 /**
