@@ -20,7 +20,7 @@ import org.knora.webapi.slice.admin.domain.model.Group
 final case class GroupsGetResponseADM(groups: Seq[Group]) extends AdminKnoraResponseADM
 object GroupsGetResponseADM {
   implicit val codec: JsonCodec[GroupsGetResponseADM] = DeriveJsonCodec.gen[GroupsGetResponseADM]
-  
+
   // Custom schema to ensure 'groups' field is not marked as optional in OpenAPI
   // This addresses the Tapir library issue: https://github.com/softwaremill/tapir/issues/993
   implicit val schema: Schema[GroupsGetResponseADM] = {
