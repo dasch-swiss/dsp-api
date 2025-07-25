@@ -242,3 +242,4 @@ site/
 .venv
 # Generated openapi yaml files
 docs/openapi/*.yml
+/.claude/settings.local.json
