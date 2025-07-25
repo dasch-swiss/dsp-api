@@ -169,6 +169,7 @@ final case class BulkIngestService(
       } yield mapping
     }
 
+  private val ChunkSize = 64 * 1024 // larger chunk size; better for larger files
   def uploadSingleFile(
     shortcode: ProjectShortcode,
     filename: String,
@@ -185,7 +186,7 @@ final case class BulkIngestService(
           .mapError(msg => BadRequest.invalidPathVariable("filename", filename, msg))
       file <- storage.getImportFolder(shortcode).map(_ / path)
       _    <- ZIO.foreachDiscard(file.parent)(Files.createDirectories(_)).orDie
-      _    <- (stream >>> ZSink.fromFile(file.toFile)).orDie
+      _    <- stream.rechunk(ChunkSize).run(ZSink.fromFile(file.toFile)).orDie
     } yield UploadResponse()
   }
 }

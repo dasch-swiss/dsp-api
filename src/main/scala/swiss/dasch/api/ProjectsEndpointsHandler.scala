@@ -130,6 +130,7 @@ final case class ProjectsEndpointsHandler(
           ),
       )
 
+  private val ChunkSize = 64 * 1024 // larger chunk size; better for larger files
   private val postProjectAssetEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postProjectAsset
     .serverLogic(principal => { case (shortcode, filename, stream) =>
       authorizationHandler.ensureProjectWritable(principal, shortcode) *>
@@ -139,7 +140,7 @@ final case class ProjectsEndpointsHandler(
             tmpDir <-
               storageService.createTempDirectoryScoped(s"${prj.shortcode}-ingest").mapError(InternalServerError(_))
             tmpFile = tmpDir / filename.value
-            _      <- stream.run(ZSink.fromFile(tmpFile.toFile)).mapError(InternalServerError(_))
+            _      <- stream.rechunk(ChunkSize).run(ZSink.fromFile(tmpFile.toFile)).mapError(InternalServerError(_))
             _      <- Files.size(tmpFile).orDie.filterOrFail(_ > 0)(BadRequest.invalidBody("The uploaded file is empty."))
             asset  <- ingestService.ingestFile(tmpFile, shortcode).mapError(InternalServerError(_))
             info   <- assetInfoService.findByAssetRef(asset.ref).someOrFailException.orDie

@@ -145,11 +145,11 @@ lazy val root = (project in file("."))
     // Install Temurin Java 21 https://adoptium.net/de/installation/linux/
     dockerCommands += Cmd(
       "RUN",
-      "apt update && apt install -y wget apt-transport-https && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null",
+      "apt-get update && apt install -y wget apt-transport-https && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null && rm -rf /var/lib/apt/lists/*",
     ),
     dockerCommands += Cmd(
       "RUN",
-      "echo \"deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main\" | tee /etc/apt/sources.list.d/adoptium.list && apt update && apt upgrade -y && apt install -y temurin-21-jre && apt clean",
+      "echo \"deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main\" | tee /etc/apt/sources.list.d/adoptium.list && apt-get update && apt-get install -y temurin-21-jre && rm -rf /var/lib/apt/lists/*",
     ),
     dockerCommands := dockerCommands.value.filterNot {
       case Cmd("USER", args @ _*) => true
