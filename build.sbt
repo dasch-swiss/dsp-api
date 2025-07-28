@@ -12,7 +12,7 @@ addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck; inte
 
 val flywayVersion               = "11.10.2"
 val hikariVersion               = "6.3.0"
-val knoraSipiVersion            = "v31.15.0"
+val knoraSipiVersion            = "v31.20.0"
 val quillVersion                = "4.8.6"
 val sqliteVersion               = "3.50.2.0"
 val tapirVersion                = "1.11.36"
