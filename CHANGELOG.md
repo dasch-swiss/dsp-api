@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.20.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.20.1...v0.20.2) (2025-07-28)
+
+
+### Maintenances
+
+* Bump Knora-SIPI version to v31.20.0 ([#376](https://github.com/dasch-swiss/dsp-ingest/issues/376)) ([bbf45b7](https://github.com/dasch-swiss/dsp-ingest/commit/bbf45b763f973cb87394bc8a417132ca9cc393e6))
+* **claude:** Add initial Claude.md ([#374](https://github.com/dasch-swiss/dsp-ingest/issues/374)) ([a5d80ed](https://github.com/dasch-swiss/dsp-ingest/commit/a5d80ed14086b40149e9b867fd19216f15c3c1b4))
+* Minor dependency updates ([#372](https://github.com/dasch-swiss/dsp-ingest/issues/372)) ([99b9963](https://github.com/dasch-swiss/dsp-ingest/commit/99b99631476a5c70a32a6b8f9d7109901d6af296))
+* Patch dependency updates ([#371](https://github.com/dasch-swiss/dsp-ingest/issues/371)) ([772af57](https://github.com/dasch-swiss/dsp-ingest/commit/772af571490d8e5d9a78b2c938445d50bfd089e9))
+
+
+### Bug Fixes
+
+* Uploading of large files ([#375](https://github.com/dasch-swiss/dsp-ingest/issues/375)) ([e16491b](https://github.com/dasch-swiss/dsp-ingest/commit/e16491bffbd37184f054857703d67811706a422c))
+
 ## [0.20.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.20.0...v0.20.1) (2025-07-02)
 
 
