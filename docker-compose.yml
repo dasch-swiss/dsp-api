@@ -1,6 +1,6 @@
 services:
   app:
-    image: daschswiss/dsp-app:v11.37.0
+    image: daschswiss/dsp-app:latest
     ports:
       - "4200:4200"
     networks:
