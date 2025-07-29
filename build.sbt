@@ -10,6 +10,7 @@ import scala.language.postfixOps
 import scala.sys.process.*
 import org.knora.Dependencies
 import org.knora.LocalSettings
+import CommonSettings._
 
 import java.time.Instant
 
@@ -38,7 +39,11 @@ ThisBuild / version := gitVersion
 lazy val buildCommit = ("git rev-parse --short HEAD" !!).trim
 lazy val buildTime   = Instant.now.toString
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, integration)
+// New modules
+lazy val dspCommon = ProjectRef(file("modules/dsp-common"), "dspCommon")
+lazy val knoraInfrastructure = ProjectRef(file("modules/knora-infrastructure"), "knoraInfrastructure")
+
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(dspCommon, knoraInfrastructure, webapi, sipi, integration)
 
 lazy val year = java.time.LocalDate.now().getYear
 lazy val buildSettings = Seq(
@@ -59,6 +64,8 @@ lazy val dockerImageTag = taskKey[String]("Returns the docker image tag")
 
 lazy val root: Project = Project(id = "root", file("."))
   .aggregate(
+    dspCommon,
+    knoraInfrastructure,
     webapi,
     sipi,
     integration,
