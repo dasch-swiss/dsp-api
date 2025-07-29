@@ -18,6 +18,7 @@ lazy val knoraInfrastructure = project
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio" % "2.1.19",
       "dev.zio" %% "zio-json" % "0.7.44",
+      "dev.zio" %% "zio-nio" % "2.0.2",
       "dev.zio" %% "zio-config" % "4.0.4",
       "dev.zio" %% "zio-config-magnolia" % "4.0.4",
       "dev.zio" %% "zio-config-typesafe" % "4.0.4",
