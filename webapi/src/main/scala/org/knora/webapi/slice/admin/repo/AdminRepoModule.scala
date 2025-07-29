@@ -18,7 +18,7 @@ import org.knora.webapi.slice.admin.repo.service.DefaultObjectAccessPermissionRe
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
-import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object AdminRepoModule { self =>

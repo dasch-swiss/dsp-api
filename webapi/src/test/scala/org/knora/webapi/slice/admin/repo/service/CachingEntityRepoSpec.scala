@@ -18,7 +18,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.repo.rdf.Errors
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 

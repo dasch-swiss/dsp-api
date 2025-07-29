@@ -11,7 +11,7 @@ import dsp.errors.ForbiddenException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.admin.api.MessageResponse
-import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 

@@ -22,8 +22,9 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
-import org.knora.webapi.slice.infrastructure.Jwt
-import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.infrastructure.Jwt
+import org.knora.webapi.infrastructure.JwtService
+import org.knora.webapi.slice.infrastructure.InfrastructureConverters.*
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
@@ -140,7 +141,7 @@ final case class SipiServiceLive(
 
     for {
       scope           <- scopeResolver.resolve(user)
-      jwt             <- jwtService.createJwt(user.userIri, scope)
+      jwt             <- jwtService.createJwt(user.userIri.toInfrastructure, scope)
       assetDownloaded <- downloadAsset(asset, jwt)
       _               <- downloadKnoraJson(asset, jwt).when(assetDownloaded.isDefined)
     } yield assetDownloaded
@@ -149,5 +150,7 @@ final case class SipiServiceLive(
 
 object SipiServiceLive {
   val layer: URLayer[Sipi & DspIngestClient & JwtService & ScopeResolver, SipiServiceLive] =
-    HttpClientZioBackend.layer().orDie >>> ZLayer.derive[SipiServiceLive]
+    HttpClientZioBackend.layer().orDie >>> 
+    ZLayer.fromFunction((sipiConfig: Sipi, jwtService: JwtService, scopeResolver: ScopeResolver, backend: StreamBackend[Task, ZioStreams], dspIngestClient: DspIngestClient) => 
+      SipiServiceLive(sipiConfig, jwtService, scopeResolver, backend, dspIngestClient))
 }

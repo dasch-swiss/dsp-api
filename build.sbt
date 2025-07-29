@@ -165,6 +165,7 @@ val customScalacOptions = Seq(
 )
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
+  .dependsOn(dspCommon, knoraInfrastructure)
   .settings(buildSettings)
   .settings(
     inConfig(Test) {

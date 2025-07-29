@@ -29,3 +29,4 @@ final case class DspIngestConfig(baseUrl: String, audience: String)
 final case class UserIri(value: String) extends AnyVal {
   override def toString: String = value
 }
+

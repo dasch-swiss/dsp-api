@@ -5,6 +5,7 @@
 
 package org.knora.webapi.infrastructure
 
+
 final case class Scope(values: Set[ScopeValue]) { self =>
   def toScopeString: String         = self.values.map(_.toScopeString).mkString(" ")
   def +(addThis: ScopeValue): Scope = Scope(values.foldLeft(Set(addThis)) { case (s, old) => s.flatMap(_.merge(old)) })
@@ -50,3 +51,4 @@ object ScopeValue {
 
 // Minimal Shortcode abstraction for infrastructure module
 final case class Shortcode(value: String) extends AnyVal
+

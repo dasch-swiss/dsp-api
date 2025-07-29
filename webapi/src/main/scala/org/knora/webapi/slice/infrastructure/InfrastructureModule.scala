@@ -10,12 +10,25 @@ import zio.ZLayer
 
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
+import org.knora.webapi.infrastructure.{CacheManager, CsvService, InvalidTokenCache, JwtService, JwtServiceLive}
 
 object InfrastructureModule { self =>
-  type Dependencies = DspIngestConfig & JwtConfig
+  type Dependencies = org.knora.webapi.config.DspIngestConfig & org.knora.webapi.config.JwtConfig
   type Provided     = CacheManager & CsvService & InvalidTokenCache & JwtService
+  
+  // Convert webapi config to infrastructure config
+  private val jwtConfigLayer = ZLayer.fromFunction { (webapiJwtConfig: org.knora.webapi.config.JwtConfig) =>
+    org.knora.webapi.infrastructure.JwtConfig(webapiJwtConfig.secret, webapiJwtConfig.expiration, webapiJwtConfig.issuer)
+  }
+  
+  private val dspIngestConfigLayer = ZLayer.fromFunction { (webapiDspIngestConfig: org.knora.webapi.config.DspIngestConfig) =>
+    org.knora.webapi.infrastructure.DspIngestConfig(webapiDspIngestConfig.baseUrl, webapiDspIngestConfig.audience)
+  }
+  
   val layer: URLayer[self.Dependencies, self.Provided] =
     ZLayer.makeSome[self.Dependencies, self.Provided](
+      jwtConfigLayer,
+      dspIngestConfigLayer,
       CacheManager.layer,
       InvalidTokenCache.layer,
       JwtServiceLive.layer,

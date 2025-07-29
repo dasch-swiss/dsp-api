@@ -47,8 +47,8 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.CreateMappingRequestV2
-import org.knora.webapi.slice.infrastructure.CacheManager
-import org.knora.webapi.slice.infrastructure.EhCache
+import org.knora.webapi.infrastructure.CacheManager
+import org.knora.webapi.infrastructure.EhCache
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.store.iiif.api.SipiService

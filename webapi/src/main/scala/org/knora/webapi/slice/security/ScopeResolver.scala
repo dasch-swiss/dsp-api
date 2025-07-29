@@ -18,9 +18,10 @@ import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.Proje
 import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.ProjectResourceCreateRestricted
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.infrastructure.Scope
-import org.knora.webapi.slice.infrastructure.ScopeValue
-import org.knora.webapi.slice.infrastructure.ScopeValue.Write
+import org.knora.webapi.infrastructure.Scope
+import org.knora.webapi.infrastructure.ScopeValue
+import org.knora.webapi.infrastructure.ScopeValue.Write
+import org.knora.webapi.slice.infrastructure.InfrastructureConverters.*
 
 final case class ScopeResolver(projectService: KnoraProjectService) {
   def resolve(user: User): UIO[Scope] =
@@ -42,7 +43,7 @@ final case class ScopeResolver(projectService: KnoraProjectService) {
       .map(_.name)
       .flatMap(Administrative.fromToken)
       .flatMap {
-        case ProjectResourceCreateAll | ProjectResourceCreateRestricted | ProjectAdminAll => Some(Write(shortcode))
+        case ProjectResourceCreateAll | ProjectResourceCreateRestricted | ProjectAdminAll => Some(Write(shortcode.toInfrastructure))
         case _                                                                            => None
       }
 }

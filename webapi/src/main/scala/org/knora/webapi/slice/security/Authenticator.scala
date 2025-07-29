@@ -16,9 +16,10 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserService
-import org.knora.webapi.slice.infrastructure.InvalidTokenCache
-import org.knora.webapi.slice.infrastructure.Jwt
-import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.infrastructure.InvalidTokenCache
+import org.knora.webapi.infrastructure.Jwt
+import org.knora.webapi.infrastructure.JwtService
+import org.knora.webapi.slice.infrastructure.InfrastructureConverters.*
 import org.knora.webapi.slice.security.AuthenticatorError.*
 import org.knora.webapi.slice.security.CredentialsIdentifier.*
 import org.knora.webapi.slice.security.KnoraCredentialsV2.*
@@ -88,7 +89,7 @@ final case class AuthenticatorLive(
   private def ensurePasswordMatch(user: User, password: String): IO[AuthenticatorError, Unit] =
     ZIO.fail(BadCredentials).when(!user.password.exists(passwordService.matchesStr(password, _))).unit
 
-  private def createToken(user: User) = scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri, _))
+  private def createToken(user: User) = scopeResolver.resolve(user).flatMap(jwtService.createJwt(user.userIri.toInfrastructure, _))
 
   override def authenticate(jwtToken: String): IO[AuthenticatorError, User] = for {
     _ <- ZIO.fail(BadCredentials).when(invalidTokens.contains(jwtToken))

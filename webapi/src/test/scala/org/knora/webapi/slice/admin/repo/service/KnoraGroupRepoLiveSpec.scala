@@ -24,7 +24,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.common.repo.service.AbstractInMemoryCrudRepository
-import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 final case class KnoraGroupRepoInMemory(groups: Ref[Chunk[KnoraGroup]])

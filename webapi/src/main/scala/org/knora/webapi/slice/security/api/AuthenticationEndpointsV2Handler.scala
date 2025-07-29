@@ -17,7 +17,7 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
-import org.knora.webapi.slice.infrastructure.Jwt
+import org.knora.webapi.infrastructure.Jwt
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.Authenticator.BAD_CRED_NOT_VALID
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2.CheckResponse

@@ -13,8 +13,8 @@ import zio.ZLayer
 import scala.reflect.ClassTag
 
 import org.knora.webapi.slice.common.Value.StringValue
-import org.knora.webapi.slice.infrastructure.CacheManager
-import org.knora.webapi.slice.infrastructure.EhCache
+import org.knora.webapi.infrastructure.CacheManager
+import org.knora.webapi.infrastructure.EhCache
 
 final case class EntityCache[I <: StringValue, E <: EntityWithId[I]](cache: EhCache[I, E]) {
   def put(value: E): E          = { cache.put(value.id, value); value }

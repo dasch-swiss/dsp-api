@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.infrastructure
 
+import org.knora.webapi.infrastructure.JwtService
+
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
@@ -37,7 +39,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.infrastructure.Scope as AuthScope
+import org.knora.webapi.infrastructure.Scope as AuthScope
 
 final case class ScopeJs(scope: String)
 object ScopeJs {

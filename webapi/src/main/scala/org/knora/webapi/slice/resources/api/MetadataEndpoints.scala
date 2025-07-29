@@ -22,8 +22,8 @@ import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.infrastructure.ColumnDef
-import org.knora.webapi.slice.infrastructure.CsvRowBuilder
+import org.knora.webapi.infrastructure.ColumnDef
+import org.knora.webapi.infrastructure.CsvRowBuilder
 import org.knora.webapi.slice.resources.api.model.IriDto
 
 final case class ResourceMetadataDto(

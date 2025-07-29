@@ -48,9 +48,9 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.dspIngestConfigLayer
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.jwtServiceMockLayer
 import org.knora.webapi.slice.admin.domain.service.HttpMockServer.TestPort
-import org.knora.webapi.slice.infrastructure.Jwt
-import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.infrastructure.Scope as AuthScope
+import org.knora.webapi.infrastructure.Jwt
+import org.knora.webapi.infrastructure.JwtService
+import org.knora.webapi.infrastructure.Scope as AuthScope
 
 object DspIngestClientLiveSpec extends ZIOSpecDefault {
 
