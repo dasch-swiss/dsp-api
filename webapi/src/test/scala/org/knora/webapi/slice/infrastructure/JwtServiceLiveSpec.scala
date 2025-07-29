@@ -5,7 +5,8 @@
 
 package org.knora.webapi.slice.infrastructure
 
-import org.knora.webapi.infrastructure.JwtService
+import org.knora.webapi.infrastructure.{JwtService, CacheManager, InvalidTokenCache, JwtServiceLive}
+import org.knora.webapi.slice.infrastructure.InfrastructureConverters.*
 
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
@@ -95,7 +96,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
   val spec: Spec[TestEnvironment with Scope, Any] = (suite("JwtService")(
     test("create a token") {
       for {
-        token    <- JwtService(_.createJwt(user.userIri, AuthScope.empty, Map("foo" -> Json.Str("bar"))))
+        token    <- JwtService(_.createJwt(user.userIri.toInfrastructure, AuthScope.empty, Map("foo" -> Json.Str("bar"))))
         userIri  <- getClaim(token.jwtString, _.subject)
         audience <- getClaim(token.jwtString, _.audience.getOrElse(Set.empty))
         scope    <- getScopeClaimValue(token.jwtString)
@@ -107,7 +108,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     },
     test("create a token with admin scope for system admins") {
       for {
-        token <- JwtService(_.createJwt(user.userIri, AuthScope.admin))
+        token <- JwtService(_.createJwt(user.userIri.toInfrastructure, AuthScope.admin))
         scope <- getScopeClaimValue(token.jwtString)
       } yield assertTrue(scope == "admin")
     },
@@ -119,13 +120,13 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     },
     test("create a token with admin scope for project admins") {
       for {
-        token <- JwtService(_.createJwt(user.userIri, AuthScope.write(Shortcode.unsafeFrom("0001"))))
+        token <- JwtService(_.createJwt(user.userIri.toInfrastructure, AuthScope.write(Shortcode.unsafeFrom("0001").toInfrastructure)))
         scope <- getScopeClaimValue(token.jwtString)
       } yield assertTrue(scope == "write:project:0001")
     },
     test("create a token with dsp-ingest audience for sys admins") {
       for {
-        token            <- JwtService(_.createJwt(user.userIri, AuthScope.admin))
+        token            <- JwtService(_.createJwt(user.userIri.toInfrastructure, AuthScope.admin))
         userIriByService <- JwtService(_.extractUserIriFromToken(token.jwtString))
         userIri          <- getClaim(token.jwtString, _.subject)
         audience         <- getClaim(token.jwtString, _.audience.getOrElse(Set.empty))
@@ -149,7 +150,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     },
     test("validate a self issued token") {
       for {
-        token   <- JwtService(_.createJwt(user.userIri, AuthScope.empty))
+        token   <- JwtService(_.createJwt(user.userIri.toInfrastructure, AuthScope.empty))
         isValid <- ZIO.serviceWith[JwtService](_.isTokenValid(token.jwtString))
       } yield assertTrue(isValid)
     },

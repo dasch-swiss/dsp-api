@@ -13,21 +13,22 @@ import zio.test.check
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.infrastructure.{Scope, ScopeValue}
 import org.knora.webapi.infrastructure.ScopeValue.Admin
+import org.knora.webapi.slice.infrastructure.InfrastructureConverters.*
 
 object ScopeSpec extends ZIOSpecDefault {
   private val prj1             = Shortcode.unsafeFrom("0001")
-  private val readScopeValue1  = ScopeValue.Read(prj1)
-  private val writeScopeValue1 = ScopeValue.Write(prj1)
+  private val readScopeValue1  = ScopeValue.Read(prj1.toInfrastructure)
+  private val writeScopeValue1 = ScopeValue.Write(prj1.toInfrastructure)
 
   private val prj2             = Shortcode.unsafeFrom("0002")
-  private val readScopeValue2  = ScopeValue.Read(prj2)
-  private val writeScopeValue2 = ScopeValue.Write(prj2)
+  private val readScopeValue2  = ScopeValue.Read(prj2.toInfrastructure)
+  private val writeScopeValue2 = ScopeValue.Write(prj2.toInfrastructure)
 
   private val scopeValueSuite = suite("ScopeValue")(
     test("merging any ScopeValue with Admin should return Admin") {
       val adminScopeValue           = Admin
       val expected: Set[ScopeValue] = Set(Admin)
-      check(Gen.fromIterable(Seq(Admin, ScopeValue.Read(prj1), ScopeValue.Write(prj2)))) { (other: ScopeValue) =>
+      check(Gen.fromIterable(Seq(Admin, ScopeValue.Read(prj1.toInfrastructure), ScopeValue.Write(prj2.toInfrastructure)))) { (other: ScopeValue) =>
         assertTrue(
           other.merge(adminScopeValue) == expected,
           adminScopeValue.merge(other) == expected,
