@@ -9,6 +9,7 @@ import zio.URLayer
 import zio.ZLayer
 
 import org.knora.webapi.config.GraphRoute
+import org.knora.webapi.infrastructure.CsvService
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.responders.v2.StandoffResponderV2
@@ -21,7 +22,6 @@ import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.infrastructure.CsvService
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.api.service.MetadataRestService
 import org.knora.webapi.slice.resources.api.service.ResourceInfoRestService

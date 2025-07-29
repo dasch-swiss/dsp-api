@@ -40,7 +40,7 @@ lazy val buildCommit = ("git rev-parse --short HEAD" !!).trim
 lazy val buildTime   = Instant.now.toString
 
 // New modules
-lazy val dspCommon = ProjectRef(file("modules/dsp-common"), "dspCommon")
+lazy val dspCommon           = ProjectRef(file("modules/dsp-common"), "dspCommon")
 lazy val knoraInfrastructure = ProjectRef(file("modules/knora-infrastructure"), "knoraInfrastructure")
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(dspCommon, knoraInfrastructure, webapi, sipi, integration)

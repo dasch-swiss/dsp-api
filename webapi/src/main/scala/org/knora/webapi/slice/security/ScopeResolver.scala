@@ -9,6 +9,9 @@ import zio.UIO
 import zio.ZIO
 import zio.ZLayer
 
+import org.knora.webapi.infrastructure.Scope
+import org.knora.webapi.infrastructure.ScopeValue
+import org.knora.webapi.infrastructure.ScopeValue.Write
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -18,9 +21,6 @@ import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.Proje
 import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.ProjectResourceCreateRestricted
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.infrastructure.Scope
-import org.knora.webapi.infrastructure.ScopeValue
-import org.knora.webapi.infrastructure.ScopeValue.Write
 import org.knora.webapi.slice.infrastructure.InfrastructureConverters.*
 
 final case class ScopeResolver(projectService: KnoraProjectService) {
@@ -43,8 +43,9 @@ final case class ScopeResolver(projectService: KnoraProjectService) {
       .map(_.name)
       .flatMap(Administrative.fromToken)
       .flatMap {
-        case ProjectResourceCreateAll | ProjectResourceCreateRestricted | ProjectAdminAll => Some(Write(shortcode.toInfrastructure))
-        case _                                                                            => None
+        case ProjectResourceCreateAll | ProjectResourceCreateRestricted | ProjectAdminAll =>
+          Some(Write(shortcode.toInfrastructure))
+        case _ => None
       }
 }
 object ScopeResolver {

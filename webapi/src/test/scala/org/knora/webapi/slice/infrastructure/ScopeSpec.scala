@@ -28,7 +28,9 @@ object ScopeSpec extends ZIOSpecDefault {
     test("merging any ScopeValue with Admin should return Admin") {
       val adminScopeValue           = Admin
       val expected: Set[ScopeValue] = Set(Admin)
-      check(Gen.fromIterable(Seq(Admin, ScopeValue.Read(prj1.toInfrastructure), ScopeValue.Write(prj2.toInfrastructure)))) { (other: ScopeValue) =>
+      check(
+        Gen.fromIterable(Seq(Admin, ScopeValue.Read(prj1.toInfrastructure), ScopeValue.Write(prj2.toInfrastructure))),
+      ) { (other: ScopeValue) =>
         assertTrue(
           other.merge(adminScopeValue) == expected,
           adminScopeValue.merge(other) == expected,

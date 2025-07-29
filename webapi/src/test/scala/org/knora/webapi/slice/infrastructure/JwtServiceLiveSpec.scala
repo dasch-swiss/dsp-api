@@ -120,7 +120,10 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     },
     test("create a token with admin scope for project admins") {
       for {
-        token <- JwtService(_.createJwt(user.userIri.toInfrastructure, AuthScope.write(Shortcode.unsafeFrom("0001").toInfrastructure)))
+        token <-
+          JwtService(
+            _.createJwt(user.userIri.toInfrastructure, AuthScope.write(Shortcode.unsafeFrom("0001").toInfrastructure)),
+          )
         scope <- getScopeClaimValue(token.jwtString)
       } yield assertTrue(scope == "write:project:0001")
     },

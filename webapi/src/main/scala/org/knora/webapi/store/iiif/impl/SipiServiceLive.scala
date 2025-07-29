@@ -16,14 +16,14 @@ import java.net.URI
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.Sipi
+import org.knora.webapi.infrastructure.Jwt
+import org.knora.webapi.infrastructure.JwtService
 import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
-import org.knora.webapi.infrastructure.Jwt
-import org.knora.webapi.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.InfrastructureConverters.*
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
@@ -150,7 +150,14 @@ final case class SipiServiceLive(
 
 object SipiServiceLive {
   val layer: URLayer[Sipi & DspIngestClient & JwtService & ScopeResolver, SipiServiceLive] =
-    HttpClientZioBackend.layer().orDie >>> 
-    ZLayer.fromFunction((sipiConfig: Sipi, jwtService: JwtService, scopeResolver: ScopeResolver, backend: StreamBackend[Task, ZioStreams], dspIngestClient: DspIngestClient) => 
-      SipiServiceLive(sipiConfig, jwtService, scopeResolver, backend, dspIngestClient))
+    HttpClientZioBackend.layer().orDie >>>
+      ZLayer.fromFunction(
+        (
+          sipiConfig: Sipi,
+          jwtService: JwtService,
+          scopeResolver: ScopeResolver,
+          backend: StreamBackend[Task, ZioStreams],
+          dspIngestClient: DspIngestClient,
+        ) => SipiServiceLive(sipiConfig, jwtService, scopeResolver, backend, dspIngestClient),
+      )
 }

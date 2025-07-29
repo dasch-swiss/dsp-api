@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.repo
 import zio.URLayer
 import zio.ZLayer
 
+import org.knora.webapi.infrastructure.CacheManager
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermissionRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
@@ -18,7 +19,6 @@ import org.knora.webapi.slice.admin.repo.service.DefaultObjectAccessPermissionRe
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
-import org.knora.webapi.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object AdminRepoModule { self =>

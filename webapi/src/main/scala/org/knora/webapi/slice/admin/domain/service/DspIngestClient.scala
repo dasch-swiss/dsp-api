@@ -30,9 +30,9 @@ import java.io.IOException
 import scala.concurrent.duration.DurationInt
 
 import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.infrastructure.JwtService
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.infrastructure.JwtService
 
 trait DspIngestClient {
   def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path]
@@ -128,7 +128,9 @@ final case class DspIngestClientLive(
 
 object DspIngestClientLive {
   val layer: ZLayer[JwtService & DspIngestConfig, Nothing, DspIngestClientLive] =
-    HttpClientZioBackend.layer().orDie >>> 
-    ZLayer.fromFunction((jwtService: JwtService, dspIngestConfig: DspIngestConfig, backend: StreamBackend[Task, ZioStreams]) => 
-      DspIngestClientLive(jwtService, dspIngestConfig, backend))
+    HttpClientZioBackend.layer().orDie >>>
+      ZLayer.fromFunction(
+        (jwtService: JwtService, dspIngestConfig: DspIngestConfig, backend: StreamBackend[Task, ZioStreams]) =>
+          DspIngestClientLive(jwtService, dspIngestConfig, backend),
+      )
 }
