@@ -66,6 +66,9 @@ import org.knora.webapi.slice.shacl.ShaclModule
 import org.knora.webapi.slice.shacl.api.ShaclApiModule
 import org.knora.webapi.slice.shacl.api.ShaclApiRoutes
 import org.knora.webapi.slice.shacl.api.ShaclEndpoints
+import org.knora.webapi.slice.v3.V3Module
+import org.knora.webapi.slice.v3.V3Routes
+import org.knora.webapi.slice.v3.api.ApiV3Endpoints
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -140,6 +143,7 @@ object LayersLive { self =>
     ApiComplexV2JsonLdRequestParser &
     ApiRoutes &
     ApiV2Endpoints &
+    ApiV3Endpoints &
     AssetPermissionsResponder &
     AuthenticationApiModule.Provided &
     AuthorizationRestService &
@@ -179,6 +183,7 @@ object LayersLive { self =>
     StandoffResponderV2 &
     StandoffTagUtilV2 &
     State &
+    V3Routes &
     ValuesResponderV2
     // format: on
 
@@ -235,6 +240,7 @@ object LayersLive { self =>
       StandoffTagUtilV2Live.layer,
       State.layer,
       TapirToPekkoInterpreter.layer,
+      V3Module.layer,
       ValuesResponderV2.layer,
       // ZLayer.Debug.mermaid,
     )
