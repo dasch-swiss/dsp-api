@@ -33,6 +33,7 @@ object Dependencies {
   val ZioSchemaVersion            = "1.7.4"
   val ZioMockVersion              = "1.0.0-RC12"
   val ZioVersion                  = "2.1.20"
+  val ZioCacheVersion             = "0.2.4"
 
   // ZIO
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
@@ -41,6 +42,7 @@ object Dependencies {
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
 
   val ZioJsonVersion        = "0.7.44"
+  val zioCache              = "dev.zio" %% "zio-cache"                 % ZioCacheVersion
   val zioJson               = "dev.zio" %% "zio-json"                  % ZioJsonVersion
   val zioLogging            = "dev.zio" %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
@@ -214,6 +216,7 @@ object Dependencies {
     titaniumJSONLD,
     topbraidShacl,
     zio,
+    zioCache,
     zioConfig,
     zioConfigMagnolia,
     zioConfigTypesafe,

@@ -24,6 +24,7 @@ import org.knora.webapi.slice.resources.api.ResourcesApiRoutes
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.security.api.AuthenticationApiRoutes
 import org.knora.webapi.slice.shacl.api.ShaclApiRoutes
+import org.knora.webapi.slice.v3.V3Routes
 
 /**
  * All routes composed together and CORS activated based on the
@@ -42,6 +43,7 @@ final case class ApiRoutes(
   shaclApiRoutes: ShaclApiRoutes,
   managementRoutes: ManagementRoutes,
   ontologiesRoutes: OntologiesApiRoutes,
+  v3Routes: V3Routes,
   system: ActorSystem,
 ) {
   val routes: Route =
@@ -57,7 +59,8 @@ final case class ApiRoutes(
           resourceInfoRoutes.routes ++
           resourcesApiRoutes.routes ++
           searchApiRoutes.routes ++
-          shaclApiRoutes.routes).reduce(_ ~ _)
+          shaclApiRoutes.routes ++
+          Seq(v3Routes.routes)).reduce(_ ~ _)
       }
     }
 }
