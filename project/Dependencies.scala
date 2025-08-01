@@ -16,12 +16,12 @@ object Dependencies {
 
   val ScalaVersion = "3.3.6"
 
-  val PekkoActorVersion = "1.1.4"
+  val PekkoActorVersion = "1.1.5"
   val PekkoHttpVersion  = "1.2.0"
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion         = "5.1.3"
+  val Rdf4jVersion         = "5.1.4"
   val TopbraidShaclVersion = "1.4.4"
   val JenaVersion          = "5.2.0" // should be aligned with the version topbraid-shacl uses
 
@@ -31,7 +31,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.4.0"
   val ZioPreludeVersion           = "1.0.0-RC41"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.1.19"
+  val ZioVersion                  = "2.1.20"
 
   // ZIO
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
@@ -99,7 +99,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-zio-json" % "11.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.5.1" exclude (
+    "org.springframework.security" % "spring-security-core" % "6.5.2" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
@@ -132,7 +132,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.18.0"
 
-  val tapirVersion = "1.11.36"
+  val tapirVersion = "1.11.40"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
@@ -148,7 +148,7 @@ object Dependencies {
   )
 
   val openTelemetryWithSentry = Seq(
-    "dev.zio"  %% "zio-opentelemetry"              % "3.1.6",
+    "dev.zio"  %% "zio-opentelemetry"              % "3.1.7",
     "io.sentry" % "sentry-opentelemetry-agentless" % "8.18.0",
   )
 
