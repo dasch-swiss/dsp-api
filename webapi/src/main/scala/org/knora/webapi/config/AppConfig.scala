@@ -188,7 +188,7 @@ final case class OpenTelemetryConfig(
 )
 
 object AppConfig {
-  type AppConfigurations = LayersLive.Config & InstrumentationServerConfig
+  type AppConfigurations = LayersLive.Config & InstrumentationServerConfig & JwtConfig & DspIngestConfig
 
   val parseConfig: UIO[AppConfig] = {
     val descriptor = deriveConfig[AppConfig].mapKey(toKebabCase)

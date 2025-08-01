@@ -36,11 +36,10 @@ object MetricsServer {
       _          <- ZIO.never.as(())
     } yield ()
 
-  val make: ZIO[
-    KnoraApi & State & InstrumentationServerConfig & ApiV2Endpoints & ShaclEndpoints & AdminApiEndpoints,
-    Throwable,
-    Unit,
-  ] =
+  type MetricsServerEnv = KnoraApi & State & InstrumentationServerConfig & ApiV2Endpoints & ShaclEndpoints &
+    AdminApiEndpoints
+
+  val make: ZIO[MetricsServerEnv, Throwable, Unit] =
     for {
       knoraApiConfig    <- ZIO.service[KnoraApi]
       apiV2Endpoints    <- ZIO.service[ApiV2Endpoints]
