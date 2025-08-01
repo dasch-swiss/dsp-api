@@ -1,5 +1,15 @@
 # Changelog
 
+## [31.20.1](https://github.com/dasch-swiss/dsp-api/compare/v31.20.0...v31.20.1) (2025-08-01)
+
+
+### Maintenances
+
+* Git-ignore claud tmp files ([#3701](https://github.com/dasch-swiss/dsp-api/issues/3701)) ([231dc6c](https://github.com/dasch-swiss/dsp-api/commit/231dc6c61519f81017c82abe1e4a5d73c2d05b7f))
+* Minor dependency updates ([#3704](https://github.com/dasch-swiss/dsp-api/issues/3704)) ([3b90959](https://github.com/dasch-swiss/dsp-api/commit/3b90959462ea23a5d04d62c67887d00d61aa2ff7))
+* Patch dependency updates ([#3703](https://github.com/dasch-swiss/dsp-api/issues/3703)) ([7d87d0f](https://github.com/dasch-swiss/dsp-api/commit/7d87d0f74c1e7b4cee38583d22ee07f69b50d4d0))
+* Use latest tag for app in local development ([#3698](https://github.com/dasch-swiss/dsp-api/issues/3698)) ([3b4c0f3](https://github.com/dasch-swiss/dsp-api/commit/3b4c0f36bf628e3d37f1f6d34749494505a0979a))
+
 ## [31.20.0](https://github.com/dasch-swiss/dsp-api/compare/v31.19.2...v31.20.0) (2025-07-25)
 
 
