@@ -10,12 +10,12 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck; integration/Te
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate; integration/Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck; integration/Test/headerCheck")
 
-val flywayVersion               = "11.10.2"
-val hikariVersion               = "6.3.0"
+val flywayVersion               = "11.10.5"
+val hikariVersion               = "6.3.2"
 val knoraSipiVersion            = "v31.20.0"
 val quillVersion                = "4.8.6"
 val sqliteVersion               = "3.50.2.0"
-val tapirVersion                = "1.11.36"
+val tapirVersion                = "1.11.40"
 val testContainersVersion       = "1.20.4"
 val zioConfigVersion            = "4.0.4"
 val zioJsonVersion              = "0.7.44"
@@ -25,7 +25,7 @@ val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
 val zioSchemaVersion            = "1.7.3"
 val zioPreludeVersion           = "1.0.0-RC41"
-val zioVersion                  = "2.1.19"
+val zioVersion                  = "2.1.20"
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
 val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
