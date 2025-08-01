@@ -19,9 +19,12 @@ object Logger {
 
   private val logFilter = LogFilter.LogLevelByNameConfig(
     rootLogLevel,
+    ("org.apache.jena", LogLevel.Info),
+    ("io.netty", LogLevel.Info),
+    ("org.ehcache", LogLevel.Info),
     // Uncomment the following lines to change the log level for specific loggers:
-    // , ("zio.logging.slf4j", LogLevel.Debug)
-    // , ("SLF4J-LOGGER", LogLevel.Warning)
+    // ("zio.logging.slf4j", LogLevel.Debug)
+    // ("SLF4J-LOGGER", LogLevel.Warning)
   )
 
   private val logFormatText: LogFormat =
