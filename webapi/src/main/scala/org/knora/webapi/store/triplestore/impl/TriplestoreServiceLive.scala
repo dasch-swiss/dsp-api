@@ -153,7 +153,7 @@ case class TriplestoreServiceLive(
   override def query(query: Ask): Task[Boolean] =
     for {
       resultString <- executeSparqlQuery(query)
-      _            <- ZIO.logDebug(s"sparqlHttpAsk - resultString: $resultString")
+      _            <- ZIO.logTrace(s"sparqlHttpAsk - resultString: $resultString")
       result <-
         ZIO
           .fromEither(for {
@@ -402,7 +402,7 @@ case class TriplestoreServiceLive(
              val endTime  = java.lang.System.nanoTime()
              val duration = Duration.fromNanos(endTime - startTime)
              ZIO.when(!triplestoreConfig.isTestEnv && duration >= trackingThreshold) {
-               ZIO.logInfo(
+               ZIO.logDebug(
                  s"Fuseki request took $duration, which is longer than $trackingThreshold, timeout=${query.timeout}\n ${query.sparql}",
                )
              }
@@ -471,7 +471,7 @@ case class TriplestoreServiceLive(
           val error   = TriplestoreConnectionException(message, Some(e))
           ZIO.logError(error.toString) *> ZIO.fail(error)
       }
-    } <* ZIO.logDebug(s"Executing Query: $request")
+    } <* ZIO.logTrace(s"Executing Query: $request")
 
     def checkResponse(response: Response[Either[String, String]]): Task[Unit] =
       ZIO
@@ -492,9 +492,7 @@ case class TriplestoreServiceLive(
         .unit
 
     for {
-      _        <- ZIO.logDebug("Executing query...")
       response <- executeQuery(request)
-      _        <- ZIO.logDebug(s"Executed query with status code: ${response.code}")
       _        <- checkResponse(response)
     } yield response
   }
