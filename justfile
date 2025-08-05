@@ -4,6 +4,14 @@ default:
 
 alias dog := docs-openapi-generate
 
+# Format Scala code
+fmt:
+    ./sbtx fmt
+
+# Run unit tests
+test:
+    ./sbtx test
+
 # Remove the sqlite database file
 localdev-cleandb:
     rm ./localdev/storage/db/ingest.sqlite
@@ -39,7 +47,7 @@ docs-build: docs-install docs-openapi-generate
     mkdocs build --clean
 
 # Serve the documentation
-docs-serve: docs-install 
+docs-serve: docs-install
     mkdocs serve
 
 # Clean build, regenerate OpenApi, and serve the documentation

@@ -121,7 +121,7 @@ final case class ProjectsEndpointsHandler(
             filenameEncoded = URLEncoder.encode(assetInfo.originalFilename.value, StandardCharsets.UTF_8.toString)
             permissionCode <- fetchAssetPermissions
                                 .getPermissionCode(userSession.map(_.jwtRaw), assetInfo)
-                                .mapError(_ => InternalServerError("error fetching permissions"))
+                                .orElseFail(InternalServerError("error fetching permissions"))
             _ <- ZIO.fail(Forbidden("permission denied")).unless(permissionCode >= 2)
           } yield (
             s"attachment; filename*=UTF-8''${filenameEncoded}", // Content-Disposition
@@ -151,7 +151,7 @@ final case class ProjectsEndpointsHandler(
   private val postBulkIngestEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngest
     .serverLogic(userSession =>
       code =>
-        authorizationHandler.ensureAdminScope(userSession) *>
+        authorizationHandler.ensureProjectWritable(userSession, code) *>
           bulkIngestService
             .startBulkIngest(code)
             .mapBoth(
@@ -166,7 +166,7 @@ final case class ProjectsEndpointsHandler(
   private val postBulkIngestEndpointFinalize: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngestFinalize
     .serverLogic(userSession =>
       code =>
-        authorizationHandler.ensureAdminScope(userSession) *>
+        authorizationHandler.ensureProjectWritable(userSession, code) *>
           bulkIngestService
             .finalizeBulkIngest(code)
             .mapBoth(
@@ -182,7 +182,7 @@ final case class ProjectsEndpointsHandler(
     projectEndpoints.getBulkIngestMappingCsv
       .serverLogic(userSession =>
         code =>
-          authorizationHandler.ensureAdminScope(userSession) *>
+          authorizationHandler.ensureProjectWritable(userSession, code) *>
             bulkIngestService
               .getBulkIngestMappingCsv(code)
               .mapError {
@@ -195,7 +195,7 @@ final case class ProjectsEndpointsHandler(
   private val postBulkIngestUploadEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postBulkIngestUpload
     .serverLogic(principal => { case (shortcode, filename, stream) =>
       for {
-        _ <- authorizationHandler.ensureAdminScope(principal)
+        _ <- authorizationHandler.ensureProjectWritable(principal, shortcode)
         s <- bulkIngestService.uploadSingleFile(shortcode, filename, stream).mapError {
                _.getOrElse(failBulkIngestInProgress(shortcode))
              }

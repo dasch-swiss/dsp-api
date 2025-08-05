@@ -209,7 +209,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       "Triggers an ingest on the project with the given shortcode. " +
         "The files are expected to be in the `tmp/<project_shortcode>` directory. " +
         "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
-        "Authorization: admin scope required.",
+        "Authorization: write:project:1234 scope required.",
     )
     .tag("bulk-ingest")
 
@@ -221,7 +221,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
         "This will remove the files from the `tmp/<project_shortcode>` directory and the directory itself. " +
         "This will remove also the mapping.csv file. " +
         "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
-        "Authorization: admin scope required.",
+        "Authorization: write:project:1234 scope required.",
     )
     .tag("bulk-ingest")
 
@@ -230,8 +230,8 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .description(
       "Get the current result of the bulk ingest. " +
         "The result is a csv with the following structure: `original,derivative`. " +
-        "Will return 409 Conflict if a bulk-ingest is currently running for the project." +
-        "Authorization: admin scope required.",
+        "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
+        "Authorization: write:project:1234 scope required.",
     )
     .out(stringBody)
     .out(header(HeaderNames.ContentType, "text/csv"))
@@ -243,9 +243,9 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .in(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
     .out(jsonBody[UploadResponse])
     .description(
-      "Uploads a file for consumption with the bulk-ingest route." +
-        "Will return 409 Conflict if a bulk-ingest is currently running for the project." +
-        "Authorization: admin scope required.",
+      "Uploads a file for consumption with the bulk-ingest route. " +
+        "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
+        "Authorization: write:project:1234 scope required.",
     )
     .tag("bulk-ingest")
 
