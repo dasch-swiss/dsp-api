@@ -41,15 +41,27 @@ Run all integration tests from the terminal.
 make integration-test
 ```
 
-.NOTE
-_The integration tests currently depend on a locally published Sipi container, the make target helps you with that._
+### Sipi Image Versioning
+
+Integration tests use different Sipi image versions based on environment:
+
+- **Local development**: Uses `daschswiss/knora-sipi:latest` (default)
+- **CI environment**: Uses exact git version (e.g., `v31.20.0-6-gfa52f5f`)
+
+You can override this behavior with environment variables:
+
+- `SIPI_VERSION=<version>` - Use specific version
+- `SIPI_USE_EXACT_VERSION=true` - Force exact git version locally
+
+If the required image doesn't exist locally, build it with:
+
+```shell
+make docker-build-sipi-image
+```
 
 ## Debugging
 
 You can debug unit tests directly in your IDE. 
 
-For debugging the integration tests locally with `sbt` or your IDE you need to have a fresh SIPI container build:
-
-```shell
-make docker-build-sipi-image
-```
+For debugging integration tests locally with `sbt` or your IDE, tests will use the `latest` Sipi image by default.
+If you need a specific version, use the environment variables described above.
