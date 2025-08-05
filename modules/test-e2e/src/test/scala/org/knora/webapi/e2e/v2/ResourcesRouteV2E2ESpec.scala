@@ -710,6 +710,69 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(text == "this is text with standoff")
     }
 
+    "create a resource with text value containing footnote with apostrophe - should encode apostrophe correctly" in {
+      val textValueAsXml: String =
+        """|<?xml version="1.0" encoding="UTF-8"?>
+           |<text>Text <footnote content="Apostrophe start ' end"/> end text</text>
+           |""".stripMargin
+
+      val createResourceWithTextFootnote: String =
+        s"""|{
+            |  "@type" : "anything:Thing",
+            |  "anything:hasRichtext" : {
+            |    "@type" : "knora-api:TextValue",
+            |    "knora-api:textValueAsXml" : ${JsString(textValueAsXml).compactPrint},
+            |    "knora-api:textValueHasMapping" : {
+            |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+            |    }
+            |  },
+            |  "knora-api:attachedToProject" : {
+            |    "@id" : "http://rdfh.ch/projects/0001"
+            |  },
+            |  "rdfs:label" : "test thing with footnote apostrophe",
+            |  "@context" : {
+            |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+            |  }
+            |}""".stripMargin
+
+      val request = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithTextFootnote),
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      val response: HttpResponse = singleAwaitingRequest(request)
+      assert(response.status == StatusCodes.OK, responseToString(response))
+      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      assert(resourceIri.toSmartIri.isKnoraDataIri)
+
+      // Request the newly created resource and check that the apostrophe is correctly encoded
+      val resourceGetRequest = Get(
+        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)
+      assert(resourceGetResponse.status == StatusCodes.OK, responseToString(resourceGetResponse))
+      val resourceJsonDoc: JsonLDDocument = responseToJsonLDDocument(resourceGetResponse)
+
+      val textValue: JsonLDObject = resourceJsonDoc.body
+        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
+        .fold(msg => throw BadRequestException(msg), identity)
+
+      val savedTextValueAsXml: String = textValue
+        .getRequiredString(KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), identity)
+
+      // The apostrophe should be preserved as-is, not escaped as &apos;
+      assert(
+        savedTextValueAsXml.contains("Apostrophe start &apos; end"),
+        s"Expected apostrophe to be preserved, but got: $savedTextValueAsXml",
+      )
+    }
+
     "create a resource and a property with references to an external ontology (FOAF)" in {
       val createResourceWithRefToFoaf: String =
         """{
