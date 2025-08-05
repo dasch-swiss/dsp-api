@@ -454,40 +454,40 @@ final case class SearchResponderV2Live(
     val query: String =
       s"""
          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+         |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
          |
          |CONSTRUCT {
-         |?region knora-api:isMainResource true .
-         |
-         |?region knora-api:hasGeometry ?geom .
-         |
-         |?region knora-api:hasComment ?comment .
-         |
-         |?region knora-api:hasColor ?color .
-         |} WHERE {
-         |?region a knora-api:Region .
-         |?region a knora-api:Resource .
-         |
-         |?region knora-api:isRegionOf <$resourceIri> .
-         |knora-api:isRegionOf knora-api:objectType knora-api:Resource .
-         |
-         |<$resourceIri> a knora-api:Resource .
-         |
-         |?region knora-api:hasGeometry ?geom .
-         |knora-api:hasGeometry knora-api:objectType knora-api:Geom .
-         |
-         |?geom a knora-api:Geom .
-         |
-         |OPTIONAL {
+         |  ?region knora-api:isMainResource true .
+         |  ?region knora-api:hasGeometry ?geom .
          |  ?region knora-api:hasComment ?comment .
-         |  knora-api:hasComment knora-api:objectType xsd:string .
-         |  ?comment a xsd:string .
-         |}
+         |  ?region knora-api:hasColor ?color .
+         |} 
+         |WHERE {
+         |  ?region a knora-api:Region .
+         |  ?region a knora-api:Resource .
          |
-         |?region knora-api:hasColor ?color .
-         |knora-api:hasColor knora-api:objectType knora-api:Color .
+         |  ?region knora-api:isRegionOf <$resourceIri> .
+         |  knora-api:isRegionOf knora-api:objectType knora-api:Resource .
+         |  <$resourceIri> a knora-api:Resource .
          |
-         |?color a knora-api:Color .
-         |} OFFSET $offset
+         |  ?region knora-api:hasGeometry ?geom .
+         |  knora-api:hasGeometry knora-api:objectType knora-api:Geom .
+         |  ?geom a knora-api:Geom .
+         |
+         |  OPTIONAL {
+         |    ?region knora-api:hasComment ?comment .
+         |    knora-api:hasComment knora-api:objectType xsd:string .
+         |    ?comment a xsd:string .
+         |  }
+         |
+         |  ?region knora-api:hasColor ?color .
+         |  knora-api:hasColor knora-api:objectType knora-api:Color .
+         |  ?color a knora-api:Color .
+         |
+         |  ?region rdfs:label ?label .
+         |} 
+         |ORDER BY ?label
+         |OFFSET $offset
          |""".stripMargin
 
     gravsearchV2(query, rendering, user, limitToProject)
