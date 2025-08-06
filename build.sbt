@@ -13,6 +13,8 @@ addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck; inte
 val flywayVersion               = "11.10.5"
 val hikariVersion               = "6.3.2"
 val knoraSipiVersion            = "v31.20.0"
+val otelAgentVersion            = "v2.18.1"
+val otelPyroscopeVersion        = "v1.0.4"
 val quillVersion                = "4.8.6"
 val sqliteVersion               = "3.50.3.0"
 val tapirVersion                = "1.11.40"
@@ -150,6 +152,17 @@ lazy val root = (project in file("."))
     dockerCommands += Cmd(
       "RUN",
       "echo \"deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main\" | tee /etc/apt/sources.list.d/adoptium.list && apt-get update && apt-get install -y temurin-21-jre && rm -rf /var/lib/apt/lists/*",
+    ),
+    // Add Opentelemetry java agent and Grafana Pyroscope extension
+    dockerCommands += Cmd(
+      "ADD",
+      s"https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/${otelAgentVersion}/opentelemetry-javaagent.jar",
+      "/usr/local/lib/opentelemetry-javaagent.jar"
+    ),
+    dockerCommands += Cmd(
+      "ADD",
+      s"https://github.com/grafana/otel-profiling-java/releases/download/${otelPyroscopeVersion}/pyroscope-otel.jar",
+      "/usr/local/lib/pyroscope-otel.jar"
     ),
     dockerCommands := dockerCommands.value.filterNot {
       case Cmd("USER", args @ _*) => true
