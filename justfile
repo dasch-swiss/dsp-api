@@ -9,6 +9,10 @@ alias ssl := stack-start-latest
 alias stop := stack-stop
 alias ssd := stack-start-dev
 
+# Farmat code
+fmt:
+    ./sbtx fmt
+
 # Start stack
 stack-start:
     @echo "Starting Stack"
