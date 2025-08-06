@@ -73,7 +73,7 @@ docs-install-requirements:
 docs-clean:
     rm -rf site/
 
-docs-build-dependent: docs-openapi-generate
+docs-build-dependent:
     make -C docs graphvizfigures
 
 docs-serve: docs-build-dependent

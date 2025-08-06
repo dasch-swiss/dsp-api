@@ -19,8 +19,8 @@ The copyright holder of the file.
 A copyright holder is a person or organization that holds the copyright to a file.
 Each file value has exactly one copyright holder (currently zero or one).
 
-Each project [references an allowed list of copyright holders](../03-endpoints/api-admin/index.md#get-adminprojectsshortcodeprojectshortcodelegal-infocopyright-holders) that can be used.  
-System project administrators can [add new copyright holders](../03-endpoints/api-admin/index.md#post-adminprojectsshortcodeprojectshortcodelegal-infocopyright-holders) to the list.
+Each project references an allowed list of copyright holders that can be used.  
+System project administrators can add new copyright holders to the list.
 
 ## Authorship
 
@@ -38,7 +38,7 @@ A license has the following properties:
 - `label-en` - this is a human-readable label for the license in English.
 - `id` - this is a unique identifier as an IRI for the license.
 
-Each project knows which [licenses](../03-endpoints/api-admin/index.md#get-adminprojectsshortcodeprojectshortcodelegal-infolicenses) are available.
+Each project knows which licenses are available.
 From the set of available licenses a project must enable the licenses it needs.
 New projects will be created with the DaSCH recommended licenses enabled.
 Only enabled licenses are allowed to be used for project data.
