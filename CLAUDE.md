@@ -20,7 +20,7 @@ The project uses ZIO for functional programming, Pekko HTTP (Apache Pekko) for t
 - Run a single test: `sbt "testOnly *TestClassName*"`
 - Run tests in a specific package: `sbt "testOnly org.knora.webapi.slice.admin.*"`
 - `sbt test` - Run unit tests
--  When running any E2EZSpec from the integration tests, ensure that the Sipi image is built first `make docker-build-sipi-image`.
+- Integration tests use `latest` Sipi image by default. To use exact git version locally, set `SIPI_USE_EXACT_VERSION=true` or build with `make docker-build-sipi-image`.
 - `make integration-test` - Run integration tests (requires Docker)
 - `make test-all` - Run all tests
 

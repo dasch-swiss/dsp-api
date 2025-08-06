@@ -1,6 +1,9 @@
 ---
 # Config file for https://github.com/igorshubovych/markdownlint-cli
 
+# MD004/ul-style - Unordered list style
+MD004: false
+
 # MD007/ul-indent - Unordered list indentation
 MD007:
     # Whether to indent the first level of the list

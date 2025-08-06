@@ -21,7 +21,7 @@ import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.testcontainers.TestContainerOps.toZio
 
 final class SipiTestContainer
-    extends GenericContainer[SipiTestContainer](s"daschswiss/knora-sipi:${BuildInfo.version}") {
+    extends GenericContainer[SipiTestContainer](s"daschswiss/knora-sipi:${SipiTestContainer.imageVersion}") {
 
   def sipiBaseUrl: URL = {
     val urlString = s"http://${SipiTestContainer.localHostAddress}:$getFirstMappedPort"
@@ -34,6 +34,15 @@ final class SipiTestContainer
 object SipiTestContainer {
 
   private val imagesDir = "/sipi/images"
+
+  private val shouldUseExactVersion: Boolean =
+    sys.env.contains("CI") || sys.env.get("SIPI_USE_EXACT_VERSION").contains("true")
+
+  val imageVersion: String =
+    sys.env
+      .get("SIPI_VERSION")
+      .orElse(Option.when(shouldUseExactVersion)(BuildInfo.version))
+      .getOrElse("latest")
 
   val localHostAddress: String = {
     val localhost = InetAddress.getLocalHost
