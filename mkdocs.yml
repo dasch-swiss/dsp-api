@@ -13,6 +13,7 @@ nav:
       - The Knora Base Ontology: 02-dsp-ontologies/knora-base.md
       - The SALSAH GUI Ontology: 02-dsp-ontologies/salsah-gui.md
   - DSP-API Endpoints:
+      - OpenAPI Documentation: 03-endpoints/openapi.md
       - DSP-API V2:
           - Introduction: 03-endpoints/api-v2/introduction.md
           - Authentication: 03-endpoints/api-v2/authentication.md
@@ -39,7 +40,6 @@ nav:
           - Lists Endpoint: 03-endpoints/api-admin/lists.md
           - Permissions Endpoint: 03-endpoints/api-admin/permissions.md
           - Stores Endpoint: 03-endpoints/api-admin/stores.md
-          - OpenApi Documentation: 03-endpoints/api-admin/index.md
       - Util API:
           - Version: 03-endpoints/api-util/version.md
       - Instrumentation API:
@@ -108,8 +108,6 @@ nav:
 plugins:
   - search
   - git-revision-date-localized
-  - neoteroi.mkdocsoad:
-      use_pymdownx: true
 
 theme:
   name: material
@@ -134,7 +132,6 @@ theme:
 
 extra_css:
   - assets/css/theme.css
-  - assets/css/mkdocsoad-v1.0.2.css
 
 markdown_extensions:
   - admonition
