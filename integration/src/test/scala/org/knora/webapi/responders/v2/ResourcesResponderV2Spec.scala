@@ -2252,6 +2252,66 @@ class ResourcesResponderV2Spec extends E2ESpec with ImplicitSender { self =>
         UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Ask(query)))) should be(false)
       }
     }
+
+    "erase a deleted resource" in {
+      // Create a resource.
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val createReq = CreateResourceRequestV2(
+        CreateResourceV2(
+          Some(resourceIri.toSmartIri),
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          "test label for resource to be deleted then erased",
+          Map.empty,
+          SharedTestDataADM.anythingProject,
+        ),
+        SharedTestDataADM.anythingUser1,
+        UUID.randomUUID,
+      )
+      val createResponse              = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.createResource(createReq)))
+      val createdResourceIri          = createResponse.resources.head.resourceIri
+      val createdResourceCreationDate = createResponse.resources.head.creationDate
+
+      // First, mark the resource as deleted.
+      val deleteRequest = DeleteOrEraseResourceRequestV2(
+        resourceIri = createdResourceIri,
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri, // External schema IRI
+        maybeDeleteComment = Some("This resource will be deleted first, then erased."),
+        maybeLastModificationDate = Some(createdResourceCreationDate),
+        requestingUser = SharedTestDataADM.anythingAdminUser, // Need admin user for erasure
+        apiRequestID = UUID.randomUUID,
+      )
+      val _ = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.markResourceAsDeletedV2(deleteRequest)))
+
+      // Verify the resource is marked as deleted.
+      val getDeletedResponse = UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[ResourcesResponderV2](
+          _.getResourcesV2(
+            resourceIris = Seq(createdResourceIri),
+            withDeleted = true,
+            targetSchema = ApiV2Complex,
+            schemaOptions = Set.empty,
+            requestingUser = SharedTestDataADM.anythingAdminUser,
+          ),
+        ),
+      )
+      val deletedResource = getDeletedResponse.resources.head
+      deletedResource.deletionInfo should be(defined)
+
+      // Now, erase the deleted resource. This should work without schema validation errors.
+      val eraseRequest = DeleteOrEraseResourceRequestV2(
+        resourceIri = createdResourceIri,
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri, // Same external schema IRI
+        maybeLastModificationDate = deletedResource.lastModificationDate,
+        requestingUser = SharedTestDataADM.anythingAdminUser,
+        apiRequestID = UUID.randomUUID,
+      )
+      val eraseResponse = UnsafeZioRun.runOrThrow(resourcesResponderV2(_.eraseResourceV2(eraseRequest)))
+      eraseResponse.message should equal("Resource erased")
+
+      // Verify the resource is completely erased.
+      val query = sparql.admin.txt.checkIriExists(createdResourceIri)
+      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Ask(query)))) should be(false)
+    }
   }
   "When given a custom IRI" should {
 

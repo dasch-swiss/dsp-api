@@ -472,6 +472,7 @@ final case class ResourcesResponderV2(
                         )
 
         resource: ReadResourceV2 = resourcesSeq.toResource(eraseResourceV2.resourceIri)
+        isResourceDeleted        = resource.deletionInfo.isDefined
 
         // Ensure that the requesting user is a system admin, or an admin of this project.
         _ <- ZIO.when(
@@ -484,7 +485,9 @@ final case class ResourcesResponderV2(
         internalResourceClassIri = eraseResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
 
         // Make sure that the resource's class is what the client thinks it is.
-        _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri) {
+        // Validation is skipped for deleted resources because getResourcePreviewV2
+        // returns the resource as type of knora-base:DeletedResource
+        _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri && !isResourceDeleted) {
                val msg =
                  s"Resource <${resource.resourceIri}> is not a member of class <${eraseResourceV2.resourceClassIri}>"
                ZIO.fail(BadRequestException(msg))
