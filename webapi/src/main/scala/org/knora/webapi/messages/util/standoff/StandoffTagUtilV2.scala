@@ -54,7 +54,7 @@ trait StandoffTagUtilV2 {
    * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]] objects.
    * @return a sequence of [[StandoffTagV2]] objects.
    */
-  def createStandoffTagsV2FromSelectResults(
+  private[standoff] def createStandoffTagsV2FromSelectResults(
     standoffAssertions: Map[IRI, Map[IRI, String]],
     requestingUser: User,
   ): Task[Vector[StandoffTagV2]]
