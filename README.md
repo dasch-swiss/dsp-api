@@ -53,6 +53,12 @@ sdk install java 21.x.y-tem
 
 SDKMAN will take care of the environment variable JAVA_HOME.
 
+#### EditorConfig
+
+This repository contains a root-level `.editorconfig` to keep Markdown and YAML formatting consistent (e.g., 4-space
+list indents in Markdown, 2-space YAML). Most editors support EditorConfig natively or via a plugin; consider enabling
+it and format-on-save for consistent diffs.
+
 ### For building the documentation
 
 See [docs/Readme.md](docs/Readme.md).
