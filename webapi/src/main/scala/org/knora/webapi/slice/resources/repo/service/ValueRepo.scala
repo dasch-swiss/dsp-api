@@ -6,22 +6,25 @@
 package org.knora.webapi.slice.resources.repo.service
 
 import org.apache.jena.rdf.model.Resource
+import org.apache.jena.update.UpdateFactory
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
 import zio.*
 
 import java.time.Instant
+import java.util.UUID
 import scala.language.implicitConversions
 
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.ValueIri
@@ -30,6 +33,7 @@ import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_Strin
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.resources.repo.service.value.queries.CreateValueQueryBuilder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -197,6 +201,105 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
       )
 
     triplestore.query(Update(query))
+  }
+
+  def createValue(
+    dataNamedGraph: InternalIri,
+    resourceIri: InternalIri,
+    propertyIri: org.knora.webapi.messages.SmartIri,
+    newValueIri: InternalIri,
+    newValueUUID: UUID,
+    value: ValueContentV2,
+    linkUpdates: Seq[SparqlTemplateLinkUpdate],
+    valueCreator: InternalIri,
+    valuePermissions: String,
+    creationDate: Instant,
+  ): Task[Unit] = {
+    // Generate query using RDF4J builder (primary)
+    val builderQuery = CreateValueQueryBuilder.createValueQuery(
+      dataNamedGraph,
+      resourceIri,
+      propertyIri,
+      newValueIri,
+      newValueUUID,
+      value,
+      linkUpdates,
+      valueCreator,
+      valuePermissions,
+      creationDate,
+    )
+
+    // Generate query using Twirl template (verification)
+    val twirlQuery = CreateValueQueryBuilder.createValueQueryTwirl(
+      dataNamedGraph,
+      resourceIri,
+      propertyIri,
+      newValueIri,
+      newValueUUID,
+      value,
+      linkUpdates,
+      valueCreator,
+      valuePermissions,
+      creationDate,
+    )(sf)
+
+    // Compare and log differences
+    for {
+      _ <- compareQueries(builderQuery.sparql, twirlQuery.sparql, "CreateValue").ignore()
+      _ <- triplestore.query(builderQuery) // Execute Twirl query for now as requested
+    } yield ()
+  }
+
+  private def compareQueries(
+    builderQuery: String,
+    twirlQuery: String,
+    queryType: String,
+  ): Task[Unit] =
+    for {
+      parsedTwirlUpdate   <- ZIO.attempt(UpdateFactory.create(twirlQuery))
+      parsedBuilderUpdate <- ZIO.attempt(UpdateFactory.create(builderQuery))
+      normalizedBuilder    = replaceUuidPatterns(parsedBuilderUpdate.toString)
+      normalizedTwirl      = replaceUuidPatterns(parsedTwirlUpdate.toString)
+      _ <- ZIO.when(normalizedBuilder != normalizedTwirl)(
+             ZIO.logWarning(
+               s"""|$queryType: Builder and Twirl template generated different queries!
+                   |
+                   |${diffLines(normalizedBuilder, normalizedTwirl)}
+                   |
+                   |${"*" * 80}
+                   |
+                   |Normalized builder:
+                   |$normalizedBuilder
+                   |
+                   |${"*" * 80}
+                   |
+                   |Normalized twirl:
+                   |$normalizedTwirl""".stripMargin,
+             ),
+           )
+    } yield ()
+
+  private def diffLines(query1: String, query2: String): String = {
+    val lines1 = query1.split('\n')
+    val lines2 = query2.split('\n')
+    val minLen = math.min(lines1.length, lines2.length)
+
+    val startSame = (0 until minLen).takeWhile(i => lines1(i) == lines2(i)).length
+    val endSame = (0 until (minLen - startSame))
+      .takeWhile(i => lines1(lines1.length - 1 - i) == lines2(lines2.length - 1 - i))
+      .length
+
+    val diff1 = lines1.slice(startSame, lines1.length - endSame)
+    val diff2 = lines2.slice(startSame, lines2.length - endSame)
+
+    s"Builder diff:\n${diff1.mkString("\n")}\n\nTwirl diff:\n${diff2.mkString("\n")}"
+  }
+
+  private def replaceUuidPatterns(sparqlQuery: String): String = {
+    val valueUuidPattern    = """knora-base:valueHasUUID\s+"[^"]+"\s*\.""".r
+    val standoffUuidPattern = """knora-base:standoffTagHasUUID\s+"[^"]+"\s*\.""".r
+    val withValueUuids      = valueUuidPattern.replaceAllIn(sparqlQuery, """knora-base:valueHasUUID "***" .""")
+    standoffUuidPattern.replaceAllIn(withValueUuids, """knora-base:standoffTagHasUUID "***" .""")
   }
 }
 
