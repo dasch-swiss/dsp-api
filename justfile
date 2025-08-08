@@ -9,9 +9,21 @@ alias ssl := stack-start-latest
 alias stop := stack-stop
 alias ssd := stack-start-dev
 
-# Farmat code
+# Format code
 fmt:
     ./sbtx fmt
+
+# Run unit tests
+test:
+    ./sbtx "webapi/test"
+
+# Run integration tests
+test-it:
+    ./sbtx "it/test"
+
+# Run End-2-End tests
+test-e2e:
+    ./sbtx "e2e/test"
 
 # Start stack
 stack-start:
