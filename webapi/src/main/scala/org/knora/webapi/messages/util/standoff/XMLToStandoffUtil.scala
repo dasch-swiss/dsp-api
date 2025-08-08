@@ -5,8 +5,6 @@
 
 package org.knora.webapi.messages.util.standoff
 
-import com.sksamuel.diffpatch.DiffMatchPatch
-import com.sksamuel.diffpatch.DiffMatchPatch.*
 import org.apache.commons.text.StringEscapeUtils
 
 import java.io.StringReader
@@ -155,59 +153,6 @@ case class FreeStandoffTag(
 case class TextWithStandoff(text: String, standoff: Seq[StandoffTag])
 
 /**
- * Represents a difference between two texts, a base text and a derived text.
- */
-trait StandoffDiff {
-
-  /**
-   * The position in the base text where the difference starts.
-   */
-  def baseStartPosition: Int
-
-  /**
-   * The position in the derived text where the difference starts.
-   */
-  def derivedStartPosition: Int
-}
-
-/**
- * Represents a string that is in both the base text and the derived text.
- *
- * @param baseStartPosition    the start position of the string in the base text.
- * @param baseEndPosition      the end position of the string in the base text.
- * @param derivedStartPosition the start position of the string in the derived text.
- * @param derivedEndPosition   the end position of the string in the derived text.
- */
-case class StandoffDiffEqual(
-  baseStartPosition: Int,
-  baseEndPosition: Int,
-  derivedStartPosition: Int,
-  derivedEndPosition: Int,
-) extends StandoffDiff
-
-/**
- * Represents a string that is present in the derived text but not in the base text.
- *
- * @param baseStartPosition    the position in the base text where the string would have to be inserted to match
- *                             the derived text.
- * @param derivedStartPosition the start position of the inserted string in the derived text.
- * @param derivedEndPosition   the end position of the inserted string in the derived text.
- */
-case class StandoffDiffInsert(baseStartPosition: Int, derivedStartPosition: Int, derivedEndPosition: Int)
-    extends StandoffDiff
-
-/**
- * Represents a string that is present in the base text but not in the derived text.
- *
- * @param baseStartPosition    the start position of the deleted string in the base text.
- * @param baseEndPosition      the end position of the deleted string in the base text.
- * @param derivedStartPosition the position in the derived text where the string would have to be inserted to
- *                             match the base text.
- */
-case class StandoffDiffDelete(baseStartPosition: Int, baseEndPosition: Int, derivedStartPosition: Int)
-    extends StandoffDiff
-
-/**
  * Represents an XML element that requires a separator to be inserted at its end.
  * This is necessary because the markup is going to be represented in standoff (separated from the text).
  *
@@ -312,9 +257,6 @@ class XMLToStandoffUtil(
   private val saxParserFactory = SAXParserFactory.newInstance()
   saxParserFactory.setFeature("http://xml.org/sax/features/external-general-entities", false)
   saxParserFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
-
-  // Computes diffs between texts.
-  private val diffMatchPatch = new DiffMatchPatch
 
   // A Map of UUIDs to document-specific IDs.
   private val uuidsToDocumentSpecificIds: Map[UUID, String] = documentSpecificIDs.map(_.swap)
@@ -559,146 +501,6 @@ class XMLToStandoffUtil(
     }
 
     xmlStr
-  }
-
-  /**
-   * Computes the differences between a base text and a derived text.
-   *
-   * @param baseText    the base text.
-   * @param derivedText the derived text.
-   * @return the differences between the two texts.
-   */
-  def makeStandoffDiffs(baseText: String, derivedText: String): Seq[StandoffDiff] = {
-    import scala.jdk.CollectionConverters.*
-
-    case class DiffConversionState(
-      standoffDiffs: Vector[StandoffDiff] = Vector.empty[StandoffDiff],
-      basePos: Int = 0,
-      derivedPos: Int = 0,
-    )
-
-    val diffList = diffMatchPatch.diff_main(baseText, derivedText)
-    diffMatchPatch.diff_cleanupSemantic(diffList)
-    val diffs: Seq[Diff] = diffList.asScala.toSeq
-
-    val conversionResult = diffs.foldLeft(DiffConversionState()) { case (conversionState, diff) =>
-      diff.operation match {
-        case Operation.EQUAL =>
-          val standoffDiff = StandoffDiffEqual(
-            baseStartPosition = conversionState.basePos,
-            baseEndPosition = conversionState.basePos + diff.text.length,
-            derivedStartPosition = conversionState.derivedPos,
-            derivedEndPosition = conversionState.derivedPos + diff.text.length,
-          )
-
-          DiffConversionState(
-            standoffDiffs = conversionState.standoffDiffs :+ standoffDiff,
-            basePos = standoffDiff.baseEndPosition,
-            derivedPos = standoffDiff.derivedEndPosition,
-          )
-
-        case Operation.DELETE =>
-          val standoffDiff = StandoffDiffDelete(
-            baseStartPosition = conversionState.basePos,
-            baseEndPosition = conversionState.basePos + diff.text.length,
-            derivedStartPosition = conversionState.derivedPos,
-          )
-
-          DiffConversionState(
-            standoffDiffs = conversionState.standoffDiffs :+ standoffDiff,
-            basePos = standoffDiff.baseEndPosition,
-            derivedPos = conversionState.derivedPos,
-          )
-
-        case Operation.INSERT =>
-          val standoffDiff = StandoffDiffInsert(
-            baseStartPosition = conversionState.basePos,
-            derivedStartPosition = conversionState.derivedPos,
-            derivedEndPosition = conversionState.derivedPos + diff.text.length,
-          )
-
-          DiffConversionState(
-            standoffDiffs = conversionState.standoffDiffs :+ standoffDiff,
-            basePos = conversionState.basePos,
-            derivedPos = standoffDiff.derivedEndPosition,
-          )
-      }
-    }
-
-    conversionResult.standoffDiffs
-  }
-
-  /**
-   * Converts standoff diffs to XML. The resulting XML has a root element called `<diff>` containing the base
-   * text, along with `<del>` tags representing deletions and `<ins>` tags representing insertions.
-   *
-   * @param baseText      the base text that was used to calculate the diffs.
-   * @param derivedText   the derived text that was used to calculate the diffs.
-   * @param standoffDiffs the standoff diffs.
-   * @return an XML representation of the diffs.
-   */
-  def standoffDiffs2Xml(baseText: String, derivedText: String, standoffDiffs: Seq[StandoffDiff]): String = {
-    val stringBuilder = new StringBuilder(XmlHeader).append("<diffs>")
-
-    for (standoffDiff <- standoffDiffs) {
-      standoffDiff match {
-        case equal: StandoffDiffEqual =>
-          stringBuilder.append(
-            StringEscapeUtils.escapeXml11(baseText.substring(equal.baseStartPosition, equal.baseEndPosition)),
-          )
-
-        case delete: StandoffDiffDelete =>
-          stringBuilder
-            .append("<del>")
-            .append(StringEscapeUtils.escapeXml11(baseText.substring(delete.baseStartPosition, delete.baseEndPosition)))
-            .append("</del>")
-
-        case insert: StandoffDiffInsert =>
-          stringBuilder
-            .append("<ins>")
-            .append(
-              StringEscapeUtils.escapeXml11(
-                derivedText.substring(insert.derivedStartPosition, insert.derivedEndPosition),
-              ),
-            )
-            .append("</ins>")
-      }
-    }
-
-    stringBuilder.append("</diffs>")
-    stringBuilder.toString
-  }
-
-  /**
-   * Given a set of standoff tags referring to an old version of a text and a set of standoff tags referring to a newer
-   * version of the text, finds the standoff tags that have been added or removed.
-   *
-   * @param oldStandoff the standoff tags referring to the old version of the text.
-   * @param newStandoff the standoff tags referring to the new version of the text.
-   * @return a tuple containing the added standoff tags and the removed standoff tags.
-   */
-  def findChangedStandoffTags(
-    oldStandoff: Seq[StandoffTag],
-    newStandoff: Seq[StandoffTag],
-  ): (Set[StandoffTag], Set[StandoffTag]) = {
-    def makeStandoffTagUuidMap(standoff: Seq[StandoffTag]): Map[UUID, StandoffTag] =
-      standoff.map { tag =>
-        tag.uuid -> tag
-      }.toMap
-
-    val oldTags  = makeStandoffTagUuidMap(oldStandoff)
-    val oldUuids = oldTags.keySet
-
-    val newTags  = makeStandoffTagUuidMap(newStandoff)
-    val newUuids = newTags.keySet
-
-    val addedTagUuids = newUuids -- oldUuids
-    val addedTags     = addedTagUuids.map(uuid => newTags(uuid))
-
-    val removedTagUuids = oldUuids -- newUuids
-    val removedTags     = removedTagUuids.map(uuid => oldTags(uuid))
-
-    (addedTags, removedTags)
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

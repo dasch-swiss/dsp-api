@@ -307,11 +307,6 @@ object StandoffTagUtilV2Spec extends E2EZSpec {
   private val standoffTagUtilV2 = ZIO.serviceWithZIO[StandoffTagUtilV2]
 
   override val e2eSpec = suite("StandoffTagUtilV2")(
-    test("compare standoff when the order of attributes is different") {
-      val comparableStandoff1 = StandoffTagUtilV2.makeComparableStandoffCollection(standoff1)
-      val comparableStandoff2 = StandoffTagUtilV2.makeComparableStandoffCollection(standoff2)
-      assertTrue(comparableStandoff1 == comparableStandoff2)
-    },
     test("should create the correct StandoffTagV2 from SPARQL query results") {
       for {
         standoffTagsV1 <- standoffTagUtilV2(_.createStandoffTagsV2FromSelectResults(sparqlResultsV1, anythingUser1))

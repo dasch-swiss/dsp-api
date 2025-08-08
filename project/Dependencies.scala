@@ -109,7 +109,6 @@ object Dependencies {
   val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
 
   // other
-  val diff           = "com.sksamuel.diff"     % "diff"             % "1.1.11"
   val gwtServlet     = "com.google.gwt"        % "gwt-servlet"      % "2.10.0"
   val icu4j          = "com.ibm.icu"           % "icu4j"            % "77.1"
   val jakartaJSON    = "org.glassfish"         % "jakarta.json"     % "2.0.1"
@@ -176,7 +175,6 @@ object Dependencies {
     bouncyCastle,
     commonsLang3,
     commonsValidator,
-    diff,
     ehcache,
     gwtServlet,
     icu4j,

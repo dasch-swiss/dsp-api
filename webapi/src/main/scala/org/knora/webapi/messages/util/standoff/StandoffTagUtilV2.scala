@@ -54,7 +54,7 @@ trait StandoffTagUtilV2 {
    * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]] objects.
    * @return a sequence of [[StandoffTagV2]] objects.
    */
-  def createStandoffTagsV2FromSelectResults(
+  private[standoff] def createStandoffTagsV2FromSelectResults(
     standoffAssertions: Map[IRI, Map[IRI, String]],
     requestingUser: User,
   ): Task[Vector[StandoffTagV2]]
@@ -280,9 +280,6 @@ object StandoffTagUtilV2 {
 
   // an internal Link in an XML document begins with this character
   private val internalLinkMarker = '#'
-
-  // A fixed UUID for comparing standoff tags when their UUIDs are not significant.
-  private val fixedUuid = UUID.fromString("00000000-0000-0000-0000-000000000000")
 
   /**
    * Tries to find a data type attribute in the XML attributes of a given standoff node. Throws an appropriate error if information is inconsistent or missing.
@@ -1642,37 +1639,4 @@ object StandoffTagUtilV2 {
     standoffUtil.textWithStandoff2Xml(textWithStandoff)
   }
 
-  /**
-   * Given a sequence of standoff tags from a text value, makes a collection that can be compared with standoff from
-   * another text value.
-   *
-   * @param standoff the standoff that needs to be compared.
-   * @return a sequence of sets of tags that have the same start index, ordered by start index. All tags have their
-   *         UUIDs replaced with empty strings.
-   */
-  def makeComparableStandoffCollection(standoff: Seq[StandoffTagV2]): Vector[Set[StandoffTagV2]] =
-    // Since multiple tags could have the same index (e.g. if the standoff editor that
-    // generated them doesn't use indexes), we first group them into sets of tags that have the same index,
-    // then make a sequence of sets of tags sorted by index.
-    standoff
-      .groupBy(_.startIndex)
-      .map { case (index: Int, standoffForIndex: Seq[StandoffTagV2]) =>
-        // Set each tag's UUID to a fixed UUID (because these should not affect the comparison),
-        // and sort its attributes by standoff property IRI.
-        val comparableTags = standoffForIndex.map { tag =>
-          tag.copy(
-            uuid = fixedUuid,
-            attributes = tag.attributes.sortBy(_.standoffPropertyIri),
-          )
-        }
-
-        index -> comparableTags.toSet
-      }
-      .toVector
-      .sortBy { case (index: Int, _) =>
-        index
-      }
-      .map { case (_, standoffForIndex: Set[StandoffTagV2]) =>
-        standoffForIndex
-      }
 }
