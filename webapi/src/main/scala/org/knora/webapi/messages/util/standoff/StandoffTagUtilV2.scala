@@ -372,9 +372,7 @@ object StandoffTagUtilV2 {
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.String))) =>
                 StandoffTagStringAttributeV2(
                   standoffPropertyIri = standoffTagPropIri,
-                  value = Iri
-                    .toSparqlEncodedString(attr.value)
-                    .getOrElse(throw BadRequestException(s"Invalid string attribute: '${attr.value}'")),
+                  value = attr.value,
                 )
 
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Integer))) =>
@@ -846,10 +844,10 @@ object StandoffTagUtilV2 {
         val uriValue = StandoffTagUriAttributeV2(
           standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri.toSmartIri,
           value = Iri
-            .validateAndEscapeIri(uriString)
+            .validateAndEscapeIri(uriString) // XXX
             .orElse(
               if (uriString.startsWith("www.")) {
-                Iri.validateAndEscapeIri(s"https://$uriString")
+                Iri.validateAndEscapeIri(s"https://$uriString") // XXX
               } else {
                 throw BadRequestException(s"URI invalid: $uriString")
               },

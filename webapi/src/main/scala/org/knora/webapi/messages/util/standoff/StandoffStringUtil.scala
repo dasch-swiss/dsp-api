@@ -52,7 +52,7 @@ object StandoffStringUtil {
 
   def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean): Validation[ValidationException, IRI] =
     if (acceptClientIDs && StandoffStringUtil.isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
-    else Iri.validateAndEscapeIri(s)
+    else Iri.validateAndEscapeIri(s) // XXX
 
   /**
    * Accepts a reference from a standoff link to a resource. The reference may be either a real resource IRI
