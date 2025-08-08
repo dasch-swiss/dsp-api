@@ -1,5 +1,41 @@
 # Changelog
 
+## [31.21.0](https://github.com/dasch-swiss/dsp-api/compare/v31.20.0...v31.21.0) (2025-08-08)
+
+
+### Maintenances
+
+* Extract method for readability ([#3713](https://github.com/dasch-swiss/dsp-api/issues/3713)) ([c4f1cbb](https://github.com/dasch-swiss/dsp-api/commit/c4f1cbbd0026e8406d3538c32cba0e8116ba80dd))
+* Git-ignore claud tmp files ([#3701](https://github.com/dasch-swiss/dsp-api/issues/3701)) ([231dc6c](https://github.com/dasch-swiss/dsp-api/commit/231dc6c61519f81017c82abe1e4a5d73c2d05b7f))
+* Improve logging so that DEBUG log level gets viable ([#3705](https://github.com/dasch-swiss/dsp-api/issues/3705)) ([fa52f5f](https://github.com/dasch-swiss/dsp-api/commit/fa52f5f49ad48dd18984c02c9a154c8a0982e237))
+* Improve ZIO layer creation ([#3702](https://github.com/dasch-swiss/dsp-api/issues/3702)) ([78fe523](https://github.com/dasch-swiss/dsp-api/commit/78fe523ec475fc01ee44f2237ceac53f95dcfb7d))
+* Minor dependency updates ([#3704](https://github.com/dasch-swiss/dsp-api/issues/3704)) ([3b90959](https://github.com/dasch-swiss/dsp-api/commit/3b90959462ea23a5d04d62c67887d00d61aa2ff7))
+* Patch dependency updates ([#3703](https://github.com/dasch-swiss/dsp-api/issues/3703)) ([7d87d0f](https://github.com/dasch-swiss/dsp-api/commit/7d87d0f74c1e7b4cee38583d22ee07f69b50d4d0))
+* Remove unused code and dependency ([#3712](https://github.com/dasch-swiss/dsp-api/issues/3712)) ([80404b4](https://github.com/dasch-swiss/dsp-api/commit/80404b4abbc4294c395640601fb28b22f6da9896))
+* Use latest tag for app in local development ([#3698](https://github.com/dasch-swiss/dsp-api/issues/3698)) ([3b4c0f3](https://github.com/dasch-swiss/dsp-api/commit/3b4c0f36bf628e3d37f1f6d34749494505a0979a))
+* Use more reasonable log level ([#3707](https://github.com/dasch-swiss/dsp-api/issues/3707)) ([fd53532](https://github.com/dasch-swiss/dsp-api/commit/fd53532204a7a9b3ebd290d554f2400c2a135948))
+
+
+### Documentation
+
+* Add AGENTS.md ([#3711](https://github.com/dasch-swiss/dsp-api/issues/3711)) ([36c2630](https://github.com/dasch-swiss/dsp-api/commit/36c2630a9151618e28359e6a64f68c188214a733))
+* Remove OpenAPI documentation from docs ([#3709](https://github.com/dasch-swiss/dsp-api/issues/3709)) ([7286d22](https://github.com/dasch-swiss/dsp-api/commit/7286d22c966a9790ff949d102b8c17ffb65e2fff))
+
+
+### Enhancements
+
+* Sort annotations by label (DEV-5220) ([#3708](https://github.com/dasch-swiss/dsp-api/issues/3708)) ([9b204d8](https://github.com/dasch-swiss/dsp-api/commit/9b204d88184b3111add8d178cba71b6b08794856))
+
+
+### Bug Fixes
+
+* Erase a deleted resource ([#3710](https://github.com/dasch-swiss/dsp-api/issues/3710)) ([8e3e888](https://github.com/dasch-swiss/dsp-api/commit/8e3e88800ea291fdf8ad0231ca466c255fb3d346))
+
+
+### Tests
+
+* Change test setup to not require building Sipi first ([#3706](https://github.com/dasch-swiss/dsp-api/issues/3706)) ([24b0713](https://github.com/dasch-swiss/dsp-api/commit/24b0713b12acddfe0b9b9bfcb68b961c4571bcb9))
+
 ## [31.20.0](https://github.com/dasch-swiss/dsp-api/compare/v31.19.2...v31.20.0) (2025-07-25)
 
 
