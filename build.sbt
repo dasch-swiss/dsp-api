@@ -7,6 +7,7 @@ import sbt.*
 import sbt.Keys.version
 
 import scala.language.postfixOps
+import sbt.io._
 import scala.sys.process.*
 import org.knora.Dependencies
 import org.knora.LocalSettings
@@ -38,7 +39,7 @@ ThisBuild / version := gitVersion
 lazy val buildCommit = ("git rev-parse --short HEAD" !!).trim
 lazy val buildTime   = Instant.now.toString
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, integration)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, testkit, it, e2e)
 
 lazy val year = java.time.LocalDate.now().getYear
 lazy val buildSettings = Seq(
@@ -61,7 +62,9 @@ lazy val root: Project = Project(id = "root", file("."))
   .aggregate(
     webapi,
     sipi,
-    integration,
+    testkit,
+    it,
+    e2e,
   )
   .settings(
     // values set for all sub-projects
@@ -83,14 +86,15 @@ lazy val root: Project = Project(id = "root", file("."))
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
 addCommandAlias(
   "headerCreateAll",
-  "; all webapi/headerCreate webapi/Test/headerCreate integration/headerCreate integration/Test/headerCreate",
+  "; all webapi/headerCreate webapi/Test/headerCreate testkit/headerCreate test-it/headerCreate test-it/Test/headerCreate test-e2e/headerCreate test-e2e/Test/headerCreate",
 )
 addCommandAlias(
   "headerCheckAll",
-  "; all webapi/headerCheck webapi/Test/headerCheck integration/headerCheck integration/Test/headerCheck",
+  "; all webapi/headerCheck webapi/Test/headerCheck testkit/headerCheck test-it/headerCheck test-it/Test/headerCheck test-e2e/headerCheck test-e2e/Test/headerCheck",
 )
 addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check; headerCheckAll")
-addCommandAlias("it", "integration/test")
+addCommandAlias("test-it", "test-it/test")
+addCommandAlias("test-e2e", "test-e2e/test")
 
 //////////////////////////////////////
 // DSP's custom SIPI
@@ -188,7 +192,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(
     scalacOptions ++= customScalacOptions,
     logLevel := Level.Info,
-    javaAgents += Dependencies.aspectjweaver,
   )
   .settings(LocalSettings.localScalacOptions: _*)
   .settings(
@@ -257,34 +260,94 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   )
 
 //////////////////////////////////////
-// INTEGRATION (./integration)
+// TESTKIT (shared test utilities)
 //////////////////////////////////////
 
 run / connectInput := true
 
-lazy val integration: Project = Project(id = "integration", base = file("integration"))
+lazy val testkit: Project = Project(id = "testkit", base = file("modules/testkit"))
   .dependsOn(webapi, sipi)
   .settings(buildSettings)
   .settings(
+    Compile / packageDoc / mappings := Seq(),
+    Compile / packageSrc / mappings := Seq(),
+    scalacOptions ++= customScalacOptions,
+    logLevel := Level.Info,
+    // bring in test frameworks as compile-time for base specs
+    libraryDependencies ++= Seq(
+      Dependencies.scalaTest,
+      Dependencies.zioTest,
+      Dependencies.pekkoTestkit,
+      Dependencies.testcontainers,
+      Dependencies.wiremock,
+    ),
+    publish / skip := true,
+    name           := "testkit",
+    resolvers ++= Seq(
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+    ),
+  )
+  .enablePlugins(HeaderPlugin)
+
+//////////////////////////////////////
+// IT tests (service/repo/util/Sipi)
+//////////////////////////////////////
+
+lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
+  .dependsOn(webapi, sipi, testkit)
+  .settings(buildSettings)
+  .settings(
     inConfig(Test) {
-      Defaults.testSettings ++ Defaults.testTasks ++ baseAssemblySettings ++ headerSettings(Test)
+      Defaults.testSettings ++ Defaults.testTasks ++ headerSettings(Test)
     },
     scalacOptions ++= customScalacOptions,
     logLevel := Level.Info,
-    javaAgents += Dependencies.aspectjweaver,
     Test / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
     Test / exportJars         := false,
-    Test / fork               := true, // run tests in a forked JVM
+    Test / fork               := true,
     Test / testForkedParallel := false,
     Test / parallelExecution  := false,
     Test / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "pekko"),
-    Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
+    Test / testOptions += Tests.Argument("-oDF"), // full stack traces and durations
+    Test / baseDirectory := (ThisBuild / baseDirectory).value,
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies,
   )
   .settings(LocalSettings.localScalacOptions: _*)
-  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
+  .enablePlugins(HeaderPlugin)
   .settings(
-    name := "integration",
+    name := "test-it",
+    resolvers ++= Seq(
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+    ),
+  )
+
+//////////////////////////////////////
+// E2E tests (HTTP API routes)
+//////////////////////////////////////
+
+lazy val e2e: Project = Project(id = "test-e2e", base = file("modules/test-e2e"))
+  .dependsOn(webapi, sipi, testkit)
+  .settings(buildSettings)
+  .settings(
+    inConfig(Test) {
+      Defaults.testSettings ++ Defaults.testTasks ++ headerSettings(Test)
+    },
+    scalacOptions ++= customScalacOptions,
+    logLevel := Level.Info,
+    Test / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    Test / exportJars         := false,
+    Test / fork               := true,
+    Test / testForkedParallel := false,
+    Test / parallelExecution  := false,
+    Test / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "pekko"),
+    Test / testOptions += Tests.Argument("-oDF"),
+    Test / baseDirectory := (ThisBuild / baseDirectory).value,
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies,
+  )
+  .settings(LocalSettings.localScalacOptions: _*)
+  .enablePlugins(HeaderPlugin)
+  .settings(
+    name := "test-e2e",
     resolvers ++= Seq(
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     ),

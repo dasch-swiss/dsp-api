@@ -172,15 +172,19 @@ stack-db-only:  ## starts only fuseki.
 #################################
 
 .PHONY: test-all
-test-all: test integration-test
+test-all: test test-it test-e2e
 
 .PHONY: test
 test: ## runs all unit tests
 	$(SBTX) -v coverage "webapi/test" coverageAggregate
 
-.PHONY: integration-test
-integration-test: docker-build-sipi-image ## runs all integration tests
-	$(SBTX) -v coverage "integration/test" coverageAggregate
+.PHONY: test-it
+test-it: docker-build-sipi-image ## runs integration (service/repo) tests
+	$(SBTX) -v coverage "test-it/test" coverageAggregate
+
+.PHONY: test-e2e
+test-e2e: docker-build-sipi-image ## runs end-to-end (HTTP) tests
+	$(SBTX) -v coverage "test-e2e/test" coverageAggregate
 
 
 #################################
@@ -311,7 +315,7 @@ clean-sipi-projects: ## deletes all files uploaded within a project
 	@rm -rf sipi/images/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
 
 .PHONY: check
-check: ## Run code formatting check 
+check: ## Run code formatting check
 	@$(SBTX) "check"
 
 .PHONY: fmt
