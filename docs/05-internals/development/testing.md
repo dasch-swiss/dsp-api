@@ -30,15 +30,18 @@ You might need to create an integration test because:
 * It is slow and cannot run in parallel with other tests
 * You have to do special things to the environment in order to run it
 
-In this case create it in the `src/it`  source set of our projects.
-
-.NOTE
-_Currently only the `webapi` project supports integration tests._
+In this case create it in the `modules/test-it/src/test/scala/` directory.
 
 Run all integration tests from the terminal.
 
 ```shell
-make integration-test
+make test-it
+```
+
+Run all end-to-end HTTP API tests from the terminal.
+
+```shell
+make test-e2e
 ```
 
 ### Sipi Image Versioning

@@ -95,8 +95,7 @@ just stack-stop
 
 ### Run the automated tests
 
-Automated tests are split into different source sets into slow running integration tests (i.e. tests which do IO or are
-using [Testcontainers](https://www.testcontainers.org/)) and fast running unit tests.
+Automated tests are split into different modules: fast unit tests, integration tests (service/repo/Sipi tests using [Testcontainers](https://www.testcontainers.org/)), and end-to-end HTTP API tests.
 
 Run unit tests:
 
@@ -107,7 +106,13 @@ sbt test
 Run integration tests:
 
 ```shell
-make integration-test
+make test-it
+```
+
+Run end-to-end tests:
+
+```shell
+make test-e2e
 ```
 
 Run all tests:
