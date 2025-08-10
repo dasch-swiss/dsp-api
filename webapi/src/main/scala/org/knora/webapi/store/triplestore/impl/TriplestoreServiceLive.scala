@@ -241,6 +241,8 @@ case class TriplestoreServiceLive(
       rdfContents <- ZIO
                        .readFile(Paths.get("..", rdfDataObject.path))
                        .orElse(ZIO.readFile(Paths.get(rdfDataObject.path)))
+                       .orElse(ZIO.readFile(Paths.get("../..", rdfDataObject.path)))
+                       .orElse(ZIO.readFile(Paths.get("../../..", rdfDataObject.path)))
                        .orElse(ZIO.attemptBlocking(Source.fromResource(rdfDataObject.path).mkString))
       request = authenticatedRequest
                   .post(targetHostUri.addPath(paths.data).addParam("graph", graphName))
