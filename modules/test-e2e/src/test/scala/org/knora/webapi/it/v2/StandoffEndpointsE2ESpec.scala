@@ -15,6 +15,7 @@ import zio.json.ast.*
 
 import java.nio.file.Path
 import java.nio.file.Paths
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -38,7 +39,7 @@ import org.knora.webapi.util.MutableTestIri
 /**
  * Integration test specification for the standoff endpoint.
  */
-class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
+class StandoffEndpointsE2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
 
   val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
@@ -51,7 +52,7 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
   private val freetestXSLTFile           = "freetestCustomMappingTransformation.xsl"
   private val pathToFreetestXSLTFile     = s"test_data/test_route/texts/$freetestXSLTFile"
   private val freetestCustomMappingIRI   = s"$anythingProjectIri/mappings/FreetestCustomMapping"
-  private val freetestCustomMappingWithTranformationIRI =
+  private val freetestCustomMappingWithTransformationIRI =
     s"$anythingProjectIri/mappings/FreetestCustomMappingWithTransformation"
   private val freetestOntologyIRI  = "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
   private val freetestTextValueIRI = new MutableTestIri
@@ -260,14 +261,14 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
         )
       val mappingIRI =
         mappingResponseDocument.body.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
-      mappingIRI should equal(freetestCustomMappingWithTranformationIRI)
+      mappingIRI should equal(freetestCustomMappingWithTransformationIRI)
     }
 
     "create a text value with the freetext custom mapping and transformation" in {
       // create a resource with a TextValue with custom mapping
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
       val resourceResponseDocument =
-        UnsafeZioRun.runOrThrow(createResourceWithTextValue(xmlContent, freetestCustomMappingWithTranformationIRI))
+        UnsafeZioRun.runOrThrow(createResourceWithTextValue(xmlContent, freetestCustomMappingWithTransformationIRI))
       freetestTextValueIRI.set(
         resourceResponseDocument.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun),
       )
@@ -289,7 +290,7 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
       textValueObject
         .getRequiredObject(KA.TextValueHasMapping)
         .flatMap(_.getRequiredString(JsonLDKeywords.ID))
-        .fold(e => throw BadRequestException(e), identity) should equal(freetestCustomMappingWithTranformationIRI)
+        .fold(e => throw BadRequestException(e), identity) should equal(freetestCustomMappingWithTransformationIRI)
       textValueObject
         .getRequiredString(KA.TextValueAsXml)
         .fold(msg => throw BadRequestException(msg), identity) should equal(xmlContent)
