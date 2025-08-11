@@ -9,14 +9,14 @@ import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import sttp.client4.*
-import zio.ZIO
+import zio.*
 import zio.json.*
 import zio.json.ast.*
+import zio.test.*
 
 import java.nio.file.Path
 import java.nio.file.Paths
 
-import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
@@ -28,7 +28,6 @@ import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
@@ -36,10 +35,7 @@ import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
-/**
- * Integration test specification for the standoff endpoint.
- */
-class StandoffEndpointsE2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
+object StandoffEndpointsE2ESpec extends E2EZSpec {
 
   val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
@@ -98,7 +94,10 @@ class StandoffEndpointsE2ESpec extends E2ESpec with AuthenticationV2JsonProtocol
     } yield jsonLd
   }
 
-  private def createResourceWithTextValue(xmlContent: String, mappingIRI: String) = {
+  private def createResourceWithTextValue(
+    xmlContent: String,
+    mappingIRI: String,
+  ): RIO[TestApiClient, JsonLDDocument] = {
     val jsonLDEntity = Json
       .Obj(
         ("@type", Json.Str("freetest:FreeTest")),
@@ -125,181 +124,132 @@ class StandoffEndpointsE2ESpec extends E2ESpec with AuthenticationV2JsonProtocol
       )
 
     for {
-      response <- TestApiClient.postJsonLd(uri"/v2/resources", jsonLDEntity.toString(), anythingUser1)
+      response <- TestApiClient.postJsonLd(uri"/v2/resources", jsonLDEntity.toString(), anythingUser1).orDie
       jsonLd   <- response.assert200.mapAttempt(JsonLDUtil.parseJsonLD).orDie
     } yield jsonLd
   }
 
-  private def getTextValueAsDocument(iri: String): JsonLDDocument = UnsafeZioRun.runOrThrow(
-    TestApiClient.getJsonLdDocument(uri"/v2/resources/$iri", anythingUser1).flatMap(_.assert200),
-  )
+  private def getTextValueAsDocument(iri: String): ZIO[TestApiClient, Throwable, JsonLDDocument] =
+    TestApiClient.getJsonLdDocument(uri"/v2/resources/$iri", anythingUser1).flatMap(_.assert200)
 
-  "The Standoff v2 Endpoint" should {
-    "create a text value with standard mapping" in {
-      val xmlContent = FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping))
-      val resourceResponseDocument =
-        UnsafeZioRun.runOrThrow(createResourceWithTextValue(xmlContent, KB.StandardMapping))
-      freetestTextValueIRI.set(
-        resourceResponseDocument.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun),
+  override val e2eSpec: Spec[env, Any] = suite("The Standoff v2 Endpoint")(
+    test("create a text value with standard mapping") {
+      for {
+        xmlContent <- ZIO.attempt(FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping)))
+        document   <- createResourceWithTextValue(xmlContent, KB.StandardMapping)
+        _           = freetestTextValueIRI.set(document.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun))
+      } yield assertCompletes
+    },
+    test("return XML but no HTML for a resource with standard mapping") {
+      for {
+        xmlContent       <- ZIO.attempt(FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping)))
+        responseDocument <- getTextValueAsDocument(freetestTextValueIRI.get)
+        value            <- ZIO.fromEither(responseDocument.body.getRequiredObject(s"${freetestOntologyIRI}hasText"))
+        valueType        <- ZIO.fromEither(value.getRequiredString(JsonLDKeywords.TYPE))
+        mapping <- ZIO.fromEither(
+                     value.getRequiredObject(KA.TextValueHasMapping).flatMap(_.getRequiredString(JsonLDKeywords.ID)),
+                   )
+        actualXml     <- ZIO.fromEither(value.getRequiredString(KA.TextValueAsXml))
+        xmlDiff        = DiffBuilder.compare(Input.fromString(xmlContent)).withTest(Input.fromString(actualXml)).build()
+        valueAsHtml   <- ZIO.fromEither(value.getString(KA.TextValueAsHtml))
+        valueAsString <- ZIO.fromEither(value.getString(KA.ValueAsString))
+      } yield assertTrue(
+        valueType == KA.TextValue,
+        mapping == KB.StandardMapping,
+        !xmlDiff.hasDifferences,
+        valueAsHtml.isEmpty,
+        valueAsString.isEmpty,
       )
-    }
-
-    "return XML but no HTML for a resource with standard mapping" in {
-      val xmlContent       = FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping))
-      val responseDocument = getTextValueAsDocument(freetestTextValueIRI.get)
-      val textValueObject = responseDocument.body
-        .getRequiredObject(s"${freetestOntologyIRI}hasText")
-        .fold(e => throw BadRequestException(e), identity)
-      textValueObject
-        .getRequiredString(JsonLDKeywords.TYPE)
-        .fold(msg => throw BadRequestException(msg), identity) should equal(
-        KA.TextValue,
-      )
-      textValueObject
-        .getRequiredObject(KA.TextValueHasMapping)
-        .flatMap(_.getRequiredString(JsonLDKeywords.ID))
-        .fold(e => throw BadRequestException(e), identity) should equal(KB.StandardMapping)
-      val retrievedXML = textValueObject
-        .getRequiredString(KA.TextValueAsXml)
-        .fold(msg => throw BadRequestException(msg), identity)
-      val xmlDiff: Diff = DiffBuilder
-        .compare(Input.fromString(xmlContent))
-        .withTest(Input.fromString(retrievedXML))
-        .build()
-      xmlDiff.hasDifferences should be(false)
-      textValueObject
-        .getString(KA.TextValueAsHtml)
-        .fold(msg => throw BadRequestException(msg), identity) should equal(None)
-      textValueObject
-        .getString(KA.ValueAsString)
-        .fold(msg => throw BadRequestException(msg), identity) should equal(None)
-    }
-
-    "create a mapping from a XML" in {
+    },
+    test("create a mapping from a XML") {
       val expected =
         FileUtil.readAsJsonLd(Paths.get("test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
-      val actual =
-        UnsafeZioRun.runOrThrow(createMapping("LetterMapping", "letter mapping", Paths.get(pathToLetterMapping)))
-      assert(expected == actual)
-    }
+      createMapping("LetterMapping", "letter mapping", Paths.get(pathToLetterMapping))
+        .map(actual => assertTrue(expected == actual))
+    },
+    test("create a custom mapping for XML in freetest") {
+      createMapping("FreetestCustomMapping", "label", Paths.get(pathToFreetestCustomMapping))
+        .flatMap(jsonLd => ZIO.fromEither(jsonLd.body.getRequiredString("@id")).mapError(Exception(_)).orDie)
+        .map(mappingIRI => assertTrue(mappingIRI == freetestCustomMappingIRI))
+    },
+    test("create a text value with the freetext custom mapping") {
+      for {
+        xmlContent <- ZIO.attempt(FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue)))
+        document   <- createResourceWithTextValue(xmlContent, freetestCustomMappingIRI)
+        _           = freetestTextValueIRI.set(document.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun))
+      } yield assertCompletes
+    },
+    test("return XML but no HTML, as there is no transformation provided") {
+      for {
+        xmlContent <- ZIO.attempt(FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue)))
+        document   <- getTextValueAsDocument(freetestTextValueIRI.get)
+        value      <- ZIO.fromEither(document.body.getRequiredObject(s"${freetestOntologyIRI}hasText"))
+        valueType  <- ZIO.fromEither(value.getRequiredString(JsonLDKeywords.TYPE))
+        mapping <- ZIO.fromEither(
+                     value.getRequiredObject(KA.TextValueHasMapping).flatMap(_.getRequiredString(JsonLDKeywords.ID)),
+                   )
+        textValueAsXml  <- ZIO.fromEither(value.getRequiredString(KA.TextValueAsXml))
+        textValueAsHtml <- ZIO.fromEither(value.getString(KA.TextValueAsHtml))
+        valueAsString   <- ZIO.fromEither(value.getString(KA.ValueAsString))
 
-    "create a custom mapping for XML in freetest" in {
-      val mappingIRI = UnsafeZioRun.runOrThrow(
-        createMapping("FreetestCustomMapping", "label", Paths.get(pathToFreetestCustomMapping)).flatMap(jsonLd =>
-          ZIO.fromEither(jsonLd.body.getRequiredString("@id")).mapError(Exception(_)).orDie,
-        ),
+      } yield assertTrue(
+        valueType == KA.TextValue,
+        mapping == freetestCustomMappingIRI,
+        textValueAsXml == xmlContent,
+        textValueAsHtml.isEmpty,
+        valueAsString.isEmpty,
       )
-      mappingIRI should equal(freetestCustomMappingIRI)
-    }
-
-    "create a text value with the freetext custom mapping" in {
-      // create a resource with a TextValue with custom mapping
-      val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
-      val resourceResponseDocument =
-        UnsafeZioRun.runOrThrow(createResourceWithTextValue(xmlContent, freetestCustomMappingIRI))
-      freetestTextValueIRI.set(
-        resourceResponseDocument.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun),
-      )
-    }
-
-    "return XML but no HTML, as there is no transformation provided" in {
-      val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
-
-      val responseDocument = getTextValueAsDocument(freetestTextValueIRI.get)
-      val textValueObject = responseDocument.body
-        .getRequiredObject(s"${freetestOntologyIRI}hasText")
-        .fold(e => throw BadRequestException(e), identity)
-      textValueObject
-        .getRequiredString(JsonLDKeywords.TYPE)
-        .fold(msg => throw BadRequestException(msg), identity) should equal(
-        KA.TextValue,
-      )
-      textValueObject
-        .getRequiredObject(KA.TextValueHasMapping)
-        .flatMap(_.getRequiredString(JsonLDKeywords.ID))
-        .fold(msg => throw BadRequestException(msg), identity) should equal(freetestCustomMappingIRI)
-      textValueObject
-        .getRequiredString(KA.TextValueAsXml)
-        .fold(msg => throw BadRequestException(msg), identity) should equal(xmlContent)
-      textValueObject
-        .getString(KA.TextValueAsHtml)
-        .fold(msg => throw BadRequestException(msg), identity) should equal(None)
-      textValueObject
-        .getString(KA.ValueAsString)
-        .fold(msg => throw BadRequestException(msg), identity) should equal(None)
-    }
-
-    "create a custom mapping with an XSL transformation" in {
-      val uploadedFile =
-        UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(Paths.get(pathToFreetestXSLTFile), anythingShortcode))
-
-      // create FileRepresentation in API
-      val uploadFileJson = UploadFileRequest
-        .make(
-          fileType = FileType.TextFile,
-          internalFilename = uploadedFile.internalFilename,
-          resourceIRI = Some(freetestXSLTIRI),
-        )
-        .toJsonLd(className = Some("XSLTransformation"))
-      val responseJsonDoc = UnsafeZioRun.runOrThrow(for {
+    },
+    test("create a custom mapping with an XSL transformation") {
+      for {
+        uploadedFile <- TestDspIngestClient.uploadFile(Paths.get(pathToFreetestXSLTFile), anythingShortcode)
+        uploadFileJson = UploadFileRequest
+                           .make(
+                             fileType = FileType.TextFile,
+                             internalFilename = uploadedFile.internalFilename,
+                             resourceIRI = Some(freetestXSLTIRI),
+                           )
+                           .toJsonLd(className = Some("XSLTransformation"))
         response <- TestApiClient.postJsonLd(uri"/v2/resources", uploadFileJson, anythingUser1)
         jsonLd   <- response.assert200.mapAttempt(JsonLDUtil.parseJsonLD).orDie
-      } yield jsonLd)
-
-      responseJsonDoc.body
-        .getRequiredString(JsonLDKeywords.ID)
-        .fold(msg => throw BadRequestException(msg), identity) should equal(freetestXSLTIRI)
-
-      // add a mapping that refers to the transformation
-      val mappingResponseDocument =
-        UnsafeZioRun.runOrThrow(
-          createMapping(
-            "FreetestCustomMappingWithTransformation",
-            "label",
-            Paths.get(pathToFreetestCustomMappingWithTransformation),
-          ),
-        )
-      val mappingIRI =
-        mappingResponseDocument.body.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
-      mappingIRI should equal(freetestCustomMappingWithTransformationIRI)
-    }
-
-    "create a text value with the freetext custom mapping and transformation" in {
-      // create a resource with a TextValue with custom mapping
-      val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
-      val resourceResponseDocument =
-        UnsafeZioRun.runOrThrow(createResourceWithTextValue(xmlContent, freetestCustomMappingWithTransformationIRI))
-      freetestTextValueIRI.set(
-        resourceResponseDocument.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun),
+        id       <- ZIO.fromEither(jsonLd.body.getRequiredString(JsonLDKeywords.ID))
+        mapping <- createMapping(
+                     "FreetestCustomMappingWithTransformation",
+                     "label",
+                     Paths.get(pathToFreetestCustomMappingWithTransformation),
+                   )
+        mappingIRI <- ZIO.fromEither(mapping.body.getRequiredString("@id"))
+      } yield assertTrue(id == freetestXSLTIRI, mappingIRI == freetestCustomMappingWithTransformationIRI)
+    },
+    test("create a text value with the freetext custom mapping and transformation") {
+      for {
+        xmlContent               <- ZIO.attempt(FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue)))
+        resourceResponseDocument <- createResourceWithTextValue(xmlContent, freetestCustomMappingWithTransformationIRI)
+        _ = freetestTextValueIRI.set(
+              resourceResponseDocument.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun),
+            )
+      } yield assertCompletes
+    },
+    test("return XML and HTML rendering of the standoff") {
+      for {
+        xmlContent  <- ZIO.attempt(FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue)))
+        expectedHTML = Some("<div>\n    <p> This is a <i>sample</i> of standoff text. </p>\n</div>")
+        document    <- getTextValueAsDocument(freetestTextValueIRI.get)
+        value       <- ZIO.fromEither(document.body.getRequiredObject(s"${freetestOntologyIRI}hasText"))
+        valueType   <- ZIO.fromEither(value.getRequiredString(JsonLDKeywords.TYPE))
+        mapping <- ZIO.fromEither(
+                     value.getRequiredObject(KA.TextValueHasMapping).flatMap(_.getRequiredString(JsonLDKeywords.ID)),
+                   )
+        textValueAsXml  <- ZIO.fromEither(value.getRequiredString(KA.TextValueAsXml))
+        textValueAsHtml <- ZIO.fromEither(value.getString(KA.TextValueAsHtml))
+        valueAsString   <- ZIO.fromEither(value.getString(KA.ValueAsString))
+      } yield assertTrue(
+        valueType == KA.TextValue,
+        mapping == freetestCustomMappingWithTransformationIRI,
+        textValueAsXml == xmlContent,
+        textValueAsHtml == expectedHTML,
+        valueAsString.isEmpty,
       )
-    }
-
-    "return XML and HTML rendering of the standoff" in {
-      val xmlContent   = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
-      val expectedHTML = Some("<div>\n    <p> This is a <i>sample</i> of standoff text. </p>\n</div>")
-
-      val responseDocument = getTextValueAsDocument(freetestTextValueIRI.get)
-      val textValueObject = responseDocument.body
-        .getRequiredObject(s"${freetestOntologyIRI}hasText")
-        .fold(e => throw BadRequestException(e), identity)
-      textValueObject
-        .getRequiredString(JsonLDKeywords.TYPE)
-        .fold(msg => throw BadRequestException(msg), identity) should equal(
-        KA.TextValue,
-      )
-      textValueObject
-        .getRequiredObject(KA.TextValueHasMapping)
-        .flatMap(_.getRequiredString(JsonLDKeywords.ID))
-        .fold(e => throw BadRequestException(e), identity) should equal(freetestCustomMappingWithTransformationIRI)
-      textValueObject
-        .getRequiredString(KA.TextValueAsXml)
-        .fold(msg => throw BadRequestException(msg), identity) should equal(xmlContent)
-      textValueObject
-        .getString(KA.TextValueAsHtml)
-        .fold(msg => throw BadRequestException(msg), identity) should equal(expectedHTML)
-      textValueObject
-        .getString(KA.ValueAsString)
-        .fold(msg => throw BadRequestException(msg), identity) should equal(None)
-    }
-  }
+    },
+  )
 }
