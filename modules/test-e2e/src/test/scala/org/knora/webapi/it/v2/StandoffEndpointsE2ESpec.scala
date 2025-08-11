@@ -37,8 +37,6 @@ import org.knora.webapi.util.MutableTestIri
 
 object StandoffEndpointsE2ESpec extends E2EZSpec {
 
-  val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
-
   private val pathToXMLWithStandardMapping = "test_data/test_route/texts/StandardHTML.xml"
   private val pathToLetterMapping          = "test_data/test_route/texts/mappingForLetter.xml"
   private val pathToFreetestCustomMapping  = "test_data/test_route/texts/freetestCustomMapping.xml"
@@ -50,9 +48,11 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
   private val freetestCustomMappingIRI   = s"$anythingProjectIri/mappings/FreetestCustomMapping"
   private val freetestCustomMappingWithTransformationIRI =
     s"$anythingProjectIri/mappings/FreetestCustomMappingWithTransformation"
-  private val freetestOntologyIRI  = "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
+  private val freetestOntologyIRI = "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
+  private val freetestXSLTIRI     = "http://rdfh.ch/0001/xYSnl8dmTw2RM6KQGVqNDA"
+
   private val freetestTextValueIRI = new MutableTestIri
-  private val freetestXSLTIRI      = "http://rdfh.ch/0001/xYSnl8dmTw2RM6KQGVqNDA"
+  private val validationFun        = (s: String, e: Nothing) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/anything"),
