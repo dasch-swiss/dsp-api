@@ -51,8 +51,8 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
   private val freetestOntologyIRI = "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
   private val freetestXSLTIRI     = "http://rdfh.ch/0001/xYSnl8dmTw2RM6KQGVqNDA"
 
-  private val freetestTextValueIRI = new MutableTestIri
-  private val validationFun        = (s: String, e: Nothing) => Iri.validateAndEscapeIri(s).getOrElse(e)
+  private val freetestTextValueIRI                          = new MutableTestIri
+  private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/anything"),
@@ -137,7 +137,9 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
       for {
         xmlContent <- ZIO.attempt(FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping)))
         document   <- createResourceWithTextValue(xmlContent, KB.StandardMapping)
-        _           = freetestTextValueIRI.set(document.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun))
+        valueIri    = document.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+        _          <- Console.printLine(s"Created text value with IRI: $valueIri")
+        _           = freetestTextValueIRI.set(valueIri)
       } yield assertCompletes
     },
     test("return XML but no HTML for a resource with standard mapping") {
