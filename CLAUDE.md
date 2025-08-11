@@ -21,7 +21,8 @@ The project uses ZIO for functional programming, Pekko HTTP (Apache Pekko) for t
 - Run tests in a specific package: `sbt "testOnly org.knora.webapi.slice.admin.*"`
 - `sbt test` - Run unit tests
 - Integration tests use `latest` Sipi image by default. To use exact git version locally, set `SIPI_USE_EXACT_VERSION=true` or build with `make docker-build-sipi-image`.
-- `make integration-test` - Run integration tests (requires Docker)
+- `make test-it` - Run integration tests (requires Docker)
+- `make test-e2e` - Run end-to-end HTTP API tests (requires Docker)
 - `make test-all` - Run all tests
 
 **Code Quality:**
@@ -47,7 +48,9 @@ The codebase is organized into several key modules:
 
 **Core Modules:**
 - `webapi/` - Main API application
-- `integration/` - Integration tests
+- `modules/testkit/` - Shared test utilities and base classes
+- `modules/test-it/` - Integration tests (service/repo/Sipi tests)
+- `modules/test-e2e/` - End-to-end HTTP API tests
 - `sipi/` - Custom Sipi media server configuration
 
 **Slice Architecture** (`webapi/src/main/scala/org/knora/webapi/slice/`):
@@ -85,7 +88,9 @@ Each slice typically contains:
 
 ### Test Organization
 - Unit tests: `webapi/src/test/scala/`
-- Integration tests: `integration/src/test/scala/` 
+- Integration tests: `modules/test-it/src/test/scala/`
+- End-to-end tests: `modules/test-e2e/src/test/scala/`
+- Shared test utilities: `modules/testkit/src/main/scala/`
 - Tests are organized by module following the main source structure
 
 ### Test Execution

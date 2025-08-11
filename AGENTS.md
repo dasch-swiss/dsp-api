@@ -42,7 +42,8 @@ Essential commands:
   - `sbt test` — Run unit tests
   - `sbt "testOnly *TestClassName*"` — Single test
   - `sbt "testOnly org.knora.webapi.slice.admin.*"` — Package tests
-  - `make integration-test` — Integration tests (requires Docker)
+  - `make test-it` — Integration tests (requires Docker)
+  - `make test-e2e` — End-to-end HTTP API tests (requires Docker)
   - `make test-all` — All tests
   - Integration tests use `latest` Sipi by default. To use exact git version locally, set `SIPI_USE_EXACT_VERSION=true` or build with `make docker-build-sipi-image`.
 - Code Quality
@@ -63,7 +64,9 @@ Essential commands:
 
 - Modules
   - `webapi/` — Main API application
-  - `integration/` — Integration tests
+  - `modules/testkit/` — Shared test utilities and base classes
+  - `modules/test-it/` — Integration tests (service/repo/Sipi tests)
+  - `modules/test-e2e/` — End-to-end HTTP API tests
   - `sipi/` — Sipi media server configuration
 - Slice architecture (`webapi/src/main/scala/org/knora/webapi/slice/`)
   - `admin/`, `common/`, `infrastructure/`, `lists/`, `ontology/`, `resources/`, `search/`, `security/`, `shacl/`
@@ -116,7 +119,9 @@ Essential commands:
 
 - Location
   - Unit tests: `webapi/src/test/scala/`
-  - Integration: `integration/src/test/scala/`
+  - Integration tests: `modules/test-it/src/test/scala/`
+  - End-to-end tests: `modules/test-e2e/src/test/scala/`
+  - Shared test utilities: `modules/testkit/src/main/scala/`
   - Test data: `test_data/` with `project_ontologies/` and `project_data/`
 - Execution
   - Unit tests should use in-memory or test doubles
