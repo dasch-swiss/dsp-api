@@ -15,11 +15,9 @@ import zio.json.ast.*
 
 import java.nio.file.Path
 import java.nio.file.Paths
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
-import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
 import org.knora.webapi.messages.OntologyConstants.Rdfs
@@ -177,16 +175,11 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     }
 
     "create a mapping from a XML" in {
-      val expectedAnswerJSONLD =
-        FileUtil.readTextFile(Paths.get("test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
-
+      val expected =
+        FileUtil.readAsJsonLd(Paths.get("test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
       val actual =
         UnsafeZioRun.runOrThrow(createMapping("LetterMapping", "letter mapping", Paths.get(pathToLetterMapping)))
-
-      compareJSONLDForMappingCreationResponse(
-        expectedJSONLD = expectedAnswerJSONLD,
-        receivedJSONLD = actual.toCompactString(),
-      )
+      assert(expected == actual)
     }
 
     "create a custom mapping for XML in freetest" in {
