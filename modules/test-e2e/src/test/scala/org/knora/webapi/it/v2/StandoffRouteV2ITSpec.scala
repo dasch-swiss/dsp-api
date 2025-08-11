@@ -5,17 +5,15 @@
 
 package org.knora.webapi.it.v2
 
-import org.apache.pekko
-import org.apache.pekko.http.javadsl.model.StatusCodes
-import org.apache.pekko.http.scaladsl.model.*
-import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import sttp.client4.*
+import zio.ZIO
 import zio.json.*
 import zio.json.ast.*
 
+import java.nio.file.Path
 import java.nio.file.Paths
 
 import dsp.errors.BadRequestException
@@ -28,10 +26,10 @@ import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
@@ -45,10 +43,6 @@ import org.knora.webapi.util.MutableTestIri
 class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
 
   val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
-
-  private val anythingUser      = SharedTestDataADM.anythingUser1
-  private val anythingUserEmail = anythingUser.email
-  private val password          = SharedTestDataADM.testPass
 
   private val pathToXMLWithStandardMapping = "test_data/test_route/texts/StandardHTML.xml"
   private val pathToLetterMapping          = "test_data/test_route/texts/mappingForLetter.xml"
@@ -77,12 +71,16 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     ),
   )
 
-  def createMapping(mappingPath: String, mappingName: String): HttpResponse = {
-    val jsonPart = Json
+  private def createMapping(
+    mappingName: String,
+    label: String,
+    xmlFile: Path,
+  ): ZIO[TestApiClient, Nothing, JsonLDDocument] = {
+    val json = Json
       .Obj(
         ("knora-api:mappingHasName", Json.Str(mappingName)),
         ("knora-api:attachedToProject", Json.Obj("@id", Json.Str(anythingProjectIri.value))),
-        ("rdfs:label", Json.Str("custom mapping")),
+        ("rdfs:label", Json.Str(label)),
         (
           "@context",
           Json.Obj(
@@ -91,20 +89,17 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
           ),
         ),
       )
-
-    val xmlPart = Paths.get(mappingPath)
-
-    val formData = Multipart.FormData(
-      Multipart.FormData.BodyPart("json", HttpEntity(ContentTypes.`application/json`, jsonPart.toString())),
-      Multipart.FormData.BodyPart("xml", HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, xmlPart)),
+    val body = Seq(
+      multipart("json", json.toString()).contentType("application/json"),
+      multipartFile("xml", xmlFile).contentType("text/xml(UTF-8)"),
     )
-    singleAwaitingRequest(
-      Post(baseApiUrl + "/v2/mapping", formData) ~>
-        addCredentials(BasicHttpCredentials(anythingUserEmail, password)),
-    )
+    for {
+      response <- TestApiClient.postMultiPart[Json](uri"/v2/mapping", body, anythingUser1).orDie
+      jsonLd   <- response.assert200.map(_.toString).mapAttempt(JsonLDUtil.parseJsonLD).orDie
+    } yield jsonLd
   }
 
-  def createResourceWithTextValue(xmlContent: String, mappingIRI: String): HttpResponse = {
+  private def createResourceWithTextValue(xmlContent: String, mappingIRI: String) = {
     val jsonLDEntity = Json
       .Obj(
         ("@type", Json.Str("freetest:FreeTest")),
@@ -130,31 +125,23 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
         ),
       )
 
-    val resourceRequest = Post(
-      s"$baseApiUrl/v2/resources",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity.toString()),
-    ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-    singleAwaitingRequest(resourceRequest)
+    for {
+      response <- TestApiClient.postJsonLd(uri"/v2/resources", jsonLDEntity.toString(), anythingUser1)
+      jsonLd   <- response.assert200.mapAttempt(JsonLDUtil.parseJsonLD).orDie
+    } yield jsonLd
   }
 
-  def getTextValueAsDocument(iri: String): JsonLDDocument = UnsafeZioRun.runOrThrow(
+  private def getTextValueAsDocument(iri: String): JsonLDDocument = UnsafeZioRun.runOrThrow(
     TestApiClient.getJsonLdDocument(uri"/v2/resources/$iri", anythingUser1).flatMap(_.assert200),
   )
 
   "The Standoff v2 Endpoint" should {
     "create a text value with standard mapping" in {
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping))
-      val response = createResourceWithTextValue(
-        xmlContent = xmlContent,
-        mappingIRI = KB.StandardMapping,
-      )
-      assert(response.status == StatusCodes.OK, responseToString(response))
-      val resourceResponseDocument: JsonLDDocument = responseToJsonLDDocument(response)
+      val resourceResponseDocument =
+        UnsafeZioRun.runOrThrow(createResourceWithTextValue(xmlContent, KB.StandardMapping))
       freetestTextValueIRI.set(
-        resourceResponseDocument.body.requireStringWithValidation(
-          JsonLDKeywords.ID,
-          validationFun,
-        ),
+        resourceResponseDocument.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun),
       )
     }
 
@@ -190,84 +177,34 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     }
 
     "create a mapping from a XML" in {
-      val xmlFileToSend = Paths.get(pathToLetterMapping)
-
-      val mappingParams =
-        s"""
-           |{
-           |    "knora-api:mappingHasName": "LetterMapping",
-           |    "knora-api:attachedToProject": {
-           |      "@id": "$anythingProjectIri"
-           |    },
-           |    "rdfs:label": "letter mapping",
-           |    "@context": {
-           |        "rdfs": "${Rdfs.RdfsPrefixExpansion}",
-           |        "knora-api": "${KA.KnoraApiV2PrefixExpansion}"
-           |    }
-           |}
-                """.stripMargin
-
-      val formDataMapping = Multipart.FormData(
-        Multipart.FormData.BodyPart(
-          "json",
-          HttpEntity(ContentTypes.`application/json`, mappingParams),
-        ),
-        Multipart.FormData.BodyPart(
-          "xml",
-          HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), xmlFileToSend),
-          Map("filename" -> "brokenMapping.xml"),
-        ),
-      )
-
-      // create standoff from XML
-      val request = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
-      )
-      val response = singleAwaitingRequest(request)
-      val status   = response.status
-      val text     = responseToString(response)
-
-      assert(
-        status == StatusCodes.OK,
-        s"creation of a mapping returned a non successful HTTP status code: $text",
-      )
-
       val expectedAnswerJSONLD =
-        FileUtil.readTextFile(
-          Paths.get("test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld"),
-        )
+        FileUtil.readTextFile(Paths.get("test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
+
+      val actual =
+        UnsafeZioRun.runOrThrow(createMapping("LetterMapping", "letter mapping", Paths.get(pathToLetterMapping)))
 
       compareJSONLDForMappingCreationResponse(
         expectedJSONLD = expectedAnswerJSONLD,
-        receivedJSONLD = text,
+        receivedJSONLD = actual.toCompactString(),
       )
     }
 
     "create a custom mapping for XML in freetest" in {
-      // define custom XML to standoff mapping
-      val mappingResponse         = createMapping(pathToFreetestCustomMapping, "FreetestCustomMapping")
-      val mappingResponseDocument = responseToJsonLDDocument(mappingResponse)
-      mappingResponse.status should equal(StatusCodes.OK)
-
-      val mappingIRI =
-        mappingResponseDocument.body.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
+      val mappingIRI = UnsafeZioRun.runOrThrow(
+        createMapping("FreetestCustomMapping", "label", Paths.get(pathToFreetestCustomMapping)).flatMap(jsonLd =>
+          ZIO.fromEither(jsonLd.body.getRequiredString("@id")).mapError(Exception(_)).orDie,
+        ),
+      )
       mappingIRI should equal(freetestCustomMappingIRI)
     }
 
     "create a text value with the freetext custom mapping" in {
       // create a resource with a TextValue with custom mapping
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
-      val response = createResourceWithTextValue(
-        xmlContent = xmlContent,
-        mappingIRI = freetestCustomMappingIRI,
-      )
-      assert(response.status == StatusCodes.OK, responseToString(response))
-      val resourceResponseDocument: JsonLDDocument = responseToJsonLDDocument(response)
+      val resourceResponseDocument =
+        UnsafeZioRun.runOrThrow(createResourceWithTextValue(xmlContent, freetestCustomMappingIRI))
       freetestTextValueIRI.set(
-        resourceResponseDocument.body.requireStringWithValidation(
-          JsonLDKeywords.ID,
-          validationFun,
-        ),
+        resourceResponseDocument.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun),
       )
     }
 
@@ -310,22 +247,24 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
           resourceIRI = Some(freetestXSLTIRI),
         )
         .toJsonLd(className = Some("XSLTransformation"))
-      val fileRepresentationRequest = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, uploadFileJson),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val fileRepresentationResponse = singleAwaitingRequest(fileRepresentationRequest)
-      assert(StatusCodes.OK == fileRepresentationResponse.status, responseToString(fileRepresentationResponse))
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(fileRepresentationResponse)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(for {
+        response <- TestApiClient.postJsonLd(uri"/v2/resources", uploadFileJson, anythingUser1)
+        jsonLd   <- response.assert200.mapAttempt(JsonLDUtil.parseJsonLD).orDie
+      } yield jsonLd)
+
       responseJsonDoc.body
         .getRequiredString(JsonLDKeywords.ID)
         .fold(msg => throw BadRequestException(msg), identity) should equal(freetestXSLTIRI)
 
       // add a mapping that refers to the transformation
-      val mappingResponse =
-        createMapping(pathToFreetestCustomMappingWithTransformation, "FreetestCustomMappingWithTransformation")
-      val mappingResponseDocument = responseToJsonLDDocument(mappingResponse)
-      mappingResponse.status should equal(StatusCodes.OK)
+      val mappingResponseDocument =
+        UnsafeZioRun.runOrThrow(
+          createMapping(
+            "FreetestCustomMappingWithTransformation",
+            "label",
+            Paths.get(pathToFreetestCustomMappingWithTransformation),
+          ),
+        )
       val mappingIRI =
         mappingResponseDocument.body.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
       mappingIRI should equal(freetestCustomMappingWithTranformationIRI)
@@ -334,17 +273,10 @@ class StandoffRouteV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     "create a text value with the freetext custom mapping and transformation" in {
       // create a resource with a TextValue with custom mapping
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
-      val response = createResourceWithTextValue(
-        xmlContent = xmlContent,
-        mappingIRI = freetestCustomMappingWithTranformationIRI,
-      )
-      assert(response.status == StatusCodes.OK, responseToString(response))
-      val resourceResponseDocument: JsonLDDocument = responseToJsonLDDocument(response)
+      val resourceResponseDocument =
+        UnsafeZioRun.runOrThrow(createResourceWithTextValue(xmlContent, freetestCustomMappingWithTranformationIRI))
       freetestTextValueIRI.set(
-        resourceResponseDocument.body.requireStringWithValidation(
-          JsonLDKeywords.ID,
-          validationFun,
-        ),
+        resourceResponseDocument.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun),
       )
     }
 
