@@ -9,7 +9,6 @@ import sttp.client4.*
 import sttp.model.StatusCode
 import zio.*
 import zio.test.*
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.OntologyConstants
@@ -19,6 +18,7 @@ import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
@@ -58,7 +58,7 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
     ZIO.serviceWithZIO[KnoraProjectService](_.createProject(createRequest)).map(_.id)
   }
 
-  private def createOntology(projectIri: ProjectIri): ZIO[TestApiClient, Throwable, (String, String)] = {
+  private def createOntology(projectIri: ProjectIri): ZIO[TestApiClient, Throwable, (OntologyIri, String)] = {
     val payload =
       s"""|{
           |  "knora-api:ontologyName" : "$ontologyName",
@@ -77,12 +77,15 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
                     .postJsonLd(uri"/v2/ontologies", payload, rootUser)
                     .flatMap(_.assert200)
                     .mapAttempt(JsonLDUtil.parseJsonLD)
-      ontologyIri <- ZIO.fromEither(document.body.getRequiredString(JsonLDKeywords.ID)).mapError(new AssertionError(_))
+      ontologyIri <- ZIO
+                       .fromEither(document.body.getRequiredString(JsonLDKeywords.ID))
+                       .mapError(new AssertionError(_))
+                       .mapAttempt(str => OntologyIri.unsafeFrom(sf.toSmartIri(str)))
     } yield (ontologyIri, getLastModificationDate(document))
   }
 
   private def createClass(
-    ontologyIri: String,
+    ontologyIri: OntologyIri,
     className: String,
     superClass: Option[String],
     lastModificationDate: String,
@@ -128,7 +131,7 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
       .map(getLastModificationDate)
   }
 
-  private def createProperty(ontologyIri: String, propertyName: String, lastModificationDate: String) = {
+  private def createProperty(ontologyIri: OntologyIri, propertyName: String, lastModificationDate: String) = {
     val payload =
       s"""|{
           |  "@id" : "$ontologyIri",
@@ -171,7 +174,7 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
   }
 
   private def addRequiredCardinalityToClass(
-    ontologyIri: String,
+    ontologyIri: OntologyIri,
     className: String,
     propertyName: String,
     lastModificationDate: String,
@@ -215,7 +218,7 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
 
   private def createValue(
     projectIri: ProjectIri,
-    ontologyIri: String,
+    ontologyIri: OntologyIri,
     className: String,
     propertyNames: List[String],
   ) = {
