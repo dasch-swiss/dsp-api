@@ -313,12 +313,7 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
         lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty2, lmd)
 
         // trying to create an instance of the sub class, but missing mandatory props defined on super class
-        status <- createValue(
-                    projectIri = projectIri,
-                    ontologyIri = ontologyIri,
-                    className = subClassName,
-                    propertyNames = List(subClassProperty1, subClassProperty2),
-                  )
+        status <- createValue(projectIri, ontologyIri, subClassName, List(subClassProperty1, subClassProperty2))
       } yield assertTrue(status == StatusCode.BadRequest)
     },
     test(
