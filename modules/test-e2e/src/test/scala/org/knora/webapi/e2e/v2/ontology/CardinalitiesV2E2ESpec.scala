@@ -34,6 +34,21 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
   private val subClassProperty1   = "subClassProperty1"
   private val subClassProperty2   = "subClassProperty2"
 
+  private def createTestOntologyInNewProject(shortname: String, shortcode: String) =
+    for {
+      projectIri        <- createProject(shortname, shortcode)
+      iriAndLmd         <- createOntology(projectIri)
+      (ontologyIri, lmd) = iriAndLmd
+
+      lmd <- createClass(ontologyIri, superClassName, None, lmd)
+      lmd <- createClass(ontologyIri, subClassName, Some(superClassName), lmd)
+
+      lmd <- createProperty(ontologyIri, superClassProperty1, lmd)
+      lmd <- createProperty(ontologyIri, superClassProperty2, lmd)
+      lmd <- createProperty(ontologyIri, subClassProperty1, lmd)
+      lmd <- createProperty(ontologyIri, subClassProperty2, lmd)
+    } yield (projectIri, ontologyIri, lmd)
+
   private def createProject(shortname: String, shortcode: String): ZIO[KnoraProjectService, Throwable, ProjectIri] = {
     val createRequest = ProjectCreateRequest(
       shortname = Shortname.unsafeFrom(shortname),
@@ -240,19 +255,9 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
 
   override val e2eSpec = suite("Ontologies endpoint")(
     test("be able to create resource instances with all properties, when adding cardinalities on super class first") {
-
       for {
-        projectIri        <- createProject("test1", "4441")
-        iriAndLmd         <- createOntology(projectIri)
-        (ontologyIri, lmd) = iriAndLmd
-
-        lmd <- createClass(ontologyIri, superClassName, None, lmd)
-        lmd <- createClass(ontologyIri, subClassName, Some(superClassName), lmd)
-
-        lmd <- createProperty(ontologyIri, superClassProperty1, lmd)
-        lmd <- createProperty(ontologyIri, superClassProperty2, lmd)
-        lmd <- createProperty(ontologyIri, subClassProperty1, lmd)
-        lmd <- createProperty(ontologyIri, subClassProperty2, lmd)
+        created                       <- createTestOntologyInNewProject("test1", "4441")
+        (projectIri, ontologyIri, lmd) = created
 
         // first adding the cardinalities to the *super*, then to the *sub* class
         lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty1, lmd)
@@ -272,17 +277,8 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
     },
     test("be able to create resource instances with all properties, when adding cardinalities on sub class first") {
       for {
-        projectIri        <- createProject("test2", "4442")
-        iriAndLmd         <- createOntology(projectIri)
-        (ontologyIri, lmd) = iriAndLmd
-
-        lmd <- createClass(ontologyIri, superClassName, None, lmd)
-        lmd <- createClass(ontologyIri, subClassName, Some(superClassName), lmd)
-
-        lmd <- createProperty(ontologyIri, superClassProperty1, lmd)
-        lmd <- createProperty(ontologyIri, superClassProperty2, lmd)
-        lmd <- createProperty(ontologyIri, subClassProperty1, lmd)
-        lmd <- createProperty(ontologyIri, subClassProperty2, lmd)
+        created                       <- createTestOntologyInNewProject("test2", "4442")
+        (projectIri, ontologyIri, lmd) = created
 
         // first adding the cardinalities to the *sub*, then to the *super* class
         lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty1, lmd)
@@ -307,17 +303,8 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
       "not be able to create subclass instances with missing required properties defined on superclass, when adding cardinalities on super class first",
     ) {
       for {
-        projectIri        <- createProject("test3", "4443")
-        iriAndLmd         <- createOntology(projectIri)
-        (ontologyIri, lmd) = iriAndLmd
-
-        lmd <- createClass(ontologyIri, superClassName, None, lmd)
-        lmd <- createClass(ontologyIri, subClassName, Some(superClassName), lmd)
-
-        lmd <- createProperty(ontologyIri, superClassProperty1, lmd)
-        lmd <- createProperty(ontologyIri, superClassProperty2, lmd)
-        lmd <- createProperty(ontologyIri, subClassProperty1, lmd)
-        lmd <- createProperty(ontologyIri, subClassProperty2, lmd)
+        created                       <- createTestOntologyInNewProject("test3", "4443")
+        (projectIri, ontologyIri, lmd) = created
 
         // first adding the cardinalities to the *super*, then to the *sub* class
         lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty1, lmd)
@@ -338,17 +325,8 @@ object CardinalitiesV2E2ESpec extends E2EZSpec {
       "not be able to create subclass instances with missing properties defined on superclass, when adding cardinalities on sub class first",
     ) {
       for {
-        projectIri        <- createProject("test4", "4444")
-        iriAndLmd         <- createOntology(projectIri)
-        (ontologyIri, lmd) = iriAndLmd
-
-        lmd <- createClass(ontologyIri, superClassName, None, lmd)
-        lmd <- createClass(ontologyIri, subClassName, Some(superClassName), lmd)
-
-        lmd <- createProperty(ontologyIri, superClassProperty1, lmd)
-        lmd <- createProperty(ontologyIri, superClassProperty2, lmd)
-        lmd <- createProperty(ontologyIri, subClassProperty1, lmd)
-        lmd <- createProperty(ontologyIri, subClassProperty2, lmd)
+        created                       <- createTestOntologyInNewProject("test4", "4444")
+        (projectIri, ontologyIri, lmd) = created
 
         // first adding the cardinalities to the *sub*, then to the *super* class
         lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty1, lmd)
