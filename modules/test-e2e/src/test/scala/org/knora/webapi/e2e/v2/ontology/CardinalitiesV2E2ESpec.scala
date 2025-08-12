@@ -9,6 +9,7 @@ import sttp.client4.*
 import sttp.model.StatusCode
 import zio.*
 import zio.test.*
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.OntologyConstants
