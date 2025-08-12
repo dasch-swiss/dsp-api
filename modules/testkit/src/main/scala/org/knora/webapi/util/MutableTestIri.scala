@@ -13,6 +13,7 @@ import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 
 /**
  * Holds an optional, mutable IRI for use in tests.
@@ -43,6 +44,7 @@ class MutableTestIri { self =>
   def asProjectIri: ProjectIri                                 = ProjectIri.unsafeFrom(self.get)
   def asUserIri: UserIri                                       = UserIri.unsafeFrom(self.get)
   def asGroupIri: GroupIri                                     = GroupIri.unsafeFrom(self.get)
+  def asResourceIri(implicit sf: StringFormatter): ResourceIri = ResourceIri.unsafeFrom(self.get.toSmartIri)
 }
 
 /**

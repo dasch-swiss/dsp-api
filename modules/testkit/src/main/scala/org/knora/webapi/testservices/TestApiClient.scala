@@ -9,6 +9,7 @@ import sttp.client4.*
 import sttp.client4.ResponseException.DeserializationException
 import sttp.client4.ziojson.*
 import sttp.model.MediaType
+import sttp.model.Part
 import sttp.model.Uri
 import zio.*
 import zio.json.*
@@ -148,6 +149,21 @@ final case class TestApiClient(
         .send(backend)
     }
 
+  def postMultiPart[A: JsonDecoder](
+    relativeUri: Uri,
+    body: Seq[Part[BasicBodyPart]],
+    user: User,
+  ): Task[Response[Either[String, A]]] =
+    jwtFor(user).flatMap { jwt =>
+      basicRequest
+        .post(relativeUri)
+        .multipartBody(body)
+        .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
+        .auth
+        .bearer(jwt)
+        .send(backend)
+    }
+
   def putJson[A: JsonDecoder, B: JsonEncoder](
     relativeUri: Uri,
     body: B,
@@ -272,6 +288,13 @@ object TestApiClient {
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.putJsonLd(relativeUri, jsonLdBody, user))
+
+  def postMultiPart[A: JsonDecoder](
+    relativeUri: Uri,
+    body: Seq[Part[BasicBodyPart]],
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postMultiPart[A](relativeUri, body, user))
 
   val layer = ZLayer.derive[TestApiClient]
 }
