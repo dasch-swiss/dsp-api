@@ -5,46 +5,48 @@
 
 package org.knora.webapi.e2e.v2.ontology
 
-import org.apache.pekko
+import sttp.client4.*
+import sttp.model.StatusCode
 import zio.*
+import zio.test.*
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.RdfMediaTypes
+import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.TestApiClient
 
-import pekko.http.scaladsl.model.HttpEntity
-import pekko.http.scaladsl.model.HttpResponse
-import pekko.http.scaladsl.model.StatusCodes
-import pekko.http.scaladsl.model.headers.BasicHttpCredentials
+object CardinalitiesV2E2ESpec extends E2EZSpec {
 
-class CardinalitiesV2E2ESpec extends E2ESpec {
+  private val ontologyName = "inherit"
 
-  private def createProject(shortname: String, shortcode: String) = UnsafeZioRun.runOrThrow(
-    ZIO
-      .serviceWithZIO[KnoraProjectService] {
-        _.createProject(
-          ProjectCreateRequest(
-            shortname = Shortname.unsafeFrom(shortname),
-            shortcode = Shortcode.unsafeFrom(shortcode),
-            description = List(Description.unsafeFrom("test project", Some("en"))),
-          ),
-        )
-      }
-      .map(_.id),
-  )
+  private val superClassName = "SuperClass"
+  private val subClassName   = "SubClass"
 
-  private def createOntology(projectIri: ProjectIri) = {
+  private val superClassProperty1 = "superClassProperty1"
+  private val superClassProperty2 = "superClassProperty2"
+  private val subClassProperty1   = "subClassProperty1"
+  private val subClassProperty2   = "subClassProperty2"
+
+  private def createProject(shortname: String, shortcode: String): ZIO[KnoraProjectService, Throwable, ProjectIri] = {
+    val createRequest = ProjectCreateRequest(
+      shortname = Shortname.unsafeFrom(shortname),
+      shortcode = Shortcode.unsafeFrom(shortcode),
+      description = List(Description.unsafeFrom("test project", Some("en"))),
+    )
+    ZIO.serviceWithZIO[KnoraProjectService](_.createProject(createRequest)).map(_.id)
+  }
+
+  private def createOntology(projectIri: ProjectIri): ZIO[TestApiClient, Throwable, (String, String)] = {
     val payload =
       s"""|{
-          |  "knora-api:ontologyName" : "inherit",
+          |  "knora-api:ontologyName" : "$ontologyName",
           |  "knora-api:attachedToProject" : {
           |    "@id" : "$projectIri"
           |  },
@@ -55,25 +57,17 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           |  }
           |}
           |""".stripMargin
-    val request = Post(
-      s"$baseApiUrl/v2/ontologies",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, payload),
-    ) ~> addCredentials(rootCredentials)
-    val response = singleAwaitingRequest(request)
-    assert(response.status == StatusCodes.OK, responseToString(response))
-    val lastModificationDate = getLastModificationDate(response)
-    val ontologyIri =
-      JsonLDUtil
-        .parseJsonLD(responseToString(response))
-        .body
-        .getRequiredString(JsonLDKeywords.ID)
-        .fold(msg => throw BadRequestException(msg), identity)
-    (ontologyIri, lastModificationDate)
+    for {
+      document <- TestApiClient
+                    .postJsonLd(uri"/v2/ontologies", payload, rootUser)
+                    .flatMap(_.assert200)
+                    .mapAttempt(JsonLDUtil.parseJsonLD)
+      ontologyIri <- ZIO.fromEither(document.body.getRequiredString(JsonLDKeywords.ID)).mapError(new AssertionError(_))
+    } yield (ontologyIri, getLastModificationDate(document))
   }
 
   private def createClass(
     ontologyIri: String,
-    ontologyName: String,
     className: String,
     superClass: Option[String],
     lastModificationDate: String,
@@ -112,21 +106,14 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           |  }
           |}
           |""".stripMargin
-    val request = Post(
-      s"$baseApiUrl/v2/ontologies/classes",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, payload),
-    ) ~> addCredentials(rootCredentials)
-    val response = singleAwaitingRequest(request)
-    assert(response.status == StatusCodes.OK, responseToString(response))
-    getLastModificationDate(response)
+    TestApiClient
+      .postJsonLd(uri"/v2/ontologies/classes", payload, rootUser)
+      .flatMap(_.assert200)
+      .mapAttempt(JsonLDUtil.parseJsonLD)
+      .map(getLastModificationDate)
   }
 
-  private def createProperty(
-    ontologyIri: String,
-    ontologyName: String,
-    propertyName: String,
-    lastModificationDate: String,
-  ) = {
+  private def createProperty(ontologyIri: String, propertyName: String, lastModificationDate: String) = {
     val payload =
       s"""|{
           |  "@id" : "$ontologyIri",
@@ -161,18 +148,15 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           |  }
           |}
           |""".stripMargin
-    val request = Post(
-      s"$baseApiUrl/v2/ontologies/properties",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, payload),
-    ) ~> addCredentials(rootCredentials)
-    val response = singleAwaitingRequest(request)
-    assert(response.status == StatusCodes.OK, responseToString(response))
-    getLastModificationDate(response)
+    TestApiClient
+      .postJsonLd(uri"/v2/ontologies/properties", payload, rootUser)
+      .flatMap(_.assert200)
+      .mapAttempt(JsonLDUtil.parseJsonLD)
+      .map(getLastModificationDate)
   }
 
   private def addRequiredCardinalityToClass(
     ontologyIri: String,
-    ontologyName: String,
     className: String,
     propertyName: String,
     lastModificationDate: String,
@@ -185,7 +169,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           |    "@type" : "xsd:dateTimeStamp",
           |    "@value" : "$lastModificationDate"
           |  },
-          |  "@graph" : [ 
+          |  "@graph" : [
           |    {
           |      "@id" : "$ontologyName:$className",
           |      "@type" : "owl:Class",
@@ -207,19 +191,16 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           |  }
           |}
           |""".stripMargin
-    val request = Post(
-      s"$baseApiUrl/v2/ontologies/cardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, payload),
-    ) ~> addCredentials(rootCredentials)
-    val response = singleAwaitingRequest(request)
-    assert(response.status == StatusCodes.OK, responseToString(response))
-    getLastModificationDate(response)
+    TestApiClient
+      .postJsonLd(uri"/v2/ontologies/cardinalities", payload, rootUser)
+      .flatMap(_.assert200)
+      .mapAttempt(JsonLDUtil.parseJsonLD)
+      .map(getLastModificationDate)
   }
 
   private def createValue(
     projectIri: ProjectIri,
     ontologyIri: String,
-    ontologyName: String,
     className: String,
     propertyNames: List[String],
   ) = {
@@ -247,309 +228,136 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           |  }
           |}
           |""".stripMargin
-    val request = Post(
-      s"$baseApiUrl/v2/resources",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, payload),
-    ) ~> addCredentials(rootCredentials)
-    val response = singleAwaitingRequest(request)
-    (response.status, responseToString(response))
+    TestApiClient.postJsonLd(uri"/v2/resources", payload, rootUser).map(_.code)
   }
 
-  private def getLastModificationDate(response: HttpResponse): String =
-    JsonLDUtil
-      .parseJsonLD(responseToString(response))
-      .body
+  private def getLastModificationDate(document: JsonLDDocument): String =
+    document.body
       .getRequiredObject(OntologyConstants.KnoraApiV2Complex.LastModificationDate)
       .fold(e => throw BadRequestException(e), identity)
       .getRequiredString(JsonLDKeywords.VALUE)
       .fold(msg => throw BadRequestException(msg), identity)
 
-  private val rootCredentials = BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
+  override val e2eSpec = suite("Ontologies endpoint")(
+    test("be able to create resource instances with all properties, when adding cardinalities on super class first") {
 
-  "Ontologies endpoint" should {
-    "be able to create resource instances with all properties, when adding cardinalities on super class first" in {
+      for {
+        projectIri        <- createProject("test1", "4441")
+        iriAndLmd         <- createOntology(projectIri)
+        (ontologyIri, lmd) = iriAndLmd
 
-      val projectIri = createProject("test1", "4441")
+        lmd <- createClass(ontologyIri, superClassName, None, lmd)
+        lmd <- createClass(ontologyIri, subClassName, Some(superClassName), lmd)
 
-      val (ontologyIri, lmd)   = createOntology(projectIri)
-      var lastModificationDate = lmd
+        lmd <- createProperty(ontologyIri, superClassProperty1, lmd)
+        lmd <- createProperty(ontologyIri, superClassProperty2, lmd)
+        lmd <- createProperty(ontologyIri, subClassProperty1, lmd)
+        lmd <- createProperty(ontologyIri, subClassProperty2, lmd)
 
-      val superClassName = "SuperClass"
-      val ontologyName   = "inherit"
-      lastModificationDate = createClass(
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = superClassName,
-        superClass = None,
-        lastModificationDate = lastModificationDate,
+        // first adding the cardinalities to the *super*, then to the *sub* class
+        lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty1, lmd)
+        lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty2, lmd)
+        lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty1, lmd)
+        lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty2, lmd)
+
+        superStatus <-
+          createValue(projectIri, ontologyIri, superClassName, List(superClassProperty1, superClassProperty2))
+        subStatus <- createValue(
+                       projectIri,
+                       ontologyIri,
+                       subClassName,
+                       List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2),
+                     )
+      } yield assertTrue(superStatus == StatusCode.Ok, subStatus == StatusCode.Ok)
+    },
+    test("be able to create resource instances with all properties, when adding cardinalities on sub class first") {
+      for {
+        projectIri        <- createProject("test2", "4442")
+        iriAndLmd         <- createOntology(projectIri)
+        (ontologyIri, lmd) = iriAndLmd
+
+        lmd <- createClass(ontologyIri, superClassName, None, lmd)
+        lmd <- createClass(ontologyIri, subClassName, Some(superClassName), lmd)
+
+        lmd <- createProperty(ontologyIri, superClassProperty1, lmd)
+        lmd <- createProperty(ontologyIri, superClassProperty2, lmd)
+        lmd <- createProperty(ontologyIri, subClassProperty1, lmd)
+        lmd <- createProperty(ontologyIri, subClassProperty2, lmd)
+
+        // first adding the cardinalities to the *sub*, then to the *super* class
+        lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty1, lmd)
+        lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty2, lmd)
+        lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty1, lmd)
+        lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty2, lmd)
+
+        superStatus <-
+          createValue(projectIri, ontologyIri, superClassName, List(superClassProperty1, superClassProperty2))
+        subStatus <- createValue(
+                       projectIri,
+                       ontologyIri,
+                       subClassName,
+                       List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2),
+                     )
+      } yield assertTrue(
+        superStatus == StatusCode.Ok,
+        subStatus == StatusCode.Ok,
       )
+    },
+    test(
+      "not be able to create subclass instances with missing required properties defined on superclass, when adding cardinalities on super class first",
+    ) {
+      for {
+        projectIri        <- createProject("test3", "4443")
+        iriAndLmd         <- createOntology(projectIri)
+        (ontologyIri, lmd) = iriAndLmd
 
-      val subClassName = "SubClass"
-      lastModificationDate = createClass(
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = subClassName,
-        superClass = Some(superClassName),
-        lastModificationDate = lastModificationDate,
-      )
+        lmd <- createClass(ontologyIri, superClassName, None, lmd)
+        lmd <- createClass(ontologyIri, subClassName, Some(superClassName), lmd)
 
-      val superClassProperty1 = "superClassProperty1"
-      val superClassProperty2 = "superClassProperty2"
-      val subClassProperty1   = "subClassProperty1"
-      val subClassProperty2   = "subClassProperty2"
-      for (prop <- List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2)) {
-        lastModificationDate = createProperty(
-          ontologyIri = ontologyIri,
-          ontologyName = ontologyName,
-          propertyName = prop,
-          lastModificationDate = lastModificationDate,
-        )
-      }
+        lmd <- createProperty(ontologyIri, superClassProperty1, lmd)
+        lmd <- createProperty(ontologyIri, superClassProperty2, lmd)
+        lmd <- createProperty(ontologyIri, subClassProperty1, lmd)
+        lmd <- createProperty(ontologyIri, subClassProperty2, lmd)
 
-      // first adding the the cardinalities to the *super*, then to the *sub* class
-      val clsAndProps = List(
-        (superClassName, superClassProperty1),
-        (superClassName, superClassProperty2),
-        (subClassName, subClassProperty1),
-        (subClassName, subClassProperty2),
-      )
-      for ((cls, prop) <- clsAndProps) {
-        lastModificationDate = addRequiredCardinalityToClass(
-          ontologyIri = ontologyIri,
-          ontologyName = ontologyName,
-          className = cls,
-          propertyName = prop,
-          lastModificationDate = lastModificationDate,
-        )
-      }
+        // first adding the cardinalities to the *super*, then to the *sub* class
+        lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty1, lmd)
+        lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty2, lmd)
+        lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty1, lmd)
+        lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty2, lmd)
 
-      val (superStatus, superResponse) = createValue(
-        projectIri = projectIri,
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = superClassName,
-        propertyNames = List(superClassProperty1, superClassProperty2),
-      )
-      assert(superStatus == StatusCodes.OK, superResponse)
+        // trying to create an instance of the sub class, but missing mandatory props defined on super class
+        status <- createValue(
+                    projectIri = projectIri,
+                    ontologyIri = ontologyIri,
+                    className = subClassName,
+                    propertyNames = List(subClassProperty1, subClassProperty2),
+                  )
+      } yield assertTrue(status == StatusCode.BadRequest)
+    },
+    test(
+      "not be able to create subclass instances with missing properties defined on superclass, when adding cardinalities on sub class first",
+    ) {
+      for {
+        projectIri        <- createProject("test4", "4444")
+        iriAndLmd         <- createOntology(projectIri)
+        (ontologyIri, lmd) = iriAndLmd
 
-      val (subStatus, subResponse) = createValue(
-        projectIri = projectIri,
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = subClassName,
-        propertyNames = List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2),
-      )
-      assert(subStatus == StatusCodes.OK, subResponse)
-    }
+        lmd <- createClass(ontologyIri, superClassName, None, lmd)
+        lmd <- createClass(ontologyIri, subClassName, Some(superClassName), lmd)
 
-    "be able to create resource instances with all properties, when adding cardinalities on sub class first" in {
+        lmd <- createProperty(ontologyIri, superClassProperty1, lmd)
+        lmd <- createProperty(ontologyIri, superClassProperty2, lmd)
+        lmd <- createProperty(ontologyIri, subClassProperty1, lmd)
+        lmd <- createProperty(ontologyIri, subClassProperty2, lmd)
 
-      val projectIri = createProject("test2", "4442")
+        // first adding the cardinalities to the *sub*, then to the *super* class
+        lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty1, lmd)
+        lmd <- addRequiredCardinalityToClass(ontologyIri, subClassName, subClassProperty2, lmd)
+        lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty1, lmd)
+        lmd <- addRequiredCardinalityToClass(ontologyIri, superClassName, superClassProperty2, lmd)
 
-      val (ontologyIri, lmd)   = createOntology(projectIri)
-      var lastModificationDate = lmd
-
-      val superClassName = "SuperClass"
-      val ontologyName   = "inherit"
-      lastModificationDate = createClass(
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = superClassName,
-        superClass = None,
-        lastModificationDate = lastModificationDate,
-      )
-
-      val subClassName = "SubClass"
-      lastModificationDate = createClass(
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = subClassName,
-        superClass = Some(superClassName),
-        lastModificationDate = lastModificationDate,
-      )
-
-      val superClassProperty1 = "superClassProperty1"
-      val superClassProperty2 = "superClassProperty2"
-      val subClassProperty1   = "subClassProperty1"
-      val subClassProperty2   = "subClassProperty2"
-      for (prop <- List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2)) {
-        lastModificationDate = createProperty(
-          ontologyIri = ontologyIri,
-          ontologyName = ontologyName,
-          propertyName = prop,
-          lastModificationDate = lastModificationDate,
-        )
-      }
-
-      // first adding the the cardinalities to the *sub*, then to the *super* class
-      val clsAndProps = List(
-        (subClassName, subClassProperty1),
-        (subClassName, subClassProperty2),
-        (superClassName, superClassProperty1),
-        (superClassName, superClassProperty2),
-      )
-      for ((cls, prop) <- clsAndProps) {
-        lastModificationDate = addRequiredCardinalityToClass(
-          ontologyIri = ontologyIri,
-          ontologyName = ontologyName,
-          className = cls,
-          propertyName = prop,
-          lastModificationDate = lastModificationDate,
-        )
-      }
-
-      val (superStatus, superResponse) = createValue(
-        projectIri = projectIri,
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = superClassName,
-        propertyNames = List(superClassProperty1, superClassProperty2),
-      )
-      assert(superStatus == StatusCodes.OK, superResponse)
-
-      val (subStatus, subResponse) = createValue(
-        projectIri = projectIri,
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = subClassName,
-        propertyNames = List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2),
-      )
-      assert(subStatus == StatusCodes.OK, subResponse)
-    }
-
-    "not be able to create subclass instances with missing required properties defined on superclass, when adding cardinalities on super class first" in {
-
-      val projectIri = createProject("test3", "4443")
-
-      val (ontologyIri, lmd)   = createOntology(projectIri)
-      var lastModificationDate = lmd
-
-      val superClassName = "SuperClass"
-      val ontologyName   = "inherit"
-      lastModificationDate = createClass(
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = superClassName,
-        superClass = None,
-        lastModificationDate = lastModificationDate,
-      )
-
-      val subClassName = "SubClass"
-      lastModificationDate = createClass(
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = subClassName,
-        superClass = Some(superClassName),
-        lastModificationDate = lastModificationDate,
-      )
-
-      val superClassProperty1 = "superClassProperty1"
-      val superClassProperty2 = "superClassProperty2"
-      val subClassProperty1   = "subClassProperty1"
-      val subClassProperty2   = "subClassProperty2"
-      for (prop <- List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2)) {
-        lastModificationDate = createProperty(
-          ontologyIri = ontologyIri,
-          ontologyName = ontologyName,
-          propertyName = prop,
-          lastModificationDate = lastModificationDate,
-        )
-      }
-
-      // first adding the cardinalities to the *super*, then to the *sub* class
-      val clsAndProps = List(
-        (superClassName, superClassProperty1),
-        (superClassName, superClassProperty2),
-        (subClassName, subClassProperty1),
-        (subClassName, subClassProperty2),
-      )
-      for ((cls, prop) <- clsAndProps) {
-        lastModificationDate = addRequiredCardinalityToClass(
-          ontologyIri = ontologyIri,
-          ontologyName = ontologyName,
-          className = cls,
-          propertyName = prop,
-          lastModificationDate = lastModificationDate,
-        )
-      }
-
-      val (status, response) = createValue(
-        projectIri = projectIri,
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = subClassName,
-        // missing mandatory props defined on super class
-        propertyNames = List(subClassProperty1, subClassProperty2),
-      )
-      assert(status == StatusCodes.BadRequest, response)
-    }
-
-    "not be able to create subclass instances with missing properties defined on superclass, when adding cardinalities on sub class first" in {
-
-      val projectIri = createProject("test4", "4444")
-
-      val (ontologyIri, lmd)   = createOntology(projectIri)
-      var lastModificationDate = lmd
-
-      val superClassName = "SuperClass"
-      val ontologyName   = "inherit"
-      lastModificationDate = createClass(
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = superClassName,
-        superClass = None,
-        lastModificationDate = lastModificationDate,
-      )
-
-      val subClassName = "SubClass"
-      lastModificationDate = createClass(
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = subClassName,
-        superClass = Some(superClassName),
-        lastModificationDate = lastModificationDate,
-      )
-
-      val superClassProperty1 = "superClassProperty1"
-      val superClassProperty2 = "superClassProperty2"
-      val subClassProperty1   = "subClassProperty1"
-      val subClassProperty2   = "subClassProperty2"
-      for (prop <- List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2)) {
-        lastModificationDate = createProperty(
-          ontologyIri = ontologyIri,
-          ontologyName = ontologyName,
-          propertyName = prop,
-          lastModificationDate = lastModificationDate,
-        )
-      }
-
-      // first adding the the cardinalities to the *sub*, then to the *super* class
-      val clsAndProps = List(
-        (subClassName, subClassProperty1),
-        (subClassName, subClassProperty2),
-        (superClassName, superClassProperty1),
-        (superClassName, superClassProperty2),
-      )
-      for ((cls, prop) <- clsAndProps) {
-        lastModificationDate = addRequiredCardinalityToClass(
-          ontologyIri = ontologyIri,
-          ontologyName = ontologyName,
-          className = cls,
-          propertyName = prop,
-          lastModificationDate = lastModificationDate,
-        )
-      }
-
-      val (status, response) = createValue(
-        projectIri = projectIri,
-        ontologyIri = ontologyIri,
-        ontologyName = ontologyName,
-        className = subClassName,
-        // missing mandatory props defined on super class
-        propertyNames = List(subClassProperty1, subClassProperty2),
-      )
-      assert(status == StatusCodes.BadRequest, response)
-    }
-
-  }
+        status <- createValue(projectIri, ontologyIri, subClassName, List(subClassProperty1, subClassProperty2))
+      } yield assertTrue(status == StatusCode.BadRequest)
+    },
+  )
 }
