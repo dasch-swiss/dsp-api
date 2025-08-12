@@ -29,6 +29,7 @@ import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestDspIngestClient
@@ -129,7 +130,7 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
     } yield jsonLd
   }
 
-  private def getTextValueAsDocument(iri: String): ZIO[TestApiClient, Throwable, JsonLDDocument] =
+  private def getTextValueAsDocument(iri: ResourceIri): ZIO[TestApiClient, Throwable, JsonLDDocument] =
     TestApiClient.getJsonLdDocument(uri"/v2/resources/$iri", anythingUser1).flatMap(_.assert200)
 
   override val e2eSpec: Spec[env, Any] = suite("The Standoff v2 Endpoint")(
@@ -138,14 +139,13 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
         xmlContent <- ZIO.attempt(FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping)))
         document   <- createResourceWithTextValue(xmlContent, KB.StandardMapping)
         valueIri    = document.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-        _          <- Console.printLine(s"Created text value with IRI: $valueIri")
         _           = freetestTextValueIRI.set(valueIri)
       } yield assertCompletes
     },
     test("return XML but no HTML for a resource with standard mapping") {
       for {
         xmlContent       <- ZIO.attempt(FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping)))
-        responseDocument <- getTextValueAsDocument(freetestTextValueIRI.get)
+        responseDocument <- getTextValueAsDocument(freetestTextValueIRI.asResourceIri)
         value            <- ZIO.fromEither(responseDocument.body.getRequiredObject(s"${freetestOntologyIRI}hasText"))
         valueType        <- ZIO.fromEither(value.getRequiredString(JsonLDKeywords.TYPE))
         mapping <- ZIO.fromEither(
@@ -184,7 +184,7 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
     test("return XML but no HTML, as there is no transformation provided") {
       for {
         xmlContent <- ZIO.attempt(FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue)))
-        document   <- getTextValueAsDocument(freetestTextValueIRI.get)
+        document   <- getTextValueAsDocument(freetestTextValueIRI.asResourceIri)
         value      <- ZIO.fromEither(document.body.getRequiredObject(s"${freetestOntologyIRI}hasText"))
         valueType  <- ZIO.fromEither(value.getRequiredString(JsonLDKeywords.TYPE))
         mapping <- ZIO.fromEither(
@@ -236,7 +236,7 @@ object StandoffEndpointsE2ESpec extends E2EZSpec {
       for {
         xmlContent  <- ZIO.attempt(FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue)))
         expectedHTML = Some("<div>\n    <p> This is a <i>sample</i> of standoff text. </p>\n</div>")
-        document    <- getTextValueAsDocument(freetestTextValueIRI.get)
+        document    <- getTextValueAsDocument(freetestTextValueIRI.asResourceIri)
         value       <- ZIO.fromEither(document.body.getRequiredObject(s"${freetestOntologyIRI}hasText"))
         valueType   <- ZIO.fromEither(value.getRequiredString(JsonLDKeywords.TYPE))
         mapping <- ZIO.fromEither(
