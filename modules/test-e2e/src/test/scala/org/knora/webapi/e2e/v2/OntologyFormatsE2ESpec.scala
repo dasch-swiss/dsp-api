@@ -5,15 +5,17 @@
 
 package org.knora.webapi.e2e.v2
 
-import zio.json.ast.*
-import zio.json.*
+import sttp.client4.*
+import sttp.model.*
 import zio.*
+import zio.json.*
+import zio.json.ast.*
 import zio.test.*
-import org.knora.webapi.testservices.ResponseOps.assert200
 
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
@@ -23,10 +25,9 @@ import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.*
-import sttp.client4.*
-import sttp.model.*
 
 object OntologyFormatsE2ESpec extends E2EZSpec {
 
