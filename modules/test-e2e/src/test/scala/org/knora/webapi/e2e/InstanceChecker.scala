@@ -5,9 +5,9 @@
 
 package org.knora.webapi.e2e
 
-import com.typesafe.scalalogging.LazyLogging
+import sttp.client4.*
+import zio.*
 
-import java.net.URLEncoder
 import scala.collection.mutable
 
 import dsp.errors.AssertionException
@@ -22,14 +22,17 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.TestApiClient
 
 /**
- * A factory that constructs [[InstanceChecker]] instances for different Knora response formats.
+ * A test utility for checking whether an instance of an RDF class returned in a Knora response corresponds to the
+ * class definition.
  */
-object InstanceChecker {
+case class InstanceChecker()(implicit val stringFormatter: StringFormatter) { self =>
+
+  private val instanceInspector: JsonLDInstanceInspector = JsonLDInstanceInspector()
+
   // A cache of class definitions.
   private val classDefCache: mutable.Map[SmartIri, ClassInfoContentV2] = mutable.Map.empty
 
@@ -37,59 +40,40 @@ object InstanceChecker {
   private val propertyDefCache: mutable.Map[SmartIri, PropertyInfoContentV2] = mutable.Map.empty
 
   /**
-   * Returns an [[InstanceChecker]] for Knora responses in JSON-LD format.
-   */
-  def getJsonLDChecker: InstanceChecker = new InstanceChecker(new JsonLDInstanceInspector)
-}
-
-/**
- * A test utility for checking whether an instance of an RDF class returned in a Knora response corresponds to the
- * the class definition.
- *
- * @param instanceInspector an [[InstanceInspector]] for working with instances in a particular format.
- */
-class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging {
-
-  implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  /**
    * Checks that an instance of an RDF class returned in a Knora response corresponds to the class definition.
    *
    * @param instanceResponse a Knora response containing the instance to be checked.
    * @param expectedClassIri the IRI of the expected class.
-   * @param knoraRouteGet    a function that takes a Knora API URL path and returns a response from Knora.
    */
-  def check(instanceResponse: String, expectedClassIri: SmartIri, knoraRouteGet: String => String): Unit = {
+  def check(instanceResponse: String, expectedClassIri: SmartIri) = {
     val instanceElement: InstanceElement = instanceInspector.toElement(instanceResponse)
-    val definitions: Definitions         = getDefinitions(classIri = expectedClassIri, knoraRouteGet = knoraRouteGet)
+    for {
+      definitions <- getDefinitions(expectedClassIri)
 
-    // A map of class IRIs to their immediate base classes.
-    val directSubClassOfRelations: Map[SmartIri, Set[SmartIri]] = definitions.classDefs.map {
-      case (classIri, classDef) => classIri -> classDef.subClassOf
-    }
+      // A map of class IRIs to their immediate base classes.
+      directSubClassOfRelations: Map[SmartIri, Set[SmartIri]] = definitions.classDefs.map { case (classIri, classDef) =>
+                                                                  classIri -> classDef.subClassOf
+                                                                }
 
-    val allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]] = definitions.classDefs.keySet.map { classIri =>
-      // get all hierarchically ordered base classes
-      val baseClasses: Seq[SmartIri] = OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations)
-      // prepend the classIri to the sequence of base classes because a class is also a subclass of itself.
-      (classIri, classIri +: baseClasses)
-    }.toMap
+      allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]] = definitions.classDefs.keySet.map { classIri =>
+                                                               // get all hierarchically ordered base classes
+                                                               val baseClasses: Seq[SmartIri] =
+                                                                 OntologyUtil.getAllBaseDefs(
+                                                                   classIri,
+                                                                   directSubClassOfRelations,
+                                                                 )
+                                                               // prepend the classIri to the sequence of base classes because a class is also a subclass of itself.
+                                                               (classIri, classIri +: baseClasses)
+                                                             }.toMap
 
-    val definitionsWithSubClassOf = definitions.copy(
-      subClassOf = allSubClassOfRelations,
-    )
+      definitionsWithSubClassOf = definitions.copy(subClassOf = allSubClassOfRelations)
 
-    checkRec(instanceElement = instanceElement, classIri = expectedClassIri, definitions = definitionsWithSubClassOf)
-  }
-
-  /**
-   * Logs an error message at DEBUG level and throws an [[AssertionException]] containing the message.
-   *
-   * @param msg the error message.
-   */
-  private def throwAndLogAssertionException(msg: String): Nothing = {
-    logger.debug(msg)
-    throw AssertionException(msg)
+      _ <- checkRec(
+             instanceElement = instanceElement,
+             classIri = expectedClassIri,
+             definitions = definitionsWithSubClassOf,
+           )
+    } yield ()
   }
 
   /**
@@ -99,194 +83,194 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
    * @param classIri        the class IRI.
    * @param definitions     definitions of the class and any other relevant classes and properties.
    */
-  private def checkRec(instanceElement: InstanceElement, classIri: SmartIri, definitions: Definitions): Unit = {
-    if (
-      !instanceInspector.elementHasCompatibleType(
-        element = instanceElement,
-        expectedType = classIri,
-        definitions = definitions,
-      )
-    ) {
-      throwAndLogAssertionException(
-        s"Instance type ${instanceElement.elementType} is not compatible with expected class IRI $classIri",
-      )
-    }
+  private def checkRec(
+    instanceElement: InstanceElement,
+    classIri: SmartIri,
+    definitions: Definitions,
+  ): ZIO[Any, Throwable, Unit] =
+    for {
+      _ <- ZIO
+             .fail(
+               AssertionException(
+                 s"Instance type ${instanceElement.elementType} is not compatible with expected class IRI $classIri",
+               ),
+             )
+             .when(!instanceInspector.elementHasCompatibleType(instanceElement, classIri, definitions))
 
-    val classDef: ClassInfoContentV2 = definitions.getClassDef(classIri, throwAndLogAssertionException)
+      classDef <- ZIO.attempt(definitions.getClassDef(classIri, msg => throw AssertionException(msg)))
 
-    // Make a map of property IRIs to property names used in the instance.
-    val propertyIrisToInstancePropertyNames: Map[SmartIri, String] = classDef.directCardinalities.keySet.map {
-      propertyIri =>
-        propertyIri -> instanceInspector.propertyIriToInstancePropertyName(classIri, propertyIri)
-    }.toMap
+      // Make a map of property IRIs to property names used in the instance.
+      propertyIrisToInstancePropertyNames: Map[SmartIri, String] =
+        classDef.directCardinalities.keySet.map { propertyIri =>
+          propertyIri -> instanceInspector.propertyIriToInstancePropertyName(classIri, propertyIri)
+        }.toMap
 
-    // Check that there are no extra properties.
+      // Check that there are no extra properties.
 
-    val allowedInstancePropertyNames: Set[String] = propertyIrisToInstancePropertyNames.values.toSet
-    val extraInstancePropertyNames                = instanceElement.propertyObjects.keySet -- allowedInstancePropertyNames
+      allowedInstancePropertyNames: Set[String] = propertyIrisToInstancePropertyNames.values.toSet
+      extraInstancePropertyNames                = instanceElement.propertyObjects.keySet -- allowedInstancePropertyNames
 
-    if (extraInstancePropertyNames.nonEmpty) {
-      throwAndLogAssertionException(
-        s"One or more instance properties are not allowed by cardinalities: ${extraInstancePropertyNames.mkString(", ")}",
-      )
-    }
+      _ <-
+        ZIO
+          .fail(
+            AssertionException(
+              s"One or more instance properties are not allowed by cardinalities: ${extraInstancePropertyNames.mkString(", ")}",
+            ),
+          )
+          .when(extraInstancePropertyNames.nonEmpty)
 
-    // Check that cardinalities are respected.
-    propertyIrisToInstancePropertyNames.foreach { case (propertyIri, instancePropertyName) =>
-      val cardinality: org.knora.webapi.slice.ontology.domain.model.Cardinality =
-        classDef.directCardinalities(propertyIri).cardinality
-      val objectsOfProp: Vector[InstanceElement] =
-        instanceElement.propertyObjects.getOrElse(instancePropertyName, Vector.empty)
-      val numberOfObjects = objectsOfProp.size
+      // Check that cardinalities are respected.
+      _ <- ZIO.foreachDiscard(propertyIrisToInstancePropertyNames) { case (propertyIri, instancePropertyName) =>
+             val cardinality     = classDef.directCardinalities(propertyIri).cardinality
+             val numberOfObjects = instanceElement.propertyObjects.getOrElse(instancePropertyName, Vector.empty).size
+             ZIO
+               .fail(
+                 AssertionException(
+                   s"Property $instancePropertyName has $numberOfObjects objects, but its cardinality is ${cardinality.toString}",
+                 ),
+               )
+               .unless(cardinality.isCountIncluded(numberOfObjects))
+           }
 
-      if (
-        (cardinality == ExactlyOne && numberOfObjects != 1) ||
-        (cardinality == ZeroOrOne && numberOfObjects > 1) ||
-        (cardinality == AtLeastOne && numberOfObjects == 0)
-      ) {
-        throwAndLogAssertionException(
-          s"Property $instancePropertyName has $numberOfObjects objects, but its cardinality is ${cardinality.toString}",
-        )
-      }
-    }
+      // Check the objects of the instance's properties.
+      _ <- ZIO.foreachDiscard(propertyIrisToInstancePropertyNames) { case (propertyIri, instancePropertyName) =>
+             // Get the expected type of the property's objects.
+             val objectType: SmartIri = if (propertyIri.isKnoraApiV2EntityIri) {
+               val propertyDef = definitions.getPropertyDef(propertyIri, msg => throw AssertionException(msg))
+               getObjectType(propertyDef).getOrElse(
+                 throw AssertionException(s"Property $propertyIri has no knora-api:objectType"),
+               )
+             } else {
+               OntologyConstants.Xsd.String.toSmartIri
+             }
 
-    // Check the objects of the instance's properties.
-    propertyIrisToInstancePropertyNames.foreach { case (propertyIri, instancePropertyName) =>
-      // Get the expected type of the property's objects.
-      val objectType: SmartIri = if (propertyIri.isKnoraApiV2EntityIri) {
-        val propertyDef = definitions.getPropertyDef(propertyIri, throwAndLogAssertionException)
-        getObjectType(propertyDef).getOrElse(
-          throwAndLogAssertionException(s"Property $propertyIri has no knora-api:objectType"),
-        )
-      } else {
-        OntologyConstants.Xsd.String.toSmartIri
-      }
+             val objectTypeStr                          = objectType.toString
+             val objectTypeIsKnoraDefinedClass: Boolean = isKnoraDefinedClass(objectType)
+             val objectTypeIsKnoraDatatype: Boolean =
+               OntologyConstants.KnoraApiV2Simple.KnoraDatatypes.contains(objectTypeStr)
+             val objectsOfProp: Vector[InstanceElement] =
+               instanceElement.propertyObjects.getOrElse(instancePropertyName, Vector.empty)
 
-      val objectTypeStr                          = objectType.toString
-      val objectTypeIsKnoraDefinedClass: Boolean = isKnoraDefinedClass(objectType)
-      val objectTypeIsKnoraDatatype: Boolean =
-        OntologyConstants.KnoraApiV2Simple.KnoraDatatypes.contains(objectTypeStr)
-      val objectsOfProp: Vector[InstanceElement] =
-        instanceElement.propertyObjects.getOrElse(instancePropertyName, Vector.empty)
+             // Iterate over the objects of the property.
+             ZIO.foreach(objectsOfProp) { obj =>
+               val literalContentMsg = obj.literalContent match {
+                 case Some(literalContent) => s" with literal content '$literalContent'"
+                 case None                 => ""
+               }
 
-      // Iterate over the objects of the property.
-      for (obj: InstanceElement <- objectsOfProp) {
-        val literalContentMsg = obj.literalContent match {
-          case Some(literalContent) => s" with literal content '$literalContent'"
-          case None                 => ""
-        }
+               val errorMsg =
+                 s"Property $instancePropertyName has an object of type ${obj.elementType}$literalContentMsg, but type $objectType was expected"
 
-        val errorMsg =
-          s"Property $instancePropertyName has an object of type ${obj.elementType}$literalContentMsg, but type $objectType was expected"
-
-        // Are we expecting an instance of a Knora class that isn't a datatype?
-        if (objectType.isKnoraApiV2EntityIri && !objectTypeIsKnoraDatatype) {
-          // Yes. Is it a class that Knora serves?
-          if (objectTypeIsKnoraDefinedClass) {
-            // Yes. If we got an IRI, accept it. Otherwise, recurse.
-            if (!instanceInspector.elementIsIri(obj)) {
-              checkRec(instanceElement = obj, classIri = objectType, definitions = definitions)
-            }
-          } else if (!instanceInspector.elementIsIri(obj)) {
-            // It's a class that Knora doesn't serve. Accept the object only if it's an IRI.
-            throwAndLogAssertionException(
-              s"Property $propertyIri requires an IRI referring to an instance of $objectType, but object content was received instead",
-            )
-          }
-        } else {
-          // We're expecting a literal. Ask the element inspector if the object is compatible with
-          // the expected type.
-          if (
-            !instanceInspector.elementHasCompatibleType(
-              element = obj,
-              expectedType = objectType,
-              definitions = definitions,
-            )
-          ) {
-            throwAndLogAssertionException(errorMsg)
-          }
-        }
-      }
-    }
-  }
+               // Are we expecting an instance of a Knora class that isn't a datatype?
+               if (objectType.isKnoraApiV2EntityIri && !objectTypeIsKnoraDatatype) {
+                 // Yes. Is it a class that Knora serves?
+                 if (objectTypeIsKnoraDefinedClass) {
+                   // Yes. If we got an IRI, accept it. Otherwise, recurse.
+                   ZIO
+                     .unless(instanceInspector.elementIsIri(obj))(
+                       checkRec(instanceElement = obj, classIri = objectType, definitions = definitions),
+                     )
+                     .unit
+                 } else if (!instanceInspector.elementIsIri(obj)) {
+                   // It's a class that Knora doesn't serve. Accept the object only if it's an IRI.
+                   ZIO.fail(
+                     AssertionException(
+                       s"Property $propertyIri requires an IRI referring to an instance of $objectType, but object content was received instead",
+                     ),
+                   )
+                 } else {
+                   ZIO.unit
+                 }
+               } else {
+                 // We're expecting a literal. Ask the element inspector if the object is compatible with
+                 // the expected type.
+                 ZIO
+                   .fail(AssertionException(errorMsg))
+                   .when(
+                     !instanceInspector.elementHasCompatibleType(
+                       element = obj,
+                       expectedType = objectType,
+                       definitions = definitions,
+                     ),
+                   )
+                   .unit
+               }
+             }
+           }
+    } yield ()
 
   /**
    * Gets all the definitions needed to check an instance of the specified class.
    *
    * @param classIri      the class IRI.
-   * @param knoraRouteGet a function that takes a Knora API URL path and returns a response from Knora.
    * @return a [[Definitions]] instance containing the relevant definitions.
    */
-  private def getDefinitions(classIri: SmartIri, knoraRouteGet: String => String): Definitions =
-    getDefinitionsRec(classIri = classIri, knoraRouteGet = knoraRouteGet, definitions = Definitions())
+  private def getDefinitions(classIri: SmartIri): ZIO[TestApiClient, Throwable, Definitions] =
+    getDefinitionsRec(classIri = classIri, definitions = Definitions())
 
   /**
    * Recursively gets definitions that are needed to check an instance of the specified class.
    *
    * @param classIri      the class IRI.
-   * @param knoraRouteGet a function that takes a Knora API URL path and returns a response from Knora.
    * @param definitions   the definitions collected so far.
    * @return a [[Definitions]] instance containing the relevant definitions.
    */
   private def getDefinitionsRec(
     classIri: SmartIri,
-    knoraRouteGet: String => String,
     definitions: Definitions,
-  ): Definitions = {
+  ): ZIO[TestApiClient, Throwable, Definitions] =
     // Get the definition of classIri.
-    val classDef: ClassInfoContentV2 = getClassDef(classIri = classIri, knoraRouteGet = knoraRouteGet)
+    for {
+      classDef <- getClassDef(classIri)
 
-    // Get the IRIs of the base classes of that class.
-    val baseClassIris = classDef.subClassOf.filter(baseClassIri => isKnoraDefinedClass(baseClassIri))
+      // Get the IRIs of the base classes of that class.
+      baseClassIris = classDef.subClassOf.filter(baseClassIri => isKnoraDefinedClass(baseClassIri))
 
-    // Get the IRIs of the Knora properties on which that class has cardinalities.
-    val propertyIrisFromCardinalities: Set[SmartIri] =
-      (classDef.directCardinalities.keySet -- definitions.propertyDefs.keySet).filter(_.isKnoraApiV2EntityIri)
+      // Get the IRIs of the Knora properties on which that class has cardinalities.
+      propertyIrisFromCardinalities: Set[SmartIri] =
+        (classDef.directCardinalities.keySet -- definitions.propertyDefs.keySet).filter(_.isKnoraApiV2EntityIri)
 
-    // Get the definitions of those properties.
-    val propertyDefsFromCardinalities: Map[SmartIri, PropertyInfoContentV2] = propertyIrisFromCardinalities.map {
-      propertyIri =>
-        propertyIri -> getPropertyDef(propertyIri = propertyIri, knoraRouteGet = knoraRouteGet)
-    }.toMap
+      // Get the definitions of those properties.
+      propertyDefsFromCardinalities: Map[SmartIri, PropertyInfoContentV2] <-
+        ZIO
+          .foreach(propertyIrisFromCardinalities.toSeq)(p => getPropertyDef(p).map(p -> _))
+          .map(_.toMap)
 
-    // Get the IRIs of the Knora classes that are object types of those properties and that are available in the
-    // class's ontology schema.
-    val classIrisFromObjectTypes: Set[SmartIri] = propertyDefsFromCardinalities.values.foldLeft(Set.empty[SmartIri]) {
-      case (acc, propertyDef) =>
-        getObjectType(propertyDef) match {
-          case Some(objectType) =>
-            if (isKnoraDefinedClass(objectType)) {
-              acc + objectType
-            } else {
-              acc
-            }
+      // Get the IRIs of the Knora classes that are object types of those properties and that are available in the
+      // class's ontology schema.
+      classIrisFromObjectTypes: Set[SmartIri] = propertyDefsFromCardinalities.values.foldLeft(Set.empty[SmartIri]) {
+                                                  case (acc, propertyDef) =>
+                                                    getObjectType(propertyDef) match {
+                                                      case Some(objectType) =>
+                                                        if (isKnoraDefinedClass(objectType)) {
+                                                          acc + objectType
+                                                        } else {
+                                                          acc
+                                                        }
 
-          case None => acc
-        }
-    }
+                                                      case None => acc
+                                                    }
+                                                }
 
-    // Update definitions with the class and property definitions we've got so far.
-    val updatedDefs: Definitions = definitions.copy(
-      classDefs = definitions.classDefs + (classIri -> classDef),
-      propertyDefs = definitions.propertyDefs ++ propertyDefsFromCardinalities,
-    )
+      // Update definitions with the class and property definitions we've got so far.
+      updatedDefs: Definitions = definitions.copy(
+                                   classDefs = definitions.classDefs + (classIri -> classDef),
+                                   propertyDefs = definitions.propertyDefs ++ propertyDefsFromCardinalities,
+                                 )
 
-    val classIrisForRecursion = baseClassIris ++ classIrisFromObjectTypes -- definitions.classDefs.keySet - classIri
+      classIrisForRecursion = baseClassIris ++ classIrisFromObjectTypes -- definitions.classDefs.keySet - classIri
 
-    // Recursively add the definitions of base classes and classes that we identified as object types.
-    classIrisForRecursion.foldLeft(updatedDefs) { case (acc, classIriFromObjectType) =>
-      val recDefinitions: Definitions = getDefinitionsRec(
-        classIri = classIriFromObjectType,
-        knoraRouteGet = knoraRouteGet,
-        definitions = acc,
-      )
-
-      acc.copy(
-        classDefs = acc.classDefs ++ recDefinitions.classDefs,
-        propertyDefs = acc.propertyDefs ++ recDefinitions.propertyDefs,
-      )
-    }
-  }
+      // Recursively add the definitions of base classes and classes that we identified as object types.
+      definitions <- ZIO.foldLeft(classIrisForRecursion)(updatedDefs) { case (acc, classIriFromObjectType) =>
+                       getDefinitionsRec(classIriFromObjectType, acc)
+                         .map(recDefinitions =>
+                           acc.copy(
+                             classDefs = acc.classDefs ++ recDefinitions.classDefs,
+                             propertyDefs = acc.propertyDefs ++ recDefinitions.propertyDefs,
+                           ),
+                         )
+                     }
+    } yield definitions
 
   /**
    * Determines whether Knora should have the definition of a class.
@@ -325,7 +309,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
             false
           }
 
-        case _ => throwAndLogAssertionException("Unreachable code")
+        case _ => throw AssertionException("Unreachable code")
       }
     } else {
       false
@@ -335,61 +319,48 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
    * Gets a class definition from Knora.
    *
    * @param classIri      the class IRI.
-   * @param knoraRouteGet a function that takes a Knora API URL path and returns a response from Knora.
    * @return the class definition.
    */
-  private def getClassDef(classIri: SmartIri, knoraRouteGet: String => String): ClassInfoContentV2 =
-    InstanceChecker.classDefCache.get(classIri) match {
-      case Some(classDef) => classDef
-
-      case None =>
-        val urlPath                        = s"/v2/ontologies/classes/${URLEncoder.encode(classIri.toString, "UTF-8")}"
-        val classDefStr: String            = knoraRouteGet(urlPath)
-        val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(classDefStr)
-
-        // If Knora returned an error, get the error message and throw an exception.
-        jsonLDDocument.body
-          .getString(OntologyConstants.KnoraApiV2Complex.Error)
-          .fold(msg => throw BadRequestException(msg), identity) match {
-          case Some(error) => throwAndLogAssertionException(error)
-          case None        => ()
-        }
-
-        val classDef =
-          InputOntologyV2.fromJsonLD(jsonLDDocument, parsingMode = KnoraOutputParsingModeV2).classes(classIri)
-        InstanceChecker.classDefCache.put(classIri, classDef)
-        classDef
+  private def getClassDef(classIri: SmartIri) =
+    ZIO.fromOption(self.classDefCache.get(classIri)).orElse {
+      for {
+        jsonLDDocument <- TestApiClient.getJsonLdDocument(uri"/v2/ontologies/classes/$classIri").flatMap(_.assert200)
+        // If Knora returned an error, get the error message and fail
+        _ <- ZIO
+               .fromEither(jsonLDDocument.body.getString(OntologyConstants.KnoraApiV2Complex.Error))
+               .mapError(msg => AssertionException(msg))
+               .flatMap {
+                 case Some(error) => ZIO.fail(AssertionException(error))
+                 case None        => ZIO.unit
+               }
+        classDef <- ZIO.attempt(InputOntologyV2.fromJsonLD(jsonLDDocument, KnoraOutputParsingModeV2).classes(classIri))
+        _         = self.classDefCache.put(classIri, classDef)
+      } yield classDef
     }
 
   /**
    * Gets a property definition from Knora.
    *
    * @param propertyIri   the property IRI.
-   * @param knoraRouteGet a function that takes a Knora API URL path and returns a response from Knora.
    * @return the property definition.
    */
-  private def getPropertyDef(propertyIri: SmartIri, knoraRouteGet: String => String): PropertyInfoContentV2 =
-    InstanceChecker.propertyDefCache.get(propertyIri) match {
-      case Some(propertyDef) => propertyDef
-
-      case None =>
-        val urlPath                        = s"/v2/ontologies/properties/${URLEncoder.encode(propertyIri.toString, "UTF-8")}"
-        val propertyDefStr: String         = knoraRouteGet(urlPath)
-        val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(propertyDefStr)
-
-        // If Knora returned an error, get the error message and throw an exception.
-        jsonLDDocument.body
-          .getString(OntologyConstants.KnoraApiV2Complex.Error)
-          .fold(msg => throw BadRequestException(msg), identity) match {
-
-          case Some(error) => throwAndLogAssertionException(error)
-          case None        => ()
-        }
-
-        val propertyDef =
-          InputOntologyV2.fromJsonLD(jsonLDDocument, parsingMode = KnoraOutputParsingModeV2).properties(propertyIri)
-        InstanceChecker.propertyDefCache.put(propertyIri, propertyDef)
-        propertyDef
+  private def getPropertyDef(propertyIri: SmartIri) =
+    ZIO.fromOption(self.propertyDefCache.get(propertyIri)).orElse {
+      for {
+        jsonLDDocument <-
+          TestApiClient.getJsonLdDocument(uri"/v2/ontologies/properties/$propertyIri").flatMap(_.assert200)
+        // If Knora returned an error, get the error message and fail
+        _ <- ZIO
+               .fromEither(jsonLDDocument.body.getString(OntologyConstants.KnoraApiV2Complex.Error))
+               .mapError(AssertionException(_))
+               .flatMap {
+                 case Some(error) => ZIO.fail(AssertionException(error))
+                 case None        => ZIO.unit
+               }
+        propertyDef <-
+          ZIO.attempt(InputOntologyV2.fromJsonLD(jsonLDDocument, KnoraOutputParsingModeV2).properties(propertyIri))
+        _ = self.propertyDefCache.put(propertyIri, propertyDef)
+      } yield propertyDef
     }
 
   /**
@@ -402,6 +373,10 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
     propertyDef
       .getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri)
       .orElse(propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri))
+}
+
+object InstanceChecker {
+  def make(implicit sf: StringFormatter): InstanceChecker = new InstanceChecker()
 }
 
 /**
@@ -418,40 +393,9 @@ case class InstanceElement(
   propertyObjects: Map[String, Vector[InstanceElement]] = Map.empty,
 )
 
-/**
- * A trait for classes that help [[InstanceChecker]] check instances in different formats.
- */
-trait InstanceInspector {
+case class JsonLDInstanceInspector()(implicit private val stringFormatter: StringFormatter) {
 
-  /**
-   * Converts a Knora response representing a class instance to an [[InstanceElement]].
-   */
-  def toElement(instanceResponse: String): InstanceElement
-
-  /**
-   * Converts an RDF property IRI to the property name used in instances.
-   */
-  def propertyIriToInstancePropertyName(classIri: SmartIri, propertyIri: SmartIri): String
-
-  /**
-   * Returns `true` if the specified instance element is an IRI pointing to an object, as opposed to
-   * the object itself.
-   */
-  def elementIsIri(element: InstanceElement): Boolean
-
-  /**
-   * Checks, as far as possible, whether the type of an instance is compatible with the type IRI of its class.
-   */
-  def elementHasCompatibleType(element: InstanceElement, expectedType: SmartIri, definitions: Definitions): Boolean
-}
-
-/**
- * An [[InstanceInspector]] that works with Knora responses in JSON-LD format.
- */
-class JsonLDInstanceInspector extends InstanceInspector {
-  implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  override def toElement(response: String): InstanceElement =
+  def toElement(response: String): InstanceElement =
     jsonLDObjectToElement(JsonLDUtil.parseJsonLD(response).body)
 
   private def jsonLDValueToElements(jsonLDValue: JsonLDValue): Vector[InstanceElement] =
@@ -516,13 +460,13 @@ class JsonLDInstanceInspector extends InstanceInspector {
     InstanceElement(elementType = elementType, propertyObjects = propertyObjects)
   }
 
-  override def propertyIriToInstancePropertyName(classIri: SmartIri, propertyIri: SmartIri): String =
+  def propertyIriToInstancePropertyName(classIri: SmartIri, propertyIri: SmartIri): String =
     propertyIri.toString
 
-  override def elementIsIri(element: InstanceElement): Boolean =
+  def elementIsIri(element: InstanceElement): Boolean =
     element.elementType == OntologyConstants.Xsd.Uri
 
-  override def elementHasCompatibleType(
+  def elementHasCompatibleType(
     element: InstanceElement,
     expectedType: SmartIri,
     definitions: Definitions,

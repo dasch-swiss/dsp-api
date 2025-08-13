@@ -5,145 +5,178 @@
 
 package org.knora.webapi.e2e
 
-import org.apache.pekko
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.nio.file.Paths
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration.NANOSECONDS
 
 import dsp.errors.AssertionException
-import org.knora.webapi.E2ESpec
+import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.util.FileUtil
 
-import pekko.http.scaladsl.testkit.RouteTestTimeout
+object InstanceCheckerSpec extends E2EZSpec {
 
-/**
- * Tests [[InstanceChecker]].
- */
-class InstanceCheckerSpec extends E2ESpec {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private val jsonLDInstanceChecker: InstanceChecker = InstanceChecker.make
 
-  implicit def default: RouteTestTimeout = RouteTestTimeout(
-    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS),
-  )
-
-  private val jsonLDInstanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
-
-  "The InstanceChecker" should {
-    "accept a JSON-LD instance of anything:Thing" in {
-      val testDing =
-        FileUtil.readTextFile(Paths.get("test_data/generated_test_data/resourcesR2RV2/Testding.jsonld"))
-
-      jsonLDInstanceChecker.check(
-        instanceResponse = testDing,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
-      )
-    }
-
-    "reject a JSON-LD instance of anything:Thing (in the complex schema) with an extra property" in {
-      val exception = intercept[AssertionException] {
-        jsonLDInstanceChecker.check(
-          instanceResponse = InstanceCheckerSpec.complexThingWithExtraProperty,
-          expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest,
+  override val e2eSpec = suite("The InstanceChecker")(
+    test("accept a JSON-LD instance of anything:Thing") {
+      val testDing = FileUtil.readTextFile(Paths.get("test_data/generated_test_data/resourcesR2RV2/Testding.jsonld"))
+      jsonLDInstanceChecker
+        .check(testDing, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
+        .as(assertCompletes)
+    },
+    test("reject a JSON-LD instance of anything:Thing (in the complex schema) with an extra property") {
+      jsonLDInstanceChecker
+        .check(
+          InstanceCheckerSpec.complexThingWithExtraProperty,
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         )
-      }
-
-      assert(
-        exception.getMessage == "One or more instance properties are not allowed by cardinalities: http://0.0.0.0:3333/ontology/0001/anything/v2#hasExtraProperty",
-      )
-    }
-
-    "reject a JSON-LD instance of anything:Thing (in the complex schema) with an extra property object" in {
-      val exception = intercept[AssertionException] {
-        jsonLDInstanceChecker.check(
+        .exit
+        .map(
+          assert(_)(
+            fails(
+              isSubtype[AssertionException](
+                hasMessage(
+                  equalTo(
+                    "One or more instance properties are not allowed by cardinalities: http://0.0.0.0:3333/ontology/0001/anything/v2#hasExtraProperty",
+                  ),
+                ),
+              ),
+            ),
+          ),
+        )
+    },
+    test("reject a JSON-LD instance of anything:Thing (in the complex schema) with an extra property object") {
+      jsonLDInstanceChecker
+        .check(
           instanceResponse = InstanceCheckerSpec.complexThingWithExtraPropertyObject,
           expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest,
         )
-      }
-
-      assert(
-        exception.getMessage == "Property http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean has 2 objects, but its cardinality is 0-1",
-      )
-    }
-
-    "reject a JSON-LD instance of anything:Thing (in the complex schema) with an invalid literal type" in {
-      val exception = intercept[AssertionException] {
-        jsonLDInstanceChecker.check(
-          instanceResponse = InstanceCheckerSpec.complexThingWithInvalidLiteralType,
-          expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest,
+        .exit
+        .map(
+          assert(_)(
+            fails(
+              isSubtype[AssertionException](
+                hasMessage(
+                  equalTo(
+                    "Property http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean has 2 objects, but its cardinality is 0-1",
+                  ),
+                ),
+              ),
+            ),
+          ),
         )
-      }
-
-      assert(
-        exception.getMessage == "Property http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean has an object of type http://www.w3.org/2001/XMLSchema#string with literal content 'invalid literal', but type http://www.w3.org/2001/XMLSchema#boolean was expected",
-      )
-    }
-
-    "reject a JSON-LD instance of anything:Thing (in the complex schema) with an invalid object type" in {
-      val exception = intercept[AssertionException] {
-        jsonLDInstanceChecker.check(
+    },
+    test("reject a JSON-LD instance of anything:Thing (in the complex schema) with an invalid literal type") {
+      jsonLDInstanceChecker
+        .check(
+          InstanceCheckerSpec.complexThingWithInvalidLiteralType,
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        )
+        .exit
+        .map(
+          assert(_)(
+            fails(
+              isSubtype[AssertionException](
+                hasMessage(
+                  equalTo(
+                    "Property http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean has an object of type http://www.w3.org/2001/XMLSchema#string with literal content 'invalid literal', but type http://www.w3.org/2001/XMLSchema#boolean was expected",
+                  ),
+                ),
+              ),
+            ),
+          ),
+        )
+    },
+    test("reject a JSON-LD instance of anything:Thing (in the complex schema) with an invalid object type") {
+      jsonLDInstanceChecker
+        .check(
           instanceResponse = InstanceCheckerSpec.complexThingWithInvalidObjectType,
           expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest,
         )
-      }
-
-      assert(
-        exception.getMessage == "Instance type http://api.knora.org/ontology/knora-api/v2#DateValue is not compatible with expected class IRI http://api.knora.org/ontology/knora-api/v2#BooleanValue",
-      )
-    }
-
-    "reject a JSON-LD instance of anything:Thing (in the complex schema) with object content where an IRI is required" in {
-      val exception = intercept[AssertionException] {
-        jsonLDInstanceChecker.check(
-          instanceResponse = InstanceCheckerSpec.complexThingWithInvalidUseOfObjectInsteadOfIri,
-          expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest,
+        .exit
+        .map(
+          assert(_)(
+            fails(
+              isSubtype[AssertionException](
+                hasMessage(
+                  equalTo(
+                    "Instance type http://api.knora.org/ontology/knora-api/v2#DateValue is not compatible with expected class IRI http://api.knora.org/ontology/knora-api/v2#BooleanValue",
+                  ),
+                ),
+              ),
+            ),
+          ),
         )
-      }
-
-      assert(
-        exception.getMessage == "Property http://api.knora.org/ontology/knora-api/v2#textValueHasMapping requires an IRI referring to an instance of http://api.knora.org/ontology/knora-api/v2#XMLToStandoffMapping, but object content was received instead",
-      )
-    }
-
-    "reject a JSON-LD instance of anything:Thing (in the simple schema) with an invalid datatype" in {
-      val exception = intercept[AssertionException] {
-        jsonLDInstanceChecker.check(
-          instanceResponse = InstanceCheckerSpec.simpleThingWithInvalidDatatype,
-          expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest,
+    },
+    test(
+      "reject a JSON-LD instance of anything:Thing (in the complex schema) with object content where an IRI is required",
+    ) {
+      jsonLDInstanceChecker
+        .check(
+          InstanceCheckerSpec.complexThingWithInvalidUseOfObjectInsteadOfIri,
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         )
-      }
-
-      assert(
-        exception.getMessage == "Property http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasDecimal has an object of type http://api.knora.org/ontology/knora-api/simple/v2#Date with literal content 'GREGORIAN:1489 CE', but type http://www.w3.org/2001/XMLSchema#decimal was expected",
-      )
-    }
-
-    "reject a JSON-LD instance of anything:Thing (in the simple schema) without an rdfs:label" in {
-      val exception = intercept[AssertionException] {
-        jsonLDInstanceChecker.check(
-          instanceResponse = InstanceCheckerSpec.simpleThingWithMissingLabel,
-          expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest,
+        .exit
+        .map(
+          assert(_)(
+            fails(
+              isSubtype[AssertionException](
+                hasMessage(
+                  equalTo(
+                    "Property http://api.knora.org/ontology/knora-api/v2#textValueHasMapping requires an IRI referring to an instance of http://api.knora.org/ontology/knora-api/v2#XMLToStandoffMapping, but object content was received instead",
+                  ),
+                ),
+              ),
+            ),
+          ),
         )
-      }
-
-      assert(
-        exception.getMessage == "Property http://www.w3.org/2000/01/rdf-schema#label has 0 objects, but its cardinality is 1",
-      )
-    }
-  }
-}
-
-object InstanceCheckerSpec {
+    },
+    test("reject a JSON-LD instance of anything:Thing (in the simple schema) with an invalid datatype") {
+      jsonLDInstanceChecker
+        .check(
+          InstanceCheckerSpec.simpleThingWithInvalidDatatype,
+          "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+        )
+        .exit
+        .map(
+          assert(_)(
+            fails(
+              isSubtype[AssertionException](
+                hasMessage(
+                  equalTo(
+                    "Property http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasDecimal has an object of type http://api.knora.org/ontology/knora-api/simple/v2#Date with literal content 'GREGORIAN:1489 CE', but type http://www.w3.org/2001/XMLSchema#decimal was expected",
+                  ),
+                ),
+              ),
+            ),
+          ),
+        )
+    },
+    test("reject a JSON-LD instance of anything:Thing (in the simple schema) without an rdfs:label") {
+      jsonLDInstanceChecker
+        .check(
+          InstanceCheckerSpec.simpleThingWithMissingLabel,
+          "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+        )
+        .exit
+        .map(
+          assert(_)(
+            fails(
+              isSubtype[AssertionException](
+                hasMessage(
+                  equalTo(
+                    "Property http://www.w3.org/2000/01/rdf-schema#label has 0 objects, but its cardinality is 1",
+                  ),
+                ),
+              ),
+            ),
+          ),
+        )
+    },
+  )
 
   val complexThingWithExtraProperty: String =
     """{
