@@ -16,6 +16,8 @@ import javax.sql.DataSource
 object Db {
 
   private def makeDataSource(dbConfig: DbConfig): HikariDataSource = {
+    // NOTE: added after migration why wasn't this needed in the dsp-ingest tree?
+    Class.forName("org.sqlite.JDBC")
     val config = new HikariConfig()
     config.setJdbcUrl(dbConfig.jdbcUrl)
     config.setConnectionInitSql("PRAGMA foreign_keys = ON")
