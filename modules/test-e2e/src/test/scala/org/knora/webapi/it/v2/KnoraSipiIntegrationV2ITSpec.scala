@@ -5,12 +5,8 @@
 
 package org.knora.webapi.it.v2
 
-import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.apache.pekko.http.scaladsl.model.*
-import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import spray.json.*
+import sttp.client4.*
 
-import java.net.URLEncoder
 import java.nio.file.Paths
 
 import dsp.errors.AssertionException
@@ -22,7 +18,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.models.filemodels.*
 import org.knora.webapi.routing.UnsafeZioRun
@@ -32,6 +27,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingOntologyIri
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingShortcode
 import org.knora.webapi.slice.admin.domain.model.LegalInfo
 import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.ResponseOps.assert400
+import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestResourcesApiClient
 import org.knora.webapi.util.MutableTestIri
@@ -39,11 +36,8 @@ import org.knora.webapi.util.MutableTestIri
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
  */
-class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
+class KnoraSipiIntegrationV2ITSpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  private val anythingUserEmail = SharedTestDataADM.anythingAdminUser.email
-  private val password          = SharedTestDataADM.testPass
 
   private val stillImageResourceIri  = new MutableTestIri
   private val stillImageFileValueIri = new MutableTestIri
@@ -60,10 +54,6 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
 
   private val videoResourceIri = new MutableTestIri
   private val videoValueIri    = new MutableTestIri
-
-  private val jsonLdHttpEntity = HttpEntity(RdfMediaTypes.`application/ld+json`, _: String)
-  private val addAuthorization = addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-  private val encodeUTF8       = URLEncoder.encode(_: String, "UTF-8")
 
   private val marblesOriginalFilename = "marbles.tif"
   private val pathToMarbles           = Paths.get(s"test_data/test_route/images/$marblesOriginalFilename")
@@ -139,10 +129,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
    * @param internalFilename the files's internal filename.
    * @param url              the file's URL.
    */
-  case class SavedDocument(
-    internalFilename: String,
-    url: String,
-  )
+  case class SavedDocument(internalFilename: String, url: String)
 
   /**
    * Represents the information that Knora returns about a text file value that was created.
@@ -166,10 +153,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
    * @param internalFilename the file's internal filename.
    * @param url              the file's URL.
    */
-  case class SavedVideoFile(
-    internalFilename: String,
-    url: String,
-  )
+  case class SavedVideoFile(internalFilename: String, url: String)
 
   /**
    * Given a JSON-LD document representing a resource, returns a JSON-LD array containing the values of the specified
@@ -325,9 +309,6 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
     SavedVideoFile(internalFilename = internalFilename, url = url)
   }
 
-  protected def requestJsonLDWithAuth(request: HttpRequest): JsonLDDocument =
-    getResponseAsJsonLD(request ~> addAuthorization)
-
   "The Knora/Sipi integration" should {
     "create a resource with a still image file" in {
       // Upload the image to Sipi.
@@ -377,12 +358,14 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
         .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
-      val response = requestJsonLDWithAuth(
-        Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)),
+      val resIri = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD)
+          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
       )
-      val resIri     = UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString
-      val getRequest = Get(s"$baseApiUrl/v2/resources/${encodeUTF8(resIri)}")
-      checkResponseOK(getRequest)
+      UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$resIri").flatMap(_.assert200))
     }
 
     "change a still image file value" in {
@@ -403,10 +386,21 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         .toJsonLd
 
       // Send the JSON in a PUT request to the API.
-      val response = requestJsonLDWithAuth(Put(baseApiUrl + "/v2/values", jsonLdHttpEntity(jsonLdEntity)))
-      stillImageFileValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val resIri = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD)
+          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
+      )
+      stillImageFileValueIri.set(resIri.toString)
 
-      val resource   = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(stillImageResourceIri.get)}"))
+      val resource = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/${stillImageResourceIri.get}")
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD),
+      )
       val savedValue = getValueFromResource(resource, HasStillImageFileValue.toSmartIri, stillImageFileValueIri.get)
       val savedImage = savedValueToSavedImage(savedValue)
 
@@ -431,10 +425,21 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
           .make(fileType = FileType.DocumentFile(), internalFilename = uploadedFile.internalFilename)
           .toJsonLd(className = Some("ThingDocument"), ontologyName = "anything")
 
-      val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
-      pdfResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val resIri = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD)
+          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
+      )
+      pdfResourceIri.set(resIri.toString)
 
-      val resource = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(pdfResourceIri.get)}"))
+      val resource = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/${pdfResourceIri.get}")
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD),
+      )
       assert(
         UnsafeZioRun.runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri).toString == thingDocumentIRI,
       )
@@ -471,10 +476,21 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         )
         .toJsonLd
 
-      val response = requestJsonLDWithAuth(Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)))
-      pdfValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val resIri = UnsafeZioRun
+        .runOrThrow(
+          TestApiClient
+            .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+            .flatMap(_.assert200)
+            .mapAttempt(JsonLDUtil.parseJsonLD)
+            .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
+        )
+      pdfValueIri.set(resIri.toString)
 
-      val resource = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(pdfResourceIri.get)}"))
+      val resource = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLdDocument(uri"/v2/resources/${pdfResourceIri.get}")
+          .flatMap(_.assert200),
+      )
 
       val savedValue: JsonLDObject     = getValueFromResource(resource, HasDocumentFileValue.toSmartIri, pdfValueIri.get)
       val savedDocument: SavedDocument = savedValueToSavedDocument(savedValue)
@@ -496,8 +512,12 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         .make(fileType = FileType.DocumentFile(), internalFilename = uploadedFile.internalFilename)
         .toJsonLd(className = Some("ThingDocument"), ontologyName = "anything")
 
-      val request = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      assert(singleAwaitingRequest(request).status == StatusCodes.BadRequest)
+      UnsafeZioRun.runOrThrow {
+        TestApiClient
+          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert400)
+          .mapAttempt(JsonLDUtil.parseJsonLD)
+      }
     }
 
     "create a resource with a CSV file" in {
@@ -511,12 +531,19 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         .make(fileType = FileType.TextFile, internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val response    = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
+      val response = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD),
+      )
       val resourceIri = response.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       csvResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
       // Get the new file value from the resource.
-      val resource                    = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(resourceIri)}"))
+      val resource =
+        UnsafeZioRun.runOrThrow(TestApiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri").flatMap(_.assert200))
+
       val savedValues: JsonLDArray    = getValuesFromResource(resource, HasTextFileValue.toSmartIri)
       val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
       csvValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
@@ -544,10 +571,18 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         )
         .toJsonLd
 
-      val response = requestJsonLDWithAuth(Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)))
-      csvValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val resIri = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD)
+          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
+      )
+      csvValueIri.set(resIri.toString)
 
-      val resource = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(csvResourceIri.get)}"))
+      val resource = UnsafeZioRun.runOrThrow {
+        TestApiClient.getJsonLdDocument(uri"/v2/resources/${csvResourceIri.get}").flatMap(_.assert200)
+      }
 
       // Get the new file value from the resource.
       val savedValue: JsonLDObject     = getValueFromResource(resource, HasTextFileValue.toSmartIri, csvValueIri.get)
@@ -570,9 +605,12 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         .make(fileType = FileType.StillImageFile(), internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val request  = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val response = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest)
+      UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert400)
+          .mapAttempt(JsonLDUtil.parseJsonLD),
+      )
     }
 
     "create a resource with an XML file" in {
@@ -586,11 +624,20 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         .make(fileType = FileType.TextFile, internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val response         = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
-      val resourceIri: IRI = response.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+      val response = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD),
+      )
       xmlResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val resourceIri: IRI = response.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
-      val resource = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(resourceIri)}"))
+      val resource = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLdDocument(uri"/v2/resources/$resourceIri")
+          .flatMap(_.assert200),
+      )
 
       // Get the new file value from the resource.
 
@@ -626,10 +673,19 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         )
         .toJsonLd
 
-      val response = requestJsonLDWithAuth(Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)))
-      xmlValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val resIri =
+        UnsafeZioRun.runOrThrow(
+          TestApiClient
+            .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+            .flatMap(_.assert200)
+            .mapAttempt(JsonLDUtil.parseJsonLD)
+            .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
+        )
+      xmlValueIri.set(resIri.toString)
 
-      val resource = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(xmlResourceIri.get)}"))
+      val resource = UnsafeZioRun.runOrThrow(
+        TestApiClient.getJsonLdDocument(uri"/v2/resources/${xmlResourceIri.get}").flatMap(_.assert200),
+      )
 
       // Get the new file value from the resource.
       val savedValue: JsonLDObject = getValueFromResource(
@@ -657,9 +713,12 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         .make(fileType = FileType.TextFile, internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val request  = Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)) ~> addAuthorization
-      val response = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest)
+      UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert400)
+          .mapAttempt(JsonLDUtil.parseJsonLD),
+      )
     }
 
     "create a resource of type ArchiveRepresentation with a Zip file" in {
@@ -673,10 +732,18 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         .make(fileType = FileType.ArchiveFile, internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
-      zipResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val resIri = UnsafeZioRun.runOrThrow {
+        TestApiClient
+          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD)
+          .flatMap(response => response.body.getRequiredIdValueAsKnoraDataIri.map(_.toIri))
+      }
+      zipResourceIri.set(resIri)
 
-      val resource = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(zipResourceIri.get)}"))
+      val resource = UnsafeZioRun.runOrThrow(
+        TestApiClient.getJsonLdDocument(uri"/v2/resources/${zipResourceIri.get}").flatMap(_.assert200),
+      )
 
       UnsafeZioRun.runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri).toString should equal(
         OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation,
@@ -716,10 +783,19 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         )
         .toJsonLd
 
-      val response = requestJsonLDWithAuth(Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)))
-      zipValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val resIri = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD)
+          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri)
+          .map(_.toString),
+      )
+      zipValueIri.set(resIri)
 
-      val resource = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(zipResourceIri.get)}"))
+      val resource = UnsafeZioRun.runOrThrow(
+        TestApiClient.getJsonLdDocument(uri"/v2/resources/${zipResourceIri.get}").flatMap(_.assert200),
+      )
 
       // Get the new file value from the resource.
       val savedValue: JsonLDObject = getValueFromResource(
@@ -747,10 +823,19 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         .make(fileType = FileType.ArchiveFile, internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
-      zipResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val resIri = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD)
+          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri)
+          .map(_.toIri),
+      )
+      zipResourceIri.set(resIri)
 
-      val resource = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(zipResourceIri.get)}"))
+      val resource = UnsafeZioRun.runOrThrow(
+        TestApiClient.getJsonLdDocument(uri"/v2/resources/${zipResourceIri.get}").flatMap(_.assert200),
+      )
 
       UnsafeZioRun.runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri).toString should equal(
         OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation,
@@ -784,10 +869,19 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         .make(fileType = FileType.AudioFile, internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
-      wavResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val resIri = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD)
+          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri)
+          .map(_.toIri),
+      )
+      wavResourceIri.set(resIri)
 
-      val resource = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(wavResourceIri.get)}"))
+      val resource = UnsafeZioRun.runOrThrow(
+        TestApiClient.getJsonLdDocument(uri"/v2/resources/${wavResourceIri.get}").flatMap(_.assert200),
+      )
       assert(
         UnsafeZioRun
           .runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri)
@@ -828,10 +922,18 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         )
         .toJsonLd
 
-      val response = requestJsonLDWithAuth(Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)))
-      wavValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
+      val resIri = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD)
+          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
+      )
+      wavValueIri.set(resIri.toIri)
 
-      val resource = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(wavResourceIri.get)}"))
+      val resource = UnsafeZioRun.runOrThrow(
+        TestApiClient.getJsonLdDocument(uri"/v2/resources/${wavResourceIri.get}").flatMap(_.assert200),
+      )
 
       // Get the new file value from the resource.
       val savedValue: JsonLDObject = getValueFromResource(
@@ -858,10 +960,18 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         .make(fileType = FileType.MovingImageFile(), internalFilename = uploadedFile.internalFilename)
         .toJsonLd()
 
-      val response = requestJsonLDWithAuth(Post(s"$baseApiUrl/v2/resources", jsonLdHttpEntity(jsonLdEntity)))
+      val response = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD),
+      )
       videoResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
-      val resource = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(videoResourceIri.get)}"))
+      val resource =
+        UnsafeZioRun.runOrThrow(
+          TestApiClient.getJsonLdDocument(uri"/v2/resources/${videoResourceIri.get}").flatMap(_.assert200),
+        )
       assert(
         UnsafeZioRun
           .runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri)
@@ -902,10 +1012,17 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
         )
         .toJsonLd
 
-      val response = requestJsonLDWithAuth(Put(s"$baseApiUrl/v2/values", jsonLdHttpEntity(jsonLdEntity)))
+      val response = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+          .flatMap(_.assert200)
+          .mapAttempt(JsonLDUtil.parseJsonLD),
+      )
       videoValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
 
-      val resource = getResponseAsJsonLD(Get(s"$baseApiUrl/v2/resources/${encodeUTF8(videoResourceIri.get)}"))
+      val resource = UnsafeZioRun.runOrThrow(
+        TestApiClient.getJsonLdDocument(uri"/v2/resources/${videoResourceIri.get}").flatMap(_.assert200),
+      )
 
       // Get the new file value from the resource.
       val savedValue: JsonLDObject = getValueFromResource(
@@ -922,11 +1039,4 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec with AuthenticationV2JsonProt
       checkResponseOK(sipiGetFileRequest)
     }
   }
-}
-
-final case class LoginResponse(token: String)
-
-trait AuthenticationV2JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
-  implicit val SessionResponseFormat: RootJsonFormat[LoginResponse] =
-    jsonFormat1(LoginResponse.apply)
 }
