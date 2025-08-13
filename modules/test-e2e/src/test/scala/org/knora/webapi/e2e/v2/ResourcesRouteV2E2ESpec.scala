@@ -80,7 +80,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     ),
   )
 
-  private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
+  private val instanceChecker: InstanceChecker = InstanceChecker.make
 
   private def successResponse(message: String): String =
     s"""{
@@ -126,10 +126,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri),
       )
     }
 
@@ -188,10 +186,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(
+          responseAsString,
+          "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
+        ),
       )
     }
 
@@ -258,10 +257,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
       )
     }
 
@@ -275,10 +272,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
       )
     }
 
@@ -292,10 +287,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
       )
     }
 
@@ -310,10 +303,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri),
       )
     }
 
@@ -327,10 +318,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
       )
     }
 
@@ -345,10 +334,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri),
       )
     }
 
@@ -362,10 +349,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
       )
     }
 
@@ -380,10 +365,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri),
       )
     }
 
@@ -397,10 +380,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
       )
     }
 
@@ -414,10 +395,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
       )
     }
 
@@ -431,10 +410,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
       )
     }
 
@@ -448,10 +425,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       // Check that the resource corresponds to the ontology.
-      instanceChecker.check(
-        instanceResponse = responseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
       )
     }
 
@@ -779,10 +754,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
       val resourceComplexGetResponseAsString       = responseToString(resourceComplexGetResponse)
 
-      instanceChecker.check(
-        instanceResponse = resourceComplexGetResponseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(
+          resourceComplexGetResponseAsString,
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        ),
       )
 
       // Request the newly created resource in the simple schema, and check that it matches the ontology.
@@ -793,10 +769,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
       val resourceSimpleGetResponseAsString       = responseToString(resourceSimpleGetResponse)
 
-      instanceChecker.check(
-        instanceResponse = resourceSimpleGetResponseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(
+          resourceSimpleGetResponseAsString,
+          "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+        ),
       )
 
       // Check that the text value with standoff is correct in the simple schema.
@@ -847,10 +824,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
       val resourceComplexGetResponseAsString       = responseToString(resourceComplexGetResponse)
 
-      instanceChecker.check(
-        instanceResponse = resourceComplexGetResponseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreeTestSubClassOfFoafPerson".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(
+          resourceComplexGetResponseAsString,
+          "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreeTestSubClassOfFoafPerson".toSmartIri,
+        ),
       )
 
       // Request the newly created resource in the simple schema, and check that it matches the ontology.
@@ -861,11 +839,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
       val resourceSimpleGetResponseAsString       = responseToString(resourceSimpleGetResponse)
 
-      instanceChecker.check(
-        instanceResponse = resourceSimpleGetResponseAsString,
-        expectedClassIri =
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(
+          resourceSimpleGetResponseAsString,
           "http://0.0.0.0:3333/ontology/0001/freetest/simple/v2#FreeTestSubClassOfFoafPerson".toSmartIri,
-        knoraRouteGet = doGetRequest,
+        ),
       )
 
       // Check that the value is correct in the simple schema.
@@ -1671,10 +1649,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val resourceGetResponseAsString = getResponseAsString(resourceGetRequest)
 
       // Check that the response matches the ontology.
-      instanceChecker.check(
-        instanceResponse = resourceGetResponseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(
+          resourceGetResponseAsString,
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        ),
       )
 
       // Get the XML from the response.
@@ -1700,10 +1679,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val resourceGetResponseAsString       = responseToString(resourceGetResponse)
 
       // Check that the response matches the ontology.
-      instanceChecker.check(
-        instanceResponse = resourceGetResponseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(
+          resourceGetResponseAsString,
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        ),
       )
 
       // Get the standoff markup separately.
@@ -1760,11 +1740,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       for (jsonLDObject <- standoffBuffer) {
         val docForValidation = JsonLDDocument(body = jsonLDObject).toCompactString()
 
-        instanceChecker.check(
-          instanceResponse = docForValidation,
-          expectedClassIri =
+        UnsafeZioRun.runOrThrow(
+          instanceChecker.check(
+            docForValidation,
             jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr),
-          knoraRouteGet = doGetRequest,
+          ),
         )
       }
     }
@@ -1846,10 +1826,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
       val resourceComplexGetResponseAsString       = responseToString(resourceComplexGetResponse)
 
-      instanceChecker.check(
-        instanceResponse = resourceComplexGetResponseAsString,
-        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest,
+      UnsafeZioRun.runOrThrow(
+        instanceChecker.check(
+          resourceComplexGetResponseAsString,
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        ),
       )
 
       // Check that it has the property knora-api:hasStandoffLinkToValue.
