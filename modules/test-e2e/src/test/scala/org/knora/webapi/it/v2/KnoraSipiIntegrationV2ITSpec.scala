@@ -5,7 +5,9 @@
 
 package org.knora.webapi.it.v2
 
-import sttp.client4.*
+import sttp.model.Uri.*
+import zio.*
+import zio.test.*
 
 import java.nio.file.Paths
 
@@ -13,14 +15,13 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.models.filemodels.*
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingOntologyIri
@@ -36,7 +37,7 @@ import org.knora.webapi.util.MutableTestIri
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
  */
-class KnoraSipiIntegrationV2ITSpec extends E2ESpec {
+object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val stillImageResourceIri  = new MutableTestIri
@@ -309,734 +310,634 @@ class KnoraSipiIntegrationV2ITSpec extends E2ESpec {
     SavedVideoFile(internalFilename = internalFilename, url = url)
   }
 
-  "The Knora/Sipi integration" should {
-    "create a resource with a still image file" in {
-      // Upload the image to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToMarbles, anythingShortcode))
-      uploadedFile.originalFilename should ===(marblesOriginalFilename)
+  override val e2eSpec = suite("The Knora/Sipi integration")(
+    test("create a resource with a still image file") {
+      for {
+        // Upload the image to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToMarbles, anythingShortcode)
 
-      // Create the resource in the API.
-      val resource = UnsafeZioRun
-        .runOrThrow(
-          for {
-            response <- TestResourcesApiClient
-                          .createStillImageRepresentation(
-                            anythingShortcode,
-                            anythingOntologyIri,
-                            "ThingPicture",
-                            uploadedFile,
-                            anythingAdminUser,
-                            LegalInfo.empty,
-                          )
-            jsonLd      <- response.assert200.mapAttempt(JsonLDUtil.parseJsonLD)
-            resourceIri <- jsonLd.body.getRequiredIdValueAsKnoraDataIri.map(_.toIri)
-            _            = stillImageResourceIri.set(resourceIri)
-            r           <- TestResourcesApiClient.getResource(resourceIri).flatMap(_.assert200)
-          } yield r,
-        )
+        // Create the resource in the API.
+        response <- TestResourcesApiClient
+                      .createStillImageRepresentation(
+                        anythingShortcode,
+                        anythingOntologyIri,
+                        "ThingPicture",
+                        uploadedFile,
+                        anythingAdminUser,
+                        LegalInfo.empty,
+                      )
+        jsonLd      <- response.assert200.mapAttempt(JsonLDUtil.parseJsonLD)
+        resourceIri <- jsonLd.body.getRequiredIdValueAsKnoraDataIri.map(_.toIri)
+        _            = stillImageResourceIri.set(resourceIri)
+        resource    <- TestResourcesApiClient.getResource(resourceIri).flatMap(_.assert200)
 
-      assert(
-        UnsafeZioRun
-          .runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri)
-          .toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture",
+        // Verify resource type
+        resourceType <- resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri
+
+        // Get the new file value from the resource.
+        savedValues   = getValuesFromResource(resource, HasStillImageFileValue.toSmartIri)
+        savedValueObj = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
+        valueIri     <- savedValueObj.getRequiredIdValueAsKnoraDataIri
+        _             = stillImageFileValueIri.set(valueIri.toString)
+
+        savedImage = savedValueToSavedImage(savedValueObj)
+      } yield assertTrue(
+        uploadedFile.originalFilename == marblesOriginalFilename,
+        resourceType.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture",
+        savedImage.internalFilename == uploadedFile.internalFilename,
+        savedImage.width == marblesWidth,
+        savedImage.height == marblesHeight
       )
+    },
+    test("create a resource with a still image file that has already been ingested") {
+      for {
+        // Create the resource in the API.
+        jsonLdEntity <-
+          ZIO.succeed(
+            UploadFileRequest
+              .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
+              .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything"),
+          )
+        response <- TestApiClient
+                      .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        resIri <- response.body.getRequiredIdValueAsKnoraDataIri
+        _      <- TestApiClient.getJsonLd(uri"/v2/resources/$resIri").flatMap(_.assert200)
+      } yield assertCompletes
+    },
+    test("change a still image file value") {
+      for {
+        // Upload the image to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToTrp88, anythingShortcode)
 
-      // Get the new file value from the resource.
+        // JSON describing the new image to the API.
+        jsonLdEntity = ChangeFileRequest
+                         .make(
+                           fileType = FileType.StillImageFile(),
+                           internalFilename = uploadedFile.internalFilename,
+                           resourceIri = stillImageResourceIri.get,
+                           valueIri = stillImageFileValueIri.get,
+                           className = Some("ThingPicture"),
+                           ontologyName = "anything",
+                         )
+                         .toJsonLd
 
-      val savedValues: JsonLDArray    = getValuesFromResource(resource, HasStillImageFileValue.toSmartIri)
-      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
-      stillImageFileValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
+        // Send the JSON in a PUT request to the API.
+        response <- TestApiClient
+                      .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        resIri <- response.body.getRequiredIdValueAsKnoraDataIri
+        _       = stillImageFileValueIri.set(resIri.toString)
 
-      val savedImage = savedValueToSavedImage(savedValueObj)
-      assert(savedImage.internalFilename == uploadedFile.internalFilename)
-      assert(savedImage.width == marblesWidth)
-      assert(savedImage.height == marblesHeight)
-    }
-
-    "create a resource with a still image file that has already been ingested" in {
-      // Create the resource in the API.
-      val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
-        .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
-      val resIri = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD)
-          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
+        resource <- TestApiClient
+                      .getJsonLd(uri"/v2/resources/${stillImageResourceIri.get}")
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        savedValue = getValueFromResource(resource, HasStillImageFileValue.toSmartIri, stillImageFileValueIri.get)
+        savedImage = savedValueToSavedImage(savedValue)
+      } yield assertTrue(
+        uploadedFile.originalFilename == trp88OriginalFilename,
+        savedImage.internalFilename == uploadedFile.internalFilename,
+        savedImage.width == trp88Width,
+        savedImage.height == trp88Height,
+        savedImage.iiifUrl.nonEmpty
       )
-      UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$resIri").flatMap(_.assert200))
-    }
+    },
+    test("create a resource with a PDF file") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToMinimalPdf, anythingShortcode)
 
-    "change a still image file value" in {
-      // Upload the image to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTrp88, anythingShortcode))
-      uploadedFile.originalFilename should ===(trp88OriginalFilename)
+        // Create the resource in the API.
+        jsonLdEntity = UploadFileRequest
+                         .make(fileType = FileType.DocumentFile(), internalFilename = uploadedFile.internalFilename)
+                         .toJsonLd(className = Some("ThingDocument"), ontologyName = "anything")
 
-      // JSON describing the new image to the API.
-      val jsonLdEntity = ChangeFileRequest
-        .make(
-          fileType = FileType.StillImageFile(),
-          internalFilename = uploadedFile.internalFilename,
-          resourceIri = stillImageResourceIri.get,
-          valueIri = stillImageFileValueIri.get,
-          className = Some("ThingPicture"),
-          ontologyName = "anything",
-        )
-        .toJsonLd
+        response <- TestApiClient
+                      .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        resIri <- response.body.getRequiredIdValueAsKnoraDataIri
+        _       = pdfResourceIri.set(resIri.toString)
 
-      // Send the JSON in a PUT request to the API.
-      val resIri = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD)
-          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
+        resource <- TestApiClient
+                      .getJsonLd(uri"/v2/resources/${pdfResourceIri.get}")
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        resourceType <- resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri
+
+        // Get the new file value from the resource.
+        savedValues   = getValuesFromResource(resource, HasDocumentFileValue.toSmartIri)
+        savedValueObj = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
+        valueIri     <- savedValueObj.getRequiredIdValueAsKnoraDataIri
+        _             = pdfValueIri.set(valueIri.toString)
+
+        savedDocument = savedValueToSavedDocument(savedValueObj)
+      } yield assertTrue(
+        uploadedFile.originalFilename == minimalPdfOriginalFilename,
+        resourceType.toString == thingDocumentIRI,
+        savedDocument.internalFilename == uploadedFile.internalFilename,
+        savedDocument.url.nonEmpty
       )
-      stillImageFileValueIri.set(resIri.toString)
+    },
+    test("change a PDF file value") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToTestPdf, anythingShortcode)
 
-      val resource = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLd(uri"/v2/resources/${stillImageResourceIri.get}")
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD),
+        // Update the value.
+        jsonLdEntity = ChangeFileRequest
+                         .make(
+                           fileType = FileType.DocumentFile(),
+                           internalFilename = uploadedFile.internalFilename,
+                           resourceIri = pdfResourceIri.get,
+                           valueIri = pdfValueIri.get,
+                           className = Some("ThingDocument"),
+                           ontologyName = "anything",
+                         )
+                         .toJsonLd
+
+        response <- TestApiClient
+                      .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        resIri <- response.body.getRequiredIdValueAsKnoraDataIri
+        _       = pdfValueIri.set(resIri.toString)
+
+        resource <- TestApiClient
+                      .getJsonLdDocument(uri"/v2/resources/${pdfResourceIri.get}")
+                      .flatMap(_.assert200)
+
+        savedValue    = getValueFromResource(resource, HasDocumentFileValue.toSmartIri, pdfValueIri.get)
+        savedDocument = savedValueToSavedDocument(savedValue)
+      } yield assertTrue(
+        uploadedFile.originalFilename == testPdfOriginalFilename,
+        savedDocument.internalFilename == uploadedFile.internalFilename,
+        savedDocument.url.nonEmpty
       )
-      val savedValue = getValueFromResource(resource, HasStillImageFileValue.toSmartIri, stillImageFileValueIri.get)
-      val savedImage = savedValueToSavedImage(savedValue)
+    },
+    test("not create a document resource if the file is actually a zip file") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToMinimalZip, anythingShortcode)
 
-      assert(savedImage.internalFilename == uploadedFile.internalFilename)
-      assert(savedImage.width == trp88Width)
-      assert(savedImage.height == trp88Height)
+        // Create the resource in the API - this should fail.
+        jsonLdEntity = UploadFileRequest
+                         .make(fileType = FileType.DocumentFile(), internalFilename = uploadedFile.internalFilename)
+                         .toJsonLd(className = Some("ThingDocument"), ontologyName = "anything")
 
-      // Request the permanently stored image from Sipi.
-      val sipiGetImageRequest = Get(savedImage.iiifUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetImageRequest)
-    }
+        _ <- TestApiClient
+               .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+               .flatMap(_.assert400)
+               .mapAttempt(JsonLDUtil.parseJsonLD)
+      } yield assertTrue(uploadedFile.originalFilename == minimalZipOriginalFilename)
+    },
+    test("create a resource with a CSV file") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToCsv1, anythingShortcode)
 
-    "create a resource with a PDF file" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToMinimalPdf, anythingShortcode))
-      uploadedFile.originalFilename should ===(minimalPdfOriginalFilename)
+        // Create the resource in the API.
+        jsonLdEntity = UploadFileRequest
+                         .make(fileType = FileType.TextFile, internalFilename = uploadedFile.internalFilename)
+                         .toJsonLd()
 
-      // Create the resource in the API.
+        response <- TestApiClient
+                      .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        resourceIri = response.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+        dataIri    <- response.body.getRequiredIdValueAsKnoraDataIri
+        _           = csvResourceIri.set(dataIri.toString)
 
-      val jsonLdEntity =
-        UploadFileRequest
-          .make(fileType = FileType.DocumentFile(), internalFilename = uploadedFile.internalFilename)
-          .toJsonLd(className = Some("ThingDocument"), ontologyName = "anything")
+        // Get the new file value from the resource.
+        resource <- TestApiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri").flatMap(_.assert200)
 
-      val resIri = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD)
-          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
+        savedValues   = getValuesFromResource(resource, HasTextFileValue.toSmartIri)
+        savedValueObj = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
+        valueIri     <- savedValueObj.getRequiredIdValueAsKnoraDataIri
+        _             = csvValueIri.set(valueIri.toString)
+
+        savedTextFile = savedValueToSavedTextFile(savedValueObj)
+      } yield assertTrue(
+        uploadedFile.originalFilename == csv1OriginalFilename,
+        savedTextFile.internalFilename == uploadedFile.internalFilename,
+        savedTextFile.url.nonEmpty
       )
-      pdfResourceIri.set(resIri.toString)
+    },
+    test("change a CSV file value") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToCsv2, anythingShortcode)
 
-      val resource = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLd(uri"/v2/resources/${pdfResourceIri.get}")
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD),
+        // Update the value.
+        jsonLdEntity = ChangeFileRequest
+                         .make(
+                           fileType = FileType.TextFile,
+                           internalFilename = uploadedFile.internalFilename,
+                           resourceIri = csvResourceIri.get,
+                           valueIri = csvValueIri.get,
+                         )
+                         .toJsonLd
+
+        response <- TestApiClient
+                      .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        resIri <- response.body.getRequiredIdValueAsKnoraDataIri
+        _       = csvValueIri.set(resIri.toString)
+
+        resource <- TestApiClient.getJsonLdDocument(uri"/v2/resources/${csvResourceIri.get}").flatMap(_.assert200)
+
+        // Get the new file value from the resource.
+        savedValue    = getValueFromResource(resource, HasTextFileValue.toSmartIri, csvValueIri.get)
+        savedTextFile = savedValueToSavedTextFile(savedValue)
+      } yield assertTrue(
+        uploadedFile.originalFilename == csv2OriginalFilename,
+        savedTextFile.internalFilename == uploadedFile.internalFilename,
+        savedTextFile.url.nonEmpty
       )
-      assert(
-        UnsafeZioRun.runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri).toString == thingDocumentIRI,
+    },
+    test("not create a resource with a still image file that's actually a text file") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToCsv1, anythingShortcode)
+
+        // Create the resource in the API - this should fail.
+        jsonLdEntity = UploadFileRequest
+                         .make(fileType = FileType.StillImageFile(), internalFilename = uploadedFile.internalFilename)
+                         .toJsonLd()
+
+        _ <- TestApiClient
+               .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+               .flatMap(_.assert400)
+               .mapAttempt(JsonLDUtil.parseJsonLD)
+      } yield assertTrue(uploadedFile.originalFilename == csv1OriginalFilename)
+    },
+    test("create a resource with an XML file") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToXml1, anythingShortcode)
+
+        // Create the resource in the API.
+        jsonLdEntity = UploadFileRequest
+                         .make(fileType = FileType.TextFile, internalFilename = uploadedFile.internalFilename)
+                         .toJsonLd()
+
+        response <- TestApiClient
+                      .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        dataIri    <- response.body.getRequiredIdValueAsKnoraDataIri
+        _           = xmlResourceIri.set(dataIri.toString)
+        resourceIri = response.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+
+        resource <- TestApiClient
+                      .getJsonLdDocument(uri"/v2/resources/$resourceIri")
+                      .flatMap(_.assert200)
+
+        // Get the new file value from the resource.
+        savedValues = getValuesFromResource(
+                        resource = resource,
+                        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri,
+                      )
+
+        savedValueObj = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
+        valueIri     <- savedValueObj.getRequiredIdValueAsKnoraDataIri
+        _             = xmlValueIri.set(valueIri.toString)
+
+        savedTextFile = savedValueToSavedTextFile(savedValueObj)
+      } yield assertTrue(
+        uploadedFile.originalFilename == xml1OriginalFilename,
+        savedTextFile.internalFilename == uploadedFile.internalFilename,
+        savedTextFile.url.nonEmpty
       )
+    },
+    test("change an XML file value") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToXml2, anythingShortcode)
 
-      // Get the new file value from the resource.
+        // Update the value.
+        jsonLdEntity = ChangeFileRequest
+                         .make(
+                           fileType = FileType.TextFile,
+                           internalFilename = uploadedFile.internalFilename,
+                           resourceIri = xmlResourceIri.get,
+                           valueIri = xmlValueIri.get,
+                         )
+                         .toJsonLd
 
-      val savedValues: JsonLDArray    = getValuesFromResource(resource, HasDocumentFileValue.toSmartIri)
-      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
-      pdfValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
+        response <- TestApiClient
+                      .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        resIri <- response.body.getRequiredIdValueAsKnoraDataIri
+        _       = xmlValueIri.set(resIri.toString)
 
-      val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
-      assert(savedDocument.internalFilename == uploadedFile.internalFilename)
+        resource <- TestApiClient.getJsonLdDocument(uri"/v2/resources/${xmlResourceIri.get}").flatMap(_.assert200)
 
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
-    }
+        // Get the new file value from the resource.
+        savedValue = getValueFromResource(
+                       resource = resource,
+                       propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri,
+                       expectedValueIri = xmlValueIri.get,
+                     )
 
-    "change a PDF file value" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTestPdf, anythingShortcode))
-
-      uploadedFile.originalFilename should ===(testPdfOriginalFilename)
-
-      // Update the value.
-      val jsonLdEntity = ChangeFileRequest
-        .make(
-          fileType = FileType.DocumentFile(),
-          internalFilename = uploadedFile.internalFilename,
-          resourceIri = pdfResourceIri.get,
-          valueIri = pdfValueIri.get,
-          className = Some("ThingDocument"),
-          ontologyName = "anything",
-        )
-        .toJsonLd
-
-      val resIri = UnsafeZioRun
-        .runOrThrow(
-          TestApiClient
-            .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
-            .flatMap(_.assert200)
-            .mapAttempt(JsonLDUtil.parseJsonLD)
-            .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
-        )
-      pdfValueIri.set(resIri.toString)
-
-      val resource = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLdDocument(uri"/v2/resources/${pdfResourceIri.get}")
-          .flatMap(_.assert200),
+        savedTextFile = savedValueToSavedTextFile(savedValue)
+      } yield assertTrue(
+        uploadedFile.originalFilename == xml2OriginalFilename,
+        savedTextFile.internalFilename == uploadedFile.internalFilename,
+        savedTextFile.url.nonEmpty
       )
+    },
+    test("not create a resource of type TextRepresentation with a Zip file") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToMinimalZip, anythingShortcode)
 
-      val savedValue: JsonLDObject     = getValueFromResource(resource, HasDocumentFileValue.toSmartIri, pdfValueIri.get)
-      val savedDocument: SavedDocument = savedValueToSavedDocument(savedValue)
-      assert(savedDocument.internalFilename == uploadedFile.internalFilename)
+        // Create the resource in the API - this should fail.
+        jsonLdEntity = UploadFileRequest
+                         .make(fileType = FileType.TextFile, internalFilename = uploadedFile.internalFilename)
+                         .toJsonLd()
 
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
-    }
+        _ <- TestApiClient
+               .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+               .flatMap(_.assert400)
+               .mapAttempt(JsonLDUtil.parseJsonLD)
+      } yield assertTrue(uploadedFile.originalFilename == minimalZipOriginalFilename)
+    },
+    test("create a resource of type ArchiveRepresentation with a Zip file") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToMinimalZip, anythingShortcode)
 
-    "not create a document resource if the file is actually a zip file" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToMinimalZip, anythingShortcode))
-      uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
+        // Create the resource in the API.
+        jsonLdEntity = UploadFileRequest
+                         .make(fileType = FileType.ArchiveFile, internalFilename = uploadedFile.internalFilename)
+                         .toJsonLd()
 
-      // Create the resource in the API.
+        response <- TestApiClient
+                      .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        resIri <- response.body.getRequiredIdValueAsKnoraDataIri.map(_.toIri)
+        _       = zipResourceIri.set(resIri)
 
-      val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.DocumentFile(), internalFilename = uploadedFile.internalFilename)
-        .toJsonLd(className = Some("ThingDocument"), ontologyName = "anything")
+        resource <- TestApiClient.getJsonLdDocument(uri"/v2/resources/${zipResourceIri.get}").flatMap(_.assert200)
 
-      UnsafeZioRun.runOrThrow {
-        TestApiClient
-          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert400)
-          .mapAttempt(JsonLDUtil.parseJsonLD)
-      }
-    }
+        resourceType <- resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri
 
-    "create a resource with a CSV file" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToCsv1, anythingShortcode))
-      uploadedFile.originalFilename should ===(csv1OriginalFilename)
+        // Get the new file value from the resource.
+        savedValues = getValuesFromResource(
+                        resource = resource,
+                        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri,
+                      )
 
-      // Create the resource in the API.
+        savedValueObj = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
+        valueIri     <- savedValueObj.getRequiredIdValueAsKnoraDataIri
+        _             = zipValueIri.set(valueIri.toString)
 
-      val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.TextFile, internalFilename = uploadedFile.internalFilename)
-        .toJsonLd()
-
-      val response = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD),
+        savedDocument = savedValueToSavedDocument(savedValueObj)
+      } yield assertTrue(
+        uploadedFile.originalFilename == minimalZipOriginalFilename,
+        resourceType.toString == OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation,
+        savedDocument.internalFilename == uploadedFile.internalFilename,
+        savedDocument.url.nonEmpty
       )
-      val resourceIri = response.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-      csvResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
+    },
+    test("change a Zip file value") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToTestZip, anythingShortcode)
 
-      // Get the new file value from the resource.
-      val resource =
-        UnsafeZioRun.runOrThrow(TestApiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri").flatMap(_.assert200))
+        // Update the value.
+        jsonLdEntity = ChangeFileRequest
+                         .make(
+                           fileType = FileType.ArchiveFile,
+                           resourceIri = zipResourceIri.get,
+                           valueIri = zipValueIri.get,
+                           internalFilename = uploadedFile.internalFilename,
+                         )
+                         .toJsonLd
 
-      val savedValues: JsonLDArray    = getValuesFromResource(resource, HasTextFileValue.toSmartIri)
-      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
-      csvValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
+        response <- TestApiClient
+                      .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        resIri <- response.body.getRequiredIdValueAsKnoraDataIri
+        _       = zipValueIri.set(resIri.toString)
 
-      val savedTextFile: SavedTextFile = savedValueToSavedTextFile(savedValueObj)
-      assert(savedTextFile.internalFilename == uploadedFile.internalFilename)
+        resource <- TestApiClient.getJsonLdDocument(uri"/v2/resources/${zipResourceIri.get}").flatMap(_.assert200)
 
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedTextFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
-    }
+        // Get the new file value from the resource.
+        savedValue = getValueFromResource(
+                       resource = resource,
+                       propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri,
+                       expectedValueIri = zipValueIri.get,
+                     )
 
-    "change a CSV file value" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToCsv2, anythingShortcode))
-      uploadedFile.originalFilename should ===(csv2OriginalFilename)
-
-      // Update the value.
-      val jsonLdEntity = ChangeFileRequest
-        .make(
-          fileType = FileType.TextFile,
-          internalFilename = uploadedFile.internalFilename,
-          resourceIri = csvResourceIri.get,
-          valueIri = csvValueIri.get,
-        )
-        .toJsonLd
-
-      val resIri = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD)
-          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
+        savedDocument = savedValueToSavedDocument(savedValue)
+      } yield assertTrue(
+        uploadedFile.originalFilename == testZipOriginalFilename,
+        savedDocument.internalFilename == uploadedFile.internalFilename,
+        savedDocument.url.nonEmpty
       )
-      csvValueIri.set(resIri.toString)
+    },
+    test("create a resource of type ArchiveRepresentation with a 7z file") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToTest7z, anythingShortcode)
 
-      val resource = UnsafeZioRun.runOrThrow {
-        TestApiClient.getJsonLdDocument(uri"/v2/resources/${csvResourceIri.get}").flatMap(_.assert200)
-      }
+        // Create the resource in the API.
+        jsonLdEntity = UploadFileRequest
+                         .make(fileType = FileType.ArchiveFile, internalFilename = uploadedFile.internalFilename)
+                         .toJsonLd()
 
-      // Get the new file value from the resource.
-      val savedValue: JsonLDObject     = getValueFromResource(resource, HasTextFileValue.toSmartIri, csvValueIri.get)
-      val savedTextFile: SavedTextFile = savedValueToSavedTextFile(savedValue)
-      assert(savedTextFile.internalFilename == uploadedFile.internalFilename)
+        response <- TestApiClient
+                      .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        resIri <- response.body.getRequiredIdValueAsKnoraDataIri.map(_.toIri)
+        _       = zipResourceIri.set(resIri)
 
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedTextFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
-    }
+        resource <- TestApiClient.getJsonLdDocument(uri"/v2/resources/${zipResourceIri.get}").flatMap(_.assert200)
 
-    "not create a resource with a still image file that's actually a text file" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToCsv1, anythingShortcode))
-      uploadedFile.originalFilename should ===(csv1OriginalFilename)
+        resourceType <- resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri
 
-      // Create the resource in the API.
+        // Get the new file value from the resource.
+        savedValues = getValuesFromResource(
+                        resource = resource,
+                        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri,
+                      )
 
-      val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.StillImageFile(), internalFilename = uploadedFile.internalFilename)
-        .toJsonLd()
+        savedValueObj = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
+        valueIri     <- savedValueObj.getRequiredIdValueAsKnoraDataIri
+        _             = zipValueIri.set(valueIri.toString)
 
-      UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert400)
-          .mapAttempt(JsonLDUtil.parseJsonLD),
+        savedDocument = savedValueToSavedDocument(savedValueObj)
+      } yield assertTrue(
+        uploadedFile.originalFilename == test7zOriginalFilename,
+        resourceType.toString == OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation,
+        savedDocument.internalFilename == uploadedFile.internalFilename,
+        savedDocument.url.nonEmpty
       )
-    }
+    },
+    test("create a resource with a WAV file") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToMinimalWav, anythingShortcode)
 
-    "create a resource with an XML file" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToXml1, anythingShortcode))
-      uploadedFile.originalFilename should ===(xml1OriginalFilename)
+        // Create the resource in the API.
+        jsonLdEntity = UploadFileRequest
+                         .make(fileType = FileType.AudioFile, internalFilename = uploadedFile.internalFilename)
+                         .toJsonLd()
 
-      // Create the resource in the API.
+        response <- TestApiClient
+                      .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        resIri <- response.body.getRequiredIdValueAsKnoraDataIri.map(_.toIri)
+        _       = wavResourceIri.set(resIri)
 
-      val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.TextFile, internalFilename = uploadedFile.internalFilename)
-        .toJsonLd()
+        resource <- TestApiClient.getJsonLdDocument(uri"/v2/resources/${wavResourceIri.get}").flatMap(_.assert200)
 
-      val response = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD),
+        resourceType <- resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri
+
+        // Get the new file value from the resource.
+        savedValues = getValuesFromResource(
+                        resource = resource,
+                        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasAudioFileValue.toSmartIri,
+                      )
+
+        savedValueObj = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
+        valueIri     <- savedValueObj.getRequiredIdValueAsKnoraDataIri
+        _             = wavValueIri.set(valueIri.toString)
+
+        savedAudioFile = savedValueToSavedAudioFile(savedValueObj)
+      } yield assertTrue(
+        uploadedFile.originalFilename == minimalWavOriginalFilename,
+        resourceType.toString == "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation",
+        savedAudioFile.internalFilename == uploadedFile.internalFilename,
+        savedAudioFile.url.nonEmpty
       )
-      xmlResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
-      val resourceIri: IRI = response.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+    },
+    test("change a WAV file value") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToTestWav, anythingShortcode)
 
-      val resource = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLdDocument(uri"/v2/resources/$resourceIri")
-          .flatMap(_.assert200),
+        // Update the value.
+        jsonLdEntity = ChangeFileRequest
+                         .make(
+                           fileType = FileType.AudioFile,
+                           resourceIri = wavResourceIri.get,
+                           internalFilename = uploadedFile.internalFilename,
+                           valueIri = wavValueIri.get,
+                         )
+                         .toJsonLd
+
+        response <- TestApiClient
+                      .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        resIri <- response.body.getRequiredIdValueAsKnoraDataIri
+        _       = wavValueIri.set(resIri.toIri)
+
+        resource <- TestApiClient.getJsonLdDocument(uri"/v2/resources/${wavResourceIri.get}").flatMap(_.assert200)
+
+        // Get the new file value from the resource.
+        savedValue = getValueFromResource(
+                       resource = resource,
+                       propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasAudioFileValue.toSmartIri,
+                       expectedValueIri = wavValueIri.get,
+                     )
+
+        savedAudioFile = savedValueToSavedAudioFile(savedValue)
+      } yield assertTrue(
+        uploadedFile.originalFilename == testWavOriginalFilename,
+        savedAudioFile.internalFilename == uploadedFile.internalFilename,
+        savedAudioFile.url.nonEmpty
       )
+    },
+    test("create a resource with a video file") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToTestVideo, anythingShortcode)
 
-      // Get the new file value from the resource.
+        // Create the resource in the API.
+        jsonLdEntity = UploadFileRequest
+                         .make(fileType = FileType.MovingImageFile(), internalFilename = uploadedFile.internalFilename)
+                         .toJsonLd()
 
-      val savedValues: JsonLDArray = getValuesFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri,
+        response <- TestApiClient
+                      .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        dataIri <- response.body.getRequiredIdValueAsKnoraDataIri
+        _        = videoResourceIri.set(dataIri.toString)
+
+        resource <- TestApiClient.getJsonLdDocument(uri"/v2/resources/${videoResourceIri.get}").flatMap(_.assert200)
+
+        resourceType <- resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri
+
+        // Get the new file value from the resource.
+        savedValues = getValuesFromResource(
+                        resource = resource,
+                        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasMovingImageFileValue.toSmartIri,
+                      )
+
+        savedValueObj = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
+        valueIri     <- savedValueObj.getRequiredIdValueAsKnoraDataIri
+        _             = videoValueIri.set(valueIri.toString)
+
+        savedVideoFile = savedValueToSavedVideoFile(savedValueObj)
+      } yield assertTrue(
+        uploadedFile.originalFilename == testVideoOriginalFilename,
+        resourceType.toString == "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation",
+        savedVideoFile.internalFilename == uploadedFile.internalFilename,
+        savedVideoFile.url.nonEmpty
       )
+    },
+    test("change a video file value") {
+      for {
+        // Upload the file to Sipi.
+        uploadedFile <- TestDspIngestClient.uploadFile(pathToTestVideo2, anythingShortcode)
 
-      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
-      xmlValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
+        // Update the value.
+        jsonLdEntity = ChangeFileRequest
+                         .make(
+                           fileType = FileType.MovingImageFile(),
+                           resourceIri = videoResourceIri.get,
+                           internalFilename = uploadedFile.internalFilename,
+                           valueIri = videoValueIri.get,
+                         )
+                         .toJsonLd
 
-      val savedTextFile: SavedTextFile = savedValueToSavedTextFile(savedValueObj)
-      assert(savedTextFile.internalFilename == uploadedFile.internalFilename)
+        response <- TestApiClient
+                      .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        dataIri <- response.body.getRequiredIdValueAsKnoraDataIri
+        _        = videoValueIri.set(dataIri.toString)
 
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedTextFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
-    }
+        resource <- TestApiClient.getJsonLdDocument(uri"/v2/resources/${videoResourceIri.get}").flatMap(_.assert200)
 
-    "change an XML file value" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToXml2, anythingShortcode))
-      uploadedFile.originalFilename should ===(xml2OriginalFilename)
+        // Get the new file value from the resource.
+        savedValue = getValueFromResource(
+                       resource = resource,
+                       propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasMovingImageFileValue.toSmartIri,
+                       expectedValueIri = videoValueIri.get,
+                     )
 
-      // Update the value.
-
-      val jsonLdEntity = ChangeFileRequest
-        .make(
-          fileType = FileType.TextFile,
-          internalFilename = uploadedFile.internalFilename,
-          resourceIri = xmlResourceIri.get,
-          valueIri = xmlValueIri.get,
-        )
-        .toJsonLd
-
-      val resIri =
-        UnsafeZioRun.runOrThrow(
-          TestApiClient
-            .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
-            .flatMap(_.assert200)
-            .mapAttempt(JsonLDUtil.parseJsonLD)
-            .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
-        )
-      xmlValueIri.set(resIri.toString)
-
-      val resource = UnsafeZioRun.runOrThrow(
-        TestApiClient.getJsonLdDocument(uri"/v2/resources/${xmlResourceIri.get}").flatMap(_.assert200),
+        savedVideoFile = savedValueToSavedVideoFile(savedValue)
+      } yield assertTrue(
+        uploadedFile.originalFilename == testVideo2OriginalFilename,
+        savedVideoFile.internalFilename == uploadedFile.internalFilename,
+        savedVideoFile.url.nonEmpty
       )
-
-      // Get the new file value from the resource.
-      val savedValue: JsonLDObject = getValueFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri,
-        expectedValueIri = xmlValueIri.get,
-      )
-
-      val savedTextFile: SavedTextFile = savedValueToSavedTextFile(savedValue)
-      assert(savedTextFile.internalFilename == uploadedFile.internalFilename)
-
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedTextFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
-    }
-
-    "not create a resource of type TextRepresentation with a Zip file" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToMinimalZip, anythingShortcode))
-      uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
-
-      // Create the resource in the API.
-
-      val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.TextFile, internalFilename = uploadedFile.internalFilename)
-        .toJsonLd()
-
-      UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert400)
-          .mapAttempt(JsonLDUtil.parseJsonLD),
-      )
-    }
-
-    "create a resource of type ArchiveRepresentation with a Zip file" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToMinimalZip, anythingShortcode))
-      uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
-
-      // Create the resource in the API.
-
-      val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.ArchiveFile, internalFilename = uploadedFile.internalFilename)
-        .toJsonLd()
-
-      val resIri = UnsafeZioRun.runOrThrow {
-        TestApiClient
-          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD)
-          .flatMap(response => response.body.getRequiredIdValueAsKnoraDataIri.map(_.toIri))
-      }
-      zipResourceIri.set(resIri)
-
-      val resource = UnsafeZioRun.runOrThrow(
-        TestApiClient.getJsonLdDocument(uri"/v2/resources/${zipResourceIri.get}").flatMap(_.assert200),
-      )
-
-      UnsafeZioRun.runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri).toString should equal(
-        OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation,
-      )
-
-      // Get the new file value from the resource.
-
-      val savedValues: JsonLDArray = getValuesFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri,
-      )
-
-      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
-      zipValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
-
-      val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
-      assert(savedDocument.internalFilename == uploadedFile.internalFilename)
-
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
-    }
-
-    "change a Zip file value" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTestZip, anythingShortcode))
-      uploadedFile.originalFilename should ===(testZipOriginalFilename)
-
-      // Update the value.
-
-      val jsonLdEntity = ChangeFileRequest
-        .make(
-          fileType = FileType.ArchiveFile,
-          resourceIri = zipResourceIri.get,
-          valueIri = zipValueIri.get,
-          internalFilename = uploadedFile.internalFilename,
-        )
-        .toJsonLd
-
-      val resIri = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD)
-          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri)
-          .map(_.toString),
-      )
-      zipValueIri.set(resIri)
-
-      val resource = UnsafeZioRun.runOrThrow(
-        TestApiClient.getJsonLdDocument(uri"/v2/resources/${zipResourceIri.get}").flatMap(_.assert200),
-      )
-
-      // Get the new file value from the resource.
-      val savedValue: JsonLDObject = getValueFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri,
-        expectedValueIri = zipValueIri.get,
-      )
-
-      val savedDocument: SavedDocument = savedValueToSavedDocument(savedValue)
-      assert(savedDocument.internalFilename == uploadedFile.internalFilename)
-
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
-    }
-
-    "create a resource of type ArchiveRepresentation with a 7z file" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTest7z, anythingShortcode))
-      uploadedFile.originalFilename should ===(test7zOriginalFilename)
-
-      // Create the resource in the API.
-
-      val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.ArchiveFile, internalFilename = uploadedFile.internalFilename)
-        .toJsonLd()
-
-      val resIri = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD)
-          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri)
-          .map(_.toIri),
-      )
-      zipResourceIri.set(resIri)
-
-      val resource = UnsafeZioRun.runOrThrow(
-        TestApiClient.getJsonLdDocument(uri"/v2/resources/${zipResourceIri.get}").flatMap(_.assert200),
-      )
-
-      UnsafeZioRun.runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri).toString should equal(
-        OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation,
-      )
-
-      // Get the new file value from the resource.
-
-      val savedValues: JsonLDArray = getValuesFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri,
-      )
-
-      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
-      zipValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
-
-      val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
-      assert(savedDocument.internalFilename == uploadedFile.internalFilename)
-
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
-    }
-
-    "create a resource with a WAV file" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToMinimalWav, anythingShortcode))
-      uploadedFile.originalFilename should ===(minimalWavOriginalFilename)
-
-      // Create the resource in the API.
-      val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.AudioFile, internalFilename = uploadedFile.internalFilename)
-        .toJsonLd()
-
-      val resIri = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD)
-          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri)
-          .map(_.toIri),
-      )
-      wavResourceIri.set(resIri)
-
-      val resource = UnsafeZioRun.runOrThrow(
-        TestApiClient.getJsonLdDocument(uri"/v2/resources/${wavResourceIri.get}").flatMap(_.assert200),
-      )
-      assert(
-        UnsafeZioRun
-          .runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri)
-          .toString == "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation",
-      )
-
-      // Get the new file value from the resource.
-
-      val savedValues: JsonLDArray = getValuesFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasAudioFileValue.toSmartIri,
-      )
-
-      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
-      wavValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
-
-      val savedAudioFile: SavedAudioFile = savedValueToSavedAudioFile(savedValueObj)
-      assert(savedAudioFile.internalFilename == uploadedFile.internalFilename)
-
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedAudioFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
-    }
-
-    "change a WAV file value" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTestWav, anythingShortcode))
-      uploadedFile.originalFilename should ===(testWavOriginalFilename)
-
-      // Update the value.
-
-      val jsonLdEntity = ChangeFileRequest
-        .make(
-          fileType = FileType.AudioFile,
-          resourceIri = wavResourceIri.get,
-          internalFilename = uploadedFile.internalFilename,
-          valueIri = wavValueIri.get,
-        )
-        .toJsonLd
-
-      val resIri = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD)
-          .flatMap(_.body.getRequiredIdValueAsKnoraDataIri),
-      )
-      wavValueIri.set(resIri.toIri)
-
-      val resource = UnsafeZioRun.runOrThrow(
-        TestApiClient.getJsonLdDocument(uri"/v2/resources/${wavResourceIri.get}").flatMap(_.assert200),
-      )
-
-      // Get the new file value from the resource.
-      val savedValue: JsonLDObject = getValueFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasAudioFileValue.toSmartIri,
-        expectedValueIri = wavValueIri.get,
-      )
-
-      val savedAudioFile: SavedAudioFile = savedValueToSavedAudioFile(savedValue)
-      assert(savedAudioFile.internalFilename == uploadedFile.internalFilename)
-
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedAudioFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
-    }
-
-    "create a resource with a video file" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTestVideo, anythingShortcode))
-      uploadedFile.originalFilename should ===(testVideoOriginalFilename)
-
-      // Create the resource in the API.
-      val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.MovingImageFile(), internalFilename = uploadedFile.internalFilename)
-        .toJsonLd()
-
-      val response = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .postJsonLd(uri"/v2/resources", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD),
-      )
-      videoResourceIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
-
-      val resource =
-        UnsafeZioRun.runOrThrow(
-          TestApiClient.getJsonLdDocument(uri"/v2/resources/${videoResourceIri.get}").flatMap(_.assert200),
-        )
-      assert(
-        UnsafeZioRun
-          .runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri)
-          .toString == "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation",
-      )
-
-      // Get the new file value from the resource.
-
-      val savedValues: JsonLDArray = getValuesFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasMovingImageFileValue.toSmartIri,
-      )
-
-      val savedValueObj: JsonLDObject = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
-      videoValueIri.set(UnsafeZioRun.runOrThrow(savedValueObj.getRequiredIdValueAsKnoraDataIri).toString)
-
-      val savedVideoFile: SavedVideoFile = savedValueToSavedVideoFile(savedValueObj)
-      assert(savedVideoFile.internalFilename == uploadedFile.internalFilename)
-
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedVideoFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
-    }
-
-    "change a video file value" in {
-      // Upload the file to Sipi.
-      val uploadedFile = UnsafeZioRun.runOrThrow(TestDspIngestClient.uploadFile(pathToTestVideo2, anythingShortcode))
-      uploadedFile.originalFilename should ===(testVideo2OriginalFilename)
-
-      // Update the value.
-
-      val jsonLdEntity = ChangeFileRequest
-        .make(
-          fileType = FileType.MovingImageFile(),
-          resourceIri = videoResourceIri.get,
-          internalFilename = uploadedFile.internalFilename,
-          valueIri = videoValueIri.get,
-        )
-        .toJsonLd
-
-      val response = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .putJsonLd(uri"/v2/values", jsonLdEntity, anythingAdminUser)
-          .flatMap(_.assert200)
-          .mapAttempt(JsonLDUtil.parseJsonLD),
-      )
-      videoValueIri.set(UnsafeZioRun.runOrThrow(response.body.getRequiredIdValueAsKnoraDataIri).toString)
-
-      val resource = UnsafeZioRun.runOrThrow(
-        TestApiClient.getJsonLdDocument(uri"/v2/resources/${videoResourceIri.get}").flatMap(_.assert200),
-      )
-
-      // Get the new file value from the resource.
-      val savedValue: JsonLDObject = getValueFromResource(
-        resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasMovingImageFileValue.toSmartIri,
-        expectedValueIri = videoValueIri.get,
-      )
-
-      val savedVideoFile: SavedVideoFile = savedValueToSavedVideoFile(savedValue)
-      assert(savedVideoFile.internalFilename == uploadedFile.internalFilename)
-
-      // Request the permanently stored file from Sipi.
-      val sipiGetFileRequest = Get(savedVideoFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-      checkResponseOK(sipiGetFileRequest)
-    }
-  }
+    },
+  )
 }
