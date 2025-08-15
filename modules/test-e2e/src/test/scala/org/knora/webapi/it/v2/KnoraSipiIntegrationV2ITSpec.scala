@@ -32,6 +32,7 @@ import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestResourcesApiClient
+import org.knora.webapi.testservices.TestSipiApiClient
 import org.knora.webapi.util.MutableTestIri
 
 /**
@@ -346,7 +347,7 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
         resourceType.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture",
         savedImage.internalFilename == uploadedFile.internalFilename,
         savedImage.width == marblesWidth,
-        savedImage.height == marblesHeight
+        savedImage.height == marblesHeight,
       )
     },
     test("create a resource with a still image file that has already been ingested") {
@@ -397,12 +398,15 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
                       .mapAttempt(JsonLDUtil.parseJsonLD)
         savedValue = getValueFromResource(resource, HasStillImageFileValue.toSmartIri, stillImageFileValueIri.get)
         savedImage = savedValueToSavedImage(savedValue)
+
+        // Request the permanently stored image from Sipi.
+        _ <- TestSipiApiClient.getFile(savedImage.iiifUrl).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == trp88OriginalFilename,
         savedImage.internalFilename == uploadedFile.internalFilename,
         savedImage.width == trp88Width,
         savedImage.height == trp88Height,
-        savedImage.iiifUrl.nonEmpty
+        savedImage.iiifUrl.nonEmpty,
       )
     },
     test("create a resource with a PDF file") {
@@ -435,11 +439,14 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
         _             = pdfValueIri.set(valueIri.toString)
 
         savedDocument = savedValueToSavedDocument(savedValueObj)
+
+        // Request the permanently stored file from Sipi.
+        _ <- TestSipiApiClient.getFile(savedDocument.url).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == minimalPdfOriginalFilename,
         resourceType.toString == thingDocumentIRI,
         savedDocument.internalFilename == uploadedFile.internalFilename,
-        savedDocument.url.nonEmpty
+        savedDocument.url.nonEmpty,
       )
     },
     test("change a PDF file value") {
@@ -472,10 +479,13 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
 
         savedValue    = getValueFromResource(resource, HasDocumentFileValue.toSmartIri, pdfValueIri.get)
         savedDocument = savedValueToSavedDocument(savedValue)
+
+        // Request the permanently stored file from Sipi.
+        _ <- TestSipiApiClient.getFile(savedDocument.url).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == testPdfOriginalFilename,
         savedDocument.internalFilename == uploadedFile.internalFilename,
-        savedDocument.url.nonEmpty
+        savedDocument.url.nonEmpty,
       )
     },
     test("not create a document resource if the file is actually a zip file") {
@@ -521,10 +531,13 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
         _             = csvValueIri.set(valueIri.toString)
 
         savedTextFile = savedValueToSavedTextFile(savedValueObj)
+
+        // Request the permanently stored file from Sipi.
+        _ <- TestSipiApiClient.getFile(savedTextFile.url).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == csv1OriginalFilename,
         savedTextFile.internalFilename == uploadedFile.internalFilename,
-        savedTextFile.url.nonEmpty
+        savedTextFile.url.nonEmpty,
       )
     },
     test("change a CSV file value") {
@@ -554,10 +567,13 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
         // Get the new file value from the resource.
         savedValue    = getValueFromResource(resource, HasTextFileValue.toSmartIri, csvValueIri.get)
         savedTextFile = savedValueToSavedTextFile(savedValue)
+
+        // Request the permanently stored file from Sipi.
+        _ <- TestSipiApiClient.getFile(savedTextFile.url).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == csv2OriginalFilename,
         savedTextFile.internalFilename == uploadedFile.internalFilename,
-        savedTextFile.url.nonEmpty
+        savedTextFile.url.nonEmpty,
       )
     },
     test("not create a resource with a still image file that's actually a text file") {
@@ -609,10 +625,13 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
         _             = xmlValueIri.set(valueIri.toString)
 
         savedTextFile = savedValueToSavedTextFile(savedValueObj)
+
+        // Request the permanently stored file from Sipi.
+        _ <- TestSipiApiClient.getFile(savedTextFile.url).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == xml1OriginalFilename,
         savedTextFile.internalFilename == uploadedFile.internalFilename,
-        savedTextFile.url.nonEmpty
+        savedTextFile.url.nonEmpty,
       )
     },
     test("change an XML file value") {
@@ -647,10 +666,13 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
                      )
 
         savedTextFile = savedValueToSavedTextFile(savedValue)
+
+        // Request the permanently stored file from Sipi.
+        _ <- TestSipiApiClient.getFile(savedTextFile.url).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == xml2OriginalFilename,
         savedTextFile.internalFilename == uploadedFile.internalFilename,
-        savedTextFile.url.nonEmpty
+        savedTextFile.url.nonEmpty,
       )
     },
     test("not create a resource of type TextRepresentation with a Zip file") {
@@ -701,11 +723,14 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
         _             = zipValueIri.set(valueIri.toString)
 
         savedDocument = savedValueToSavedDocument(savedValueObj)
+
+        // Request the permanently stored file from Sipi.
+        _ <- TestSipiApiClient.getFile(savedDocument.url).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == minimalZipOriginalFilename,
         resourceType.toString == OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation,
         savedDocument.internalFilename == uploadedFile.internalFilename,
-        savedDocument.url.nonEmpty
+        savedDocument.url.nonEmpty,
       )
     },
     test("change a Zip file value") {
@@ -740,10 +765,13 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
                      )
 
         savedDocument = savedValueToSavedDocument(savedValue)
+
+        // Request the permanently stored file from Sipi.
+        _ <- TestSipiApiClient.getFile(savedDocument.url).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == testZipOriginalFilename,
         savedDocument.internalFilename == uploadedFile.internalFilename,
-        savedDocument.url.nonEmpty
+        savedDocument.url.nonEmpty,
       )
     },
     test("create a resource of type ArchiveRepresentation with a 7z file") {
@@ -778,11 +806,14 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
         _             = zipValueIri.set(valueIri.toString)
 
         savedDocument = savedValueToSavedDocument(savedValueObj)
+
+        // Request the permanently stored file from Sipi.
+        _ <- TestSipiApiClient.getFile(savedDocument.url).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == test7zOriginalFilename,
         resourceType.toString == OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation,
         savedDocument.internalFilename == uploadedFile.internalFilename,
-        savedDocument.url.nonEmpty
+        savedDocument.url.nonEmpty,
       )
     },
     test("create a resource with a WAV file") {
@@ -817,11 +848,14 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
         _             = wavValueIri.set(valueIri.toString)
 
         savedAudioFile = savedValueToSavedAudioFile(savedValueObj)
+
+        // Request the permanently stored file from Sipi.
+        _ <- TestSipiApiClient.getFile(savedAudioFile.url).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == minimalWavOriginalFilename,
         resourceType.toString == "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation",
         savedAudioFile.internalFilename == uploadedFile.internalFilename,
-        savedAudioFile.url.nonEmpty
+        savedAudioFile.url.nonEmpty,
       )
     },
     test("change a WAV file value") {
@@ -856,10 +890,13 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
                      )
 
         savedAudioFile = savedValueToSavedAudioFile(savedValue)
+
+        // Request the permanently stored file from Sipi.
+        _ <- TestSipiApiClient.getFile(savedAudioFile.url).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == testWavOriginalFilename,
         savedAudioFile.internalFilename == uploadedFile.internalFilename,
-        savedAudioFile.url.nonEmpty
+        savedAudioFile.url.nonEmpty,
       )
     },
     test("create a resource with a video file") {
@@ -894,11 +931,14 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
         _             = videoValueIri.set(valueIri.toString)
 
         savedVideoFile = savedValueToSavedVideoFile(savedValueObj)
+
+        // Request the permanently stored file from Sipi.
+        _ <- TestSipiApiClient.getFile(savedVideoFile.url).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == testVideoOriginalFilename,
         resourceType.toString == "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation",
         savedVideoFile.internalFilename == uploadedFile.internalFilename,
-        savedVideoFile.url.nonEmpty
+        savedVideoFile.url.nonEmpty,
       )
     },
     test("change a video file value") {
@@ -933,10 +973,13 @@ object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
                      )
 
         savedVideoFile = savedValueToSavedVideoFile(savedValue)
+
+        // Request the permanently stored file from Sipi.
+        _ <- TestSipiApiClient.getFile(savedVideoFile.url).flatMap(_.assert200)
       } yield assertTrue(
         uploadedFile.originalFilename == testVideo2OriginalFilename,
         savedVideoFile.internalFilename == uploadedFile.internalFilename,
-        savedVideoFile.url.nonEmpty
+        savedVideoFile.url.nonEmpty,
       )
     },
   )
