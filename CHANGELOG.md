@@ -1,5 +1,24 @@
 # Changelog
 
+## [31.21.1](https://github.com/dasch-swiss/dsp-api/compare/v31.21.0...v31.21.1) (2025-08-15)
+
+
+### Maintenances
+
+* Migrate CardinalitiesV2E2ESpec to zio-test ([#3722](https://github.com/dasch-swiss/dsp-api/issues/3722)) ([4c7f685](https://github.com/dasch-swiss/dsp-api/commit/4c7f685d2d02af6f762588363d6164febce1b4b5))
+* Migrate instance checker spec to zio ([#3724](https://github.com/dasch-swiss/dsp-api/issues/3724)) ([82b3eff](https://github.com/dasch-swiss/dsp-api/commit/82b3eff940498dc00bdeb09f4d498c74310a4e91))
+* Migrate KnoraSipiIntegrationV2ITSpec to zio test ([#3729](https://github.com/dasch-swiss/dsp-api/issues/3729)) ([c1309a2](https://github.com/dasch-swiss/dsp-api/commit/c1309a26aa3febe3efde91043215112c2674c3ef))
+* Migrate OntologyFormatsE2ESpec to zio-test ([#3723](https://github.com/dasch-swiss/dsp-api/issues/3723)) ([d609f67](https://github.com/dasch-swiss/dsp-api/commit/d609f67cfe0d223ed52cb3c88cdcca293d43ae51))
+* Migrate StandoffEndpointsE2ESpec to zio-test ([#3719](https://github.com/dasch-swiss/dsp-api/issues/3719)) ([ebce5ea](https://github.com/dasch-swiss/dsp-api/commit/ebce5ea8f7597159bca47ccb64c19601be28e0d2))
+* Migrate StandoffResponderV2Spec to zio-test ([#3730](https://github.com/dasch-swiss/dsp-api/issues/3730)) ([a4e7cae](https://github.com/dasch-swiss/dsp-api/commit/a4e7cae5c105459a04223766c7fcd6019b5cfa53))
+* Minor dependency updates ([#3728](https://github.com/dasch-swiss/dsp-api/issues/3728)) ([e1a7a55](https://github.com/dasch-swiss/dsp-api/commit/e1a7a5587a8042889e26959981f9dc57f5c6861a))
+* Patch dependency updates ([#3727](https://github.com/dasch-swiss/dsp-api/issues/3727)) ([a066724](https://github.com/dasch-swiss/dsp-api/commit/a066724f8a334c430314b2a73fe2c1cc12da6274))
+
+
+### Tests
+
+* Remove spray json serialization test TriplestoreMessagesSpec ([#3725](https://github.com/dasch-swiss/dsp-api/issues/3725)) ([b5aae91](https://github.com/dasch-swiss/dsp-api/commit/b5aae912ede6ce1683c8146589dce983357d5155))
+
 ## [31.21.0](https://github.com/dasch-swiss/dsp-api/compare/v31.20.0...v31.21.0) (2025-08-11)
 
 
