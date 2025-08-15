@@ -50,6 +50,7 @@ import org.knora.webapi.slice.security.AuthenticatorError
 import org.knora.webapi.slice.security.AuthenticatorError.*
 import org.knora.webapi.slice.security.api.AuthenticationEndpointsV2
 import org.knora.webapi.slice.shacl.api.ShaclEndpoints
+import org.knora.webapi.slice.v3.projects.api.ProjectsEndpoints as V3ProjectsEndpoints
 
 final case class DocsNoopAuthenticator() extends Authenticator {
   override def calculateCookieName(): String = "KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9"
@@ -74,11 +75,13 @@ object DocsGenerator extends ZIOAppDefault {
       adminEndpoints      <- ZIO.serviceWith[AdminApiEndpoints](_.endpoints)
       managementEndpoints <- ZIO.serviceWith[ManagementEndpoints](_.endpoints)
       v2Endpoints         <- ZIO.serviceWith[ApiV2Endpoints](_.endpoints)
+      v3ProjectsEndpoints <- ZIO.serviceWith[V3ProjectsEndpoints](_.endpoints)
       shaclEndpoints      <- ZIO.serviceWith[ShaclEndpoints](_.endpoints)
       path                 = Path(args.headOption.getOrElse("/tmp"))
       filesWritten <-
         writeToFile(adminEndpoints, path, "admin-api") <*>
           writeToFile(v2Endpoints, path, "v2") <*>
+          writeToFile(v3ProjectsEndpoints, path, "v3-projects") <*>
           writeToFile(managementEndpoints, path, "management") <*>
           writeToFile(shaclEndpoints, path, "shacl")
       _ <- ZIO.logInfo(s"Wrote $filesWritten")
@@ -101,6 +104,7 @@ object DocsGenerator extends ZIOAppDefault {
     PermissionsEndpoints.layer,
     ProjectsLegalInfoEndpoints.layer,
     ProjectsEndpoints.layer,
+    V3ProjectsEndpoints.layer,
     ResourceInfoEndpoints.layer,
     ResourcesEndpoints.layer,
     SearchEndpoints.layer,
