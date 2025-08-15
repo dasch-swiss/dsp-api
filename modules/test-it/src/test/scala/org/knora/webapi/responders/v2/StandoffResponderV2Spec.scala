@@ -6,27 +6,22 @@
 package org.knora.webapi.responders.v2
 
 import zio.ZIO
+import zio.test.assertTrue
 
 import java.util.UUID
 
 import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.CreateMappingRequestV2
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
-class StandoffResponderV2Spec extends E2ESpec {
+object StandoffResponderV2Spec extends E2EZSpec {
 
-  private def getMapping(iri: String): SparqlConstructResponse =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Construct(sparql.v2.txt.getMapping(iri)))))
-
-  "The standoff responder" should {
-    "create a standoff mapping" in {
+  override val e2eSpec = suite("The standoff responder")(
+    test("create a standoff mapping") {
       val mappingName = "customMapping"
       val xmlContent =
         s"""<?xml version="1.0" encoding="UTF-8"?>
@@ -78,28 +73,21 @@ class StandoffResponderV2Spec extends E2ESpec {
            |
            |</mapping>
            |""".stripMargin
+      val createRequest = CreateMappingRequestV2("custom mapping", anythingProjectIri, mappingName, xmlContent)
 
-      val projectIri = ProjectIri.unsafeFrom(anythingProjectIri)
-      val response = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[StandoffResponderV2](
-          _.createMappingV2(
-            CreateMappingRequestV2(
-              "custom mapping",
-              projectIri,
-              mappingName,
-              xmlContent,
-            ),
-            SharedTestDataADM.rootUser,
-            UUID.randomUUID(),
-          ),
-        ),
+      for {
+        response <- ZIO.serviceWithZIO[StandoffResponderV2](
+                      _.createMappingV2(createRequest, rootUser, UUID.randomUUID()),
+                    )
+        expectedMappingIRI = f"${anythingProjectIri.value}/mappings/$mappingName"
+        mappingFromDB <- ZIO.serviceWithZIO[TriplestoreService](
+                           _.query(Construct(sparql.v2.txt.getMapping(response.mappingIri))),
+                         )
+      } yield assertTrue(
+        mappingFromDB.statements.nonEmpty,
+        mappingFromDB.statements.get(expectedMappingIRI).nonEmpty,
+        response.mappingIri == expectedMappingIRI,
       )
-
-      val expectedMappingIRI = f"${projectIri.value}/mappings/$mappingName"
-      response.mappingIri should equal(expectedMappingIRI)
-      val mappingFromDB: SparqlConstructResponse = getMapping(response.mappingIri)
-      mappingFromDB.statements should not be Map.empty
-      mappingFromDB.statements.get(expectedMappingIRI) should not be Map.empty
-    }
-  }
+    },
+  )
 }
