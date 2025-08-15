@@ -19,6 +19,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.DeleteOrEraseResourceRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -184,6 +185,16 @@ object ValuesEraseSpec extends E2EZSpec {
         val0 <- TestHelper.createIntegerValue(res1)
         val1 <- TestHelper.deleteIntegerValue(val0, res1)
         _    <- TestHelper.eraseIntegerValue(val1, res1)
+      } yield assertCompletes
+    },
+    test("erase a value from a deleted resource") {
+      for {
+        res1 <- TestHelper.createResource
+        val0 <- TestHelper.createIntegerValue(res1)
+        // Get fresh resource data after the value was created to have the current lastModificationDate
+        updatedResource <- TestHelper.findActiveResource(res1.iri)
+        _               <- TestHelper.deleteResource(updatedResource)
+        _               <- TestHelper.eraseIntegerValue(val0, updatedResource)
       } yield assertCompletes
     },
   ).provideSomeAuto(TestHelper.layer, ValueRepo.layer)
@@ -572,6 +583,25 @@ final case class TestHelper(
                 .map(_.toMap)
   } yield ResourceWithValues(created, values)
 
+  def findActiveResource(resourceIri: ResourceIri): Task[ActiveResource] = for {
+    resource <- resourceRepo
+                  .findActiveById(resourceIri)
+                  .someOrFail(IllegalStateException("Resource not found"))
+  } yield resource
+
+  def deleteResource(resource: ActiveResource): Task[Unit] = for {
+    uuid <- Random.nextUUID
+    deleteReq = DeleteOrEraseResourceRequestV2(
+                  resourceIri = resource.iri.toString,
+                  resourceClassIri = resource.resourceClassIri.toComplexSchema,
+                  maybeDeleteComment = Some("Test deletion for value erase test"),
+                  maybeLastModificationDate = resource.lastModificationDate,
+                  requestingUser = rootUser,
+                  apiRequestID = uuid,
+                )
+    _ <- resourcesResponderV2.markResourceAsDeletedV2(deleteReq)
+  } yield ()
+
   def findValues(iri: ResourceIri): Task[Map[PropertyIri, Seq[ValueIri]]] = resourceRepo.findValues(iri)
 
   def findLinks(iri: ResourceIri): Task[Map[PropertyIri, Seq[ResourceIri]]] = resourceRepo.findLinks(iri)
@@ -641,6 +671,12 @@ object TestHelper {
   ): ZIO[TestHelper, Throwable, Unit] =
     ZIO.serviceWithZIO[TestHelper](_.eraseIntegerValueHistory(value, resource, propName))
 
+  def createResourceWithClass(
+    className: String,
+    values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map.empty,
+  ): ZIO[TestHelper, Throwable, ResourceWithValues] =
+    ZIO.serviceWithZIO[TestHelper](_.createResourceWithClass(className, values))
+
   def findValue(valueIri: ValueIri): ZIO[TestHelper, Throwable, Option[ValueModel]] =
     ZIO.serviceWithZIO[TestHelper](_.findValue(valueIri))
 
@@ -652,12 +688,6 @@ object TestHelper {
 
   def createResource: ZIO[TestHelper, Throwable, ActiveResource] =
     ZIO.serviceWithZIO[TestHelper](_.createResource)
-
-  def createResourceWithClass(
-    className: String,
-    values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map.empty,
-  ): ZIO[TestHelper, Throwable, ResourceWithValues] =
-    ZIO.serviceWithZIO[TestHelper](_.createResourceWithClass(className, values))
 
   def createTextValueWithStandoff(
     resource: ActiveResource,
@@ -677,6 +707,12 @@ object TestHelper {
 
   def findAllPrevious(valueIri: ValueIri): ZIO[TestHelper, Throwable, Seq[ValueIri]] =
     ZIO.serviceWithZIO[TestHelper](_.findAllPrevious(valueIri))
+
+  def findActiveResource(resourceIri: ResourceIri): ZIO[TestHelper, Throwable, ActiveResource] =
+    ZIO.serviceWithZIO[TestHelper](_.findActiveResource(resourceIri))
+
+  def deleteResource(resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestHelper](_.deleteResource(resource))
 
   final case class ResourceWithValues(resource: ActiveResource, values: Map[SmartIri, Seq[ActiveValue]])
 

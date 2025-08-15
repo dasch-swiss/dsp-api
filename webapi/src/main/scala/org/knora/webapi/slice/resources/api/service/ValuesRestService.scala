@@ -40,7 +40,7 @@ final class ValuesRestService(
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] =
     render(
-      resourcesService.getResourcesV2(
+      resourcesService.getResourcesWithDeletedResource(
         Seq(resourceIri),
         None,
         Some(valueUuid.value),
