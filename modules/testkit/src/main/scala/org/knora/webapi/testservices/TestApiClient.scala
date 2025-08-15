@@ -80,6 +80,19 @@ final case class TestApiClient(
 
   def getJsonLd(
     relativeUri: Uri,
+    f: Request[Either[String, String]] => Request[Either[String, String]],
+  ): Task[Response[Either[String, String]]] = {
+    val request: Request[Either[String, String]] = f(
+      basicRequest
+        .get(relativeUri)
+        .contentType(MediaType.unsafeApply("application", "ld+json"))
+        .response(asString),
+    )
+    request.send(backend)
+  }
+
+  def getJsonLd(
+    relativeUri: Uri,
     user: User,
   ): Task[Response[Either[String, String]]] =
     jwtFor(user).flatMap(jwt =>
@@ -91,6 +104,23 @@ final case class TestApiClient(
         .response(asString)
         .send(backend),
     )
+
+  def getJsonLd(
+    relativeUri: Uri,
+    user: User,
+    f: Request[Either[String, String]] => Request[Either[String, String]],
+  ): Task[Response[Either[String, String]]] =
+    jwtFor(user).flatMap { jwt =>
+      val request: Request[Either[String, String]] = f(
+        basicRequest
+          .get(relativeUri)
+          .contentType(MediaType.unsafeApply("application", "ld+json"))
+          .auth
+          .bearer(jwt)
+          .response(asString),
+      )
+      request.send(backend)
+    }
   def getJsonLdDocument(relativeUri: Uri): Task[Response[Either[String, JsonLDDocument]]] =
     basicRequest
       .get(relativeUri)
@@ -243,6 +273,12 @@ object TestApiClient {
   def getJsonLd(relativeUri: Uri): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri))
 
+  def getJsonLd(
+    relativeUri: Uri,
+    f: Request[Either[String, String]] => Request[Either[String, String]],
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri, f))
+
   def getJsonLdDocument(relativeUri: Uri): ZIO[TestApiClient, Throwable, Response[Either[String, JsonLDDocument]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getJsonLdDocument(relativeUri))
 
@@ -254,6 +290,13 @@ object TestApiClient {
 
   def getJsonLd(relativeUri: Uri, user: User): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri, user))
+
+  def getJsonLd(
+    relativeUri: Uri,
+    user: User,
+    f: Request[Either[String, String]] => Request[Either[String, String]],
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.getJsonLd(relativeUri, user, f))
 
   def postJson[A: JsonDecoder, B: JsonEncoder](
     relativeUri: Uri,

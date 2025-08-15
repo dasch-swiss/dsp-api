@@ -7,9 +7,7 @@ package org.knora.webapi.e2e.v2
 
 import org.apache.pekko.http.scaladsl.model.HttpEntity
 import org.apache.pekko.http.scaladsl.model.HttpResponse
-import org.apache.pekko.http.scaladsl.model.MediaRange
 import org.apache.pekko.http.scaladsl.model.StatusCodes
-import org.apache.pekko.http.scaladsl.model.headers.Accept
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.xmlunit.builder.DiffBuilder
@@ -18,9 +16,9 @@ import org.xmlunit.diff.Diff
 import spray.json.JsString
 import spray.json.JsValue
 import spray.json.JsonParser
-import zio.durationInt
+import sttp.model.Uri
+import sttp.model.Uri.*
 
-import java.net.URLEncoder
 import java.nio.file.Paths
 import java.time.Instant
 import scala.collection.mutable.ArrayBuffer
@@ -46,6 +44,11 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.testservices.ResponseOps.assert200
+import org.knora.webapi.testservices.ResponseOps.assert400
+import org.knora.webapi.testservices.ResponseOps.assert404
+import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.*
 
 /**
@@ -54,15 +57,13 @@ import org.knora.webapi.util.*
 class ResourcesRouteV2E2ESpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val anythingUserEmail             = SharedTestDataADM.anythingUser1.email
-  private val password                      = SharedTestDataADM.testPass
-  private var aThingLastModificationDate    = Instant.now
-  private val hamletResourceIri             = new MutableTestIri
-  private val aThingIri                     = "http://rdfh.ch/0001/a-thing"
-  private val aThingIriEncoded              = URLEncoder.encode(aThingIri, "UTF-8")
-  private val aThingWithHistoryIri          = "http://rdfh.ch/0001/thing-with-history"
-  private val aThingWithHistoryIriEncoded   = URLEncoder.encode(aThingWithHistoryIri, "UTF-8")
-  private val reiseInsHeiligeLandIriEncoded = URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")
+  private val anythingUserEmail          = SharedTestDataADM.anythingUser1.email
+  private val password                   = SharedTestDataADM.testPass
+  private var aThingLastModificationDate = Instant.now
+  private val hamletResourceIri          = new MutableTestIri
+  private val aThingIri                  = "http://rdfh.ch/0001/a-thing"
+  private val aThingWithHistoryIri       = "http://rdfh.ch/0001/thing-with-history"
+  private val reiseInsHeiligeLandIri     = "http://rdfh.ch/0803/2a6221216701"
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
@@ -117,10 +118,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
   "The resources v2 endpoint" should {
     "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
-      val request                = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$reiseInsHeiligeLandIri")
+          .flatMap(_.assert200),
+      )
 
       val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLand.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -132,56 +134,52 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in Turtle" in {
-      // Test correct handling of q values in the Accept header.
-      val acceptHeader: Accept = Accept(
-        MediaRange.One(RdfMediaTypes.`application/ld+json`, 0.5f),
-        MediaRange.One(RdfMediaTypes.`text/turtle`, 0.8f),
-        MediaRange.One(RdfMediaTypes.`application/rdf+xml`, 0.2f),
+      // Test correct handling of q values in the Accept header by requesting as string with turtle content type.
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getAsString(uri"/v2/resources/$reiseInsHeiligeLandIri", _.header("Accept", "text/turtle"))
+          .flatMap(_.assert200),
       )
-
-      val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(acceptHeader)
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerTurtle = testData("BookReiseInsHeiligeLand.ttl")
       assert(RdfModel.fromTurtle(responseAsString) == RdfModel.fromTurtle(expectedAnswerTurtle))
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in RDF/XML" in {
-      val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(Accept(RdfMediaTypes.`application/rdf+xml`))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getAsString(uri"/v2/resources/$reiseInsHeiligeLandIri", _.header("Accept", "application/rdf+xml"))
+          .flatMap(_.assert200),
+      )
       val expectedAnswerRdfXml = testData("BookReiseInsHeiligeLand.rdf")
       assert(RdfModel.fromRdfXml(responseAsString) == RdfModel.fromRdfXml(expectedAnswerRdfXml))
     }
 
     "perform a resource preview request for the book 'Reise ins Heilige Land' using the complex schema" in {
-      val request                = Get(s"$baseApiUrl/v2/resourcespreview/$reiseInsHeiligeLandIriEncoded")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resourcespreview/$reiseInsHeiligeLandIri")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLandPreview.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
     "perform a resource preview request for a Thing resource using the complex schema" in {
-      val request                = Get(s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resourcespreview/$aThingIri")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("AThing.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header) in JSON-LD" in {
-      val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(SchemaHeader.simple)
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$reiseInsHeiligeLandIri?schema=simple")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLandSimple.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
@@ -195,64 +193,69 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in Turtle" in {
-      val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(SchemaHeader.simple)
-        .addHeader(Accept(RdfMediaTypes.`text/turtle`))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getAsString(
+            uri"/v2/resources/$reiseInsHeiligeLandIri",
+            _.header("X-Knora-Accept-Schema", "simple").header("Accept", "text/turtle"),
+          )
+          .flatMap(_.assert200),
+      )
       val expectedAnswerTurtle = testData("BookReiseInsHeiligeLandSimple.ttl")
       assert(RdfModel.fromTurtle(responseAsString) == RdfModel.fromTurtle(expectedAnswerTurtle))
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in RDF/XML" in {
-      val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(SchemaHeader.simple)
-        .addHeader(Accept(RdfMediaTypes.`application/rdf+xml`))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getAsString(
+            uri"/v2/resources/$reiseInsHeiligeLandIri",
+            _.header("X-Knora-Accept-Schema", "simple").header("Accept", "application/rdf+xml"),
+          )
+          .flatMap(_.assert200),
+      )
       val expectedAnswerRdfXml = testData("BookReiseInsHeiligeLandSimple.rdf")
       assert(RdfModel.fromRdfXml(responseAsString) == RdfModel.fromRdfXml(expectedAnswerRdfXml))
     }
 
     "perform a resource preview request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header)" in {
-      val request = Get(s"$baseApiUrl/v2/resourcespreview/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(SchemaHeader.simple)
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resourcespreview/$reiseInsHeiligeLandIri?schema=simple")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLandSimplePreview.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by a URL parameter)" in {
-      val request = Get(
-        s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded?schema=simple",
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$reiseInsHeiligeLandIri?schema=simple")
+          .flatMap(_.assert200),
       )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLandSimple.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
     "perform a resource request for the first page of the book '[Das] Narrenschiff (lat.)' using the complex schema" in {
-      val iri                    = URLEncoder.encode("http://rdfh.ch/0803/7bbb8e59b703", "UTF-8")
-      val request                = Get(s"$baseApiUrl/v2/resources/$iri")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val iri = "http://rdfh.ch/0803/7bbb8e59b703"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$iri")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("NarrenschiffFirstPage.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
     "perform a full resource request for a resource with a BCE date property" in {
-      val iri                    = URLEncoder.encode("http://rdfh.ch/0001/thing_with_BCE_date", "UTF-8")
-      val request                = Get(s"$baseApiUrl/v2/resources/$iri")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val iri = "http://rdfh.ch/0001/thing_with_BCE_date"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$iri")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("ThingWithBCEDate.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
@@ -263,11 +266,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a full resource request for a resource with a date property that represents a period going from BCE to CE" in {
-      val iri                    = URLEncoder.encode("http://rdfh.ch/0001/thing_with_BCE_date2", "UTF-8")
-      val request                = Get(s"$baseApiUrl/v2/resources/$iri")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val iri = "http://rdfh.ch/0001/thing_with_BCE_date2"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$iri")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("ThingWithBCEDate2.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
@@ -278,11 +282,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a full resource request for a resource with a list value" in {
-      val iri                    = URLEncoder.encode("http://rdfh.ch/0001/thing_with_list_value", "UTF-8")
-      val request                = Get(s"$baseApiUrl/v2/resources/$iri")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val iri = "http://rdfh.ch/0001/thing_with_list_value"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$iri")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("ThingWithListValue.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
@@ -293,12 +298,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a full resource request for a resource with a list value (in the simple schema)" in {
-      val iri = URLEncoder.encode("http://rdfh.ch/0001/thing_with_list_value", "UTF-8")
-      val request = Get(s"$baseApiUrl/v2/resources/$iri")
-        .addHeader(SchemaHeader.simple)
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val iri = "http://rdfh.ch/0001/thing_with_list_value"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$iri?schema=simple")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("ThingWithListValueSimple.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
@@ -309,11 +314,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a full resource request for a resource with a link (in the complex schema)" in {
-      val iri                    = URLEncoder.encode("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ", "UTF-8")
-      val request                = Get(s"$baseApiUrl/v2/resources/$iri")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val iri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$iri")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("ThingWithLinkComplex.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
@@ -324,12 +330,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a full resource request for a resource with a link (in the simple schema)" in {
-      val iri = URLEncoder.encode("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ", "UTF-8")
-      val request = Get(s"$baseApiUrl/v2/resources/$iri")
-        .addHeader(SchemaHeader.simple)
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val iri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$iri?schema=simple")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("ThingWithLinkSimple.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
@@ -340,11 +346,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a full resource request for a resource with a Text language (in the complex schema)" in {
-      val iri                    = URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage", "UTF-8")
-      val request                = Get(s"$baseApiUrl/v2/resources/$iri")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val iri = "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$iri")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("ThingWithTextLangComplex.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
@@ -355,12 +362,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a full resource request for a resource with a Text language (in the simple schema)" in {
-      val iri = URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage", "UTF-8")
-      val request = Get(s"$baseApiUrl/v2/resources/$iri")
-        .addHeader(SchemaHeader.simple)
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val iri = "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$iri?schema=simple")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("ThingWithTextLangSimple.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
@@ -371,11 +378,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a full resource request for a resource with values of different types" in {
-      val iri                    = URLEncoder.encode("http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw", "UTF-8")
-      val request                = Get(s"$baseApiUrl/v2/resources/$iri")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val iri = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$iri")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("Testding.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
@@ -386,11 +394,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a full resource request for a Thing resource with a link to a ThingPicture resource" in {
-      val iri                    = URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-picture", "UTF-8")
-      val request                = Get(s"$baseApiUrl/v2/resources/$iri")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val iri = "http://rdfh.ch/0001/a-thing-with-picture"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$iri")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("ThingWithPicture.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
@@ -401,11 +410,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a full resource request with a link to a resource that the user doesn't have permission to see" in {
-      val iri                    = URLEncoder.encode("http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw", "UTF-8")
-      val request                = Get(s"$baseApiUrl/v2/resources/$iri")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val iri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$iri")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("ThingWithOneHiddenResource.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
@@ -416,11 +426,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a full resource request with a link to a resource that is marked as deleted" in {
-      val iri                    = URLEncoder.encode("http://rdfh.ch/0001/l8f8FVEiSCeq9A1p8gBR-A", "UTF-8")
-      val request                = Get(s"$baseApiUrl/v2/resources/$iri")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val iri = "http://rdfh.ch/0001/l8f8FVEiSCeq9A1p8gBR-A"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$iri")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("ThingWithOneDeletedResource.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
@@ -431,51 +442,55 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a full resource request for a past version of a resource, using a URL-encoded xsd:dateTimeStamp" in {
-      val timestamp              = URLEncoder.encode("2019-02-12T08:05:10.351Z", "UTF-8")
-      val request                = Get(s"$baseApiUrl/v2/resources/$aThingWithHistoryIriEncoded?version=$timestamp")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val timestamp = "2019-02-12T08:05:10.351Z"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$aThingWithHistoryIri?version=$timestamp")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("ThingWithVersionHistory.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
     "perform a full resource request for a past version of a resource, using a Knora ARK timestamp" in {
-      val timestamp              = URLEncoder.encode("20190212T080510351Z", "UTF-8")
-      val request                = Get(s"$baseApiUrl/v2/resources/$aThingWithHistoryIriEncoded?version=$timestamp")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val timestamp = "20190212T080510351Z"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$aThingWithHistoryIri?version=$timestamp")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("ThingWithVersionHistory.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
     "return the complete version history of a resource" in {
-      val request                = Get(s"$baseApiUrl/v2/resources/history/$aThingWithHistoryIriEncoded")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/history/$aThingWithHistoryIri")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("CompleteVersionHistory.jsonld")
       compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
     "return the version history of a resource within a date range" in {
-      val startDate = URLEncoder.encode(Instant.parse("2019-02-08T15:05:11Z").toString, "UTF-8")
-      val endDate   = URLEncoder.encode(Instant.parse("2019-02-13T09:05:10Z").toString, "UTF-8")
-      val request =
-        Get(s"$baseApiUrl/v2/resources/history/$aThingWithHistoryIriEncoded?startDate=$startDate&endDate=$endDate")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val startDate = Instant.parse("2019-02-08T15:05:11Z").toString
+      val endDate   = Instant.parse("2019-02-13T09:05:10Z").toString
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/history/$aThingWithHistoryIri?startDate=$startDate&endDate=$endDate")
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("PartialVersionHistory.jsonld")
       compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
 
     "return each of the versions of a resource listed in its version history" in {
-      val historyRequest                = Get(s"$baseApiUrl/v2/resources/history/$aThingWithHistoryIriEncoded")
-      val historyResponse: HttpResponse = singleAwaitingRequest(historyRequest)
-      val historyResponseAsString       = responseToString(historyResponse)
-      assert(historyResponse.status == StatusCodes.OK, historyResponseAsString)
+      val historyResponseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/history/$aThingWithHistoryIri")
+          .flatMap(_.assert200),
+      )
       val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(historyResponseAsString)
       val entries: JsonLDArray = jsonLDDocument.body
         .getRequiredArray("@graph")
@@ -490,11 +505,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
               validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
             )
 
-            val arkTimestamp                  = stringFormatter.formatArkTimestamp(versionDate)
-            val versionRequest                = Get(s"$baseApiUrl/v2/resources/$aThingWithHistoryIriEncoded?version=$arkTimestamp")
-            val versionResponse: HttpResponse = singleAwaitingRequest(versionRequest)
-            val versionResponseAsString       = responseToString(versionResponse)
-            assert(versionResponse.status == StatusCodes.OK, versionResponseAsString)
+            val arkTimestamp = stringFormatter.formatArkTimestamp(versionDate)
+            val versionResponseAsString = UnsafeZioRun.runOrThrow(
+              TestApiClient
+                .getJsonLd(uri"/v2/resources/$aThingWithHistoryIri?version=$arkTimestamp")
+                .flatMap(_.assert200),
+            )
             val expectedAnswerJSONLD = testData(s"ThingWithVersionHistory$arkTimestamp.jsonld")
             compareJSONLDForResourcesResponse(expectedAnswerJSONLD, versionResponseAsString)
 
@@ -504,29 +520,30 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "return all history events for a given resource" in {
-      val resourceIri = URLEncoder.encode("http://rdfh.ch/0001/a-thing-picture", "UTF-8")
-      val resourceHistoryRequest = Get(s"$baseApiUrl/v2/resources/resourceHistoryEvents/$resourceIri")
-        .addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
-      val resourceHistoryResponse: HttpResponse = singleAwaitingRequest(resourceHistoryRequest)
-      val historyResponseAsString               = responseToString(resourceHistoryResponse)
-      assert(resourceHistoryResponse.status == StatusCodes.OK, historyResponseAsString)
+      val resourceIri = "http://rdfh.ch/0001/a-thing-picture"
+      UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/resourceHistoryEvents/$resourceIri", SharedTestDataADM.anythingAdminUser)
+          .flatMap(_.assert200),
+      )
     }
 
     "return entire resource and value history events for a given project" in {
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
-      val projectHistoryRequest = Get(s"$baseApiUrl/v2/resources/projectHistoryEvents/$projectIri")
-        .addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
-      val projectHistoryResponse: HttpResponse = singleAwaitingRequest(projectHistoryRequest, 30.seconds)
-      val historyResponseAsString              = responseToString(projectHistoryResponse)
-      assert(projectHistoryResponse.status == StatusCodes.OK, historyResponseAsString)
+      val projectIri = "http://rdfh.ch/projects/0001"
+      UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/projectHistoryEvents/$projectIri", SharedTestDataADM.anythingAdminUser)
+          .flatMap(_.assert200),
+      )
     }
 
     "return a graph of resources reachable via links from/to a given resource" in {
-      val request =
-        Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=both")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val resourceIri = "http://rdfh.ch/0001/start"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/graph/$resourceIri?direction=both")
+          .flatMap(_.assert200),
+      )
       val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
       val expectedAnswerJSONLD = testData("ThingGraphBoth.jsonld")
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
@@ -534,11 +551,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "return a graph of resources reachable via links from a given resource" in {
-      val request =
-        Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=outbound")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val resourceIri = "http://rdfh.ch/0001/start"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/graph/$resourceIri?direction=outbound")
+          .flatMap(_.assert200),
+      )
       val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
       val expectedAnswerJSONLD = testData("ThingGraphOutbound.jsonld")
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
@@ -546,11 +564,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "return a graph of resources reachable via links to a given resource" in {
-      val request =
-        Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=inbound")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val resourceIri = "http://rdfh.ch/0001/start"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/graph/$resourceIri?direction=inbound")
+          .flatMap(_.assert200),
+      )
       val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
       val expectedAnswerJSONLD = testData("ThingGraphInbound.jsonld")
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
@@ -558,13 +577,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "return a graph of resources reachable via links to/from a given resource, excluding a specified property" in {
-      val request = Get(
-        s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=both&excludeProperty=${URLEncoder
-            .encode("http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing", "UTF-8")}",
+      val resourceIri     = "http://rdfh.ch/0001/start"
+      val excludeProperty = "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/graph/$resourceIri?direction=both&excludeProperty=$excludeProperty")
+          .flatMap(_.assert200),
       )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
       val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
       val expectedAnswerJSONLD = testData("ThingGraphBothWithExcludedProp.jsonld")
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
@@ -572,11 +591,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "return a graph of resources reachable via links from a given resource, specifying search depth" in {
-      val request =
-        Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=both&depth=2")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val resourceIri = "http://rdfh.ch/0001/start"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/graph/$resourceIri?direction=both&depth=2")
+          .flatMap(_.assert200),
+      )
       val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
       val expectedAnswerJSONLD = testData("ThingGraphBothWithDepth.jsonld")
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
@@ -584,49 +604,54 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "not accept a graph request with an invalid direction" in {
-      val request =
-        Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=foo")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.BadRequest, responseAsString)
+      val resourceIri = "http://rdfh.ch/0001/start"
+      UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/graph/$resourceIri?direction=foo")
+          .flatMap(_.assert400),
+      )
     }
 
     "not accept a graph request with an invalid depth (< 1)" in {
-      val request                = Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?depth=0")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.BadRequest, responseAsString)
+      val resourceIri = "http://rdfh.ch/0001/start"
+      UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/graph/$resourceIri?depth=0")
+          .flatMap(_.assert400),
+      )
     }
 
     "not accept a graph request with an invalid depth (> max)" in {
-      val request = Get(
-        s"$baseApiUrl/v2/graph/${URLEncoder
-            .encode("http://rdfh.ch/0001/start", "UTF-8")}?depth=${appConfig.v2.graphRoute.maxGraphBreadth + 1}",
+      val resourceIri = "http://rdfh.ch/0001/start"
+      val maxDepth    = appConfig.v2.graphRoute.maxGraphBreadth + 1
+      UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/graph/$resourceIri?depth=$maxDepth")
+          .flatMap(_.assert400),
       )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.BadRequest, responseAsString)
     }
 
     "not accept a graph request with an invalid property to exclude" in {
-      val request =
-        Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?excludeProperty=foo")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.BadRequest, responseAsString)
+      val resourceIri = "http://rdfh.ch/0001/start"
+      UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/graph/$resourceIri?excludeProperty=foo")
+          .flatMap(_.assert400),
+      )
     }
 
     "return resources from a project" in {
-      val resourceClass   = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book", "UTF-8")
-      val orderByProperty = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title", "UTF-8")
-      val request =
-        Get(s"$baseApiUrl/v2/resources?resourceClass=$resourceClass&orderByProperty=$orderByProperty&page=0")
-          .addHeader(new ProjectHeader(SharedTestDataADM.incunabulaProject.id)) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.incunabulaProjectAdminUser.email, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseAsString       = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseAsString)
+      val resourceClass   = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book"
+      val orderByProperty = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title"
+      val responseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(
+            uri"/v2/resources?resourceClass=$resourceClass&orderByProperty=$orderByProperty&page=0",
+            SharedTestDataADM.incunabulaProjectAdminUser,
+            _.header("x-knora-accept-project", SharedTestDataADM.incunabulaProject.id.value),
+          )
+          .flatMap(_.assert200),
+      )
       val expectedAnswerJSONLD = testData("BooksFromIncunabula.jsonld")
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
     }
@@ -748,11 +773,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(resourceIri.toSmartIri.isKnoraDataIri)
 
       // Request the newly created resource in the complex schema, and check that it matches the ontology.
-      val resourceComplexGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
-      val resourceComplexGetResponseAsString       = responseToString(resourceComplexGetResponse)
+      val resourceComplexGetResponseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$resourceIri", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
+      )
 
       UnsafeZioRun.runOrThrow(
         instanceChecker.check(
@@ -762,12 +787,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       )
 
       // Request the newly created resource in the simple schema, and check that it matches the ontology.
-      val resourceSimpleGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~>
-        SchemaHeader.simple ~>
-        addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-
-      val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
-      val resourceSimpleGetResponseAsString       = responseToString(resourceSimpleGetResponse)
+      val resourceSimpleGetResponseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$resourceIri?schema=simple", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
+      )
 
       UnsafeZioRun.runOrThrow(
         instanceChecker.check(
@@ -818,11 +842,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(resourceIri.toSmartIri.isKnoraDataIri)
 
       // Request the newly created resource in the complex schema, and check that it matches the ontology.
-      val resourceComplexGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
-      val resourceComplexGetResponseAsString       = responseToString(resourceComplexGetResponse)
+      val resourceComplexGetResponseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$resourceIri", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
+      )
 
       UnsafeZioRun.runOrThrow(
         instanceChecker.check(
@@ -832,12 +856,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       )
 
       // Request the newly created resource in the simple schema, and check that it matches the ontology.
-      val resourceSimpleGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}")
-        .addHeader(SchemaHeader.simple) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
+      val resourceSimpleGetResponseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$resourceIri?schema=simple", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
       )
-      val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
-      val resourceSimpleGetResponseAsString       = responseToString(resourceSimpleGetResponse)
 
       UnsafeZioRun.runOrThrow(
         instanceChecker.check(
@@ -1051,13 +1074,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
-      // Request the newly created resource.
-      val resourceGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-
       // Get the value from the response.
-      val resourceGetResponseAsJsonLD = getResponseAsJsonLD(resourceGetRequest)
+      val resourceGetResponseAsJsonLD = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLdDocument(uri"/v2/resources/$resourceIri", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
+      )
       val valueIri: IRI = resourceGetResponseAsJsonLD.body
         .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
         .fold(e => throw BadRequestException(e), identity)
@@ -1097,13 +1119,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
-      // Request the newly created resource.
-      val resourceGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-
       // Get the value from the response.
-      val resourceGetResponseAsJsonLD = getResponseAsJsonLD(resourceGetRequest)
+      val resourceGetResponseAsJsonLD = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLdDocument(uri"/v2/resources/$resourceIri", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
+      )
       val valueUUID = resourceGetResponseAsJsonLD.body
         .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
         .flatMap(_.getRequiredString(KnoraApiV2Complex.ValueHasUUID))
@@ -1148,13 +1169,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
       // Request the newly created resource.
-      val resourceGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val resourceGetResponseAsString = getResponseAsString(resourceGetRequest)
-
-      // Get the value from the response.
-      val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+      val resourceGetResponseAsJsonLD = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLdDocument(uri"/v2/resources/$resourceIri", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
+      )
       val savedCreationDate: Instant = resourceGetResponseAsJsonLD.body
         .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
         .fold(e => throw BadRequestException(e), identity)
@@ -1210,13 +1229,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(resourceIri == customResourceIRI)
 
       // Request the newly created resource.
-      val resourceGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val resourceGetResponseAsString = getResponseAsString(resourceGetRequest)
-
-      // Get the value from the response.
-      val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+      val resourceGetResponseAsJsonLD = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLdDocument(uri"/v2/resources/$resourceIri", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
+      )
       val valueIri: IRI = resourceGetResponseAsJsonLD.body
         .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
         .fold(e => throw BadRequestException(e), identity)
@@ -1377,11 +1394,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         ),
       )
 
-      val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-
-      val previewJsonLD = getResponseAsJsonLD(previewRequest)
+      val previewJsonLD = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLdDocument(uri"/v2/resourcespreview/$aThingIri", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
+      )
       val updatedLabel: String = previewJsonLD.body
         .getRequiredString(OntologyConstants.Rdfs.Label)
         .fold(msg => throw BadRequestException(msg), identity)
@@ -1450,12 +1467,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         ),
       )
 
-      val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
-      val previewResponseAsString       = responseToString(previewResponse)
-      assert(previewResponse.status == StatusCodes.OK, previewResponseAsString)
+      val previewResponseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resourcespreview/$aThingIri", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
+      )
 
       val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
       val updatedLabel: String = previewJsonLD.body
@@ -1529,14 +1545,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
       assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
 
-      val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
-      previewResponse.status should equal(StatusCodes.OK)
-
-      val previewResponseAsString = responseToString(previewResponse)
-      val previewJsonLD           = JsonLDUtil.parseJsonLD(previewResponseAsString)
+      val previewResponseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resourcespreview/$resourceIri", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
+      )
+      val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
       val responseIsDeleted = previewJsonLD.body
         .getRequiredBoolean(KnoraApiV2Complex.IsDeleted)
         .fold(e => throw BadRequestException(e), identity)
@@ -1577,12 +1591,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
       assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
 
-      val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
-      val previewResponseAsString       = responseToString(previewResponse)
-      previewResponse.status should equal(StatusCodes.OK)
+      val previewResponseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resourcespreview/$resourceIri", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
+      )
 
       val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
       val responseIsDeleted = previewJsonLD.body
@@ -1643,10 +1656,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val hamletXml = FileUtil.readTextFile(Paths.get("test_data/generated_test_data/resourcesR2RV2/hamlet.xml"))
 
       // Request the newly created resource.
-      val resourceGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val resourceGetResponseAsString = getResponseAsString(resourceGetRequest)
+      val resourceGetResponseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient.getJsonLd(uri"/v2/resources/${hamletResourceIri.get}", anythingUser1).flatMap(_.assert200),
+      )
 
       // Check that the response matches the ontology.
       UnsafeZioRun.runOrThrow(
@@ -1671,12 +1683,15 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "read the large text without its markup, and get the markup separately as pages of standoff" ignore { // depends on previous test
       // Get the resource without markup.
-      val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}")
-        .addHeader(MarkupHeader.standoff) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password),
+      val resourceGetResponseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(
+            uri"/v2/resources/${hamletResourceIri.get}",
+            SharedTestDataADM.anythingUser1,
+            _.header("x-knora-accept-markup", "standoff"),
+          )
+          .flatMap(_.assert200),
       )
-      val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)
-      val resourceGetResponseAsString       = responseToString(resourceGetResponse)
 
       // Check that the response matches the ontology.
       UnsafeZioRun.runOrThrow(
@@ -1699,9 +1714,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val textValueIri: IRI                             = textValue.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
-      val resourceIriEncoded: IRI  = URLEncoder.encode(hamletResourceIri.get, "UTF-8")
-      val textValueIriEncoded: IRI = URLEncoder.encode(textValueIri, "UTF-8")
-
       val standoffBuffer: ArrayBuffer[JsonLDObject] = ArrayBuffer.empty
       var offset: Int                               = 0
       var hasMoreStandoff: Boolean                  = true
@@ -1709,11 +1721,16 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       while (hasMoreStandoff) {
         // Get a page of standoff.
 
-        val standoffGetRequest = Get(
-          s"$baseApiUrl/v2/standoff/$resourceIriEncoded/$textValueIriEncoded/$offset",
-        ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-        val standoffGetResponse: HttpResponse         = singleAwaitingRequest(standoffGetRequest)
-        val standoffGetResponseAsJsonLD: JsonLDObject = responseToJsonLDDocument(standoffGetResponse).body
+        val standoffGetResponseAsJsonLD: JsonLDObject = UnsafeZioRun
+          .runOrThrow(
+            TestApiClient
+              .getJsonLdDocument(
+                uri"/v2/standoff/${hamletResourceIri.get}/$textValueIri/$offset",
+                SharedTestDataADM.anythingUser1,
+              )
+              .flatMap(_.assert200),
+          )
+          .body
 
         val standoff: Seq[JsonLDValue] =
           standoffGetResponseAsJsonLD.getArray(JsonLDKeywords.GRAPH).map(_.value).getOrElse(Seq.empty)
@@ -1777,12 +1794,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val updateResponseAsString       = responseToString(updateResponse)
       assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
 
-      val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/$aThingWithHistoryIriEncoded",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
-      val previewResponseAsString       = responseToString(previewResponse)
-      assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
+      UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resourcespreview/$aThingWithHistoryIri", anythingUser1)
+          .flatMap(_.assert404),
+      )
     }
 
     "create a resource containing a text value with a standoff link" in {
@@ -1820,11 +1836,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(resourceIri.toSmartIri.isKnoraDataIri)
 
       // Request the newly created resource in the complex schema, and check that it matches the ontology.
-      val resourceComplexGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
-      val resourceComplexGetResponseAsString       = responseToString(resourceComplexGetResponse)
+      val resourceComplexGetResponseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$resourceIri", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
+      )
 
       UnsafeZioRun.runOrThrow(
         instanceChecker.check(
@@ -1873,11 +1889,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(resourceIri.toSmartIri.isKnoraDataIri)
 
       // Request the newly created resource in the complex schema, and check that it matches the ontology.
-      val resourceComplexGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
-      val resourceComplexGetResponseAsString       = responseToString(resourceComplexGetResponse)
+      val resourceComplexGetResponseAsString = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/$resourceIri", SharedTestDataADM.anythingUser1)
+          .flatMap(_.assert200),
+      )
 
       // Check that it has multiple property knora-api:hasStandoffLinkToValue.
       val resourceJsonLDDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceComplexGetResponseAsString)
@@ -1890,11 +1906,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "return a IIIF manifest for the pages of a book" in {
-      val resourceIri            = "http://rdfh.ch/0001/thing-with-pages"
-      val request                = Get(s"$baseApiUrl/v2/resources/iiifmanifest/${URLEncoder.encode(resourceIri, "UTF-8")}")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseStr: String    = responseToString(response)
-      assert(response.status == StatusCodes.OK, responseStr)
+      val resourceIri = "http://rdfh.ch/0001/thing-with-pages"
+      val responseStr = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/iiifmanifest/$resourceIri")
+          .flatMap(_.assert200),
+      )
       val responseJson: JsValue = JsonParser(responseStr)
       val expectedJson: JsValue = JsonParser(testData("IIIFManifest.jsonld"))
       assert(responseJson == expectedJson)
@@ -1986,12 +2003,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         responseToJsonLDDocument(resourceResponse).body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
       // get resource back
-      val resourceComplexGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
-      ) ~> addCredentials(auth)
-      val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
+      val resourceComplexGetResponse = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .getJsonLdDocument(uri"/v2/resources/$resourceIri", SharedTestDataADM.anythingAdminUser)
+          .flatMap(_.assert200),
+      )
 
-      val valueObject = responseToJsonLDDocument(resourceComplexGetResponse).body
+      val valueObject = resourceComplexGetResponse.body
         .getRequiredObject("http://0.0.0.0:3333/ontology/0001/freetest/v2#hasName")
         .fold(e => throw BadRequestException(e), identity)
       val valueIri: IRI = valueObject.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
