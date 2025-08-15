@@ -31,6 +31,11 @@ case class TestSipiApiClient(
     jwtFor(user).flatMap { jwt =>
       basicRequest.get(uri"/$shortcode/$filename/full/max/0/default.jpg").cookie(authCookieName, jwt).send(backend)
     }
+
+  def getFile(uri: String): Task[Response[Either[String, Array[Byte]]]] = {
+    val adjustedUri = uri.replace("http://0.0.0.0:1024", sipiConfig.internalBaseUrl)
+    basicRequest.get(Uri.unsafeParse(adjustedUri)).response(asByteArray).send(backend)
+  }
 }
 
 object TestSipiApiClient {
@@ -41,6 +46,9 @@ object TestSipiApiClient {
     user: User,
   ): ZIO[TestSipiApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestSipiApiClient](_.getImage(shortcode, filename, user))
+
+  def getFile(uri: String): ZIO[TestSipiApiClient, Throwable, Response[Either[String, Array[Byte]]]] =
+    ZIO.serviceWithZIO[TestSipiApiClient](_.getFile(uri))
 
   val layer = ZLayer.derive[TestSipiApiClient]
 }
