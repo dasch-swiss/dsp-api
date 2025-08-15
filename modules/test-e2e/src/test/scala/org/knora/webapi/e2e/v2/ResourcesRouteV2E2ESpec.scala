@@ -5,11 +5,6 @@
 
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko.http.scaladsl.model.HttpEntity
-import org.apache.pekko.http.scaladsl.model.HttpResponse
-import org.apache.pekko.http.scaladsl.model.StatusCodes
-import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -22,9 +17,6 @@ import sttp.model.Uri.*
 import java.nio.file.Paths
 import java.time.Instant
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.Await
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration.SECONDS
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -57,8 +49,6 @@ import org.knora.webapi.util.*
 class ResourcesRouteV2E2ESpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val anythingUserEmail          = anythingUser1.email
-  private val password                   = SharedTestDataADM.testPass
   private var aThingLastModificationDate = Instant.now
   private val hamletResourceIri          = new MutableTestIri
   private val aThingIri                  = "http://rdfh.ch/0001/a-thing"
@@ -679,13 +669,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |  }
           |}""".stripMargin
 
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/resources", createResourceWithValues, anythingUser1)
+          .flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
@@ -704,9 +692,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource in the simple schema, and check that it matches the ontology.
       val resourceSimpleGetResponseAsString = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLd(uri"/v2/resources/$resourceIri?schema=simple", anythingUser1)
-          .flatMap(_.assert200),
+        TestApiClient.getJsonLd(uri"/v2/resources/$resourceIri?schema=simple", anythingUser1).flatMap(_.assert200),
       )
 
       UnsafeZioRun.runOrThrow(
@@ -746,13 +732,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |  }
           |}""".stripMargin
 
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithRefToFoaf),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/resources", createResourceWithRefToFoaf, anythingUser1)
+          .flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
@@ -797,13 +781,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/resourcesR2RV2/ThingWithUnicodeEscape.jsonld"),
         )
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1)
+          .flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
@@ -836,13 +818,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1)
+          .flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
@@ -884,13 +864,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val customIRI: IRI = SharedTestDataADM.customResourceIRI
       val jsonLDEntity   = createResourceWithCustomIRI(customIRI)
 
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1)
+          .flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri == customIRI)
@@ -899,23 +877,17 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "not create a resource with an invalid custom IRI" in {
       val customIRI: IRI = "http://rdfh.ch/invalid-resource-IRI"
       val jsonLDEntity   = createResourceWithCustomIRI(customIRI)
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
+      UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert400),
+      )
     }
 
     "not create a resource with a custom IRI containing the wrong project code" in {
       val customIRI: IRI = "http://rdfh.ch/0803/a-thing-with-IRI"
       val jsonLDEntity   = createResourceWithCustomIRI(customIRI)
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
+      UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert400),
+      )
     }
 
     "return a DuplicateValueException during resource creation when the supplied resource IRI is not unique" in {
@@ -942,14 +914,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request =
-        Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password),
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
-
-      val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], FiniteDuration.apply(1, SECONDS))
+      val errorMessage: String = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/resources", params, anythingUser1).flatMap(_.assert400),
+      )
       val invalidIri: Boolean =
         errorMessage.contains(s"IRI: 'http://rdfh.ch/0001/a-thing' already exists, try another one.")
       invalidIri should be(true)
@@ -980,19 +947,15 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val customValueIRI: IRI = SharedTestDataADM.customValueIRI
       val jsonLDEntity        = createResourceWithCustomValueIRI(customValueIRI)
 
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
       // Get the value from the response.
       val resourceGetResponseAsJsonLD = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLdDocument(uri"/v2/resources/$resourceIri", anythingUser1)
-          .flatMap(_.assert200),
+        TestApiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri", anythingUser1).flatMap(_.assert200),
       )
       val valueIri: IRI = resourceGetResponseAsJsonLD.body
         .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
@@ -1025,19 +988,15 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            | }
            |}""".stripMargin
 
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
       // Get the value from the response.
       val resourceGetResponseAsJsonLD = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLdDocument(uri"/v2/resources/$resourceIri", anythingUser1)
-          .flatMap(_.assert200),
+        TestApiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri", anythingUser1).flatMap(_.assert200),
       )
       val valueUUID = resourceGetResponseAsJsonLD.body
         .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
@@ -1074,19 +1033,15 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            | }
            |}""".stripMargin
 
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
       // Request the newly created resource.
       val resourceGetResponseAsJsonLD = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLdDocument(uri"/v2/resources/$resourceIri", anythingUser1)
-          .flatMap(_.assert200),
+        TestApiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri", anythingUser1).flatMap(_.assert200),
       )
       val savedCreationDate: Instant = resourceGetResponseAsJsonLD.body
         .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
@@ -1133,20 +1088,16 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            | }
            |}""".stripMargin
 
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri == customResourceIRI)
 
       // Request the newly created resource.
       val resourceGetResponseAsJsonLD = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLdDocument(uri"/v2/resources/$resourceIri", anythingUser1)
-          .flatMap(_.assert200),
+        TestApiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri", anythingUser1).flatMap(_.assert200),
       )
       val valueIri: IRI = resourceGetResponseAsJsonLD.body
         .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
@@ -1205,11 +1156,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
-      val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/resources", jsonLDEntity, SharedTestDataADM.anythingAdminUser)
+          .flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
@@ -1245,12 +1196,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingUser2.email, password))
-      val response = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest)
+      UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/resources", jsonLDEntity, SharedTestDataADM.anythingUser2).flatMap(_.assert400),
+      )
     }
 
     "create a resource containing escaped text" in {
@@ -1258,11 +1206,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         FileUtil.readTextFile(
           Paths.get("test_data/generated_test_data/resourcesR2RV2/CreateResourceWithEscape.jsonld"),
         )
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
@@ -1292,11 +1238,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             |  }
             |}""".stripMargin
 
-      val updateRequest = Put(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val updateResponseAsString: String = getResponseAsString(updateRequest)
+      val updateResponseAsString: String = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLd(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       assert(
         JsonParser(updateResponseAsString) == JsonParser(
           updateResourceMetadataResponse(
@@ -1309,9 +1253,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       )
 
       val previewJsonLD = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLdDocument(uri"/v2/resourcespreview/$aThingIri", anythingUser1)
-          .flatMap(_.assert200),
+        TestApiClient.getJsonLdDocument(uri"/v2/resourcespreview/$aThingIri", anythingUser1).flatMap(_.assert200),
       )
       val updatedLabel: String = previewJsonLD.body
         .getRequiredString(OntologyConstants.Rdfs.Label)
@@ -1363,13 +1305,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             |  }
             |}""".stripMargin
 
-      val updateRequest = Put(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val updateResponse: HttpResponse   = singleAwaitingRequest(updateRequest)
-      val updateResponseAsString: String = responseToString(updateResponse)
-      assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
+      val updateResponseAsString: String = UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLd(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       assert(
         JsonParser(updateResponseAsString) == JsonParser(
           updateResourceMetadataResponse(
@@ -1382,9 +1320,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       )
 
       val previewResponseAsString = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLd(uri"/v2/resourcespreview/$aThingIri", anythingUser1)
-          .flatMap(_.assert200),
+        TestApiClient.getJsonLd(uri"/v2/resourcespreview/$aThingIri", anythingUser1).flatMap(_.assert200),
       )
 
       val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
@@ -1412,11 +1348,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "mark a resource as deleted" in {
       // given a new resource
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceReqPayload()),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val responseJsonDoc: JsonLDDocument = getResponseAsJsonLD(request)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/resources", createResourceReqPayload(), anythingUser1)
+          .flatMap(_.assert200),
+      )
 
       val resourceIri = responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID).getOrElse {
         throw BadRequestException("Resource IRI not found in response")
@@ -1448,21 +1384,15 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
             |  }
             |}""".stripMargin
-      val updateRequest = Post(
-        s"$baseApiUrl/v2/resources/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val updateResponse: HttpResponse   = singleAwaitingRequest(updateRequest)
-      val updateResponseAsString: String = responseToString(updateResponse)
+      val updateResponseAsString: String = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLd(uri"/v2/resources/delete", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
 
       // then it should be marked as deleted
-      assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
       assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
 
       val previewResponseAsString = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLd(uri"/v2/resourcespreview/$resourceIri", anythingUser1)
-          .flatMap(_.assert200),
+        TestApiClient.getJsonLd(uri"/v2/resourcespreview/$resourceIri", anythingUser1).flatMap(_.assert200),
       )
       val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
       val responseIsDeleted = previewJsonLD.body
@@ -1496,19 +1426,15 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             |  }
             |}""".stripMargin
 
-      val updateRequest = Post(
-        s"$baseApiUrl/v2/resources/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.superUser.email, password))
-      val updateResponse: HttpResponse   = singleAwaitingRequest(updateRequest)
-      val updateResponseAsString: String = responseToString(updateResponse)
-      assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
+      val updateResponseAsString: String = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLd(uri"/v2/resources/delete", jsonLDEntity, SharedTestDataADM.superUser)
+          .flatMap(_.assert200),
+      )
       assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
 
       val previewResponseAsString = UnsafeZioRun.runOrThrow(
-        TestApiClient
-          .getJsonLd(uri"/v2/resourcespreview/$resourceIri", anythingUser1)
-          .flatMap(_.assert200),
+        TestApiClient.getJsonLd(uri"/v2/resourcespreview/$resourceIri", anythingUser1).flatMap(_.assert200),
       )
 
       val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
@@ -1554,12 +1480,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val resourceCreateRequest = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val resourceCreateResponseAsJsonLD: JsonLDDocument = getResponseAsJsonLD(resourceCreateRequest)
-      val validationFun: (String, => Nothing) => String  = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
+      val resourceCreateResponseAsJsonLD: JsonLDDocument = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
+      val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI =
         resourceCreateResponseAsJsonLD.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
@@ -1638,10 +1562,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         val standoffGetResponseAsJsonLD: JsonLDObject = UnsafeZioRun
           .runOrThrow(
             TestApiClient
-              .getJsonLdDocument(
-                uri"/v2/standoff/${hamletResourceIri.get}/$textValueIri/$offset",
-                anythingUser1,
-              )
+              .getJsonLdDocument(uri"/v2/standoff/${hamletResourceIri.get}/$textValueIri/$offset", anythingUser1)
               .flatMap(_.assert200),
           )
           .body
@@ -1700,16 +1621,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             |  }
             |}""".stripMargin
 
-      val updateRequest = Post(
-        s"$baseApiUrl/v2/resources/erase",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
-      val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
-      val updateResponseAsString       = responseToString(updateResponse)
-      assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
-
       UnsafeZioRun.runOrThrow(
-        TestApiClient.getJsonLd(uri"/v2/resourcespreview/$aThingWithHistoryIri", anythingUser1).flatMap(_.assert404),
+        TestApiClient
+          .postJsonLd(uri"/v2/resources/erase", jsonLDEntity, SharedTestDataADM.anythingAdminUser)
+          .flatMap(_.assert200) *>
+          TestApiClient.getJsonLd(uri"/v2/resourcespreview/$aThingWithHistoryIri", anythingUser1).flatMap(_.assert404),
       )
     }
 
@@ -1736,13 +1652,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |  }
           |}""".stripMargin
 
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
@@ -1787,13 +1699,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |                }
           | }""".stripMargin
 
-      val request = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient.postJsonLdDocument(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
@@ -1825,7 +1733,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "correctly update the ontology cache when adding a resource, so that the resource can afterwards be found by gravsearch" in {
       val freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
-      val auth                         = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, SharedTestDataADM.testPass)
 
       // create a new resource class and add a property with cardinality to it
       val createResourceClass =
@@ -1868,13 +1775,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val createResourceClassRequest = Post(
-        s"$baseApiUrl/v2/ontologies/classes",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceClass),
-      ) ~> addCredentials(auth)
-      val createResourceClassResponse: HttpResponse = singleAwaitingRequest(createResourceClassRequest)
-
-      assert(createResourceClassResponse.status == StatusCodes.OK, createResourceClassResponse.toString)
+      UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLd(uri"/v2/ontologies/classes", createResourceClass, SharedTestDataADM.anythingAdminUser)
+          .flatMap(_.assert200),
+      )
 
       // create an instance of the class
       val createResourceWithValues: String =
@@ -1897,16 +1802,14 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |  }
           |}""".stripMargin
 
-      val resourceRequest = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues),
-      ) ~> addCredentials(auth)
-      val resourceResponse: HttpResponse = singleAwaitingRequest(resourceRequest)
-
-      assert(resourceResponse.status == StatusCodes.OK, resourceResponse.toString)
+      val responseJsonDoc = UnsafeZioRun.runOrThrow(
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/resources", createResourceWithValues, SharedTestDataADM.anythingAdminUser)
+          .flatMap(_.assert200),
+      )
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI =
-        responseToJsonLDDocument(resourceResponse).body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
       // get resource back
       val resourceComplexGetResponse = UnsafeZioRun.runOrThrow(
@@ -1941,12 +1844,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      val editValueRequest =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, editValue)) ~> addCredentials(
-          auth,
-        )
-      val editValueResponse: HttpResponse = singleAwaitingRequest(editValueRequest)
-      assert(editValueResponse.status == StatusCodes.OK, responseToString(editValueResponse))
+      UnsafeZioRun.runOrThrow(
+        TestApiClient.putJsonLd(uri"/v2/values", editValue, SharedTestDataADM.anythingAdminUser).flatMap(_.assert200),
+      )
     }
   }
 }
