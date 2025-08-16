@@ -1188,12 +1188,9 @@ object TextValueContentV2 {
             } else {
               TextValueType.CustomFormattedText(InternalIri(mappingResponse.mappingIri))
             }
-          text <- ZIO
-                    .fromOption(Iri.toSparqlEncodedString(textWithStandoffTags.text))
-                    .orElseFail(BadRequestException("Text value contains invalid characters"))
         } yield TextValueContentV2(
           ontologySchema = ApiV2Complex,
-          maybeValueHasString = Some(text),
+          maybeValueHasString = Some(textWithStandoffTags.text),
           textValueType = textType,
           valueHasLanguage = maybeValueHasLanguage,
           standoff = textWithStandoffTags.standoffTagV2,
