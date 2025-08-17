@@ -14,16 +14,12 @@ import scala.collection.SortedSet
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
-import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueV2
-import org.knora.webapi.messages.v2.responder.valuemessages.DeleteValueV2
-import org.knora.webapi.messages.v2.responder.valuemessages.EraseValueHistoryV2
-import org.knora.webapi.messages.v2.responder.valuemessages.EraseValueV2
-import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueContentV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -42,6 +38,8 @@ import org.knora.webapi.slice.resources.repo.service.ValueModel
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+
+import TestHelper.ResourceWithValues
 
 object ValuesEraseSpec extends E2EZSpec {
   import TestHelper.DiffLib._
@@ -71,6 +69,32 @@ object ValuesEraseSpec extends E2EZSpec {
         previousValues     <- ZIO.foreach(previousValueIris)(TestHelper.findValue).map(_.flatten)
         currentValue       <- TestHelper.findValue(activeValueVersion.iri)
       } yield assertTrue(previousValues.isEmpty, currentValue.isDefined)
+    },
+    test("erase an IntValue's history when minCardinality = 1") {
+      def runTest(onlyHistory: Boolean) =
+        for {
+          ontologyIri          <- ZIO.serviceWithZIO[TestHelper](th => ZIO.succeed(th.ontologyIri))
+          hasRequiredIntegerIri = ontologyIri.makeProperty("hasRequiredInteger").toComplexSchema
+          integerValue          = IntegerValueContentV2(ApiV2Complex, 765)
+          resourceWVals <-
+            TestHelper.createResourceWithClass(
+              "ThingWithRequiredInt",
+              Map(hasRequiredIntegerIri -> Seq(CreateValueInNewResourceV2(integerValue))),
+            )
+          val1  = resourceWVals.values.head._2.head // TODO: fragile access
+          res1  = resourceWVals.resource
+          val2 <- TestHelper.updateIntegerValue(val1, res1, 567, Some("hasRequiredInteger"))
+          result <-
+            (if (onlyHistory)
+               TestHelper.eraseIntegerValueHistory(val2, res1, Some("hasRequiredInteger"))
+             else
+               TestHelper.eraseIntegerValue(val2, res1, Some("hasRequiredInteger"))).exit
+        } yield result
+
+      for {
+        first  <- runTest(true)
+        second <- runTest(false)
+      } yield assertTrue(first.isSuccess && second.isFailure)
     },
     test("erase a LinkValue") {
       for {
@@ -290,12 +314,29 @@ final case class TestHelper(
                  .someOrFail(IllegalStateException("Value not found"))
     } yield value
 
+  def createRequiredIntegerValue(resource: ActiveResource): Task[ActiveValue] =
+    val hasInteger = resource.ontologyIri.makeProperty("hasRequiredInteger")
+    for {
+      uuid <- Random.nextUUID
+      createVal = CreateValueV2(
+                    resource.iri.toString,
+                    resource.resourceClassIri.toComplexSchema,
+                    hasInteger.toComplexSchema,
+                    IntegerValueContentV2(ApiV2Complex, 1, None),
+                  )
+      value <- valuesResponder.createValueV2(createVal, rootUser, uuid)
+      value <- valueRepo
+                 .findActiveById(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
+                 .someOrFail(IllegalStateException("Value not found"))
+    } yield value
+
   def updateIntegerValue(
     value: ActiveValue,
     resource: ActiveResource,
     newValue: Int,
+    propName: Option[String] = None,
   ): ZIO[Any, Throwable, ActiveValue] =
-    val hasInteger = resource.ontologyIri.makeProperty("hasInteger")
+    val hasInteger = resource.ontologyIri.makeProperty(propName.getOrElse("hasInteger"))
     val update = UpdateValueContentV2(
       resource.iri.toString,
       resource.resourceClassIri.toComplexSchema,
@@ -326,11 +367,15 @@ final case class TestHelper(
       deleted <- valueRepo.findById(value.iri).someOrFail(IllegalStateException("Deleted value not found"))
     } yield deleted
 
-  def eraseIntegerValue(value: ValueModel, resource: ActiveResource): ZIO[Any, Throwable, Unit] =
+  def eraseIntegerValue(
+    value: ValueModel,
+    resource: ActiveResource,
+    propName: Option[String] = None,
+  ): ZIO[Any, Throwable, Unit] =
     val erase = EraseValueV2(
       resource.iri,
       resource.resourceClassIri,
-      resource.ontologyIri.makeProperty("hasInteger"),
+      resource.ontologyIri.makeProperty(propName.getOrElse("hasInteger")),
       value.iri,
       value.valueClass.value.toSmartIri,
       UUID.randomUUID(),
@@ -447,11 +492,15 @@ final case class TestHelper(
       _ <- valuesResponder.eraseValueHistory(erase, rootUser, project)
     } yield ()
 
-  def eraseIntegerValueHistory(value: ActiveValue, resource: ActiveResource): ZIO[Any, Throwable, Unit] =
+  def eraseIntegerValueHistory(
+    value: ActiveValue,
+    resource: ActiveResource,
+    propName: Option[String] = None,
+  ): ZIO[Any, Throwable, Unit] =
     val erase = EraseValueHistoryV2(
       resource.iri,
       resource.resourceClassIri,
-      resource.ontologyIri.makeProperty("hasInteger"),
+      resource.ontologyIri.makeProperty(propName.getOrElse("hasInteger")),
       value.iri,
       value.valueClass.value.toSmartIri,
       UUID.randomUUID(),
@@ -493,6 +542,31 @@ final case class TestHelper(
                  .findActiveById(ResourceIri.unsafeFrom(res.resources.head.resourceIri.toSmartIri))
                  .someOrFail(IllegalStateException("Resource not found"))
   } yield created
+
+  def createResourceWithClass(
+    className: String,
+    values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map.empty,
+  ): Task[ResourceWithValues] = for {
+    prj      <- projectService.findByShortcode(shortcode).someOrFail(IllegalStateException("Project not found"))
+    uuid     <- Random.nextUUID
+    createRes = CreateResourceV2(None, ontologyIri.makeClass(className).smartIri, "label", values, prj, None, None)
+    createReq = CreateResourceRequestV2(createRes, rootUser, uuid)
+    resource <- resourcesResponderV2.createResource(createReq).map(_.resources.head)
+    created <- resourceRepo
+                 .findActiveById(ResourceIri.unsafeFrom(resource.resourceIri.toSmartIri))
+                 .someOrFail(IllegalStateException("Resource not found"))
+    values <- ZIO
+                .foreach(resource.values.toList) { (s, vs) =>
+                  ZIO
+                    .foreach(vs) { v =>
+                      valueRepo
+                        .findActiveById(ValueIri.unsafeFrom(v.valueIri.toSmartIri))
+                        .someOrFail(IllegalStateException("Value not found"))
+                    }
+                    .map((s, _))
+                }
+                .map(_.toMap)
+  } yield ResourceWithValues(created, values)
 
   def findValues(iri: ResourceIri): Task[Map[PropertyIri, Seq[ValueIri]]] = resourceRepo.findValues(iri)
 
@@ -538,18 +612,30 @@ object TestHelper {
   def createIntegerValue(resource: ActiveResource): RIO[TestHelper, ActiveValue] =
     ZIO.serviceWithZIO[TestHelper](_.createIntegerValue(resource))
 
+  def createRequiredIntegerValue(resource: ActiveResource): RIO[TestHelper, ActiveValue] =
+    ZIO.serviceWithZIO[TestHelper](_.createRequiredIntegerValue(resource))
+
   def updateIntegerValue(
     value: ActiveValue,
     resource: ActiveResource,
     newValue: Int,
+    propName: Option[String] = None,
   ): ZIO[TestHelper, Throwable, ActiveValue] =
-    ZIO.serviceWithZIO[TestHelper](_.updateIntegerValue(value, resource, newValue))
+    ZIO.serviceWithZIO[TestHelper](_.updateIntegerValue(value, resource, newValue, propName))
 
-  def eraseIntegerValue(value: ValueModel, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
-    ZIO.serviceWithZIO[TestHelper](_.eraseIntegerValue(value, resource))
+  def eraseIntegerValue(
+    value: ValueModel,
+    resource: ActiveResource,
+    propName: Option[String] = None,
+  ): ZIO[TestHelper, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestHelper](_.eraseIntegerValue(value, resource, propName))
 
-  def eraseIntegerValueHistory(value: ActiveValue, resource: ActiveResource): ZIO[TestHelper, Throwable, Unit] =
-    ZIO.serviceWithZIO[TestHelper](_.eraseIntegerValueHistory(value, resource))
+  def eraseIntegerValueHistory(
+    value: ActiveValue,
+    resource: ActiveResource,
+    propName: Option[String] = None,
+  ): ZIO[TestHelper, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestHelper](_.eraseIntegerValueHistory(value, resource, propName))
 
   def findValue(valueIri: ValueIri): ZIO[TestHelper, Throwable, Option[ValueModel]] =
     ZIO.serviceWithZIO[TestHelper](_.findValue(valueIri))
@@ -562,6 +648,12 @@ object TestHelper {
 
   def createResource: ZIO[TestHelper, Throwable, ActiveResource] =
     ZIO.serviceWithZIO[TestHelper](_.createResource)
+
+  def createResourceWithClass(
+    className: String,
+    values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map.empty,
+  ): ZIO[TestHelper, Throwable, ResourceWithValues] =
+    ZIO.serviceWithZIO[TestHelper](_.createResourceWithClass(className, values))
 
   def createTextValueWithStandoff(
     resource: ActiveResource,
@@ -581,6 +673,8 @@ object TestHelper {
 
   def findAllPrevious(valueIri: ValueIri): ZIO[TestHelper, Throwable, Seq[ValueIri]] =
     ZIO.serviceWithZIO[TestHelper](_.findAllPrevious(valueIri))
+
+  final case class ResourceWithValues(resource: ActiveResource, values: Map[SmartIri, Seq[ActiveValue]])
 
   type Triple = (String, String, String)
 
