@@ -73,7 +73,7 @@ object ValuesEraseSpec extends E2EZSpec {
     test("erase an IntValue's history when minCardinality = 1") {
       def runTest(onlyHistory: Boolean) =
         for {
-          ontologyIri          <- ZIO.serviceWithZIO[TestHelper](th => ZIO.succeed(th.ontologyIri))
+          ontologyIri          <- ZIO.serviceWith[TestHelper](_.ontologyIri)
           hasRequiredIntegerIri = ontologyIri.makeProperty("hasRequiredInteger").toComplexSchema
           integerValue          = IntegerValueContentV2(ApiV2Complex, 765)
           resourceWVals <-
@@ -81,7 +81,8 @@ object ValuesEraseSpec extends E2EZSpec {
               "ThingWithRequiredInt",
               Map(hasRequiredIntegerIri -> Seq(CreateValueInNewResourceV2(integerValue))),
             )
-          val1  = resourceWVals.values.head._2.head // TODO: fragile access
+          requiredIntIri <- ZIO.serviceWith[TestHelper](_.toSmartIri("http://www.knora.org/ontology/0001/anything#hasRequiredInteger"))
+          val1  = resourceWVals.values(requiredIntIri).head
           res1  = resourceWVals.resource
           val2 <- TestHelper.updateIntegerValue(val1, res1, 567, Some("hasRequiredInteger"))
           result <-
@@ -200,6 +201,8 @@ final case class TestHelper(
   val sf: StringFormatter,
 ) {
   import org.knora.webapi.messages.IriConversions.ConvertibleIri
+
+  def toSmartIri(iri: String): SmartIri = iri.toSmartIri
 
   def getProjectTriples(
     selectForGraph: String => String = graph => s"""
