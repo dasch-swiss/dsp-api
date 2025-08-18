@@ -777,6 +777,59 @@
             "@id": "anything:ThingWithRepresentation"
         },
         {
+            "rdfs:label": "Thing",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Resource"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasRequiredInteger"
+                    },
+                    "owl:minCardinality": 1
+                }
+            ],
+            "rdfs:comment": "This thing requires an integer.",
+            "@type": "owl:Class",
+            "@id": "anything:ThingWithRequiredInt"
+        },
+        {
             "rdfs:label": "Thing with sequence number",
             "rdfs:subClassOf": [
                 {
@@ -1282,6 +1335,20 @@
                 "@id": "xsd:string"
             },
             "@id": "anything:hasPictureTitle"
+        },
+        {
+            "rdfs:label": "Integer",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:ThingWithRequiredInt"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:integer"
+            },
+            "@id": "anything:hasRequiredInteger"
         },
         {
             "rdfs:label": "Text",

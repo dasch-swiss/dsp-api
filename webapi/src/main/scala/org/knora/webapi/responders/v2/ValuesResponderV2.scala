@@ -1116,7 +1116,7 @@ final case class ValuesResponderV2(
     project: KnoraProject,
     onlyHistory: Boolean = false,
   ): Task[SuccessResponseV2] =
-    canRemoveValue(req, requestingUser).flatMap { case (_, _, value) =>
+    canRemoveValue(req, requestingUser, onlyHistory).flatMap { case (_, _, value) =>
       for {
         valueIri         <- ZIO.succeed(ValueIri.unsafeFrom(value.valueIri.toSmartIri))
         _                <- failBadRequestForStandoffWithLinks(value)
@@ -1164,6 +1164,7 @@ final case class ValuesResponderV2(
   private def canRemoveValue(
     deleteValue: ValueRemoval,
     requestingUser: User,
+    onlyHistory: Boolean = false,
   ): IO[Throwable, (ReadResourceV2, ReadPropertyInfoV2, ReadValueV2)] = for {
     _ <- auth.ensureUserIsNotAnonymous(requestingUser)
     propertyIri <-
@@ -1262,7 +1263,7 @@ final case class ValuesResponderV2(
       resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
 
     _ <-
-      ZIO.when(cardinalityInfo.cardinality.min == 1 && currentValuesForProp.size == 1)(
+      ZIO.when(!onlyHistory && cardinalityInfo.cardinality.min == 1 && currentValuesForProp.size == 1)(
         ZIO.fail(
           OntologyConstraintException(
             s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of " +
