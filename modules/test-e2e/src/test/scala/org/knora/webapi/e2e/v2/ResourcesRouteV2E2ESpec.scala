@@ -112,7 +112,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       )
 
       val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLand.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -146,14 +146,14 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         TestApiClient.getJsonLd(uri"/v2/resourcespreview/$reiseInsHeiligeLandIri").flatMap(_.assert200),
       )
       val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLandPreview.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
     }
 
     "perform a resource preview request for a Thing resource using the complex schema" in {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resourcespreview/$aThingIri").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("AThing.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header) in JSON-LD" in {
@@ -161,7 +161,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         TestApiClient.getJsonLd(uri"/v2/resources/$reiseInsHeiligeLandIri?schema=simple").flatMap(_.assert200),
       )
       val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLandSimple.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -203,7 +203,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         TestApiClient.getJsonLd(uri"/v2/resourcespreview/$reiseInsHeiligeLandIri?schema=simple").flatMap(_.assert200),
       )
       val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLandSimplePreview.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by a URL parameter)" in {
@@ -211,7 +211,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         TestApiClient.getJsonLd(uri"/v2/resources/$reiseInsHeiligeLandIri?schema=simple").flatMap(_.assert200),
       )
       val expectedAnswerJSONLD = testData("BookReiseInsHeiligeLandSimple.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
     }
 
     "perform a resource request for the first page of the book '[Das] Narrenschiff (lat.)' using the complex schema" in {
@@ -219,7 +219,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("NarrenschiffFirstPage.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
     }
 
     "perform a full resource request for a resource with a BCE date property" in {
@@ -227,7 +227,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("ThingWithBCEDate.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -240,7 +240,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("ThingWithBCEDate2.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -253,7 +253,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("ThingWithListValue.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -266,7 +266,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$iri?schema=simple").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("ThingWithListValueSimple.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -279,7 +279,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("ThingWithLinkComplex.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -292,7 +292,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$iri?schema=simple").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("ThingWithLinkSimple.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -305,7 +305,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("ThingWithTextLangComplex.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -318,7 +318,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$iri?schema=simple").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("ThingWithTextLangSimple.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -331,7 +331,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("Testding.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -344,7 +344,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("ThingWithPicture.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -357,7 +357,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("ThingWithOneHiddenResource.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -370,7 +370,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseAsString =
         UnsafeZioRun.runOrThrow(TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200))
       val expectedAnswerJSONLD = testData("ThingWithOneDeletedResource.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
 
       // Check that the resource corresponds to the ontology.
       UnsafeZioRun.runOrThrow(
@@ -384,7 +384,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         TestApiClient.getJsonLd(uri"/v2/resources/$aThingWithHistoryIri?version=$timestamp").flatMap(_.assert200),
       )
       val expectedAnswerJSONLD = testData("ThingWithVersionHistory.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
     }
 
     "perform a full resource request for a past version of a resource, using a Knora ARK timestamp" in {
@@ -393,7 +393,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         TestApiClient.getJsonLd(uri"/v2/resources/$aThingWithHistoryIri?version=$timestamp").flatMap(_.assert200),
       )
       val expectedAnswerJSONLD = testData("ThingWithVersionHistory.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
     }
 
     "return the complete version history of a resource" in {
@@ -401,7 +401,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         TestApiClient.getJsonLd(uri"/v2/resources/history/$aThingWithHistoryIri").flatMap(_.assert200),
       )
       val expectedAnswerJSONLD = testData("CompleteVersionHistory.jsonld")
-      compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourceHistoryResponse(expectedAnswerJSONLD, responseAsString)
     }
 
     "return the version history of a resource within a date range" in {
@@ -413,7 +413,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           .flatMap(_.assert200),
       )
       val expectedAnswerJSONLD = testData("PartialVersionHistory.jsonld")
-      compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourceHistoryResponse(expectedAnswerJSONLD, responseAsString)
     }
 
     "return each of the versions of a resource listed in its version history" in {
@@ -560,7 +560,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           .flatMap(_.assert200),
       )
       val expectedAnswerJSONLD = testData("BooksFromIncunabula.jsonld")
-      compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+      compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString)
     }
 
     "create a resource with values" in {
