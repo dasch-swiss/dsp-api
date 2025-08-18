@@ -15,6 +15,7 @@ import org.knora.webapi.config.Sipi
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.ScopeResolver
+import org.knora.webapi.util.TestDataFileUtil
 
 object TestClientsModule { self =>
 
@@ -23,6 +24,7 @@ object TestClientsModule { self =>
     TestAdminApiClient &
     TestApiClient &
     TestClientService &
+    TestDataFileUtil &
     TestDspIngestClient &
     TestMetadataApiClient &
     TestOntologyApiClient &
@@ -47,6 +49,7 @@ object TestClientsModule { self =>
       TestApiClient.layer >+>
         TestAdminApiClient.layer ++
         TestClientService.layer ++
+        TestDataFileUtil.layer ++
         TestDspIngestClient.layer ++
         TestMetadataApiClient.layer ++
         TestOntologyApiClient.layer ++

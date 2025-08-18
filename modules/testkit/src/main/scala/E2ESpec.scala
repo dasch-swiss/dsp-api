@@ -113,5 +113,5 @@ abstract class E2ESpec
   }
 
   def readTestData(folder: String, filename: String): String =
-    TestDataFileUtil.readTestData(folder, filename, appConfig.sipi)
+    UnsafeZioRun.runOrThrow(TestDataFileUtil.readTestData(folder, filename))
 }
