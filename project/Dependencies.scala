@@ -30,7 +30,8 @@ object Dependencies {
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.4.1"
   val ZioPreludeVersion           = "1.0.0-RC41"
-  val ZioSchemaVersion            = "0.2.0"
+  val ZioSchemaVersion            = "1.7.4"
+  val ZioMockVersion              = "1.0.0-RC12"
   val ZioVersion                  = "2.1.20"
 
   // ZIO
@@ -45,6 +46,27 @@ object Dependencies {
   val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
   val zioNio                = "dev.zio" %% "zio-nio"                   % ZioNioVersion
   val zioPrelude            = "dev.zio" %% "zio-prelude"               % ZioPreludeVersion
+
+  val zioMock = "dev.zio" %% "zio-mock" % ZioMockVersion % Test
+
+  val zioSeq = Seq(
+    "dev.zio" %% "zio"                   % ZioVersion,
+    "dev.zio" %% "zio-streams"           % ZioVersion,
+    "dev.zio" %% "zio-schema"            % ZioSchemaVersion,
+    "dev.zio" %% "zio-schema-derivation" % ZioSchemaVersion,
+    "dev.zio" %% "zio-nio"               % ZioNioVersion,
+    "dev.zio" %% "zio-prelude"           % ZioPreludeVersion,
+  )
+
+  val ingestTest = Seq(
+    "dev.zio"      %% "zio-mock"               % ZioMockVersion % Test,
+    "dev.zio"      %% "zio-http"               % "3.3.3"        % Test,
+    "dev.zio"      %% "zio-test"               % ZioVersion     % Test,
+    "dev.zio"      %% "zio-test-junit"         % ZioVersion     % Test,
+    "dev.zio"      %% "zio-test-magnolia"      % ZioVersion     % Test,
+    "dev.zio"      %% "zio-test-sbt"           % ZioVersion     % Test,
+    "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.3.1"        % Test,
+  )
 
   val SttpClientVersion = "4.0.9"
   val zioSttpClient = Seq(
@@ -201,4 +223,20 @@ object Dependencies {
     zioNio,
     zioPrelude,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
+
+  val flywayVersion         = "11.10.5"
+  val knoraSipiVersion      = "v31.20.0"
+  val otelAgentVersion      = "v2.18.1"
+  val otelPyroscopeVersion  = "v1.0.4"
+  val hikariVersion         = "6.3.2"
+  val quillVersion          = "4.8.6"
+  val sqliteVersion         = "3.50.3.0"
+  val testContainersVersion = "1.20.4"
+
+  val db = Seq(
+    "org.xerial"   % "sqlite-jdbc"    % sqliteVersion,
+    "org.flywaydb" % "flyway-core"    % flywayVersion,
+    "com.zaxxer"   % "HikariCP"       % hikariVersion,
+    "io.getquill" %% "quill-jdbc-zio" % quillVersion,
+  )
 }

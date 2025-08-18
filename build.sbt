@@ -14,6 +14,13 @@ import org.knora.LocalSettings
 
 import java.time.Instant
 
+import com.typesafe.sbt.packager.docker.Cmd
+import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
+import sbt.Keys.testFrameworks
+
+import scala.collection.Seq
+import scala.sys.process.*
+
 //////////////////////////////////////
 // GLOBAL SETTINGS
 //////////////////////////////////////
@@ -42,16 +49,17 @@ lazy val buildTime   = Instant.now.toString
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, testkit, it, e2e)
 
 lazy val year = java.time.LocalDate.now().getYear
-lazy val buildSettings = Seq(
-  organization := "org.knora",
-  version      := (ThisBuild / version).value,
-  headerLicense := Some(
-    HeaderLicense.Custom(
-      s"""|Copyright © 2021 - $year Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
-          |SPDX-License-Identifier: Apache-2.0
-          |""".stripMargin,
-    ),
+lazy val projectLicense = Some(
+  HeaderLicense.Custom(
+    s"""|Copyright © 2021 - $year Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+        |SPDX-License-Identifier: Apache-2.0
+        |""".stripMargin,
   ),
+)
+lazy val buildSettings = Seq(
+  organization  := "org.knora",
+  version       := (ThisBuild / version).value,
+  headerLicense := projectLicense,
 )
 
 lazy val rootBaseDir = ThisBuild / baseDirectory
@@ -65,6 +73,7 @@ lazy val root: Project = Project(id = "root", file("."))
     testkit,
     it,
     e2e,
+    ingest,
   )
   .settings(
     // values set for all sub-projects
@@ -348,3 +357,88 @@ lazy val e2e: Project = Project(id = "test-e2e", base = file("modules/test-e2e")
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     ),
   )
+
+lazy val ingest = {
+  import Dependencies._
+
+  // TODO: is this present in a non-hardcoded way?
+  val knoraSipiVersion = "v31.20.0"
+
+  Project(id = "ingest", file("ingest"))
+    .enablePlugins(JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
+    .settings(
+      scalacOptions ++= Seq("-old-syntax", "-rewrite"),
+      scalacOptions ++= Seq("-Xmax-inlines", "50"),
+      buildInfoKeys := Seq[BuildInfoKey](
+        name,
+        version,
+        scalaVersion,
+        sbtVersion,
+        BuildInfoKey("knoraSipiVersion", knoraSipiVersion),
+        BuildInfoKey.action("gitCommit")(gitCommit),
+      ),
+      buildInfoOptions += BuildInfoOption.BuildTime,
+      buildInfoPackage    := "swiss.dasch.version",
+      Compile / mainClass := Some("swiss.dasch.Main"),
+    )
+    .settings(
+      name          := "dsp-ingest",
+      headerLicense := projectLicense,
+      libraryDependencies ++= db ++ tapir ++ metrics ++ zioSeq ++ Seq(
+        "com.github.jwt-scala"          %% "jwt-zio-json"                      % "11.0.2",
+        "commons-io"                     % "commons-io"                        % "2.20.0",
+        "dev.zio"                       %% "zio-config"                        % ZioConfigVersion,
+        "dev.zio"                       %% "zio-config-magnolia"               % ZioConfigVersion,
+        "dev.zio"                       %% "zio-config-typesafe"               % ZioConfigVersion,
+        "dev.zio"                       %% "zio-json"                          % ZioJsonVersion,
+        "dev.zio"                       %% "zio-json-interop-refined"          % ZioJsonVersion,
+        "dev.zio"                       %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,
+        "dev.zio"                       %% "zio-metrics-connectors-prometheus" % ZioMetricsConnectorsVersion,
+        "eu.timepit"                    %% "refined"                           % "0.11.3",
+        "com.softwaremill.sttp.client3" %% "zio"                               % "3.11.0",
+
+        // csv for reports
+        "com.github.tototoshi" %% "scala-csv" % "2.0.0",
+
+        // logging
+        "dev.zio" %% "zio-logging"               % ZioLoggingVersion,
+        "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion,
+      ) ++ ingestTest,
+      testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+      Docker / dockerRepository            := Some("daschswiss"),
+      Docker / packageName                 := "dsp-ingest",
+      dockerExposedPorts                   := Seq(3340),
+      Docker / defaultLinuxInstallLocation := "/sipi",
+      dockerUpdateLatest                   := true,
+      dockerBaseImage                      := s"daschswiss/knora-sipi:$knoraSipiVersion",
+      dockerBuildxPlatforms                := Seq("linux/arm64/v8", "linux/amd64"),
+      dockerCommands += Cmd(
+        """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
+          |CMD curl -sS --fail 'http://localhost:3340/health' || exit 1""".stripMargin,
+      ),
+      // Install Temurin Java 21 https://adoptium.net/de/installation/linux/
+      dockerCommands += Cmd(
+        "RUN",
+        "apt-get update && apt install -y wget apt-transport-https && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null && rm -rf /var/lib/apt/lists/*",
+      ),
+      dockerCommands += Cmd(
+        "RUN",
+        "echo \"deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main\" | tee /etc/apt/sources.list.d/adoptium.list && apt-get update && apt-get install -y temurin-21-jre && rm -rf /var/lib/apt/lists/*",
+      ),
+      // Add Opentelemetry java agent and Grafana Pyroscope extension
+      dockerCommands += Cmd(
+        "ADD",
+        s"https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/${otelAgentVersion}/opentelemetry-javaagent.jar",
+        "/usr/local/lib/opentelemetry-javaagent.jar",
+      ),
+      dockerCommands += Cmd(
+        "ADD",
+        s"https://github.com/grafana/otel-profiling-java/releases/download/${otelPyroscopeVersion}/pyroscope-otel.jar",
+        "/usr/local/lib/pyroscope-otel.jar",
+      ),
+      dockerCommands := dockerCommands.value.filterNot {
+        case Cmd("USER", args @ _*) => true
+        case cmd                    => false
+      },
+    )
+}

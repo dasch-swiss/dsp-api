@@ -1,0 +1,148 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "main"
+  release:
+    types: [ published ]
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build-and-test:
+    name: Build and Run Tests
+    strategy:
+      matrix:
+        java-version: [ 21 ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java-version }}
+          cache: sbt
+      - name: Build and Test
+        run: ./sbtx -v clean coverage test headerCheckAll fmtCheck coverageAggregate
+      - name: Unit Test Report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Unit Test Results
+          path: ./target/test-reports/TEST-*.xml
+          reporter: java-junit
+      - name: Upload coverage data to codacy
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: ./target/scala-3.3.6/coverage-report/cobertura.xml
+
+  test-docs-build:
+    name: Test docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup just
+        uses: extractions/setup-just@v1
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Build docs with just
+        run: just docs-build
+
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: sbt
+      - name: Run integration tests
+        run: export DOCKER_BUILDKIT=1;./sbtx Docker/publishLocal;./sbtx integration/test
+
+  publish-docker-image:
+    if: (github.ref == 'refs/heads/main' && github.event_name != 'release') || startsWith(github.ref, 'refs/tags/')
+    name: Publish docker images to Docker Hub
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.docker_image_tag.outputs.tag }}
+    strategy:
+      matrix:
+        java-version: [ 21 ]
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java-version }}
+          cache: sbt
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        # Temporary workaround for ARM builds
+        # https://github.com/docker/setup-qemu-action/issues/198
+        with:
+          image: tonistiigi/binfmt:qemu-v7.0.0-28
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      - name: Build and push image
+        run: export DOCKER_BUILDKIT=1; ./sbtx Docker/publish
+      - name: Output docker image tag
+        id: docker_image_tag
+        run: echo "tag=$(git describe --tag --dirty --abbrev=7 --always | tr -d '\n')" >> "$GITHUB_OUTPUT"
+        shell: bash # Explicit for fail-fast behaviour
+
+  trigger-dev-deployment:
+    name: Trigger deployment to DEV
+    runs-on: ubuntu-latest
+    needs: publish-docker-image
+    steps:
+      - name: Trigger deployment to DEV
+        env:
+          IMAGE_TAG: ${{needs.publish-docker-image.outputs.tag}}
+          JENKINS_BASIC_AUTH_USER: ${{secrets.JENKINS_BASIC_AUTH_USER}}
+          JENKINS_BASIC_AUTH_PASS: ${{secrets.JENKINS_BASIC_AUTH_PASS}}
+          JENKINS_DEV_WEBHOOK: ${{secrets.JENKINS_DEV_WEBHOOK}}
+        run: |
+          echo "Trigger deployment for tag=$IMAGE_TAG"; \
+          curl -f -u "${JENKINS_BASIC_AUTH_USER}:${JENKINS_BASIC_AUTH_PASS}" \
+               -X POST "${JENKINS_DEV_WEBHOOK}" \
+               -d "Service=ingest&Version=${IMAGE_TAG}"
+
+  send-chat-notification:
+    name: Send google chat notification
+    needs: [ publish-docker-image ]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
+    steps:
+      - name: Send notification to google chat room "DSP releases"
+        uses: lakto/google-chat-action@main
+        with:
+          url: ${{ secrets.GOOGLE_CHAT_DSP_RELEASES_WEBHOOK_URL }}
