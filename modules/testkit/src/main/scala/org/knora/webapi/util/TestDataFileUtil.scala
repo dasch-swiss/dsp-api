@@ -13,7 +13,7 @@ import java.nio.file.Paths
 
 import org.knora.webapi.config.Sipi
 
-final case class TestDataFileUtil(sipi: Sipi) {
+final case class TestDataFileUtil(private val sipi: Sipi) {
 
   private val iiifBaseUrl: String = "IIIF_BASE_URL"
 
