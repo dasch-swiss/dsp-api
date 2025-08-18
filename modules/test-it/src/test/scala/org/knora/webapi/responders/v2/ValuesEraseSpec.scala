@@ -81,7 +81,8 @@ object ValuesEraseSpec extends E2EZSpec {
               "ThingWithRequiredInt",
               Map(hasRequiredIntegerIri -> Seq(CreateValueInNewResourceV2(integerValue))),
             )
-          requiredIntIri <- ZIO.serviceWith[TestHelper](_.toSmartIri("http://www.knora.org/ontology/0001/anything#hasRequiredInteger"))
+          requiredIntIri <-
+            ZIO.serviceWith[TestHelper](_.toSmartIri("http://www.knora.org/ontology/0001/anything#hasRequiredInteger"))
           val1  = resourceWVals.values(requiredIntIri).head
           res1  = resourceWVals.resource
           val2 <- TestHelper.updateIntegerValue(val1, res1, 567, Some("hasRequiredInteger"))
