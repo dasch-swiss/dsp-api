@@ -62,3 +62,6 @@ docs/03-endpoints/generated-openapi/*
 # Claude Code 
 .claude/settings.local.json
 /.claude/tmp
+
+# ingest
+localdev/storage/
