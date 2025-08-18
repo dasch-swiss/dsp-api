@@ -8,11 +8,10 @@ package org.knora.webapi.e2e.v2
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
-import spray.json.JsString
-import spray.json.JsValue
-import spray.json.JsonParser
 import sttp.model.Uri
 import sttp.model.Uri.*
+import zio.json.*
+import zio.json.ast.Json
 
 import java.nio.file.Paths
 import java.time.Instant
@@ -1242,14 +1241,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         TestApiClient.putJsonLd(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200),
       )
       assert(
-        JsonParser(updateResponseAsString) == JsonParser(
-          updateResourceMetadataResponse(
-            resourceIri = aThingIri,
-            maybeNewLabel = newLabel,
-            newLastModificationDate = newModificationDate,
-            maybeNewPermissions = newPermissions,
-          ),
-        ),
+        updateResponseAsString.fromJson[Json] == updateResourceMetadataResponse(
+          resourceIri = aThingIri,
+          maybeNewLabel = newLabel,
+          newLastModificationDate = newModificationDate,
+          maybeNewPermissions = newPermissions,
+        ).fromJson[Json],
       )
 
       val previewJsonLD = UnsafeZioRun.runOrThrow(
@@ -1309,14 +1306,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         TestApiClient.putJsonLd(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert200),
       )
       assert(
-        JsonParser(updateResponseAsString) == JsonParser(
-          updateResourceMetadataResponse(
-            resourceIri = aThingIri,
-            maybeNewLabel = newLabel,
-            newLastModificationDate = newModificationDate,
-            maybeNewPermissions = newPermissions,
-          ),
-        ),
+        updateResponseAsString.fromJson[Json] == updateResourceMetadataResponse(
+          resourceIri = aThingIri,
+          maybeNewLabel = newLabel,
+          newLastModificationDate = newModificationDate,
+          maybeNewPermissions = newPermissions,
+        ).fromJson[Json],
       )
 
       val previewResponseAsString = UnsafeZioRun.runOrThrow(
@@ -1389,7 +1384,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       )
 
       // then it should be marked as deleted
-      assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
+      assert(updateResponseAsString.fromJson[Json] == successResponse("Resource marked as deleted").fromJson[Json])
 
       val previewResponseAsString = UnsafeZioRun.runOrThrow(
         TestApiClient.getJsonLd(uri"/v2/resourcespreview/$resourceIri", anythingUser1).flatMap(_.assert200),
@@ -1431,7 +1426,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           .postJsonLd(uri"/v2/resources/delete", jsonLDEntity, SharedTestDataADM.superUser)
           .flatMap(_.assert200),
       )
-      assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
+      assert(updateResponseAsString.fromJson[Json] == successResponse("Resource marked as deleted").fromJson[Json])
 
       val previewResponseAsString = UnsafeZioRun.runOrThrow(
         TestApiClient.getJsonLd(uri"/v2/resourcespreview/$resourceIri", anythingUser1).flatMap(_.assert200),
@@ -1462,7 +1457,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |  "@type" : "anything:Thing",
            |  "anything:hasRichtext" : {
            |    "@type" : "knora-api:TextValue",
-           |    "knora-api:textValueAsXml" : ${JsString(hamletXml).compactPrint},
+           |    "knora-api:textValueAsXml" : ${hamletXml.toJson},
            |    "knora-api:textValueHasMapping" : {
            |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
            |    }
@@ -1726,8 +1721,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val responseStr = UnsafeZioRun.runOrThrow(
         TestApiClient.getJsonLd(uri"/v2/resources/iiifmanifest/$resourceIri").flatMap(_.assert200),
       )
-      val responseJson: JsValue = JsonParser(responseStr)
-      val expectedJson: JsValue = JsonParser(testData("IIIFManifest.jsonld"))
+      val responseJson: Json = responseStr.fromJson[Json].getOrElse(Json.Null)
+      val expectedJson: Json = testData("IIIFManifest.jsonld").fromJson[Json].getOrElse(Json.Null)
       assert(responseJson == expectedJson)
     }
 
