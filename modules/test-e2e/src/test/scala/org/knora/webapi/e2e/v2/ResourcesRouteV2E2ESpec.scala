@@ -35,6 +35,7 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.ResponseOps.assert404
@@ -49,7 +50,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
   private val hamletResourceIri          = new MutableTestIri
   private val aThingIri                  = "http://rdfh.ch/0001/a-thing"
   private val aThingWithHistoryIri       = "http://rdfh.ch/0001/thing-with-history"
-  private val reiseInsHeiligeLandIri     = "http://rdfh.ch/0803/2a6221216701"
+  val reiseInsHeiligeLandIri             = ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701".toSmartIri)
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
@@ -151,34 +152,6 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
        |}""".stripMargin
 
   override val e2eSpec = suite("The resources v2 endpoint")(
-    test("perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD") {
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$reiseInsHeiligeLandIri").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("BookReiseInsHeiligeLand.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri)
-      } yield assertCompletes
-    },
-    test("perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in Turtle") {
-      for {
-        // Test correct handling of q values in the Accept header by requesting as string with turtle content type.
-        responseAsString <-
-          TestApiClient
-            .getAsString(uri"/v2/resources/$reiseInsHeiligeLandIri", _.header("Accept", "text/turtle"))
-            .flatMap(_.assert200)
-        expectedAnswerTurtle <- readFile("BookReiseInsHeiligeLand.ttl")
-      } yield assertTrue(RdfModel.fromTurtle(responseAsString) == RdfModel.fromTurtle(expectedAnswerTurtle))
-    },
-    test("perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in RDF/XML") {
-      for {
-        responseAsString <-
-          TestApiClient
-            .getAsString(uri"/v2/resources/$reiseInsHeiligeLandIri", _.header("Accept", "application/rdf+xml"))
-            .flatMap(_.assert200)
-        expectedAnswerRdfXml <- readFile("BookReiseInsHeiligeLand.rdf")
-      } yield assertTrue(RdfModel.fromRdfXml(responseAsString) == RdfModel.fromRdfXml(expectedAnswerRdfXml))
-    },
     test("perform a resource preview request for the book 'Reise ins Heilige Land' using the complex schema") {
       for {
         responseAsString <-
@@ -195,45 +168,6 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
       } yield assertCompletes
     },
     test(
-      "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header) in JSON-LD",
-    ) {
-      for {
-        responseAsString <-
-          TestApiClient.getJsonLd(uri"/v2/resources/$reiseInsHeiligeLandIri?schema=simple").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("BookReiseInsHeiligeLandSimple.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(
-               responseAsString,
-               "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-             )
-      } yield assertCompletes
-    },
-    test("perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in Turtle") {
-      for {
-        responseAsString <- TestApiClient
-                              .getAsString(
-                                uri"/v2/resources/$reiseInsHeiligeLandIri",
-                                _.header("X-Knora-Accept-Schema", "simple").header("Accept", "text/turtle"),
-                              )
-                              .flatMap(_.assert200)
-        expectedAnswerTurtle <- readFile("BookReiseInsHeiligeLandSimple.ttl")
-        _                    <- ZIO.attempt(assert(RdfModel.fromTurtle(responseAsString) == RdfModel.fromTurtle(expectedAnswerTurtle)))
-      } yield assertCompletes
-    },
-    test("perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in RDF/XML") {
-      for {
-        responseAsString <- TestApiClient
-                              .getAsString(
-                                uri"/v2/resources/$reiseInsHeiligeLandIri",
-                                _.header("X-Knora-Accept-Schema", "simple").header("Accept", "application/rdf+xml"),
-                              )
-                              .flatMap(_.assert200)
-        expectedAnswerRdfXml <- readFile("BookReiseInsHeiligeLandSimple.rdf")
-        _                    <- ZIO.attempt(assert(RdfModel.fromRdfXml(responseAsString) == RdfModel.fromRdfXml(expectedAnswerRdfXml)))
-      } yield assertCompletes
-    },
-    test(
       "perform a resource preview request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header)",
     ) {
       for {
@@ -242,157 +176,6 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         expectedAnswerJSONLD <-
           readFile("BookReiseInsHeiligeLandSimplePreview.jsonld")
         _ <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-      } yield assertCompletes
-    },
-    test(
-      "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by a URL parameter)",
-    ) {
-      for {
-        responseAsString <-
-          TestApiClient.getJsonLd(uri"/v2/resources/$reiseInsHeiligeLandIri?schema=simple").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("BookReiseInsHeiligeLandSimple.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-      } yield assertCompletes
-    },
-    test(
-      "perform a resource request for the first page of the book '[Das] Narrenschiff (lat.)' using the complex schema",
-    ) {
-      val iri = "http://rdfh.ch/0803/7bbb8e59b703"
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("NarrenschiffFirstPage.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-      } yield assertCompletes
-    },
-    test("perform a full resource request for a resource with a BCE date property") {
-      val iri = "http://rdfh.ch/0001/thing_with_BCE_date"
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("ThingWithBCEDate.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
-      } yield assertCompletes
-    },
-    test(
-      "perform a full resource request for a resource with a date property that represents a period going from BCE to CE",
-    ) {
-      val iri = "http://rdfh.ch/0001/thing_with_BCE_date2"
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("ThingWithBCEDate2.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
-      } yield assertCompletes
-    },
-    test("perform a full resource request for a resource with a list value") {
-      val iri = "http://rdfh.ch/0001/thing_with_list_value"
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("ThingWithListValue.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
-      } yield assertCompletes
-    },
-    test("perform a full resource request for a resource with a list value (in the simple schema)") {
-      val iri = "http://rdfh.ch/0001/thing_with_list_value"
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$iri?schema=simple").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("ThingWithListValueSimple.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(
-               responseAsString,
-               "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-             )
-      } yield assertCompletes
-    },
-    test("perform a full resource request for a resource with a link (in the complex schema)") {
-      val iri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("ThingWithLinkComplex.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
-      } yield assertCompletes
-    },
-    test("perform a full resource request for a resource with a link (in the simple schema)") {
-      val iri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$iri?schema=simple").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("ThingWithLinkSimple.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(
-               responseAsString,
-               "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-             )
-      } yield assertCompletes
-    },
-    test("perform a full resource request for a resource with a Text language (in the complex schema)") {
-      val iri = "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage"
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("ThingWithTextLangComplex.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
-      } yield assertCompletes
-    },
-    test("perform a full resource request for a resource with a Text language (in the simple schema)") {
-      val iri = "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage"
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$iri?schema=simple").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("ThingWithTextLangSimple.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(
-               responseAsString,
-               "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-             )
-      } yield assertCompletes
-    },
-    test("perform a full resource request for a resource with values of different types") {
-      val iri = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw"
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("Testding.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
-      } yield assertCompletes
-    },
-    test("perform a full resource request for a Thing resource with a link to a ThingPicture resource") {
-      val iri = "http://rdfh.ch/0001/a-thing-with-picture"
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("ThingWithPicture.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
-      } yield assertCompletes
-    },
-    test("perform a full resource request with a link to a resource that the user doesn't have permission to see") {
-      val iri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("ThingWithOneHiddenResource.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
-      } yield assertCompletes
-    },
-    test("perform a full resource request with a link to a resource that is marked as deleted") {
-      val iri = "http://rdfh.ch/0001/l8f8FVEiSCeq9A1p8gBR-A"
-      for {
-        responseAsString     <- TestApiClient.getJsonLd(uri"/v2/resources/$iri").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("ThingWithOneDeletedResource.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-        // Check that the resource corresponds to the ontology.
-        _ <- instanceChecker.check(responseAsString, "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
       } yield assertCompletes
     },
     test("perform a full resource request for a past version of a resource, using a URL-encoded xsd:dateTimeStamp") {
@@ -441,7 +224,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         entries = jsonLDDocument.body
                     .getRequiredArray("@graph")
                     .fold(e => throw BadRequestException(e), identity)
-        _ <- ZIO.foreach(entries.value) { entry =>
+        _ <- ZIO.foreachDiscard(entries.value) { entry =>
                entry match {
                  case jsonLDObject: JsonLDObject =>
                    for {
