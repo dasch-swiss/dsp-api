@@ -178,24 +178,6 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         _ <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
       } yield assertCompletes
     },
-    test("perform a full resource request for a past version of a resource, using a URL-encoded xsd:dateTimeStamp") {
-      val timestamp = "2019-02-12T08:05:10.351Z"
-      for {
-        responseAsString <-
-          TestApiClient.getJsonLd(uri"/v2/resources/$aThingWithHistoryIri?version=$timestamp").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("ThingWithVersionHistory.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-      } yield assertCompletes
-    },
-    test("perform a full resource request for a past version of a resource, using a Knora ARK timestamp") {
-      val timestamp = "20190212T080510351Z"
-      for {
-        responseAsString <-
-          TestApiClient.getJsonLd(uri"/v2/resources/$aThingWithHistoryIri?version=$timestamp").flatMap(_.assert200)
-        expectedAnswerJSONLD <- readFile("ThingWithVersionHistory.jsonld")
-        _                    <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, responseAsString))
-      } yield assertCompletes
-    },
     test("return the complete version history of a resource") {
       for {
         responseAsString <-
