@@ -80,9 +80,6 @@ abstract class E2ESpec
       ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request, timeout, printFailure)),
     )
 
-  protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration): HttpResponse =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request, Some(duration))))
-
   protected def getResponseAsString(request: HttpRequest): String =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.getResponseString(request)))
 
