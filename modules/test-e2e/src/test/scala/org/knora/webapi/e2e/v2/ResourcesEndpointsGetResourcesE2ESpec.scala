@@ -78,7 +78,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
 
     private def readRdf(str: String): RdfModel = mediaType.readRdf(str)
 
-    private def updateRequest(r: Request[Either[String, String]]): Request[Either[String, String]] = {
+    private val updateRequest: (r: Request[Either[String, String]]) => Request[Either[String, String]] = r => {
       def versionUpdate = (r: Request[Either[String, String]]) =>
         version match {
           case None    => r
@@ -88,8 +88,9 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
     }
 
     def check: ZIO[TestApiClient & TestDataFileUtil, Throwable, TestResult] = for {
-      actual <-
-        TestApiClient.getAsString(uri"/v2/resources/${self.resourceIri}", self.updateRequest).flatMap(_.assert200)
+      actual <- TestApiClient
+                  .getAsString(uri"/v2/resources/${self.resourceIri}", self.updateRequest)
+                  .flatMap(_.assert200)
       expected <- TestDataFileUtil.readTestData("resourcesR2RV2", self.filename)
       _ <- (self.resourceClassIri, self.mediaType) match {
              case (Some(iri), TestMediaType.JsonLd) => instanceChecker.check(actual, iri.smartIri)
