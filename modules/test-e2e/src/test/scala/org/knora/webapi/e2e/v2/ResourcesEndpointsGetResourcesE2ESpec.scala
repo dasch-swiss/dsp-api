@@ -9,7 +9,9 @@ import sttp.client4.Request
 import sttp.client4.UriContext
 import sttp.model.MediaType
 import zio.ZIO
+import zio.test.TestResult
 import zio.test.assertTrue
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.aThingWithHistoryIri
@@ -24,7 +26,6 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.TestDataFileUtil
-import zio.test.TestResult
 
 object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
 
