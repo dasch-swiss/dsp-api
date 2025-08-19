@@ -101,8 +101,7 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
        |    }
        |}""".stripMargin
 
-  private def readFile(fileName: String): ZIO[TestDataFileUtil, Nothing, String] =
-    TestDataFileUtil.readTestData("resourcesR2RV2", fileName)
+  private def readFile(fileName: String) = TestDataFileUtil.readTestData("resourcesR2RV2", fileName)
 
   private def createResourceReqPayload() =
     createResourceWithCustomIRI("http://rdfh.ch/0001/" + UuidUtil.makeRandomBase64EncodedUuid)
