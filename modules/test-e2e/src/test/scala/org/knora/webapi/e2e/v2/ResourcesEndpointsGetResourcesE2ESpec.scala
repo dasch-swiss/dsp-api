@@ -10,7 +10,6 @@ import sttp.client4.UriContext
 import sttp.model.MediaType
 import zio.ZIO
 import zio.test.assertTrue
-
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.aThingWithHistoryIri
@@ -25,6 +24,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.TestDataFileUtil
+import zio.test.TestResult
 
 object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
 
@@ -72,9 +72,11 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
     resourceClassIri: Option[ResourceClassIri] = None,
     schema: TestSchema = TestSchema.Complex,
     version: Option[String] = None,
-  ) {
-    def readRdf(str: String): RdfModel = mediaType.readRdf(str)
-    def updateRequest(r: Request[Either[String, String]]): Request[Either[String, String]] = {
+  ) { self =>
+
+    private def readRdf(str: String): RdfModel = mediaType.readRdf(str)
+
+    private def updateRequest(r: Request[Either[String, String]]): Request[Either[String, String]] = {
       def versionUpdate = (r: Request[Either[String, String]]) =>
         version match {
           case None    => r
@@ -82,16 +84,17 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
         }
       versionUpdate.andThen(schema.f)(r).header("Accept", mediaType.mediaType.toString())
     }
-  }
 
-  private def check(test: TestCase) = for {
-    actual   <- TestApiClient.getAsString(uri"/v2/resources/${test.resourceIri}", test.updateRequest).flatMap(_.assert200)
-    expected <- TestDataFileUtil.readTestData("resourcesR2RV2", test.filename)
-    _ <- (test.resourceClassIri, test.mediaType) match {
-           case (Some(iri), TestMediaType.JsonLd) => instanceChecker.check(actual, iri.smartIri)
-           case _                                 => ZIO.unit
-         }
-  } yield assertTrue(test.readRdf(actual) == test.readRdf(expected))
+    def check: ZIO[TestApiClient & TestDataFileUtil, Throwable, TestResult] = for {
+      actual <-
+        TestApiClient.getAsString(uri"/v2/resources/${self.resourceIri}", self.updateRequest).flatMap(_.assert200)
+      expected <- TestDataFileUtil.readTestData("resourcesR2RV2", self.filename)
+      _ <- (self.resourceClassIri, self.mediaType) match {
+             case (Some(iri), TestMediaType.JsonLd) => instanceChecker.check(actual, iri.smartIri)
+             case _                                 => ZIO.unit
+           }
+    } yield assertTrue(self.readRdf(actual) == self.readRdf(expected))
+  }
 
   private val readResourcesSuite = suite("GET /v2/resources") {
     Seq(
@@ -230,7 +233,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
         s"perform a resource request for ${t.description} ${t.resourceIri} " +
           s"using the ${t.schema} schema " +
           s"in ${t.mediaType.mediaType}",
-      )(check(t))
+      )(t.check)
     }.toList
   }
 
