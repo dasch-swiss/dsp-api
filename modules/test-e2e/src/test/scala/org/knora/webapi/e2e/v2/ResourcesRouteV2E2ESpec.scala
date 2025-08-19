@@ -46,11 +46,11 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
 
   private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
-  private var aThingLastModificationDate = Instant.now
-  private val hamletResourceIri          = new MutableTestIri
-  private val aThingIri                  = "http://rdfh.ch/0001/a-thing"
-  private val aThingWithHistoryIri       = "http://rdfh.ch/0001/thing-with-history"
-  val reiseInsHeiligeLandIri             = ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701".toSmartIri)
+  private var aThingLastModificationDate  = Instant.now
+  private val hamletResourceIri           = new MutableTestIri
+  private val aThingIri                   = "http://rdfh.ch/0001/a-thing"
+  val aThingWithHistoryIri: ResourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history".toSmartIri)
+  val reiseInsHeiligeLandIri: ResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701".toSmartIri)
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
@@ -206,29 +206,27 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
         entries = jsonLDDocument.body
                     .getRequiredArray("@graph")
                     .fold(e => throw BadRequestException(e), identity)
-        _ <- ZIO.foreachDiscard(entries.value) { entry =>
-               entry match {
-                 case jsonLDObject: JsonLDObject =>
-                   for {
-                     versionDate <- ZIO.succeed(
-                                      jsonLDObject.requireDatatypeValueInObject(
-                                        key = KnoraApiV2Complex.VersionDate,
-                                        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                        validationFun = (s, errorFun) =>
-                                          ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
-                                      ),
-                                    )
-                     arkTimestamp <- ZIO.succeed(sf.formatArkTimestamp(versionDate))
-                     versionResponseAsString <-
-                       TestApiClient
-                         .getJsonLd(uri"/v2/resources/$aThingWithHistoryIri?version=$arkTimestamp")
-                         .flatMap(_.assert200)
-                     expectedAnswerJSONLD <-
-                       readFile(s"ThingWithVersionHistory$arkTimestamp.jsonld")
-                     _ <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, versionResponseAsString))
-                   } yield ()
-                 case other => ZIO.fail(AssertionException(s"Expected JsonLDObject, got $other"))
-               }
+        _ <- ZIO.foreachDiscard(entries.value) {
+               case jsonLDObject: JsonLDObject =>
+                 for {
+                   versionDate <- ZIO.succeed(
+                                    jsonLDObject.requireDatatypeValueInObject(
+                                      key = KnoraApiV2Complex.VersionDate,
+                                      expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                      validationFun = (s, errorFun) =>
+                                        ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+                                    ),
+                                  )
+                   arkTimestamp <- ZIO.succeed(sf.formatArkTimestamp(versionDate))
+                   versionResponseAsString <-
+                     TestApiClient
+                       .getJsonLd(uri"/v2/resources/$aThingWithHistoryIri?version=$arkTimestamp")
+                       .flatMap(_.assert200)
+                   expectedAnswerJSONLD <-
+                     readFile(s"ThingWithVersionHistory$arkTimestamp.jsonld")
+                   _ <- ZIO.attempt(compareJSONLDForResourcesResponse(expectedAnswerJSONLD, versionResponseAsString))
+                 } yield ()
+               case other => ZIO.fail(AssertionException(s"Expected JsonLDObject, got $other"))
              }
       } yield assertCompletes
     },

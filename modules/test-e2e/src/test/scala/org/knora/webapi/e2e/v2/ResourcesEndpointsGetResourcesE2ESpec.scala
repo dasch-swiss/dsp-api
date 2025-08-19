@@ -12,6 +12,7 @@ import zio.ZIO
 import zio.test.assertTrue
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.InstanceChecker
+import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.aThingWithHistoryIri
 import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.reiseInsHeiligeLandIri
 import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.suite
 import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.test
@@ -213,13 +214,13 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
       ),
       TestCase(
         "for a past version of a resource, using a URL-encoded xsd:dateTimeStamp",
-        ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history".toSmartIri),
+        aThingWithHistoryIri,
         "ThingWithVersionHistory.jsonld",
         version = Some("2019-02-12T08:05:10.351Z"),
       ),
       TestCase(
         "for a past version of a resource, using a Knora ARK timestamp",
-        ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history".toSmartIri),
+        aThingWithHistoryIri,
         "ThingWithVersionHistory.jsonld",
         version = Some("20190212T080510351Z"),
       ),
