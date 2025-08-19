@@ -106,12 +106,6 @@ abstract class E2ESpec
     Await.result(responseBodyFuture, FiniteDuration(10L, TimeUnit.SECONDS))
   }
 
-  protected def doGetRequest(urlPath: String): String = {
-    val request                = Get(s"$baseApiUrl$urlPath")
-    val response: HttpResponse = singleAwaitingRequest(request)
-    responseToString(response)
-  }
-
   def readTestData(folder: String, filename: String): String =
     UnsafeZioRun.runOrThrow(TestDataFileUtil.readTestData(folder, filename))
 }
