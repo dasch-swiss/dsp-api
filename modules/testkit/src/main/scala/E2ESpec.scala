@@ -60,8 +60,7 @@ abstract class E2ESpec
   val log: Logger                                      = Logger(this.getClass)
 
   // needed by some tests
-  val baseApiUrl: String          = appConfig.knoraApi.internalKnoraApiBaseUrl
-  val baseInternalSipiUrl: String = appConfig.sipi.internalBaseUrl
+  val baseApiUrl: String = appConfig.knoraApi.internalKnoraApiBaseUrl
 
   // the default timeout for all tests
   implicit val timeout: FiniteDuration = FiniteDuration(10, SECONDS)
