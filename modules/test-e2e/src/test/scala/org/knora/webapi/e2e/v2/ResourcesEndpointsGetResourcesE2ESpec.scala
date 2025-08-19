@@ -52,7 +52,9 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
   private val bookSimpleResourceClassIri =
     ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri)
 
-  private enum TestMediaType(val mediaType: MediaType, val readRdf: String => RdfModel) {
+  private enum TestMediaType(val mediaType: MediaType, val readRdf: String => RdfModel) { self =>
+    override def toString: String = self.mediaType.toString()
+
     case JsonLd extends TestMediaType(MediaType.unsafeApply("application", "ld+json"), RdfModel.fromJsonLD)
     case RdfXml extends TestMediaType(MediaType.unsafeApply("application", "rdf+xml"), RdfModel.fromRdfXml)
     case Turtle extends TestMediaType(MediaType.unsafeApply("text", "turtle"), RdfModel.fromTurtle)
@@ -82,7 +84,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
           case None    => r
           case Some(v) => r.copy(uri = r.uri.addParam("version", v))
         }
-      versionUpdate.andThen(schema.f)(r).header("Accept", mediaType.mediaType.toString())
+      versionUpdate.andThen(schema.f)(r).header("Accept", mediaType.toString())
     }
 
     def check: ZIO[TestApiClient & TestDataFileUtil, Throwable, TestResult] = for {
@@ -232,7 +234,7 @@ object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
       test(
         s"perform a resource request for ${t.description} ${t.resourceIri} " +
           s"using the ${t.schema} schema " +
-          s"in ${t.mediaType.mediaType}",
+          s"in ${t.mediaType}",
       )(t.check)
     }.toList
   }
