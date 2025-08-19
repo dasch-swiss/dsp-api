@@ -643,7 +643,7 @@ final case class CreateResourceV2Handler(
 
     for {
       // Get information about the existing resources that are targets of links.
-      existingTargets <- getResources.getResourcePreviewV2(
+      existingTargets <- getResources.getResourcePreviewWithDeletedResource(
                            resourceIris = existingTargetIris.toSeq,
                            targetSchema = ApiV2Complex,
                            requestingUser = requestingUser,
@@ -680,7 +680,7 @@ final case class CreateResourceV2Handler(
     }
 
     getResources
-      .getResourcePreviewV2(
+      .getResourcePreviewWithDeletedResource(
         resourceIris = standoffLinkTargetsThatShouldExist.toSeq,
         targetSchema = ApiV2Complex,
         requestingUser = requestingUser,
@@ -821,7 +821,7 @@ final case class CreateResourceV2Handler(
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] =
     getResources
-      .getResourcesV2(
+      .getResourcesWithDeletedResource(
         resourceIris = Seq(resourceIri),
         requestingUser = requestingUser,
         targetSchema = ApiV2Complex,
