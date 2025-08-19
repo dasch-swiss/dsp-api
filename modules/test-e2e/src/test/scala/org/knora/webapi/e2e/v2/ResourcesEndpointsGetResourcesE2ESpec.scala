@@ -10,6 +10,7 @@ import sttp.client4.UriContext
 import sttp.model.MediaType
 import zio.ZIO
 import zio.test.assertTrue
+
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.aThingWithHistoryIri
