@@ -13,6 +13,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.RequestsUpdates
+import org.knora.webapi.testservices.RequestsUpdates.RequestUpdate
 import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaHeader
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
@@ -48,6 +49,18 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
 
   private def loadFile(filename: String) = TestDataFileUtil.readTestData("searchR2RV2", filename)
 
+  private def verifyQueryResult(
+    query: String,
+    expectedFile: String,
+    update: RequestUpdate[String] = identity,
+  ) = for {
+    actual <- TestApiClient
+                .postSparql(uri"/v2/searchextended", query, update)
+                .flatMap(_.assert200)
+                .mapAttempt(RdfModel.fromJsonLD)
+    expected <- loadFile(expectedFile).mapAttempt(RdfModel.fromJsonLD)
+  } yield assertTrue(actual == expected)
+
   override def e2eSpec = suite("SearchEndpoints POST /v2/searchextended")(
     test("perform a Gravsearch query using simple schema which allows to sort the results by external link") {
       val query =
@@ -63,7 +76,6 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |  ?res anything:hasUri ?exLink .
           |}
           |ORDER BY (?exLink)""".stripMargin
-
       TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200).as(assertCompletes)
     },
     test("perform a Gravsearch query using complex schema which allows to sort the results by external link") {
@@ -80,7 +92,6 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |  ?res anything:hasUri ?exLink .
           |}
           |ORDER BY (?exLink)""".stripMargin
-
       TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200).as(assertCompletes)
     },
     test("perform a Gravsearch query for an anything:Thing with an optional date and sort by date") {
@@ -110,11 +121,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |  }
           |}
           |ORDER BY DESC(?date)""".stripMargin
-
-      for {
-        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
-        expected <- loadFile("thingWithOptionalDateSortedDesc.jsonld")
-      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+      verifyQueryResult(query, "thingWithOptionalDateSortedDesc.jsonld")
     },
     test(
       "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)",
@@ -141,10 +148,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
           |
           |}""".stripMargin
-      for {
-        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
-        expected <- loadFile("ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
-      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+      verifyQueryResult(query, "ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
     },
     test(
       "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)",
@@ -172,10 +176,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
           |
           |}""".stripMargin
-      for {
-        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
-        expected <- loadFile("ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
-      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+      verifyQueryResult(query, "ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld")
     },
     test(
       "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)",
@@ -202,10 +203,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
           |
           |}""".stripMargin
-      for {
-        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query, addSimpleSchemaHeader).flatMap(_.assert200)
-        expected <- loadFile("ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
-      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+      verifyQueryResult(query, "ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld", addSimpleSchemaHeader)
     },
     test(
       "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)",
@@ -233,10 +231,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
           |
           |}""".stripMargin
-      for {
-        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query, addSimpleSchemaHeader).flatMap(_.assert200)
-        expected <- loadFile("ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
-      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+      verifyQueryResult(query, "ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld", addSimpleSchemaHeader)
     },
     test(
       "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer",
@@ -261,10 +256,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
           |
           |}""".stripMargin
-      for {
-        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
-        expected <- loadFile("ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld")
-      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+      verifyQueryResult(query, "ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld")
     },
     test("perform a Gravsearch query for books that do not have the title 'Zeitglöcklein des Lebens'") {
       val query =
@@ -289,10 +281,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |    FILTER(?title != "Zeitglöcklein des Lebens und Leidens Christi")
           |
           |}""".stripMargin
-      for {
-        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
-        expected <- loadFile("NotZeitgloeckleinExtendedSearch.jsonld")
-      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+      verifyQueryResult(query, "NotZeitgloeckleinExtendedSearch.jsonld")
     },
     test(
       "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum and the link value",
@@ -325,10 +314,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |     ?seqnum a xsd:integer .
           |
           |}""".stripMargin
-      for {
-        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
-        expected <- loadFile("PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld")
-      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+      verifyQueryResult(query, "PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld")
     },
     test("perform a Gravsearch query for the page of a book whose seqnum equals 10, returning only the seqnum") {
       val query =
@@ -357,10 +343,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |    ?seqnum a xsd:integer .
           |
           |}""".stripMargin
-      for {
-        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
-        expected <- loadFile("PageWithSeqnum10OnlySeqnuminAnswer.jsonld")
-      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+      verifyQueryResult(query, "PageWithSeqnum10OnlySeqnuminAnswer.jsonld")
     },
     test("perform a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10") {
       val query =
@@ -392,10 +375,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |} ORDER BY ?seqnum
           |""".stripMargin
-      for {
-        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
-        expected <- loadFile("pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonLd")
-      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+      verifyQueryResult(query, "pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonLd")
     },
     test("perform a Gravsearch query for the pages of a book and return them ordered by their seqnum") {
       val query =
@@ -425,11 +405,7 @@ object SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |
           |} ORDER BY ?seqnum
           |""".stripMargin
-
-      for {
-        actual   <- TestApiClient.postSparql(uri"/v2/searchextended", query).flatMap(_.assert200)
-        expected <- loadFile("PagesOfNarrenschiffOrderedBySeqnum.jsonld")
-      } yield assertTrue(RdfModel.fromJsonLD(actual) == RdfModel.fromJsonLD(expected))
+      verifyQueryResult(query, "PagesOfNarrenschiffOrderedBySeqnum.jsonld")
     },
   )
 }
